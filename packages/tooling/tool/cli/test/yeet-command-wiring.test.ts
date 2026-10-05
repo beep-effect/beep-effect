@@ -1,19 +1,26 @@
 import { yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
+import { MemoryStats, RepoPlanStep, RepoRunPlan } from "@beep/repo-cli/test/RepoRun";
 import {
   buildYeetRunPlanWithMode,
+  defaultYeetRunOptions,
+  MONITOR_READY_SUBMIT_STEP_ID,
+  PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   RepoRunContext,
+  runPushFirstPublishPhasesForTesting,
   TurboPlanSnapshot,
   YeetRunPlanModeOptions,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, FileSystem, Layer, pipe } from "effect";
+import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
+import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
 
@@ -125,12 +132,10 @@ describe("yeet publish plan wiring", () => {
         O.none(),
         YeetRunPlanModeOptions.make({
           amend: options.amend,
-          fast: false,
           mode: "publish",
           monitor: false,
           noEdit: options.noEdit,
           pushOnly: false,
-          startPrEarly: false,
           tier: "full",
         })
       ).steps,
@@ -156,6 +161,213 @@ describe("yeet publish plan wiring", () => {
     ]);
     expect(publishPlanArgs({ amend: true, noEdit: true })).toEqual(["commit", "--amend", "--no-edit"]);
   });
+});
+
+describe("yeet push-first publish plan wiring", () => {
+  const planContext = RepoRunContext.make({
+    base: "origin/main",
+    branch: "feat/yeet-command-wiring",
+    cwd: "/repo",
+    head: "HEAD",
+    originalArgv: [],
+    packetDir: ".beep/yeet",
+    repoRoot: "/repo",
+    turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+  });
+  // The plan reads two ambient overrides; pin them so the fixture compares the
+  // planner, not the shell it ran in.
+  const withPlanEnv = <Out>(use: () => Out): Out => {
+    const names = ["BEEP_YEET_LANE_PROOF_MODE", "BEEP_YEET_PUSH_REFSPEC"] as const;
+    const previous = A.map(names, (name) => [name, Bun.env[name]] as const);
+    for (const name of names) delete Bun.env[name];
+    try {
+      return use();
+    } finally {
+      for (const [name, value] of previous) {
+        if (value === undefined) delete Bun.env[name];
+        else Bun.env[name] = value;
+      }
+    }
+  };
+  const publishPlan = (options: {
+    readonly mode?: "publish" | "verify";
+    readonly monitor?: boolean;
+    readonly pr: boolean;
+    readonly proveFirst?: boolean;
+  }) =>
+    withPlanEnv(() =>
+      buildYeetRunPlanWithMode(
+        planContext,
+        O.some("feat(repo-cli): example"),
+        YeetRunPlanModeOptions.make({
+          amend: false,
+          mode: options.mode ?? "publish",
+          monitor: options.monitor ?? false,
+          noEdit: false,
+          pr: options.pr,
+          proveFirst: options.proveFirst ?? false,
+          pushOnly: false,
+          tier: "full",
+        })
+      )
+    );
+  const stepIds = (plan: RepoRunPlan): ReadonlyArray<string> => A.map(plan.steps, (step) => step.id);
+  const withoutWaves = (plan: RepoRunPlan): RepoRunPlan =>
+    RepoRunPlan.make({
+      context: plan.context,
+      steps: A.map(plan.steps, ({ waves: _waves, ...step }) => RepoPlanStep.make(step)),
+    });
+  const printedPlan = Effect.fn("printedPlan")(function* (plan: RepoRunPlan) {
+    const chunks: Array<string> = [];
+    yield* printCommandJson(plan).pipe(
+      Effect.provideService(CommandJsonOutput, (text) => Effect.sync(() => void chunks.push(text)))
+    );
+    return A.join(chunks, "");
+  });
+  const decodeFixture = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
+  const decodePlan = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
+
+  it("plans the default publish as cheap-gates, preflight, push, draft PR, label, stamp, detached monitor", () => {
+    expect(stepIds(publishPlan({ pr: true }))).toEqual([
+      "advisory:01-fallow-feedback",
+      "commit:01-git-commit",
+      "full:00-cheap-gates",
+      "publish:00-head-install-preflight",
+      "publish:01-git-push",
+      "publish:02-pr-create",
+      PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+      "publish:03-pr-provenance-stamp",
+      MONITOR_READY_SUBMIT_STEP_ID,
+    ]);
+    // No full proof, no CI parity, no admission-bearing step on the default path.
+    expect(stepIds(publishPlan({ pr: true }))).not.toContain("full:01-pre-push");
+    expect(stepIds(publishPlan({ pr: true }))).not.toContain("full:02-ci-parity");
+  });
+
+  it("plans --no-pr as a bare push with no pull request or monitor steps", () => {
+    expect(stepIds(publishPlan({ pr: false }))).toEqual([
+      "advisory:01-fallow-feedback",
+      "commit:01-git-commit",
+      "full:00-cheap-gates",
+      "publish:00-head-install-preflight",
+      "publish:01-git-push",
+    ]);
+  });
+
+  it("replaces the detached submit with the attached watch under --monitor", () => {
+    const ids = stepIds(publishPlan({ monitor: true, pr: true }));
+    expect(ids).not.toContain(MONITOR_READY_SUBMIT_STEP_ID);
+    expect(A.takeRight(ids, 2)).toEqual(["monitor:01-pr-context", "monitor:02-pr-checks-watch"]);
+  });
+
+  it.effect("reproduces the pre-push-first plan byte-for-byte under --prove-first", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixturePath = yield* path.fromFileUrl(
+        new URL("./fixtures/yeet-publish-plan/prove-first-plans.json", import.meta.url)
+      );
+      const fixtures = yield* decodeFixture(yield* fs.readFileString(fixturePath));
+      const verifyPlan = publishPlan({ mode: "verify", pr: false });
+      for (const [name, options] of [
+        ["no-pr", { pr: false }],
+        ["pr", { pr: true }],
+        ["pr-monitor", { monitor: true, pr: true }],
+      ] as const) {
+        const expected = yield* decodePlan(fixtures[name]);
+        const actual = publishPlan({ ...options, proveFirst: true });
+        // Byte equality of the `--plan --json` render. The fixture was captured
+        // from the pre-change default; lane waves are compared against the
+        // current verify plan instead, so a lane added to the catalog later
+        // moves both and does not stale this fixture.
+        expect(yield* printedPlan(withoutWaves(actual))).toBe(yield* printedPlan(withoutWaves(expected)));
+        for (const step of A.filter(actual.steps, (candidate) => candidate.waves !== undefined)) {
+          const twin = A.findFirst(verifyPlan.steps, (candidate) => candidate.id === step.id);
+          expect(O.map(twin, (candidate) => candidate.waves)).toEqual(O.some(step.waves));
+        }
+      }
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+
+  it.effect("parses --no-pr and --prove-first, and rejects the removed --fast and --start-pr-early", () =>
+    Effect.gen(function* () {
+      // `--detach --plan` is refused by the handler after parsing, so reaching
+      // that refusal proves the flags before it parsed.
+      for (const flag of ["--no-pr", "--prove-first"]) {
+        expect(yield* runYeetCommand(["publish", flag, "--detach", "--plan"]).pipe(Effect.flip)).toMatchObject({
+          _tag: "YeetCommandError",
+          message: "--detach cannot be combined with --plan.",
+        });
+      }
+      for (const flag of ["--fast", "--start-pr-early"]) {
+        const error = yield* runYeetCommand(["publish", flag, "--detach", "--plan"]).pipe(Effect.flip);
+        expect(error._tag).not.toBe("YeetCommandError");
+      }
+    }).pipe(provideScopedLayer(commandTestLayer))
+  );
+
+  it("registers the ready subcommand", () => {
+    expect(subcommandNames).toContain("ready");
+    expect(O.map(findSubcommand("ready"), (command) => command.description)).toEqual(O.some(expect.any(String)));
+  });
+});
+
+it.layer(commandTestLayer, { timeout: "30 seconds" })("push-first publish gate", (it) => {
+  it.effect(
+    "stops on a cheap-gates red before the preflight, the push, or any pull request step",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-push-first-" });
+      const context = RepoRunContext.make({
+        base: "origin/main",
+        branch: "feat/push-first",
+        cwd: root,
+        head: "HEAD",
+        originalArgv: [],
+        packetDir: ".beep/yeet",
+        repoRoot: root,
+        turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+      });
+      const step = (id: string, phase: RepoPlanStep["phase"], source: string) =>
+        RepoPlanStep.make({
+          id,
+          label: id,
+          phase,
+          command: "bun",
+          args: ["--eval", source],
+          cwd: root,
+          scope: "repo",
+          mutability: "readonly",
+          resume: "never",
+        });
+      const gate = step("full:00-cheap-gates", "full", 'console.log("knip: 1 unused export"); process.exitCode = 23');
+      const push = step("publish:01-git-push", "publish", 'console.log("must not push")');
+      const create = step("publish:02-pr-create", "publish", 'console.log("must not open a PR")');
+      const submit = step(MONITOR_READY_SUBMIT_STEP_ID, "monitor", 'console.log("must not submit")');
+      const plan = RepoRunPlan.make({ context, steps: [gate, push, create, submit] });
+      const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>({
+        baseFreshness: O.none(),
+        mergeReady: O.none(),
+        stash: O.none(),
+      });
+
+      const error = yield* runPushFirstPublishPhasesForTesting(
+        plan,
+        defaultYeetRunOptions({ message: "feat(repo-cli): push first", pr: true }),
+        [gate],
+        [push, create],
+        [submit],
+        recorder,
+        extras,
+        false
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain("cheap-gates failed");
+      expect(error.message).toContain("nothing was pushed");
+      expect(A.map(yield* Ref.get(recorder), (entry) => entry.step.id)).toEqual(["full:00-cheap-gates"]);
+    }, provideScopedLayer(commandTestLayer))
+  );
 });
 
 describe("yeet monitor command routing", () => {

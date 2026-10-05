@@ -1,7 +1,11 @@
 import {
+  deriveYeetMergeReady,
+  deriveYeetReadyPendingFlip,
   YeetMergeReady,
   YeetMergeReadyCriteria,
   YeetMergeReadyFromEncoded,
+  YeetStatusArtifact,
+  YeetStatusRemote,
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
@@ -238,4 +242,64 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       assertTrue(Exit.isFailure(exit));
     })
   );
+});
+
+describe("ready-pending-flip derivation (push-first-publish D9)", () => {
+  // A draft as GitHub reports it: merge state DRAFT, everything else green, and
+  // a closeout bound to the current head.
+  const draftRemote = (
+    overrides: Partial<{
+      readonly failingRequiredCheckCount: number;
+      readonly isDraft: boolean;
+      readonly mergeStateStatus: string;
+      readonly mergeable: string;
+      readonly unresolvedReviewThreadCount: number;
+    }> = {}
+  ) =>
+    YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR #42 OPEN",
+      state: "OPEN",
+      number: 42,
+      headSha: O.some("abc123"),
+      isDraft: true,
+      mergeable: "MERGEABLE",
+      mergeStateStatus: "DRAFT",
+      requiredCheckCount: 3,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      unresolvedReviewThreadCount: 0,
+      ...overrides,
+    });
+  const boundCloseout = YeetStatusArtifact.make({
+    detail: "closed",
+    issueCount: 0,
+    path: "pr-closeout.json",
+    state: "present",
+    reviewedHeadSha: O.some("abc123"),
+  });
+  const pendingFlip = (remote: YeetStatusRemote): boolean =>
+    O.exists(deriveYeetMergeReady(boundCloseout, remote), (ready) => deriveYeetReadyPendingFlip(remote, ready));
+
+  it("holds when the draft flag is the only blocker", () => {
+    const remote = draftRemote();
+    assertSome(
+      O.map(deriveYeetMergeReady(boundCloseout, remote), (ready) => ready.failing),
+      O.some("not-draft")
+    );
+    assertTrue(pendingFlip(remote));
+  });
+
+  it("does not hold when any other criterion fails", () => {
+    assertFalse(pendingFlip(draftRemote({ unresolvedReviewThreadCount: 1 })));
+    assertFalse(pendingFlip(draftRemote({ failingRequiredCheckCount: 1 })));
+    assertFalse(pendingFlip(draftRemote({ mergeable: "CONFLICTING" })));
+    assertFalse(pendingFlip(draftRemote({ mergeStateStatus: "BLOCKED" })));
+  });
+
+  it("does not hold for a ready pull request, ready or not", () => {
+    assertFalse(pendingFlip(draftRemote({ isDraft: false, mergeStateStatus: "CLEAN" })));
+    assertFalse(pendingFlip(draftRemote({ isDraft: false, mergeStateStatus: "CLEAN", failingRequiredCheckCount: 1 })));
+  });
 });

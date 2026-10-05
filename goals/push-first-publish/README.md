@@ -32,12 +32,12 @@ carries the ten locked decisions.
 
 ## Current Phase
 
-P0 Research complete (2026-10-05 grill-with-docs session). P1 Implement not
-started.
+P0 Research and P1 Implement complete (2026-10-05). P2 Doctrine not
+started; see `history/p1-handoff.md`.
 
 ## Latest Evidence
 
-Packet authored. No code changed yet.
+P1 landed on the lane (2026-10-05): 315 targeted tests green, test-tsgo green; package-verify carries one inherited red (`history/p1-handoff.md`).
 
 ## Notes
 

@@ -51,7 +51,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -85,5 +85,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-10-05 from a grill-with-docs session. Decisions D1-D10 in SPEC.md are locked. P0 complete; P1 not started."
+  "statusNote": "P0 and P1 complete 2026-10-05 (code + tests on the lane; history/p1-handoff.md). P2 doctrine next."
 }

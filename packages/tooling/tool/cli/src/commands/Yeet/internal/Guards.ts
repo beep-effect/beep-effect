@@ -29,14 +29,6 @@ type OptionGuardRule = {
 
 const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
   {
-    rejects: (options) => options.fast && options.mode !== "publish",
-    message: "yeet --fast is only valid for publish.",
-  },
-  {
-    rejects: (options) => options.fast && !options.monitor,
-    message: "yeet publish --fast requires --monitor so hosted PR checks remain explicit.",
-  },
-  {
     rejects: (options) => options.merged && options.mode !== "verify",
     message:
       "yeet --merged is only valid for verify. Publish proves the commit it is about to push, which is the tree the operator owns; --merged proves a tree that exists only until the merge happens.",
@@ -48,30 +40,25 @@ const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
   },
   {
     rejects: (options) => options.ciParity && options.mode !== "verify",
-    message: "yeet --ci-parity is only valid for verify; ordinary publish runs CI parity automatically.",
+    message: "yeet --ci-parity is only valid for verify; publish runs CI parity only under --prove-first.",
   },
   {
     rejects: (options) => options.ciParity && (options.tier !== "full" || options.merged),
     message: "yeet verify --ci-parity requires the full tier and cannot be combined with --merged.",
   },
   {
-    rejects: (options) => options.startPrEarly && options.mode !== "publish",
-    message: "yeet --start-pr-early is only valid for publish.",
+    rejects: (options) => options.proveFirst && options.mode !== "publish",
+    message: "yeet --prove-first is only valid for publish.",
   },
   {
-    rejects: (options) => options.startPrEarly && !options.monitor,
-    message: "yeet publish --start-pr-early requires --monitor so hosted PR checks are watched while local proof runs.",
-  },
-  {
-    rejects: (options) =>
-      options.startPrEarly &&
-      (options.fast || options.pushOnly || options.reuseVerified || options.amend || options.noEdit),
+    rejects: (options) => options.proveFirst && options.pushOnly,
     message:
-      "yeet publish --start-pr-early cannot be combined with --fast, --push-only, --reuse-verified, --amend, or --no-edit.",
+      "yeet publish --prove-first cannot be combined with --push-only; --push-only pushes an already-verified commit without proving it again.",
   },
   {
     rejects: (options) => options.mode === "publish" && options.tier !== "full",
-    message: "yeet publish always uses the full local proof. Use `yeet verify --tier review-fix` for review loops.",
+    message:
+      "yeet publish picks its own proof (cheap-gates before push, or the full proof under --prove-first); --tier applies to verify only. Use `yeet verify --tier review-fix` for review loops.",
   },
   {
     rejects: (options) => options.noEdit && !options.amend,
@@ -86,8 +73,8 @@ const optionGuardRules: ReadonlyArray<OptionGuardRule> = [
     message: "yeet publish --push-only requires --reuse-verified.",
   },
   {
-    rejects: (options) => options.pushOnly && (options.amend || options.noEdit || options.fast),
-    message: "yeet publish --push-only cannot be combined with --amend, --no-edit, or --fast.",
+    rejects: (options) => options.pushOnly && (options.amend || options.noEdit),
+    message: "yeet publish --push-only cannot be combined with --amend or --no-edit.",
   },
   {
     rejects: (options) => options.pushOnly && O.isSome(optionFromNonEmpty(options.message)),
@@ -138,26 +125,6 @@ const validateOptionGuards = (options: YeetRunOptions): Effect.Effect<void, Yeet
  */
 export const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
   options.monitor || options.mode === "monitor" || options.mode === "closeout";
-
-/**
- * Require explicit PR creation consent before repository hydration can perform
- * remote base reads for start-pr-early publish.
- *
- * @param options - Runtime Yeet options after CLI defaults are applied.
- * @returns A successful Effect unless start-pr-early omits `--pr`.
- * @category guards
- * @since 0.0.0
- */
-export const validateStartPrEarlyPrGuard = (options: YeetRunOptions): Effect.Effect<void, YeetCommandError> =>
-  options.startPrEarly && !options.pr
-    ? Effect.fail(
-        YeetCommandError.make({
-          message:
-            "yeet publish --start-pr-early requires --pr so a PR-less branch creates its pull request before monitoring. Add `--pr` and retry.",
-          exitCode: 1,
-        })
-      )
-    : Effect.void;
 
 /**
  * Reject monitor-like Yeet flows on branches that cannot have a PR head.
@@ -238,7 +205,6 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   context: RepoRunContext,
   options: YeetRunOptions
 ): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  yield* validateStartPrEarlyPrGuard(options);
   yield* validateOptionGuards(options);
 
   if (!shouldMonitorChecks(options)) {

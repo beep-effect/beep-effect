@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { Console, Effect, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -12,9 +13,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
 import { RepoStepRunResult, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { HEAVY_ADMISSION_LABEL, isHeavyDocsOnlyPath } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
-import { runGitOutput } from "./GitExec.ts";
+import { runGitOutput, runGitPathList } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   ensureProvenanceFooter,
@@ -31,8 +33,10 @@ import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/in
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
-const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state"] as const;
-const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state";
+const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
+
+const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url"] as const;
+const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 
 const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError => {
@@ -209,10 +213,38 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   );
   const proofSection = Str.isNonEmpty(laneSummary)
     ? laneSummary
-    : "- full local proof still running (start-pr-early); see the verdict artifact for final lane results";
+    : "- no local proof lane ran before the push; hosted CI is the authoritative proof";
   const runId = yield* runIdForContext(context);
   return `${Str.trim(commitLog)}\n\n## Local proof\n\n${proofSection}\n\nVerdict: .beep/yeet/runs/${runId}/verdict.json\n`;
 });
+
+/**
+ * The pull request a publish ended up with: the one it created, or the open
+ * one it found for the branch.
+ *
+ * **Example** (Describe a created draft)
+ *
+ * ```ts
+ * import { YeetEnsuredPullRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const pullRequest = YeetEnsuredPullRequest.make({ number: 42, url: O.some("https://github.com/o/r/pull/42"), created: true })
+ * console.log(pullRequest.created) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetEnsuredPullRequest extends S.Class<YeetEnsuredPullRequest>($I`YeetEnsuredPullRequest`)(
+  {
+    number: S.Finite,
+    url: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    created: S.Boolean,
+  },
+  $I.annote("YeetEnsuredPullRequest", {
+    description: "The pull request a publish created or found open for its branch.",
+  })
+) {}
 
 interface EnsurePullRequestDependencies {
   readonly capture?: typeof runRepoCommandCapture;
@@ -368,8 +400,8 @@ export const recordPrProvenanceStampLane = Effect.fn("Yeet.recordPrProvenanceSta
  * @param prStep - Optional planned PR creation lane for recorder metadata.
  * @param stampStep - Optional planned provenance-stamp lane for recorder metadata.
  * @param dependencies - Injectable GitHub runners and registry for deterministic tests.
- * @returns An Effect that completes after an existing PR is found or a new PR
- * is created.
+ * @returns The open pull request the branch now has, and whether this call
+ * created it. A create step whose args carry `--draft` opens a draft.
  * @category workflows
  * @since 0.0.0
  */
@@ -380,7 +412,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   stampStep: O.Option<RepoPlanStep> = O.none(),
   dependencies: EnsurePullRequestDependencies = {}
 ): Effect.fn.Return<
-  void,
+  YeetEnsuredPullRequest,
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
@@ -411,15 +443,20 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
           message: `[yeet] provenance footer stamp skipped for PR #${existing.value.number}: session recording was unavailable`,
         });
     yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(existing.value.number), outcome);
-    return;
+    return YeetEnsuredPullRequest.make({
+      number: existing.value.number,
+      url: O.fromUndefinedOr(existing.value.url),
+      created: false,
+    });
   }
 
   const title = yield* runGitOutput(context.repoRoot, ["log", "-1", "--pretty=%s"]).pipe(Effect.map(Str.trim));
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
   yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
+  const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
   const result = yield* capture(
     "gh",
-    ["pr", "create", "--title", title, "--body-file", bodyPath],
+    ["pr", "create", ...(draft ? ["--draft"] : []), "--title", title, "--body-file", bodyPath],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
   if (result.exitCode !== 0) {
@@ -429,7 +466,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
       exitCode: result.exitCode,
     });
   }
-  yield* Console.log(`[yeet] --pr: created pull request -> ${Str.trim(result.output)}`);
+  yield* Console.log(`[yeet] --pr: created ${draft ? "draft " : ""}pull request -> ${Str.trim(result.output)}`);
   yield* recordPrCreateLane(recorder, prStep, Str.trim(result.output));
   const created = yield* (dependencies.view ?? runGhPullRequestView)(context);
   const recording = yield* recordCurrentPrSession(
@@ -446,6 +483,122 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
         message: `[yeet] provenance footer stamp skipped for PR #${created.number}: session recording was unavailable`,
       });
   yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(created.number), outcome);
+  return YeetEnsuredPullRequest.make({
+    number: created.number,
+    url: O.orElse(O.fromUndefinedOr(created.url), () => O.liftPredicate(Str.trim(result.output), Str.isNonEmpty)),
+    created: true,
+  });
+});
+
+interface HeavyAdmissionLabelDependencies {
+  readonly capture?: typeof runRepoCommandCapture;
+  readonly changedPaths?: (
+    context: RepoRunContext
+  ) => Effect.Effect<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+}
+
+const recordPrLabelLane = (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  labelStep: RepoPlanStep,
+  status: "passed" | "failed" | "skipped",
+  output: string
+) =>
+  Ref.update(
+    recorder,
+    A.append(
+      YeetExecutedStep.make({
+        result: RepoStepRunResult.make({
+          stepId: labelStep.id,
+          commandText: `gh pr edit <number> --add-label ${HEAVY_ADMISSION_LABEL}`,
+          exitCode: status === "failed" ? 1 : 0,
+          output,
+        }),
+        status,
+        step: labelStep,
+      })
+    )
+  );
+
+const branchChangedPaths = (context: RepoRunContext) =>
+  runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${context.base}...HEAD`]);
+
+/**
+ * Apply the heavy-admission label to the draft pull request a publish just
+ * created.
+ *
+ * **Details**
+ *
+ * Push-first publish opens the pull request as a draft and admits the heavy
+ * matrix at creation (push-first-publish D4), so the hosted proof starts with
+ * the first push instead of waiting for someone to add the label. A diff whose
+ * every path is docs-only skips the label: the heavy matrix already treats it as
+ * satisfied. An existing pull request keeps the labels it has. A failed edit is
+ * recorded and warned about, never fatal: the branch is already pushed, and
+ * `monitor --until-ready` names the same edit while the heavy matrix holds.
+ *
+ * **Example** (Skip without a planned label step)
+ *
+ * ```ts
+ * import { applyHeavyAdmissionLabel, RepoRunContext, YeetEnsuredPullRequest } from "@beep/repo-cli/test/Yeet"
+ * import { Effect, Ref } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main", branch: "feature/x", cwd: ".", head: "HEAD", originalArgv: [],
+ *   packetDir: ".beep/yeet", repoRoot: ".", turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const program = Effect.gen(function* () {
+ *   const recorder = yield* Ref.make([])
+ *   yield* applyHeavyAdmissionLabel(context, recorder, O.none(), YeetEnsuredPullRequest.make({ number: 1, created: true }))
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param context - Repo context whose branch diff decides the docs-only skip.
+ * @param recorder - Execution recorder updated with the label lane.
+ * @param labelStep - Planned label step; `None` skips the edit entirely.
+ * @param pullRequest - The pull request the publish created or found.
+ * @param dependencies - Injectable GitHub runner and changed-path reader for tests.
+ * @returns An Effect that completes after the label lane is recorded.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  labelStep: O.Option<RepoPlanStep>,
+  pullRequest: YeetEnsuredPullRequest,
+  dependencies: HeavyAdmissionLabelDependencies = {}
+): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  if (O.isNone(labelStep)) return;
+  if (!pullRequest.created) {
+    yield* recordPrLabelLane(
+      recorder,
+      labelStep.value,
+      "skipped",
+      `skipped: pull request #${pullRequest.number} already existed and keeps its labels`
+    );
+    return;
+  }
+  const changedPaths = yield* (dependencies.changedPaths ?? branchChangedPaths)(context);
+  if (A.isReadonlyArrayNonEmpty(changedPaths) && A.every(changedPaths, isHeavyDocsOnlyPath)) {
+    yield* Console.log(`[yeet] docs-only diff: ${HEAVY_ADMISSION_LABEL} not applied to PR #${pullRequest.number}`);
+    yield* recordPrLabelLane(recorder, labelStep.value, "skipped", "skipped: docs-only diff needs no heavy matrix");
+    return;
+  }
+  const args = ["pr", "edit", `${pullRequest.number}`, "--add-label", HEAVY_ADMISSION_LABEL];
+  const result = yield* (dependencies.capture ?? runRepoCommandCapture)("gh", args, context.repoRoot).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to run gh pr edit --add-label."))
+  );
+  if (result.exitCode !== 0) {
+    yield* Console.error(
+      `[yeet] warning: could not apply ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}; run: gh ${A.join(args, " ")}\n${result.output}`
+    );
+    yield* recordPrLabelLane(recorder, labelStep.value, "failed", result.output);
+    return;
+  }
+  yield* Console.log(`[yeet] applied ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}`);
+  yield* recordPrLabelLane(recorder, labelStep.value, "passed", Str.trim(result.output));
 });
 
 /**
@@ -485,7 +638,7 @@ export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")
   if (pullRequest.state !== "OPEN") {
     return yield* YeetCommandError.make({
       message: `yeet monitor requires an open pull request; current branch PR #${pullRequest.number} is ${pullRequest.state}.`,
-      command: "gh pr view --json number,headRefName,state",
+      command: ghPullRequestViewCommand,
       exitCode: 1,
     });
   }
@@ -493,7 +646,7 @@ export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")
   if (pullRequest.headRefName !== context.branch) {
     return yield* YeetCommandError.make({
       message: `yeet monitor expected PR head "${context.branch}" but gh reported "${pullRequest.headRefName}".`,
-      command: "gh pr view --json number,headRefName,state",
+      command: ghPullRequestViewCommand,
       exitCode: 1,
     });
   }

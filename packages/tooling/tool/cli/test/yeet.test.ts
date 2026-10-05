@@ -748,8 +748,12 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(detailedError.file).toBe(".beep/yeet/status.json");
     });
 
-    it("builds publish as advisory feedback, commit, pre-push proof, then push", () => {
-      const plan = buildYeetRunPlanForTesting({ context, message: O.some("feat(repo-cli): add yeet") });
+    it("builds publish --prove-first as advisory feedback, commit, pre-push proof, then push", () => {
+      const plan = buildYeetRunPlanForTesting({
+        context,
+        message: O.some("feat(repo-cli): add yeet"),
+        proveFirst: true,
+      });
 
       expect(
         pipe(
@@ -1035,12 +1039,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       ]);
     });
 
-    it("builds fast-plus-monitor publish without the local full proof", () => {
+    it("builds the push-first default as cheap-gates, preflight, push, draft PR, label, stamp, then the detached monitor", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
-        fast: true,
         message: O.some("feat(repo-cli): add yeet"),
-        monitor: true,
+        pr: true,
       });
 
       expect(
@@ -1051,10 +1054,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       ).toEqual([
         "fallow-advisory-feedback",
         "commit:git:commit",
+        "full:cheap-gates",
         "publish:head-install-preflight",
         "publish:git:push",
-        "monitor:pr-context",
-        "monitor:pr-checks:watch",
+        "publish:pr-create",
+        "publish:pr-ready-for-heavy-label",
+        "publish:pr-provenance-stamp",
+        "monitor:until-ready:submit",
       ]);
       expect(
         pipe(
@@ -1062,50 +1068,50 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.map((step) => step.label)
         )
       ).not.toContain("full:pre-push");
+      expect(findStep(plan.steps, "publish:pr-create").args).toContain("--draft");
+      expect(findStep(plan.steps, "publish:pr-ready-for-heavy-label").args).toEqual([
+        "pr",
+        "edit",
+        "<number>",
+        "--add-label",
+        "ready-for-heavy",
+      ]);
+      expect(findStep(plan.steps, "monitor:until-ready:submit").args).toEqual([
+        "run",
+        "beep",
+        "yeet",
+        "monitor",
+        "--until-ready",
+        "--detach",
+        "--json",
+      ]);
     });
 
-    it("builds start-pr-early publish as commit, preflight, early push, full proof, then monitor", () => {
+    it("keeps local hooks active on the push-first push and carries no proof-reuse marker", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
-        monitor: true,
-        startPrEarly: true,
+        pr: true,
       });
 
-      expect(
-        pipe(
-          plan.steps,
-          A.map((step) => step.label)
-        )
-      ).toEqual([
-        "fallow-advisory-feedback",
-        "commit:git:commit",
-        "publish:head-install-preflight",
-        "early-publish:git:push",
-        "full:cheap-gates",
-        "full:pre-push",
-        "full:ci-parity",
-        "monitor:pr-context",
-        "monitor:pr-checks:watch",
-      ]);
       expect(
         pipe(
           plan.steps,
           A.map((step) => step.phase),
           A.dedupe
         )
-      ).toEqual(["feedback", "commit", "early-publish", "full", "monitor"]);
+      ).toEqual(["feedback", "commit", "full", "publish", "monitor"]);
 
       const commit = findStep(plan.steps, "commit:git:commit");
-      const earlyPush = findStep(plan.steps, "early-publish:git:push");
+      const push = findStep(plan.steps, "publish:git:push");
 
-      // start-pr-early must keep local pre-commit/pre-push hooks active so secret
-      // scanning and SAST gates cannot be bypassed before the remote publish.
+      // Pushing before the full proof must keep local pre-commit/pre-push hooks
+      // active so secret scanning and SAST gates cannot be bypassed.
       expect(commit.args).toEqual(["commit", "-m", "feat(repo-cli): add yeet"]);
       expect(commit.args).not.toContain("--no-verify");
-      expect(earlyPush.args).toEqual(["push", "-u", "origin", "HEAD"]);
-      expect(earlyPush.args).not.toContain("--no-verify");
-      expect(earlyPush.env).toBeUndefined();
+      expect(push.args).toEqual(["push", "-u", "origin", "HEAD"]);
+      expect(push.args).not.toContain("--no-verify");
+      expect(push.env).toBeUndefined();
     });
 
     it("targets the original PR branch when a recovery worktree supplies a push refspec", () => {
@@ -1114,10 +1120,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           context,
           message: O.some("fix(repo-cli): recover published branch"),
           monitor: true,
-          startPrEarly: true,
         })
       );
-      expect(findStep(plan.steps, "early-publish:git:push").args).toEqual([
+      expect(findStep(plan.steps, "publish:git:push").args).toEqual([
         "push",
         "-u",
         "origin",
@@ -1167,12 +1172,25 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "publish:pr-provenance-stamp",
       ]);
 
-      const earlyWithoutMonitor = buildYeetRunPlanForTesting({
+      const pushFirstWithoutPr = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
-        startPrEarly: true,
       });
-      expect(A.some(earlyWithoutMonitor.steps, (step) => step.phase === "monitor")).toBe(false);
+      expect(A.some(pushFirstWithoutPr.steps, (step) => step.phase === "monitor")).toBe(false);
+      expect(A.some(pushFirstWithoutPr.steps, (step) => Str.startsWith("publish:pr-")(step.label))).toBe(false);
+
+      const pushFirstAttached = buildYeetRunPlanForTesting({
+        context,
+        message: O.some("feat(repo-cli): add yeet"),
+        monitor: true,
+        pr: true,
+      });
+      expect(
+        A.map(
+          A.filter(pushFirstAttached.steps, (step) => step.phase === "monitor"),
+          (step) => step.label
+        )
+      ).toEqual(["monitor:pr-context", "monitor:pr-checks:watch"]);
     });
 
     it("plans proof defaults independently of ambient Yeet variables", () => {
@@ -1289,11 +1307,12 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         })
     );
 
-    it("keeps publish monitor on the full local proof unless fast is explicit", () => {
+    it("keeps the full local proof before the push under --prove-first", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
         monitor: true,
+        proveFirst: true,
       });
 
       expect(
@@ -1614,7 +1633,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
     it("does not enable fingerprint resume until runtime skip execution exists", () => {
       const repairPlan = buildYeetRunPlanForTesting({ context, message: O.none(), mode: "repair" });
-      const publishPlan = buildYeetRunPlanForTesting({ context, message: O.some("feat(repo-cli): add yeet") });
+      const publishPlan = buildYeetRunPlanForTesting({
+        context,
+        message: O.some("feat(repo-cli): add yeet"),
+        proveFirst: true,
+      });
 
       expect(findStep(repairPlan.steps, "feedback:check").resume).toBe("never");
       expect(findStep(publishPlan.steps, "full:pre-push").resume).toBe("never");
@@ -4015,8 +4038,13 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(overlappingBasePathsForTesting([], ["src/c.ts"])).toEqual([]);
     });
 
-    it("plans publish --pr with the create step after the push", () => {
-      const plan = buildYeetRunPlanForTesting({ context, message: O.some("feat(repo-cli): add yeet"), pr: true });
+    it("plans publish --prove-first --pr with the ready create step after the push", () => {
+      const plan = buildYeetRunPlanForTesting({
+        context,
+        message: O.some("feat(repo-cli): add yeet"),
+        pr: true,
+        proveFirst: true,
+      });
       const labels = pipe(
         plan.steps,
         A.map((step) => step.label)
@@ -4035,56 +4063,20 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(findStep(plan.steps, "publish:pr-create").command).toBe("gh");
     });
 
-    it("plans start-pr-early --pr with the create step after the early push", () => {
-      const plan = buildYeetRunPlanForTesting({
-        context,
-        message: O.some("feat(repo-cli): add yeet"),
-        monitor: true,
-        pr: true,
-        startPrEarly: true,
-      });
-      const labels = pipe(
-        plan.steps,
-        A.map((step) => step.label)
-      );
-      expect(labels).toEqual([
-        "fallow-advisory-feedback",
-        "commit:git:commit",
-        "publish:head-install-preflight",
-        "early-publish:git:push",
-        "publish:pr-create",
-        "publish:pr-provenance-stamp",
-        "full:cheap-gates",
-        "full:pre-push",
-        "full:ci-parity",
-        "monitor:pr-context",
-        "monitor:pr-checks:watch",
-      ]);
-    });
-
-    it.effect("requires explicit --pr before start-pr-early can reach commit or push", () =>
+    it.effect("rejects --prove-first with --push-only before any commit or push", () =>
       Effect.gen(function* () {
         const error = yield* validateMonitorGuards(
           context,
-          defaultYeetRunOptions({
-            message: "test(repo-cli): probe early publish",
-            monitor: true,
-            startPrEarly: true,
-          })
+          defaultYeetRunOptions({ proveFirst: true, pushOnly: true, reuseVerified: true })
         ).pipe(Effect.flip);
 
-        expect(error.message).toContain("requires --pr");
-        expect(error.message).toContain("Add `--pr` and retry");
+        expect(error.message).toContain("--prove-first cannot be combined with --push-only");
 
-        yield* validateMonitorGuards(
+        const verifyError = yield* validateMonitorGuards(
           context,
-          defaultYeetRunOptions({
-            message: "test(repo-cli): probe early publish",
-            monitor: true,
-            pr: true,
-            startPrEarly: true,
-          })
-        );
+          defaultYeetRunOptions({ mode: "verify", proveFirst: true })
+        ).pipe(Effect.flip);
+        expect(verifyError.message).toBe("yeet --prove-first is only valid for publish.");
       })
     );
 
@@ -4564,13 +4556,26 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         context,
         forceTurbo: true,
         message: O.some("feat(repo-cli): add yeet"),
+        proveFirst: true,
       });
       const proof = findStep(forced.steps, "full:pre-push");
       expect(proof.env).toMatchObject({ TURBO_FORCE: "true" });
       const advisory = findStep(forced.steps, "fallow-advisory-feedback");
       expect(advisory.env?.TURBO_FORCE).toBeUndefined();
 
-      const unforced = buildYeetRunPlanForTesting({ context, message: O.some("feat(repo-cli): add yeet") });
+      // The push-first default forces its cheap-gates tier the same way.
+      const pushFirst = buildYeetRunPlanForTesting({
+        context,
+        forceTurbo: true,
+        message: O.some("feat(repo-cli): add yeet"),
+      });
+      expect(findStep(pushFirst.steps, "full:cheap-gates").env).toMatchObject({ TURBO_FORCE: "true" });
+
+      const unforced = buildYeetRunPlanForTesting({
+        context,
+        message: O.some("feat(repo-cli): add yeet"),
+        proveFirst: true,
+      });
       expect(findStep(unforced.steps, "full:pre-push").env?.TURBO_FORCE).toBeUndefined();
     });
 

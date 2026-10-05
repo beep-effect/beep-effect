@@ -58,6 +58,23 @@ const $I = $RepoCliId.create("commands/Yeet/internal/MonitorPolicy");
 export const YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS = 30 * 60_000;
 
 /**
+ * The command that flips a draft pull request to ready once only the draft
+ * flag blocks it.
+ *
+ * **Example** (Read the flip command)
+ *
+ * ```ts
+ * import { YEET_READY_COMMAND } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_READY_COMMAND) // "bun run beep yeet ready"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_READY_COMMAND = "bun run beep yeet ready" as const;
+
+/**
  * Consecutive failed polls the merge loop tolerates before ending with
  * `poll-error-budget`. A transient GraphQL or `gh pr view` error is retried on
  * the next tick; five in a row is an outage, not a blip.
@@ -81,7 +98,11 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * **Details**
  *
  * `merged` and `closed` are pull-request states. `ready` is the
- * `--until-ready` success terminal. `wave` is the attached `--until-ready`
+ * `--until-ready` success terminal. `ready-pending-flip` is its draft twin: the
+ * pull request is still a draft and the draft flag is the only thing between it
+ * and readiness, so the loop ends with exit 0 and names
+ * `bun run beep yeet ready` instead of flipping the draft itself
+ * (push-first-publish D9). `wave` is the attached `--until-ready`
  * hand-back: a new P0/P1 inbox wave landed on the pull request and the loop
  * stops so the operator can fix and re-run it. `settle-timeout` and
  * `poll-error-budget` are the failure terminals; which terminals a policy
@@ -95,7 +116,7 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * ```ts
  * import { YeetMonitorTerminalState } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetMonitorTerminalState.literals.length) // 6
+ * console.log(YeetMonitorTerminalState.literals.length) // 7
  * ```
  *
  * @category models
@@ -105,6 +126,7 @@ export const YeetMonitorTerminalState = LiteralKit([
   "merged",
   "closed",
   "ready",
+  "ready-pending-flip",
   "wave",
   "settle-timeout",
   "poll-error-budget",
@@ -260,6 +282,7 @@ export const yeetMonitorPolicyTerminals = (policy: YeetMonitorLoopPolicy): HashS
     Match.discriminator("kind")("until-ready", () =>
       HashSet.make<ReadonlyArray<YeetMonitorTerminalState>>(
         "ready",
+        "ready-pending-flip",
         "merged",
         "closed",
         "settle-timeout",
@@ -393,6 +416,13 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
         terminal: "ready",
         exitCode: 0,
         summary: "merge-ready: yes; every hard criterion is green; hand the pull request to the operator",
+      })
+    ),
+    Match.when("ready-pending-flip", () =>
+      YeetMonitorExit.make({
+        terminal: "ready-pending-flip",
+        exitCode: 0,
+        summary: `ready-pending-flip: the draft flag is the only blocker; flip it with ${YEET_READY_COMMAND}`,
       })
     ),
     Match.when("wave", () =>
