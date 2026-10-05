@@ -655,10 +655,10 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
     expect(isLiveReadyMonitorJob(otherPr, target)).toBe(false);
     expect(isLiveReadyMonitorJob(verifyJob, target)).toBe(false);
     expect(isLiveReadyMonitorJob(ProofJobRecord.make({ ...running, phase: "terminated" }), target)).toBe(false);
-    // A cancel in flight still reads `running` until the unit stops; reusing it would leave no poller.
+    // A cancel request means the job is about to stop polling: never reuse it.
     expect(
       isLiveReadyMonitorJob(
-        ProofJobRecord.make({ ...running, cancelRequestedAt: O.some("2026-10-05T10:05:00.000Z") }),
+        ProofJobRecord.make({ ...running, cancelRequestedAt: O.some("2026-10-05T12:00:00.000Z") }),
         target
       )
     ).toBe(false);
@@ -715,7 +715,7 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-reuse-" });
       const marker = `${root}/submitted.txt`;
-      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync(${JSON.stringify(marker)}, "x")`);
+      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync("${marker}", "x")`);
       const listed = yield* Ref.make(0);
       const result = yield* finishPublishWithPullRequestForTesting(
         fixture.plan,
@@ -743,37 +743,44 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
   );
 
   it.effect(
+    "submits a new monitor when the recorded running monitor's runner process is gone",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-dead-runner-" });
+      const marker = `${root}/submitted.txt`;
+      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync("${marker}", "x")`);
+      const probed = yield* Ref.make<ReadonlyArray<string>>([]);
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): second push", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          listJobs: () => Effect.succeed([finished, running]),
+          runnerStatus: (record) =>
+            Ref.update(probed, (ids) => [...ids, record.jobId]).pipe(Effect.as("dead" as const)),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      expect(yield* Ref.get(probed)).toEqual([RUNNING_ID]);
+      // The stale record is not handed back: the submit step really ran.
+      expect(yield* fs.exists(marker)).toBe(true);
+    })
+  );
+
+  it.effect(
     "submits a new monitor when the registry has no live monitor for the pull request",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-submit-" });
       // The child's JSON record line, as `monitor --until-ready --detach --json` prints it.
-      const line = JSON.stringify({
-        schemaVersion: "yeet-proof-job/v1",
-        jobId: SUBMITTED_ID,
-        phase: "submitted",
-        submittedAt: "2026-10-05T11:00:00.000Z",
-        request: {
-          mode: "monitor",
-          argv: ["monitor", "--until-ready", "--json"],
-          checkout: "/repo",
-          branch: "feat/push-first",
-          base: "origin/main",
-          head: "0123456789abcdef0123456789abcdef01234567",
-          forwardedEnvNames: [],
-        },
-        submitter: { pid: 4242, cwd: "/repo" },
-        unit: {
-          unitName: `beep-proof-${SUBMITTED_ID}.service`,
-          slice: "agent-runs.slice",
-          description: "beep-yeet-job",
-          logPath: `/repo/.beep/yeet/jobs/${SUBMITTED_ID}.log`,
-          execStart: ["/opt/bun"],
-          execStopPost: ["/opt/bun"],
-        },
-        returnedWaveRowIds: [],
-      });
-      const fixture = yield* tailFixture(root, `console.log(${JSON.stringify(line)})`);
+      // Written as JSON text: the fixture script is JavaScript, so the record is
+      // a literal the child serializes itself.
+      const record = `{"schemaVersion":"yeet-proof-job/v1","jobId":"${SUBMITTED_ID}","phase":"submitted","submittedAt":"2026-10-05T11:00:00.000Z","request":{"mode":"monitor","argv":["monitor","--until-ready","--json"],"checkout":"/repo","branch":"feat/push-first","base":"origin/main","head":"0123456789abcdef0123456789abcdef01234567","forwardedEnvNames":[]},"submitter":{"pid":4242,"cwd":"/repo"},"unit":{"unitName":"beep-proof-${SUBMITTED_ID}.service","slice":"agent-runs.slice","description":"beep-yeet-job","logPath":"/repo/.beep/yeet/jobs/${SUBMITTED_ID}.log","execStart":["/opt/bun"],"execStopPost":["/opt/bun"]},"returnedWaveRowIds":[]}`;
+      const fixture = yield* tailFixture(root, `console.log(JSON.stringify(${record}))`);
       const result = yield* finishPublishWithPullRequestForTesting(
         fixture.plan,
         defaultYeetRunOptions({ message: "fix(repo-cli): first push", pr: true }),
@@ -805,8 +812,8 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       const submitSource = [
         'const fs = require("node:fs");',
         "Bun.sleepSync(400);",
-        `fs.appendFileSync(${JSON.stringify(submits)}, "submitted\\n");`,
-        `fs.writeFileSync(${JSON.stringify(registered)}, "1");`,
+        `fs.appendFileSync("${submits}", "submitted\\n");`,
+        `fs.writeFileSync("${registered}", "1");`,
       ].join(" ");
       const first = yield* tailFixture(root, submitSource);
       const second = yield* tailFixture(root, submitSource);

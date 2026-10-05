@@ -43,6 +43,7 @@ import {
   sortedUniquePaths,
   withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
+import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -151,6 +152,7 @@ import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.t
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/process";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
+import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
@@ -890,7 +892,49 @@ export interface PublishTailDependencies {
     YeetCommandError,
     Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   >;
+  readonly runnerStatus?: (
+    record: ProofJobRecord
+  ) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
 }
+
+// A job record can say `running` after its runner died without a finalizer
+// (the unit stays loaded, the record is never stamped). The record's runner
+// pid and process-start identity are the liveness evidence; a `submitted` job
+// has no runner yet because its unit is still starting.
+const readyMonitorRunnerStatus = (
+  record: ProofJobRecord
+): Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem> =>
+  O.match(record.runner, {
+    onNone: () => Effect.succeed<ProcessIdentityStatus>("alive"),
+    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
+  });
+
+// Newest live monitor whose runner is not provably dead; a dead one is named
+// and skipped so the publish submits a replacement instead of handing back a
+// job that no longer polls.
+const pickReusableReadyMonitor = (
+  records: ReadonlyArray<ProofJobRecord>,
+  target: { readonly branch: string; readonly prNumber: number },
+  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
+): Effect.Effect<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> =>
+  O.match(findLiveReadyMonitorJob(records, target), {
+    onNone: () => Effect.succeedNone,
+    onSome: (candidate) =>
+      Effect.flatMap(runnerStatus(candidate), (status) =>
+        status !== "dead"
+          ? Effect.succeedSome(candidate)
+          : Effect.andThen(
+              Console.error(
+                `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
+              ),
+              pickReusableReadyMonitor(
+                A.filter(records, (record) => record.jobId !== candidate.jobId),
+                target,
+                runnerStatus
+              )
+            )
+      ),
+  });
 
 // The checkout's own job registry: the same records `yeet job list` prints.
 const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* (context: RepoRunContext) {
@@ -903,14 +947,15 @@ const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* 
 const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(function* (
   context: RepoRunContext,
   prNumber: number,
-  listJobs: NonNullable<PublishTailDependencies["listJobs"]>
+  listJobs: NonNullable<PublishTailDependencies["listJobs"]>,
+  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
 ): Effect.fn.Return<
   O.Option<ProofJobRecord>,
   never,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* listJobs(context).pipe(
-    Effect.map((records) => findLiveReadyMonitorJob(records, { branch: context.branch, prNumber })),
+    Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
     Effect.catch((error) =>
       Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
         Effect.as(O.none<ProofJobRecord>())
@@ -967,7 +1012,8 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
       const running = yield* findRunningReadyMonitor(
         plan.context,
         pullRequest.number,
-        dependencies.listJobs ?? listCheckoutProofJobs
+        dependencies.listJobs ?? listCheckoutProofJobs,
+        dependencies.runnerStatus ?? readyMonitorRunnerStatus
       );
       const job = O.isSome(running)
         ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
@@ -991,6 +1037,14 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
 /**
  * Run the publish pull-request tail — pull request, heavy-admission label, and
  * the readiness monitor reuse-or-submit — in isolation.
+ *
+ * **Example** (Reference the tail for a wiring test)
+ *
+ * ```ts
+ * import { finishPublishWithPullRequestForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof finishPublishWithPullRequestForTesting) // "function"
+ * ```
  *
  * @category testing
  * @since 0.0.0
