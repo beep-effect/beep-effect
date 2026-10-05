@@ -1,7 +1,10 @@
 # Roadmap
 
-Freshness: 2026-10-02. Re-eval after three weeks under the 2026-09-12 map:
-283 PRs merged since 09-12 and none touched Lane 1; the accelerator
+Freshness: 2026-10-05 (re-eval opened 2026-10-02, refreshed before merge).
+Re-eval after three weeks under the 2026-09-12 map: 287 PRs merged since
+09-12 and none touched a Lane 1 packet (#1387 on 10-02 landed the
+document-intake statechart in `apps/professional-desktop` without a packet
+commit, the only product-facing merge of the period); the accelerator
 [`time-to-certainty`](../goals/time-to-certainty/README.md) paused itself on
 2026-09-28 (ruling 80: C4.2 enforcement waits for a post-merge shadow sample),
 so the expiry clause's first trigger cannot fire from inside the lane; three
@@ -85,10 +88,11 @@ arrive — and it ends anyway, by this re-eval. The accelerator has paid what
 it can without a sample; the three admission windows (weeks of 09-04, 09-13
 and 09-23) were denied with the breach attributed to hosted-queue saturation
 and bounded by a six-branch fan-out cap (repair decision 3, signed
-2026-10-01), which no further machinery packet changes; and 283 PRs in three
-weeks moved nothing product-facing. From here: Lane 1 holds a dated start
-(practice-kg-mcp P6 and P7, no attorney input needed, first session this
-week); Lane 3 keeps one slot (`effect-vitest-canon`) with ci-lane-economics
+2026-10-01), which no further machinery packet changes; and 287 PRs in three
+weeks moved one product-facing change (#1387), none through a packet. From
+here: Lane 1 holds a dated start (practice-kg-mcp P6 and P7, no attorney
+input needed; as of 10-05 no session has opened P6 yet, so it is the first
+thing to happen after this merges); Lane 3 keeps one slot (`effect-vitest-canon`) with ci-lane-economics
 P3 riding for the governor and window 4; no new machinery packet starts a
 lane slot; accelerators that take no slot by charter (cloud-agent-readiness,
 ciops-ontology-pipeline run 4) run in parallel.
@@ -117,7 +121,8 @@ own PR; neither needs Tom and both start now, before P5 closes. P5 closes in
 parallel once Tom's calls and the AC-2 provenance fix land. P8 handoff waits
 for all three: the bundle is not installed on Tom's machine until the P5
 acceptance gauntlet passes. No
-commit has touched a Lane 1 packet since the 09-12 re-eval;
+commit has touched a Lane 1 packet since the 09-12 re-eval (still true on
+2026-10-05; the practice-kg-mcp packet was last touched 2026-08-30);
 `legal-document-intake` now carries `blockedBy: practice-kg-mcp` so the
 doctor reads its wait as a dependency, not neglect. The cut itself is
 unchanged — the first-user
@@ -229,8 +234,9 @@ merged) and is paused on ruling 80 (parked table). The slot passes
 (2026-10-02) to:
 
 - [`effect-vitest-canon`](../goals/effect-vitest-canon/README.md) (8/11; P1
-  inventory and P2 remediation waves in progress, PR #1312 merged, thirty
-  commits since 09-22) — the slot holder. It closes on the final empty
+  inventory and P2 remediation waves in progress, PR #1312 merged, 33
+  commits since 09-22, the last on 10-05 via #1406 and #1408) — the slot
+  holder. It closes on the final empty
   baseline, the complete inventory and hosted proof.
 
 Riding in the slot, not holding it:
@@ -241,7 +247,9 @@ Riding in the slot, not holding it:
   23m58s under the 16-context population ratified 2026-10-01). Repair
   decision 3 (2026-10-01): bound the load with a six-branch fan-out governor
   on the agent side; window 4 is censused with a concurrency column so a
-  pass or breach attributes to the cap, the governor or capacity. Its close
+  pass or breach attributes to the cap, the governor or capacity. The
+  governor PR is not open as of 2026-10-05, so window 4 has not started; it
+  is the next ci-lane-economics move. Its close
   still fires [`ci-fleet-endgame`](../goals/ci-fleet-endgame/README.md) P6.
 - [`agent-pool-doctrine`](../goals/agent-pool-doctrine/README.md) (1/5,
   graduated 2026-09-16; #1162 bound the pool order and admitted the Cursor
@@ -268,8 +276,8 @@ Riding in the slot, not holding it:
    [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
    (2/9) and
    [`nightly-research-routine`](../goals/nightly-research-routine/README.md)
-   (1/5; the routine itself runs — packets 09-22, 09-23, 09-25, 09-27, 09-30
-   and 10-02 — P1 to P4 are the fillers) — while the slot holder waits on
+   (1/5; the routine itself runs — packets 09-22, 09-23, 09-25, 09-27, 09-30,
+   10-02 and 10-03 — P1 to P4 are the fillers) — while the slot holder waits on
    review.
 4. [`ontology-sidecar-stateless-identity`](../goals/ontology-sidecar-stateless-identity/README.md)
    (1/5, graduated 2026-09-22) — its gate,
@@ -431,7 +439,8 @@ as a pair, also behind `law-doc-structure-oa-slice`; and
 [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
 and [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md),
 which carry their own status notes and resume when a Lane 1 or Lane 2 slot
-pulls them. None of these starts while machinery-first holds.
+pulls them. Machinery-first no longer holds them back; none starts until a
+Lane 1 or Lane 2 slot pulls it.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:
@@ -479,7 +488,11 @@ rows and now have them — `agent-pool-doctrine` and `agent-pool-picker`
 `effect-reference-workspace`, `turborepo-task-qualification` and both
 `codex-security-findings` packets; `tsgo-045-effect-idiom-sweep` was
 superseded by the single-PR tsgo ratchet. The rule held for none of them
-either. The gold-intake cohort's
+either. **Refreshed 2026-10-05** before this re-eval merged: #1405 moved
+`boolean-creep` to `reference` on 10-02; nothing else graduated, closed,
+paused or was superseded between 10-02 and 10-05 (13 PRs merged, 54 active,
+15 paused, 123 completed-retained, 4 reference, 1 superseded). The
+gold-intake cohort's
 pre-drafted DECISIONS files are the shaping queue;
 `bun run beep explore atlas` renders the local status board from D3 state.
 
