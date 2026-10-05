@@ -43,6 +43,7 @@ import {
   RecordEdgeFact,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
+import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
@@ -58,19 +59,24 @@ import {
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   productEntityFixtureInput,
+  provideScopedLayer,
   TestDatabaseInfo,
+  TestDatabaseInfoShape,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { eq } from "drizzle-orm";
-import { Effect, flow, Layer, pipe } from "effect";
+import { DateTime, Effect, FileSystem, flow, Layer, Path, pipe } from "effect";
 import * as Crypto from "effect/Crypto";
 import * as Eq from "effect/Equal";
 import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
@@ -439,6 +445,123 @@ const listQuery = (disposition: "all" | "open" | "rejected" | "superseded", know
     orgId: 1,
     validAt: instant(1_500),
   });
+
+// Restart boundary: one persistent PGlite directory opened by two independent scopes. The
+// first scope migrates, submits, and reviews through the production repository; PGlite shuts
+// down with that scope. The second scope reopens the same directory without migrating and
+// re-asks the identical two-axis questions. `TestDatabaseInfo` is supplied by hand because the
+// in-process test driver only knows ephemeral databases.
+const RestartTempDirServices = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+
+const makePersistentContradictionLayer = (dataDir: string, tempDir: string) =>
+  EpistemicServerDrizzleLive.pipe(
+    Layer.provideMerge(makeDrizzleLayer()),
+    Layer.provideMerge(Pglite.makeLayer({ dataDir, extensions: { btree_gist }, relaxedDurability: true })),
+    Layer.provideMerge(
+      Layer.succeed(
+        TestDatabaseInfo,
+        TestDatabaseInfoShape.make({
+          connectionUri: O.none(),
+          containerId: O.none(),
+          database: O.none(),
+          databasePath: O.some(dataDir),
+          driver: "pglite-inprocess",
+          host: O.none(),
+          port: O.none(),
+          schema: O.none(),
+          tempDir: O.some(tempDir),
+          username: O.none(),
+        })
+      )
+    ),
+    Layer.provideMerge(NodeCrypto.layer)
+  );
+
+interface RestartCandidateIds {
+  readonly open: ContradictionIdentity.ContradictionCandidateId;
+  readonly rejected: ContradictionIdentity.ContradictionCandidateId;
+  readonly superseded: ContradictionIdentity.ContradictionCandidateId;
+}
+
+const dispositionStatusOf = (disposition: O.Option<{ readonly decision: { readonly status: string } }>) =>
+  pipe(
+    disposition,
+    O.map((value) => value.decision.status),
+    O.getOrNull
+  );
+
+const expiredAtMillis = (expiredAt: O.Option<DateTime.DateTime>) =>
+  pipe(expiredAt, O.map(DateTime.toEpochMillis), O.getOrNull);
+
+const byCandidateId = Order.mapInput(Order.Number, (item: { readonly id: number }) => item.id);
+
+/**
+ * Every answer the restart proof compares, projected to plain data so the reopened scope's
+ * replay can be checked with structural equality.
+ */
+const restartSnapshot = Effect.fnUntraced(function* (
+  ids: RestartCandidateIds,
+  losingBeliefId: EdgeVersion["id"],
+  identityA: typeof LogicalEdgeIdentity.Encoded
+) {
+  const repository = yield* ContradictionTriageRepository;
+  const edges = yield* EdgeAuthorityRepository;
+  const page = (disposition: "all" | "open" | "rejected" | "superseded", knownAt: number) =>
+    Effect.map(repository.list(listQuery(disposition, knownAt)), (result) => ({
+      items: pipe(
+        result.items,
+        A.map((item) => ({ id: item.candidate.id, status: dispositionStatusOf(item.disposition) })),
+        A.sort(byCandidateId)
+      ),
+      total: result.total,
+    }));
+  const detail = (candidateId: ContradictionIdentity.ContradictionCandidateId, knownAt: number) =>
+    Effect.map(
+      repository.getExpanded(
+        GetExpandedContradictionCandidate.make({
+          candidateId,
+          knownAt: instant(knownAt),
+          orgId: SharedIdentity.OrganizationId.make(1),
+          sourceScopeRef: "workspace:1",
+          validAt: instant(1_500),
+        })
+      ),
+      flow(
+        O.map((expanded) => ({
+          losingExpiredAt: pipe(
+            A.findFirst([expanded.left.belief, expanded.right.belief], (belief) => belief.id === losingBeliefId),
+            O.flatMap((belief) => belief.expiredAt),
+            expiredAtMillis
+          ),
+          rowVersion: expanded.candidate.rowVersion,
+          status: dispositionStatusOf(expanded.disposition),
+        })),
+        O.getOrNull
+      )
+    );
+  const amount = (knownAt: number) =>
+    Effect.map(
+      edges.readAsOf(asOf(identityA, 1_500, knownAt)),
+      flow(
+        O.map((edge) => edge.fact.amount),
+        O.getOrNull
+      )
+    );
+  return yield* Effect.all({
+    allAfter: page("all", 2_500),
+    amountAfter: amount(2_500),
+    amountBefore: amount(1_500),
+    openAfter: page("open", 2_500),
+    openBefore: page("open", 1_500),
+    openDetailAfter: detail(ids.open, 2_500),
+    rejectedAfter: page("rejected", 2_500),
+    rejectedDetailAfter: detail(ids.rejected, 2_500),
+    rejectedDetailBefore: detail(ids.rejected, 1_500),
+    supersededAfter: page("superseded", 2_500),
+    supersededDetailAfter: detail(ids.superseded, 2_500),
+    supersededDetailBefore: detail(ids.superseded, 1_500),
+  });
+});
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("ContradictionTriage repository PGlite integration", () => {});
@@ -1392,6 +1515,90 @@ if (!shouldRunPgliteIntegration) {
           );
         }),
         120_000
+      );
+    });
+
+    it.layer(RestartTempDirServices, { timeout: "5 minutes" })("restart boundary", (it) => {
+      it.effect(
+        "re-queries open and resolved candidates identically through the repository after a reopen",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-epistemic-contradiction-restart-" });
+          const dataDir = path.join(tempDir, "pgdata");
+          const persistent = makePersistentContradictionLayer(dataDir, tempDir);
+
+          const written = yield* Effect.gen(function* () {
+            const repository = yield* ContradictionTriageRepository;
+            const open = yield* repository.submit(yield* makeSubmission(117, yield* seedScenario(117)));
+            const rejected = yield* repository.submit(yield* makeSubmission(118, yield* seedScenario(118)));
+            const supersededSeed = yield* seedScenario(119);
+            const superseded = yield* repository.submit(yield* makeSubmission(119, supersededSeed));
+            const proposal = superseded.candidate.assessment.proposals[0];
+            yield* TestClock.setTime(2_000);
+            yield* repository.review(
+              ReviewContradictionCandidate.make({
+                candidateId: rejected.candidate.id,
+                decision: { decision: "reject", reason: "The passages address different accounting periods." },
+                expectedCandidateVersion: rejected.candidate.rowVersion,
+              }),
+              systemPrincipal,
+              reviewScope(rejected.candidate.orgId)
+            );
+            yield* repository.review(
+              ReviewContradictionCandidate.make({
+                candidateId: superseded.candidate.id,
+                decision: {
+                  decision: "supersedeProposal",
+                  proposalDigest: proposal.proposalDigest,
+                  proposalId: proposal.proposalId,
+                  reason: "Approved against the controlling signed source.",
+                },
+                expectedCandidateVersion: superseded.candidate.rowVersion,
+              }),
+              systemPrincipal,
+              reviewScope(superseded.candidate.orgId)
+            );
+            const ids: RestartCandidateIds = {
+              open: open.candidate.id,
+              rejected: rejected.candidate.id,
+              superseded: superseded.candidate.id,
+            };
+            return {
+              identityA: supersededSeed.identityA,
+              ids,
+              losingBeliefId: supersededSeed.beliefA.id,
+              snapshot: yield* restartSnapshot(ids, supersededSeed.beliefA.id, supersededSeed.identityA),
+            };
+          }).pipe(provideScopedLayer(persistent));
+
+          // The first scope's answers must be the two-axis picture, not an empty database:
+          // every candidate is open before the reviews were known, and each resolution shows
+          // only on its own axis afterwards.
+          const { ids, snapshot } = written;
+          expect(A.map(snapshot.openBefore.items, (item) => item.id)).toStrictEqual(
+            A.sort([ids.open, ids.rejected, ids.superseded], Order.Number)
+          );
+          expect(A.map(snapshot.openBefore.items, (item) => item.status)).toStrictEqual([null, null, null]);
+          expect(snapshot.openAfter.items).toStrictEqual([{ id: ids.open, status: null }]);
+          expect(snapshot.rejectedAfter.items).toStrictEqual([{ id: ids.rejected, status: "rejected" }]);
+          expect(snapshot.supersededAfter.items).toStrictEqual([{ id: ids.superseded, status: "superseded" }]);
+          expect(snapshot.allAfter.total).toBe(3);
+          expect(snapshot.rejectedDetailBefore?.status).toBeNull();
+          expect(snapshot.rejectedDetailAfter?.status).toBe("rejected");
+          expect(snapshot.supersededDetailBefore?.losingExpiredAt).toBeNull();
+          expect(snapshot.supersededDetailAfter?.losingExpiredAt).toBe(2_000);
+          expect(snapshot.amountBefore).toBe("100");
+          expect(snapshot.amountAfter).toBe("125");
+
+          // PGlite has shut down with the first scope; only the directory carries the answers.
+          // Nothing is migrated here — the reopened production repository must replay them.
+          const reopened = yield* restartSnapshot(ids, written.losingBeliefId, written.identityA).pipe(
+            provideScopedLayer(persistent)
+          );
+          expect(reopened).toStrictEqual(snapshot);
+        }),
+        180_000
       );
     });
   });
