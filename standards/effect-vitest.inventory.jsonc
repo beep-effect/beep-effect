@@ -1081,27 +1081,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:26:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts",
-      "line": 26,
-      "endLine": 72,
-      "symbol": "runPromise",
-      "occurrence": "v2:ae2524fd28722c7cff9c9b6fb73e58f2e8bf673fccd85537428f09472b981666",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeProjectFile(\"bun.lock\", \"\"); yield* writeProjectFile( \"goals/demo/ops/manifest.json\", `${encodeJson({ schemaVersion:",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts:116:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
