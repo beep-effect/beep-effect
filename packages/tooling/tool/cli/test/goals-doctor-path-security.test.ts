@@ -12,12 +12,12 @@ const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const absoluteExplorationPath = "/etc/passwd";
 
+const workingDirectoryLayer = Layer.effectDiscard(temporaryWorkingDirectory).pipe(Layer.provide(NodeServices.layer));
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TestConsole.layer,
-  Layer.effectDiscard(temporaryWorkingDirectory).pipe(Layer.provide(NodeServices.layer))
-);
+  TestConsole.layer
+).pipe(Layer.provideMerge(workingDirectoryLayer));
 
 describe("goals doctor provenance path security", () => {
   it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
