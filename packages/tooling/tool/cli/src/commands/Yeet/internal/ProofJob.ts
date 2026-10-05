@@ -1008,6 +1008,122 @@ export const isSettledProofJob = (record: Pick<ProofJobRecord, "phase" | "system
   record.phase === "terminated" || O.isSome(record.systemd);
 
 /**
+ * The pull request a publish is about to monitor, as the coordinates a live
+ * readiness-monitor job is matched against.
+ *
+ * **Example** (Name the pull request a branch publishes to)
+ *
+ * ```ts
+ * import { ReadyMonitorTarget } from "@beep/repo-cli/test/Yeet"
+ *
+ * const target = ReadyMonitorTarget.make({ branch: "feat/x", prNumber: 1427 })
+ * console.log(target.prNumber) // 1427
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReadyMonitorTarget extends S.Class<ReadyMonitorTarget>($I`ReadyMonitorTarget`)(
+  {
+    branch: S.NonEmptyString,
+    prNumber: S.Finite,
+  },
+  $I.annote("ReadyMonitorTarget", {
+    description: "The branch and pull request number a publish would submit a readiness monitor for.",
+  })
+) {}
+
+/**
+ * Recognize a detached `monitor --until-ready` job that is still polling the
+ * given pull request from this checkout.
+ *
+ * **Details**
+ *
+ * A job is live while it is `submitted` or `running`: a `finished` record is a
+ * loop that already ended and only awaits its finalizer, and a settled record
+ * is history. The job follows the target when it bound the same pull request
+ * number, or, before `--until-ready` resolved and bound the pull request, when
+ * it was submitted for the same branch. Publish uses this to reuse the running
+ * monitor instead of submitting a second job that would poll the same pull
+ * request (yeet doctrine: a running monitor keeps polling across fix pushes).
+ *
+ * **Example** (A running monitor bound to the pull request)
+ *
+ * ```ts
+ * import { isLiveReadyMonitorJob, ProofJobRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = ProofJobRequest.make({ mode: "monitor", argv: ["monitor", "--until-ready"], checkout: "/repo", branch: "feat/x", base: "origin/main", head: "0123456789abcdef0123456789abcdef01234567", forwardedEnvNames: [] })
+ * console.log(isLiveReadyMonitorJob({ phase: "running", systemd: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // true
+ * console.log(isLiveReadyMonitorJob({ phase: "finished", systemd: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // false
+ * ```
+ *
+ * @param record - Phase, finalization stamp, replayed request, and bound pull request of the job.
+ * @param target - The branch and pull request the publish would monitor.
+ * @returns Whether the job is already monitoring that pull request. Data-last form takes `target` first.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isLiveReadyMonitorJob: {
+  (target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): (record: LiveReadyMonitorCandidate) => boolean;
+  (record: LiveReadyMonitorCandidate, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): boolean;
+} = dual(
+  2,
+  (record: LiveReadyMonitorCandidate, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): boolean =>
+    !isSettledProofJob(record) &&
+    record.phase !== "finished" &&
+    record.request.mode === "monitor" &&
+    A.contains(record.request.argv, "--until-ready") &&
+    O.match(record.prNumber, {
+      onNone: () => record.request.branch === target.branch,
+      onSome: (prNumber) => prNumber === target.prNumber,
+    })
+);
+
+/**
+ * The job-record fields {@link isLiveReadyMonitorJob} reads.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LiveReadyMonitorCandidate = Pick<ProofJobRecord, "phase" | "systemd" | "request" | "prNumber">;
+
+/**
+ * Pick the readiness monitor already polling a pull request from a job listing.
+ *
+ * **Details**
+ *
+ * `ProofJobLauncher.list` returns newest first, so the first match is the most
+ * recent live monitor; older duplicates stay listed for `yeet job list`.
+ *
+ * **Example** (No live monitor in an empty registry)
+ *
+ * ```ts
+ * import { findLiveReadyMonitorJob } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(findLiveReadyMonitorJob([], { branch: "feat/x", prNumber: 1427 }))) // true
+ * ```
+ *
+ * @param records - The checkout's job records, newest first.
+ * @param target - The branch and pull request the publish would monitor.
+ * @returns The live monitor job, when one exists.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const findLiveReadyMonitorJob: {
+  (
+    target: Pick<ReadyMonitorTarget, "branch" | "prNumber">
+  ): (records: ReadonlyArray<ProofJobRecord>) => O.Option<ProofJobRecord>;
+  (
+    records: ReadonlyArray<ProofJobRecord>,
+    target: Pick<ReadyMonitorTarget, "branch" | "prNumber">
+  ): O.Option<ProofJobRecord>;
+} = dual(2, (records: ReadonlyArray<ProofJobRecord>, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">) =>
+  A.findFirst(records, isLiveReadyMonitorJob(target))
+);
+
+/**
  * Decide whether a settled record still owes its inbox row and journal row.
  * Publication runs after the record lock, so a crash between the stamp and the
  * publish leaves `publishedAt` empty; the next finalize, read, list, or wait

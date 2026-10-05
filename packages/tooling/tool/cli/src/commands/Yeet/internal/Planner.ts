@@ -680,6 +680,11 @@ const monitorSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
  * The step runs the ordinary `monitor --until-ready --detach` submit as a child
  * process, so the job is the same durable unit an operator would submit by
  * hand. Publish reads the job id from the child's JSON record and prints it.
+ * Before running it, publish reads the checkout's job registry (the records
+ * `yeet job list` prints); when a `submitted` or `running` readiness monitor
+ * already follows the pull request, the step is recorded as skipped and that
+ * job's id and `job wait` command are printed instead, because a running
+ * monitor keeps polling across fix pushes.
  *
  * **Example** (Recognize the submit step)
  *

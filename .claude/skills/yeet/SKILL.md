@@ -647,7 +647,10 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    the ten-minute tool-call cap, but not a reboot: re-submit it after one.
    A required red or a base conflict does not end the monitor: it writes inbox
    rows and keeps polling across your fix pushes, so do not re-submit it after
-   a red. `job wait` returns 0 for green (the loop ended `ready`), 2 for a wave
+   a red. A fix `publish` on the same branch reads the job registry and reuses
+   the running monitor (it prints the existing job id and `job wait` command
+   and records the submit step as skipped); it submits a new job only when no
+   `submitted` or `running` monitor follows the PR. `job wait` returns 0 for green (the loop ended `ready`), 2 for a wave
    (new P0 rows or P1 thread and comment rows on this PR, or a required red
    that came back red on a rerun: read the gate line, act on the rows, publish
    any fix, then re-run `bun run beep yeet job wait <jobId>` on the same job),

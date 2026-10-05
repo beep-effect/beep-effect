@@ -1,14 +1,23 @@
-import { yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
+import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/repo-cli/commands/Yeet";
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
 import { MemoryStats, RepoPlanStep, RepoRunPlan } from "@beep/repo-cli/test/RepoRun";
+import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   buildYeetRunPlanWithMode,
   defaultYeetRunOptions,
+  findLiveReadyMonitorJob,
+  finishPublishWithPullRequestForTesting,
+  isLiveReadyMonitorJob,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+  ProofJobRecord,
+  ProofJobRequest,
+  ProofJobSubmitter,
+  ProofJobUnit,
   RepoRunContext,
   runPushFirstPublishPhasesForTesting,
   TurboPlanSnapshot,
+  YeetEnsuredPullRequest,
   YeetRunPlanModeOptions,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -553,5 +562,223 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("attached monitor environm
       expect(exit._tag).toBe("Failure");
       if (exit._tag === "Failure") expect(Cause.pretty(exit.cause)).toContain("fixture-git-boundary");
     })
+  );
+});
+
+it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor reuse", (it) => {
+  const monitorRequest = (branch: string) =>
+    ProofJobRequest.make({
+      mode: "monitor",
+      argv: ["monitor", "--until-ready", "--json"],
+      checkout: "/repo",
+      branch,
+      base: "origin/main",
+      head: "0123456789abcdef0123456789abcdef01234567",
+      forwardedEnvNames: [],
+    });
+  const jobRecord = (
+    jobId: string,
+    phase: ProofJobRecord["phase"],
+    request: ProofJobRequest,
+    prNumber: O.Option<number>,
+    submittedAt: string
+  ) =>
+    ProofJobRecord.make({
+      jobId: S.decodeSync(UUID)(jobId),
+      phase,
+      submittedAt,
+      request,
+      submitter: ProofJobSubmitter.make({ pid: 4242, procStart: O.none(), cwd: "/repo", harness: O.none() }),
+      unit: ProofJobUnit.make({
+        unitName: `beep-proof-${jobId}.service`,
+        slice: "agent-runs.slice",
+        description: "beep-yeet-job",
+        logPath: `/repo/.beep/yeet/jobs/${jobId}.log`,
+        execStart: ["/opt/bun"],
+        execStopPost: ["/opt/bun"],
+        maxRuntimeSeconds: O.none(),
+        invocationId: O.none(),
+      }),
+      runner: O.none(),
+      outcome: O.none(),
+      systemd: O.none(),
+      terminationReason: O.none(),
+      cancelRequestedAt: O.none(),
+      prNumber,
+    });
+  const RUNNING_ID = "cc5d6bd3-1111-4aaa-8bbb-000000000001";
+  const SUBMITTED_ID = "f8bdb3ac-2222-4aaa-8bbb-000000000002";
+  const running = jobRecord(
+    RUNNING_ID,
+    "running",
+    monitorRequest("feat/push-first"),
+    O.some(1427),
+    "2026-10-05T10:00:00.000Z"
+  );
+  const unboundSubmitted = jobRecord(
+    SUBMITTED_ID,
+    "submitted",
+    monitorRequest("feat/push-first"),
+    O.none(),
+    "2026-10-05T11:00:00.000Z"
+  );
+  const finished = jobRecord(
+    "aaaaaaaa-3333-4aaa-8bbb-000000000003",
+    "finished",
+    monitorRequest("feat/push-first"),
+    O.some(1427),
+    "2026-10-05T12:00:00.000Z"
+  );
+  const otherPr = jobRecord(
+    "bbbbbbbb-4444-4aaa-8bbb-000000000004",
+    "running",
+    monitorRequest("feat/other"),
+    O.some(99),
+    "2026-10-05T13:00:00.000Z"
+  );
+  const verifyJob = ProofJobRecord.make({
+    ...jobRecord(
+      "cccccccc-5555-4aaa-8bbb-000000000005",
+      "running",
+      monitorRequest("feat/push-first"),
+      O.none(),
+      "2026-10-05T14:00:00.000Z"
+    ),
+    request: ProofJobRequest.make({ ...monitorRequest("feat/push-first"), mode: "verify", argv: ["verify"] }),
+  });
+  const target = { branch: "feat/push-first", prNumber: 1427 };
+
+  it("selects only a live --until-ready monitor on this pull request or branch", () => {
+    expect(isLiveReadyMonitorJob(running, target)).toBe(true);
+    expect(isLiveReadyMonitorJob(unboundSubmitted, target)).toBe(true);
+    expect(isLiveReadyMonitorJob(finished, target)).toBe(false);
+    expect(isLiveReadyMonitorJob(otherPr, target)).toBe(false);
+    expect(isLiveReadyMonitorJob(verifyJob, target)).toBe(false);
+    expect(isLiveReadyMonitorJob(ProofJobRecord.make({ ...running, phase: "terminated" }), target)).toBe(false);
+    expect(isLiveReadyMonitorJob(ProofJobRecord.make({ ...unboundSubmitted, prNumber: O.some(99) }), target)).toBe(
+      false
+    );
+    // Newest first, as the registry lists them: the most recent live monitor wins.
+    assertSome(
+      O.map(findLiveReadyMonitorJob([verifyJob, otherPr, finished, unboundSubmitted, running], target), (r) => r.jobId),
+      unboundSubmitted.jobId
+    );
+    expect(O.isNone(findLiveReadyMonitorJob([verifyJob, otherPr, finished], target))).toBe(true);
+  });
+
+  const tailFixture = Effect.fnUntraced(function* (root: string, submitSource: string) {
+    const context = RepoRunContext.make({
+      base: "origin/main",
+      branch: "feat/push-first",
+      cwd: root,
+      head: "HEAD",
+      originalArgv: [],
+      packetDir: ".beep/yeet",
+      repoRoot: root,
+      turbo: TurboPlanSnapshot.make({ graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }),
+    });
+    const submit = RepoPlanStep.make({
+      id: MONITOR_READY_SUBMIT_STEP_ID,
+      label: MONITOR_READY_SUBMIT_STEP_ID,
+      phase: "monitor",
+      command: "bun",
+      args: ["--eval", submitSource],
+      cwd: root,
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+    const plan = RepoRunPlan.make({ context, steps: [submit] });
+    const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+    const extras = yield* Ref.make<YeetVerdictExtrasForTesting>({
+      baseFreshness: O.none(),
+      mergeReady: O.none(),
+      stash: O.none(),
+    });
+    const ensurePullRequest = () =>
+      Effect.succeed(
+        YeetEnsuredPullRequest.make({ number: 1427, url: O.some("https://github.com/o/r/pull/1427"), created: false })
+      );
+    return { plan, submit, recorder, extras, ensurePullRequest };
+  });
+
+  it.effect(
+    "reuses the running monitor for the pull request instead of submitting a second job",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-reuse-" });
+      const marker = `${root}/submitted.txt`;
+      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync(${JSON.stringify(marker)}, "x")`);
+      const listed = yield* Ref.make(0);
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): second push", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          listJobs: () => Ref.update(listed, (n) => n + 1).pipe(Effect.as([finished, running])),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      expect(yield* Ref.get(listed)).toBe(1);
+      expect(yield* fs.exists(marker)).toBe(false);
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(A.map(entries, (entry) => [entry.step.id, entry.status])).toEqual([
+        [MONITOR_READY_SUBMIT_STEP_ID, "skipped"],
+      ]);
+      expect(A.map(entries, (entry) => entry.result.output)).toEqual([
+        `skipped: readiness monitor job ${RUNNING_ID} is already running for this pull request`,
+      ]);
+    }, provideScopedLayer(commandTestLayer))
+  );
+
+  it.effect(
+    "submits a new monitor when the registry has no live monitor for the pull request",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-submit-" });
+      const line = JSON.stringify(S.encodeSync(ProofJobRecord)(unboundSubmitted));
+      const fixture = yield* tailFixture(root, `console.log(${JSON.stringify(line)})`);
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): first push", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        { ensurePullRequest: fixture.ensurePullRequest, listJobs: () => Effect.succeed([finished, otherPr]) }
+      );
+      expect(result.pushed).toBe(true);
+      const entries = yield* Ref.get(fixture.recorder);
+      expect(A.map(entries, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
+      expect(A.map(entries, (entry) => entry.result.exitCode)).toEqual([0]);
+      expect(A.map(entries, (entry) => entry.status)).not.toContain("skipped");
+    }, provideScopedLayer(commandTestLayer))
+  );
+
+  it.effect(
+    "falls back to submitting when the registry cannot be read",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-fallback-" });
+      const fixture = yield* tailFixture(root, 'console.log("no record line")');
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): registry down", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          listJobs: () => YeetCommandError.make({ message: "jobs dir unreadable" }),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      expect(A.map(yield* Ref.get(fixture.recorder), (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
+    }, provideScopedLayer(commandTestLayer))
   );
 });

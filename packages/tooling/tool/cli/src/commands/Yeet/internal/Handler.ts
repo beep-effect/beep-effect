@@ -109,8 +109,8 @@ import {
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { ProofJobOutcome, ProofJobRecord, ProofJobRunner } from "./ProofJob.ts";
-import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import { findLiveReadyMonitorJob, ProofJobOutcome, ProofJobRecord, ProofJobRunner } from "./ProofJob.ts";
+import { ProofJobLauncher, updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
   changedPackagesForAttempt,
   proofShadowAttemptFacts,
@@ -865,16 +865,76 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
+/**
+ * Injectable collaborators for the publish pull-request tail, so tests can
+ * drive it against a fake job registry and a known pull request.
+ *
+ * **Example** (Default collaborators)
+ *
+ * ```ts
+ * import type { PublishTailDependencies } from "@beep/repo-cli/test/Yeet"
+ *
+ * const dependencies: PublishTailDependencies = {}
+ * console.log(Object.keys(dependencies).length) // 0
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export interface PublishTailDependencies {
+  readonly ensurePullRequest?: typeof ensureRequestedPullRequest;
+  readonly listJobs?: (
+    context: RepoRunContext
+  ) => Effect.Effect<
+    ReadonlyArray<ProofJobRecord>,
+    YeetCommandError,
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >;
+}
+
+// The checkout's own job registry: the same records `yeet job list` prints.
+const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* (context: RepoRunContext) {
+  const launcher = yield* ProofJobLauncher.make(context.repoRoot);
+  return yield* launcher.list;
+});
+
+// A registry read failure must not block the publish: fall back to submitting
+// a fresh monitor and say why.
+const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  listJobs: NonNullable<PublishTailDependencies["listJobs"]>
+): Effect.fn.Return<
+  O.Option<ProofJobRecord>,
+  never,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  return yield* listJobs(context).pipe(
+    Effect.map((records) => findLiveReadyMonitorJob(records, { branch: context.branch, prNumber })),
+    Effect.catch((error) =>
+      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
+        Effect.as(O.none<ProofJobRecord>())
+      )
+    )
+  );
+});
+
+const renderReadyMonitorJob = (record: ProofJobRecord, reused: boolean): string =>
+  `[yeet] readiness monitor job: ${record.jobId}${reused ? ` (already ${record.phase}; not re-submitted)` : ""}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`;
+
 // The pull-request tail every publish path shares (push-first-publish D4, D7):
-// ensure the draft pull request, apply the heavy-admission label, then submit
-// the detached readiness monitor or stay attached when `--monitor` asked to.
+// ensure the draft pull request, apply the heavy-admission label, then reuse
+// the readiness monitor already polling that pull request, submit a detached
+// one, or stay attached when `--monitor` asked to. A running monitor keeps
+// polling across fix pushes, so a second publish must not submit a second job.
 const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullRequest")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   extras: Ref.Ref<YeetVerdictExtras>,
-  skipCommit: boolean
+  skipCommit: boolean,
+  dependencies: PublishTailDependencies = {}
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -883,7 +943,11 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   if (!options.pr) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  const pullRequest = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+  const pullRequest = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
+    plan.context,
+    plan.steps,
+    recorder
+  );
   yield* applyHeavyAdmissionLabel(
     plan.context,
     recorder,
@@ -894,7 +958,14 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  const job = yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
+  const running = yield* findRunningReadyMonitor(
+    plan.context,
+    pullRequest.number,
+    dependencies.listJobs ?? listCheckoutProofJobs
+  );
+  const job = O.isSome(running)
+    ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
+    : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
   yield* Console.log(
     `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
   );
@@ -903,13 +974,44 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
       Console.error(
         "[yeet] warning: the readiness monitor was submitted but its job id could not be read; run `bun run beep yeet job list`"
       ),
-    onSome: (record) =>
-      Console.log(
-        `[yeet] readiness monitor job: ${record.jobId}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`
-      ),
+    onSome: (record) => Console.log(renderReadyMonitorJob(record, O.isSome(running))),
   });
   return yield* publishResult(plan.context, !skipCommit);
 });
+
+/**
+ * Run the publish pull-request tail — pull request, heavy-admission label, and
+ * the readiness monitor reuse-or-submit — in isolation.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const finishPublishWithPullRequestForTesting = finishPublishWithPullRequest;
+
+// The submit step is planned but not run: record it as skipped so the verdict
+// and the attempt journal show which job the publish handed back.
+const recordReusedReadyMonitor = (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  submitSteps: ReadonlyArray<RepoPlanStep>,
+  record: ProofJobRecord
+) =>
+  Ref.update(
+    recorder,
+    A.appendAll(
+      A.map(submitSteps, (step) =>
+        YeetExecutedStep.make({
+          result: RepoStepRunResult.make({
+            stepId: step.id,
+            commandText: `${step.command} ${A.join(step.args, " ")}`,
+            exitCode: 0,
+            output: `skipped: readiness monitor job ${record.jobId} is already ${record.phase} for this pull request`,
+          }),
+          status: "skipped",
+          step,
+        })
+      )
+    )
+  );
 
 const PUSH_PHASE_EXCLUDED_STEP_IDS: ReadonlyArray<string> = [
   "publish:02-pr-create",
