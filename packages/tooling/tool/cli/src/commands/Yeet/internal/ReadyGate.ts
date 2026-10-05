@@ -108,6 +108,16 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
 /**
  * The gate passed on a draft: flip it.
  *
+ * **Example** (Describe a flip decision)
+ *
+ * ```ts
+ * import { YeetReadyGateFlip } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const decision = YeetReadyGateFlip.make({ prNumber: 42, headSha: O.some("abc1234") })
+ * console.log(decision._tag) // "flip"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,6 +129,15 @@ export class YeetReadyGateFlip extends S.TaggedClass<YeetReadyGateFlip>($I`YeetR
 
 /**
  * The gate passed and the pull request is already ready for review.
+ *
+ * **Example** (Describe an already-ready decision)
+ *
+ * ```ts
+ * import { YeetReadyGateAlreadyReady } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetReadyGateAlreadyReady.make({ prNumber: 42 })
+ * console.log(decision._tag) // "already-ready"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -133,6 +152,18 @@ export class YeetReadyGateAlreadyReady extends S.TaggedClass<YeetReadyGateAlread
 
 /**
  * The gate refused: the first unmet criterion and what the read observed.
+ *
+ * **Example** (Describe a blocked decision)
+ *
+ * ```ts
+ * import { YeetReadyGateBlocked } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetReadyGateBlocked.make({
+ *   blocker: "threads-resolved",
+ *   detail: "1 review thread still owes an answer",
+ * })
+ * console.log(decision.blocker) // "threads-resolved"
+ * ```
  *
  * @category models
  * @since 0.0.0
