@@ -306,7 +306,8 @@ cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep 
   goals/<slug> …`, `activePackets` in JSON): that packet's lifecycle flip
   belonged in the merged PR, so open the closeout PR before moving on.
   `bun run beep goals doctor` keeps flagging it as `active-after-merge` while
-  a merge commit cites the slug and nobody touches the packet.
+  a merge commit cites the slug, nobody touches the packet, and its manifest
+  carries no `statusNote` or `blockedBy` saying why it stays open.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 

@@ -606,6 +606,11 @@ const citedAnywhere = (packet: DoctorPacket, subjectsText: string): boolean =>
   Str.includes(packet.record.slug)(subjectsText) ||
   O.exists(recordedPullRequest(packet), (value) => Str.includes(value)(subjectsText));
 
+// A statusNote or a non-empty blockedBy is the packet's own account of why it
+// is still open; both staleness-shaped advisories defer to it.
+const hasOpenContext = (manifest: GoalManifest): boolean =>
+  manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
+
 const stalenessAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
   recentPathsText: string,
@@ -618,9 +623,11 @@ const stalenessAdvisories = (
       continue;
     }
     const manifest = packet.manifest.value;
-    const hasContext =
-      manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
-    if (GoalStatus.is.active(manifest.initiative.status) && !HashSet.has(touched, packet.record.slug) && !hasContext) {
+    if (
+      GoalStatus.is.active(manifest.initiative.status) &&
+      !HashSet.has(touched, packet.record.slug) &&
+      !hasOpenContext(manifest)
+    ) {
       findings = A.append(
         findings,
         finding(
@@ -637,9 +644,10 @@ const stalenessAdvisories = (
 
 // An active packet that a merge/squash commit already cites and that nobody
 // has touched since the staleness window opened is the "shipped, never
-// closed" shape: the lifecycle flip belonged in the PR that cited it. The
-// merge is a stronger signal than a statusNote, so this fires regardless of
-// one; the plain stale-active advisory is suppressed for the same packet.
+// closed" shape: the lifecycle flip belonged in the PR that cited it. A
+// statusNote or blockedBy is the packet saying it stays open on purpose, so
+// it silences this advisory exactly as it silences stale-active; the plain
+// stale-active advisory is suppressed for the same packet.
 const activeAfterMergeAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
   subjectsText: string,
@@ -656,6 +664,7 @@ const activeAfterMergeAdvisories = (
     if (
       GoalStatus.is.active(manifest.initiative.status) &&
       manifest.completionGate.requiresPullRequest &&
+      !hasOpenContext(manifest) &&
       !HashSet.has(touched, packet.record.slug) &&
       citedBy(packet, tokens)
     ) {
