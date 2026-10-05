@@ -10,7 +10,7 @@ runs on, and the build that joins them.
 | `shell.html` | Page template: tokens, slim sticky header, scroll-away hero stage, the fixed peek overlay a "show me" opens (closes itself after about half a viewport of scrolling, or on hide), animation, legend, beat links, receipts markup. |
 | `build.mjs` | Node, stdlib only. Renders the article markdown into the shell and injects the data. |
 | `subdag.json` | The real fan of commit `8733d894e0`: 26 packages, 123 `dependsOn` edges. |
-| `files.json` | The 48 files that commit edited (the edit beads). |
+| `files.json` | The 46 distinct basenames of the 48 paths that commit edited (the edit beads). |
 | `lanes.json` | The real yeet planner steps (the check chips) and the S7 replay census. |
 
 Rebuild (any output path; the page is published as an Artifact, never served from the repo):
