@@ -171,7 +171,7 @@
     "eslint-plugin-jsdoc": "^65.1.0",
     "eslint-plugin-tsdoc": "^0.5.4",
     "exifreader": "^4.46.0",
-    "fallow": "^3.31.0",
+    "fallow": "~3.30.0",
     "fast-check": "^4.10.2",
     "fast-xml-parser": "^5.11.2",
     "fast-xml-validator": "1.2.0",
