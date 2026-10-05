@@ -883,8 +883,10 @@ describe("runner bake planning and argv", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
-        const script = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
+        const caller = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
+        const script = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "bootstrap.sh"));
 
+        expect(caller).toContain('BEEP_CLOUD_VENDOR=cursor exec bash "${REPO_ROOT}/scripts/cloud/bootstrap.sh"');
         expect(script).not.toContain("https://bun.sh/install");
         expect(script).toContain(
           "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
@@ -892,7 +894,7 @@ describe("runner bake planning and argv", () => {
         expect(script).toContain(".bun-linux-x64.sha256");
         expect(script).toContain("sha256sum --check --strict -");
         expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
-          script.indexOf('install -m 0755 "${bun_work}/bun-linux-x64/bun"')
+          script.indexOf('install -m 0755 "${run_dir}/bun/bun-linux-x64/bun"')
         );
         expect(script).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
         expect(script).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');

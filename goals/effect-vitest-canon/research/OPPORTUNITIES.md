@@ -6699,3 +6699,14 @@ and restored those reasons. Three `yeet-sweep-retire.test.ts` EV002 candidates
 remain open for the later main-delta inventory. A stable identity or reviewed
 exception reattachment across line and expression shifts would prevent this
 manual merge repair.
+
+### Shared cloud bootstrap moved beneath a repo-cli assertion (2026-10-05)
+
+The full `@beep/repo-cli` package audit failed one of 5,267 tests after
+PR #1432 moved cloud installation logic from `.cursor/install.sh` into
+`scripts/cloud/bootstrap.sh`. The unchanged `runners-bake.test.ts` still
+expected the thin caller to contain the Bun archive URL and checksum code.
+A focused Node/Bun reproduction identified the stale assertion; checking the
+shared bootstrap and the caller's delegation passed all 25 tests on each
+runner. A cross-file test search when moving a script's implementation would
+have caught this before the full package audit.
