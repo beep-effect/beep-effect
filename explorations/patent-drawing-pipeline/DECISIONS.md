@@ -43,7 +43,10 @@ generic about any live article.
 design's geometry to a public repo is a disclosure (and loses foreign design
 rights). D9 is read as "no client bytes in git", not "no client bytes on the
 developer workstation" — the corpus home already lives here and the operator
-runs the CLI here (next decision). Rejected: strict D9 (blocks the live
+runs the CLI here (next decision). That reading is not left implicit: at
+graduation agentic-cad's SPEC gains a scoped D9 exception for this goal's
+CLI and corpus directory, and the goal's Exception Ledger records it with a
+removal condition (the pipeline ships on the attorney's machine). Rejected: strict D9 (blocks the live
 request on the never-run desktop release lane); real geometry in-repo.
 
 ## 2026-10-05 — operating surface
@@ -125,8 +128,10 @@ attorney authored** (an email reply by Internet Message-ID, or an
 initialed PDF under the corpus root) that contains, on its own line, the
 verbatim approval statement the CLI prints for that sheet set (`I approve
 design-figure sheet set <hash> for filing.`). A hash quoted in any other
-sentence, a rejection included, is refused; `drawings sign` verifies the
-whole line before writing the event.
+sentence, a rejection included, is refused. For an email the sender must
+equal the attorney address in the matter spec and the line must sit in the
+attorney-authored portion (Graph `uniqueBody`), never only in the quoted
+thread; `drawings sign` verifies all of it before writing the event.
 
 **Rationale:** Reuses the judge machinery and its hallucinated-evidence
 guard; the judge handles semantics only. Rejected: validator-only (misses

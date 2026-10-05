@@ -29,7 +29,8 @@ surface shading, the judge rubric, and the sign-off event.
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (effect-first-development,
    schema-first-development, yeet).
 3. `standards/ARCHITECTURE.md`, `standards/architecture/03-driver-boundaries.md`,
-   `07-non-slice-families.md`; `goals/agentic-cad-patent-tooling/SPEC.md` D6–D8.
+   `07-non-slice-families.md`; `goals/agentic-cad-patent-tooling/SPEC.md` D6–D9, including its
+   scoped D9 exception for this goal (see Exception Ledger).
 4. This `SPEC.md`, which carries the exploration's eight decisions
    (`explorations/patent-drawing-pipeline/DECISIONS.md`) as its contract; a
    decision that conflicts with a higher source is reopened, not followed.
@@ -46,6 +47,7 @@ Higher sources outrank lower sources when they conflict.
 - `packages/law-practice/domain` (+ `use-cases`, `server`) — `Matter`, `ModelSpec`, `Figure`, view-name `LiteralKit`, validator findings, sign-off event; pipeline service composition.
 - `packages/tooling/tool/cli/src/commands/Drawings/` — `render`, `validate`, `judge`, `sign`.
 - `packages/tooling/tool/cli/src/commands/Qa/` — drawing rubric extension of the qa-inventory/v1 judge.
+- `packages/drivers/m365` — add Graph `uniqueBody` to the `GraphMessage` read subset (`M365.schemas.ts`) so sign-off verification can separate the attorney-authored reply from the quoted thread (slice 2; read-only, no intake).
 - Synthetic fixture article + golden sheets under the owning package's `test/`.
 
 ## Constraints
@@ -59,7 +61,7 @@ Higher sources outrank lower sources when they conflict.
 - Reproducibility: outlined text, rounded/sorted SVG coordinates, PDF dates stripped or from `SOURCE_DATE_EPOCH`, seeded jitter, WASM pinned by hash, pixi lockfile committed; `manifest.json` records spec, toolchain, per-figure, and PDF hashes plus the validator report.
 - Licensing: MuPDF.js (AGPL) is never linked; opencascade.js (LGPL) is linked, not vendored; ported code carries attribution per `research/SOURCES.md`.
 - Data: real matter inputs/outputs only under `BEEP_OPPOLD_CORPUS_ROOT`; the repo holds a synthetic fixture.
-- Attorney sign-off is a recorded event (who, when, sheet-set hash) — the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry". `--by` is descriptive metadata, never proof. The event must carry a `confirmation` reference to an artifact the attorney authored — an email reply identified by Internet Message-ID, or an initialed PDF stored under the corpus root — and `drawings sign` refuses to write the event unless that artifact contains, on a line of its own, the exact approval statement the CLI prints for that sheet set: `I approve design-figure sheet set <sheet-set-hash> for filing.` A hash quoted in any other sentence (a question, a rejection, a forwarded thread) is not approval and is refused; the match is the whole line, verbatim, so the check never interprets prose. The event stores the artifact's locator and its own content hash alongside the sheet-set hash.
+- Attorney sign-off is a recorded event (who, when, sheet-set hash) — the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry". `--by` is descriptive metadata, never proof. The event must carry a `confirmation` reference to an artifact the attorney authored, and `drawings sign` refuses to write the event unless all of these hold: (1) the artifact contains, on a line of its own, the verbatim approval statement the CLI prints for that sheet set, `I approve design-figure sheet set <sheet-set-hash> for filing.`; (2) for an email confirmation, the message is read through `@beep/m365`, its `from` and `sender` addresses equal the attorney address recorded in the matter spec, and the approval line appears in the attorney-authored portion (Graph `uniqueBody`, added to the driver's read subset), never only in the quoted thread; (3) for a PDF confirmation, the file lives under the corpus root and the operator attests in the event that the attorney delivered it. The approval statement must not be sent to the attorney pre-filled in the request body. A hash or approval line that appears only in quoted text, or in a rejection, question, or forward, is refused; the match is whole-line and verbatim, so the check never interprets prose. The event stores the artifact locator, its content hash, and the matched sender alongside the sheet-set hash.
 
 ## Acceptance Criteria
 
@@ -67,7 +69,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `beep drawings render` on the synthetic fixture produces eight sheets whose hashes match committed goldens on two consecutive runs.
 - [ ] `beep drawings validate` returns zero findings on those sheets and non-zero findings on a deliberately broken fixture (margin, gray pixel, PDF 1.7).
 - [ ] The live matter's eight unshaded sheets render from a spec under the corpus root and pass the validator (evidence: validator report hash in `history/`, no sheets committed).
-- [ ] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read, and `drawings sign` refuses both a confirmation artifact without the sheet-set hash and one that quotes the hash without the verbatim approval line, such as a rejection (negative tests).
+- [ ] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read, and `drawings sign` refuses both a confirmation artifact without the sheet-set hash and one that quotes the hash without the verbatim approval line, such as a rejection; a reply whose approval line appears only in the quoted thread; and a reply whose sender is not the recorded attorney (negative tests).
 - [ ] `bun run beep quality package-verify` passes for every touched package.
 - [ ] No unrelated refactors or formatting churn.
 
@@ -95,4 +97,4 @@ Higher sources outrank lower sources when they conflict.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| agentic-cad D9 (client-data processing only on the attorney's machine) | `beep drawings` runs on the developer workstation over one matter's drawing inputs and outputs under `BEEP_OPPOLD_CORPUS_ROOT`; nothing else, nothing in git | Operator (decision 2026-10-05, `explorations/patent-drawing-pipeline/DECISIONS.md`) | The corpus home already lives on this workstation and the desktop release lane has never run; the attorney reviews and signs off every sheet set (Model Rule 5.3 supervision) | The pipeline ships on the attorney's machine (agentic-cad P7 / gated `design-figure-desktop`) |

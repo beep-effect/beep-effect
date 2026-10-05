@@ -177,8 +177,18 @@ Two machines, two roles. **D9 fixes all client-data processing on Machine A.**
 | --- | --- | --- |
 | OS | **Windows** | Linux |
 | GPU | **NVIDIA RTX 3070, 8 GB** (CUDA, CC 8.6) | 2x AMD Radeon AI PRO R9700, 64 GB (ROCm) |
-| Holds client files | **Yes** | No, and must stay that way |
+| Holds client files | **Yes** | No, and must stay that way, except under the scoped D9 exception below |
 | Role | Runs the shipped app; all privileged processing | Development, and local LLM work on non-client data |
+
+**D9 exception (operator decision, 2026-10-05).** The sibling goal
+`goals/design-figure-generation` runs a developer-operated `beep drawings`
+CLI on Machine B over one matter's drawing inputs (spec, reference photos,
+generated sheets) held under the out-of-repo corpus root. This is the only
+client-data processing admitted on Machine B. It is bounded to that CLI and
+that directory, never enters git, and every sheet set is reviewed and signed
+off by the attorney before use (the Model Rule 5.3 supervision D9 exists
+for). The exception is recorded in that goal's Exception Ledger and ends when
+the pipeline ships on Machine A (P7). D9 is otherwise unchanged.
 
 **CUDA changes the optional tiers, not the plan.** With an NVIDIA card the
 photogrammetry rule-out reverses — **Meshroom/AliceVision's CUDA-gated

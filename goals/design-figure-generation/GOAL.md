@@ -20,7 +20,7 @@ contract:
 - `explorations/patent-drawing-pipeline/DECISIONS.md` (eight locked decisions)
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, `standards/ARCHITECTURE.md`,
-and `goals/agentic-cad-patent-tooling/SPEC.md` (D6–D8, shared bricks).
+and `goals/agentic-cad-patent-tooling/SPEC.md` (D6–D9 and its scoped D9 exception; shared bricks).
 Higher-priority repo standards outrank packet prose when they conflict.
 
 Scope:
