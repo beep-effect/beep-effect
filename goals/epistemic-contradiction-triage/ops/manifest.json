@@ -68,7 +68,7 @@
       "name": "Verify",
       "status": "complete",
       "exit": "Two-axis queries over open and resolved candidates, the approval-to-atomic-supersession race lane (opt-in pattern per standards/architecture/08-testing.md), and restart/migration proof are green, and bun run beep yeet verify reports SUCCESS.",
-      "statusNote": "PASS 2026-10-05. Focused epistemic lanes green (domain 94, tables 50, use-cases 50, server 86, client 18, db-admin migration 2), opt-in real-Postgres race lane 2/2 with restart recovery, reflection and goal-packet lints clean. Evidence: history/p2/2026-10-05-verification-and-closeout.md."
+      "statusNote": "PASS 2026-10-05. Focused epistemic lanes green (domain 94, tables 50, use-cases 50, server 87 incl. the new production-repository restart proof, client 18, db-admin migration 2), opt-in real-Postgres race lane 2/2 with fresh-stack recovery, reflection and goal-packet lints clean; hosted required checks on the closing PR are the full proof. Evidence: history/p2/2026-10-05-verification-and-closeout.md."
     },
     {
       "id": "P3",

@@ -25,7 +25,7 @@ Focused package lanes (`CI=true bunx vitest run` inside each package):
 | `@beep/epistemic-domain` | 8 passed | 94 passed |
 | `@beep/epistemic-tables` | 4 passed | 50 passed |
 | `@beep/epistemic-use-cases` | 8 passed | 50 passed |
-| `@beep/epistemic-server` | 13 passed, 2 skipped (opt-in Postgres lanes) | 86 passed |
+| `@beep/epistemic-server` | 13 passed, 2 skipped (opt-in Postgres lanes) | 87 passed (86 inherited + the new restart proof below) |
 | `@beep/epistemic-client` | 2 passed | 18 passed |
 | `@beep/db-admin` `EpistemicContradictionMigration.pglite.test.ts` | 1 passed | 2 passed |
 
@@ -49,10 +49,10 @@ reports `blocking_new=0 blocking_inherited=0 advisories=0`.
 | --- | --- | --- |
 | Two-axis queries over open and resolved candidates | PASS | `ContradictionTriage.pglite.test.ts` › "queries both axes and records a durable rejection"; "expands exact beliefs with organization- and source-scoped verification as of query transaction time"; P0 gate "visibility" assertion re-run green. |
 | Approval-to-atomic-supersession race lane | PASS | Real-Postgres lane: two independent repository/client stacks, one winner, typed loser, disposition and supersession preserved through a third fresh stack (restart). |
-| Restart/migration recovery | PASS | `ContradictionTriage.p0.pglite.test.ts` restart gate (full PGlite close/reopen without remigration) plus the db-admin generated-migration proof enforcing tenant-bound identities, digests, and append-only records. |
+| Restart/migration recovery | PASS | New in this PR: `ContradictionTriage.pglite.test.ts` › "restart boundary › re-queries open and resolved candidates identically through the repository after a reopen" — one persistent PGlite directory, first scope migrates with the generated migration, submits three candidates and reviews two (reject, supersede) through the production `ContradictionTriageRepository`, snapshots `list` on all four disposition axes at `knownAt` 1500/2500, `getExpanded` for each candidate on both axes, and the authority `readAsOf`; PGlite shuts down with the scope; a second scope reopens the directory without migrating and the production repository replays the snapshot exactly (`toStrictEqual`). The real-Postgres lane additionally re-reads the resolved candidate and the supersession winner through a fresh repository/client stack. Supporting: `ContradictionTriage.p0.pglite.test.ts` restart gate over the fixture tables; db-admin generated-migration proof. |
 | Detection never mutates authority | PASS | "refuses a stale proposal digest without touching authority"; "refuses a proposal when a surviving overlap appears after submission"; approval path "approves only the persisted proposal and atomically supersedes one lineage". |
 | Tenant-scoped idempotency (codex reflection follow-up) | PASS | "scopes receipt idempotency to the organization without cross-selecting"; "isolates the same candidate key across organizations". |
-| Full proof `bun run beep yeet verify` | PASS (after inherited coverage red cleared by #1411) | See "Yeet verify" below and the closing PR's Yeet publish proof. |
+| Full proof | Local: 32/33 lanes green, one inherited red (see "Yeet verify"); hosted: the closing PR's required checks are the authoritative full proof | Local `yeet verify` was not re-run to completion after the fast-forward (operator directed the lane to push and let hosted CI prove, per the push-first doctrine). The hosted check results on PR #1421 are the recorded proof. |
 
 ## Yeet verify
 
@@ -65,6 +65,7 @@ Attribution: **inherited**. That file changed on `main` in PR #1408 (merged
 lcov run reproduced the identical 17/18 branch count (`BRDA:95,1,0,0`). PR #1411
 ("test(repo-cli): cover rejected OSV package overrides") landed the covering
 test on `main` the same day, so the lane was fast-forwarded to `ea7b0c6251` and
-the inbox row acknowledged against that fix. The publish proof of the closing
-PR is the authoritative full-proof record (`.beep/yeet/runs/<run>/verdict.json`
-and the PR's "Local proof" footer).
+the inbox row acknowledged against that fix (`yeet inbox ack --fix-sha
+28c6e3a3b4`). A second local full proof was started and then stopped on the
+operator's instruction not to wait on local proof; the hosted required checks
+on the closing PR are the authoritative full-proof record for this packet.
