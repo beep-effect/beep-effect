@@ -14,10 +14,10 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
+import { Config, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { constant, dual } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -268,6 +268,98 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
       )
     );
 });
+
+// Only the lifecycle matters here; the packet's full manifest is the goals
+// doctor's business, and a manifest that fails to decode is simply not active.
+const PacketLifecycleProbe = S.Struct({ lifecycle: S.optionalKey(S.String) });
+const decodePacketLifecycle = S.decodeUnknownEffect(S.fromJsonString(PacketLifecycleProbe));
+
+const packetSlugFromPath = (relativePath: string): O.Option<string> => {
+  const segments = Str.split(relativePath, "/");
+  return A.length(segments) >= 3 && Eq.equals(A.get(segments, 0), O.some("goals")) ? A.get(segments, 1) : O.none();
+};
+
+/**
+ * The goal packets the retired branch touched whose lifecycle is still `active`.
+ *
+ * **Details**
+ *
+ * A branch that carried a packet and merged should also have flipped that
+ * packet's lifecycle (same-PR packet-state flips). This reads the paths the
+ * branch changed under `goals/` since it forked from the main branch and the
+ * lifecycle each packet's manifest records in the lane's own tree, which is
+ * the merged content. It is an advisory: any probe failure yields no slugs
+ * rather than failing the retirement.
+ *
+ * **Example** (Build the probe effect)
+ *
+ * ```ts
+ * import { activePacketsOnBranch } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(activePacketsOnBranch))) // true
+ * ```
+ *
+ * @param plan - The retirement plan naming the lane and its branch.
+ * @param state - The observed git facts, for the main branch name.
+ * @returns The sorted slugs of touched packets still marked active.
+ * @category planning
+ * @since 0.0.0
+ */
+export const activePacketsOnBranch = Effect.fn("Yeet.activePacketsOnBranch")(function* (
+  plan: YeetRetirePlan,
+  state: SweepGitState
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const changed = yield* gitOutput(plan.worktreePath, ["merge-base", state.mainBranch, "HEAD"]).pipe(
+    Effect.flatMap((mergeBase) =>
+      gitOutput(plan.worktreePath, ["diff", "--name-only", mergeBase, "HEAD", "--", "goals/"])
+    ),
+    Effect.orElseSucceed(constant(""))
+  );
+  const slugs: ReadonlyArray<string> = pipe(
+    Str.split(changed, "\n"),
+    A.map(Str.trim),
+    A.map(packetSlugFromPath),
+    A.getSomes,
+    A.dedupe,
+    A.sort(Str.Order)
+  );
+  return yield* Effect.filter(slugs, (slug) =>
+    fs.readFileString(path.join(plan.worktreePath, "goals", slug, "ops", "manifest.json")).pipe(
+      Effect.flatMap(decodePacketLifecycle),
+      Effect.map((manifest) => Eq.equals(manifest.lifecycle, "active")),
+      Effect.orElseSucceed(constant(false))
+    )
+  );
+});
+
+/**
+ * Render the active-packet advisory lines for a retirement.
+ *
+ * **Example** (Render no advisories)
+ *
+ * ```ts
+ * import { renderActivePackets } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderActivePackets([])) // ""
+ * ```
+ *
+ * @param slugs - Packets the branch touched that are still active.
+ * @returns One line per packet, or the empty string.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderActivePackets = (slugs: ReadonlyArray<string>): string =>
+  A.join(
+    A.map(
+      slugs,
+      (slug) =>
+        `[yeet] packet still active after merge: goals/${slug} (this branch touched it); flip its lifecycle in a closeout PR`
+    ),
+    "\n"
+  );
 
 // Two absolute paths on one filesystem relate by a relative path; only a
 // leading `..` means the candidate lies outside the root.

@@ -745,6 +745,7 @@ const VALIDATION_REQUIREMENTS_BY_FINDING_KIND: Readonly<
   "phases-terminal-but-active": ["doctor-clean"],
   "reflection-frontmatter-invalid": ["reflection-frontmatter-valid"],
   "stale-active": [],
+  "active-after-merge": [],
   "active-missing-goal-md": [],
   "schema-version-upgrade": [],
   "completion-gate-unsatisfied": [],

@@ -103,6 +103,7 @@ export const GoalDoctorFindingKind = LiteralKit([
   "phases-terminal-but-active",
   "reflection-frontmatter-invalid",
   "stale-active",
+  "active-after-merge",
   "active-missing-goal-md",
   "schema-version-upgrade",
   "completion-gate-unsatisfied",
@@ -556,11 +557,9 @@ type DoctorPacket = {
   readonly raw: O.Option<Readonly<Record<string, unknown>>>;
 };
 
-const stalenessAdvisories = (
-  packets: ReadonlyArray<DoctorPacket>,
-  recentPathsText: string
-): ReadonlyArray<GoalDoctorFinding> => {
-  const touched = HashSet.fromIterable(
+// The slugs whose packet paths appear in the staleness window's git log.
+const touchedSlugs = (recentPathsText: string): HashSet.HashSet<string> =>
+  HashSet.fromIterable(
     pipe(
       recentPathsText,
       Str.split("\n"),
@@ -569,9 +568,28 @@ const stalenessAdvisories = (
       A.map(flow(Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr)))
     )
   );
+
+// A merge/squash subject cites the packet by slug or by its recorded PR number.
+const citedByMergeSubject = (packet: DoctorPacket, subjectsText: string): boolean => {
+  const prNumber = pipe(
+    packet.raw,
+    O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
+    O.map((value) => `#${String(value)}`)
+  );
+  return (
+    Str.includes(packet.record.slug)(subjectsText) || (O.isSome(prNumber) && Str.includes(prNumber.value)(subjectsText))
+  );
+};
+
+const stalenessAdvisories = (
+  packets: ReadonlyArray<DoctorPacket>,
+  recentPathsText: string,
+  excluded: HashSet.HashSet<string>
+): ReadonlyArray<GoalDoctorFinding> => {
+  const touched = touchedSlugs(recentPathsText);
   let findings = A.empty<GoalDoctorFinding>();
   for (const packet of packets) {
-    if (O.isNone(packet.manifest)) {
+    if (O.isNone(packet.manifest) || HashSet.has(excluded, packet.record.slug)) {
       continue;
     }
     const manifest = packet.manifest.value;
@@ -592,6 +610,43 @@ const stalenessAdvisories = (
   return findings;
 };
 
+// An active packet that a merge/squash commit already cites and that nobody
+// has touched since the staleness window opened is the "shipped, never
+// closed" shape: the lifecycle flip belonged in the PR that cited it. The
+// merge is a stronger signal than a statusNote, so this fires regardless of
+// one; the plain stale-active advisory is suppressed for the same packet.
+const activeAfterMergeAdvisories = (
+  packets: ReadonlyArray<DoctorPacket>,
+  subjectsText: string,
+  recentPathsText: string
+): ReadonlyArray<GoalDoctorFinding> => {
+  const touched = touchedSlugs(recentPathsText);
+  let findings = A.empty<GoalDoctorFinding>();
+  for (const packet of packets) {
+    if (O.isNone(packet.manifest)) {
+      continue;
+    }
+    const manifest = packet.manifest.value;
+    if (
+      GoalStatus.is.active(manifest.initiative.status) &&
+      manifest.completionGate.requiresPullRequest &&
+      !HashSet.has(touched, packet.record.slug) &&
+      citedByMergeSubject(packet, subjectsText)
+    ) {
+      findings = A.append(
+        findings,
+        finding(
+          packet.record.slug,
+          "active-after-merge",
+          "advisory",
+          `active packet is cited by a merge/squash commit and untouched for ${STALE_ACTIVE_DAYS}+ days; flip its lifecycle in a closeout PR or record the next PR in statusNote.`
+        )
+      );
+    }
+  }
+  return findings;
+};
+
 const completionGateAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
   subjectsText: string
@@ -605,15 +660,7 @@ const completionGateAdvisories = (
     if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered) {
       continue;
     }
-    const prNumber = pipe(
-      packet.raw,
-      O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
-      O.map((value) => `#${String(value)}`)
-    );
-    const cited =
-      Str.includes(packet.record.slug)(subjectsText) ||
-      (O.isSome(prNumber) && Str.includes(prNumber.value)(subjectsText));
-    if (!cited) {
+    if (!citedByMergeSubject(packet, subjectsText)) {
       findings = A.append(
         findings,
         finding(
@@ -655,15 +702,27 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: Reado
     "--",
     "goals/",
   ]);
+  // Single-pass completion-gate heuristic: merge/squash subjects citing the
+  // packet slug or the packet's recorded PR number.
+  const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
+
+  // Shipped-but-open packets first: they take the slot the plain staleness
+  // advisory would otherwise fill for the same slug.
+  const afterMerge =
+    O.isSome(subjects) && O.isSome(recentPaths)
+      ? activeAfterMergeAdvisories(packets, subjects.value, recentPaths.value)
+      : A.empty<GoalDoctorFinding>();
+  findings = A.appendAll(findings, afterMerge);
+
   if (O.isSome(recentPaths)) {
-    findings = A.appendAll(findings, stalenessAdvisories(packets, recentPaths.value));
+    findings = A.appendAll(
+      findings,
+      stalenessAdvisories(packets, recentPaths.value, HashSet.fromIterable(A.map(afterMerge, (item) => item.slug)))
+    );
   } else {
     notes = A.append(notes, "git log for staleness failed; staleness advisories skipped.");
   }
 
-  // Single-pass completion-gate heuristic: merge/squash subjects citing the
-  // packet slug or the packet's recorded PR number.
-  const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
   if (O.isSome(subjects)) {
     findings = A.appendAll(findings, completionGateAdvisories(packets, subjects.value));
   } else {

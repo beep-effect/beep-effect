@@ -54,6 +54,7 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
 });
 
 const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
+const encodePacketLifecycle = S.encodeEffect(S.fromJsonString(S.Struct({ lifecycle: S.String })));
 
 const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN") =>
   Layer.effect(
@@ -672,6 +673,46 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(error.message).toContain("--branch cannot override it");
         expect(yield* fs.exists(lane)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("names the touched goal packets the merged branch left active", () =>
+    withScratchRepo(({ repoRoot, lane, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // One packet the branch flipped (closed) and one it left active: only
+        // the open one is an advisory, and a non-packet path under goals/ is
+        // ignored.
+        for (const [slug, lifecycle] of [
+          ["open-packet", "active"],
+          ["closed-packet", "completed-retained"],
+        ] as const) {
+          yield* fs.makeDirectory(path.join(lane, "goals", slug, "ops"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(lane, "goals", slug, "ops", "manifest.json"),
+            `${yield* encodePacketLifecycle({ lifecycle })}\n`
+          );
+        }
+        yield* fs.writeFileString(path.join(lane, "goals", "INDEX.md"), "# index\n");
+        yield* runGit(lane, ["add", "goals"]);
+        yield* runGit(lane, ["commit", "-m", "packets"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane:main"]);
+        yield* runGit(repoRoot, ["fetch", "origin"]);
+        const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
+        const planOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
+        expect(plan.activePackets).toEqual(["open-packet"]);
+        const output = yield* captureOutput(
+          withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
+        expect(output).not.toContain("closed-packet");
+        expect(yield* fs.exists(lane)).toBe(false);
       })
     )
   );

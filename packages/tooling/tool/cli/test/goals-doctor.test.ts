@@ -10,8 +10,10 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
+import { Cause, Console, DateTime, Effect, Exit, flow, Layer, Result, Runtime } from "effect";
+import * as A from "effect/Array";
 import { Command } from "effect/cli";
+import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
@@ -57,6 +59,53 @@ const writeDriftedPacket = Effect.fn("writeDriftedPacket")(function* (slug: stri
   yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\n## Status\n\nLifecycle: \`active\`\n`);
 });
 
+const runGit = Effect.fn("GoalsDoctorTest.runGit")(function* (
+  args: ReadonlyArray<string>,
+  env: Record<string, string> = {}
+) {
+  const handle = yield* ChildProcess.make("git", [...args], {
+    cwd: process.cwd(),
+    env,
+    extendEnv: true,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "inherit",
+  });
+  expect(yield* handle.exitCode).toBe(0);
+});
+
+const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const current = yield* Console.Console;
+  let output: ReadonlyArray<unknown> = [];
+  yield* effect.pipe(
+    Effect.provideService(Console.Console, {
+      ...current,
+      log: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(output, values);
+      },
+      error: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(output, values);
+      },
+    })
+  );
+  return A.join(A.map(output, String), "\n");
+});
+
+// A consistent active packet whose shipping PR could already have merged.
+const writeActivePacket = Effect.fn("writeActivePacket")(function* (slug: string) {
+  yield* writeProjectFile(
+    `goals/${slug}/ops/manifest.json`,
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v2",
+      initiative: { id: slug, title: slug, status: "active" },
+      lifecycle: "active",
+      completionGate: COMPLETION_GATE,
+    })}\n`
+  );
+  yield* writeProjectFile(`goals/${slug}/README.md`, `# ${slug}\n\n## Status\n\nLifecycle: \`active\`\n`);
+  yield* writeProjectFile(`goals/${slug}/GOAL.md`, `# ${slug}\n`);
+});
+
 const writeBaseline = (keys: ReadonlyArray<string>) =>
   writeProjectFile(
     "goals/goals-doctor.baseline.jsonc",
@@ -99,6 +148,36 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeBaseline(["demo lifecycle-mismatch"]);
         const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
         assertTrue(Exit.isSuccess(exit));
+      }),
+    20_000
+  );
+
+  it.effect(
+    "flags an active packet a merge commit cited and nobody touched since, and not a fresh one",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* runGit(["init", "-b", "main"]);
+        yield* runGit(["config", "user.email", "goals-doctor-test@example.com"]);
+        yield* runGit(["config", "user.name", "Goals Doctor Test"]);
+        yield* runGit(["config", "commit.gpgsign", "false"]);
+        yield* writeBaseline([]);
+        yield* writeActivePacket("shipped");
+        // The wall clock, not the test clock: git compares the backdated commit
+        // against real time when the doctor asks for the last 21 days.
+        const fortyDaysAgo = DateTime.formatIso(DateTime.subtract(DateTime.nowUnsafe(), { days: 40 }));
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship shipped (#1)"], {
+          GIT_AUTHOR_DATE: fortyDaysAgo,
+          GIT_COMMITTER_DATE: fortyDaysAgo,
+        });
+        yield* writeActivePacket("fresh");
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship fresh (#2)"]);
+        const output = yield* captureOutput(runGoalsCommand(["doctor"]));
+        expect(output).toContain("shipped [active-after-merge]");
+        expect(output).not.toContain("shipped [stale-active]");
+        expect(output).not.toContain("fresh [active-after-merge]");
       }),
     20_000
   );
