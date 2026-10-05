@@ -136,90 +136,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:229:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 229,
-      "endLine": 252,
-      "symbol": "runPromise",
-      "occurrence": "v2:18487a29d1d0f7b153eb29ae73fde574fcfd40c74eb6a0726f11fcb497a3eaa1",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo((tmpDir) => Effect.gen(function* () { yield* writeFixtureRepo( tmpDir, `--- \"@beep/demo\": patch --- Patch demo. ` ); const summary = yield* runChangesetGraphCheck(tmpDi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:255:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 255,
-      "endLine": 286,
-      "symbol": "runPromise",
-      "occurrence": "v2:4f3170d29c4ab51f570ff8976c5d0274a53ab23db17ff2e06369eec1888ccc33",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo((tmpDir) => Effect.gen(function* () { yield* writeFixtureRepo( tmpDir, `--- \"@beep/ontology\": patch --- Record retired package release cleanup. `, { packages: [ { name:",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:289:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 289,
-      "endLine": 314,
-      "symbol": "runPromise",
-      "occurrence": "v2:17234b7399b546c6875423a2a9068577574d53921b132b5c48b2e1cfc694d854",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo((tmpDir) => Effect.gen(function* () { yield* writeFixtureRepo( tmpDir, `--- \"@beep/missing\": patch --- Patch missing package. ` ); const error = yield* runChangesetGrap",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-graph.test.ts:317:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 317,
-      "endLine": 339,
-      "symbol": "runPromise",
-      "occurrence": "v2:8544123b46eb72b675cf3c9d04fe0b3e5bef5f0145f27596e15edd3511e183e7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo((tmpDir) => Effect.gen(function* () { yield* writeFixtureRepo( tmpDir, `--- --- Record a private workspace change. ` ); const summary = yield* runChangesetGraphCheck(tm",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:295:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -357,90 +273,6 @@
       "occurrence": "v2:82f2b601b95b36c0b70329f23cca730955a8cb760528ff72adfcadb2dbd39148",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const packageDir = yield* fs.makeTempDirectoryScoped({ prefix: \"codegen-command-tes",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:124:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 124,
-      "endLine": 136,
-      "symbol": "runPromise",
-      "occurrence": "v2:5e3ae6912b0609b813596e0f7185c4bf3a60666e7dfe27ae82a331e8c6bd1fa2",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { yield* writeBaselineFixture(repoRoot, baselineFixture); const before = yield* readBaselineText(repoRoot); yiel",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:139:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 139,
-      "endLine": 151,
-      "symbol": "runPromise",
-      "occurrence": "v2:213682bc1b8b30f0dd8418fb99df8f2c3a9d019f17fe62faac0441e83fa3a6df",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; yield* subtractPackageFromCoverageRegr",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:154:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 154,
-      "endLine": 182,
-      "symbol": "runPromise",
-      "occurrence": "v2:e7a4bf45005bb3bfb3e73c8d04fb8ba807e254adc1ac2e56150540857dac5d88",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { const legacy = { schema_version: 1, generated_at: \"2026-01-01T00:00:00.000Z\", git_sha: \"feedfacefeedfacefeedfa",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:99:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 99,
-      "endLine": 121,
-      "symbol": "runPromise",
-      "occurrence": "v2:1fbbf995efa3ffadc74b66774ad5fd5b3ee5dd7481855e74e52209c05f8b8e30",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideNode( withTempDirectory((repoRoot) => Effect.gen(function* () { yield* writeBaselineFixture(repoRoot, baselineFixture); yield* subtractPackageFromCoverageRegressionBaseline(r",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -12798,48 +12630,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-graph.test.ts:18:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 18,
-      "endLine": 20,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-graph.test.ts:36:withTempRepo@21#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-graph.test.ts",
-      "line": 36,
-      "endLine": 48,
-      "symbol": "withTempRepo",
-      "occurrence": "v2:be44b737be4a28d6ed85bb57694556259967cd6cdfc42638885a44dbae8ea36b",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) => Effect.scoped( Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const tmpDir = yield* fs.makeT",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/changeset-status.test.ts:26:provideScopedLayer@2#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -12986,48 +12776,6 @@
       "mechanization": "detector",
       "status": "exception",
       "reason": "withPartitionShim owns a native executable fixture and temporarily binds its PATH and command-log environment for one invocation. acquireUseRelease registers root cleanup before fallible setup and restores each prior environment value. This domain fixture remains per invocation; a shared layer would widen process-global state lifetime. See goals/effect-vitest-canon/research/ci-lane-scope-proof.md."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:27:provideNode@20#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 27,
-      "endLine": 30,
-      "symbol": "provideNode",
-      "occurrence": "v2:9982c64d2d082239d722011bdc745e3361db596146812a76260e7489a7106174",
-      "class": "resource-wrapper",
-      "evidence": "<A2, E, R2>(effect: Effect.Effect<A2, E, R2>) => Effect.scoped( Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:32:withTempDirectory@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts",
-      "line": 32,
-      "endLine": 44,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:5682e4728f453d8ea6dda58b40e7271d3e891eafa1ab5cabacb33b14d549088d",
-      "class": "resource-wrapper",
-      "evidence": "<A2, E, R2>(use: (directory: string) => Effect.Effect<A2, E, R2>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory();",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/effect-fn.test.ts:10:provideScopedLayer@2#1",
@@ -27286,7 +27034,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional because the release-path tests run real git against scoped temporary repository files; TestConsole captures the actual command error. All 11 cases pass with CI=true on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/changeset-status.test.ts:12:@effect/platform-node@0#1",
@@ -27561,7 +27310,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional because the tests exercise real baseline JSONC file emission, subtraction, and byte identity in scoped temporary directories. All four cases pass on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/coverage-turbo-inputs.test.ts:5:@effect/platform-node@0#1",
