@@ -1039,9 +1039,11 @@ export class ReadyMonitorTarget extends S.Class<ReadyMonitorTarget>($I`ReadyMoni
  *
  * **Details**
  *
- * A job is live while it is `submitted` or `running`: a `finished` record is a
- * loop that already ended and only awaits its finalizer, and a settled record
- * is history. The job follows the target when it bound the same pull request
+ * A job is live while it is `submitted` or `running` and no cancel was
+ * requested: a `finished` record is a loop that already ended and only awaits
+ * its finalizer, a settled record is history, and a job with a cancel request
+ * is about to stop polling. The record alone cannot prove the runner process
+ * is still alive; publish checks that separately before reusing a job. The job follows the target when it bound the same pull request
  * number, or, before `--until-ready` resolved and bound the pull request, when
  * it was submitted for the same branch. Publish uses this to reuse the running
  * monitor instead of submitting a second job that would poll the same pull
@@ -1054,8 +1056,8 @@ export class ReadyMonitorTarget extends S.Class<ReadyMonitorTarget>($I`ReadyMoni
  * import * as O from "effect/Option"
  *
  * const request = ProofJobRequest.make({ mode: "monitor", argv: ["monitor", "--until-ready"], checkout: "/repo", branch: "feat/x", base: "origin/main", head: "0123456789abcdef0123456789abcdef01234567", forwardedEnvNames: [] })
- * console.log(isLiveReadyMonitorJob({ phase: "running", systemd: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // true
- * console.log(isLiveReadyMonitorJob({ phase: "finished", systemd: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // false
+ * console.log(isLiveReadyMonitorJob({ phase: "running", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // true
+ * console.log(isLiveReadyMonitorJob({ phase: "finished", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427) }, { branch: "feat/x", prNumber: 1427 })) // false
  * ```
  *
  * @param record - Phase, finalization stamp, replayed request, and bound pull request of the job.
@@ -1072,6 +1074,7 @@ export const isLiveReadyMonitorJob: {
   (record: LiveReadyMonitorCandidate, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): boolean =>
     !isSettledProofJob(record) &&
     record.phase !== "finished" &&
+    O.isNone(record.cancelRequestedAt) &&
     record.request.mode === "monitor" &&
     A.contains(record.request.argv, "--until-ready") &&
     O.match(record.prNumber, {
@@ -1086,7 +1089,10 @@ export const isLiveReadyMonitorJob: {
  * @category models
  * @since 0.0.0
  */
-export type LiveReadyMonitorCandidate = Pick<ProofJobRecord, "phase" | "systemd" | "request" | "prNumber">;
+export type LiveReadyMonitorCandidate = Pick<
+  ProofJobRecord,
+  "phase" | "systemd" | "request" | "prNumber" | "cancelRequestedAt"
+>;
 
 /**
  * Pick the readiness monitor already polling a pull request from a job listing.
