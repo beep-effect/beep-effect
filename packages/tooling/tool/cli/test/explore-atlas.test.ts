@@ -15,7 +15,7 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -30,9 +30,6 @@ const testLayer = Layer.mergeAll(
   TestConsole.layer
 );
 const PROJECTION_REPEAT_RUNS = 20;
-
-const provideTestLayer = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.scoped(Layer.build(testLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const manifest = (slug: string, title: string, status: string, stage: string) => ({
   schemaVersion: "exploration-manifest/v1",
@@ -102,194 +99,199 @@ const writeStream = Effect.fnUntraced(function* (
 });
 
 describe("exploration projections", () => {
-  it("preserves metadata when projected README bytes are already current", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-metadata-" });
-          yield* writePacket(
-            root,
-            "alpha",
-            manifest("alpha", "Alpha", "active", "research"),
-            readme("Alpha", "research", "active")
-          );
-          yield* writeExplorationAtlas(root);
+  it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+    it.effect("releases a fixture directory when the test body fails", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        let root = "";
+        const failure = yield* Effect.scoped(
+          Effect.gen(function* () {
+            root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-failure-" });
+            yield* writePacket(
+              root,
+              "alpha",
+              manifest("alpha", "Alpha", "active", "research"),
+              readme("Alpha", "research", "active")
+            );
+            return yield* Effect.fail(new Error("intentional fixture failure"));
+          })
+        ).pipe(Effect.flip);
 
-          const readmePath = path.join(root, "explorations", "alpha", "README.md");
-          yield* fs.chmod(readmePath, 0o744);
-          const before = yield* fs.readFileString(readmePath);
-          yield* writeExplorationAtlas(root);
-          const after = yield* fs.stat(readmePath);
+        expect(failure.message).toBe("intentional fixture failure");
+        expect(yield* fs.exists(root)).toBe(false);
+      })
+    );
 
-          expect(yield* fs.readFileString(readmePath)).toBe(before);
-          expect(after.mode & 0o777).toBe(0o744);
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+    it.effect("preserves metadata when projected README bytes are already current", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-metadata-" });
+        yield* writePacket(
+          root,
+          "alpha",
+          manifest("alpha", "Alpha", "active", "research"),
+          readme("Alpha", "research", "active")
+        );
+        yield* writeExplorationAtlas(root);
 
-  it("renders adoption-derived D3 state and preserves authored README sections", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-" });
-          yield* writePacket(
-            root,
-            "zeta",
-            manifest("zeta", "Zeta", "active", "shape"),
-            readme("Zeta", "shape", "active")
-          );
-          yield* writePacket(
-            root,
-            "alpha",
-            manifest("alpha", "Alpha", "active", "research"),
-            readme("Alpha", "research", "active", " — `authored` status detail survives projection.")
-          );
-          yield* writePacket(
-            root,
-            "done",
-            manifest("done", "Done", "graduated", "graduate"),
-            readme("Done", "graduate", "graduated")
-          );
-          yield* writePacket(
-            root,
-            "rejected",
-            manifest("rejected", "Rejected", "killed", "align"),
-            readme("Rejected", "align", "killed")
-          );
-          yield* fs.makeDirectory(path.join(root, "explorations", "broken"), { recursive: true });
-          yield* fs.makeDirectory(path.join(root, "explorations", "_internal"), { recursive: true });
+        const readmePath = path.join(root, "explorations", "alpha", "README.md");
+        yield* fs.chmod(readmePath, 0o744);
+        const before = yield* fs.readFileString(readmePath);
+        yield* writeExplorationAtlas(root);
+        const after = yield* fs.stat(readmePath);
 
-          const projection = yield* buildExplorationProjection(root);
-          const repeated = yield* Effect.forEach(
-            A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
-            (index) =>
-              buildExplorationProjection(root).pipe(
-                Effect.provideService(FileSystem.FileSystem, permutedDirectoryReadsFileSystem(fs, index))
-              ),
-            { concurrency: 1 }
-          );
+        expect(yield* fs.readFileString(readmePath)).toBe(before);
+        expect(after.mode & 0o777).toBe(0o744);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-          expect(projection.atlasContent).toContain("5 exploration packets.");
-          expect(projection.atlasContent).toContain("## Active (2)");
-          expect(projection.atlasContent).toContain("## Graduated (1)");
-          expect(projection.atlasContent).toContain("## Killed (1)");
-          expect(projection.atlasContent).toContain("## Underivable packets (1)");
-          expect(projection.atlasContent).toContain("manifest-adoption");
-          expect(projection.atlasContent.indexOf("[Alpha]")).toBeLessThan(projection.atlasContent.indexOf("[Zeta]"));
-          expect(A.every(repeated, (next) => next.atlasContent === projection.atlasContent)).toBe(true);
-          expect(
-            A.every(
-              repeated,
-              (next) =>
-                A.length(next.readmes) === A.length(projection.readmes) &&
-                A.every(
-                  A.zip(next.readmes, projection.readmes),
-                  ([nextReadme, firstReadme]) =>
-                    nextReadme.path === firstReadme.path && nextReadme.projected === firstReadme.projected
-                )
-            )
-          ).toBe(true);
-          expect(projection.issues).toHaveLength(1);
-          expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
+    it.effect("renders adoption-derived D3 state and preserves authored README sections", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-" });
+        yield* writePacket(
+          root,
+          "zeta",
+          manifest("zeta", "Zeta", "active", "shape"),
+          readme("Zeta", "shape", "active")
+        );
+        yield* writePacket(
+          root,
+          "alpha",
+          manifest("alpha", "Alpha", "active", "research"),
+          readme("Alpha", "research", "active", " — `authored` status detail survives projection.")
+        );
+        yield* writePacket(
+          root,
+          "done",
+          manifest("done", "Done", "graduated", "graduate"),
+          readme("Done", "graduate", "graduated")
+        );
+        yield* writePacket(
+          root,
+          "rejected",
+          manifest("rejected", "Rejected", "killed", "align"),
+          readme("Rejected", "align", "killed")
+        );
+        yield* fs.makeDirectory(path.join(root, "explorations", "broken"), { recursive: true });
+        yield* fs.makeDirectory(path.join(root, "explorations", "_internal"), { recursive: true });
 
-          const alpha = A.findFirst(projection.readmes, (item) => item.path.endsWith("/alpha/README.md"));
-          alpha.pipe(O.isSome, assertTrue);
-          if (O.isSome(alpha)) {
-            expect(alpha.value.projected).toContain("<!-- BEGIN GENERATED: EXPLORATION STATUS -->");
-            expect(alpha.value.projected).toContain("Which question survives projection?");
-            expect(alpha.value.projected).toContain("authored trail survives projection");
-            expect(alpha.value.projected).toContain("Status context stays authored.");
-            expect(alpha.value.projected).toContain("Status note: `authored` status detail survives projection.");
-          }
-          expect(explorationProjectionDriftPaths(projection, O.none())).toHaveLength(4);
-          expect(
-            explorationProjectionDriftPaths(projection, O.some(`${projection.atlasContent}authored doctrine`))
-          ).toContain("explorations/ATLAS.md");
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+        const projection = yield* buildExplorationProjection(root);
+        const repeated = yield* Effect.forEach(
+          A.makeBy(PROJECTION_REPEAT_RUNS, (index) => index),
+          (index) =>
+            buildExplorationProjection(root).pipe(
+              Effect.provideService(FileSystem.FileSystem, permutedDirectoryReadsFileSystem(fs, index))
+            ),
+          { concurrency: 1 }
+        );
 
-  it("uses the event fold after opt-in and exposes furthest versus resume stage", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-stream-" });
-          yield* writePacket(
-            root,
-            "looped",
-            manifest("looped", "Looped", "parked", "research"),
-            readme("Looped", "research", "parked")
-          );
-          yield* writeStream(root, "looped", [
-            {
-              body: { type: "packet-created", status: "active", stage: "shape", ordinal: 3 },
-              at: "2026-08-27T00:00:00.000Z",
-            },
-            { body: { type: "stage-entered", stage: "research", ordinal: 1 }, at: "2026-08-27T00:01:00.000Z" },
-            {
-              body: { type: "status-set", status: "parked", previous: "active" },
-              at: "2026-08-27T00:02:00.000Z",
-            },
-          ]);
+        expect(projection.atlasContent).toContain("5 exploration packets.");
+        expect(projection.atlasContent).toContain("## Active (2)");
+        expect(projection.atlasContent).toContain("## Graduated (1)");
+        expect(projection.atlasContent).toContain("## Killed (1)");
+        expect(projection.atlasContent).toContain("## Underivable packets (1)");
+        expect(projection.atlasContent).toContain("manifest-adoption");
+        expect(projection.atlasContent.indexOf("[Alpha]")).toBeLessThan(projection.atlasContent.indexOf("[Zeta]"));
+        expect(A.every(repeated, (next) => next.atlasContent === projection.atlasContent)).toBe(true);
+        expect(
+          A.every(
+            repeated,
+            (next) =>
+              A.length(next.readmes) === A.length(projection.readmes) &&
+              A.every(
+                A.zip(next.readmes, projection.readmes),
+                ([nextReadme, firstReadme]) =>
+                  nextReadme.path === firstReadme.path && nextReadme.projected === firstReadme.projected
+              )
+          )
+        ).toBe(true);
+        expect(projection.issues).toHaveLength(1);
+        expect(projection.issues[0]?.detail).toContain("manifest is missing or invalid");
 
-          const projection = yield* buildExplorationProjection(root);
+        const alpha = A.findFirst(projection.readmes, (item) => item.path.endsWith("/alpha/README.md"));
+        alpha.pipe(O.isSome, assertTrue);
+        if (O.isSome(alpha)) {
+          expect(alpha.value.projected).toContain("<!-- BEGIN GENERATED: EXPLORATION STATUS -->");
+          expect(alpha.value.projected).toContain("Which question survives projection?");
+          expect(alpha.value.projected).toContain("authored trail survives projection");
+          expect(alpha.value.projected).toContain("Status context stays authored.");
+          expect(alpha.value.projected).toContain("Status note: `authored` status detail survives projection.");
+        }
+        expect(explorationProjectionDriftPaths(projection, O.none())).toHaveLength(4);
+        expect(
+          explorationProjectionDriftPaths(projection, O.some(`${projection.atlasContent}authored doctrine`))
+        ).toContain("explorations/ATLAS.md");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-          expect(projection.issues).toEqual([]);
-          expect(projection.atlasContent).toContain(
-            "| [Looped](./looped/README.md) | research | shape | event-stream | 2026-08-27 |"
-          );
-          expect(projection.readmes[0]?.projected).toContain("Stage: `research`");
-          expect(projection.readmes[0]?.projected).toContain("Status: `parked`");
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+    it.effect("uses the event fold after opt-in and exposes furthest versus resume stage", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-stream-" });
+        yield* writePacket(
+          root,
+          "looped",
+          manifest("looped", "Looped", "parked", "research"),
+          readme("Looped", "research", "parked")
+        );
+        yield* writeStream(root, "looped", [
+          {
+            body: { type: "packet-created", status: "active", stage: "shape", ordinal: 3 },
+            at: "2026-08-27T00:00:00.000Z",
+          },
+          { body: { type: "stage-entered", stage: "research", ordinal: 1 }, at: "2026-08-27T00:01:00.000Z" },
+          {
+            body: { type: "status-set", status: "parked", previous: "active" },
+            at: "2026-08-27T00:02:00.000Z",
+          },
+        ]);
 
-  it("fails closed instead of falling back when an opted-in stream is underivable", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-invalid-stream-" });
-          yield* writePacket(
-            root,
-            "invalid-stream",
-            manifest("invalid-stream", "Invalid stream", "active", "capture"),
-            readme("Invalid stream", "capture", "active")
-          );
-          const events = path.join(root, "explorations", "invalid-stream", "ops", "events");
-          yield* fs.makeDirectory(events, { recursive: true });
-          yield* fs.writeFileString(path.join(events, "not-a-cas-event.json"), "{}\n");
+        const projection = yield* buildExplorationProjection(root);
 
-          const projection = yield* buildExplorationProjection(root);
+        expect(projection.issues).toEqual([]);
+        expect(projection.atlasContent).toContain(
+          "| [Looped](./looped/README.md) | research | shape | event-stream | 2026-08-27 |"
+        );
+        expect(projection.readmes[0]?.projected).toContain("Stage: `research`");
+        expect(projection.readmes[0]?.projected).toContain("Status: `parked`");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-          expect(projection.atlasContent).toContain("## Underivable packets (1)");
-          expect(A.some(projection.issues, (issue) => issue.detail.includes("unreadable or invalid"))).toBe(true);
-          expect(projection.atlasContent).not.toContain("manifest-adoption");
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+    it.effect("fails closed instead of falling back when an opted-in stream is underivable", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-invalid-stream-" });
+        yield* writePacket(
+          root,
+          "invalid-stream",
+          manifest("invalid-stream", "Invalid stream", "active", "capture"),
+          readme("Invalid stream", "capture", "active")
+        );
+        const events = path.join(root, "explorations", "invalid-stream", "ops", "events");
+        yield* fs.makeDirectory(events, { recursive: true });
+        yield* fs.writeFileString(path.join(events, "not-a-cas-event.json"), "{}\n");
 
-  it("rejects malformed generated README markers", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-markers-" });
-          yield* writePacket(
-            root,
-            "malformed",
-            manifest("malformed", "Malformed", "active", "capture"),
-            `# Malformed
+        const projection = yield* buildExplorationProjection(root);
+
+        expect(projection.atlasContent).toContain("## Underivable packets (1)");
+        expect(A.some(projection.issues, (issue) => issue.detail.includes("unreadable or invalid"))).toBe(true);
+        expect(projection.atlasContent).not.toContain("manifest-adoption");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("rejects malformed generated README markers", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-markers-" });
+        yield* writePacket(
+          root,
+          "malformed",
+          manifest("malformed", "Malformed", "active", "capture"),
+          `# Malformed
 
 ## Status
 
@@ -301,67 +303,61 @@ Status: \`active\`
 
 Does this fail closed?
 `
-          );
+        );
 
-          const projection = yield* buildExplorationProjection(root);
+        const projection = yield* buildExplorationProjection(root);
 
-          expect(projection.issues[0]?.detail).toContain("malformed generated markers");
-          expect(projection.readmes).toEqual([]);
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+        expect(projection.issues[0]?.detail).toContain("malformed generated markers");
+        expect(projection.readmes).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("prints every underivable input on stderr before the silent reported exit", () =>
-    Effect.runPromise(
-      provideTestLayer(
+    it.effect("prints every underivable input on stderr before the silent reported exit", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-refusal-" });
+        yield* writePacket(
+          root,
+          "alpha",
+          manifest("alpha", "Alpha", "active", "research"),
+          readme("Alpha", "research", "active")
+        );
+        yield* writePacket(
+          root,
+          "renamed",
+          manifest("moved", "Moved", "active", "capture"),
+          readme("Moved", "capture", "active")
+        );
+        const manifestPath = path.join(root, "explorations", "renamed", "ops", "manifest.json");
+        const refusal = [
+          "[explore:atlas] 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md:",
+          `- ${manifestPath}: manifest slug is moved, not directory renamed`,
+        ];
+
+        const checkError = yield* checkExplorationAtlas(root).pipe(Effect.flip);
+        const writeError = yield* writeExplorationAtlas(root).pipe(Effect.flip);
+
+        const sentinel = {
+          _tag: "CliReportedExit",
+          exitCode: 1,
+          message:
+            "explore atlas: 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md.",
+        };
+        expect(checkError).toMatchObject(sentinel);
+        expect(writeError).toMatchObject(sentinel);
+        expect(yield* errorLines()).toEqual([...refusal, ...refusal]);
+        expect(yield* fs.exists(path.join(root, "explorations", "ATLAS.md"))).toBe(false);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect(
+      "refuses README drift, names a stale git-ignored Atlas beside it, and refreshes a stale Atlas alone",
+      () =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-refusal-" });
-          yield* writePacket(
-            root,
-            "alpha",
-            manifest("alpha", "Alpha", "active", "research"),
-            readme("Alpha", "research", "active")
-          );
-          yield* writePacket(
-            root,
-            "renamed",
-            manifest("moved", "Moved", "active", "capture"),
-            readme("Moved", "capture", "active")
-          );
-          const manifestPath = path.join(root, "explorations", "renamed", "ops", "manifest.json");
-          const refusal = [
-            "[explore:atlas] 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md:",
-            `- ${manifestPath}: manifest slug is moved, not directory renamed`,
-          ];
-
-          const checkError = yield* checkExplorationAtlas(root).pipe(Effect.flip);
-          const writeError = yield* writeExplorationAtlas(root).pipe(Effect.flip);
-
-          const sentinel = {
-            _tag: "CliReportedExit",
-            exitCode: 1,
-            message:
-              "explore atlas: 1 underivable projection input(s); repair the packet inputs, never explorations/ATLAS.md.",
-          };
-          expect(checkError).toMatchObject(sentinel);
-          expect(writeError).toMatchObject(sentinel);
-          expect(yield* errorLines()).toEqual([...refusal, ...refusal]);
-          expect(yield* fs.exists(path.join(root, "explorations", "ATLAS.md"))).toBe(false);
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
-
-  it("refuses README drift, names a stale git-ignored Atlas beside it, and refreshes a stale Atlas alone", () =>
-    Effect.runPromise(
-      provideTestLayer(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const root = yield* fs.makeTempDirectory({ prefix: "beep-exploration-atlas-drift-" });
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-exploration-atlas-drift-" });
           yield* writePacket(
             root,
             "alpha",
@@ -409,8 +405,7 @@ Does this fail closed?
             "[explore:atlas] refreshed stale git-ignored explorations/ATLAS.md from the D3 projection.",
             "[explore:atlas] OK: D3 Atlas and README projections are current.",
           ]);
-          yield* fs.remove(root, { recursive: true });
-        })
-      )
-    ));
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

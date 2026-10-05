@@ -6643,3 +6643,13 @@ The failed jobs were rerun on the same head and passed after merge; the full
 local Yeet proof also passed 37 lanes, including affected coverage. Waiting for `merge-ready: yes`
 before merging, plus runner health telemetry when communication drops, would
 have made the failure actionable before it reached main.
+
+### Fresh worktree package check lacks dependency declarations (2026-10-05)
+
+While qualifying the `explore-atlas.test.ts` migration, `bun run beep quality
+package-verify @beep/repo-cli --quick` passed lint but failed check with
+`TS6305` because `packages/foundation/modeling/utils/dist/index.d.ts` had not
+been built in the fresh worktree. The missing `dist` directory is a setup
+condition, not evidence that the test edit introduced the subsequent TypeScript
+diagnostics. A package-verify preflight that builds or names missing referenced
+declaration outputs would prevent a large, misleading check failure.
