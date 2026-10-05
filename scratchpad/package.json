@@ -6,13 +6,7 @@
   "homepage": "https://github.com/beep-effect/beep-effect/tree/main/scratchpad",
   "exports": {
     "./beep": "./beep/index.ts",
-    "./beep-docs": "./beep-docs/api-reference/index.ts",
-    "./glob": "./glob/index.ts",
-    "./jsonc": "./jsonc/index.ts",
-    "./jsonl": "./jsonl/index.ts",
     "./semver": "./semver/index.ts",
-    "./toml": "./toml/index.ts",
-    "./yaml": "./yaml/index.ts",
     "./*": "./*.ts"
   },
   "scripts": {
