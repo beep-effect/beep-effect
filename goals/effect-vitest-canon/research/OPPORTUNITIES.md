@@ -6633,3 +6633,13 @@ that file held partial-suite coverage and distorted CRAP scores. Removing
 only that generated file made the exact Fallow gate pass with zero findings.
 An explicit coverage input or a cleanup step after focused coverage probes
 would have prevented the misleading proof failure.
+
+### Hosted Heavy runners lost communication after PR merge (2026-10-05)
+
+PR #1411 was merged while its Heavy Lint Policy and Coverage Regression jobs
+were still running. Both jobs later failed with GitHub's runner-communication
+annotation, without a source diagnostic; their log endpoints returned 404.
+The failed jobs were rerun on the same head and passed after merge; the full
+local Yeet proof also passed 37 lanes, including affected coverage. Waiting for `merge-ready: yes`
+before merging, plus runner health telemetry when communication drops, would
+have made the failure actionable before it reached main.
