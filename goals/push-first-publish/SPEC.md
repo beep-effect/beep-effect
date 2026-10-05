@@ -23,7 +23,7 @@ This packet removes the need for that instruction.
 | D2 | The full local proof is dropped from publish. `yeet verify` stays as an on-demand tool. No detached post-push proof. | Detached advisory proof (burns machine capacity in parallel with hosted CI); blocking post-push proof (status quo). |
 | D3 | Push-first is unconditional. | Conditional on scheduler queue depth; conditional on PR already existing. Agents cannot reliably detect a runner burst, and conditional rules are what get re-stated by hand. |
 | D4 | `publish --pr` creates a **draft** PR and applies `ready-for-heavy` at creation. `yeet ready` flips draft to ready. | Ready by default with `--draft`; leave PR state to `gh`. |
-| D5 | `--fast` and `--start-pr-early` are removed, with their guards, tests, and skill prose. New opt-in `--prove-first` restores the old order (full proof before push). The proof-shadow ledger and CI-parity step stay, fed only by on-demand `verify`. | Keep all flags and flip the default; retire the shadow ledger. |
+| D5 | `--fast` and `--start-pr-early` are removed, with their guards, tests, and skill prose. New opt-in `--prove-first` restores the old proof order (full proof and CI parity before the push). The pull-request tail (draft, label, stamp, detached monitor) is the same on every path, including `--push-only` (review finding on #1427). The proof-shadow ledger and CI-parity step stay, fed only by on-demand `verify`. | Keep all flags and flip the default; retire the shadow ledger. |
 | D6 | Push budget: one push per addressed wave of inbox rows or review threads, never per file or per comment. Cheap-gates green is a precondition of any push. | No budget rule; mass re-pushes across a fleet saturate the queue the scheduler was built for. |
 | D7 | "Publish done" = pushed + draft PR + `ready-for-heavy` applied + detached `monitor --until-ready` job submitted. Publish prints the PR URL and job id, then exits. Attached `--monitor` becomes opt-in. | Pushed + PR only (forgotten monitor); attached monitor (fleet holds processes). |
 | D8 | `--pr` becomes the default on a PR-less branch; `--no-pr` opts out. | Keep `--pr` opt-in. `check.yml` triggers only on `pull_request` and pushes to `main`, so a bare push produces no hosted signal at all. |
@@ -90,8 +90,8 @@ Higher sources outrank lower sources when they conflict.
 - Schema-first: new flags and terminals are `LiteralKit` members and `S.Class`
   fields, never ad-hoc strings.
 - The removed flags must fail loudly at parse time, not be silently ignored.
-- `--prove-first` must produce exactly the pre-change plan so the existing
-  plan-wiring tests can be reused as its fixtures.
+- `--prove-first` must reproduce the pre-change proof order; the PR-less plan
+  is byte-identical to the fixture, and with a PR it carries the shared draft tail.
 - `yeet ready` reuses the monitor's PR read; no second GitHub read path.
 - Draft creation must not break docs-only PRs: they need no label and must
   still reach `ready-pending-flip`.
@@ -107,8 +107,8 @@ Higher sources outrank lower sources when they conflict.
       URL and job id, exits 0. No admission ticket is enqueued.
 - [ ] `yeet publish --no-pr` pushes without a PR and warns that no hosted
       checks will run.
-- [ ] `yeet publish --prove-first` reproduces the pre-change plan byte-for-byte
-      in `--plan --json`.
+- [ ] `yeet publish --prove-first` reproduces the pre-change proof order (PR-less
+      plan byte-for-byte in `--plan --json`); with a PR it shares the draft tail.
 - [ ] `yeet publish --fast` and `--start-pr-early` are unknown flags.
 - [ ] `monitor --until-ready` ends `ready-pending-flip` with exit 0 on a draft
       whose threads are answered and required checks green, and prints

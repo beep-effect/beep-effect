@@ -113,7 +113,7 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
  */
 export class YeetReadyGateFlip extends S.TaggedClass<YeetReadyGateFlip>($I`YeetReadyGateFlip`)(
   "flip",
-  { prNumber: S.Finite },
+  { prNumber: S.Finite, headSha: S.Option(S.String) },
   $I.annote("YeetReadyGateFlip", { description: "The D10 gate holds on a draft pull request; flip it to ready." })
 ) {}
 
@@ -277,7 +277,7 @@ export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGa
       onSome: (prNumber): YeetReadyGateDecision =>
         read.remote.isDraft === false
           ? YeetReadyGateAlreadyReady.make({ prNumber })
-          : YeetReadyGateFlip.make({ prNumber }),
+          : YeetReadyGateFlip.make({ prNumber, headSha: read.remote.headSha }),
     })
   );
 };
@@ -343,9 +343,28 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       ),
     "already-ready": ({ prNumber }) =>
       Console.log(`[yeet] pull request #${prNumber} is already ready for review; nothing to flip`),
-    flip: Effect.fnUntraced(function* ({ prNumber }) {
+    flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
+      const capture = dependencies.capture ?? runRepoCommandCapture;
+      // The gate decided on a head read moments ago; a push landing in between
+      // would flip a head the gate never saw, so re-read it right before the
+      // flip and refuse on any drift.
+      const liveHead = yield* capture(
+        "gh",
+        ["pr", "view", `${prNumber}`, "--json", "headRefOid"],
+        context.repoRoot
+      ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr view before the ready flip.")));
+      const liveSha = O.flatMap(
+        O.liftPredicate(liveHead, (view) => view.exitCode === 0),
+        (view) => O.fromUndefinedOr(/"headRefOid":\s*"([0-9a-f]+)"/.exec(view.output)?.[1])
+      );
+      if (O.isNone(liveSha) || !O.contains(headSha, liveSha.value)) {
+        return yield* YeetCommandError.make({
+          message: `yeet ready refused: the pull request head moved since the gate read (gate ${O.getOrElse(headSha, () => "unknown")}, live ${O.getOrElse(liveSha, () => "unknown")}). Re-run \`${YEET_READY_COMMAND}\` so the new head is gated.`,
+          exitCode: 1,
+        });
+      }
       const args = ["pr", "ready", `${prNumber}`];
-      const result = yield* (dependencies.capture ?? runRepoCommandCapture)("gh", args, context.repoRoot).pipe(
+      const result = yield* capture("gh", args, context.repoRoot).pipe(
         Effect.mapError(YeetCommandError.new("Failed to run gh pr ready."))
       );
       if (result.exitCode !== 0) {

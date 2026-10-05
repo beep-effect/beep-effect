@@ -499,6 +499,9 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
         })
       )
     : yield* createPullRequest(context, recorder, prStep, capture, dependencies.view ?? runGhPullRequestView);
+  // A failed provenance stamp must not stop the heavy-admission label or the
+  // readiness monitor that follow: the pull request already exists on the
+  // remote, so record the failure and carry on.
   yield* stampPullRequestProvenance(
     context,
     recorder,
@@ -508,6 +511,20 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
     pullRequest.created ? "created" : "pushed",
     capture,
     dependencies.registry
+  ).pipe(
+    Effect.catch((error) =>
+      Effect.andThen(
+        Console.error(
+          `[yeet] warning: provenance footer stamp failed for PR #${pullRequest.number}; continuing: ${error.message}`
+        ),
+        recordPrProvenanceStampLane(
+          recorder,
+          stampStep,
+          O.some(pullRequest.number),
+          ProvenanceStampOutcome.make({ status: "failed", message: error.message })
+        )
+      )
+    )
   );
   return pullRequest;
 });

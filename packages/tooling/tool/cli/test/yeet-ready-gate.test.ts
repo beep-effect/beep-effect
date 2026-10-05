@@ -100,12 +100,19 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (it) => {
+  // The flip re-reads the head right before `gh pr ready`; the fake answers
+  // that view with `liveHead` and every other call with the given exit code.
   const recordingCapture =
-    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0) =>
+    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0, liveHead = headSha) =>
     (command: string, args: ReadonlyArray<string>) =>
       Ref.update(calls, (all) => [...all, [command, ...args]]).pipe(
-        Effect.as({ exitCode, output: exitCode === 0 ? "" : "gh: not permitted", truncated: false })
+        Effect.as(
+          args[1] === "view"
+            ? { exitCode: 0, output: `{"headRefOid":"${liveHead}"}`, truncated: false }
+            : { exitCode, output: exitCode === 0 ? "" : "gh: not permitted", truncated: false }
+        )
       );
+  const viewCall = ["gh", "pr", "view", "42", "--json", "headRefOid"];
 
   it.effect("runs gh pr ready on the read pull request when the gate holds", () =>
     Effect.gen(function* () {
@@ -115,7 +122,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
         capture: recordingCapture(calls),
       });
       expect(decision._tag).toBe("flip");
-      expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
+      expect(yield* Ref.get(calls)).toEqual([viewCall, ["gh", "pr", "ready", "42"]]);
+    })
+  );
+
+  it.effect("refuses to flip when the head moved between the gate read and gh pr ready", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const error = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView()),
+        capture: recordingCapture(calls, 0, "fedcba9876"),
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetCommandError" });
+      expect(error.message).toContain("head moved since the gate read");
+      expect(error.message).toContain(`gate ${headSha}, live fedcba9876`);
+      expect(yield* Ref.get(calls)).toEqual([viewCall]);
     })
   );
 

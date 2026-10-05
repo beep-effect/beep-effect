@@ -1169,7 +1169,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "publish:head-install-preflight",
         "publish:git:push",
         "publish:pr-create",
+        "publish:pr-ready-for-heavy-label",
         "publish:pr-provenance-stamp",
+        "monitor:until-ready:submit",
       ]);
 
       const pushFirstWithoutPr = buildYeetRunPlanForTesting({
@@ -4038,7 +4040,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       expect(overlappingBasePathsForTesting([], ["src/c.ts"])).toEqual([]);
     });
 
-    it("plans publish --prove-first --pr with the ready create step after the push", () => {
+    it("plans publish --prove-first --pr with the draft create tail after the push", () => {
       const plan = buildYeetRunPlanForTesting({
         context,
         message: O.some("feat(repo-cli): add yeet"),
@@ -4058,9 +4060,12 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         "publish:head-install-preflight",
         "publish:git:push",
         "publish:pr-create",
+        "publish:pr-ready-for-heavy-label",
         "publish:pr-provenance-stamp",
+        "monitor:until-ready:submit",
       ]);
       expect(findStep(plan.steps, "publish:pr-create").command).toBe("gh");
+      expect(findStep(plan.steps, "publish:pr-create").args).toContain("--draft");
     });
 
     it.effect("rejects --prove-first with --push-only before any commit or push", () =>

@@ -195,6 +195,7 @@ describe("yeet push-first publish plan wiring", () => {
     readonly monitor?: boolean;
     readonly pr: boolean;
     readonly proveFirst?: boolean;
+    readonly pushOnly?: boolean;
   }) =>
     withPlanEnv(() =>
       buildYeetRunPlanWithMode(
@@ -207,7 +208,7 @@ describe("yeet push-first publish plan wiring", () => {
           noEdit: false,
           pr: options.pr,
           proveFirst: options.proveFirst ?? false,
-          pushOnly: false,
+          pushOnly: options.pushOnly ?? false,
           tier: "full",
         })
       )
@@ -270,11 +271,9 @@ describe("yeet push-first publish plan wiring", () => {
       );
       const fixtures = yield* decodeFixture(yield* fs.readFileString(fixturePath));
       const verifyPlan = publishPlan({ mode: "verify", pr: false });
-      for (const [name, options] of [
-        ["no-pr", { pr: false }],
-        ["pr", { pr: true }],
-        ["pr-monitor", { monitor: true, pr: true }],
-      ] as const) {
+      // Only the PR-less plan is byte-identical: with a pull request every
+      // publish path now shares the draft-label-monitor tail (D4, D7).
+      for (const [name, options] of [["no-pr", { pr: false }]] as const) {
         const expected = yield* decodePlan(fixtures[name]);
         const actual = publishPlan({ ...options, proveFirst: true });
         // Byte equality of the `--plan --json` render. The fixture was captured
@@ -292,6 +291,26 @@ describe("yeet push-first publish plan wiring", () => {
       }
     }).pipe(provideScopedLayer(commandTestLayer))
   );
+
+  it("gives --prove-first and --push-only the same draft, label, stamp, and detached monitor tail", () => {
+    const tail = [
+      "publish:02-pr-create",
+      PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+      "publish:03-pr-provenance-stamp",
+      MONITOR_READY_SUBMIT_STEP_ID,
+    ];
+    expect(A.takeRight(stepIds(publishPlan({ pr: true, proveFirst: true })), 4)).toEqual(tail);
+    expect(A.takeRight(stepIds(publishPlan({ pr: true, pushOnly: true })), 4)).toEqual(tail);
+    const proveFirst = publishPlan({ pr: true, proveFirst: true });
+    assertSome(
+      O.map(
+        A.findFirst(proveFirst.steps, (step) => step.id === "publish:02-pr-create"),
+        (step) => A.contains(step.args, "--draft")
+      ),
+      true
+    );
+    expect(stepIds(proveFirst)).toContain("full:01-pre-push");
+  });
 
   it.effect("parses --no-pr and --prove-first, and rejects the removed --fast and --start-pr-early", () =>
     Effect.gen(function* () {

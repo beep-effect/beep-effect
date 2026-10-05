@@ -816,9 +816,11 @@ is the accepted miss. Inline review comments reach the inbox as
   URL and job id. `--monitor` stays attached instead (opt-in).
 - `--no-pr` pushes without a PR and warns: `check.yml` runs only on
   `pull_request`, so no hosted checks run until a PR exists.
-- `--prove-first` restores the previous order (full proof + CI parity before
-  the push) exactly. It is the only way to put the full proof on the publish
-  path. `--fast` and `--start-pr-early` no longer exist.
+- `--prove-first` restores the previous proof order (full proof + CI parity
+  before the push). It is the only way to put the full proof on the publish
+  path. `--push-only` still pushes an already-proven commit. Both share the
+  same draft, label, and detached-monitor tail as the default. `--fast` and
+  `--start-pr-early` no longer exist.
 - `bun run audit:github pre-push` remains the named full local fallback for
   secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
 

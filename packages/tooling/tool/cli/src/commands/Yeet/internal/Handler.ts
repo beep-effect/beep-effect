@@ -857,21 +857,58 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   );
 
   yield* warnOnMismatchedPublishUpstream(plan.context);
-  const pushSteps = A.filter(
-    publishSteps,
-    (step) =>
-      step.id !== "publish:02-pr-create" &&
-      step.id !== "publish:03-pr-provenance-stamp" &&
-      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-  );
+  const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
   const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
   if (A.some(publishResults, (result) => result.exitCode !== 0)) {
     return yield* failWithIssueArtifacts(plan.context, pushSteps, publishResults, "yeet publish phase failed.");
   }
-  if (options.pr) {
-    yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+});
+
+// The pull-request tail every publish path shares (push-first-publish D4, D7):
+// ensure the draft pull request, apply the heavy-admission label, then submit
+// the detached readiness monitor or stay attached when `--monitor` asked to.
+const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullRequest")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean
+): Effect.fn.Return<
+  YeetRunResult,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (!options.pr) {
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  const pullRequest = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
+  yield* applyHeavyAdmissionLabel(
+    plan.context,
+    recorder,
+    A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
+    pullRequest
+  );
+  const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
+  if (A.isReadonlyArrayEmpty(submitSteps)) {
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  }
+  const job = yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
+  yield* Console.log(
+    `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
+  );
+  yield* O.match(job, {
+    onNone: () =>
+      Console.error(
+        "[yeet] warning: the readiness monitor was submitted but its job id could not be read; run `bun run beep yeet job list`"
+      ),
+    onSome: (record) =>
+      Console.log(
+        `[yeet] readiness monitor job: ${record.jobId}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`
+      ),
+  });
+  return yield* publishResult(plan.context, !skipCommit);
 });
 
 const PUSH_PHASE_EXCLUDED_STEP_IDS: ReadonlyArray<string> = [
@@ -952,35 +989,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   if (A.some(pushResults, (result) => result.exitCode !== 0)) {
     return yield* failWithIssueArtifacts(plan.context, pushSteps, pushResults, "yeet publish phase failed.");
   }
-  if (!options.pr) {
-    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
-  }
-  const pullRequest = yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-  yield* applyHeavyAdmissionLabel(
-    plan.context,
-    recorder,
-    A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
-    pullRequest
-  );
-  const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
-  if (A.isReadonlyArrayEmpty(submitSteps)) {
-    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
-  }
-  const job = yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
-  yield* Console.log(
-    `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
-  );
-  yield* O.match(job, {
-    onNone: () =>
-      Console.error(
-        "[yeet] warning: the readiness monitor was submitted but its job id could not be read; run `bun run beep yeet job list`"
-      ),
-    onSome: (record) =>
-      Console.log(
-        `[yeet] readiness monitor job: ${record.jobId}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`
-      ),
-  });
-  return yield* publishResult(plan.context, !skipCommit);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
 
 /**

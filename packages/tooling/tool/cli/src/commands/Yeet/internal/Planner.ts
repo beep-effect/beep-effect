@@ -559,8 +559,8 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
     verification: "detached-clean-temp-worktree-of-HEAD",
   });
 
-// The push-first default opens the pull request as a draft (push-first-publish
-// D4); `--prove-first` keeps the ready create it always planned.
+// Every publish path opens the pull request as a draft (push-first-publish
+// D4); the flag stays so a plan can still describe a ready create.
 const prCreateStep = (context: RepoRunContext, draft: boolean): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
@@ -818,14 +818,26 @@ const statusSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): 
   ...(options.remote ? [statusRemoteStep(context), statusRemoteChecksStep(context)] : []),
 ];
 
+// The pull-request tail every publish path shares (push-first-publish D4, D7):
+// a draft pull request with the heavy-admission label and provenance stamp,
+// then the detached readiness monitor unless the operator stays attached.
+const pullRequestTailSteps = (
+  context: RepoRunContext,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [
+  ...(options.pr
+    ? [prCreateStep(context, true), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)]
+    : []),
+  ...(options.monitor ? monitorSteps(context) : options.pr ? [monitorReadySubmitStep(context)] : []),
+];
+
 // The push of an already-proven commit, shared by `--prove-first` and
-// `--push-only`: preflight, push carrying the proof-reuse marker, a ready
-// (non-draft) pull request, and the attached monitor when asked for.
+// `--push-only`: preflight, push carrying the proof-reuse marker, then the
+// same draft-and-monitor tail as the push-first default.
 const provenPushSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): ReadonlyArray<RepoPlanStep> => [
   headInstallPreflightStep(context, "publish"),
   pushStep(context, true),
-  ...(options.pr ? [prCreateStep(context, false), prProvenanceStampStep(context)] : []),
-  ...(options.monitor ? monitorSteps(context) : []),
+  ...pullRequestTailSteps(context, options),
 ];
 
 // The pre-push-first default, kept byte-identical behind `--prove-first`: the
@@ -856,10 +868,7 @@ const pushFirstPublishSteps = (
   proofStep(context, "cheap-gates", true),
   headInstallPreflightStep(context, "publish"),
   pushStep(context, false),
-  ...(options.pr
-    ? [prCreateStep(context, true), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)]
-    : []),
-  ...(options.monitor ? monitorSteps(context) : options.pr ? [monitorReadySubmitStep(context)] : []),
+  ...pullRequestTailSteps(context, options),
 ];
 
 const publishSteps = (
