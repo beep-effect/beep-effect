@@ -3,14 +3,14 @@
   "initiative": {
     "id": "epistemic-contradiction-triage",
     "title": "Epistemic Contradiction Triage",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-25",
-    "updated": "2026-07-29",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-triage",
-  "lifecycle": "active",
-  "statusNote": "P0-P1 are complete and P2 verification remains in progress; the formal quality-review loop and authoritative Yeet verification are the next recorded work.",
+  "lifecycle": "completed-retained",
+  "statusNote": "CLOSED 2026-10-05 (completed-retained): P0 spike PASS, P1 implementation + browser QA landed in PR #520 (merged 2026-08-02), P2 re-proved on main 8b7392fe00 (focused lanes, real-Postgres race lane, restart/migration proof; history/p2/2026-10-05-verification-and-closeout.md), P3/P4 closing PR carries the state flip and reflections.",
   "mission": "Deliver evidence-backed reviewable CONTRADICTS candidates and a human-approval path resolving as atomic SUPERSEDES, with detection never mutating authority.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -66,20 +66,23 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress",
-      "exit": "Two-axis queries over open and resolved candidates, the approval-to-atomic-supersession race lane (opt-in pattern per standards/architecture/08-testing.md), and restart/migration proof are green, and bun run beep yeet verify reports SUCCESS."
+      "status": "complete",
+      "exit": "Two-axis queries over open and resolved candidates, the approval-to-atomic-supersession race lane (opt-in pattern per standards/architecture/08-testing.md), and restart/migration proof are green, and bun run beep yeet verify reports SUCCESS.",
+      "statusNote": "PASS 2026-10-05. Focused epistemic lanes green (domain 94, tables 50, use-cases 50, server 86, client 18, db-admin migration 2), opt-in real-Postgres race lane 2/2 with restart recovery, reflection and goal-packet lints clean. Evidence: history/p2/2026-10-05-verification-and-closeout.md."
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending",
-      "exit": "PR published via bun run beep yeet publish --pr and driven to mergeable with hosted required checks green."
+      "status": "complete",
+      "exit": "PR published via bun run beep yeet publish --pr and driven to mergeable with hosted required checks green.",
+      "statusNote": "Implementation merged via PR #520 (2026-08-02); the closeout PR carries the P2 evidence and state flip and is driven to mergeable via Yeet."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending",
-      "exit": "Closeout reflection passes bun run beep lint reflection-artifacts and the packet-state flip (manifest + README) lands in the same PR as the final work."
+      "status": "complete",
+      "exit": "Closeout reflection passes bun run beep lint reflection-artifacts and the packet-state flip (manifest + README) lands in the same PR as the final work.",
+      "statusNote": "Reflections history/reflections/2026-07-30-codex.md and 2026-10-05-claude.md pass bun run beep lint reflection-artifacts; manifest + README flipped in the closing PR."
     }
   ],
   "verificationCommands": [
