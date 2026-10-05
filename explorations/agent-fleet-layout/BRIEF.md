@@ -85,13 +85,11 @@ legacy roots so discovery sees `projects/beep-effect*` until the drain ends.
 does four things: create the worktree under `lanes/`, register it, install
 dependencies (Bun hardlinks by default; the bootstrap only verifies the
 backend), and point `TURBO_CACHE_DIR` at `~/.cache/beep/turbo` so seats and
-lanes share one cache. The graft index is seeded from the ops seat.
+lanes share one cache. The graft index is seeded from the ops seat when it exists, otherwise from the lane's owning seat.
 
 ### Drain-on-empty
 
-The reaper gains one class: a checkout (legacy clone or lane) is drainable
-when it has no open PR, no active `beep-proof-*` unit, no live process and
-no dirty tree, and has been that way past a grace window. Legacy clones are
+The reaper gains one class: a checkout is drainable only when all of these hold past a grace window: no open PR; no active `beep-proof-*` unit; liveness confirmed not-live (an `unknown` liveness reading blocks the drain until a readable check confirms inactivity); a clean tree; no local-only work (every local branch, tag and stash is reachable from a remote ref, or has first been preserved in a `git bundle` under `~/.local/state/beep`); and, for a clone, no linked worktree still registered to it (owned lanes retire before their clone, checked with `git worktree list`, because removing the clone removes the `.git` store those lanes live in). Legacy clones are
 registered read-only with role `legacy` on day one and drain under the same
 rule. The three timer hosts drain last, after every renderer has been
 re-rendered against `seats/ops`.

@@ -10,7 +10,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Age-based compress or offload of the ai-metrics `raw` archive once `derived` is proven reproducible from it; raw stays the source of record.
 
-Depends on: none (first bet in the map).
+Depends on: [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
 Graduated from [`explorations/agent-fleet-layout`](../../explorations/agent-fleet-layout/README.md) on 2026-10-05.
 
 ## Launch

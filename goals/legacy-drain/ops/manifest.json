@@ -86,7 +86,11 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "dependsOn": ["goals/fleet-root-registry", "goals/ops-seat-timers"],
+  "dependsOn": [
+    "goals/fleet-root-registry",
+    "goals/lane-bootstrap",
+    "goals/ops-seat-timers"
+  ],
   "provides": ["fleet/drain"],
-  "requires": ["fleet/registry", "fleet/ops-seat"]
+  "requires": ["fleet/registry", "fleet/lane-bootstrap", "fleet/ops-seat"]
 }

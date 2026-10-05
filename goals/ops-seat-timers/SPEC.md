@@ -2,7 +2,7 @@
 
 ## Objective
 
-The timers today bake three different clones (`beep-effect0` for graft/refs, `beep-effect5` for residue reap, tmpfs reap and portfolio-watch, `beep-effect7` for research). Every renderer learns the fleet root and renders against `seats/ops`; units that are hand-written today (residue-reap, tmpfs-reap, portfolio-watch) gain a renderer so they can be re-rendered the same way. After this goal no installed unit names a `beep-effect<x>` path.
+The timers today bake three different clones (`beep-effect0` for graft/refs, `beep-effect5` for residue reap, tmpfs reap and portfolio-watch, `beep-effect7` for research). Every renderer learns the fleet root and renders against `seats/ops`; units that are hand-written today (residue-reap, tmpfs-reap, portfolio-watch) gain a renderer so they can be re-rendered the same way. After this goal none of the named timer or watch units names a `beep-effect<x>` path; transient `beep-proof-*` units keep the lane path they were submitted with.
 
 Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md)
 
@@ -40,7 +40,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `systemctl --user cat` of every `beep-*` timer-backed service shows `<fleet>/seats/ops` and no `beep-effect<x>` path.
+- [ ] `systemctl --user cat` of each named unit (graft deep refresh, refs refresh, research daily, research repo-card, residue reap, tmpfs reap, portfolio-watch, ai-metrics forwarder) shows `<fleet>/seats/ops` and no `beep-effect<x>` path. Transient `beep-proof-*` units are out of scope: they bake their own lane path and are never moved.
 - [ ] Each renderer has a `--refresh` path exercised by a test that renders against a temp fleet root.
 - [ ] `docs/runbooks/systemd-timers.md` lists every unit, its renderer and its refresh command.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.

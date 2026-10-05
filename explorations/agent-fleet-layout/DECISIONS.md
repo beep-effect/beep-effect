@@ -121,7 +121,7 @@ recommendation on every question except where noted.
 
 **Answer:** Every lane reads shared caches by default: lane bootstrap sets the shared `TURBO_CACHE_DIR`, consumes the graft seed from the ops seat, installs from the shared Bun cache. Per-lane cache dirs become empty by construction.
 
-**Rationale:** The shared turbo dir exists but only the reap unit uses it. Rejected: graft per lane (640 MB each), status quo plus reaping.
+**Rationale:** The shared turbo dir exists and is already the default for CLI-driven turbo runs and direnv shells (corrected in review; see `RESEARCH.md`); bootstrap closes the remaining invocation paths. Rejected: graft per lane (640 MB each), status quo plus reaping.
 
 ## 2026-10-05 — packet-home-and-slug
 
@@ -170,3 +170,11 @@ recommendation on every question except where noted.
 **Answer:** `raw` (22 GB, 97% older than 30 days). Retention = compress or offload `raw` by age once `derived` is proven reproducible from it; `derived`, `mirror`, `config-snapshots` untouched. Exact window is a goal decision.
 
 **Rationale:** Measured per class. Rejected: deleting raw outright (forwarder provenance), relocating the whole root.
+
+## 2026-10-05 — review-amendments (PR #1418)
+
+**Question:** Which reviewer findings change the shaped contract?
+
+**Answer:** Five. (1) The drainable predicate gains three conditions: liveness must be confirmed not-live (`unknown` blocks), no local-only branches, tags or stashes unless bundled first, and a clone drains only after every worktree registered to it. (2) `legacy-drain` also depends on `lane-bootstrap`. (3) `ai-metrics-raw-retention` depends on `ops-seat-timers` and must keep the restore drill working on compacted data. (4) `lane-bootstrap` seeds graft from the ops seat when present and from the owning seat otherwise, so it does not depend on the ops seat. (5) The ops-seat acceptance check covers the named timer-backed units and excludes transient `beep-proof-*` units.
+
+**Rationale:** The census itself shows 205 of 223 checkouts with `unknown` liveness and 11 ad hoc worktrees, so "not reported live" and "clean tree" are not safe proxies for "nothing to lose". Rejected: keeping retention independent (its timer needs the ops seat), making `lane-bootstrap` wait on the ops seat (would serialize the two parallel goals).

@@ -86,5 +86,7 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "provides": ["telemetry/raw-retention"]
+  "provides": ["telemetry/raw-retention"],
+  "dependsOn": ["goals/ops-seat-timers"],
+  "requires": ["fleet/ops-seat"]
 }

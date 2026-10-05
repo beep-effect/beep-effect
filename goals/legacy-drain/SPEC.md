@@ -2,9 +2,9 @@
 
 ## Objective
 
-Residue reap gains a `drainable` class: a checkout with no open PR, no active `beep-proof-*` unit, no live process, a clean tree, and that state held past a grace window. Legacy clones are registered with role `legacy` on day one and drain under the same rule, in waves, with the three former timer hosts last. `beep-effect-cutover` is archived. `standards/git-worktrees.md` is rewritten for the seats-and-lanes layout.
+Residue reap gains a `drainable` class: a checkout is drainable only when all of these hold past a grace window: no open PR; no active `beep-proof-*` unit; liveness confirmed not-live (an `unknown` liveness reading blocks the drain until a readable check confirms inactivity); a clean tree; no local-only work (every local branch, tag and stash is reachable from a remote ref, or has first been preserved in a `git bundle` under `~/.local/state/beep`); and, for a clone, no linked worktree still registered to it (owned lanes retire before their clone, checked with `git worktree list`, because removing the clone removes the `.git` store those lanes live in). Legacy clones are registered with role `legacy` on day one and drain under the same rule, in waves, with the three former timer hosts last. `beep-effect-cutover` is archived. `standards/git-worktrees.md` is rewritten for the seats-and-lanes layout.
 
-Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md), [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
+Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md), [`goals/lane-bootstrap`](../../goals/lane-bootstrap/README.md), [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
 
 ## Non-Goals
 
@@ -33,7 +33,10 @@ Higher sources outrank lower sources when they conflict.
 
 ## Constraints
 
-- Depends on `goals/fleet-root-registry` (drainable predicate reads the registry) and `goals/ops-seat-timers` (timer hosts must be free first).
+- Depends on `goals/fleet-root-registry` (drainable predicate reads the registry), `goals/lane-bootstrap` (new work must already land in `lanes/` through the sanctioned path) and `goals/ops-seat-timers` (timer hosts must be free first).
+- `unknown` liveness is a blocker, never a pass; the census had 205 of 223 checkouts at `unknown`.
+- Local-only work is preserved before removal: unpushed branches, tags and stashes are bundled to `~/.local/state/beep` and the bundle is verified (`git bundle verify`) before the checkout is touched.
+- Clone-level drain is ordered: every worktree registered to the clone retires first; a clone with any registered worktree is not drainable.
 - Read `git worktree list` from every seat; do not trust the mirror's per-root grouping until the undercount is explained.
 - Reaper checks `beep-proof-*` units before trees.
 - Every reap is journaled with what was removed and why; dry-run first wave.
@@ -41,7 +44,8 @@ Higher sources outrank lower sources when they conflict.
 ## Acceptance Criteria
 
 - [ ] `bun run beep quality residue-reap --fleet --json` reports a `drainable` class with per-checkout reasons, dry-run by default.
-- [ ] First apply wave removes only checkouts that met the predicate for the full grace window; journal shows PR, unit, liveness and dirty checks per removal.
+- [ ] First apply wave removes only checkouts that met the predicate for the full grace window; journal shows PR, unit, confirmed liveness, dirty, local-only-ref and owned-worktree checks per removal.
+- [ ] A fixture checkout with an unpushed branch and a stash is not removed until its bundle exists and verifies; a fixture clone with a registered worktree is refused; a fixture checkout with `unknown` liveness is refused.
 - [ ] Disk under `~/YeeBois/projects/beep-effect*` is reported before and after each wave.
 - [ ] `standards/git-worktrees.md` documents seats, lanes, registry, adoption and drain.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.

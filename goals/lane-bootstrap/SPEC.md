@@ -2,7 +2,7 @@
 
 ## Objective
 
-Creating a lane is one command. `beep worktree add` targets `<fleet>/lanes/<slug>` (seat recorded in the registry, not in the path), installs dependencies and verifies the hardlink backend is in effect, exports the shared `TURBO_CACHE_DIR=~/.cache/beep/turbo` for the lane, seeds the graft index from the ops seat, and writes the registry row. Lanes created elsewhere (`<clone>/.claude/worktrees/*`, `~/.codex/worktrees/*`, ad hoc siblings) are adopted into the registry by the fleet scan with role `adopted`.
+Creating a lane is one command. `beep worktree add` targets `<fleet>/lanes/<slug>` (seat recorded in the registry, not in the path), installs dependencies and verifies the hardlink backend is in effect, exports the shared `TURBO_CACHE_DIR=~/.cache/beep/turbo` for the lane, seeds the graft index from the ops seat when it exists and from the lane's owning seat otherwise, and writes the registry row. Lanes created elsewhere (`<clone>/.claude/worktrees/*`, `~/.codex/worktrees/*`, ad hoc siblings) are adopted into the registry by the fleet scan with role `adopted`.
 
 Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md)
 
@@ -34,6 +34,8 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - Depends on `goals/fleet-root-registry` for the fleet root and registry schema.
+- No dependency on `goals/ops-seat-timers`: the graft seed source is `seats/ops` when present, else the owning seat; a missing seed degrades to a warning, never a failed bootstrap.
+- The shared turbo cache is already the default for CLI-driven runs and direnv shells; bootstrap covers the invocation paths that bypass both.
 - Install verification is a check, not a feature: assert link count > 1 on a sampled file; fail loud if the backend fell back to copy.
 - Shared `TURBO_CACHE_DIR` across seats needs the residue reap's size cap applied.
 - Never create a lane under `/tmp`.
@@ -41,6 +43,7 @@ Higher sources outrank lower sources when they conflict.
 ## Acceptance Criteria
 
 - [ ] `bun run beep worktree add demo-lane` from any seat creates `<fleet>/lanes/demo-lane`, a registry row with the owning seat, a populated `node_modules` with hardlinked files, and a `.turbo` that resolves to the shared cache dir.
+- [ ] The same command succeeds on a fleet with no `seats/ops`, seeding graft from the owning seat.
 - [ ] A worktree created by the desktop app under `.claude/worktrees` appears in the registry with role `adopted` after one fleet scan.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.
 - [ ] No unrelated refactors or formatting churn.

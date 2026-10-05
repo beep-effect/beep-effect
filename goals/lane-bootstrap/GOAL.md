@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: `beep worktree add <slug>` is the only sanctioned lane creator: it creates the worktree under `<fleet>/lanes/<slug>`, registers it, installs with Bun's hardlink backend verified, points `TURBO_CACHE_DIR` at the shared cache, seeds graft from the ops seat, and the same scan adopts desktop-app and Codex lanes.
+Outcome: `beep worktree add <slug>` is the only sanctioned lane creator: it creates the worktree under `<fleet>/lanes/<slug>`, registers it, installs with Bun's hardlink backend verified, points `TURBO_CACHE_DIR` at the shared cache, seeds graft from the ops seat when present (else the owning seat), and the same scan adopts desktop-app and Codex lanes.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:

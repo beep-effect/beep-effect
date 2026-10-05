@@ -2,9 +2,9 @@
 
 ## Objective
 
-Prove that `derived` can be regenerated from `raw` for a sampled window, then add a compaction step (compress in place or offload to a named target) for raw files older than a retention window decided in P0. `derived`, `mirror`, `config-snapshots` are untouched. The step is a timer rendered on the ops seat via the same renderer family as `ops-seat-timers`.
+Prove that `derived` can be regenerated from `raw` for a sampled window, then add a compaction step (compress in place or offload to a named target) for raw files older than a retention window decided in P0. `derived`, `mirror`, `config-snapshots` are untouched. The restore drill reads encrypted raw files at `raw/<sourceKind>/<id>.json` today (`packages/tooling/library/ai-metrics/src/retention.ts`, `archive.ts`), so compaction must either keep that path readable or teach the restore path the compacted or offloaded form. The step is a timer rendered on the ops seat via the same renderer family as `ops-seat-timers`.
 
-Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: none (first bet in the map).
+Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
 
 ## Non-Goals
 
@@ -35,12 +35,14 @@ Higher sources outrank lower sources when they conflict.
 - Raw is the encrypted source of record (`goals/ai-metrics-stack` SPEC); compress or offload only.
 - Reproducibility proof precedes any compaction.
 - Retention window and offload target are P0 decisions recorded in this packet's decision log.
-- The compaction timer renders on `seats/ops` once `ops-seat-timers` lands; until then it may run manually.
+- Depends on `goals/ops-seat-timers`: the compaction timer renders on `seats/ops` through that renderer family. P0 research and the reproducibility proof may start earlier; the goal does not close before the timer exists.
+- Restore stays provable: a restore drill over compacted or offloaded raw must succeed before any original is removed.
 
 ## Acceptance Criteria
 
 - [ ] A documented command regenerates `derived` for a sampled window from `raw` and diffs clean.
 - [ ] Raw files older than the chosen window are compressed or offloaded; size before and after is recorded.
+- [ ] After compaction, the restore drill replays a sampled window of retained (compacted or offloaded) raw data and matches the pre-compaction result.
 - [ ] Nothing under `derived`, `mirror`, `config-snapshots` changes.
 - [ ] `bun run beep quality package-verify @beep/ai-metrics` passes.
 - [ ] No unrelated refactors or formatting churn.

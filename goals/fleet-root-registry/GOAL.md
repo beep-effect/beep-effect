@@ -21,7 +21,7 @@ prose when they conflict.
 Scope:
 
 - In: `packages/tooling/tool/cli/src/commands/Worktree/**`, `commands/Yeet/internal/Economics.ts`, `internal/repo-run/ResidueReap.ts` discovery, a new registry module, `docs/runbooks/`.
-- Out: any checkout move or delete, lane creation, timer units, `standards/git-worktrees.md`. 
+- Out: any checkout move or delete, lane creation, timer units, `standards/git-worktrees.md`.
 
 Workflow:
 

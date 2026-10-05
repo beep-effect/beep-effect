@@ -26,8 +26,12 @@ rebuilding them). Date sections; research goes stale.
   Source: [Turborepo caching](https://turborepo.dev/docs/core-concepts/caching),
   [configuration reference](https://turborepo.dev/docs/reference/configuration).
   This repo's `turbo.json` sets no `cacheDir`, so lanes already share their
-  seat's cache; seats do not share with each other unless `TURBO_CACHE_DIR`
-  points at `~/.cache/beep/turbo` (today only the reap unit sets it).
+  seat's cache. Seats share with each other through `~/.cache/beep/turbo`
+  on two paths already: the repo CLI selects it for turbo runs when nothing
+  overrides it (`packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`),
+  and `.envrc` exports `TURBO_CACHE_DIR` for direnv-loaded shells. The gap is
+  invocations that bypass both (raw `turbo`, shells without direnv, units
+  without the variable), which is what lane bootstrap still has to close.
 - **Bare-repo worktree layout.** The common pattern for parallel agents is one
   bare object store (`.bare/`), a `.git` file pointing at it, and one
   directory per branch checkout, each agent in its own worktree sharing
@@ -141,7 +145,7 @@ problem. The weight is per-lane `node_modules` and the ai-metrics data root.
 | Fleet-wide residue reap (aged previews, turbo runs, qualification views, codex sessions) | EXISTS, timer on `beep-effect5` | `internal/repo-run/ResidueReap.ts` |
 | tmpfs janitor | EXISTS (dry-run by default) | `beep quality tmpfs-reap` |
 | Timer renderers with agent-allowed `--refresh` | EXISTS | `beep research install-timers --refresh`, `beep graft deep install-timer --refresh`, `beep refs install-timer --refresh`; `docs/runbooks/systemd-timers.md` |
-| Shared turbo cache dir | EXISTS, used only by the reap unit | `TURBO_CACHE_DIR=~/.cache/beep/turbo` |
+| Shared turbo cache dir | EXISTS; default for CLI-driven turbo runs (`internal/cli/TurboCache.ts`), exported by `.envrc`, set on the reap unit; not guaranteed for raw `turbo` or non-direnv shells | `TURBO_CACHE_DIR=~/.cache/beep/turbo` |
 | Shared Bun install cache | EXISTS as a directory | `~/.cache/beep/bun-install-cache` (6.5 GB); whether lanes install from it is unverified |
 | Authored seat/lane registry (seat role, lane slug, packet, drain status, retention exemptions) | NOT FOUND | NET-NEW, to be an authored layer joined onto the fleet mirror |
 | Fleet-root configuration (`BEEP_FLEET_ROOT` or equivalent) | NOT FOUND | NET-NEW; today derived from the repo root's parent |

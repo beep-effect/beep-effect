@@ -12,10 +12,10 @@ explicitly marked NET-NEW.
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
 | `fleet-root-registry` | One fleet-root setting read by every path-dependent CLI surface, plus the authored seat/lane registry joined onto the derived fleet mirror; `beep worktree fleet` output unchanged, a new joined view added; mirror undercount explained or fixed. | none | reuse `goals/fleet-mirror` (`beep worktree fleet`); extend `commands/Yeet/internal/Economics.ts` (`projectsRootOf`, `fleetCandidates`), `commands/Worktree/Worktree.service.ts:996` managed root; NET-NEW registry schema + store under `~/.local/state/beep` |
-| `lane-bootstrap` | `beep worktree add` creates a lane under `lanes/`, registers it, installs (verifying Bun's hardlink backend), wires the shared `TURBO_CACHE_DIR`, seeds graft from the ops seat; adopts desktop-app and Codex lanes on sight. | `fleet-root-registry` | extend `commands/Worktree/`; reuse `~/.cache/beep/turbo`, `~/.cache/beep/bun-install-cache`, `beep graft deep` sibling seed; NET-NEW adoption pass |
+| `lane-bootstrap` | `beep worktree add` creates a lane under `lanes/`, registers it, installs (verifying Bun's hardlink backend), wires the shared `TURBO_CACHE_DIR`, seeds graft from the ops seat when present, else the owning seat; adopts desktop-app and Codex lanes on sight. | `fleet-root-registry` | extend `commands/Worktree/`; reuse `~/.cache/beep/turbo`, `~/.cache/beep/bun-install-cache`, `beep graft deep` sibling seed; NET-NEW adoption pass |
 | `ops-seat-timers` | Create `seats/ops`; re-render every user timer (`research install-timers`, `graft deep install-timer`, `refs install-timer`, residue-reap, tmpfs-reap, portfolio-watch, ai-metrics forwarder) against it via the `--refresh` forms; renderers read the fleet root instead of a baked clone. | `fleet-root-registry` | reuse `docs/runbooks/systemd-timers.md` renderers; extend unit renderers to take the fleet root; NET-NEW: portfolio-watch and residue/tmpfs units gain a renderer (today hand-written) |
-| `legacy-drain` | Register `projects/beep-effect*` clones as role `legacy`; add the drainable class (no open PR, no `beep-proof-*` unit, not live, clean, past grace) to residue-reap; archive `beep-effect-cutover`; reap in waves with the timer hosts last; rewrite `standards/git-worktrees.md` for seats and lanes. | `fleet-root-registry`, `ops-seat-timers` | extend `internal/repo-run/ResidueReap.ts` reap classes; reuse `yeet sweep --retire` live-checkout fence, `beep worktree remove --archive`; doctrine: `standards/git-worktrees.md` |
-| `ai-metrics-raw-retention` | Age-based compress or offload of `~/.local/state/beep/ai-metrics/raw` once `derived` is proven reproducible from it; retention window and offload target decided in-goal; raw stays source of record. | none | extend `goals/ai-metrics-stack` (P7 retention posture, encrypted raw archive); NET-NEW compaction job rendered as a timer on the ops seat |
+| `legacy-drain` | Register `projects/beep-effect*` clones as role `legacy`; add the drainable class (no open PR, no `beep-proof-*` unit, confirmed not live, clean, no local-only refs unless bundled, no registered worktrees for a clone, past grace) to residue-reap; archive `beep-effect-cutover`; reap in waves with the timer hosts last; rewrite `standards/git-worktrees.md` for seats and lanes. | `fleet-root-registry`, `lane-bootstrap`, `ops-seat-timers` | extend `internal/repo-run/ResidueReap.ts` reap classes; reuse `yeet sweep --retire` live-checkout fence, `beep worktree remove --archive`; doctrine: `standards/git-worktrees.md` |
+| `ai-metrics-raw-retention` | Age-based compress or offload of `~/.local/state/beep/ai-metrics/raw` once `derived` is proven reproducible from it; retention window and offload target decided in-goal; raw stays source of record and the restore drill keeps working on compacted data. | `ops-seat-timers` | extend `goals/ai-metrics-stack` (P7 retention posture, encrypted raw archive); NET-NEW compaction job rendered as a timer on the ops seat |
 
 Second fleet: `beep-effect-private` needs no goal. `fleet-root-registry` must
 make the fleet root per repository; the private clone then moves to
@@ -30,9 +30,10 @@ make the fleet root per repository; the private clone then moves to
    work land in `lanes/`; timers make the three infra clones retirable.
 3. `legacy-drain` once both land. It is the only goal that deletes anything
    and it needs the registry's drainable predicate and the ops seat in place.
-4. `ai-metrics-raw-retention` is independent and can run any time after the
-   ops seat exists (its compaction timer renders there). It is the disk win
-   the operator asked about first, so it may start alongside step 2.
+4. `ai-metrics-raw-retention` depends on `ops-seat-timers` because its
+   compaction timer renders on the ops seat. Its research and
+   reproducibility proof may start alongside step 2; it closes after the
+   ops seat exists.
 
 Optional and out of this map: the bare object store. It is a re-entry point
 once the registry has run for a while and `git-common-dir` consumers are
@@ -66,6 +67,9 @@ the registry file decodes against its schema; package-verify on
   live-checkout fence) must keep resolving after lanes move to a flat dir.
 - Desktop app and Codex choose their own worktree roots; adopt, never fight.
 - Detached proof units bake lane paths; the reaper checks units before trees.
+- `unknown` liveness (205 of 223 at census) blocks a drain; it never counts as idle.
+- Local-only branches, tags and stashes are bundled and verified before a checkout is removed; a clone drains only after its registered worktrees.
+- Compacted ai-metrics raw must stay restorable; the restore drill is part of acceptance.
 - The fleet root is per repository or the private fleet is invisible.
 - A shared `TURBO_CACHE_DIR` across seats needs the reap's size cap.
 - Timer re-render touches installed units; only the `--refresh` forms are

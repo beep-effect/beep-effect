@@ -21,7 +21,7 @@ prose when they conflict.
 Scope:
 
 - In: `internal/repo-run/ResidueReap*.ts`, `standards/git-worktrees.md`, `AGENTS.md` worktree bullet, journal output.
-- Out: cutover dates, live checkouts, the private repo, telemetry data. Depends on goals/fleet-root-registry, goals/ops-seat-timers landing first.
+- Out: cutover dates, live checkouts, the private repo, telemetry data. Depends on goals/fleet-root-registry, goals/lane-bootstrap, goals/ops-seat-timers landing first.
 
 Workflow:
 

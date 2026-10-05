@@ -21,7 +21,7 @@ prose when they conflict.
 Scope:
 
 - In: `packages/tooling/library/ai-metrics/**`, one timer renderer, `docs/runbooks/`.
-- Out: raw deletion, data-root relocation, forwarder or redaction changes. 
+- Out: raw deletion, data-root relocation, forwarder or redaction changes. Depends on goals/ops-seat-timers landing first.
 
 Workflow:
 

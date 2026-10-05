@@ -10,7 +10,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Register the legacy `beep-effect*` clones read-only and drain them, lane by lane and clone by clone, under a drainable predicate the reaper enforces; land the seats-and-lanes worktree standard.
 
-Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md), [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
+Depends on: [`goals/fleet-root-registry`](../../goals/fleet-root-registry/README.md), [`goals/lane-bootstrap`](../../goals/lane-bootstrap/README.md), [`goals/ops-seat-timers`](../../goals/ops-seat-timers/README.md)
 Graduated from [`explorations/agent-fleet-layout`](../../explorations/agent-fleet-layout/README.md) on 2026-10-05.
 
 ## Launch
