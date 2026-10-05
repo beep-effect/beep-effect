@@ -174,3 +174,68 @@ clone without a ledger file is recorded as absent, not as an error. Rejected: th
 singular reading (only the clone the capture runs from; from this goal's lane that ledger
 does not exist, so W4 would stop whatever Ruling 1 said, and the pin would depend on where
 the generator happened to run).
+
+**Ruling 3 — the ledger's two `key` members are pinned as 12-hex prefixes.** Every proof-ledger
+row carries a 64-hex reuse key (`fact.key.key` on facts, `decision.key` on shadow rows). The
+hosted Secret Scanning check reads main's `.gitleaks.toml`, and its `generic-api-key` rule flags
+a 64-hex value under a member named `key` (probed on 2026-10-05; the other 64-hex digests in the
+row pass). The W4 capture writes both members as their first 12 hex characters, asserts that the
+mapping stays injective over every key in the capture (a collision fails the capture closed),
+records the projection rule in the manifest, and keeps every other digest verbatim. Within-pin
+joins (shadow decision to fact, hit to prior fact) survive, and a seat can still recompute the
+prefix from the row's other members (`laneId`, `commandDigest`, `envProfile`, `inputDigest`,
+`epochDigest`). The width matches `ownerRef`, `checkoutRef` and the admission `originKey`.
+Rejected: a path- and shape-scoped allowlist landed in a prior PR (full fidelity, but two PR
+cycles and a standing allowlist on the pin path).
+
+**Ruling 4 — citations resolve against the fetched `origin/main` tree; no evidence tag.** Both
+captures record `corpus_commit` and `corpus_tree` from `refs/remotes/origin/main` as fetched at
+capture, resolve every citation against that tree with `git cat-file blob <tree>:<path>`, assert
+that the capturing checkout's copy of each cited file is byte-equal to the blob (otherwise the
+capture fails closed and asks for a merge of `origin/main`), and record the lane HEAD beside it
+as `capture_head`. `corpus_tree` therefore stays reachable from main after the squash merge
+without any remote write; verify mode fails loud when the tree object is absent and names
+`git fetch origin <corpus_commit>`. Current-tree resolution is printed as an advisory count and
+never changes the exit code (graduation Ruling 8). Rejected: citing the lane's capture commit
+and pushing an `evidence/beep-ci-ops/…-capture` tag (the run-3 route; a fresh clone would need
+the tag before verify works).
+
+**Ruling 5 — W3 scope: public-origin filter, Claude-app worktrees, the `promotions` family,
+quarantine as one payload per root.** A verbatim copy of the run3b discovery would today publish
+the private duplicate clone, miss 17 checkouts under `<clone>/.claude/worktrees/`, skip the
+`promotions` live family (`yeet-admission-promotion/v1`, present since #993) and turn 2,068
+quarantined lease files into about 4,100 payload files. The `run4-fleet` generator (1) resolves
+each checkout's git directory from the filesystem and reads the `origin` URL from its config as
+text, admitting only `github.com/beep-effect/beep-effect`; any other origin, a missing origin or
+an unreadable config excludes the checkout, counted by reason and never labelled; (2) discovers
+`<clone>/.claude/worktrees/<name>` checkouts with label `<clone>/.claude/worktrees/<name>`,
+and nested clones under a `*-worktrees` directory with their `clone` kind; (3) adds
+`promotions` to the live families; (4) captures the `quarantine` family as ONE NDJSON payload
+per admission root in sorted filename order, with filenames never persisted, custody surrogates
+minted per object and the residue scan over every byte. Rejected: a counts-only quarantine
+receipt (the two reaper sweeps' dead-lease records would not be pinned); the run3b one-file-per-
+object layout (about 5,000 files, past the review bot's sight).
+
+**Ruling 6 — W4 pins whole ledgers with the cut census.** The `run4-ledger` pin holds every
+terminated row of every owning-clone ledger, facts and shadow rows, and its manifest splits the
+census at the #1321 cut instant (`2026-09-28T15:09:38Z`, the committer instant of
+`9d52d8f587`). The 625 pre-cut facts are issuance history; the gate reads the post-cut stage
+census, not the row count. Rejected: post-cut rows only (drops the five `repair-loop` facts and
+the 28 pre-cut lane-origin facts in one clone that already contradict SPEC's "only facts written
+inside a clone" sentence).
+
+**Orchestrator notes (recorded under the sitting, not rulings).** (a) The two generators and
+their tests are new files beside the run3b generator in the corpus home, as run-3 Ruling 3 and
+Stage B Ruling 18 did; they are appends, and no existing byte under `ontology/extraction/**`
+changes. (b) Root names: `run4-fleet` (W3) and `run4-ledger` (W4), each with its own manifest
+and self-pinned generator digest, plus a `generator_lineage` field naming the run3b generator
+and its digest (Ruling 22 rider). (c) The Queue D projection is read by path and sha256 and
+recorded with a recomputed census; it is not copied into the pin. (d) W4 maps
+`provenance.originKey` to the run3b descriptor form `<fleet>/<label>` (clone root, lane,
+Claude-app worktree, or merged-preview worktree with its process component redacted); a path
+outside the fleet root fails the capture. (e) A terminated line that is not JSON is tallied and
+excluded; an unterminated tail is excluded and its byte count recorded; a row that decodes but
+drifts from the deployed schema (unknown member, literal or kind) fails the capture closed.
+(f) W4 reads no attempt journal; W3 owns attempts, and join coverage is recorded as counts.
+(g) `biome.jsonc` and the generated `biome.identity.jsonc` gain negations for both roots before
+any payload is staged; graduation Ruling 7 names them as coupled files.
