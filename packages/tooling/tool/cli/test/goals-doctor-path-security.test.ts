@@ -1,13 +1,12 @@
 import { goalsCommand, PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Ref, Result } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { temporaryWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -16,60 +15,54 @@ const absoluteExplorationPath = "/etc/passwd";
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)),
-  TestConsole.layer
+  TestConsole.layer,
+  Layer.effectDiscard(temporaryWorkingDirectory).pipe(Layer.provide(NodeServices.layer))
 );
 
 describe("goals doctor provenance path security", () => {
-  it(
-    "reports an absolute exploration path as invalid without probing it",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeProjectFile("bun.lock", "");
-            yield* writeProjectFile(
-              "goals/demo/ops/manifest.json",
-              `${encodeJson({
-                schemaVersion: "initiative-manifest/v2",
-                initiative: { id: "demo", title: "demo", status: "paused" },
-                lifecycle: "paused",
-                completionGate: {
-                  operator: "yeet",
-                  requiresPullRequest: true,
-                  requiresMergeable: true,
-                  statement: "Ship via yeet.",
-                  grandfathered: false,
-                },
-                provenance: { exploration: absoluteExplorationPath },
-              })}\n`
-            );
-            yield* writeProjectFile("goals/demo/README.md", "# demo\n\n## Status\n\nLifecycle: `paused`\n");
-            yield* writeProjectFile(
-              "goals/goals-doctor.baseline.jsonc",
-              `${encodeJson({ schemaVersion: "goals-doctor-baseline/v1", findings: [] })}\n`
-            );
+  it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
+    it.effect("reports an absolute exploration path as invalid without probing it", () =>
+      Effect.gen(function* () {
+        yield* writeProjectFile("bun.lock", "");
+        yield* writeProjectFile(
+          "goals/demo/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "demo", title: "demo", status: "paused" },
+            lifecycle: "paused",
+            completionGate: {
+              operator: "yeet",
+              requiresPullRequest: true,
+              requiresMergeable: true,
+              statement: "Ship via yeet.",
+              grandfathered: false,
+            },
+            provenance: { exploration: absoluteExplorationPath },
+          })}\n`
+        );
+        yield* writeProjectFile("goals/demo/README.md", "# demo\n\n## Status\n\nLifecycle: `paused`\n");
+        yield* writeProjectFile(
+          "goals/goals-doctor.baseline.jsonc",
+          `${encodeJson({ schemaVersion: "goals-doctor-baseline/v1", findings: [] })}\n`
+        );
 
-            const fs = yield* FileSystem.FileSystem;
-            const unsafeProbeCount = yield* Ref.make(0);
-            const instrumentedFileSystem: FileSystem.FileSystem = {
-              ...fs,
-              exists: (target) =>
-                target === absoluteExplorationPath
-                  ? Ref.update(unsafeProbeCount, (count) => count + 1).pipe(Effect.andThen(fs.exists(target)))
-                  : fs.exists(target),
-            };
+        const fs = yield* FileSystem.FileSystem;
+        const unsafeProbeCount = yield* Ref.make(0);
+        const instrumentedFileSystem: FileSystem.FileSystem = {
+          ...fs,
+          exists: (target) =>
+            target === absoluteExplorationPath
+              ? Ref.update(unsafeProbeCount, (count) => count + 1).pipe(Effect.andThen(fs.exists(target)))
+              : fs.exists(target),
+        };
 
-            yield* runGoalsCommand(["doctor"]).pipe(
-              Effect.provideService(FileSystem.FileSystem, instrumentedFileSystem)
-            );
+        yield* runGoalsCommand(["doctor"]).pipe(Effect.provideService(FileSystem.FileSystem, instrumentedFileSystem));
 
-            expect(yield* Ref.get(unsafeProbeCount)).toBe(0);
-            expect((yield* TestConsole.errorLines).join("\n")).toContain(
-              `provenance.exploration "${absoluteExplorationPath}" is an invalid path`
-            );
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    20_000
-  );
+        expect(yield* Ref.get(unsafeProbeCount)).toBe(0);
+        expect((yield* TestConsole.errorLines).join("\n")).toContain(
+          `provenance.exploration "${absoluteExplorationPath}" is an invalid path`
+        );
+      })
+    );
+  });
 });
