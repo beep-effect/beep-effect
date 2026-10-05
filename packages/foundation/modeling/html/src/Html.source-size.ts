@@ -743,7 +743,6 @@ const parseSourceSizeEntries = (
     },
   });
   if (hasParseError) return failure("invalidCss");
-  if (A.isReadonlyArrayEmpty(entries)) return failure("invalidList");
 
   const meaningfulTokens = A.filter(tokens, (token) => !isTokenEOF(token) && !isTokenWhiteSpaceOrComment(token));
   if (pipe(A.last(meaningfulTokens), O.exists(isTokenComma))) return failure("invalidList", entries.length - 1);

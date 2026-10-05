@@ -6643,3 +6643,15 @@ The failed jobs were rerun on the same head and passed after merge; the full
 local Yeet proof also passed 37 lanes, including affected coverage. Waiting for `merge-ready: yes`
 before merging, plus runner health telemetry when communication drops, would
 have made the failure actionable before it reached main.
+
+### Unrelated HTML coverage floor blocked the CLI wave (2026-10-05)
+
+PR #1416's local `quality:coverage` gate failed on the unchanged
+`@beep/html` `Html.source-size.ts` file at 99.51% branches and 99.72%
+statements against a 100% file baseline. All Turbo coverage tasks passed, and
+a focused 196-test HTML coverage run reproduced the gap. The uncovered guard
+checked for an empty list after `tokenize` had supplied an EOF token; the
+installed comma-list parser always returns at least one entry for that input.
+Removing the unreachable guard preserves the existing malformed-input behavior.
+Retaining the coverage ratchet's rendered diagnostic in Yeet evidence, rather
+than truncating its log before the failure, would have made attribution faster.
