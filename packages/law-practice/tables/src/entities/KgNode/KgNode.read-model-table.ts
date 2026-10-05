@@ -6,7 +6,7 @@
  */
 
 import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
-import type { KgNodeKind } from "@beep/law-practice-domain/values";
+import type { KgAttributionSource, KgNodeKind } from "@beep/law-practice-domain/values";
 
 /**
  * Physical table name for practice knowledge-graph nodes.
@@ -53,6 +53,7 @@ export const KG_NODE_TABLE_NAME = "kg_node" as const;
  *   label: "AB-1234 — Acme Corp",
  *   docketFamily: "AB",
  *   client: "Acme Corp",
+ *   attributionSource: "filename",
  *   epistemicStatus: "derived-from-official-records",
  *   provenanceKind: "catalog-digest",
  *   provenanceRef: "sha256:9f2c...",
@@ -73,6 +74,7 @@ export const kgNodeTable = pgTable(KG_NODE_TABLE_NAME, {
   label: text("label").notNull(),
   docketFamily: text("docket_family"),
   client: text("client"),
+  attributionSource: text("attribution_source").notNull().$type<KgAttributionSource>(),
   epistemicStatus: text("epistemic_status").notNull(),
   provenanceKind: text("provenance_kind").notNull(),
   provenanceRef: text("provenance_ref").notNull(),

@@ -9,7 +9,12 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { KgNodeKind, PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-practice-domain/values";
+import {
+  KgAttributionSource,
+  KgNodeKind,
+  PracticeKgEpistemicStatus,
+  PracticeKgProvenanceKind,
+} from "@beep/law-practice-domain/values";
 import {
   annotateFourHints,
   ColumnarEnvelope,
@@ -49,7 +54,10 @@ class BudgetParams extends S.Class<BudgetParams>($I`BudgetParams`)(
 class DocketFamilyParams extends S.Class<DocketFamilyParams>($I`DocketFamilyParams`)(
   {
     budgetBytes: BudgetBytes,
-    family: S.NonEmptyString.annotateKey({ description: "Docket-family natural key, for example 10008." }),
+    family: S.NonEmptyString.annotateKey({
+      description:
+        "Docket-family key. A bare family number such as 10008 returns every client-keyed family sharing it; a client-keyed form such as 12345.10008 returns one.",
+    }),
   },
   $I.annote("DocketFamilyParams", { description: "Parameters for resolving one docket family." })
 ) {}
@@ -62,7 +70,8 @@ class ApplicationLookupParams extends S.Class<ApplicationLookupParams>($I`Applic
     patent_number: S.optionalKey(S.NonEmptyString),
   },
   $I.annote("ApplicationLookupParams", {
-    description: "Application lookup by application number, patent number, or docket.",
+    description:
+      "Application lookup by application number, patent number, or docket. A docket may be bare (10008US01) or client-keyed (12345.10008US01).",
   })
 ) {}
 
@@ -308,6 +317,7 @@ export type PracticeKgCandidateClaimsResult = typeof PracticeKgCandidateClaimsRe
  */
 export class PracticeKgGraphToolRow extends S.Class<PracticeKgGraphToolRow>($I`PracticeKgGraphToolRow`)(
   {
+    attributionSource: S.NullOr(KgAttributionSource),
     client: S.NullOr(S.String),
     count: S.NullOr(S.Finite),
     docketFamily: S.NullOr(S.String),
@@ -438,11 +448,13 @@ export class PracticeKgCandidateClaimToolRow extends S.Class<PracticeKgCandidate
     evidenceQuote: S.String,
     family: S.String,
     label: S.Literal("candidate — unreviewed"),
+    sourceDocumentDigest: S.NullOr(S.String),
     sourceFile: S.String,
     startChar: S.Natural,
   },
   $I.annote("PracticeKgCandidateClaimToolRow", {
-    description: "Candidate claim row carrying its docket join, extraction activity, and evidence span.",
+    description:
+      "Candidate claim row carrying its docket join, extraction activity, evidence span, and the catalogued source-document digest when the input resolved to one.",
   })
 ) {}
 
@@ -468,6 +480,7 @@ export const practiceKgGraphFieldTiers = defineFieldTiers({
     naturalKey: PracticeKgGraphToolRow.fields.naturalKey,
   }),
   balanced: S.Struct({
+    attributionSource: PracticeKgGraphToolRow.fields.attributionSource,
     client: PracticeKgGraphToolRow.fields.client,
     count: PracticeKgGraphToolRow.fields.count,
     docketFamily: PracticeKgGraphToolRow.fields.docketFamily,
@@ -606,6 +619,7 @@ class PracticeKgCandidateClaimBalancedRow extends S.Class<PracticeKgCandidateCla
     evidenceQuote: PracticeKgCandidateClaimToolRow.fields.evidenceQuote,
     family: PracticeKgCandidateClaimToolRow.fields.family,
     label: PracticeKgCandidateClaimToolRow.fields.label,
+    sourceDocumentDigest: PracticeKgCandidateClaimToolRow.fields.sourceDocumentDigest,
   },
   $I.annote("PracticeKgCandidateClaimBalancedRow", {
     description: "Balanced grounded candidate-claim projection.",
