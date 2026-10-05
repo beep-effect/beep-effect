@@ -1760,6 +1760,19 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
    * (`block`). A shadow-root quote holds block children and no direct text, so
    * that instance is a `container`.
    *
+   * **Example** (Refine legacy and shadow-root quotes)
+   *
+   * ```ts import.meta.vitest name="Refine legacy and shadow-root quotes"
+   * import * as O from "effect/Option"
+   * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
+   *
+   * const legacy = QuoteNode.make({ children: [] })
+   * const shadowRoot = QuoteNode.make({ children: [], shadowRoot: O.some(true) })
+   *
+   * QuoteNode.poPatternOf(legacy) // => "block"
+   * QuoteNode.poPatternOf(shadowRoot) // => "container"
+   * ```
+   *
    * @category getters
    * @since 0.0.0
    */

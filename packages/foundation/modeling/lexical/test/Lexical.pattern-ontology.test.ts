@@ -111,11 +111,38 @@ const lexicalStructuralChildren = (node: LexicalNode): ReadonlyArray<LexicalStru
         )
       : [];
 
-/** The Md tags each in-place structural Lexical node may project onto. */
-const inPlaceLexicalTargets: Readonly<Record<LexicalStructuralNode["type"], ReadonlyArray<MdFieldOnlyNode["_tag"]>>> = {
-  listitem: ["li", "taskItem"],
-  tablerow: ["tableRow"],
-  tablecell: ["tableCell"],
+type InPlacePair = readonly [md: MdFieldOnlyNode, lexical: LexicalNode];
+
+const inPlacePair = (md: MdFieldOnlyNode, lexical: LexicalNode): InPlacePair => [md, lexical];
+
+/**
+ * Pairs each field-only Md child with the Lexical node at the same position
+ * under the same parent: list item with list item, row with row, and cell with
+ * cell inside its own row. `A.zip` truncates, so callers compare the pair count
+ * with the child count to catch a dropped sibling.
+ */
+const inPlacePairs = (block: Md.Block, node: LexicalNode): ReadonlyArray<InPlacePair> =>
+  (block._tag === "ul" || block._tag === "ol" || block._tag === "taskList") && node.type === "list"
+    ? A.zipWith(block.children, node.children, inPlacePair)
+    : block._tag === "table" && node.type === "table"
+      ? A.flatten(
+          A.zipWith(
+            block.children,
+            node.children,
+            (row, lexicalRow): ReadonlyArray<InPlacePair> => [
+              inPlacePair(row, lexicalRow),
+              ...(lexicalRow.type === "tablerow" ? A.zipWith(row.children, lexicalRow.children, inPlacePair) : []),
+            ]
+          )
+        )
+      : [];
+
+/** The Lexical type each field-only Md constructor must land on in place. */
+const inPlaceLexicalType: Readonly<Record<MdFieldOnlyNode["_tag"], LexicalStructuralNode["type"]>> = {
+  li: "listitem",
+  taskItem: "listitem",
+  tableRow: "tablerow",
+  tableCell: "tablecell",
 };
 
 /** Inline-level leaves have no block position in Md and wrap into a paragraph. */
@@ -269,50 +296,52 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
   describe("field-only constructors are checked in place", () => {
     for (const member of [Md.Ul, Md.Ol, Md.TaskList, Md.Table]) {
       it.effect.prop(
-        `conserves or explicitly demotes the children of ${member.identifier} in both directions`,
+        `conserves or explicitly demotes the children of ${member.identifier} position by position`,
         { block: Arbitrary.schema(member) },
         Effect.fnUntraced(function* ({ block }) {
           const node = yield* blockToLexical(block);
-          const sources = mdFieldOnlyChildren(block);
-          const targets = lexicalStructuralChildren(node);
 
-          // Md -> Lexical: every field-only Md child lands on a structural
-          // Lexical node of a conserved or declared pattern.
-          A.forEach(sources, (source) => {
-            const landing = A.filter(targets, (target) => A.contains(inPlaceLexicalTargets[target.type], source._tag));
-            expect(A.isReadonlyArrayNonEmpty(landing), `md-to-lexical: ${source._tag} has no in-place target`).toBe(
-              true
+          // Md -> Lexical: every field-only Md child has a Lexical partner at
+          // its own position, so a dropped item, row, or cell fails the count.
+          const forward = inPlacePairs(block, node);
+          expect(A.length(forward), "md-to-lexical: a field-only child was dropped").toBe(
+            A.length(mdFieldOnlyChildren(block))
+          );
+          A.forEach(forward, ([md, lexical]) => {
+            expect(lexical.type, `md-to-lexical: ${md._tag} landed on the wrong node`).toBe(
+              inPlaceLexicalType[md._tag]
             );
-            A.forEach(landing, (target) =>
-              expectConserved({
-                direction: "md-to-lexical",
-                sourceTag: source._tag,
-                sourcePattern: patternOf(mdFieldOnlyMembers[source._tag]),
-                targetTag: target.type,
-                targetPattern: patternOf(LexicalNode.cases[target.type]),
-                declared: mdToLexicalDemotions,
-              })
-            );
+            expectConserved({
+              direction: "md-to-lexical",
+              sourceTag: md._tag,
+              sourcePattern: patternOf(mdFieldOnlyMembers[md._tag]),
+              targetTag: lexical.type,
+              targetPattern: patternOf(LexicalNode.cases[lexical.type]),
+              declared: mdToLexicalDemotions,
+            });
           });
 
-          // Lexical -> Md: project the produced node back and check each
-          // structural Lexical child against the Md child it becomes.
-          const returned = A.flatMap(nodeToBlocks(node), mdFieldOnlyChildren);
-          A.forEach(targets, (source) => {
-            const landing = A.filter(returned, (target) => A.contains(inPlaceLexicalTargets[source.type], target._tag));
-            expect(A.isReadonlyArrayNonEmpty(landing), `lexical-to-md: ${source.type} has no in-place target`).toBe(
-              true
+          // Lexical -> Md: project the produced node back; every structural
+          // Lexical child has an Md partner at its own position.
+          const backward = O.match(A.head(nodeToBlocks(node)), {
+            onNone: A.empty<InPlacePair>,
+            onSome: (returned) => inPlacePairs(returned, node),
+          });
+          expect(A.length(backward), "lexical-to-md: a structural child was dropped").toBe(
+            A.length(lexicalStructuralChildren(node))
+          );
+          A.forEach(backward, ([md, lexical]) => {
+            expect(lexical.type, `lexical-to-md: ${lexical.type} landed on the wrong node`).toBe(
+              inPlaceLexicalType[md._tag]
             );
-            A.forEach(landing, (target) =>
-              expectConserved({
-                direction: "lexical-to-md",
-                sourceTag: source.type,
-                sourcePattern: patternOf(LexicalNode.cases[source.type]),
-                targetTag: target._tag,
-                targetPattern: patternOf(mdFieldOnlyMembers[target._tag]),
-                declared: lexicalToMdDemotions,
-              })
-            );
+            expectConserved({
+              direction: "lexical-to-md",
+              sourceTag: lexical.type,
+              sourcePattern: patternOf(LexicalNode.cases[lexical.type]),
+              targetTag: md._tag,
+              targetPattern: patternOf(mdFieldOnlyMembers[md._tag]),
+              declared: lexicalToMdDemotions,
+            });
           });
         }),
         { arbitrary: fcRuns(25) }

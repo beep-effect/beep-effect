@@ -338,14 +338,14 @@ lossiness profile.
 
 | Source | Pattern | Target | Pattern | Conservation | Evidence | Samples |
 | --- | --- | --- | --- | --- | --- | --- |
-| `li` | container | `listitem` | container | preserved | — | 110 |
-| `listitem (in place)` | container | `li` | container | preserved | — | 152 |
-| `listitem (in place)` | container | `taskItem` | container | preserved | — | 76 |
-| `tableCell` | block | `tablecell` | container | demoted | no diagnostic emitted | 78198 |
-| `tableRow` | table | `tablerow` | table | preserved | — | 1416 |
-| `tablecell (in place)` | container | `tableCell` | block | demoted | no diagnostic emitted | 140312 |
-| `tablerow (in place)` | table | `tableRow` | table | preserved | — | 1428 |
-| `taskItem` | container | `listitem` | container | preserved | — | 55 |
+| `li` | container | `listitem` | container | preserved | — | 62 |
+| `listitem (in place)` | container | `li` | container | preserved | — | 104 |
+| `listitem (in place)` | container | `taskItem` | container | preserved | — | 52 |
+| `tableCell` | block | `tablecell` | container | demoted | no diagnostic emitted | 953 |
+| `tableRow` | table | `tablerow` | table | preserved | — | 174 |
+| `tablecell (in place)` | container | `tableCell` | block | demoted | no diagnostic emitted | 1700 |
+| `tablerow (in place)` | table | `tableRow` | table | preserved | — | 186 |
+| `taskItem` | container | `listitem` | container | preserved | — | 31 |
 
 ### Field-only constructors and Pandoc
 

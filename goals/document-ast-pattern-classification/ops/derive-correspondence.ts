@@ -311,60 +311,54 @@ flushEdges("Lexical → Md nodes (loose leaves wrap into `p` by the codec's docu
 
 const mdFieldOnly = { li: Md.Li, taskItem: Md.TaskItem, tableRow: Md.TableRow, tableCell: Md.TableCell };
 type MdFieldOnlyNode = Md.Li | Md.TaskItem | Md.TableRow | Md.TableCell;
-const inPlaceTargets: Readonly<Record<string, ReadonlyArray<string>>> = {
-  listitem: ["li", "taskItem"],
-  tablerow: ["tableRow"],
-  tablecell: ["tableCell"],
-};
-const mdFieldOnlyChildren = (block: Md.Block): ReadonlyArray<MdFieldOnlyNode> =>
-  block._tag === "ul" || block._tag === "ol" || block._tag === "taskList"
-    ? block.children
-    : block._tag === "table"
-      ? A.flatMap(block.children, (row): ReadonlyArray<MdFieldOnlyNode> => [row, ...row.children])
-      : [];
-const lexicalStructuralChildren = (node: LexicalNode): ReadonlyArray<LexicalNode> =>
-  node.type === "list"
-    ? node.children
-    : node.type === "table"
-      ? A.flatMap(node.children, (row): ReadonlyArray<LexicalNode> => [row, ...("children" in row ? row.children : [])])
+type InPlacePair = readonly [md: MdFieldOnlyNode, lexical: LexicalNode];
+const inPlacePair = (md: MdFieldOnlyNode, lexical: LexicalNode): InPlacePair => [md, lexical];
+
+// Pair by position under the same parent: list item with list item, row with
+// row, and cell with cell inside its own row.
+const inPlacePairs = (block: Md.Block, node: LexicalNode): ReadonlyArray<InPlacePair> =>
+  (block._tag === "ul" || block._tag === "ol" || block._tag === "taskList") && node.type === "list"
+    ? A.zipWith(block.children, node.children, inPlacePair)
+    : block._tag === "table" && node.type === "table"
+      ? A.flatten(
+          A.zipWith(
+            block.children,
+            node.children,
+            (row, lexicalRow): ReadonlyArray<InPlacePair> => [
+              inPlacePair(row, lexicalRow),
+              ...(lexicalRow.type === "tablerow" ? A.zipWith(row.children, lexicalRow.children, inPlacePair) : []),
+            ]
+          )
+        )
       : [];
 
 for (const member of [Md.Ul, Md.Ol, Md.TaskList, Md.Table]) {
   for (const block of sample(member)) {
     const node = Effect.runSync(blockToLexical(block));
-    const targets = A.filter(lexicalStructuralChildren(node), (target) => target.type in inPlaceTargets);
-    for (const source of mdFieldOnlyChildren(block)) {
-      for (const target of A.filter(targets, (candidate) =>
-        A.contains(inPlaceTargets[candidate.type] ?? [], source._tag)
-      )) {
-        const sourcePattern = patternOf(mdFieldOnly[source._tag]);
-        const targetPattern = patternOf(LexicalNode.cases[target.type]);
-        addEdge({
-          source: source._tag,
-          sourcePattern,
-          target: target.type,
-          targetPattern,
-          conservation: poConservation(sourcePattern as never, targetPattern as never),
-          evidence: [],
-        });
-      }
+    for (const [md, lexical] of inPlacePairs(block, node)) {
+      const sourcePattern = patternOf(mdFieldOnly[md._tag]);
+      const targetPattern = patternOf(LexicalNode.cases[lexical.type]);
+      addEdge({
+        source: md._tag,
+        sourcePattern,
+        target: lexical.type,
+        targetPattern,
+        conservation: poConservation(sourcePattern as never, targetPattern as never),
+        evidence: [],
+      });
     }
-    const returned = A.flatMap(nodeToBlocks(node), mdFieldOnlyChildren);
-    for (const source of targets) {
-      for (const target of A.filter(returned, (candidate) =>
-        A.contains(inPlaceTargets[source.type] ?? [], candidate._tag)
-      )) {
-        const sourcePattern = patternOf(LexicalNode.cases[source.type]);
-        const targetPattern = patternOf(mdFieldOnly[target._tag]);
-        addEdge({
-          source: `${source.type} (in place)`,
-          sourcePattern,
-          target: target._tag,
-          targetPattern,
-          conservation: poConservation(sourcePattern as never, targetPattern as never),
-          evidence: [],
-        });
-      }
+    const returned = A.head(nodeToBlocks(node));
+    for (const [md, lexical] of O.match(returned, { onNone: () => [], onSome: (back) => inPlacePairs(back, node) })) {
+      const sourcePattern = patternOf(LexicalNode.cases[lexical.type]);
+      const targetPattern = patternOf(mdFieldOnly[md._tag]);
+      addEdge({
+        source: `${lexical.type} (in place)`,
+        sourcePattern,
+        target: md._tag,
+        targetPattern,
+        conservation: poConservation(sourcePattern as never, targetPattern as never),
+        evidence: [],
+      });
     }
   }
 }
