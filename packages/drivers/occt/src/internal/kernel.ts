@@ -10,9 +10,9 @@ import { A, N, O } from "@beep/utils";
 import { Order, pipe } from "effect";
 import * as replicad from "replicad";
 import { OcctError } from "../Occt.errors.ts";
-import { BoundingBox, EdgeSet, SolidSummary } from "../Occt.models.ts";
+import { BoundingBox, EdgeSet, Primitive, SolidSummary } from "../Occt.models.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
-import type { Camera, Primitive, Rotation, Segment2, SolidSpec } from "../Occt.models.ts";
+import type { Camera, Rotation, Segment2, SolidSpec } from "../Occt.models.ts";
 
 type Shape3D = replicad.Shape3D;
 type AnyShape = replicad.AnyShape;
@@ -33,23 +33,20 @@ const place = (shape: Shape3D, rotate: ReadonlyArray<Rotation>, translate: reado
     (rotated) => rotated.translate([...translate]) as Shape3D
   );
 
-const buildPrimitive = (primitive: Primitive): Shape3D => {
-  switch (primitive.kind) {
-    case "box":
-      return place(replicad.makeBox([...primitive.min], [...primitive.max]), primitive.rotate, primitive.translate);
-    case "prism": {
-      const face = replicad.makePolygon(primitive.profile.map((p) => [...p] as const));
-      const solid = replicad.basicFaceExtrusion(face, new replicad.Vector([...primitive.extrusion]));
-      return place(solid, primitive.rotate, primitive.translate);
-    }
-    case "cylinder":
-      return place(
-        replicad.makeCylinder(primitive.radius, primitive.height, [...primitive.base], [...primitive.axis]),
-        primitive.rotate,
-        primitive.translate
-      );
-  }
-};
+const buildPrimitive: (primitive: Primitive) => Shape3D = Primitive.match({
+  box: (box) => place(replicad.makeBox([...box.min], [...box.max]), box.rotate, box.translate),
+  prism: (prism) => {
+    const face = replicad.makePolygon(prism.profile.map((p) => [...p] as const));
+    const solid = replicad.basicFaceExtrusion(face, new replicad.Vector([...prism.extrusion]));
+    return place(solid, prism.rotate, prism.translate);
+  },
+  cylinder: (cylinder) =>
+    place(
+      replicad.makeCylinder(cylinder.radius, cylinder.height, [...cylinder.base], [...cylinder.axis]),
+      cylinder.rotate,
+      cylinder.translate
+    ),
+});
 
 const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primitive>): Shape3D => {
   const [first, ...rest] = add;

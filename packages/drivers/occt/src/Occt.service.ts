@@ -9,7 +9,7 @@
 import { createRequire } from "node:module";
 import { $OcctId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as replicad from "replicad";
 import opencascade from "replicad-opencascadejs";
@@ -53,9 +53,10 @@ export interface OcctShape {
 }
 
 const hexOf = (bytes: ArrayBuffer): string =>
-  A.join(
-    A.map(Array.from(new Uint8Array(bytes)), (b) => b.toString(16).padStart(2, "0")),
-    ""
+  pipe(
+    A.fromIterable(new Uint8Array(bytes)),
+    A.map((b) => b.toString(16).padStart(2, "0")),
+    A.join("")
   );
 
 const sha256 = (bytes: Uint8Array): Effect.Effect<string> =>
