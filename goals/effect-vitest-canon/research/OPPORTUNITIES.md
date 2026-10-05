@@ -6622,3 +6622,14 @@ non-npm or non-ignored package overrides. This follow-up adds both negative
 cases and checks their measured coverage. Running that focused coverage probe
 before the early push, then requiring the full hosted Heavy result before
 merge, would have prevented a red check from reaching main.
+
+### Focused coverage artifact contaminated Fallow health (2026-10-05)
+
+During PR #1411's local Yeet proof, `fallow:health` failed with 50
+`not-applicable` complexity findings even though no source file changed.
+Fallow's raw output showed it had auto-detected the ignored
+`coverage/coverage-final.json` left by a focused Vitest coverage probe;
+that file held partial-suite coverage and distorted CRAP scores. Removing
+only that generated file made the exact Fallow gate pass with zero findings.
+An explicit coverage input or a cleanup step after focused coverage probes
+would have prevented the misleading proof failure.
