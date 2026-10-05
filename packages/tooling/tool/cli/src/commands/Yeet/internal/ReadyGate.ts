@@ -308,7 +308,12 @@ export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGa
   // its checks and threads say: the verb must be idempotent, so a thread that
   // lands right after the flip reads as `already-ready`, never as a pending
   // flip an agent might wait on.
-  const alreadyReady = O.filter(O.fromUndefinedOr(read.remote.number), () => read.remote.isDraft === false);
+  // Only an OPEN pull request can be "already ready": `gh pr view` also
+  // returns CLOSED and MERGED ones, and those still refuse on `pr-open`.
+  const alreadyReady = O.filter(
+    O.fromUndefinedOr(read.remote.number),
+    () => read.remote.isDraft === false && read.remote.state === "OPEN"
+  );
   if (O.isSome(alreadyReady)) return YeetReadyGateAlreadyReady.make({ prNumber: alreadyReady.value });
   return pipe(
     O.fromUndefinedOr(read.remote.number),

@@ -191,6 +191,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     })
   );
 
+  it.effect("refuses a closed or merged non-draft pull request on pr-open instead of calling it ready", () =>
+    Effect.gen(function* () {
+      for (const state of ["CLOSED", "MERGED"] as const) {
+        const error = yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView({ isDraft: false, state })),
+          capture: () => Effect.die("gh must not run"),
+        }).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
+        expect(error.message).toContain(state);
+      }
+    })
+  );
+
   it.effect("does not call gh for a pull request that is already ready", () =>
     Effect.gen(function* () {
       const decision = yield* runYeetReadyGate(context, {
