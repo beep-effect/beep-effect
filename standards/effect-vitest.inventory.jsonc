@@ -766,153 +766,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:106:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 106,
-      "endLine": 131,
-      "symbol": "runPromise",
-      "occurrence": "v2:a4aa5ecd20f36a20120eec1d30e9246f09e99cb0a5eaa1e2926ad8c9d4f1fefa",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:134:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 134,
-      "endLine": 216,
-      "symbol": "runPromise",
-      "occurrence": "v2:e7b52c37f234350e254077b370c45c11cad5d1d5c93bebd8f95ed88fcc8ad99d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:219:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 219,
-      "endLine": 253,
-      "symbol": "runPromise",
-      "occurrence": "v2:3abb96c4ef2a60d9aa3c370b7b4de645deeba11bf2a6b59128feb02b49999609",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const root = yield* fs.makeTempDirectory({ prefix: \"beep-exploration-atlas-stream-\" }); yield* w",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:256:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 256,
-      "endLine": 280,
-      "symbol": "runPromise",
-      "occurrence": "v2:ab89d79172bd6456e8c4eb0d87871646da07a29e7a1c74b435160657de2f65bb",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:283:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 283,
-      "endLine": 313,
-      "symbol": "runPromise",
-      "occurrence": "v2:4df101067e65fced995ba1baa3463f445ba51205f0974b07689e8df7b1279793",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const root = yield* fs.makeTempDirectory({ prefix: \"beep-exploration-atlas-markers-\" }); yield*",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:316:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 316,
-      "endLine": 356,
-      "symbol": "runPromise",
-      "occurrence": "v2:265b3347dc9db7de707463d92e7c68dc7ad88e02edf5a362e921a054e27c781d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/explore-atlas.test.ts:359:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 359,
-      "endLine": 415,
-      "symbol": "runPromise",
-      "occurrence": "v2:075c3efda2d4dac934672bed093ea632bfbe3a23d00b52b06793447da80b46d7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( provideTestLayer( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const root = yield* fs.makeTempDirectory({ prefix: \"beep-explorat",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/explore-check.test.ts:156:runPromise@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -13891,27 +13744,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/explore-atlas.test.ts:34:provideTestLayer@25#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
-      "line": 34,
-      "endLine": 35,
-      "symbol": "provideTestLayer",
-      "occurrence": "v2:cab29155308d88e69e6d32c69beed0437b8ecee053a84d047fed6f5c57f87eb7",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.scoped(Layer.build(testLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/files-command.test.ts:767:withEnvVar@19#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -18586,6 +18418,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/explore-atlas.test.ts:107:scoped@31#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/explore-atlas.test.ts",
+      "line": 107,
+      "endLine": 118,
+      "symbol": "scoped",
+      "occurrence": "v2:a3d6ff47991eb0e78adc2a509d2b055362f667dd9d87d1c6b5b90837cb18b447",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { root = yield* fs.makeTempDirectoryScoped({ prefix: \"beep-exploration-atlas-failure-\" }); yield* writePacket( root, \"alpha\", manifest(\"alpha\", \"Alpha\", \"active\"",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This deliberately shorter nested scope closes before the assertion so the test can prove a scoped fixture directory is removed when its body fails. Removing this scope would make the cleanup assertion observe the still-live test scope."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/goals-packet-convention-migration.test.ts:858:scoped@10#1",
@@ -28885,7 +28739,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional for native chmod mode preservation and real packet event files; MemoryFileSystem would change the behavior under test. Node/Bun and full package proof passed."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-check.test.ts:15:@effect/platform-node@0#1",

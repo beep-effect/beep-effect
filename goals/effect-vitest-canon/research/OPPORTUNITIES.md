@@ -6653,3 +6653,14 @@ been built in the fresh worktree. The missing `dist` directory is a setup
 condition, not evidence that the test edit introduced the subsequent TypeScript
 diagnostics. A package-verify preflight that builds or names missing referenced
 declaration outputs would prevent a large, misleading check failure.
+
+### Detector write churns unrelated position-based IDs (2026-10-05)
+
+After the atlas migration, `bun run beep lint effect-vitest` reported eight
+resolved rows and zero introductions. Running `--write` after building package
+dependencies also rewrote 19 existing repo-cli IDs whose line numbers had
+drifted in other files, alongside the intended atlas rows. We kept the
+unchanged rows and reconciled only the eight removed atlas findings plus one
+new, intentional shorter-scope review candidate; the detector then reported
+zero introductions and resolutions. Matching and writing by stable occurrence
+identity instead of source position would avoid this unrelated baseline churn.
