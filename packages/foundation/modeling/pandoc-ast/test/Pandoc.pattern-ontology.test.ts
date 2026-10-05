@@ -34,6 +34,18 @@ const pandocToMdRerealized: ReadonlyArray<readonly [source: string, target: stri
   // content that carries structure is reported by the existing Image issue
   // beneath the image's own path.
   ["image", "img"],
+  // A span with empty attributes is Pandoc's identity wrapper: its children
+  // pass through unchanged to whichever Md inline they become. A span with
+  // attributes emits the Span issue at its own path.
+  ["span", "text"],
+  ["span", "strong"],
+  ["span", "em"],
+  ["span", "del"],
+  ["span", "code"],
+  ["span", "a"],
+  ["span", "img"],
+  ["span", "br"],
+  ["span", "inlineMath"],
 ];
 
 const mdToPandocRerealized: ReadonlyArray<readonly [source: string, target: string]> = [
@@ -55,11 +67,23 @@ const hasIssueAt = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPa
     (issue) => issue.path.length === path.length && A.every(path, (segment, index) => issue.path[index] === segment)
   );
 
-/** An inline container with no children has nothing a projection could drop. */
-const heldNothing = (inline: object): boolean =>
-  Predicate.hasProperty(inline, "children") &&
-  A.isArray(inline.children) &&
-  !A.isReadonlyArrayNonEmpty(inline.children);
+/**
+ * An inline whose content is empty all the way down (empty text, or wrappers
+ * holding only such inlines) has nothing a projection could drop.
+ */
+const heldNothing = (inline: unknown): boolean =>
+  Predicate.hasProperty(inline, "text")
+    ? inline.text === ""
+    : Predicate.hasProperty(inline, "children") && A.isArray(inline.children)
+      ? A.every(inline.children, heldNothing)
+      : false;
+
+/** An issue at the construct's own path or anywhere beneath it. */
+const hasIssueBeneath = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPath): boolean =>
+  A.some(
+    issues,
+    (issue) => issue.path.length >= path.length && A.every(path, (segment, index) => issue.path[index] === segment)
+  );
 
 const expectConserved = (input: {
   readonly direction: string;
@@ -187,9 +211,13 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
           }
 
           // A dropped inline (no Md output) is a demotion of everything it
-          // held: it needs an issue at its path unless it held nothing.
+          // held: an issue at or beneath its path must explain the drop unless
+          // it held nothing.
           if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
-            expect(explicit || heldNothing(inline), `pandoc-to-md: ${tag} was dropped silently`).toBe(true);
+            expect(
+              hasIssueBeneath(result.report.issues, ["blocks", 0, "children", 0]) || heldNothing(inline),
+              `pandoc-to-md: ${tag} was dropped silently`
+            ).toBe(true);
           }
 
           A.forEach(paragraph.children, (target) =>
@@ -247,7 +275,10 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
           }
 
           if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
-            expect(explicit || heldNothing(inline), `md-to-pandoc: ${tag} was dropped silently`).toBe(true);
+            expect(
+              hasIssueBeneath(result.report.issues, ["children", 0, "children", 0]) || heldNothing(inline),
+              `md-to-pandoc: ${tag} was dropped silently`
+            ).toBe(true);
           }
 
           A.forEach(paragraph.children, (target) =>

@@ -1717,6 +1717,12 @@ export declare namespace HeadingNode {
 /**
  * Mirrors `SerializedQuoteNode` from `@lexical/rich-text`.
  *
+ * **Gotchas**
+ *
+ * The class-level `po` annotation is `block`, the legacy inline-children
+ * realization. Use `QuoteNode.poPatternOf(node)` for an instance: a
+ * shadow-root quote is a `container`.
+ *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1724,12 +1730,6 @@ export declare namespace HeadingNode {
  *
  * QuoteNode.name // => "QuoteNode"
  * ```
- *
- * **Gotchas**
- *
- * The class-level `po` annotation is `block`, the legacy inline-children
- * realization. Use `QuoteNode.poPatternOf(node)` for an instance: a
- * shadow-root quote is a `container`.
  *
  * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-rich-text/src/index.ts | Pinned Lexical QuoteNode source} for the upstream serialized shape.
  * @category models

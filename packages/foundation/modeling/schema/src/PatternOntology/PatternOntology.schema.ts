@@ -19,13 +19,14 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Match, MutableHashSet, pipe } from "effect";
+import { MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { LiteralKit } from "../LiteralKit/index.ts";
+import { visitStructuralChildren } from "../SchemaUtils/collectAnnotationsAt.ts";
 
 const $I = $SchemaId.create("PatternOntology");
 
@@ -304,63 +305,27 @@ const collectTagged = (schema: S.Top, tagKey: PropertyKey): ReadonlyArray<PoTagg
       },
     });
 
-  const visitObjectsChildren = (ast: SchemaAST.Objects): void => {
-    A.forEach(ast.propertySignatures, (property) => visit(property.type));
-    A.forEach(ast.indexSignatures, (index) => {
-      visit(index.parameter);
-      visit(index.type);
-    });
-  };
-
-  // A class declaration wraps its field struct as its first type parameter.
-  // The declaration carries the constructor's annotations, so record it and
-  // step straight into the field types without recording the struct twice.
-  const visitDeclarationParameter = (ast: SchemaAST.AST): void => {
-    if (SchemaAST.isObjects(ast) && !MutableHashSet.has(visited, ast)) {
-      MutableHashSet.add(visited, ast);
-      visitObjectsChildren(ast);
-      return;
-    }
-    visit(ast);
-  };
+  // A class declaration wraps its field struct as its first type parameter and
+  // carries the constructor's annotations itself. Mark that struct so it is
+  // traversed for its field types without being recorded a second time.
+  const fieldStructs = MutableHashSet.empty<SchemaAST.AST>();
 
   const visit = (ast: SchemaAST.AST): void => {
     if (MutableHashSet.has(visited, ast)) {
       return;
     }
     MutableHashSet.add(visited, ast);
-    record(ast);
 
-    Match.typeTags<SchemaAST.AST, void>()({
-      Declaration: ({ typeParameters }) => A.forEach(typeParameters, visitDeclarationParameter),
-      Null: () => undefined,
-      Undefined: () => undefined,
-      Void: () => undefined,
-      Never: () => undefined,
-      Unknown: () => undefined,
-      Any: () => undefined,
-      String: () => undefined,
-      Number: () => undefined,
-      Boolean: () => undefined,
-      BigInt: () => undefined,
-      Symbol: () => undefined,
-      Literal: () => undefined,
-      UniqueSymbol: () => undefined,
-      ObjectKeyword: () => undefined,
-      Enum: () => undefined,
-      TemplateLiteral: ({ parts }) => A.forEach(parts, visit),
-      Arrays: (arrays) => {
-        A.forEach(arrays.elements, visit);
-        A.forEach(arrays.rest, visit);
-      },
-      Objects: visitObjectsChildren,
-      Union: ({ types }) => A.forEach(types, visit),
-      Suspend: ({ thunk }) => visit(thunk()),
-    })(ast);
-
-    if (ast.encoding !== undefined) {
-      A.forEach(ast.encoding, (link) => visit(link.to));
+    if (SchemaAST.isDeclaration(ast)) {
+      A.forEach(A.filter(ast.typeParameters, SchemaAST.isObjects), (fields) =>
+        MutableHashSet.add(fieldStructs, fields)
+      );
     }
+    if (!MutableHashSet.has(fieldStructs, ast)) {
+      record(ast);
+    }
+
+    visitStructuralChildren(ast, visit);
   };
 
   visit(schema.ast);
