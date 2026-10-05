@@ -52,8 +52,8 @@ Registered in `ops/manifest.json` `externalReferences`:
 |-------|------|-------------|
 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | extend (added `agent-effectiveness.ts`: report schemas, evidence aggregation, privacy checks) |
 | `@beep/repo-cli` | `packages/tooling/tool/cli/src/commands/AgentEffectiveness` | NET-NEW command group (doctor, annotations, datasets, prompts, experiments, phoenix) |
-| `@beep/observability` | `packages/tooling/library/observability` family | reuse (OTLP helpers; no semantics moved here) |
-| `@beep/infra` | dankserver topology and Phoenix deployment | reuse (read-only target) |
+| `@beep/observability` | `packages/foundation/capability/observability` | boundary (runtime OTLP helpers; developer AI analytics semantics must not move here; not imported by the Phase 1 surfaces) |
+| `@beep/infra` | `infra/` (dankserver topology and Phoenix deployment) | reuse (read-only target) |
 | `goals/ai-metrics-stack` | packet | input (privacy contract, DuckDB evidence, scorecards, labels, benchmarks) |
 | `goals/jsdoc-worker-eval` | packet | input (read-only worker-eval report, `beep-jsdoc-worker-eval` Phoenix project) |
 

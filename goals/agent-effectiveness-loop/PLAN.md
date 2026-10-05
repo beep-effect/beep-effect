@@ -67,7 +67,7 @@ gate on Phoenix writes.
 
 ```sh
 jq . goals/agent-effectiveness-loop/ops/manifest.json
-rg -n "agent-effectiveness-loop|packetAnchorDocument|executionCapable" goals/agent-effectiveness-loop
+rg -n -e agent-effectiveness-loop -e packetAnchorDocument -e executionCapable goals/agent-effectiveness-loop
 git diff --check -- goals/agent-effectiveness-loop
 bun run beep lint reflection-artifacts
 bun run beep goals doctor

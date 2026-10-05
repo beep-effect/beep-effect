@@ -206,7 +206,7 @@ Phase 1:
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
 | Manifest JSON | `jq . goals/agent-effectiveness-loop/ops/manifest.json` | Passes |
-| Packet references | `rg -n "agent-effectiveness-loop\|packetAnchorDocument\|executionCapable" goals/agent-effectiveness-loop` | Hits in manifest and docs |
+| Packet references | `rg -n -e agent-effectiveness-loop -e packetAnchorDocument -e executionCapable goals/agent-effectiveness-loop` | Hits in manifest and docs |
 | Whitespace | `git diff --check -- goals/agent-effectiveness-loop` | Passes |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes |
 | Packet consistency | `bun run beep goals doctor` | No new blocking findings |
