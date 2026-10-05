@@ -387,6 +387,14 @@ If you touch this, load or run this first. Do not hand-author around it.
   option shapes: the `closeout` skill.
 - Direction-setting decisions go through `/grill-with-docs` first; the
   closeout prompt then carries the frontier's remaining questions.
+- Before the prompt, write the ledger row:
+  `bun run beep session note --state <open|blocked|done> --next "<one line>"
+  [--summary "<one line>"] [--pr <n>]`. It appends to the workstation ledger
+  (`~/.local/state/beep/sessions/<repo>.jsonl`), shared by every clone and
+  lane; a later note for the same checkout supersedes, and `yeet sweep` /
+  `yeet sweep --retire` write the `done` row themselves. At session start,
+  read `bun run beep session open` (the Claude SessionStart hook prints it;
+  Codex runs it) and offer the live rows as resume options.
 
 <!-- graft:start -->
 ## Graft — repo context graph
