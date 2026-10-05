@@ -54,35 +54,39 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
 });
 
 const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
+const encodePacketLifecycle = S.encodeEffect(S.fromJsonString(S.Struct({ lifecycle: S.String })));
 
-const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN") =>
+const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
+
+const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = []) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
       const real = yield* ChildProcessSpawner.ChildProcessSpawner;
-      // The fake answers with the same document a real `gh pr view --json` prints,
-      // encoded through the schema the sweep decodes it with.
-      const output = Stream.make(
-        new TextEncoder().encode(
-          yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }))
-        )
-      );
-      const handle = ChildProcessSpawner.makeHandle({
-        all: output,
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        pid: ChildProcessSpawner.ProcessId(1),
-        stderr: Stream.empty,
-        stdin: Sink.drain,
-        stdout: output,
-        unref: Effect.succeed(Effect.void),
-      });
+      // The fake answers with the same documents a real `gh pr view --json`
+      // prints, encoded through the schemas the sweep decodes them with: the
+      // pull request view, or its file list when `--json files` is asked for.
+      const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
+      const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
+      const handleFor = (text: string) => {
+        const output = Stream.make(new TextEncoder().encode(text));
+        return ChildProcessSpawner.makeHandle({
+          all: output,
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          isRunning: Effect.succeed(false),
+          kill: () => Effect.void,
+          pid: ChildProcessSpawner.ProcessId(1),
+          stderr: Stream.empty,
+          stdin: Sink.drain,
+          stdout: output,
+          unref: Effect.succeed(Effect.void),
+        });
+      };
       return ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command) && command.command === "gh"
-          ? Effect.succeed(handle)
+          ? Effect.succeed(handleFor(A.contains(command.args, "files") ? filesText : viewText))
           : real.spawn(command)
       );
     })
@@ -672,6 +676,65 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(error.message).toContain("--branch cannot override it");
         expect(yield* fs.exists(lane)).toBe(true);
+      })
+    )
+  );
+
+  it.effect("names the touched goal packets the merged branch left active", () =>
+    withScratchRepo(({ repoRoot, lane, packetDir }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // One packet the branch flipped (closed) and one it left active: only
+        // the open one is an advisory, and a non-packet path under goals/ is
+        // ignored.
+        for (const [slug, lifecycle] of [
+          ["open-packet", "active"],
+          ["closed-packet", "completed-retained"],
+        ] as const) {
+          yield* fs.makeDirectory(path.join(lane, "goals", slug, "ops"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(lane, "goals", slug, "ops", "manifest.json"),
+            `${yield* encodePacketLifecycle({ lifecycle })}\n`
+          );
+        }
+        yield* fs.writeFileString(path.join(lane, "goals", "INDEX.md"), "# index\n");
+        yield* runGit(lane, ["add", "goals"]);
+        yield* runGit(lane, ["commit", "-m", "packets"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane"]);
+        yield* runGit(lane, ["push", "origin", "claude/lane:main"]);
+        yield* runGit(repoRoot, ["fetch", "origin"]);
+        const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
+        // The branch's own diff against main finds the packets here.
+        const planOutput = yield* captureOutput(
+          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
+        );
+        const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
+        expect(plan.activePackets).toEqual(["open-packet"]);
+        // Once the clone's main already contains the merge, the diff is
+        // empty and the pull request's own file list carries the packets. An
+        // uncommitted edit closing the packet in the working tree does not
+        // hide it: the lifecycle is read from the committed HEAD.
+        yield* runGit(repoRoot, ["merge", "--ff-only", "origin/main"]);
+        yield* fs.writeFileString(
+          path.join(lane, "goals", "open-packet", "ops", "manifest.json"),
+          `${yield* encodePacketLifecycle({ lifecycle: "completed-retained" })}\n`
+        );
+        const prFiles = ["goals/open-packet/ops/manifest.json", "goals/closed-packet/ops/manifest.json", "lane.txt"];
+        const laterPlan = yield* YeetRetireSweepPlanJson.decode(
+          yield* captureOutput(
+            withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
+              provideScopedLayer(ghLayer(tip, "MERGED", prFiles))
+            )
+          )
+        );
+        expect(laterPlan.activePackets).toEqual(["open-packet"]);
+        const output = yield* captureOutput(
+          withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED", prFiles)))
+        );
+        expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
+        expect(output).not.toContain("closed-packet");
+        expect(yield* fs.exists(lane)).toBe(false);
       })
     )
   );

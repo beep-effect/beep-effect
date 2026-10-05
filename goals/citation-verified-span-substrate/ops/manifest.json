@@ -3,15 +3,16 @@
   "initiative": {
     "id": "citation-verified-span-substrate",
     "title": "Citation Verified Span Substrate",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-08-27",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-verified-span-substrate",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver generic matter-scoped verified TextAnchor construction with canonical UTF-16 raw offsets, deterministic locator mapping, straddle, and fail-closed source-drift behavior.",
-  "statusNote": "P0 and P1 are complete. P2 owned package, persistence, re-anchor, schema-law, docgen, and Yeet repair proof are green; exact-head verify and hosted merge-ready closeout remain.",
+  "mergedPullRequest": 871,
+  "statusNote": "Complete. The substrate merged in PR #871 (2026-08-30); the 2026-10-05 closeout re-proved the owned acceptance matrix on current main and recorded the reflection. Evidence: history/p3/2026-10-05-current-main-closeout.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -61,12 +62,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close: Yeet PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

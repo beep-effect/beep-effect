@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,11 +34,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify: implementation and the owned acceptance matrix are green. The new
-append-only history retains raw candidates, source and engine versions, typed
-negative outcomes, drift failures, and exact re-anchor receipts across
-persistence restart. The packet remains active until the exact-head Yeet proof
-and hosted merge-ready gate pass.
+Complete. The substrate shipped in PR #871 (merged 2026-08-30) and the
+2026-10-05 closeout re-proved the owned acceptance matrix on the current
+`main` head: 22 provenance tests, 98 langextract tests, package audits,
+docgen, schema-first lint, and reflection lint all green. The append-only
+history retains raw candidates, source and engine versions, typed negative
+outcomes, drift failures, and exact re-anchor receipts across persistence
+restart.
 
 ## Coordinated Consumer
 
@@ -64,7 +66,12 @@ resolver/consumer is complete.
 [`history/p2/2026-08-27-persistence-reanchor-proof.md`](./history/p2/2026-08-27-persistence-reanchor-proof.md)
 records the 21 provenance tests, 81 langextract tests, persistence restart,
 negative attempt, source-drift, re-anchor, schema-law, docgen, and Yeet repair
-proof. Full verify and hosted closeout remain.
+proof.
+
+[`history/p3/2026-10-05-current-main-closeout.md`](./history/p3/2026-10-05-current-main-closeout.md)
+records the current-main re-proof after the schema parity train and the
+closeout reflection
+[`history/reflections/2026-10-05-claude.md`](./history/reflections/2026-10-05-claude.md).
 
 ## Notes
 
