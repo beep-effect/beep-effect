@@ -15,6 +15,7 @@ import {
   DateTime,
   Duration,
   Effect,
+  Equal,
   FileSystem,
   HashSet,
   Order,
@@ -172,6 +173,10 @@ export type ProofJobWaitResult = typeof ProofJobWaitResult.Type;
  *   share that definition. Reads recover unstamped finished records with an unknown stamp.
  * - Each transition uses a per-record file mutex for consistency, not an admission lock.
  * - Cancel saves its request under that mutex before asking systemd to stop the unit.
+ *   When the stop fails and the unit still exists (`stop-failed`), it clears its
+ *   own stamp again under the mutex so the job reads as live and publish keeps
+ *   reusing the monitor instead of submitting a second one; `stop-requested` and
+ *   `unit-absent` keep the stamp.
  * - `bindPullRequest` records the pull request a monitor job follows; `wait` then
  *   also returns when a new wave lands on that pull request (wake-set rows no
  *   earlier wait returned, or a required red set on the same head that names a
@@ -441,6 +446,17 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       attemptTerminated: false,
     });
   });
+  // Only the stamp this cancel wrote is rolled back: a settled or terminal record, or one a
+  // later cancel re-stamped (whose stop may have succeeded), is left as it is.
+  const clearCancelRequestLocked = Effect.fn("ProofJob.clearCancelRequestLocked")(function* (
+    id: UUID,
+    stamp: O.Option<string>
+  ) {
+    const record = yield* requireRecord(id);
+    if (isTerminalProofJobPhase(record.phase) || isSettledProofJob(record)) return record;
+    if (!Equal.equals(record.cancelRequestedAt, stamp)) return record;
+    return yield* save(ProofJobRecord.make({ ...record, cancelRequestedAt: O.none() }));
+  });
   const markPublishedLocked = Effect.fn("ProofJob.markPublishedLocked")(function* (id: UUID) {
     const record = yield* requireRecord(id);
     if (O.isSome(record.publishedAt)) return record;
@@ -663,9 +679,11 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       const result = yield* command("systemctl", ["--user", "stop", record.unit.unitName]);
       if (result.exitCode === 0) return ProofJobCancelOutcome.Enum["stop-requested"];
       const state = yield* command("systemctl", ["--user", "show", record.unit.unitName, "-p", "LoadState", "--value"]);
-      return Str.trim(state.output) === "not-found"
-        ? ProofJobCancelOutcome.Enum["unit-absent"]
-        : ProofJobCancelOutcome.Enum["stop-failed"];
+      if (Str.trim(state.output) === "not-found") return ProofJobCancelOutcome.Enum["unit-absent"];
+      // The unit is still running: a stamp left behind would hide the job from
+      // `isLiveReadyMonitorJob` for good, so publish would submit a second monitor.
+      yield* withRecordLock(clearCancelRequestLocked(id, record.cancelRequestedAt), id);
+      return ProofJobCancelOutcome.Enum["stop-failed"];
     }),
     bindPullRequest: Effect.fn("ProofJob.bindPullRequest")(function* (id: UUID, prNumber: number) {
       const record = yield* requireRecord(id);
