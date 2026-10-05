@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/oppold-corpus-salvage-restoration",
   "lifecycle": "active",
+  "statusNote": "2026-10-02 roadmap re-eval: operator-attended practice operation (P0 T7 salvage preservation gate); it waits for an attended session and no agent lane owns it. Slot-free under Lane 1 practice operations.",
   "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
   "executionCapable": true,
   "reflectionRequired": true,
