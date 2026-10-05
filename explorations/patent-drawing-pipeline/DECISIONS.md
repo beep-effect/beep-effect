@@ -122,9 +122,11 @@ hash** (the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry"). Because
 the developer operates the CLI, `--by` is descriptive metadata only; the
 event is valid only when it references a **confirmation artifact the
 attorney authored** (an email reply by Internet Message-ID, or an
-initialed PDF under the corpus root) whose content quotes the exact
-sheet-set hash, and `drawings sign` verifies that quote before writing the
-event.
+initialed PDF under the corpus root) that contains, on its own line, the
+verbatim approval statement the CLI prints for that sheet set (`I approve
+design-figure sheet set <hash> for filing.`). A hash quoted in any other
+sentence, a rejection included, is refused; `drawings sign` verifies the
+whole line before writing the event.
 
 **Rationale:** Reuses the judge machinery and its hallucinated-evidence
 guard; the judge handles semantics only. Rejected: validator-only (misses
