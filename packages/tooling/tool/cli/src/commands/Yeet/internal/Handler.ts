@@ -1098,6 +1098,14 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
  * Run the push-first publish tail — cheap-gates, preflight, push, pull request,
  * and the readiness-monitor submit — in isolation.
  *
+ * **Example** (Reference the tail for a wiring test)
+ *
+ * ```ts
+ * import { runPushFirstPublishPhasesForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runPushFirstPublishPhasesForTesting) // "function"
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */

@@ -108,6 +108,16 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
 /**
  * The gate passed on a draft: flip it.
  *
+ * **Example** (Describe a flip decision)
+ *
+ * ```ts
+ * import { YeetReadyGateFlip } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const decision = YeetReadyGateFlip.make({ prNumber: 42, headSha: O.some("abc1234") })
+ * console.log(decision._tag) // "flip"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -119,6 +129,15 @@ export class YeetReadyGateFlip extends S.TaggedClass<YeetReadyGateFlip>($I`YeetR
 
 /**
  * The gate passed and the pull request is already ready for review.
+ *
+ * **Example** (Describe an already-ready decision)
+ *
+ * ```ts
+ * import { YeetReadyGateAlreadyReady } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetReadyGateAlreadyReady.make({ prNumber: 42 })
+ * console.log(decision._tag) // "already-ready"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -133,6 +152,18 @@ export class YeetReadyGateAlreadyReady extends S.TaggedClass<YeetReadyGateAlread
 
 /**
  * The gate refused: the first unmet criterion and what the read observed.
+ *
+ * **Example** (Describe a blocked decision)
+ *
+ * ```ts
+ * import { YeetReadyGateBlocked } from "@beep/repo-cli/test/Yeet"
+ *
+ * const decision = YeetReadyGateBlocked.make({
+ *   blocker: "threads-resolved",
+ *   detail: "1 review thread still owes an answer",
+ * })
+ * console.log(decision.blocker) // "threads-resolved"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -345,21 +376,21 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       Console.log(`[yeet] pull request #${prNumber} is already ready for review; nothing to flip`),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
       const capture = dependencies.capture ?? runRepoCommandCapture;
-      // The gate decided on a head read moments ago; a push landing in between
-      // would flip a head the gate never saw, so re-read it right before the
-      // flip and refuse on any drift.
-      const liveHead = yield* capture(
-        "gh",
-        ["pr", "view", `${prNumber}`, "--json", "headRefOid"],
-        context.repoRoot
-      ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr view before the ready flip.")));
-      const liveSha = O.flatMap(
-        O.liftPredicate(liveHead, (view) => view.exitCode === 0),
-        (view) => O.fromUndefinedOr(/"headRefOid":\s*"([0-9a-f]+)"/.exec(view.output)?.[1])
-      );
-      if (O.isNone(liveSha) || !O.contains(headSha, liveSha.value)) {
+      // The gate decided on a read taken moments ago. A push, a check rerun,
+      // or a new thread can land in between, even on the same head, so take
+      // the whole gate read again immediately before the flip and require the
+      // same verdict on the same head.
+      const confirmation = decideYeetReadyGate(yield* (dependencies.read ?? readPullRequestForReady)(context));
+      const sameHead = O.getOrElse(headSha, () => "unknown");
+      if (confirmation._tag !== "flip" || !O.contains(confirmation.headSha, sameHead)) {
+        const reason = YeetReadyGateDecision.match(confirmation, {
+          blocked: ({ blocker, detail }) => `now blocked on ${blocker}: ${detail}`,
+          "already-ready": () => "it is already ready for review",
+          flip: ({ headSha: liveSha }) =>
+            `the head moved (gate ${sameHead}, live ${O.getOrElse(liveSha, () => "unknown")})`,
+        });
         return yield* YeetCommandError.make({
-          message: `yeet ready refused: the pull request head moved since the gate read (gate ${O.getOrElse(headSha, () => "unknown")}, live ${O.getOrElse(liveSha, () => "unknown")}). Re-run \`${YEET_READY_COMMAND}\` so the new head is gated.`,
+          message: `yeet ready refused: the pull request changed between the gate read and the flip; ${reason}. Re-run \`${YEET_READY_COMMAND}\` so the current state is gated.`,
           exitCode: 1,
         });
       }

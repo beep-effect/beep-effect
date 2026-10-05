@@ -31,6 +31,7 @@ const prView = (
   overrides: Partial<{
     readonly available: boolean;
     readonly failingRequiredCheckCount: number;
+    readonly headSha: O.Option<string>;
     readonly isDraft: boolean;
     readonly mergeable: string;
     readonly pendingRequiredCheckCount: number;
@@ -100,19 +101,20 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (it) => {
-  // The flip re-reads the head right before `gh pr ready`; the fake answers
-  // that view with `liveHead` and every other call with the given exit code.
   const recordingCapture =
-    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0, liveHead = headSha) =>
+    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0) =>
     (command: string, args: ReadonlyArray<string>) =>
       Ref.update(calls, (all) => [...all, [command, ...args]]).pipe(
-        Effect.as(
-          args[1] === "view"
-            ? { exitCode: 0, output: `{"headRefOid":"${liveHead}"}`, truncated: false }
-            : { exitCode, output: exitCode === 0 ? "" : "gh: not permitted", truncated: false }
-        )
+        Effect.as({ exitCode, output: exitCode === 0 ? "" : "gh: not permitted", truncated: false })
       );
-  const viewCall = ["gh", "pr", "view", "42", "--json", "headRefOid"];
+  // The flip takes the gate read twice: once to decide, once to confirm right
+  // before `gh pr ready`. This fake answers the first read with `first` and
+  // every later read with `later`.
+  const readTwice = (first: YeetReadyPullRequestRead, later: YeetReadyPullRequestRead) =>
+    Effect.map(
+      Ref.make(0),
+      (count) => () => Ref.getAndUpdate(count, (n) => n + 1).pipe(Effect.map((n) => (n === 0 ? first : later)))
+    );
 
   it.effect("runs gh pr ready on the read pull request when the gate holds", () =>
     Effect.gen(function* () {
@@ -122,21 +124,34 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
         capture: recordingCapture(calls),
       });
       expect(decision._tag).toBe("flip");
-      expect(yield* Ref.get(calls)).toEqual([viewCall, ["gh", "pr", "ready", "42"]]);
+      expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
     })
   );
 
-  it.effect("refuses to flip when the head moved between the gate read and gh pr ready", () =>
+  it.effect("refuses to flip when the head moved between the gate read and the confirmation", () =>
     Effect.gen(function* () {
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const error = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        capture: recordingCapture(calls, 0, "fedcba9876"),
+        read: yield* readTwice(prView(), prView({ headSha: O.some("fedcba9876") })),
+        capture: recordingCapture(calls),
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetCommandError" });
-      expect(error.message).toContain("head moved since the gate read");
+      expect(error.message).toContain("changed between the gate read and the flip");
       expect(error.message).toContain(`gate ${headSha}, live fedcba9876`);
-      expect(yield* Ref.get(calls)).toEqual([viewCall]);
+      expect(yield* Ref.get(calls)).toEqual([]);
+    })
+  );
+
+  it.effect("refuses to flip when the same head picks up a new thread before the confirmation", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const error = yield* runYeetReadyGate(context, {
+        read: yield* readTwice(prView(), prView({ unresolvedReviewThreadCount: 1 })),
+        capture: recordingCapture(calls),
+      }).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetCommandError" });
+      expect(error.message).toContain("now blocked on threads-resolved");
+      expect(yield* Ref.get(calls)).toEqual([]);
     })
   );
 
