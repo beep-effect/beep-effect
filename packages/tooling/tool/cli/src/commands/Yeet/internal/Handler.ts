@@ -1003,15 +1003,24 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   if (A.isReadonlyArrayEmpty(submitSteps)) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
   }
-  const running = yield* findRunningReadyMonitor(
-    plan.context,
-    pullRequest.number,
-    dependencies.listJobs ?? listCheckoutProofJobs,
-    dependencies.runnerStatus ?? readyMonitorRunnerStatus
+  // Read-then-submit runs under the checkout's submit lock: two publishes
+  // racing here would otherwise both read a registry with no monitor and both
+  // submit one.
+  const launcher = yield* ProofJobLauncher.make(plan.context.repoRoot);
+  const { job, running } = yield* launcher.withReadyMonitorSubmitLock(
+    Effect.gen(function* () {
+      const running = yield* findRunningReadyMonitor(
+        plan.context,
+        pullRequest.number,
+        dependencies.listJobs ?? listCheckoutProofJobs,
+        dependencies.runnerStatus ?? readyMonitorRunnerStatus
+      );
+      const job = O.isSome(running)
+        ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
+        : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
+      return { job, running };
+    })
   );
-  const job = O.isSome(running)
-    ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
-    : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
   yield* Console.log(
     `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
   );
