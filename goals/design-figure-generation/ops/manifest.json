@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "design-figure-generation",
+    "title": "Design Figure Generation",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/design-figure-generation",
+  "lifecycle": "active",
+  "mission": "Spec-as-code to one parametric solid to eight USPTO design-patent figures (hidden-line views, 37 CFR 1.84 sheets, validator, judge, attorney sign-off) as a beep drawings CLI.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/patent-drawing-pipeline",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/design-figure-generation/README.md",
+    "goals/design-figure-generation/SPEC.md",
+    "goals/design-figure-generation/PLAN.md",
+    "goals/design-figure-generation/GOAL.md",
+    "goals/design-figure-generation/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/design-figure-generation/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "complete" },
+    {
+      "id": "P1",
+      "name": "Spike: perspective HLR via replicad",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Slice 1: unshaded sheets for the live matter",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Slice 2: shading, judge rubric, sign-off",
+      "status": "pending"
+    },
+    { "id": "P4", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P5", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/design-figure-generation/GOAL.md)\" -le 4000",
+    "jq . goals/design-figure-generation/ops/manifest.json",
+    "rg -n \"design-figure-generation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/design-figure-generation",
+    "git diff --check -- goals/design-figure-generation",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "Any real article geometry, photo, or render would be committed to the repo."
+  ]
+}

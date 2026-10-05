@@ -293,7 +293,6 @@ describe("@beep/infra CiFleetController", () => {
         "r7a.2xlarge",
         "r7i.2xlarge",
         "r6i.2xlarge",
-        "r6a.2xlarge",
         "m7a.4xlarge",
         "m7i.4xlarge",
         "m6a.4xlarge",

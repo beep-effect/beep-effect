@@ -204,6 +204,17 @@
     ],
     "SessionStart": [
       {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; export CLAUDE_PROJECT_DIR=\"$d\"; bash \"$CLAUDE_PROJECT_DIR/scripts/cloud/bootstrap.sh\"",
+            "timeout": 600,
+            "statusMessage": "Bootstrapping cloud toolchain (no-op locally)"
+          }
+        ]
+      },
+      {
         "hooks": [
           {
             "type": "command",

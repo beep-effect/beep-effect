@@ -52,8 +52,10 @@ import {
   YeetRetireSweepReportJson,
 } from "./Retire.schemas.ts";
 import {
+  activePacketsOnBranch,
   owningCloneContext,
   planRetire,
+  renderActivePackets,
   renderRetirement,
   renderRetirePlan,
   retireBlocker,
@@ -241,6 +243,7 @@ const printRetirePlan = Effect.fn("Yeet.printRetirePlan")(function* (
   options: YeetSweepOptions,
   retire: YeetRetirePlan,
   state: SweepGitState,
+  activePackets: ReadonlyArray<string>,
   sweep: SweepPlan
 ) {
   const text = options.json
@@ -249,10 +252,17 @@ const printRetirePlan = Effect.fn("Yeet.printRetirePlan")(function* (
           schemaVersion: "yeet-retire-sweep-plan/v1",
           retire,
           blocker: retireBlocker(retire, state),
+          activePackets,
           sweep,
         })
       )
-    : A.join([renderRetirePlan(retire, state), renderSweepPlan(sweep)], "\n");
+    : A.join(
+        A.filter(
+          [renderRetirePlan(retire, state), renderActivePackets(activePackets), renderSweepPlan(sweep)],
+          Str.isNonEmpty
+        ),
+        "\n"
+      );
   yield* Console.log(text);
 });
 
@@ -260,13 +270,26 @@ const printRetireReport = Effect.fn("Yeet.printRetireReport")(function* (
   options: YeetSweepOptions,
   retire: YeetRetirePlan,
   receipt: WorktreeRemovalReceipt,
+  activePackets: ReadonlyArray<string>,
   sweep: SweepReport
 ) {
   const text = options.json
     ? yield* encodeRetireSweepReport(
-        YeetRetireSweepReport.make({ schemaVersion: "yeet-retire-sweep-report/v1", retire, receipt, sweep })
+        YeetRetireSweepReport.make({
+          schemaVersion: "yeet-retire-sweep-report/v1",
+          retire,
+          receipt,
+          activePackets,
+          sweep,
+        })
       )
-    : A.join([renderRetirement(retire, receipt), renderSweepReport(sweep)], "\n");
+    : A.join(
+        A.filter(
+          [renderRetirement(retire, receipt), renderActivePackets(activePackets), renderSweepReport(sweep)],
+          Str.isNonEmpty
+        ),
+        "\n"
+      );
   yield* Console.log(text);
 });
 
@@ -293,11 +316,13 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
   });
   const state = yield* observeSweepGitState(laneContext);
   const cloneContext = owningCloneContext(laneContext, retire);
+  // Read before the lane is archived: the merged packet content lives there.
+  const activePackets = yield* activePacketsOnBranch(retire, state);
   if (options.plan) {
-    return yield* printRetirePlan(options, retire, state, yield* planSweep(cloneContext));
+    return yield* printRetirePlan(options, retire, state, activePackets, yield* planSweep(cloneContext));
   }
   const receipt = yield* retireInvokingWorktree(retire, state);
-  yield* printRetireReport(options, retire, receipt, yield* executeSweep(cloneContext));
+  yield* printRetireReport(options, retire, receipt, activePackets, yield* executeSweep(cloneContext));
 });
 
 /**

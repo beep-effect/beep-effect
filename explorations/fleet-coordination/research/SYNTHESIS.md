@@ -541,7 +541,7 @@ owners and PR slots.
 33. Push-vs-PR gauntlet delta is ~20% (18.8 vs 15.6 min p50), not 40–200% — and push runs additionally execute `build`, which `merge_group` would not.
 34. `strict_required_status_checks_policy: true` does not rebase anything — ~1 extra run per merged PR, not a thundering herd; the auto-rebase-bot rejection does not transfer to it.
 35. #21/#25 tree-keyed proof reuse attacks the re-verify tax with no ruleset change and no vendor, and was never compared against the staleness guard.
-36. Blacksmith spend already >$50/week with #24 planning self-hosted runners — cost any CI-multiplying proposal against that trajectory.
+36. [redacted-vendor] spend already >$50/week with #24 planning self-hosted runners — cost any CI-multiplying proposal against that trajectory.
 
 **Design gaps still open**
 37. No design exists for what an agent **does** on receipt of a mid-turn bulletin — `additionalContext` cannot pause a turn.
