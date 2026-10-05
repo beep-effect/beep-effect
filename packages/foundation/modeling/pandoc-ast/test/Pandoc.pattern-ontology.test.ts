@@ -9,6 +9,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Predicate from "effect/Predicate";
 import * as R from "effect/Record";
 import type { JsonPath, PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report";
 import type * as S from "effect/Schema";
@@ -53,6 +54,12 @@ const hasIssueAt = (issues: ReadonlyArray<PandocMappingIssue.Type>, path: JsonPa
     issues,
     (issue) => issue.path.length === path.length && A.every(path, (segment, index) => issue.path[index] === segment)
   );
+
+/** An inline container with no children has nothing a projection could drop. */
+const heldNothing = (inline: object): boolean =>
+  Predicate.hasProperty(inline, "children") &&
+  A.isArray(inline.children) &&
+  !A.isReadonlyArrayNonEmpty(inline.children);
 
 const expectConserved = (input: {
   readonly direction: string;
@@ -179,6 +186,12 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
             return;
           }
 
+          // A dropped inline (no Md output) is a demotion of everything it
+          // held: it needs an issue at its path unless it held nothing.
+          if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
+            expect(explicit || heldNothing(inline), `pandoc-to-md: ${tag} was dropped silently`).toBe(true);
+          }
+
           A.forEach(paragraph.children, (target) =>
             expectConserved({
               direction: "pandoc-to-md",
@@ -231,6 +244,10 @@ describe("@beep/pandoc-ast Pattern Ontology classification", () => {
           expect(paragraph._tag).toBe("para");
           if (paragraph._tag !== "para") {
             return;
+          }
+
+          if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
+            expect(explicit || heldNothing(inline), `md-to-pandoc: ${tag} was dropped silently`).toBe(true);
           }
 
           A.forEach(paragraph.children, (target) =>

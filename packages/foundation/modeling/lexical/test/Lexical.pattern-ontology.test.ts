@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import type * as S from "effect/Schema";
 
 const { collectPoTaggedConstructors, getPoPattern, poConservation } = PatternOntology;
@@ -37,11 +38,18 @@ const mdToLexicalDemotions: ReadonlyArray<readonly [source: string, target: stri
   // Lossless: the artifact-link paragraph convention becomes a block leaf.
   ["p", "artifact-ref"],
   // Degraded: marks become text format bits on their flattened children, so a
-  // mark projects onto whatever its children project onto; images become
-  // links; footnote references become literal text.
-  ["strong", "*"],
-  ["em", "*"],
-  ["del", "*"],
+  // mark projects onto exactly the leaves its children project onto: text
+  // runs, line breaks, and links. Images become links; footnote references
+  // become literal text.
+  ["strong", "text"],
+  ["strong", "linebreak"],
+  ["strong", "link"],
+  ["em", "text"],
+  ["em", "linebreak"],
+  ["em", "link"],
+  ["del", "text"],
+  ["del", "linebreak"],
+  ["del", "link"],
   ["img", "link"],
   ["footnoteReference", "text"],
 ];
@@ -55,21 +63,17 @@ const lexicalToMdDemotions: ReadonlyArray<readonly [source: string, target: stri
   ["quote", "blockquote"],
   ["code", "pre"],
   ["artifact-ref", "p"],
+  // Detached structural nodes project onto their paragraph content; a detached
+  // table row re-wraps into a table and conserves its pattern.
+  ["listitem", "p"],
+  ["tablecell", "p"],
 ];
 
-const rootChildTypes: ReadonlyArray<string> = [
-  "paragraph",
-  "heading",
-  "quote",
-  "list",
-  "code",
-  "table",
-  "artifact-ref",
-  "youtube",
-];
+/** Inline-level leaves have no block position in Md and wrap into a paragraph. */
+const looseLeafTypes: ReadonlyArray<string> = ["text", "tab", "linebreak", "link"];
 
 const isDeclared = (table: ReadonlyArray<readonly [string, string]>, source: string, target: string): boolean =>
-  A.some(table, ([from, to]) => from === source && (to === "*" || to === target));
+  A.some(table, ([from, to]) => from === source && to === target);
 
 const expectConserved = (input: {
   readonly direction: string;
@@ -152,6 +156,12 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
             return;
           }
 
+          if (!A.isReadonlyArrayNonEmpty(paragraph.children)) {
+            // Empty text leaves vanish in Lexical, so a mark over empty text has
+            // nothing a projection could drop.
+            expect(Str.isEmpty(Md.Inline.toPlainText(inline)), `md-to-lexical: ${tag} was dropped silently`).toBe(true);
+          }
+
           A.forEach(paragraph.children, (target) =>
             expectConserved({
               direction: "md-to-lexical",
@@ -181,10 +191,10 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
             return;
           }
 
-          // A node without a block position in Md wraps into a paragraph; a
-          // table row re-wraps into a table. Root-level elements must conserve.
+          // An inline leaf wraps into a paragraph; every other node, root-level
+          // or detached structural, must conserve or carry a declared transition.
           const looseLeafWrapped = (target: Md.Block): boolean =>
-            !A.contains(rootChildTypes, type) && target._tag === "p";
+            A.contains(looseLeafTypes, type) && target._tag === "p";
 
           A.forEach(blocks, (target) => {
             if (looseLeafWrapped(target)) {

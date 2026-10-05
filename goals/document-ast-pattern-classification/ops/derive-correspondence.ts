@@ -61,6 +61,11 @@ const addEdge = (input: Omit<Edge, "count" | "evidence"> & { readonly evidence: 
 // Only the issue recorded at the construct's own path explains its transition;
 // nested child issues belong to the child rows. Future-constructor names are
 // arbitrary wire strings, so they collapse to one label.
+const DROPPED = "∅ (dropped)";
+
+const addDroppedEdge = (source: string, sourcePattern: string, evidence: ReadonlyArray<string>): void =>
+  addEdge({ source, sourcePattern, target: DROPPED, targetPattern: "—", conservation: "demoted", evidence });
+
 const issuesUnder = (issues: ReadonlyArray<PandocMappingIssue.Type>, prefix: ReadonlyArray<string | number>) =>
   A.map(
     A.filter(
@@ -85,12 +90,13 @@ const flushEdges = (title: string, lines: Array<string>): void => {
       a.source < b.source ? -1 : a.source > b.source ? 1 : a.target < b.target ? -1 : a.target > b.target ? 1 : 0
   );
   for (const edge of rows) {
-    const evidence =
-      edge.conservation === "preserved"
+    // Loss diagnostics are shown even when the pattern is preserved: pattern
+    // conservation never implies a lossless conversion.
+    const evidence = A.isReadonlyArrayNonEmpty(edge.evidence)
+      ? A.join(edge.evidence, "; ")
+      : edge.conservation === "preserved"
         ? "—"
-        : A.isReadonlyArrayNonEmpty(edge.evidence)
-          ? A.join(edge.evidence, "; ")
-          : "declared re-realization / README profile";
+        : "declared re-realization / README profile";
     lines.push(
       `| \`${edge.source}\` | ${edge.sourcePattern} | \`${edge.target}\` | ${edge.targetPattern} | ${edge.conservation} | ${evidence} | ${edge.count} |`
     );
@@ -158,6 +164,9 @@ for (const [tag, member] of R.toEntries(Pandoc.PandocInline.cases)) {
     const paragraph = O.getOrThrow(A.head(result.document.children));
     const evidence = issuesUnder(result.report.issues, ["blocks", 0, "children", 0]);
     const targets = paragraph._tag === "p" ? paragraph.children : [];
+    if (paragraph._tag === "p" && !A.isReadonlyArrayNonEmpty(targets)) {
+      addDroppedEdge(tag, patternOf(member), evidence);
+    }
     if (paragraph._tag !== "p") {
       addEdge({
         source: `para[${tag}]`,
@@ -208,6 +217,9 @@ for (const [tag, member] of R.toEntries(Md.Inline.cases)) {
     const paragraph = O.getOrThrow(A.head(result.pandoc.blocks));
     const evidence = issuesUnder(result.report.issues, ["children", 0, "children", 0]);
     const targets = paragraph._tag === "para" ? paragraph.children : [];
+    if (!A.isReadonlyArrayNonEmpty(targets)) {
+      addDroppedEdge(tag, patternOf(member), evidence);
+    }
     for (const target of targets) {
       const targetPattern = patternOf(Pandoc.PandocInline.cases[target._tag]);
       addEdge({
@@ -243,6 +255,9 @@ for (const [tag, member] of R.toEntries(Md.Inline.cases)) {
   for (const inline of sample(member)) {
     const paragraph = Effect.runSync(blockToLexical(Md.P.make({ children: [inline] })));
     const targets = paragraph.type === "paragraph" ? paragraph.children : [];
+    if (!A.isReadonlyArrayNonEmpty(targets)) {
+      addDroppedEdge(tag, patternOf(member), []);
+    }
     for (const target of targets) {
       const targetPattern = patternOf(LexicalNode.cases[target.type]);
       addEdge({
@@ -261,7 +276,11 @@ flushEdges("Md → Lexical inlines (README lossiness profile is the explicit rec
 for (const [type, member] of R.toEntries(LexicalNode.cases)) {
   if (type === "root") continue;
   for (const node of sample(member)) {
-    for (const target of nodeToBlocks(node)) {
+    const blocks = nodeToBlocks(node);
+    if (!A.isReadonlyArrayNonEmpty(blocks)) {
+      addDroppedEdge(type, patternOf(member), []);
+    }
+    for (const target of blocks) {
       const targetPattern = patternOf(Md.Block.cases[target._tag]);
       addEdge({
         source: type,

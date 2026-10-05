@@ -120,14 +120,14 @@ Do not edit by hand; regenerate after any annotation or codec change.
 | --- | --- | --- | --- | --- | --- | --- |
 | `blockquote` | container | `blockquote` | container | preserved | — | 40 |
 | `bulletlist` | table | `ul` | table | preserved | — | 40 |
-| `codeblock` | field | `pre` | field | preserved | — | 40 |
+| `codeblock` | field | `pre` | field | preserved | CodeBlock (lossy) | 40 |
 | `definitionList` | table | `p` | block | demoted | DefinitionList (unsupported) | 40 |
-| `div` | container | `blockquote` | container | preserved | — | 40 |
-| `figure` | container | `blockquote` | container | preserved | — | 40 |
-| `header` | block | `heading` | block | preserved | — | 40 |
+| `div` | container | `blockquote` | container | preserved | Div (unsupported) | 40 |
+| `figure` | container | `blockquote` | container | preserved | Figure (unsupported) | 40 |
+| `header` | block | `heading` | block | preserved | Header (lossy) | 40 |
 | `horizontalrule` | meta | `hr` | meta | preserved | — | 40 |
 | `lineBlock` | table | `p` | block | demoted | LineBlock (lossy) | 40 |
-| `orderedlist` | table | `ol` | table | preserved | — | 40 |
+| `orderedlist` | table | `ol` | table | preserved | OrderedList (lossy) | 40 |
 | `para` | block | `p` | block | preserved | — | 40 |
 | `plain` | block | `p` | block | preserved | — | 40 |
 | `rawBlock` | field | `p` | block | demoted | RawBlock (unsupported) | 40 |
@@ -138,89 +138,96 @@ Do not edit by hand; regenerate after any annotation or codec change.
 
 | Source | Pattern | Target | Pattern | Conservation | Evidence | Samples |
 | --- | --- | --- | --- | --- | --- | --- |
-| `cite` | inline | `a` | inline | preserved | — | 4 |
+| `cite` | inline | `a` | inline | preserved | Cite (unsupported) | 4 |
 | `cite` | inline | `br` | milestone | demoted | Cite (unsupported) | 8 |
 | `cite` | inline | `code` | atom | demoted | Cite (unsupported) | 3 |
-| `cite` | inline | `del` | inline | preserved | — | 11 |
-| `cite` | inline | `em` | inline | preserved | — | 11 |
+| `cite` | inline | `del` | inline | preserved | Cite (unsupported) | 11 |
+| `cite` | inline | `em` | inline | preserved | Cite (unsupported) | 11 |
 | `cite` | inline | `img` | milestone | demoted | Cite (unsupported) | 5 |
 | `cite` | inline | `inlineMath` | atom | demoted | Cite (unsupported) | 10 |
-| `cite` | inline | `strong` | inline | preserved | — | 10 |
+| `cite` | inline | `strong` | inline | preserved | Cite (unsupported) | 10 |
 | `cite` | inline | `text` | atom | demoted | Cite (unsupported) | 43 |
-| `code` | atom | `code` | atom | preserved | — | 40 |
+| `cite` | inline | `∅ (dropped)` | — | demoted | Cite (unsupported) | 21 |
+| `code` | atom | `code` | atom | preserved | Code (lossy) | 40 |
 | `emph` | inline | `em` | inline | preserved | — | 40 |
 | `image` | inline | `img` | milestone | demoted | Image (lossy) | 40 |
 | `linebreak` | milestone | `br` | milestone | preserved | — | 40 |
-| `link` | inline | `a` | inline | preserved | — | 40 |
+| `link` | inline | `a` | inline | preserved | Link (lossy) | 40 |
 | `math` | atom | `inlineMath` | atom | preserved | — | 21 |
 | `note` | popup | `text` | atom | demoted | Note (unsupported) | 40 |
 | `para[math]` | block | `mathBlock` | field | demoted | declared re-realization / README profile | 19 |
-| `quoted` | inline | `a` | inline | preserved | — | 10 |
+| `quoted` | inline | `a` | inline | preserved | Quoted (lossy) | 10 |
 | `quoted` | inline | `br` | milestone | demoted | Quoted (lossy) | 10 |
 | `quoted` | inline | `code` | atom | demoted | Quoted (lossy) | 6 |
-| `quoted` | inline | `del` | inline | preserved | — | 14 |
-| `quoted` | inline | `em` | inline | preserved | — | 13 |
+| `quoted` | inline | `del` | inline | preserved | Quoted (lossy) | 14 |
+| `quoted` | inline | `em` | inline | preserved | Quoted (lossy) | 13 |
 | `quoted` | inline | `img` | milestone | demoted | Quoted (lossy) | 9 |
 | `quoted` | inline | `inlineMath` | atom | demoted | Quoted (lossy) | 12 |
-| `quoted` | inline | `strong` | inline | preserved | — | 11 |
+| `quoted` | inline | `strong` | inline | preserved | Quoted (lossy) | 11 |
 | `quoted` | inline | `text` | atom | demoted | Quoted (lossy) | 159 |
-| `rawInline` | atom | `text` | atom | preserved | — | 40 |
-| `smallCaps` | inline | `a` | inline | preserved | — | 10 |
+| `rawInline` | atom | `text` | atom | preserved | RawInline (unsupported) | 40 |
+| `smallCaps` | inline | `a` | inline | preserved | SmallCaps (lossy) | 10 |
 | `smallCaps` | inline | `br` | milestone | demoted | SmallCaps (lossy) | 10 |
 | `smallCaps` | inline | `code` | atom | demoted | SmallCaps (lossy) | 6 |
-| `smallCaps` | inline | `del` | inline | preserved | — | 14 |
-| `smallCaps` | inline | `em` | inline | preserved | — | 13 |
+| `smallCaps` | inline | `del` | inline | preserved | SmallCaps (lossy) | 14 |
+| `smallCaps` | inline | `em` | inline | preserved | SmallCaps (lossy) | 13 |
 | `smallCaps` | inline | `img` | milestone | demoted | SmallCaps (lossy) | 9 |
 | `smallCaps` | inline | `inlineMath` | atom | demoted | SmallCaps (lossy) | 12 |
-| `smallCaps` | inline | `strong` | inline | preserved | — | 11 |
+| `smallCaps` | inline | `strong` | inline | preserved | SmallCaps (lossy) | 11 |
 | `smallCaps` | inline | `text` | atom | demoted | SmallCaps (lossy) | 79 |
+| `smallCaps` | inline | `∅ (dropped)` | — | demoted | SmallCaps (lossy) | 9 |
 | `softbreak` | milestone | `text` | atom | demoted | SoftBreak (lossy) | 40 |
 | `space` | milestone | `text` | atom | demoted | declared re-realization / README profile | 40 |
-| `span` | inline | `a` | inline | preserved | — | 7 |
+| `span` | inline | `a` | inline | preserved | Span (unsupported) | 7 |
 | `span` | inline | `br` | milestone | demoted | Span (unsupported) | 10 |
 | `span` | inline | `code` | atom | demoted | Span (unsupported) | 14 |
-| `span` | inline | `del` | inline | preserved | — | 15 |
-| `span` | inline | `em` | inline | preserved | — | 13 |
+| `span` | inline | `del` | inline | preserved | Span (unsupported) | 15 |
+| `span` | inline | `em` | inline | preserved | Span (unsupported) | 13 |
 | `span` | inline | `img` | milestone | demoted | Span (unsupported) | 8 |
 | `span` | inline | `inlineMath` | atom | demoted | Span (unsupported) | 9 |
-| `span` | inline | `strong` | inline | preserved | — | 11 |
+| `span` | inline | `strong` | inline | preserved | Span (unsupported) | 11 |
 | `span` | inline | `text` | atom | demoted | Span (unsupported) | 76 |
+| `span` | inline | `∅ (dropped)` | — | demoted | Span (unsupported) | 10 |
 | `str` | atom | `text` | atom | preserved | — | 40 |
 | `strikeout` | inline | `del` | inline | preserved | — | 40 |
 | `strong` | inline | `strong` | inline | preserved | — | 40 |
-| `subscript` | inline | `a` | inline | preserved | — | 10 |
+| `subscript` | inline | `a` | inline | preserved | Subscript (lossy) | 10 |
 | `subscript` | inline | `br` | milestone | demoted | Subscript (lossy) | 10 |
 | `subscript` | inline | `code` | atom | demoted | Subscript (lossy) | 6 |
-| `subscript` | inline | `del` | inline | preserved | — | 14 |
-| `subscript` | inline | `em` | inline | preserved | — | 13 |
+| `subscript` | inline | `del` | inline | preserved | Subscript (lossy) | 14 |
+| `subscript` | inline | `em` | inline | preserved | Subscript (lossy) | 13 |
 | `subscript` | inline | `img` | milestone | demoted | Subscript (lossy) | 9 |
 | `subscript` | inline | `inlineMath` | atom | demoted | Subscript (lossy) | 12 |
-| `subscript` | inline | `strong` | inline | preserved | — | 11 |
+| `subscript` | inline | `strong` | inline | preserved | Subscript (lossy) | 11 |
 | `subscript` | inline | `text` | atom | demoted | Subscript (lossy) | 79 |
-| `superscript` | inline | `a` | inline | preserved | — | 10 |
+| `subscript` | inline | `∅ (dropped)` | — | demoted | Subscript (lossy) | 9 |
+| `superscript` | inline | `a` | inline | preserved | Superscript (lossy) | 10 |
 | `superscript` | inline | `br` | milestone | demoted | Superscript (lossy) | 10 |
 | `superscript` | inline | `code` | atom | demoted | Superscript (lossy) | 6 |
-| `superscript` | inline | `del` | inline | preserved | — | 14 |
-| `superscript` | inline | `em` | inline | preserved | — | 13 |
+| `superscript` | inline | `del` | inline | preserved | Superscript (lossy) | 14 |
+| `superscript` | inline | `em` | inline | preserved | Superscript (lossy) | 13 |
 | `superscript` | inline | `img` | milestone | demoted | Superscript (lossy) | 9 |
 | `superscript` | inline | `inlineMath` | atom | demoted | Superscript (lossy) | 12 |
-| `superscript` | inline | `strong` | inline | preserved | — | 11 |
+| `superscript` | inline | `strong` | inline | preserved | Superscript (lossy) | 11 |
 | `superscript` | inline | `text` | atom | demoted | Superscript (lossy) | 79 |
-| `underline` | inline | `a` | inline | preserved | — | 10 |
+| `superscript` | inline | `∅ (dropped)` | — | demoted | Superscript (lossy) | 9 |
+| `underline` | inline | `a` | inline | preserved | Underline (lossy) | 10 |
 | `underline` | inline | `br` | milestone | demoted | Underline (lossy) | 10 |
 | `underline` | inline | `code` | atom | demoted | Underline (lossy) | 6 |
-| `underline` | inline | `del` | inline | preserved | — | 14 |
-| `underline` | inline | `em` | inline | preserved | — | 13 |
+| `underline` | inline | `del` | inline | preserved | Underline (lossy) | 14 |
+| `underline` | inline | `em` | inline | preserved | Underline (lossy) | 13 |
 | `underline` | inline | `img` | milestone | demoted | Underline (lossy) | 9 |
 | `underline` | inline | `inlineMath` | atom | demoted | Underline (lossy) | 12 |
-| `underline` | inline | `strong` | inline | preserved | — | 11 |
+| `underline` | inline | `strong` | inline | preserved | Underline (lossy) | 11 |
 | `underline` | inline | `text` | atom | demoted | Underline (lossy) | 79 |
+| `underline` | inline | `∅ (dropped)` | — | demoted | Underline (lossy) | 9 |
+| `unknownInline` | milestone | `∅ (dropped)` | — | demoted | future constructor (unsupported) | 40 |
 
 ### Md → Pandoc blocks
 
 | Source | Pattern | Target | Pattern | Conservation | Evidence | Samples |
 | --- | --- | --- | --- | --- | --- | --- |
-| `admonition` | container | `div` | container | preserved | — | 40 |
+| `admonition` | container | `div` | container | preserved | Admonition (lossy) | 40 |
 | `blockquote` | container | `blockquote` | container | preserved | — | 40 |
 | `embed` | meta | `para` | block | demoted | Embed (lossy) | 40 |
 | `footnoteDefinition` | container | `para` | block | demoted | FootnoteDefinition (lossy) | 40 |
@@ -231,7 +238,7 @@ Do not edit by hand; regenerate after any annotation or codec change.
 | `p` | block | `para` | block | preserved | — | 40 |
 | `pre` | field | `codeblock` | field | preserved | — | 40 |
 | `table` | table | `para` | block | demoted | Table (lossy) | 40 |
-| `taskList` | table | `bulletlist` | table | preserved | — | 40 |
+| `taskList` | table | `bulletlist` | table | preserved | TaskList (lossy) | 40 |
 | `ul` | table | `bulletlist` | table | preserved | — | 40 |
 | `youtube` | meta | `para` | block | demoted | YouTube (lossy) | 40 |
 
@@ -247,8 +254,8 @@ Do not edit by hand; regenerate after any annotation or codec change.
 | `footnoteReference` | milestone | `str` | atom | demoted | FootnoteReference (lossy) | 40 |
 | `img` | milestone | `image` | inline | demoted | declared re-realization / README profile | 40 |
 | `inlineMath` | atom | `math` | atom | preserved | — | 40 |
-| `rawHtml` | atom | `str` | atom | preserved | — | 40 |
-| `rawMarkdown` | atom | `str` | atom | preserved | — | 40 |
+| `rawHtml` | atom | `str` | atom | preserved | future constructor (lossy) | 40 |
+| `rawMarkdown` | atom | `str` | atom | preserved | future constructor (lossy) | 40 |
 | `strong` | inline | `strong` | inline | preserved | — | 40 |
 | `text` | atom | `str` | atom | preserved | — | 40 |
 
@@ -281,9 +288,11 @@ Do not edit by hand; regenerate after any annotation or codec change.
 | `del` | inline | `linebreak` | milestone | demoted | declared re-realization / README profile | 2 |
 | `del` | inline | `link` | inline | preserved | — | 3 |
 | `del` | inline | `text` | atom | demoted | declared re-realization / README profile | 25 |
+| `del` | inline | `∅ (dropped)` | — | demoted | declared re-realization / README profile | 21 |
 | `em` | inline | `linebreak` | milestone | demoted | declared re-realization / README profile | 2 |
 | `em` | inline | `link` | inline | preserved | — | 3 |
 | `em` | inline | `text` | atom | demoted | declared re-realization / README profile | 25 |
+| `em` | inline | `∅ (dropped)` | — | demoted | declared re-realization / README profile | 21 |
 | `footnoteReference` | milestone | `text` | atom | demoted | declared re-realization / README profile | 40 |
 | `img` | milestone | `link` | inline | demoted | declared re-realization / README profile | 40 |
 | `inlineMath` | atom | `text` | atom | preserved | — | 40 |
@@ -292,6 +301,7 @@ Do not edit by hand; regenerate after any annotation or codec change.
 | `strong` | inline | `linebreak` | milestone | demoted | declared re-realization / README profile | 2 |
 | `strong` | inline | `link` | inline | preserved | — | 3 |
 | `strong` | inline | `text` | atom | demoted | declared re-realization / README profile | 25 |
+| `strong` | inline | `∅ (dropped)` | — | demoted | declared re-realization / README profile | 21 |
 | `text` | atom | `text` | atom | preserved | — | 40 |
 
 ### Lexical → Md nodes (loose leaves wrap into `p` by the codec's documented rule)
