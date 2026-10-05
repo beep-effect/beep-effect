@@ -14,6 +14,7 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -283,7 +284,10 @@ describe("yeet push-first publish plan wiring", () => {
         expect(yield* printedPlan(withoutWaves(actual))).toBe(yield* printedPlan(withoutWaves(expected)));
         for (const step of A.filter(actual.steps, (candidate) => candidate.waves !== undefined)) {
           const twin = A.findFirst(verifyPlan.steps, (candidate) => candidate.id === step.id);
-          expect(O.map(twin, (candidate) => candidate.waves)).toEqual(O.some(step.waves));
+          assertSome(
+            O.map(twin, (candidate) => candidate.waves),
+            step.waves
+          );
         }
       }
     }).pipe(provideScopedLayer(commandTestLayer))
@@ -308,7 +312,7 @@ describe("yeet push-first publish plan wiring", () => {
 
   it("registers the ready subcommand", () => {
     expect(subcommandNames).toContain("ready");
-    expect(O.map(findSubcommand("ready"), (command) => command.description)).toEqual(O.some(expect.any(String)));
+    assertTrue(O.exists(findSubcommand("ready"), (command) => typeof command.description === "string"));
   });
 });
 

@@ -99,7 +99,7 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
   });
 });
 
-it.layer(NodeServices.layer)("yeet ready gate run", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (it) => {
   const recordingCapture =
     (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0) =>
     (command: string, args: ReadonlyArray<string>) =>

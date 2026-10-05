@@ -9755,13 +9755,76 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:182:provideScopedLayer@12#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:290:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 182,
-      "endLine": 182,
+      "line": 290,
+      "endLine": 290,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:25b4a120167d91ecbfa2ce09af0c25444add97bb3d43c51f936063b8c3e2113a",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(commandTestLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:307:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 307,
+      "endLine": 307,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:778bf6f3dee494e0b13a0f5adf5bcb0d2d1e3a57b2941970dcbed4ecf5f8adaf",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(commandTestLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:370:provideScopedLayer@7#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 370,
+      "endLine": 370,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:392ecc8ec8ae3da06c0192444b611129c99f59a74cea1e088dcf744f51852eb3",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(commandTestLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:395:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 395,
+      "endLine": 395,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:cf2b3a34fbc17b11cd2723349dd2d8bd0aa22ff4893c466d61b29f244663f94c",
       "class": "unresolved-layer-provide",
@@ -9776,13 +9839,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:216:provideScopedLayer@12#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:429:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 216,
-      "endLine": 216,
+      "line": 429,
+      "endLine": 429,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:74548dba24c1bbb6d98fea3bd933829c6afc944a95da09c34155c275f65398c2",
       "class": "unresolved-layer-provide",
@@ -9797,13 +9860,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:233:provideScopedLayer@12#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:446:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 233,
-      "endLine": 233,
+      "line": 446,
+      "endLine": 446,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d10435610f16b58be98ebcdf4fd9733c8cbc091d028e569cb1817f51e83a5448",
       "class": "unresolved-layer-provide",
@@ -9818,13 +9881,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:84:provideScopedLayer@11#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:92:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 84,
-      "endLine": 84,
+      "line": 92,
+      "endLine": 92,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:3ba4433bb981b3f20bc8d1f8c485c873552d0e9454fec805fe1fcd732cd8fb37",
       "class": "unresolved-layer-provide",
@@ -9834,6 +9897,69 @@
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:425:result@28#1",
+      "lens": "resource",
+      "ruleId": "EV005",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 425,
+      "endLine": 425,
+      "symbol": "result",
+      "occurrence": "v2:7a14f32177c7c380ce21bfdd90e79a708ab646e6fe820d03337194a816a8d1fd",
+      "class": "result-outcome-assertion",
+      "evidence": "Effect.result(runYeetCommand([\"monitor\", \"--settle-timeout\", \"30m\"]))",
+      "replacement": {
+        "primitive": "readme.exit",
+        "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:444:result@28#1",
+      "lens": "resource",
+      "ruleId": "EV005",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 444,
+      "endLine": 444,
+      "symbol": "result",
+      "occurrence": "v2:2dd6a4031dfe0a28f58919baf5b60def7b0a2db8ba90bc863f1704b64bb7e22d",
+      "class": "result-outcome-assertion",
+      "evidence": "Effect.result(runYeetCommand([\"monitor\", \"--until-ready\", \"--watch\"]))",
+      "replacement": {
+        "primitive": "readme.exit",
+        "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:15:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
@@ -10406,13 +10532,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1045:provideScopedLayer@11#1",
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1142:provideScopedLayer@11#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
-      "line": 1045,
-      "endLine": 1045,
+      "line": 1142,
+      "endLine": 1142,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:7a1d1a82cf8a4d37cb56bd21a34e2fab0e0da758cf520f7775934c6c74c9e6d2",
       "class": "unresolved-layer-provide",
@@ -10422,6 +10548,90 @@
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:40:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
+      "line": 40,
+      "endLine": 40,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV014:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1035:it.layer@0#1",
+      "lens": "resource",
+      "ruleId": "EV014",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
+      "line": 1035,
+      "endLine": 1035,
+      "symbol": "it.layer",
+      "occurrence": "v2:78aaf802400ba04f4d541ac265a2b73bc2f09fdbb330fa49cf867a2b4449279c",
+      "class": "resource-layer-without-hook-timeout",
+      "evidence": "it.layer(platform)",
+      "replacement": {
+        "primitive": "it.layer.option.timeout",
+        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1046:TestClock.adjust@32#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
+      "line": 1046,
+      "endLine": 1046,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:7136b02ed2a1c6245a504a6a957537d6432b2880720f82cf0e081393d773927e",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"999 millis\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1047:TestClock.adjust@32#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
+      "line": 1047,
+      "endLine": 1047,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:27ac287ccb1e5cee089a0548e84846d0129474c1b671b0e824d0aaf526856136",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"1 millis\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
@@ -16962,6 +17172,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/yeet.test.ts:152:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
+      "line": 152,
+      "endLine": 152,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:105:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -20580,48 +20811,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Keep typed Result failure and the existing SourceTextResolverError instance and page-out-of-range reason assertions. A Boolean or partial error witness does not establish an exact expected error or Cause; migrating to generic Exit failure would also admit defects."
-    },
-    {
-      "id": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:212:result@28#1",
-      "lens": "resource",
-      "ruleId": "EV005",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 212,
-      "endLine": 212,
-      "symbol": "result",
-      "occurrence": "v2:7a14f32177c7c380ce21bfdd90e79a708ab646e6fe820d03337194a816a8d1fd",
-      "class": "result-outcome-assertion",
-      "evidence": "Effect.result(runYeetCommand([\"monitor\", \"--settle-timeout\", \"30m\"]))",
-      "replacement": {
-        "primitive": "readme.exit",
-        "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV005:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:231:result@28#1",
-      "lens": "resource",
-      "ruleId": "EV005",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 231,
-      "endLine": 231,
-      "symbol": "result",
-      "occurrence": "v2:2dd6a4031dfe0a28f58919baf5b60def7b0a2db8ba90bc863f1704b64bb7e22d",
-      "class": "result-outcome-assertion",
-      "evidence": "Effect.result(runYeetCommand([\"monitor\", \"--until-ready\", \"--watch\"]))",
-      "replacement": {
-        "primitive": "readme.exit",
-        "sketch": "utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. readme.exit: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) with unresolved, mixed or assertion-only outcomes. Review Effect.result to Effect.exit migration while preserving matcher polarity and existing operands: Result failure holds an error, whereas Exit failure holds a Cause. Select a specific Exit helper only when its expected value or Cause is established; never invent one from a Boolean predicate or partial error field."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV005:packages/tooling/tool/cli/test/yeet-settle.test.ts:641:result@23#1",
@@ -31165,27 +31354,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:10:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 10,
-      "endLine": 10,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-comment-actor.test.ts:14:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -31398,27 +31566,6 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:40:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
-      "line": 40,
-      "endLine": 40,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:17:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -31517,6 +31664,27 @@
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-ready-gate.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-ready-gate.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "info",
       "confidence": 0.55,
@@ -31741,27 +31909,6 @@
       "file": "packages/tooling/tool/cli/test/yeet-wave-rerun.test.ts",
       "line": 54,
       "endLine": 54,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet.test.ts:152:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet.test.ts",
-      "line": 152,
-      "endLine": 152,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -41335,27 +41482,6 @@
       "reason": "This public layer contains platform service factories and a context-capturing removal service, not Git setup or a shared scratch repository. Native roots and Git commands are per-test body work in withScratchRepo; no additional hook-timeout budget is needed for this fixed layer. See goals/effect-vitest-canon/research/worktree-command-scope-proof.md."
     },
     {
-      "id": "EV014:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:938:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
-      "line": 938,
-      "endLine": 938,
-      "symbol": "it.layer",
-      "occurrence": "v2:78aaf802400ba04f4d541ac265a2b73bc2f09fdbb330fa49cf867a2b4449279c",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(platform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV014:packages/tooling/tool/cli/test/yeet-settle.test.ts:1211:it.layer@0#1",
       "lens": "resource",
       "ruleId": "EV014",
@@ -42649,48 +42775,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "This unchanged finite TestClock adjustment drives a forked fake child through the capture timeout, output-drain grace period, or cleanup deadline. Kill/unref counts, failure tags and output assertions prove the resulting state; real subprocess tests retain live clocks. See goals/effect-vitest-canon/research/step-capture-scope-proof.md."
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:949:TestClock.adjust@32#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
-      "line": 949,
-      "endLine": 949,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:7136b02ed2a1c6245a504a6a957537d6432b2880720f82cf0e081393d773927e",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"999 millis\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:950:TestClock.adjust@32#1",
-      "lens": "resource",
-      "ruleId": "EV015",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts",
-      "line": 950,
-      "endLine": 950,
-      "symbol": "TestClock.adjust",
-      "occurrence": "v2:27ac287ccb1e5cee089a0548e84846d0129474c1b671b0e824d0aaf526856136",
-      "class": "shared-test-clock-adjustment",
-      "evidence": "TestClock.adjust(\"1 millis\")",
-      "replacement": {
-        "primitive": "TestClock.adjust",
-        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/yeet-settle.test.ts:1226:TestClock.adjust@15#1",
