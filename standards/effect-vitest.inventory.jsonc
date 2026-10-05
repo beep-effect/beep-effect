@@ -493,153 +493,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:120:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 120,
-      "endLine": 150,
-      "symbol": "runPromise",
-      "occurrence": "v2:4707eba3295b286df6cf94373b581f5c9eec8b53ca8e84cf94edf96be9b56006",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const service = createFileGenerationPlanService(); yield* withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem;",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:153:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 153,
-      "endLine": 182,
-      "symbol": "runPromise",
-      "occurrence": "v2:463aa9aa2385b11449ac0f99e96ba8bb3d0edfea4386091c1c3901ac9b410948",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const service = createFileGenerationPlanService(); yield* withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem;",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:185:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 185,
-      "endLine": 208,
-      "symbol": "runPromise",
-      "occurrence": "v2:a8a29883315b86113b49ac1d9640783bf1a56da98ee6b8724d60bc7388067f22",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const service = createFileGenerationPlanService(); yield* withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem;",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:211:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 211,
-      "endLine": 233,
-      "symbol": "runPromise",
-      "occurrence": "v2:8ebe1f33d9e2346bc5803ff071b548067b3bb3e71383c7d42a83605aef3d3d16",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const service = createFileGenerationPlanService(); yield* withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem;",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:236:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 236,
-      "endLine": 267,
-      "symbol": "runPromise",
-      "occurrence": "v2:faeca51c72c4e2ab0483d6a257b05e75b4607985ec5c74011361fd6a0e4cc653",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const service = createFileGenerationPlanService(); yield* withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem;",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:73:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 73,
-      "endLine": 92,
-      "symbol": "runPromise",
-      "occurrence": "v2:97aeb593d89dfb5e1a613b5073d9647b0275f13d678b7983d2d74305f3e75f67",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const filePath = path.join(tmpDir, \"tsconfig.packages",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/create-package-security.test.ts:95:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 95,
-      "endLine": 112,
-      "symbol": "runPromise",
-      "occurrence": "v2:d0809eaa76e36471cfabaeb6abcdb6f5139c88cc0e1643c82f763f6a371ee4f5",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDirectory((tmpDir) => Effect.gen(function* () { yield* writeRootConfigFiles(tmpDir); const result = yield* checkConfigNeedsUpdate( tmpDir, ConfigUpdateTarget.make({ packageN",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/doctest.test.ts:160:runSync@22#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -13650,48 +13503,6 @@
       "occurrence": "v2:5682e4728f453d8ea6dda58b40e7271d3e891eafa1ab5cabacb33b14d549088d",
       "class": "resource-wrapper",
       "evidence": "<A2, E, R2>(use: (directory: string) => Effect.Effect<A2, E, R2>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory();",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/create-package-security.test.ts:18:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 18,
-      "endLine": 20,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7e30027013c6028b259f0acb6f89385cd5edeabc6062f779752d5a8f74e27eb2",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.flatMa",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/create-package-security.test.ts:24:withTempDirectory@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/create-package-security.test.ts",
-      "line": 24,
-      "endLine": 36,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:f2f46518b346817609034f7cb6f26a22c38833d528c4022da764e68105182523",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; return yield* fs.makeTempDirectory(); }), use",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -28401,7 +28212,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional for real symlink and path-traversal security behavior. A memory filesystem would change the filesystem boundary that these tests defend. Eight tests pass on Node and Bun."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/create-package.test.ts:6:@effect/platform-node@0#1",
