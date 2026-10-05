@@ -342,12 +342,12 @@ function schedule(a, kind, holdUntil = 0) {
     push('roll', .3, { node: n, chips });
     if (n === redNode) {
       const die = Math.floor(chips.length / 2);     // first pass dies at the middle chip
-      for (let k = chips.length - 1; k > die; k--) push('chip', .27, { node: n, chips, chipIdx: k });
+      for (let k = 0; k < die; k++) push('chip', .27, { node: n, chips, chipIdx: k });
       push('redchip', .5, { node: n, chips, chipIdx: die });
       push('respin', 1.15, { node: n, chips });
       push('roll', .25, { node: n, chips });
     }
-    for (let k = chips.length - 1; k >= 0; k--) push('chip', n === redNode ? .2 : .27, { node: n, chips, chipIdx: k });
+    for (let k = 0; k < chips.length; k++) push('chip', n === redNode ? .2 : .27, { node: n, chips, chipIdx: k });   // cheapest lane first
     push('fold', .45, { node: n, chips });
   }
   push('dock', 1.3);
@@ -386,8 +386,8 @@ function agentState(i, t) {
       st.phase = e.kind; st.local = (t - e.start) / e.dur; st.phaseStart = e.start;
       if (e.kind === 'visit') { st.visitNode = e.node; st.visitProg = ease(st.local); st.visitFile = e.file; }
       if (e.kind === 'roll') { st.active = e.node; st.chipsLeft = e.chips.length; st.chipProg = 0; st.rollProg = ease(st.local); st.chips = e.chips; }
-      if (e.kind === 'chip') { st.active = e.node; st.chipsLeft = e.chipIdx + 1; st.chipProg = st.local; st.chips = e.chips; }
-      if (e.kind === 'redchip') { st.active = e.node; st.chipsLeft = e.chipIdx + 1; st.chipProg = st.local; st.red = true; st.chips = e.chips; }
+      if (e.kind === 'chip') { st.active = e.node; st.chipsLeft = e.chips.length - e.chipIdx; st.chipProg = st.local; st.chips = e.chips; }
+      if (e.kind === 'redchip') { st.active = e.node; st.chipsLeft = e.chips.length - e.chipIdx; st.chipProg = st.local; st.red = true; st.chips = e.chips; }
       if (e.kind === 'respin') { st.active = e.node; st.red = true; st.chips = e.chips; st.chipsLeft = 0; }
       if (e.kind === 'fold') { st.foldNode = e.node; st.foldProg = ease(st.local); st.active = null; }
       break;
@@ -476,10 +476,12 @@ function drawChips(gi, node, chips, chipsLeft, chipProg, red, invMix, rollProg) 
     el('rect', { x: dir === 1 ? x0 - 4 : x0 - bw + 4, y: p.y - CHIP_H / 2 - 4, width: bw, height: CHIP_H + 8, rx: 4,
       fill: col('ground'), opacity: .82 }, g);
   }
+  const done = chips.length - chipsLeft;   // lanes already passed; the row shows what is left, cheapest first
   for (let k = 0; k < chipsLeft; k++) {
+    const lane = chips[done + k];
     const cx = x0 + dir * k * (CHIP_W + CHIP_GAP) * rp;
     const x = dir === 1 ? cx : cx - CHIP_W;
-    const isActive = k === chipsLeft - 1 && rollProg == null;
+    const isActive = k === 0 && rollProg == null;
     const gg = el('g', {}, g);
     el('rect', { x, y: p.y - CHIP_H / 2, width: CHIP_W, height: CHIP_H, rx: 3,
       fill: isActive ? (red ? c.red : chipProg > .65 ? c.green : 'none') : 'none',
@@ -489,7 +491,7 @@ function drawChips(gi, node, chips, chipsLeft, chipProg, red, invMix, rollProg) 
     const t = el('text', { x: x + CHIP_W / 2, y: p.y + 3, 'text-anchor': 'middle', 'font-size': 7.2,
       fill: isActive ? (red ? c.red : chipProg > .65 ? c.green : c.silver) : c.faint }, gg);
     t.setAttribute('font-family', MONO);
-    t.textContent = isActive && chipProg > .65 ? (red ? '✕ ' : '✓ ') + chips[k] : chips[k];
+    t.textContent = isActive && chipProg > .65 ? (red ? '✕ ' : '✓ ') + lane : lane;
   }
 }
 
@@ -747,7 +749,7 @@ btnPlay.onclick = () => {
   if (paused) pauseAt = performance.now(); else t0 += performance.now() - pauseAt;
   btnPlay.textContent = paused ? 'play' : 'pause';
 };
-btnRestart.onclick = () => { loopN = 0; buildTimelines(); t0 = 0; stepIdx = 0; clearBeat(); if (REDUCED) render(MILESTONES()[0]); };
+btnRestart.onclick = () => { loopN = 0; buildTimelines(); t0 = 0; paused = false; pauseAt = 0; btnPlay.textContent = 'pause'; stepIdx = 0; clearBeat(); if (REDUCED) render(MILESTONES()[0]); };
 btnStep.onclick = () => { const m = MILESTONES(); render(m[++stepIdx % m.length]); };
 
 /* ---------------- beat API: the story seeks the loop ---------------- */
@@ -784,7 +786,11 @@ function seek(id) {
   clearBeat();
   activeBeat = id;
   if (document.querySelectorAll) for (const b of document.querySelectorAll(`.beat[data-beat="${id}"]`)) b.classList.add('active');
-  if (REDUCED) { render(bt); return bt; }
+  if (REDUCED) {   // static mode: step continues from the nearest preset point at or before this beat
+    const m = MILESTONES(); let k = 0;
+    for (let j = 0; j < m.length; j++) if (m[j] <= bt) k = j;
+    stepIdx = k; render(bt); return bt;
+  }
   paused = false; btnPlay.textContent = 'pause';
   t0 = performance.now() - bt * 1000;
   return bt;

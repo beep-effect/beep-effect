@@ -92,6 +92,12 @@ function renderMarkdown(src) {
       i++;
       continue;
     }
+    if (/^#{3,6} /.test(line)) {   // deeper headings stay inside the current chapter
+      const level = Math.min(6, line.match(/^#+/)[0].length);
+      cur.blocks.push(`<h${level}>${inline(line.replace(/^#+ /, "").trim())}</h${level}>`);
+      i++;
+      continue;
+    }
     if (/^> ?/.test(line)) {
       const q = [];
       while (i < lines.length && /^> ?/.test(lines[i])) {
@@ -129,10 +135,11 @@ function renderMarkdown(src) {
     }
     // paragraph: consecutive non-blank, non-structural lines
     const p = [];
-    while (i < lines.length && lines[i].trim() !== "" && !/^(#|>|- |\d+\. )/.test(lines[i])) {
+    while (i < lines.length && lines[i].trim() !== "" && !/^(#{1,6} |>|- |\d+\. )/.test(lines[i])) {
       p.push(lines[i]);
       i++;
     }
+    if (p.length === 0) fail(`unhandled markdown at line ${i + 1}: ${lines[i]}`);   // never loop without consuming a line
     cur.blocks.push(`<p>${inline(p.join(" "))}</p>`);
   }
   push();
