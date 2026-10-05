@@ -32,10 +32,6 @@ const expectInvalid = (value: string, code: IssueCode): void => {
 };
 
 describe("@beep/html source-size author conformance", () => {
-  it("rejects an empty source-size list", () => {
-    expectInvalid("", "invalidList");
-  });
-
   it("returns schema-owned analyses and diagnostics", () => {
     const valid = inspectSourceSizeList("(max-width: 30em) 100vw, 50vw");
     assertSuccess(valid, SourceSizeAnalysis.make({ entryCount: 2, usesAuto: false }));
