@@ -569,17 +569,42 @@ const touchedSlugs = (recentPathsText: string): HashSet.HashSet<string> =>
     )
   );
 
-// A merge/squash subject cites the packet by slug or by its recorded PR number.
-const citedByMergeSubject = (packet: DoctorPacket, subjectsText: string): boolean => {
-  const prNumber = pipe(
+// A squash merge's subject ends with its PR number and a merge commit's starts
+// with "Merge pull request"; every other subject is an ordinary commit.
+const SQUASH_SUBJECT_PATTERN = /\(#\d+\)$/;
+const MERGE_COMMIT_SUBJECT_PATTERN = /^Merge pull request #\d+/;
+const isMergeSubject = (subject: string): boolean =>
+  SQUASH_SUBJECT_PATTERN.test(subject) || MERGE_COMMIT_SUBJECT_PATTERN.test(subject);
+
+// Citation tokens are whole words: a slug or a "#N" reference, split on
+// anything that cannot be part of either, so "#123" never matches "#1234" and
+// a short slug never matches the inside of another word.
+const CITATION_SEPARATOR = /[^A-Za-z0-9#-]+/;
+const citationTokens = (subjects: ReadonlyArray<string>): HashSet.HashSet<string> =>
+  HashSet.fromIterable(A.flatMap(subjects, (subject) => Str.split(subject, CITATION_SEPARATOR)));
+
+const subjectLines = (subjectsText: string): ReadonlyArray<string> =>
+  pipe(subjectsText, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+
+const recordedPullRequest = (packet: DoctorPacket): O.Option<string> =>
+  pipe(
     packet.raw,
     O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
     O.map((value) => `#${String(value)}`)
   );
-  return (
-    Str.includes(packet.record.slug)(subjectsText) || (O.isSome(prNumber) && Str.includes(prNumber.value)(subjectsText))
-  );
-};
+
+// A subject cites the packet by its slug or by its recorded PR number, as a
+// whole token.
+const citedBy = (packet: DoctorPacket, tokens: HashSet.HashSet<string>): boolean =>
+  HashSet.has(tokens, packet.record.slug) ||
+  O.exists(recordedPullRequest(packet), (value) => HashSet.has(tokens, value));
+
+// The completion gate keeps its looser substring reading: a packet shipped
+// under a branch name such as feature/beep-<slug> is still cited, and the
+// committed baseline was recorded against that reading.
+const citedAnywhere = (packet: DoctorPacket, subjectsText: string): boolean =>
+  Str.includes(packet.record.slug)(subjectsText) ||
+  O.exists(recordedPullRequest(packet), (value) => Str.includes(value)(subjectsText));
 
 const stalenessAdvisories = (
   packets: ReadonlyArray<DoctorPacket>,
@@ -621,6 +646,7 @@ const activeAfterMergeAdvisories = (
   recentPathsText: string
 ): ReadonlyArray<GoalDoctorFinding> => {
   const touched = touchedSlugs(recentPathsText);
+  const tokens = citationTokens(A.filter(subjectLines(subjectsText), isMergeSubject));
   let findings = A.empty<GoalDoctorFinding>();
   for (const packet of packets) {
     if (O.isNone(packet.manifest)) {
@@ -631,7 +657,7 @@ const activeAfterMergeAdvisories = (
       GoalStatus.is.active(manifest.initiative.status) &&
       manifest.completionGate.requiresPullRequest &&
       !HashSet.has(touched, packet.record.slug) &&
-      citedByMergeSubject(packet, subjectsText)
+      citedBy(packet, tokens)
     ) {
       findings = A.append(
         findings,
@@ -660,7 +686,7 @@ const completionGateAdvisories = (
     if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered) {
       continue;
     }
-    if (!citedByMergeSubject(packet, subjectsText)) {
+    if (!citedAnywhere(packet, subjectsText)) {
       findings = A.append(
         findings,
         finding(

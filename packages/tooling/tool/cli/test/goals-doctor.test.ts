@@ -153,7 +153,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
   );
 
   it.effect(
-    "flags an active packet a merge commit cited and nobody touched since, and not a fresh one",
+    "flags an active packet a squash merge cited and nobody touched since, and nothing else",
     () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
@@ -162,22 +162,46 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* runGit(["config", "user.name", "Goals Doctor Test"]);
         yield* runGit(["config", "commit.gpgsign", "false"]);
         yield* writeBaseline([]);
-        yield* writeActivePacket("shipped");
-        // The wall clock, not the test clock: git compares the backdated commit
+        // The wall clock, not the test clock: git compares the backdated commits
         // against real time when the doctor asks for the last 21 days.
-        const fortyDaysAgo = DateTime.formatIso(DateTime.subtract(DateTime.nowUnsafe(), { days: 40 }));
+        const backdated = DateTime.formatIso(DateTime.subtract(DateTime.nowUnsafe(), { days: 40 }));
+        const oldEnv = { GIT_AUTHOR_DATE: backdated, GIT_COMMITTER_DATE: backdated };
+        // Cited by a squash subject, untouched since: the shipped-but-open shape.
+        yield* writeActivePacket("shipped");
         yield* runGit(["add", "."]);
-        yield* runGit(["commit", "-m", "feat(demo): ship shipped (#1)"], {
-          GIT_AUTHOR_DATE: fortyDaysAgo,
-          GIT_COMMITTER_DATE: fortyDaysAgo,
-        });
+        yield* runGit(["commit", "-m", "feat(demo): ship shipped (#1)"], oldEnv);
+        // Cited only by an ordinary commit: stale, but no merge is evidenced.
+        yield* writeActivePacket("mentioned");
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "chore(demo): mention mentioned in passing"], oldEnv);
+        // Cited by a squash subject only inside another word, and only by a
+        // PR number that merely contains the one it recorded: neither is a citation.
+        yield* writeActivePacket("ship");
+        yield* writeProjectFile(
+          "goals/ship/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "initiative-manifest/v2",
+            initiative: { id: "ship", title: "ship", status: "active" },
+            lifecycle: "active",
+            completionGate: COMPLETION_GATE,
+            mergedPullRequest: 7,
+          })}\n`
+        );
+        yield* runGit(["add", "."]);
+        yield* runGit(["commit", "-m", "feat(demo): ship shipment (#70)"], oldEnv);
+        // Cited by a squash subject but touched inside the window: not stale.
         yield* writeActivePacket("fresh");
         yield* runGit(["add", "."]);
         yield* runGit(["commit", "-m", "feat(demo): ship fresh (#2)"]);
         const output = yield* captureOutput(runGoalsCommand(["doctor"]));
         expect(output).toContain("shipped [active-after-merge]");
         expect(output).not.toContain("shipped [stale-active]");
+        expect(output).toContain("mentioned [stale-active]");
+        expect(output).not.toContain("mentioned [active-after-merge]");
+        expect(output).toContain("ship [stale-active]");
+        expect(output).not.toContain("ship [active-after-merge]");
         expect(output).not.toContain("fresh [active-after-merge]");
+        expect(output).not.toContain("fresh [stale-active]");
       }),
     20_000
   );

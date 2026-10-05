@@ -14,7 +14,7 @@
  * @since 0.0.0
  */
 
-import { Config, Effect, FileSystem } from "effect";
+import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { constant, dual, pipe } from "effect/Function";
@@ -22,6 +22,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ghOutput } from "../../../internal/github/index.ts";
 import { ProcessPid, RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import {
   WorktreeInvokerExemption,
@@ -274,10 +275,36 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
 const PacketLifecycleProbe = S.Struct({ lifecycle: S.optionalKey(S.String) });
 const decodePacketLifecycle = S.decodeUnknownEffect(S.fromJsonString(PacketLifecycleProbe));
 
+// The paths a pull request changed, as GitHub records them.
+const PullRequestFiles = S.Struct({ files: S.Array(S.Struct({ path: S.String })) });
+const decodePullRequestFiles = S.decodeUnknownEffect(S.fromJsonString(PullRequestFiles));
+
 const packetSlugFromPath = (relativePath: string): O.Option<string> => {
   const segments = Str.split(relativePath, "/");
   return A.length(segments) >= 3 && Eq.equals(A.get(segments, 0), O.some("goals")) ? A.get(segments, 1) : O.none();
 };
+
+// GitHub's own list of the pull request's files is independent of how the
+// merge landed; a failed or truncated read contributes nothing.
+const pullRequestPaths = Effect.fn("Yeet.pullRequestPaths")(function* (plan: YeetRetirePlan) {
+  const output = yield* ghOutput({
+    args: ["pr", "view", plan.branch, "--json", "files"],
+    cwd: plan.worktreePath,
+    label: `gh pr view ${plan.branch} --json files`,
+    onFailure: (failure) => failure,
+  });
+  const document = yield* decodePullRequestFiles(output);
+  return A.map(document.files, (file) => file.path);
+});
+
+// The paths the branch changed since it forked from the main branch. Once the
+// clone's main already contains the branch this is empty, which is why the
+// pull request's own list is read as well.
+const branchPaths = Effect.fn("Yeet.branchPaths")(function* (plan: YeetRetirePlan, state: SweepGitState) {
+  const mergeBase = yield* gitOutput(plan.worktreePath, ["merge-base", state.mainBranch, "HEAD"]);
+  const changed = yield* gitOutput(plan.worktreePath, ["diff", "--name-only", mergeBase, "HEAD", "--", "goals/"]);
+  return pipe(Str.split(changed, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+});
 
 /**
  * The goal packets the retired branch touched whose lifecycle is still `active`.
@@ -285,11 +312,14 @@ const packetSlugFromPath = (relativePath: string): O.Option<string> => {
  * **Details**
  *
  * A branch that carried a packet and merged should also have flipped that
- * packet's lifecycle (same-PR packet-state flips). This reads the paths the
- * branch changed under `goals/` since it forked from the main branch and the
- * lifecycle each packet's manifest records in the lane's own tree, which is
- * the merged content. It is an advisory: any probe failure yields no slugs
- * rather than failing the retirement.
+ * packet's lifecycle (same-PR packet-state flips). The touched paths are the
+ * union of the pull request's file list on GitHub and the branch's diff
+ * against the main branch, so a clone whose main already contains the merge
+ * still names the packets. Each packet's lifecycle is read from the manifest
+ * committed at the lane's `HEAD`, never from its working tree, so an
+ * uncommitted edit cannot hide what the merged PR left open. It is an
+ * advisory: any probe failure yields no slugs rather than failing the
+ * retirement.
  *
  * **Example** (Build the probe effect)
  *
@@ -310,24 +340,18 @@ export const activePacketsOnBranch = Effect.fn("Yeet.activePacketsOnBranch")(fun
   plan: YeetRetirePlan,
   state: SweepGitState
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const changed = yield* gitOutput(plan.worktreePath, ["merge-base", state.mainBranch, "HEAD"]).pipe(
-    Effect.flatMap((mergeBase) =>
-      gitOutput(plan.worktreePath, ["diff", "--name-only", mergeBase, "HEAD", "--", "goals/"])
-    ),
-    Effect.orElseSucceed(constant(""))
-  );
+  const none = constant(A.empty<string>());
+  const fromPullRequest = yield* pullRequestPaths(plan).pipe(Effect.orElseSucceed(none));
+  const fromBranch = yield* branchPaths(plan, state).pipe(Effect.orElseSucceed(none));
   const slugs: ReadonlyArray<string> = pipe(
-    Str.split(changed, "\n"),
-    A.map(Str.trim),
+    A.appendAll(fromPullRequest, fromBranch),
     A.map(packetSlugFromPath),
     A.getSomes,
     A.dedupe,
     A.sort(Str.Order)
   );
   return yield* Effect.filter(slugs, (slug) =>
-    fs.readFileString(path.join(plan.worktreePath, "goals", slug, "ops", "manifest.json")).pipe(
+    gitOutput(plan.worktreePath, ["show", `HEAD:goals/${slug}/ops/manifest.json`]).pipe(
       Effect.flatMap(decodePacketLifecycle),
       Effect.map((manifest) => Eq.equals(manifest.lifecycle, "active")),
       Effect.orElseSucceed(constant(false))
