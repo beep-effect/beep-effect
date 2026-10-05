@@ -6611,3 +6611,25 @@ advisory-wide Bun ignore. The guard now checks nested keys too, with regression
 cases for a wrong nested version and a matching one. A lockfile fixture that
 included both root and nested resolutions in the first audit-policy test would
 have caught this before review.
+
+### Audit guard merged with a Heavy coverage regression (2026-10-05)
+
+PR #1408's final head failed `Heavy / Coverage Regression`: the new
+`Quality.osv-ignore.ts` guard measured 94.44% branch coverage below its 100%
+file baseline, then the PR was merged before that red check was repaired. A
+focused V8 coverage run located the uncovered early-return branch for
+non-npm or non-ignored package overrides. This follow-up adds both negative
+cases and checks their measured coverage. Running that focused coverage probe
+before the early push, then requiring the full hosted Heavy result before
+merge, would have prevented a red check from reaching main.
+
+### Focused coverage artifact contaminated Fallow health (2026-10-05)
+
+During PR #1411's local Yeet proof, `fallow:health` failed with 50
+`not-applicable` complexity findings even though no source file changed.
+Fallow's raw output showed it had auto-detected the ignored
+`coverage/coverage-final.json` left by a focused Vitest coverage probe;
+that file held partial-suite coverage and distorted CRAP scores. Removing
+only that generated file made the exact Fallow gate pass with zero findings.
+An explicit coverage input or a cleanup step after focused coverage probes
+would have prevented the misleading proof failure.

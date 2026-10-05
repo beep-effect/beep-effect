@@ -2,10 +2,12 @@
 
 ## Status
 
-Status: `implementation-authorized`
+Status: `completed-retained`
 
 The `/grilling` frontier is empty and the operator confirmed shared
-understanding on 2026-08-30.
+understanding on 2026-08-30. The implementation merged as PR #927 on
+2026-08-31; PR #1371 retired the selective registry on 2026-10-01 under
+`goals/effect-schema-parity`, and this packet closed on 2026-10-05.
 
 ## Phases
 
@@ -15,8 +17,8 @@ understanding on 2026-08-30.
 | P1 Implement selective APIs | completed | Implement the keyed static registry and the approved `S.Class` utility form. | Runtime, type, collision, and construction-timing tests pass. |
 | P2 Migrate and delete | completed | Replace every broad helper use with the minimal selected set and remove all old variants. | Second census finds zero live definitions, exports, examples, or consumers. |
 | P3 Ratchet and verify | completed | Fix touched and known inline compilers, enforce shrinking no-growth baselines, and run package/repo proof. | Required checks are green or unrelated failures are attributed; a fresh successor census is recorded. |
-| P4 Yeet: PR to mergeable | in progress | Publish through Yeet and close checks and review threads. | `bun run beep yeet monitor` reports `merge-ready: yes`. |
-| P5 Close | pending | Write the reflection and flip packet lifecycle in the same PR. | Packet evidence and statuses are current; reflection validates. |
+| P4 Yeet: PR to mergeable | completed | Publish through Yeet and close checks and review threads. | `bun run beep yeet monitor` reports `merge-ready: yes`. |
+| P5 Close | completed | Write the reflection and flip packet lifecycle in the same PR. | Packet evidence and statuses are current; reflection validates. |
 
 ## P0 — Alignment and Census
 
