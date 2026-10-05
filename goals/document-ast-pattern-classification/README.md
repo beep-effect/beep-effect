@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -27,9 +27,10 @@ Lexical, with derived correspondence and lossiness conservation proof.
 
 ## Current Phase
 
-P3 Yeet: the `po` annotation kit, 91 constructor annotations, exhaustiveness
-and conservation tests, and the derived correspondence report are implemented;
-the PR is being driven to mergeable.
+Closed: the `po` annotation kit, 91 constructor annotations, exhaustiveness and
+conservation tests, and the derived correspondence report shipped through
+PR #1429. The closeout reflection is
+[`history/reflections/2026-10-05-claude.md`](./history/reflections/2026-10-05-claude.md).
 
 ## Latest Evidence
 

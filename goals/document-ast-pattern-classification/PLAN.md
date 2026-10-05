@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `completed-retained`
 
 ## Phases
 
@@ -11,8 +11,8 @@ Status: `in-progress`
 | P0 Research | complete | Inventory constructors, annotations, and diagnostics. | Exhaustive matrix and seam are fixed. |
 | P1 Implement | complete | Add PO kit/annotations and derived report. | All constructors classify. |
 | P2 Verify | complete | Prove exhaustiveness and conservation laws. | Tests and required gates pass. |
-| P3 Yeet: PR to mergeable | in-progress | Publish and close hosted gates. | Yeet reports merge-ready. |
-| P4 Close | pending | Reflect and sync lifecycle/evidence. | Closeout complete. |
+| P3 Yeet: PR to mergeable | complete | Publish and close hosted gates. | Yeet reports merge-ready. |
+| P4 Close | complete | Reflect and sync lifecycle/evidence. | Closeout complete. |
 
 ## Execution Notes
 
