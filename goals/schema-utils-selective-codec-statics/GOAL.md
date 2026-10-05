@@ -64,7 +64,8 @@ Acceptance:
 - [x] Class and JSON footguns have focused runtime and type tests.
 - [x] Touched and known inline compiler sites are clean with no warning growth.
 - [x] A closing census records the mandatory successor cleanup goal.
-- [x] Required local and hosted checks are green.
+- [x] Required hosted checks are green on #927; the final full local Yeet
+      proof was not admitted (exception recorded in `SPEC.md`).
 
 Stop and report if the work would require custom Effect Schema machinery,
 cannot establish an exported schema's public static surface, would rebuild a

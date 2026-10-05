@@ -230,8 +230,12 @@ unselected factory is invoked.
       baseline rejects helper or warning growth.
 - [x] A fresh closing census is recorded and requires a successor goal for
       full cleanup and hard-error promotion.
-- [x] `@beep/schema` package verification, focused tests, docgen, and the
-      canonical Yeet lane are green (PR #927, merged 2026-08-31).
+- [x] `@beep/schema` package verification, focused tests, and docgen are
+      green. Exception: the local scheduler did not admit the final full
+      `bun run beep yeet verify` before PR #927 was published by hand; the
+      cheap-gates tier passed locally and the hosted required checks on
+      #927 (merged 2026-08-31) stood in as the full proof. See
+      `history/2026-10-05-closeout.md`.
 - [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
