@@ -118,7 +118,13 @@ filled-black area). Then **extend the existing `beep qa` judge**
 drawing rubric over a contact sheet + reference photos (view-count
 agreement, feature presence/absence, fold direction, nothing the article
 lacks). Attorney sign-off is a **recorded event keyed to the sheet-set
-hash** (the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry").
+hash** (the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry"). Because
+the developer operates the CLI, `--by` is descriptive metadata only; the
+event is valid only when it references a **confirmation artifact the
+attorney authored** (an email reply by Internet Message-ID, or an
+initialed PDF under the corpus root) whose content quotes the exact
+sheet-set hash, and `drawings sign` verifies that quote before writing the
+event.
 
 **Rationale:** Reuses the judge machinery and its hallucinated-evidence
 guard; the judge handles semantics only. Rejected: validator-only (misses

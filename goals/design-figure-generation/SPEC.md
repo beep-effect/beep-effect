@@ -59,7 +59,7 @@ Higher sources outrank lower sources when they conflict.
 - Reproducibility: outlined text, rounded/sorted SVG coordinates, PDF dates stripped or from `SOURCE_DATE_EPOCH`, seeded jitter, WASM pinned by hash, pixi lockfile committed; `manifest.json` records spec, toolchain, per-figure, and PDF hashes plus the validator report.
 - Licensing: MuPDF.js (AGPL) is never linked; opencascade.js (LGPL) is linked, not vendored; ported code carries attribution per `research/SOURCES.md`.
 - Data: real matter inputs/outputs only under `BEEP_OPPOLD_CORPUS_ROOT`; the repo holds a synthetic fixture.
-- Attorney sign-off is a recorded event (who, when, sheet-set hash) — the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry".
+- Attorney sign-off is a recorded event (who, when, sheet-set hash) — the 37 CFR 11.18(b) / 89 FR 25614 "reasonable inquiry". `--by` is descriptive metadata, never proof. The event must carry a `confirmation` reference to an artifact the attorney authored — an email reply identified by Internet Message-ID, or an initialed PDF stored under the corpus root — and `drawings sign` refuses to write the event unless that artifact's content contains the exact sheet-set hash. The event stores the artifact's locator and its own content hash alongside the sheet-set hash.
 
 ## Acceptance Criteria
 
@@ -67,7 +67,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `beep drawings render` on the synthetic fixture produces eight sheets whose hashes match committed goldens on two consecutive runs.
 - [ ] `beep drawings validate` returns zero findings on those sheets and non-zero findings on a deliberately broken fixture (margin, gray pixel, PDF 1.7).
 - [ ] The live matter's eight unshaded sheets render from a spec under the corpus root and pass the validator (evidence: validator report hash in `history/`, no sheets committed).
-- [ ] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read.
+- [ ] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read, and `drawings sign` refuses a confirmation artifact that does not quote the sheet-set hash (negative test).
 - [ ] `bun run beep quality package-verify` passes for every touched package.
 - [ ] No unrelated refactors or formatting churn.
 
