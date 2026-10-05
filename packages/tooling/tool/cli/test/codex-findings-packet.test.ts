@@ -280,6 +280,13 @@ describe("Security Cloud packet guidance", () => {
       expect(goal.length).toBeLessThanOrEqual(GOAL_MD_MAX_CHARS);
       expect(goal).toContain("Attack-path analysis");
       expect(goal).toContain("as Fixed");
+      const sources = at(documents, "research/SOURCES.md").contents;
+      expect(sources).toContain("Codex Security Cloud MCP app");
+      expect(sources).toContain("More finding actions → Export CSV");
+      expect(sources).toContain("captured summaries only");
+      expect(sources).toContain("finding-detail enrichment");
+      expect(sources).not.toContain("Full report bodies");
+      expect(at(documents, "SPEC.md").contents).toContain("Captured summaries");
       expect(
         A.join(
           A.map(documents, (d) => d.contents),

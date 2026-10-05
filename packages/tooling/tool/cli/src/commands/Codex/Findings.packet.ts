@@ -631,7 +631,9 @@ const specDocument = (plan: CodexPacketPlan): PacketDocument => {
       "  source/barrel discovery.",
       "- Schema-first and Effect-first laws govern all production changes.",
       "- Security controls may not be simplified away for diff size.",
-      "- Full reports stay in ignored `raw/`; tracked records contain only sanitized",
+      plan.source === "security-cloud-csv"
+        ? "- Captured summaries stay in ignored `raw/`; tracked records contain only sanitized"
+        : "- Full reports stay in ignored `raw/`; tracked records contain only sanitized",
       "  metadata, summaries, validation, decisions, changed files, and proof.",
       `- Browser closure happens after merge, against the exact ${capturedCount}-ID allowlist.`,
       "- Preserve unrelated work and stage only reviewed packet intent.",
@@ -687,6 +689,9 @@ const specDocument = (plan: CodexPacketPlan): PacketDocument => {
 
 const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
   const capturedCount = A.length(plan.records);
+  const copy = captureSourceCopy[plan.source];
+  const exportControl =
+    plan.source === "security-cloud-csv" ? "More finding actions → Export CSV" : "Export findings as CSV";
   return PacketDocument.make({
     path: "research/SOURCES.md",
     tracked: true,
@@ -705,16 +710,21 @@ const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       "## External Source",
       "",
-      "- Codex Cloud Security UI:",
+      `- ${copy.provider}:`,
       `  \`${plan.sourceUrl}\`, captured on ${plan.capturedAt}`,
       "  through a supported connector or the operator's signed-in in-app browser.",
-      `- The UI's signed-in \`Export findings as CSV\` control supplied the ${capturedCount}-record`,
+      `- The UI's signed-in \`${exportControl}\` control supplied the ${capturedCount}-record`,
       "  batch. `beep codex findings ingest` normalized it; the export itself was never",
       "  copied into the repository.",
       "",
       "## Notes",
       "",
-      "- Full report bodies are local ignored evidence under `raw/`.",
+      ...(plan.source === "security-cloud-csv"
+        ? [
+            "- `raw/` holds captured summaries only; Validation, Evidence, and Attack-path",
+            "  analysis require separate finding-detail enrichment before triage.",
+          ]
+        : ["- Full report bodies are local ignored evidence under `raw/`."]),
       "- Tracked CSF files intentionally omit signed artifact URLs, raw developer-local",
       "  paths, author email addresses, auth values, and unsanitized report text.",
     ]),
