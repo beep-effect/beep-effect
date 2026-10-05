@@ -9,6 +9,7 @@ import {
   TaskScriptRule,
   taskScriptRules,
 } from "@beep/repo-cli/test/PackageScripts";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
@@ -60,7 +61,7 @@ describe("canonical package scripts schemas", () => {
       const block = Result.getOrThrow(decodeAppResult(input));
       expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
     },
-    { arbitrary: { runs: 100 } }
+    { arbitrary: fcRuns(100) }
   );
   it.effect(
     "round trips implementation text and extras without interpretation",
