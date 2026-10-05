@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "cloud-environment-fanout",
+    "title": "Cloud Environment Fanout",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Does bun install succeed behind the Claude security proxy with the retry loop alone, or does the first smoke session need the npm-installed-bun fallback?",
+      "Which lanes are worth routing to Codex cloud given secrets end at setup and Plus VMs are half-size?",
+      "Where do the per-account environment ids live for orchestrators: .beep/cloud-envs.local.json or a 1Password item?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": ["docs/runbooks/cloud-environments.md"],
+      "supersededBy": null
+    },
+    "created": "2026-10-05",
+    "updated": "2026-10-05"
+  }
+}
