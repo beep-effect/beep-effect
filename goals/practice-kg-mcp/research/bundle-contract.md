@@ -44,12 +44,16 @@ kg_node(
   iri            text PRIMARY KEY,     -- deterministic, see IRI scheme
   kind           text NOT NULL,        -- LiteralKit: client | docket_family | docket
                                        --   | application | patent | document | email_archive
-  natural_key    text NOT NULL,        -- e.g. "10008JP02", "12970708", "sha256:…"
+  natural_key    text NOT NULL,        -- e.g. "12345.10008", "12345.10008JP02", "12970708", "sha256:…"
   label          text NOT NULL,        -- display name (effective_name, invention_title, …)
-  docket_family  text,                 -- denormalized spine hook
-  client         text,
+  docket_family  text,                 -- bare family number: the organizer's spine hook
+  client         text,                 -- client number from the <client>.<docket> reference form
+  attribution_source text NOT NULL,    -- D-11: 'filename' | 'restored-name' | 'text-reference'
+                                       --   | 'family-consensus' | 'client-map' | 'official-record' | 'mention'
   epistemic_status text NOT NULL,      -- 'derived-from-official-records' (spine)
                                        --   | 'candidate-unreviewed' (never for spine rows)
+                                       --   | 'mention-derived' (anchor mention edges)
+                                       --   | 'recycled-unverified' (recycle-bin $R stubs)
   provenance_kind  text NOT NULL,      -- 'catalog-digest' | 'uspto-anchor' | 'organize-row' | 'extract-operation'
   provenance_ref   text NOT NULL,      -- digest / application_number / path / operationId
   payload        jsonb NOT NULL        -- kind-specific extras (title, inventor, mtime, sizes)
@@ -64,7 +68,9 @@ kg_edge(
   PRIMARY KEY (subject_iri, predicate, object_iri)
 )
 kg_build(                              -- single-row build metadata; NEVER joined into results
-  bundle_version text, built_from_runs text, counts jsonb, built_at text
+  bundle_version text, built_from_runs text, counts jsonb,
+  built_at text,                       -- wall-clock build instant
+  corpus_snapshot_at text              -- newest catalogued source mtime
 )
 ```
 
@@ -73,19 +79,29 @@ Predicates (closed set): `has_docket_family` (client→family), `has_docket`
 (application→patent), `has_document` (docket→document; from
 `corpus_organized.docket`), `family_document` (family→document, family-level
 files), `archived_in` (document→email_archive), `continuation_of`
-(application→application, from `parent_application_numbers`), `enriched_family`
-(application→family, from `corpus_enrichment.docket_families`).
+(application→application, from `parent_application_numbers`),
+`mentioned_in_family` (application|patent→family, `mention-derived`: the family's
+docket documents mention the number; never membership).
 
-Node counts expected: 1 client · 105 families · ~643+ dockets · ≤55
-applications · ≤95 patents · 7,330 documents · 28 archives.
+Membership of an anchor (`files_as`) exists only when the anchor's number is
+mentioned by exactly one family's docket documents — file names and text
+counted together — and that family is client-keyed (D-11c). `corpus_enrichment.docket_families` is read into the
+DuckDB `enrichment` table for reference but never creates families or edges.
+
+Node counts (2026-10-05-01 rebuild): 30 clients · 170 families (143
+client-keyed + 27 bare remainders over 105 bare family numbers) · 438 dockets
+· 181 applications · 63 patents · 7,330 documents · 28 archives.
 
 **IRI scheme** — `@beep/identity` `make(...)` composers mint
 `https://ns.beep.sh/...` IRIs (`.create(path).iri` / `.curie`, verified in
 `packages/foundation/modeling/identity/src/Id.ts`; `rebase({iri, prefix})`
 exists if a practice authority is wanted later). Scheme:
 `https://ns.beep.sh/practice-kg/<kind>/<natural_key>` with natural keys:
-client slug · family number (`10008`) · docket code (`10008JP02`) · 8-digit
-application number · patent number · `sha256:<digest>` for documents/archives.
+client number (`12345`) · client-keyed family (`12345.10008`; bare `10008` only
+for the unattributed remainder) · client-keyed docket code (`12345.10008JP02`) ·
+8-digit application number · patent number · `sha256:<digest>` for
+documents/archives. `kg_docket_family` accepts either form: a bare family
+returns every keyed family sharing it.
 All keys are natural ⇒ IRIs are rerun-stable with no sequence state.
 
 **Email messages are NOT PGlite rows.** 663k rows belong in DuckDB (§3);

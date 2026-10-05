@@ -28,19 +28,20 @@ WITH applications AS (
   WHERE p.kind = 'patent' AND p.natural_key = $2
   UNION
   SELECT e.object_iri FROM kg_node d JOIN kg_edge e ON e.subject_iri = d.iri AND e.predicate = 'files_as'
-  WHERE d.kind = 'docket' AND d.natural_key = $3
+  WHERE d.kind = 'docket' AND (d.natural_key = $3 OR split_part(d.natural_key, '.', 2) = $3)
 ),
 related AS (
   SELECT iri FROM applications
   UNION
   SELECT e.subject_iri FROM kg_edge e JOIN applications a ON e.object_iri = a.iri
-    WHERE e.predicate IN ('files_as', 'granted_as', 'continuation_of', 'enriched_family')
+    WHERE e.predicate IN ('files_as', 'granted_as', 'continuation_of', 'mentioned_in_family')
   UNION
   SELECT e.object_iri FROM kg_edge e JOIN applications a ON e.subject_iri = a.iri
-    WHERE e.predicate IN ('files_as', 'granted_as', 'continuation_of', 'enriched_family')
+    WHERE e.predicate IN ('files_as', 'granted_as', 'continuation_of', 'mentioned_in_family')
 )
 SELECT n.iri, n.kind, n.natural_key AS "naturalKey", n.label,
-  n.docket_family AS "docketFamily", n.client, n.epistemic_status AS "epistemicStatus",
+  n.docket_family AS "docketFamily", n.client, n.attribution_source AS "attributionSource",
+  n.epistemic_status AS "epistemicStatus",
   n.provenance_kind AS "provenanceKind", n.provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
 FROM kg_node n JOIN related r ON r.iri = n.iri
 ORDER BY n.kind, n.natural_key`,
@@ -54,6 +55,7 @@ SELECT
   e.span->>'quote' AS "evidenceQuote",
   c.snapshot->>'family' AS family,
   'candidate — unreviewed' AS label,
+  c.snapshot->>'sourceDocumentDigest' AS "sourceDocumentDigest",
   c.snapshot->>'sourceFile' AS "sourceFile",
   CAST(e.span->>'startChar' AS FLOAT8) AS "startChar"
 FROM epistemic_candidate_claim c
@@ -71,16 +73,17 @@ WHERE table_schema = 'public'
 ORDER BY table_name`,
   clients: `
 SELECT c.iri, c.kind, c.natural_key AS "naturalKey", c.label,
-  c.docket_family AS "docketFamily", c.client, c.epistemic_status AS "epistemicStatus",
+  c.docket_family AS "docketFamily", c.client, c.attribution_source AS "attributionSource",
+  c.epistemic_status AS "epistemicStatus",
   c.provenance_kind AS "provenanceKind", c.provenance_ref AS "provenanceRef",
   COUNT(e.object_iri)::FLOAT8 AS count
 FROM kg_node c
 LEFT JOIN kg_edge e ON e.subject_iri = c.iri AND e.predicate = 'has_docket_family'
 WHERE c.kind = 'client'
-GROUP BY c.iri, c.kind, c.natural_key, c.label, c.docket_family, c.client,
+GROUP BY c.iri, c.kind, c.natural_key, c.label, c.docket_family, c.client, c.attribution_source,
   c.epistemic_status, c.provenance_kind, c.provenance_ref
 UNION ALL
-SELECT '', 'docket_family', '__unattributed__', 'Unattributed families', NULL, NULL,
+SELECT '', 'docket_family', '__unattributed__', 'Unattributed families', NULL, NULL, 'filename',
   'derived-from-official-records', 'organize-row', 'unattributed', COUNT(*)::FLOAT8
 FROM kg_node f
 WHERE f.kind = 'docket_family'
@@ -103,15 +106,16 @@ ORDER BY archive_digest, folder_path, message_ord
 LIMIT 200`,
   family: `
 WITH family AS (
-  SELECT iri, natural_key FROM kg_node WHERE kind = 'docket_family' AND natural_key = $1
+  SELECT iri, natural_key FROM kg_node
+  WHERE kind = 'docket_family' AND (natural_key = $1 OR docket_family = $1)
 ),
 dockets AS (
-  SELECT d.iri, d.natural_key FROM family f
+  SELECT d.iri, d.natural_key, f.iri AS family_iri FROM family f
   JOIN kg_edge e ON e.subject_iri = f.iri AND e.predicate = 'has_docket'
   JOIN kg_node d ON d.iri = e.object_iri
 ),
 applications AS (
-  SELECT DISTINCT a.iri, a.natural_key FROM dockets d
+  SELECT DISTINCT a.iri, a.natural_key, d.iri AS docket_iri FROM dockets d
   JOIN kg_edge e ON e.subject_iri = d.iri AND e.predicate = 'files_as'
   JOIN kg_node a ON a.iri = e.object_iri
 ),
@@ -127,19 +131,21 @@ documents AS (
 )
 SELECT f.natural_key AS family, d.natural_key AS docket, a.natural_key AS application,
   p.natural_key AS patent, doc.natural_key AS "documentDigest", doc.label AS "documentLabel",
-  (SELECT COUNT(*)::FLOAT8 FROM dockets) AS "docketCount",
-  (SELECT COUNT(*)::FLOAT8 FROM applications) AS "applicationCount",
-  (SELECT COUNT(*)::FLOAT8 FROM documents) AS "documentCount"
+  (SELECT COUNT(*)::FLOAT8 FROM dockets dc WHERE dc.family_iri = f.iri) AS "docketCount",
+  (SELECT COUNT(DISTINCT ap.iri)::FLOAT8 FROM applications ap
+    JOIN dockets dc ON dc.iri = ap.docket_iri WHERE dc.family_iri = f.iri) AS "applicationCount",
+  (SELECT COUNT(*)::FLOAT8 FROM documents dm
+    JOIN dockets dc ON dc.iri = dm.docket_iri WHERE dc.family_iri = f.iri) AS "documentCount"
 FROM family f
-LEFT JOIN dockets d ON TRUE
-LEFT JOIN applications a ON TRUE
+LEFT JOIN dockets d ON d.family_iri = f.iri
+LEFT JOIN applications a ON a.docket_iri = d.iri
 LEFT JOIN patents p ON p.application_iri = a.iri
 LEFT JOIN documents doc ON doc.docket_iri = d.iri
-ORDER BY d.natural_key, a.natural_key, p.natural_key, doc.natural_key`,
+ORDER BY f.natural_key, d.natural_key, a.natural_key, p.natural_key, doc.natural_key`,
   find: `
 SELECT iri, kind, natural_key AS "naturalKey", label, docket_family AS "docketFamily",
-  client, epistemic_status AS "epistemicStatus", provenance_kind AS "provenanceKind",
-  provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
+  client, attribution_source AS "attributionSource", epistemic_status AS "epistemicStatus",
+  provenance_kind AS "provenanceKind", provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
 FROM kg_node
 WHERE label ILIKE $1 OR natural_key ILIKE $1
 ORDER BY kind, natural_key
@@ -157,8 +163,8 @@ ORDER BY d.digest
 LIMIT 1`,
   provenance: `
 SELECT iri, kind, natural_key AS "naturalKey", label, docket_family AS "docketFamily",
-  client, epistemic_status AS "epistemicStatus", provenance_kind AS "provenanceKind",
-  provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
+  client, attribution_source AS "attributionSource", epistemic_status AS "epistemicStatus",
+  provenance_kind AS "provenanceKind", provenance_ref AS "provenanceRef", NULL::FLOAT8 AS count
 FROM kg_node
 WHERE (CAST($1 AS TEXT) IS NOT NULL AND iri = CAST($1 AS TEXT))
    OR (CAST($2 AS TEXT) IS NOT NULL AND natural_key = CAST($2 AS TEXT))
