@@ -366,6 +366,72 @@ export const recordPrProvenanceStampLane = Effect.fn("Yeet.recordPrProvenanceSta
   );
 });
 
+// Stamp the provenance footer for a pull request whose session was just
+// recorded, or record why the stamp was skipped.
+const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  stampStep: O.Option<RepoPlanStep>,
+  number: number,
+  url: O.Option<string>,
+  state: "pushed" | "created",
+  capture: typeof runRepoCommandCapture,
+  registry: EnsurePullRequestDependencies["registry"]
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const recording = yield* recordCurrentPrSession(context, number, url, state, registry);
+  const outcome = O.isSome(recording)
+    ? yield* ensureProvenanceFooter(context, recording.value.repository, number, capture, registry)
+    : ProvenanceStampOutcome.make({
+        status: "skipped",
+        message: `[yeet] provenance footer stamp skipped for PR #${number}: session recording was unavailable`,
+      });
+  yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(number), outcome);
+});
+
+// Run `gh pr create` (draft when the planned step says so) and return the
+// created pull request with the URL `gh` printed.
+const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  prStep: O.Option<RepoPlanStep>,
+  capture: typeof runRepoCommandCapture,
+  view: NonNullable<EnsurePullRequestDependencies["view"]>
+): Effect.fn.Return<
+  YeetEnsuredPullRequest,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const title = yield* runGitOutput(context.repoRoot, ["log", "-1", "--pretty=%s"]).pipe(Effect.map(Str.trim));
+  const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
+  yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
+  const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
+  const result = yield* capture(
+    "gh",
+    ["pr", "create", ...(draft ? ["--draft"] : []), "--title", title, "--body-file", bodyPath],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
+  if (result.exitCode !== 0) {
+    return yield* YeetCommandError.make({
+      message: `gh pr create failed:\n${result.output}`,
+      command: `gh pr create --title <subject> --body-file ${bodyPath}`,
+      exitCode: result.exitCode,
+    });
+  }
+  const printed = Str.trim(result.output);
+  yield* Console.log(`[yeet] --pr: created ${draft ? "draft " : ""}pull request -> ${printed}`);
+  yield* recordPrCreateLane(recorder, prStep, printed);
+  const created = yield* view(context);
+  return YeetEnsuredPullRequest.make({
+    number: created.number,
+    url: O.orElse(O.liftPredicate(printed, Str.isNonEmpty), () => O.fromUndefinedOr(created.url)),
+    created: true,
+  });
+});
+
 /**
  * Create a pull request for publish when one does not already exist.
  *
@@ -418,76 +484,32 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
 > {
   const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
-  if (O.isSome(existing)) {
-    yield* Console.log(
-      `[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}; skipping create`
-    );
-    yield* recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`);
-    const recording = yield* recordCurrentPrSession(
-      context,
-      existing.value.number,
-      O.none(),
-      "pushed",
-      dependencies.registry
-    );
-    const outcome = O.isSome(recording)
-      ? yield* ensureProvenanceFooter(
-          context,
-          recording.value.repository,
-          existing.value.number,
-          capture,
-          dependencies.registry
-        )
-      : ProvenanceStampOutcome.make({
-          status: "skipped",
-          message: `[yeet] provenance footer stamp skipped for PR #${existing.value.number}: session recording was unavailable`,
-        });
-    yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(existing.value.number), outcome);
-    return YeetEnsuredPullRequest.make({
-      number: existing.value.number,
-      url: O.fromUndefinedOr(existing.value.url),
-      created: false,
-    });
-  }
-
-  const title = yield* runGitOutput(context.repoRoot, ["log", "-1", "--pretty=%s"]).pipe(Effect.map(Str.trim));
-  const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
-  yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
-  const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
-  const result = yield* capture(
-    "gh",
-    ["pr", "create", ...(draft ? ["--draft"] : []), "--title", title, "--body-file", bodyPath],
-    context.repoRoot
-  ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `gh pr create failed:\n${result.output}`,
-      command: `gh pr create --title <subject> --body-file ${bodyPath}`,
-      exitCode: result.exitCode,
-    });
-  }
-  yield* Console.log(`[yeet] --pr: created ${draft ? "draft " : ""}pull request -> ${Str.trim(result.output)}`);
-  yield* recordPrCreateLane(recorder, prStep, Str.trim(result.output));
-  const created = yield* (dependencies.view ?? runGhPullRequestView)(context);
-  const recording = yield* recordCurrentPrSession(
+  const pullRequest = O.isSome(existing)
+    ? yield* Effect.as(
+        Effect.andThen(
+          Console.log(
+            `[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}; skipping create`
+          ),
+          recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`)
+        ),
+        YeetEnsuredPullRequest.make({
+          number: existing.value.number,
+          url: O.fromUndefinedOr(existing.value.url),
+          created: false,
+        })
+      )
+    : yield* createPullRequest(context, recorder, prStep, capture, dependencies.view ?? runGhPullRequestView);
+  yield* stampPullRequestProvenance(
     context,
-    created.number,
-    O.some(Str.trim(result.output)),
-    "created",
+    recorder,
+    stampStep,
+    pullRequest.number,
+    pullRequest.created ? pullRequest.url : O.none(),
+    pullRequest.created ? "created" : "pushed",
+    capture,
     dependencies.registry
   );
-  const outcome = O.isSome(recording)
-    ? yield* ensureProvenanceFooter(context, recording.value.repository, created.number, capture, dependencies.registry)
-    : ProvenanceStampOutcome.make({
-        status: "skipped",
-        message: `[yeet] provenance footer stamp skipped for PR #${created.number}: session recording was unavailable`,
-      });
-  yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(created.number), outcome);
-  return YeetEnsuredPullRequest.make({
-    number: created.number,
-    url: O.orElse(O.fromUndefinedOr(created.url), () => O.liftPredicate(Str.trim(result.output), Str.isNonEmpty)),
-    created: true,
-  });
+  return pullRequest;
 });
 
 interface HeavyAdmissionLabelDependencies {

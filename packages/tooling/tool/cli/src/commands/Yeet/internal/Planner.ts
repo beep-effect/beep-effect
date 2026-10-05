@@ -818,6 +818,16 @@ const statusSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): 
   ...(options.remote ? [statusRemoteStep(context), statusRemoteChecksStep(context)] : []),
 ];
 
+// The push of an already-proven commit, shared by `--prove-first` and
+// `--push-only`: preflight, push carrying the proof-reuse marker, a ready
+// (non-draft) pull request, and the attached monitor when asked for.
+const provenPushSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): ReadonlyArray<RepoPlanStep> => [
+  headInstallPreflightStep(context, "publish"),
+  pushStep(context, true),
+  ...(options.pr ? [prCreateStep(context, false), prProvenanceStampStep(context)] : []),
+  ...(options.monitor ? monitorSteps(context) : []),
+];
+
 // The pre-push-first default, kept byte-identical behind `--prove-first`: the
 // full proof and CI parity hold the push.
 const proveFirstPublishSteps = (
@@ -829,10 +839,7 @@ const proveFirstPublishSteps = (
   commitStep(context, message, options),
   ...fullProofSteps(context, options.collectAll),
   ciParityStep(context),
-  headInstallPreflightStep(context, "publish"),
-  pushStep(context, true),
-  ...(options.pr ? [prCreateStep(context, false), prProvenanceStampStep(context)] : []),
-  ...(options.monitor ? monitorSteps(context) : []),
+  ...provenPushSteps(context, options),
 ];
 
 // Push-first (push-first-publish D1-D8): only the cheap-gates tier and the
@@ -863,12 +870,7 @@ const publishSteps = (
   Match.value(options).pipe(
     Match.when(
       ({ pushOnly }) => pushOnly,
-      () => [
-        headInstallPreflightStep(context, "publish"),
-        pushStep(context, true),
-        ...(options.pr ? [prCreateStep(context, false), prProvenanceStampStep(context)] : []),
-        ...(options.monitor ? monitorSteps(context) : []),
-      ]
+      () => provenPushSteps(context, options)
     ),
     Match.when(
       ({ proveFirst }) => proveFirst,
