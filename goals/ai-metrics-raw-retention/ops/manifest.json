@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ai-metrics-raw-retention",
+    "title": "AI Metrics Raw Retention",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ai-metrics-raw-retention",
+  "lifecycle": "active",
+  "mission": "Age-based compress or offload of the ai-metrics `raw` archive once `derived` is proven reproducible from it; raw stays the source of record.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-fleet-layout",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ai-metrics-raw-retention/README.md",
+    "goals/ai-metrics-raw-retention/SPEC.md",
+    "goals/ai-metrics-raw-retention/PLAN.md",
+    "goals/ai-metrics-raw-retention/GOAL.md",
+    "goals/ai-metrics-raw-retention/research/SOURCES.md",
+    "explorations/agent-fleet-layout/BRIEF.md",
+    "explorations/agent-fleet-layout/DECISIONS.md",
+    "explorations/agent-fleet-layout/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ai-metrics-raw-retention/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ai-metrics-raw-retention/GOAL.md)\" -le 4000",
+    "jq . goals/ai-metrics-raw-retention/ops/manifest.json",
+    "rg -n \"ai-metrics-raw-retention|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ai-metrics-raw-retention",
+    "git diff --check -- goals/ai-metrics-raw-retention",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "provides": ["telemetry/raw-retention"],
+  "dependsOn": ["goals/ops-seat-timers"],
+  "requires": ["fleet/ops-seat"]
+}
