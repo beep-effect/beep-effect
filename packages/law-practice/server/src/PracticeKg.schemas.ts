@@ -7,6 +7,7 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  KgAttributionSource,
   KgEdgePredicate,
   KgNodeKind,
   PracticeKgEpistemicStatus,
@@ -41,7 +42,11 @@ const spineEpistemicStatus = PracticeKgEpistemicStatus.pipe(
  * @category schemas
  * @since 0.0.0
  */
-export { PracticeKgEpistemicStatus, PracticeKgProvenanceKind } from "@beep/law-practice-domain/values";
+export {
+  KgAttributionSource,
+  PracticeKgEpistemicStatus,
+  PracticeKgProvenanceKind,
+} from "@beep/law-practice-domain/values";
 
 const practiceKgOptionsMaxTextBytesDefault = PosInt.make(2_097_152);
 /**
@@ -149,9 +154,11 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
  * `iri` is the node's identity across the whole graph and the join target for
  * both edge endpoints; `naturalKey` is the human-facing key it was minted from.
  * `client` and `docketFamily` are absent — not empty — for nodes that belong to
- * neither, such as an email archive. `epistemicStatus` defaults at construction
- * to the settled spine label because these rows are written only by the
- * deterministic projection; candidate material never flows through this class.
+ * neither, such as an email archive. `attributionSource` says why the node sits
+ * in its family or client (file name, text reference, family consensus, official
+ * record, or a bare mention). `epistemicStatus` defaults at construction to the
+ * settled spine label because these rows are written only by the deterministic
+ * projection; candidate material never flows through this class.
  *
  * **Example** (Make docket node row)
  *
@@ -159,6 +166,7 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
  * import { PracticeKgNodeRow } from "@beep/law-practice-server"
  *
  * const node = PracticeKgNodeRow.make({
+ *   attributionSource: "filename",
  *   client: "Acme Corp",
  *   docketFamily: "AB",
  *   epistemicStatus: "derived-from-official-records",
@@ -179,6 +187,7 @@ export type PracticeKgBundleOutInput = Pick<PracticeKgOptions, "bundleOut" | "co
  */
 export class PracticeKgNodeRow extends S.Class<PracticeKgNodeRow>($I`PracticeKgNodeRow`)(
   {
+    attributionSource: KgAttributionSource,
     client: S.optionalKey(S.String),
     docketFamily: S.optionalKey(S.String),
     epistemicStatus: spineEpistemicStatus,
@@ -404,7 +413,10 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  * Written as `bundle.manifest.json` at the bundle root and read first by any
  * consumer: it is what makes a bundle self-describing once it has been copied
  * away from the corpus it was built from. `corpusRootExpected` records whether
- * the bundle's paths still assume the originating corpus layout.
+ * the bundle's paths still assume the originating corpus layout. `builtAt` is
+ * the wall-clock build instant; `corpusSnapshotAt` is the newest source-file
+ * mtime the catalog recorded, so the two differ whenever a bundle is rebuilt
+ * from an unchanged corpus.
  *
  * **Example** (Make portable bundle manifest)
  *
@@ -417,6 +429,7 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  *   builtAt: "2026-07-27T18:04:11.000Z",
  *   bundleVersion: "2026.07.1",
  *   corpusRootExpected: true,
+ *   corpusSnapshotAt: "2026-07-03T09:12:44.000Z",
  *   counts: PracticeKgCounts.make({
  *     documents: S.Natural.make(6104),
  *     edges: S.Natural.make(19233),
@@ -438,6 +451,7 @@ export class PracticeKgBundleManifest extends S.Class<PracticeKgBundleManifest>(
     builtAt: S.String,
     bundleVersion: S.NonEmptyString,
     corpusRootExpected: S.Boolean,
+    corpusSnapshotAt: S.String,
     counts: PracticeKgCounts,
     schemaVersion: PracticeKgSchemaVersions,
     sourceRuns: PracticeKgSourceRuns,
@@ -521,6 +535,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  *   builtAt: "2026-07-27T18:04:11.000Z",
  *   bundleVersion: "2026.07.1",
  *   corpusRootExpected: true,
+ *   corpusSnapshotAt: "2026-07-03T09:12:44.000Z",
  *   counts: PracticeKgCounts.make({
  *     documents: S.Natural.make(6104),
  *     edges: S.Natural.make(19233),

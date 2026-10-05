@@ -50,16 +50,26 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P5 Acceptance evidence: the AC-4/AC-5 gauntlet ran 2026-07-30 on the Windows
-target — five provisional passes carrying a failed G-3 label item and two
-partial deliverables (correctness axis pending Tom), AC-5 zero egress met as
-specified on sampled observation, and **AC-2 not met** (graph nodes carry no
-provenance). P4 Distribution is complete. Next: P6 graph-integrity repair (two
-verified blocker mechanisms in family attribution) gates the AC-6 install; P7
-server hardening follows the defect register's B-items.
+P6 Graph-integrity repair: the two blocker mechanisms (bare-family keying,
+mention-derived membership) are fixed in the build (`SPEC.md` D-11) and the
+bundle was rebuilt from the corpus on 2026-10-05 — family 10013 splits by
+client, family 10073 carries zero phantom patents, no application is filed
+from more than one family. Remaining before P6 closes: rerun the P3 claims
+batch onto the rebuilt bundle (metered), copy it to the Windows target, and
+run the G-1/G-3 spot re-runs. P5 correctness calls on G-1..G-5 remain Tom's;
+AC-2 node provenance is P7.
 
 ## Latest Evidence
 
+- 2026-10-05: **P6 graph-integrity repair landed** — families keyed
+  `<client>.<family>` from the documents' own reference form, anchors placed
+  by unique mention with `mentioned_in_family` edges for the rest,
+  `attribution_source` on every node, `$R` stubs labelled
+  `recycled-unverified`, claim rows joinable by `sourceDocumentDigest`, build
+  metadata split into `builtAt`/`corpusSnapshotAt`. Rebuilt bundle
+  `2026-10-05-01`: 8,249 nodes / 1,766 edges, 147 client-keyed families + 27
+  bare remainders, 0 cartesian memberships. Evidence:
+  [`history/p6/`](./history/p6/).
 - 2026-07-30: **AC-4/AC-5 gauntlet run** — G-1..G-5 provisional PASS on the
   document layer and epistemic conduct, with G-3's required label failing as
   delivered; AC-5 sampled pass (2,326 samples / 85.7 min / zero rows);

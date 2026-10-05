@@ -21,6 +21,7 @@ const manifest = PracticeKgBundleManifest.make({
   builtAt: "2026-08-13T00:00:00.000Z",
   bundleVersion: "2026.08.1",
   corpusRootExpected: true,
+  corpusSnapshotAt: "2026-08-12T00:00:00.000Z",
   counts: PracticeKgCounts.make({
     documents: S.Natural.make(2),
     edges: S.Natural.make(3),
