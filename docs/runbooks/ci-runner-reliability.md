@@ -10,9 +10,13 @@ pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
 The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
-allocation across eight 64 GiB instance types and five availability zones, and
+allocation across seven 64 GiB instance types and five availability zones, and
 automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
-(deployment evidence below), on top of the September 15 containment that
+(deployment evidence below, recorded with eight types), minus `r6a.2xlarge`,
+which was dropped on October 5, 2026 after 20 of its 69 launches that day
+ended `instance-terminated-no-capacity` while the other seven types lost 6 of
+86. A live scale-up Lambda listing seven types is the intended state, not
+drift. All of this sits on top of the September 15 containment that
 superseded the September 9 On-Demand posture. Keep the two-instance cap, 64 GiB
 instance choices and ephemeral one-job-per-VM teardown. A budget alert does not
 enforce a monthly worker-hour limit. Diagnose interrupted jobs before retrying;

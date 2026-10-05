@@ -5,12 +5,12 @@
     "title": "Practice KG MCP",
     "status": "active",
     "created": "2026-07-27",
-    "updated": "2026-07-30",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-kg-mcp",
   "lifecycle": "active",
-  "statusNote": "Acceptance remains open: AC-2 is unmet because shipped graph nodes lack provenance (defect B-2), and Tom's correctness calls on the G-1 through G-5 acceptance questions remain pending.",
+  "statusNote": "P6 graph-integrity repair is in the build and the bundle is rebuilt (2026-10-05): families key on <client>.<family>, anchors join only by unique mention, every node carries an attribution source. Still open: claims-batch rerun onto the rebuilt bundle, G-1/G-3 spot re-runs on the Windows target, Tom's correctness calls on G-1..G-5, and AC-2 node provenance (P7).",
   "mission": "Ship the first queryable IP-law knowledge graph over the Oppold corpus to Tom's Claude Desktop as a read-only, local-first, .mcpb-packaged stdio MCP server over a portable data bundle, taking live ownership of the orphaned knowledge-graph scope.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -79,7 +79,7 @@
     {
       "id": "P6",
       "name": "Graph-integrity repair",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P7",
