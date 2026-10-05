@@ -24,6 +24,12 @@
       "path": "../../../drivers/obs/tsconfig.json"
     },
     {
+      "path": "../../../drivers/occt/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/pdf-tools/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/phoenix/tsconfig.json"
     },
     {
@@ -46,6 +52,9 @@
     },
     {
       "path": "../../../foundation/capability/observability/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/capability/technical-drawing/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/identity/tsconfig.json"

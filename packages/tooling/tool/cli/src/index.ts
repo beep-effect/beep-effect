@@ -155,6 +155,21 @@ export {
   docsCommand,
 } from "./commands/Docs/index.ts";
 /**
+ * Design-figure drawings command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Design-figure drawings command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  drawingsCommand,
+} from "./commands/Drawings/index.ts";
+/**
  * Fallow quality-tooling command group.
  *
  * @category cli-commands

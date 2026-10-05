@@ -3,16 +3,16 @@
   "extends": "./tsconfig.json",
   "references": [
     {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
+      "path": "../../modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/schema/tsconfig.json"
+      "path": "../../modeling/schema/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/utils/tsconfig.json"
+      "path": "../../modeling/utils/tsconfig.json"
     },
     {
-      "path": "../../tooling/test-kit/test-runner/tsconfig.json"
+      "path": "../../../tooling/test-kit/test-runner/tsconfig.json"
     }
   ],
   "compilerOptions": {
@@ -21,6 +21,6 @@
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "rootDir": "../../../."
+    "rootDir": "../../../../."
   }
 }

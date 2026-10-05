@@ -198,7 +198,8 @@ const generatedComposers = $I.compose(
   "test-runner",
   "xstate",
   "occt",
-  "pdf-tools"
+  "pdf-tools",
+  "technical-drawing"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2716,3 +2717,20 @@ export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = composers.$OcctI
  * @since 0.0.0
  */
 export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = composers.$PdfToolsId;
+
+/**
+ * Identity composer for `@beep/technical-drawing`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TechnicalDrawingId } from "@beep/identity/packages"
+ *
+ * const id = $TechnicalDrawingId.make("TechnicalDrawing")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-drawing"> = composers.$TechnicalDrawingId;

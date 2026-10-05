@@ -2028,7 +2028,16 @@
       "@beep/occt": ["./packages/drivers/occt/src/index.ts"],
       "@beep/occt/*": ["./packages/drivers/occt/src/*"],
       "@beep/pdf-tools": ["./packages/drivers/pdf-tools/src/index.ts"],
-      "@beep/pdf-tools/*": ["./packages/drivers/pdf-tools/src/*"]
+      "@beep/pdf-tools/*": ["./packages/drivers/pdf-tools/src/*"],
+      "@beep/technical-drawing": [
+        "./packages/foundation/capability/technical-drawing/src/index.ts"
+      ],
+      "@beep/technical-drawing/*": [
+        "./packages/foundation/capability/technical-drawing/src/*"
+      ],
+      "@beep/repo-cli/commands/Drawings": [
+        "./packages/tooling/tool/cli/src/commands/Drawings/index.ts"
+      ]
     }
   }
 }

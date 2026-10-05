@@ -1,0 +1,169 @@
+/**
+ * Sheet rules: page formats, 37 CFR 1.84 margins, line weight, lettering.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $TechnicalDrawingId } from "@beep/identity/packages";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect } from "effect";
+import * as S from "effect/Schema";
+
+const $I = $TechnicalDrawingId.create("Sheet.schemas");
+
+const SheetFormatBase = LiteralKit(["letter", "a4"]);
+
+/**
+ * Permitted sheet formats (37 CFR 1.84(f)).
+ *
+ * **Example** (Read the formats)
+ *
+ * ```ts
+ * import { SheetFormat } from "@beep/technical-drawing"
+ *
+ * console.log(SheetFormat.literals)
+ * ```
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const SheetFormat = SheetFormatBase.pipe(
+  $I.annoteSchema("SheetFormat", {
+    description: "US Letter (8.5 × 11 in) or A4 (21.0 × 29.7 cm), portrait.",
+  }),
+  SchemaUtils.withLiteralKitStatics(SheetFormatBase)
+);
+
+/**
+ * Type for {@link SheetFormat}.
+ *
+ * **Example** (Annotate a format)
+ *
+ * ```ts
+ * import type { SheetFormat } from "@beep/technical-drawing"
+ *
+ * const format: SheetFormat = "letter"
+ * console.log(format)
+ * ```
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export type SheetFormat = typeof SheetFormat.Type;
+
+/**
+ * Points per centimetre.
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const PT_PER_CM = 72 / 2.54;
+
+/**
+ * Points per millimetre.
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const PT_PER_MM = PT_PER_CM / 10;
+
+/**
+ * Page size of a format in points.
+ *
+ * **Example** (Letter in points)
+ *
+ * ```ts
+ * import { pageSizePt } from "@beep/technical-drawing"
+ *
+ * console.log(pageSizePt("letter"))
+ * ```
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const pageSizePt = (format: SheetFormat): { readonly width: number; readonly height: number } =>
+  SheetFormat.$match(format, {
+    letter: () => ({ width: 612, height: 792 }),
+    a4: () => ({ width: 21 * PT_PER_CM, height: 29.7 * PT_PER_CM }),
+  });
+
+/**
+ * Minimum margins of 37 CFR 1.84(g), in centimetres.
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as const;
+
+/**
+ * Minimum lettering height of 37 CFR 1.84(p)(3), in centimetres.
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export const MIN_LETTER_HEIGHT_CM = 0.32;
+
+/**
+ * Sheet options of a render: format, line weight, lettering, inner safety gap.
+ *
+ * **Example** (Defaults)
+ *
+ * ```ts
+ * import { SheetOptions } from "@beep/technical-drawing"
+ *
+ * const options = SheetOptions.make({})
+ * console.log(options.format, options.lineWeightMm, options.letterHeightCm)
+ * ```
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
+  {
+    format: SheetFormat.pipe(
+      S.withConstructorDefault(Effect.succeed("letter" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("letter" as const)),
+      S.annotateKey({ description: "Page format. Defaults to letter." })
+    ),
+    lineWeightMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0.2, {
+        identifier: $I`LineWeightCheck`,
+        title: "Line Weight",
+        description: "Strokes thinner than 0.2 mm fade when the sheet is reduced to two-thirds.",
+        message: "Expected a line weight of at least 0.2 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0.35)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.35)),
+      S.annotateKey({ description: "Uniform stroke width in mm. Defaults to 0.35." })
+    ),
+    letterHeightCm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(MIN_LETTER_HEIGHT_CM, {
+        identifier: $I`LetterHeightCheck`,
+        title: "Letter Height",
+        description: "37 CFR 1.84(p)(3) requires lettering at least 0.32 cm high.",
+        message: "Expected lettering at least 0.32 cm high",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0.45)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.45)),
+      S.annotateKey({ description: "Cap height of `FIG. n` and `n/N` lettering in cm. Defaults to 0.45." })
+    ),
+    safetyMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0, {
+        identifier: $I`SafetyCheck`,
+        title: "Safety Gap",
+        description: "Extra clearance kept inside the legal margins.",
+        message: "Expected a non-negative safety gap",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(3)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(3)),
+      S.annotateKey({ description: "Clearance kept inside the 1.84 margins, in mm. Defaults to 3." })
+    ),
+  },
+  $I.annote("SheetOptions", {
+    description: "Page format, stroke width, lettering height, and margin safety gap of a render.",
+  })
+) {}

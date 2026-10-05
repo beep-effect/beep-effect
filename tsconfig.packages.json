@@ -280,6 +280,9 @@
       "path": "packages/foundation/capability/semantic-web"
     },
     {
+      "path": "packages/foundation/capability/technical-drawing"
+    },
+    {
       "path": "packages/foundation/modeling/html"
     },
     {

@@ -68,39 +68,35 @@ const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primit
  *
  * @internal
  */
-export const buildCompound = (
-  spec: SolidSpec
-): { readonly compound: AnyShape; readonly parts: ReadonlyArray<Shape3D> } => {
+export const buildCompound = (spec: SolidSpec): { readonly compound: Shape3D } => {
   const parts = spec.parts.map((part) => buildPart(part.add, part.subtract));
-  const compound = parts.length === 1 ? parts[0]! : replicad.makeCompound(parts);
-  return { compound, parts };
+  const compound = A.length(parts) === 1 ? parts[0] : replicad.makeCompound(parts);
+  if (!(compound instanceof replicad.Compound || compound instanceof replicad.Solid)) {
+    throw OcctError.make({ reason: "solid-build", message: "The parts did not form a solid or a compound." });
+  }
+  return { compound };
 };
 
 /**
  * Measure a built compound.
  *
+ * **Details**
+ *
+ * `makeCompound` disposes the part shapes it is given, so every measurement
+ * reads the compound, never the parts.
+ *
  * @internal
  */
 export const summarize = (built: ReturnType<typeof buildCompound>): SolidSummary => {
   const [min, max] = built.compound.boundingBox.bounds;
-  const volume = pipe(
-    built.parts,
-    A.reduce(0, (acc, part) => acc + replicad.measureVolume(part))
-  );
   return SolidSummary.make({
     boundingBox: BoundingBox.make({
       min: [round(min[0]), round(min[1]), round(min[2])],
       max: [round(max[0]), round(max[1]), round(max[2])],
     }),
-    volume: round(volume),
-    faceCount: pipe(
-      built.parts,
-      A.reduce(0, (acc, part) => acc + part.faces.length)
-    ),
-    edgeCount: pipe(
-      built.parts,
-      A.reduce(0, (acc, part) => acc + part.edges.length)
-    ),
+    volume: round(replicad.measureVolume(built.compound)),
+    faceCount: built.compound.faces.length,
+    edgeCount: built.compound.edges.length,
   });
 };
 
