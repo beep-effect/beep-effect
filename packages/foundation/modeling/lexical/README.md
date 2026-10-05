@@ -101,11 +101,16 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 
 - `listitem` and `tablecell` project onto a paragraph of their inline content
   (container → block); their list or table structure belongs to the parent
-  that is no longer present.
+  that is no longer present. Nested elements inside them (a nested `list` in
+  a detached `listitem`, a non-paragraph child in a detached `tablecell`)
+  degrade to their plain text, losing that nested structure.
 - `tablerow` re-wraps into a single-row `Table` (pattern preserved).
 - `text`, `tab`, `linebreak`, and `link` wrap into a paragraph.
-- `quote` → `BlockQuote` and `code` → `Pre` re-realize losslessly;
-  `artifact-ref` → the artifact-link paragraph convention.
+- `quote` → `BlockQuote` keeps shadow-root block children and wraps legacy
+  inline children in one paragraph; the flattening happens on the return trip
+  (see Normalizations). `code` → `Pre` keeps text and `language` but drops
+  the optional `theme`. `artifact-ref` → the artifact-link paragraph
+  convention.
 
 ### Degraded on Md → Lexical (documented, deterministic)
 
