@@ -17,7 +17,7 @@ available" — is falsified by attempt-filtered measurement:
   data point from 2026-08-06 was a `run_attempt` 2-3 run during the GitHub
   Actions incident; every attempt-1 run showed 0s. The metric measured
   time-until-rerun, not runner wait.
-- Job-level pickup on Blacksmith during the same incident: 19-67 seconds.
+- Job-level pickup on [redacted-vendor] during the same incident: 19-67 seconds.
 - The day's actual blockage ("Failed to resolve action download info", 5xx
   in "Set up job") is a call FROM the runner TO GitHub's control plane. A
   self-hosted runner long-polls the same API and downloads the same action
@@ -79,7 +79,7 @@ worth landing even if the fleet is never built.
    none of it regresses. Risk: SHA-pin misses can break required lanes —
    land as one PR and drill the revert first.
 2. **Measurement baseline** (no compute change). Operator obtains the
-   Blacksmith invoice (o6's cost gate is unscoreable without it; the
+   [redacted-vendor] invoice (o6's cost gate is unscoreable without it; the
    ledger's ">$50/week" is unsourced — store the invoice under the private
    surface, never the public packet). Lane-timings collector gains
    `run_attempt`, attempt-1 pickup latency (filter applied in the
@@ -93,7 +93,7 @@ worth landing even if the fleet is never built.
    5 minutes.
 4. **Shadow job**. Non-required `Coverage Regression (owned pilot)` runs
    the exact Coverage command and SHA in parallel with the untouched
-   required Blacksmith job; same-repo branches only; ≥20 paired same-SHA
+   required [redacted-vendor] job; same-repo branches only; ≥20 paired same-SHA
    samples, medians and p95s; any security-gate failure aborts the project
    permanently (o6's own abort clause). Coverage is the right first lane:
    largest 8-vCPU demand row, ~11.5-minute p50, deliberately uncached body.
@@ -178,10 +178,10 @@ phases above read as history, not as pending work:
   role/profile deleted, launcher PassRole stripped, RunInstances Deny
   guardrails attached). The allowlist's first live catch was a transitive
   action — see ledger receipt (g).
-- **Phase 2 (measurement): PARTIALLY DONE** — the Blacksmith invoice was
+- **Phase 2 (measurement): PARTIALLY DONE** — the [redacted-vendor] invoice was
   obtained (magnitude: ~7x the ledger's unsourced estimate; exact figures
   stay off the public packet) and forced the operator decision that
-  supersedes the hybrid endgame: FULL Blacksmith exit. Light lanes run on
+  supersedes the hybrid endgame: FULL [redacted-vendor] exit. Light lanes run on
   free ubuntu-24.04; the lane-collector columns (run_attempt, attempt-1
   pickup, per-lane RSS) remain queued work.
 - **Phases 3-5 (stack, shadow, cutover): SUPERSEDED BY DEPLOYMENT** — the
@@ -189,7 +189,7 @@ phases above read as history, not as pending work:
   resources, red-team gates verified against live account state) and the
   operator cut the five heavy lanes over to `beep-ec2-heavy` directly
   (PR #620), validated by a supervised burst that landed an eight-PR merge
-  wave. The shadow-job ceremony was designed for a world with Blacksmith to
+  wave. The shadow-job ceremony was designed for a world with [redacted-vendor] to
   fall back on; the exit decision removed that world.
 - **Phase 6 (sequencing conflict): RESOLVED EC2-FIRST** — grill decision 21
   amended in place; workstation deferred indefinitely.

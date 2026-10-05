@@ -54,7 +54,7 @@ only for the credentials that must exist at all. Suggested vault: a dedicated
   OIDC role assumption.
 - No long-lived runner registration tokens stored anywhere: they're minted
   per-boot from #1/#4 and expire in an hour.
-- No Blacksmith/API migration secrets: cutover is per-lane `runs-on` label
+- No [redacted-vendor]/API migration secrets: cutover is per-lane `runs-on` label
   changes only.
 
 ## Provisioned (2026-08-04)
