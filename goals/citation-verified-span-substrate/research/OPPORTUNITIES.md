@@ -98,3 +98,24 @@ the downstream workspace in the release metadata.
 - **Prevention:** give each coverage lane an isolated temporary report path, or
   serialize filtered package coverage when another reviewer may be collecting
   the same package simultaneously.
+
+## 2026-10-05: P3 closeout publication
+
+### Inherited coverage red blocked a docs-only publish proof
+
+- **What happened:** `bun run beep yeet publish --pr` ran all 33 pre-push
+  lanes green except `quality:coverage`, which failed on
+  `@beep/repo-cli` `Quality.osv-ignore.ts` branches `94.44 < 100`. This PR
+  changes only `goals/citation-verified-span-substrate`; the lane selected
+  `@beep/repo-cli` through a global input.
+- **Evidence:** the hosted `Heavy / Coverage Regression` job on `main` at
+  `c156ca2b3c` (check.yml run 37347112441) reports the same row with the same
+  value, alongside `@beep/html` `Html.source-size.ts`. The two later `main`
+  runs (37341075876, 37350588742) died of self-hosted runner loss before the
+  ratchet ran. The floor for that file was raised to 100 branches in #1408.
+  Attribution: inherited.
+- **Prevention:** judge rows for packages selected only through a global
+  input against the base measurement rather than the committed floor when the
+  branch does not touch the package, or exempt docs-only diffs from the local
+  coverage lane. The publish path needed `--push-only` to let hosted checks
+  gate an otherwise green docs change.
