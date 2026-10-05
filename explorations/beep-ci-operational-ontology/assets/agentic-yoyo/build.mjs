@@ -188,7 +188,7 @@ const receipts = `
 </details>
 <details class="receipts-block">
   <summary>The chips: real yeet planner steps</summary>
-  <p class="note">Fan nodes roll out <code>${lanes.fan.join("</code> <code>")}</code>; the touched package rolls out the full feedback ladder <code>${lanes.touched.join("</code> <code>")}</code>. Chips collapse farthest-first: the cheapest check that can prove you wrong runs first.</p>
+  <p class="note">Fan nodes roll out <code>${lanes.fan.join("</code> <code>")}</code>; the touched package rolls out the full feedback ladder <code>${lanes.touched.join("</code> <code>")}</code>. Chips collapse nearest-first: the cheapest check that can prove you wrong runs first.</p>
   <div class="scroll"><table><thead><tr><th>planner step</th><th>chip</th><th>what it is</th></tr></thead><tbody>${laneRows}</tbody></table></div>
 </details>
 <details class="receipts-block">
