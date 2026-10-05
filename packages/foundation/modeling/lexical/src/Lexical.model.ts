@@ -27,6 +27,7 @@ import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conforman
 import { PosInt } from "./internal/PosInt.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
+import type * as PatternOntology from "@beep/schema/PatternOntology";
 import type * as R from "effect/Record";
 import type * as AST from "effect/SchemaAST";
 
@@ -1724,6 +1725,12 @@ export declare namespace HeadingNode {
  * QuoteNode.name // => "QuoteNode"
  * ```
  *
+ * **Gotchas**
+ *
+ * The class-level `po` annotation is `block`, the legacy inline-children
+ * realization. Use `QuoteNode.poPatternOf(node)` for an instance: a
+ * shadow-root quote is a `container`.
+ *
  * @see {@link https://github.com/facebook/lexical/blob/ffe90924bd55b5d450c88de0f9f1c8b228c4a221/packages/lexical-rich-text/src/index.ts | Pinned Lexical QuoteNode source} for the upstream serialized shape.
  * @category models
  * @since 0.0.0
@@ -1742,7 +1749,23 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
     po: "block",
     description: "A serialized Lexical quote whose optional shadow-root mode controls its child grammar.",
   })
-) {}
+) {
+  /**
+   * Resolves the Pattern Ontology pattern of one quote instance.
+   *
+   * **Details**
+   *
+   * `QuoteNode` is a multi-pattern constructor. The class-level `po`
+   * annotation names the legacy realization, whose children are inline text
+   * (`block`). A shadow-root quote holds block children and no direct text, so
+   * that instance is a `container`.
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly poPatternOf = (node: QuoteNode): PatternOntology.PoPattern =>
+    O.contains(node.shadowRoot, true) ? "container" : "block";
+}
 
 /**
  * Companion namespace for {@link QuoteNode}.

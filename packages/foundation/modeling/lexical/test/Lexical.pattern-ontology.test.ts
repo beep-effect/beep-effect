@@ -1,5 +1,5 @@
 import { blockToLexical, nodeToBlocks } from "@beep/lexical-schema/Lexical.codec";
-import { LexicalNode, SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
+import { LexicalNode, QuoteNode, SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
 import * as Md from "@beep/md/Md.model";
 import * as PatternOntology from "@beep/schema/PatternOntology";
 import { it } from "@beep/test-runner";
@@ -52,6 +52,9 @@ const mdToLexicalDemotions: ReadonlyArray<readonly [source: string, target: stri
   ["del", "link"],
   ["img", "link"],
   ["footnoteReference", "text"],
+  // In place: an Md table cell holds inline content directly; a Lexical cell
+  // wraps that content in a paragraph.
+  ["tableCell", "tablecell"],
 ];
 
 /**
@@ -67,7 +70,53 @@ const lexicalToMdDemotions: ReadonlyArray<readonly [source: string, target: stri
   // table row re-wraps into a table and conserves its pattern.
   ["listitem", "p"],
   ["tablecell", "p"],
+  // In place: a Lexical cell's paragraph content becomes the Md cell's inline
+  // content.
+  ["tablecell", "tableCell"],
 ];
+
+/** Md constructors reachable only through fields, checked in their real position. */
+const mdFieldOnlyMembers = {
+  li: Md.Li,
+  taskItem: Md.TaskItem,
+  tableRow: Md.TableRow,
+  tableCell: Md.TableCell,
+};
+
+type MdFieldOnlyNode = Md.Li | Md.TaskItem | Md.TableRow | Md.TableCell;
+type LexicalStructuralNode = Extract<LexicalNode, { readonly type: "listitem" | "tablerow" | "tablecell" }>;
+
+const isLexicalStructural = (node: LexicalNode): node is LexicalStructuralNode =>
+  node.type === "listitem" || node.type === "tablerow" || node.type === "tablecell";
+
+/** Field-only Md children of a list or table, paired with the rows' cells. */
+const mdFieldOnlyChildren = (block: Md.Block): ReadonlyArray<MdFieldOnlyNode> =>
+  block._tag === "ul" || block._tag === "ol" || block._tag === "taskList"
+    ? block.children
+    : block._tag === "table"
+      ? A.flatMap(block.children, (row): ReadonlyArray<MdFieldOnlyNode> => [row, ...row.children])
+      : [];
+
+const structuralOnly = (nodes: ReadonlyArray<LexicalNode>): ReadonlyArray<LexicalStructuralNode> =>
+  A.getSomes(A.map(nodes, (node) => (isLexicalStructural(node) ? O.some(node) : O.none())));
+
+/** Structural Lexical children of a list or table, rows followed by their cells. */
+const lexicalStructuralChildren = (node: LexicalNode): ReadonlyArray<LexicalStructuralNode> =>
+  node.type === "list"
+    ? structuralOnly(node.children)
+    : node.type === "table"
+      ? A.flatMap(
+          structuralOnly(node.children),
+          (row): ReadonlyArray<LexicalStructuralNode> => [row, ...structuralOnly(row.children)]
+        )
+      : [];
+
+/** The Md tags each in-place structural Lexical node may project onto. */
+const inPlaceLexicalTargets: Readonly<Record<LexicalStructuralNode["type"], ReadonlyArray<MdFieldOnlyNode["_tag"]>>> = {
+  listitem: ["li", "taskItem"],
+  tablerow: ["tableRow"],
+  tablecell: ["tableCell"],
+};
 
 /** Inline-level leaves have no block position in Md and wrap into a paragraph. */
 const looseLeafTypes: ReadonlyArray<string> = ["text", "tab", "linebreak", "link"];
@@ -203,7 +252,9 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
             expectConserved({
               direction: "lexical-to-md",
               sourceTag: type,
-              sourcePattern: patternOf(member),
+              // A quote is multi-pattern: a shadow-root instance is a container
+              // and conserves; a legacy instance re-realizes through the table.
+              sourcePattern: node.type === "quote" ? QuoteNode.poPatternOf(node) : patternOf(member),
               targetTag: target._tag,
               targetPattern: patternOf(Md.Block.cases[target._tag]),
               declared: lexicalToMdDemotions,
@@ -213,6 +264,69 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
         { arbitrary: fcRuns(25) }
       );
     }
+  });
+
+  describe("field-only constructors are checked in place", () => {
+    for (const member of [Md.Ul, Md.Ol, Md.TaskList, Md.Table]) {
+      it.effect.prop(
+        `conserves or explicitly demotes the children of ${member.identifier} in both directions`,
+        { block: Arbitrary.schema(member) },
+        Effect.fnUntraced(function* ({ block }) {
+          const node = yield* blockToLexical(block);
+          const sources = mdFieldOnlyChildren(block);
+          const targets = lexicalStructuralChildren(node);
+
+          // Md -> Lexical: every field-only Md child lands on a structural
+          // Lexical node of a conserved or declared pattern.
+          A.forEach(sources, (source) => {
+            const landing = A.filter(targets, (target) => A.contains(inPlaceLexicalTargets[target.type], source._tag));
+            expect(A.isReadonlyArrayNonEmpty(landing), `md-to-lexical: ${source._tag} has no in-place target`).toBe(
+              true
+            );
+            A.forEach(landing, (target) =>
+              expectConserved({
+                direction: "md-to-lexical",
+                sourceTag: source._tag,
+                sourcePattern: patternOf(mdFieldOnlyMembers[source._tag]),
+                targetTag: target.type,
+                targetPattern: patternOf(LexicalNode.cases[target.type]),
+                declared: mdToLexicalDemotions,
+              })
+            );
+          });
+
+          // Lexical -> Md: project the produced node back and check each
+          // structural Lexical child against the Md child it becomes.
+          const returned = A.flatMap(nodeToBlocks(node), mdFieldOnlyChildren);
+          A.forEach(targets, (source) => {
+            const landing = A.filter(returned, (target) => A.contains(inPlaceLexicalTargets[source.type], target._tag));
+            expect(A.isReadonlyArrayNonEmpty(landing), `lexical-to-md: ${source.type} has no in-place target`).toBe(
+              true
+            );
+            A.forEach(landing, (target) =>
+              expectConserved({
+                direction: "lexical-to-md",
+                sourceTag: source.type,
+                sourcePattern: patternOf(LexicalNode.cases[source.type]),
+                targetTag: target._tag,
+                targetPattern: patternOf(mdFieldOnlyMembers[target._tag]),
+                declared: lexicalToMdDemotions,
+              })
+            );
+          });
+        }),
+        { arbitrary: fcRuns(25) }
+      );
+    }
+  });
+
+  it("refines the quote pattern per instance", () => {
+    const quote = (shadowRoot: boolean) => QuoteNode.make({ shadowRoot: O.some(shadowRoot), children: [] });
+
+    expect(O.getOrNull(getPoPattern(QuoteNode))).toBe("block");
+    expect(QuoteNode.poPatternOf(quote(false))).toBe("block");
+    expect(QuoteNode.poPatternOf(quote(true))).toBe("container");
+    expect(poConservation(QuoteNode.poPatternOf(quote(true)), patternOf(Md.BlockQuote))).toBe("preserved");
   });
 
   it.effect("records the block quote flattening as an explicit container-to-block demotion", () =>

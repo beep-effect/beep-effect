@@ -106,6 +106,9 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
   degrade to their plain text, losing that nested structure.
 - `tablerow` re-wraps into a single-row `Table` (pattern preserved).
 - `text`, `tab`, `linebreak`, and `link` wrap into a paragraph.
+- A shadow-root `quote` is a container (`QuoteNode.poPatternOf`), so its
+  projection onto `BlockQuote` conserves the pattern; a legacy inline quote is
+  a block that re-realizes as a container.
 - `quote` → `BlockQuote` keeps shadow-root block children and wraps legacy
   inline children in one paragraph; the flattening happens on the return trip
   (see Normalizations). `code` → `Pre` keeps text and `language` but drops
@@ -113,6 +116,11 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
   convention.
 
 ### Degraded on Md → Lexical (documented, deterministic)
+
+- Empty text produces no Lexical leaf: a `Text` with an empty value, or a
+  `Strong` / `Em` / `Del` whose content is empty, vanishes from the run.
+- `TableCell` holds inline content directly (block); the Lexical `tablecell`
+  wraps that content in a paragraph (container). The content round-trips.
 
 - `Document.frontmatter` is outside the editor wire and must be retained by the
   owning persistence adapter when editor content is rebuilt.
