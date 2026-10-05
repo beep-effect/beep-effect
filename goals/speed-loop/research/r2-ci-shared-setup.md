@@ -56,8 +56,8 @@ The composite always:
    (`.github/actions/setup-monorepo-ci/action.yml:58-65`); and
 5. optionally saves the two caches (`.github/actions/setup-monorepo-ci/action.yml:67-81`).
 
-There is **no explicit Blacksmith cache action/configuration** in `.github`;
-Blacksmith appears here as the runner provider. The repo uses GitHub's
+There is **no explicit Prior-vendor cache action/configuration** in `.github`;
+Prior-vendor appears here as the runner provider. The repo uses GitHub's
 `actions/cache` interface. Any transparent provider acceleration is outside
 the checked-in contract and is not evidenced here.
 
@@ -233,7 +233,7 @@ step. Two concrete variants:
 1. trusted, immutable `node_modules` cache/artifact keyed by runner image,
    `.bun-version`, `bun.lock`, root package metadata, and architecture; each job
    restores it and verifies the key instead of running install; or
-2. a Blacksmith runner image/snapshot preloaded with the exact lockfile install,
+2. a Prior-vendor runner image/snapshot preloaded with the exact lockfile install,
    if the provider offers an immutable image primitive. No such primitive is
    configured in this repository today.
 

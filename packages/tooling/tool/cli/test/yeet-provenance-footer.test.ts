@@ -788,7 +788,7 @@ describe("Yeet provenance footer splice", () => {
       const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
       const preserved = ProvenanceStampOutcome.make({
         status: "preserved",
-        message: "[yeet] provenance footer for PR #42 preserved a concurrent body edit by blacksmith-sh",
+        message: "[yeet] provenance footer for PR #42 preserved a concurrent body edit by prior-ci-vendor",
       });
       const yielded = ProvenanceStampOutcome.make({ status: "yielded", message: "yielded to a concurrent edit" });
       const skipped = ProvenanceStampOutcome.make({ status: "skipped", message: "no registry rows" });

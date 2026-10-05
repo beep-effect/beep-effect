@@ -105,7 +105,7 @@ non-default probe branch existed on the remote.
 Registration after the redeploy behaves as designed. Every candidate launched
 for a queued job registered in organization group 4 with the `beep-ec2-heavy`
 label and never appeared in the repository runner list. The organization
-runner list also holds 400 offline `blacksmith-*` entries in group 3; they
+runner list also holds 400 offline `prior-vendor-*` entries in group 3; they
 predate this work and are not fleet runners.
 
 The negative probe is the strongest single record. Its queued job triggered a

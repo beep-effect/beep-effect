@@ -96,7 +96,7 @@ each PR in at most one CI round. Two properties define success:
    be wire-preserving (§5.3-style parity: encoded output byte-identical
    before/after). TSConfigJsonKey is out of scope (not a fixed-point
    check).
-5. **No CI vendor / runner migration.** Blacksmith runners, existing
+5. **No CI vendor / runner migration.** Prior-vendor runners, existing
    actions, and the cache posture (CSF-001) stay.
 6. **No new lint cards** beyond what the packet's own items require;
    this packet does not extend the schema-first rule set.

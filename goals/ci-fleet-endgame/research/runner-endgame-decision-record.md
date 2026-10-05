@@ -75,7 +75,7 @@ module in production before.
    step rather than widening blast radius now.
 4. **Cost gates: $100/mo projection, $200/mo absolute ceiling (signed).**
    The standing 20%-over-projection rule stops expansion; ceiling breach is
-   a hard stop + re-decision. (~1/7th of the Blacksmith run-rate.)
+   a hard stop + re-decision. (~1/7th of the Prior-vendor run-rate.)
 5. **Spot posture: spot everywhere + on-demand failover on capacity errors
    (signed).** Diversified types, price-capacity-optimized. Standing
    tripwire: >2 interruption-caused re-runs/week → move Coverage and Test

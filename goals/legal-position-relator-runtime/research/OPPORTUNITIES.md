@@ -111,7 +111,7 @@ Receipts recorded at the moment of friction, per the repo friction-capture law.
   `feat/evidence-loop-p0-and-fixes` and `explore/graphnosis-prior-art` the same
   morning.
 - **Prevention:** this is the owned-runner migration's problem statement made
-  concrete (PR #603 groundwork; Blacksmith exit ordered 2026-08-06): the current
+  concrete (PR #603 groundwork; Prior-vendor exit ordered 2026-08-06): the current
   runners under-provision memory for `turbo run check/build/coverage` fan-out.
   Until the owned runners land, the check workflows could cap turbo concurrency
   (the local pipeline uses `--concurrency=3` for exactly this reason) or the

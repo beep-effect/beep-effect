@@ -558,7 +558,7 @@ instead of silently splitting delivery or weakening scope.
 - **2026-07-29 Bluebook scope:** deliver a source-supported transformation
   proof, not full manual compliance.
 - **2026-07-29 delivery:** one all-in implementation PR because hosted
-  Blacksmith CI is expensive.
+  Prior-vendor CI is expensive.
 - Earlier decisions rejecting a runtime `eyecite-js` dependency, hosted parser,
   privileged off-box text, and duplicate legal hierarchy remain in force.
 - Earlier decisions limiting completion to the narrow v1 forms or preserving

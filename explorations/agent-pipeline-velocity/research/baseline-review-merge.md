@@ -21,4 +21,4 @@ Explorer-agent inventory; facts only.
 ## Hardware & runners
 
 - Workstation: Threadripper 9970X (32c/64t, 4.0→5.4GHz), 128GB DDR5-5600 ECC, PCIe5 NVMe (~14.9GB/s read). Local parallelism ceiling ≈ 32 tasks.
-- Blacksmith: labels blacksmith-2vcpu-ubuntu-2404 / blacksmith-4vcpu-ubuntu-2404; no cost/concurrency config in-repo.
+- Prior-vendor: labels prior-vendor-2vcpu-ubuntu-2404 / prior-vendor-4vcpu-ubuntu-2404; no cost/concurrency config in-repo.

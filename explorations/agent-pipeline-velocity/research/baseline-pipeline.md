@@ -23,7 +23,7 @@ rqt-001 duplicate affected feedback removed from verify/publish (−348 tasks); 
 
 ## CI (`.github/workflows/check.yml`, 754 lines)
 
-- Runners: blacksmith-2vcpu (pr-size, secrets, security, nix, sast) / blacksmith-4vcpu (verify matrix, fallow, build, desktop-ipc).
+- Runners: prior-vendor-2vcpu (pr-size, secrets, security, nix, sast) / prior-vendor-4vcpu (verify matrix, fallow, build, desktop-ipc).
 - Verify matrix: lint, lint-policy (`beep lint policy`, 25m), repo-sanity, check, test-unit (`--unit --types`), test-integration, docgen (affected/full switch), codegen. Lane-gate skips unaffected lanes on PRs. Check workflow wall ≈ 13–14 min.
 - Setup action: bun install cache (`~/.bun/install/cache`, key = bun.lock hash) + timing metadata to step summary.
 - Existing timing substrate: turbo `--summarize` JSON per task (start/end, cache status local/remote) + `beep ci append-turbo-summary`; fallow per-lane `$SECONDS`; **no yeet phase-duration surface** (AIMetrics is external-metrics only).
