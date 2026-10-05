@@ -5,13 +5,13 @@
     "title": "Document AST Pattern Classification",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-10-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/document-ast-pattern-classification",
   "lifecycle": "active",
   "mission": "Classify Md, Pandoc, and Lexical constructors with schema-truth PO annotations and derived conservation proof.",
-  "statusNote": "Graduated second from document-structure-ontologies; campaign delivery follows patent-document-schema.",
+  "statusNote": "Graduated second from document-structure-ontologies; P0-P2 landed 2026-10-05, PR in flight.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -41,6 +41,8 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
+    "research/INVENTORY.md",
+    "research/CORRESPONDENCE.md",
     "../../explorations/document-structure-ontologies/research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -53,11 +55,31 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "pending" },
-    { "id": "P1", "name": "Implement", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/document-ast-pattern-classification/GOAL.md)\" -le 4000",

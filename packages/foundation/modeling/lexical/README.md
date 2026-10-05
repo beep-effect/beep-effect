@@ -41,6 +41,14 @@ md-core: `paragraph`, `heading`, `code`, `list`/`listitem`, `quote`, `link`,
 block. Mention and slash-command are composer affordances, not persisted
 blocks. Attachments and proposal blocks are named follow-ons.
 
+## Pattern Ontology classification
+
+Every `LexicalNode` member carries a `po` Pattern Ontology annotation
+(`@beep/schema/PatternOntology`). The codec has no issue channel, so the
+lossiness profile below is the explicit record of every pattern demotion:
+`test/Lexical.pattern-ontology.test.ts` states that profile as pattern
+transitions and fails on any pattern change outside it.
+
 ## Lossiness profile (locked)
 
 The codec profile was locked after running the Md ↔ Lexical lossiness check
