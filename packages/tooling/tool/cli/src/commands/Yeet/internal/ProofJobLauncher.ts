@@ -82,6 +82,8 @@ const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 200;
 // the lock proceeds unlocked: a duplicate monitor is cheaper than a publish with none.
 const READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS = 2400;
 const READY_MONITOR_SUBMIT_LOCK_FILE = "ready-monitor-submit.lock";
+// Same 25 ms cadence as the journal lock helper; paid between attempts, never while holding the lock.
+const READY_MONITOR_SUBMIT_LOCK_RETRY_PAUSE = Duration.millis(25);
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
@@ -178,8 +180,8 @@ export type ProofJobWaitResult = typeof ProofJobWaitResult.Type;
  * - `withReadyMonitorSubmitLock` serializes a publish's "is a readiness monitor
  *   already polling this pull request, else submit one" decision across
  *   processes in the checkout, so two concurrent publishes cannot both read an
- *   empty registry and both submit. A contender that cannot take the lock in
- *   about a minute warns and runs unlocked.
+ *   empty registry and both submit. A contender announces that it is waiting,
+ *   waits interruptibly, and after about a minute warns and runs unlocked.
  *
  * **Example** (Name a launcher operation)
  *
@@ -322,19 +324,29 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     Error,
     Requirements,
   >(operation: Effect.Effect<Value, Error, Requirements>) {
-    return yield* Effect.acquireUseRelease(
-      acquireJobsLock(READY_MONITOR_SUBMIT_LOCK_FILE, READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS).pipe(
-        Effect.tap((lock) =>
-          lock.owned
-            ? Effect.void
-            : Console.error(
-                "[yeet] warning: the readiness-monitor submit lock stayed busy; continuing without it (a duplicate monitor is possible; check `bun run beep yeet job list`)"
-              )
-        )
-      ),
-      () => operation,
+    // One short attempt per turn inside `acquireUseRelease`, whose acquire is
+    // uninterruptible: the lock is never held without its release registered.
+    // The pause between turns holds nothing and stays interruptible, so Ctrl-C
+    // lands within one pause instead of after the whole wait.
+    const attempt = Effect.acquireUseRelease(
+      acquireJobsLock(READY_MONITOR_SUBMIT_LOCK_FILE, 1),
+      (lock) => (lock.owned ? Effect.asSome(operation) : Effect.succeedNone),
       releaseJobsLock
     );
+    for (let turn = 0; turn < READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS; turn++) {
+      const ran = yield* attempt;
+      if (O.isSome(ran)) return ran.value;
+      if (turn === 0) {
+        yield* Console.error(
+          "[yeet] waiting for the readiness-monitor submit lock (another publish in this checkout holds it)"
+        );
+      }
+      yield* Effect.sleep(READY_MONITOR_SUBMIT_LOCK_RETRY_PAUSE);
+    }
+    yield* Console.error(
+      "[yeet] warning: the readiness-monitor submit lock stayed busy; continuing without it (a duplicate monitor is possible; check `bun run beep yeet job list`)"
+    );
+    return yield* operation;
   });
   const command = Effect.fn("ProofJob.command")(function* (exe: string, args: ReadonlyArray<string>) {
     const PATH = yield* configStringOption("PATH");

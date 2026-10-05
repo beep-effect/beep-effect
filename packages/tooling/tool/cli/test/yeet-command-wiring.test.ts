@@ -9,6 +9,7 @@ import {
   isLiveReadyMonitorJob,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+  ProofJobLauncher,
   ProofJobRecord,
   ProofJobRequest,
   ProofJobSubmitter,
@@ -23,13 +24,14 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Ref } from "effect";
+import { Cause, ConfigProvider, Effect, Fiber, FileSystem, Layer, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 import { TestClock } from "effect/testing";
+import * as TestConsole from "effect/testing/TestConsole";
 import type { YeetExecutedStep, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
@@ -840,6 +842,30 @@ it.layer(commandTestLayer, { timeout: "30 seconds" })("publish readiness-monitor
       );
       expect(A.filter(statuses, (skipped) => skipped)).toHaveLength(1);
       expect(statuses).toHaveLength(2);
+    })
+  );
+
+  // `TestClock.withLive` again: the contender's pause is a real 25 ms sleep.
+  it.effect(
+    "a contended submit lock announces the wait and interrupts within one pause",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-submit-lock-" });
+      const lockPath = `${root}/.beep/yeet/jobs/ready-monitor-submit.lock`;
+      const launcher = yield* ProofJobLauncher.make(root);
+      const holder = yield* Effect.forkScoped(launcher.withReadyMonitorSubmitLock(Effect.never));
+      yield* Effect.repeat(fs.exists(lockPath), { until: (exists) => exists }).pipe(TestClock.withLive);
+      const contender = yield* Effect.forkScoped(launcher.withReadyMonitorSubmitLock(Effect.void));
+      yield* Effect.sleep("150 millis").pipe(TestClock.withLive);
+      expect(yield* TestConsole.errorLines).toContainEqual(
+        expect.stringContaining("waiting for the readiness-monitor submit lock")
+      );
+      // The old shape sat in an uninterruptible acquire for about a minute.
+      const interrupted = yield* Effect.timeoutOption(Fiber.interrupt(contender), "2 seconds").pipe(TestClock.withLive);
+      expect(interrupted._tag).toBe("Some");
+      // The holder still owns the lock: the contender released nothing it did not take.
+      expect(yield* fs.exists(lockPath)).toBe(true);
+      yield* Fiber.interrupt(holder);
     })
   );
 

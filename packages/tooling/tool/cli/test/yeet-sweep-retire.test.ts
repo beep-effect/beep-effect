@@ -18,6 +18,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -261,6 +262,16 @@ const runRetireInvoker = Effect.fn("YeetRetireTest.runRetireInvoker")(function* 
 });
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
+  it.effect.prop(
+    "generated retire-invoker outcomes round-trip through the JSON line the invoker prints",
+    { outcome: Arbitrary.schema(RetireInvokerOutcome) },
+    ({ outcome }) =>
+      Effect.gen(function* () {
+        const line = yield* S.encodeEffect(S.fromJsonString(RetireInvokerOutcome))(outcome);
+        expect(yield* decodeRetireInvokerOutcome(line)).toEqual(outcome);
+      })
+  );
+
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
       Effect.gen(function* () {
