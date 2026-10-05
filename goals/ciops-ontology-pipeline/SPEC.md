@@ -86,16 +86,19 @@ Carried from the brief's rabbit holes:
 - **Two episode definitions.** This KPI opens at seat request, per (checkout, branch) and per
   tier; time-to-certainty's M1 is red-to-green per branch, cut at 24 h and uncut. The verdict
   states the mapping and never presents one as the other.
-- **Run 4 gate.** The pin requires time-to-certainty C4.1 checked and post-#1321 facts from
-  both local stages in the owning clone's proof ledger, read by a new ledger-capture
-  generator. Without them the pin lane records the census and stops. Realization and copy
-  legs stay flagged on C4.2 (graduation Ruling 1).
+- **Run 4 gate.** The pin requires time-to-certainty C4.1 checked and post-#1321 pre-push
+  facts in the fleet's owning-clone proof ledgers, read by a new ledger-capture generator
+  (P1 Rulings 1–2, 2026-10-05, amending graduation Ruling 1's "both local stages" clause:
+  the merged-preview stage has had no attempt since 2026-09-09). Without them the pin lane
+  records the census and stops. Realization and copy legs stay flagged on C4.2, and the
+  merged-preview issuance and custody legs stay flagged on the first post-#1321
+  merged-preview fact (graduation Ruling 1; P1 Ruling 1).
 - **Ledger population.** Only facts written inside a clone, or after #1321, survive in the
   owning clone. Shadow facts are issued, not realized; seats never read a would-reuse hit as
   a realized claim.
 - **Owning-clone capture.** Resolve the owning clone the way time-to-certainty ruling 71
-  does, without git; never walk sibling lanes' `.beep/` trees; never leak run ids that encode
-  host paths.
+  does, without git; every fleet clone is an owning clone and is read once (P1 Ruling 2);
+  never walk sibling lanes' `.beep/` trees; never leak run ids that encode host paths.
 - **Seats.** Every auditor seat, the blinded alternative included, runs on Opus 5.5 in an
   independent context; blinding is by withheld inputs. The run-4 launch entry records the
   deviation from skill v15's `codex exec` recipe; Codex or Grok seats run only on an operator

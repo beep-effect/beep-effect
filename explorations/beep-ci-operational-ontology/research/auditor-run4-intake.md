@@ -45,6 +45,15 @@ and custody legs read those rows through a NEW sibling proof-ledger capture gene
 pattern; Rulings 11 and 22). Every realization, copy or correction leg waits for time-to-certainty
 C4.2.
 
+**2026-10-05 addendum (goal P1 sitting, Rulings 1–2,
+`goals/ciops-ontology-pipeline/research/decisions.md`).** The pin lane's census found 3,442
+post-#1321 `ProofFact` rows in eight fleet clones, every one `pre-push`, and no `merged-preview`
+fact or attempt since 2026-09-09. The gate's ledger half now reads: C4.1 checked AND post-#1321
+pre-push facts in the fleet's owning-clone ledgers, each clone read once and no lane `.beep/`
+tree read. Issuance and custody discharge against those rows; the merged-preview legs of
+rat-047/048/051/052 stay flagged on the first post-#1321 merged-preview fact, beside the C4.2
+legs.
+
 ## Prior-run chain (validator-enforced)
 
 The run manifest must carry exactly:
