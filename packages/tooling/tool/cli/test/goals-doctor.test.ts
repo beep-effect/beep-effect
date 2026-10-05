@@ -174,21 +174,21 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         yield* writeActivePacket("mentioned");
         yield* runGit(["add", "."]);
         yield* runGit(["commit", "-m", "chore(demo): mention mentioned in passing"], oldEnv);
-        // Cited by a squash subject only inside another word, and only by a
+        // Cited by a squash subject only inside a longer hyphenated token, and only by a
         // PR number that merely contains the one it recorded: neither is a citation.
-        yield* writeActivePacket("ship");
+        yield* writeActivePacket("cargo");
         yield* writeProjectFile(
-          "goals/ship/ops/manifest.json",
+          "goals/cargo/ops/manifest.json",
           `${encodeJson({
             schemaVersion: "initiative-manifest/v2",
-            initiative: { id: "ship", title: "ship", status: "active" },
+            initiative: { id: "cargo", title: "cargo", status: "active" },
             lifecycle: "active",
             completionGate: COMPLETION_GATE,
             mergedPullRequest: 7,
           })}\n`
         );
         yield* runGit(["add", "."]);
-        yield* runGit(["commit", "-m", "feat(demo): ship shipment (#70)"], oldEnv);
+        yield* runGit(["commit", "-m", "feat(demo): ship cargo-bay (#70)"], oldEnv);
         // Cited by a squash subject but touched inside the window: not stale.
         yield* writeActivePacket("fresh");
         yield* runGit(["add", "."]);
@@ -198,8 +198,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         expect(output).not.toContain("shipped [stale-active]");
         expect(output).toContain("mentioned [stale-active]");
         expect(output).not.toContain("mentioned [active-after-merge]");
-        expect(output).toContain("ship [stale-active]");
-        expect(output).not.toContain("ship [active-after-merge]");
+        expect(output).toContain("cargo [stale-active]");
+        expect(output).not.toContain("cargo [active-after-merge]");
         expect(output).not.toContain("fresh [active-after-merge]");
         expect(output).not.toContain("fresh [stale-active]");
       }),
