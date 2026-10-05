@@ -53,6 +53,8 @@ export const OcctErrorReason = OcctErrorReasonBase.pipe(
  */
 export type OcctErrorReason = typeof OcctErrorReason.Type;
 
+// shared error-boundary idiom; no in-family home, future foundation capability candidate.
+// fallow-ignore-next-line code-duplication -- shared error-boundary idiom; no in-family home, future foundation capability candidate
 const causeText = (cause: unknown): O.Option<string> =>
   P.isString(cause) ? O.some(cause) : P.isError(cause) ? O.some(cause.message) : O.none();
 

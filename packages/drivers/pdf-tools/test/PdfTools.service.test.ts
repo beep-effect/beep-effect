@@ -4,10 +4,11 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Sink, Stream } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import type * as PlatformError from "effect/PlatformError";
 
 const encoder = new TextEncoder();
 
@@ -62,14 +63,38 @@ const makeHandle = (exitCode: number, stderr = ""): ChildProcessSpawner.ChildPro
 
 // Fake rsvg-convert writes a byte-sized "PDF"; fake pdftoppm writes the PPM
 // fixture at the requested prefix.
+// Fake rsvg-convert writes a one-page PDF at the `--output` path; fake pdftoppm (not `-png`)
+// writes the PPM fixture at the requested prefix.
+const fakeOutputs = (
+  fs: FileSystem.FileSystem,
+  command: ChildProcess.StandardCommand
+): Effect.Effect<void, PlatformError.PlatformError> => {
+  if (command.command === "rsvg-convert") {
+    return pipe(
+      A.get(command.args, 3),
+      O.match({
+        onNone: () => Effect.void,
+        onSome: (output) => blankPage.pipe(Effect.flatMap((bytes) => fs.writeFile(output, bytes))),
+      })
+    );
+  }
+  if (command.command === "pdftoppm" && !A.contains(command.args, "-png")) {
+    return pipe(
+      A.last(command.args),
+      O.match({ onNone: () => Effect.void, onSome: (prefix) => fs.writeFile(`${prefix}.ppm`, ppmFixture) })
+    );
+  }
+  return Effect.void;
+};
+
 const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       return ChildProcessSpawner.ChildProcessSpawner.of(
-        ChildProcessSpawner.make((command) =>
-          Effect.gen(function* () {
+        ChildProcessSpawner.make(
+          Effect.fnUntraced(function* (command) {
             if (!ChildProcess.isStandardCommand(command)) {
               return makeHandle(1, "unsupported command");
             }
@@ -77,18 +102,7 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
             if (exitCode !== 0) {
               return makeHandle(exitCode, "tool stderr");
             }
-            if (command.command === "rsvg-convert") {
-              const output = A.get(command.args, 3);
-              if (O.isSome(output)) {
-                yield* fs.writeFile(output.value, yield* blankPage);
-              }
-            }
-            if (command.command === "pdftoppm" && !A.contains(command.args, "-png")) {
-              const prefix = A.last(command.args);
-              if (O.isSome(prefix)) {
-                yield* fs.writeFile(`${prefix.value}.ppm`, ppmFixture);
-              }
-            }
+            yield* fakeOutputs(fs, command);
             return makeHandle(0);
           })
         )

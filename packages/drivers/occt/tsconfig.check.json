@@ -3,6 +3,9 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../../foundation/capability/technical-drawing/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

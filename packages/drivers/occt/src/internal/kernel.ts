@@ -10,9 +10,9 @@ import { A, N, O } from "@beep/utils";
 import { Order, pipe } from "effect";
 import * as replicad from "replicad";
 import { OcctError } from "../Occt.errors.ts";
-import { BoundingBox, EdgeSet, Primitive, SolidSummary } from "../Occt.models.ts";
+import { BoundingBox, EdgeSet, ModelSummary, Primitive } from "../Occt.models.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
-import type { Camera, Rotation, Segment2, SolidSpec } from "../Occt.models.ts";
+import type { Camera, ModelSpec, Rotation, Segment2 } from "../Occt.models.ts";
 
 type Shape3D = replicad.Shape3D;
 type AnyShape = replicad.AnyShape;
@@ -68,7 +68,7 @@ const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primit
  *
  * @internal
  */
-export const buildCompound = (spec: SolidSpec): { readonly compound: Shape3D } => {
+export const buildCompound = (spec: ModelSpec): { readonly compound: Shape3D } => {
   const parts = spec.parts.map((part) => buildPart(part.add, part.subtract));
   const compound = A.length(parts) === 1 ? parts[0] : replicad.makeCompound(parts);
   if (!(compound instanceof replicad.Compound || compound instanceof replicad.Solid)) {
@@ -87,9 +87,9 @@ export const buildCompound = (spec: SolidSpec): { readonly compound: Shape3D } =
  *
  * @internal
  */
-export const summarize = (built: ReturnType<typeof buildCompound>): SolidSummary => {
+export const summarize = (built: ReturnType<typeof buildCompound>): ModelSummary => {
   const [min, max] = built.compound.boundingBox.bounds;
-  return SolidSummary.make({
+  return ModelSummary.make({
     boundingBox: BoundingBox.make({
       min: [round(min[0]), round(min[1]), round(min[2])],
       max: [round(max[0]), round(max[1]), round(max[2])],

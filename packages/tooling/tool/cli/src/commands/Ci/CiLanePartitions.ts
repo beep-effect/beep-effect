@@ -214,6 +214,9 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     weightSeconds: 1132,
     packages: [
       "@beep/repo-cli",
+      "@beep/occt",
+      "@beep/pdf-tools",
+      "@beep/technical-drawing",
       "@beep/types",
       "@beep/colors",
       "@beep/obs",
@@ -379,6 +382,9 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     weightSeconds: 1214,
     packages: [
       "@beep/professional-desktop",
+      "@beep/occt",
+      "@beep/pdf-tools",
+      "@beep/technical-drawing",
       "@beep/lexical-schema",
       "@beep/repo-utils",
       "@beep/observability",

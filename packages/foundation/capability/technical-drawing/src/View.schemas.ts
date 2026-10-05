@@ -7,11 +7,11 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
-import { Camera, ModelSpec } from "./Geometry.schemas.ts";
+import { BoundingBox, Camera, ModelSpec } from "./Geometry.schemas.ts";
 import type { Vec3 } from "./Geometry.schemas.ts";
 
 const $I = $TechnicalDrawingId.create("View.schemas");
@@ -92,6 +92,36 @@ const orthographic = (eye: Vec3, up: Vec3) => Camera.make({ eye, up });
 export const isPerspectiveView = S.is(ViewName.pick(["top-perspective", "bottom-perspective"]));
 
 /**
+ * Input of {@link cameraForView}: the view and the model's bounding box.
+ *
+ * **Example** (Make an input)
+ *
+ * ```ts
+ * import { BoundingBox, CameraForViewInput } from "@beep/technical-drawing"
+ *
+ * console.log(CameraForViewInput.make({ view: "front", box: BoundingBox.make({ min: [0, 0, 0], max: [1, 1, 1] }) }).view)
+ * ```
+ *
+ * @category views
+ * @since 0.0.0
+ */
+export class CameraForViewInput extends S.Class<CameraForViewInput>($I`CameraForViewInput`)(
+  {
+    view: ViewName.annotateKey({ description: "View to frame." }),
+    box: BoundingBox.annotateKey({ description: "Bounding box of the model." }),
+  },
+  $I.annote("CameraForViewInput", {
+    description: "View name and model bounding box.",
+  })
+) {}
+
+const CameraForView = Fn({ input: CameraForViewInput, output: Camera }).pipe(
+  $I.annoteSchema("CameraForView", {
+    description: "Schema-backed camera for a standard view framed on a bounding box.",
+  })
+);
+
+/**
  * Camera for a view, framed on a model's bounding box.
  *
  * **Details**
@@ -112,12 +142,8 @@ export const isPerspectiveView = S.is(ViewName.pick(["top-perspective", "bottom-
  * @category views
  * @since 0.0.0
  */
-export const cameraForView = (input: {
-  readonly view: ViewName;
-  readonly box: { readonly min: Vec3; readonly max: Vec3 };
-}): Camera => {
-  const { view, box } = input;
-  return ViewName.$match(view, {
+export const cameraForView: (input: CameraForViewInput) => Camera = CameraForView.implementSync(({ view, box }) =>
+  ViewName.$match(view, {
     "top-plan": () => orthographic([0, 0, 1], [0, 1, 0]),
     "bottom-plan": () => orthographic([0, 0, -1], [0, 1, 0]),
     front: () => orthographic([0, -1, 0], [0, 0, 1]),
@@ -126,10 +152,10 @@ export const cameraForView = (input: {
     right: () => orthographic([1, 0, 0], [0, 0, 1]),
     "top-perspective": () => perspective(box, 1),
     "bottom-perspective": () => perspective(box, -1),
-  });
-};
+  })
+);
 
-const perspective = (box: { readonly min: Vec3; readonly max: Vec3 }, zSign: 1 | -1): Camera => {
+const perspective = (box: BoundingBox, zSign: 1 | -1): Camera => {
   const target: Vec3 = [(box.min[0] + box.max[0]) / 2, (box.min[1] + box.max[1]) / 2, (box.min[2] + box.max[2]) / 2];
   const diagonal = Math.hypot(box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]);
   return Camera.make({

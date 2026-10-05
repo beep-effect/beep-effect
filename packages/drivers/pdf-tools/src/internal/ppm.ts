@@ -8,11 +8,50 @@ import { O } from "@beep/utils";
 import { PdfToolsError } from "../PdfTools.errors.ts";
 import { PixelBox, RasterMetrics } from "../PdfTools.models.ts";
 
-const SPACE = 0x20;
-const NEWLINE = 0x0a;
 const HASH = 0x23;
+const NEWLINE = 0x0a;
+const ZERO = 0x30;
+const NINE = 0x39;
 
-const isWhitespace = (byte: number): boolean => byte === SPACE || byte === NEWLINE || byte === 0x0d || byte === 0x09;
+const parseError = (message: string): PdfToolsError => PdfToolsError.make({ reason: "parse", message });
+
+const isWhitespace = (byte: number): boolean => byte === 0x20 || byte === NEWLINE || byte === 0x0d || byte === 0x09;
+
+const isDigit = (byte: number): boolean => byte >= ZERO && byte <= NINE;
+
+const skipComment = (bytes: Uint8Array, start: number): number => {
+  let offset = start;
+  while (offset < bytes.length && bytes[offset] !== NEWLINE) {
+    offset += 1;
+  }
+  return offset;
+};
+
+// Advance past whitespace and `#` comments; return the first byte of the next token.
+const skipBlank = (bytes: Uint8Array, start: number): number => {
+  let offset = start;
+  while (offset < bytes.length) {
+    const byte = bytes[offset] ?? 0;
+    if (!isWhitespace(byte) && byte !== HASH) {
+      return offset;
+    }
+    offset = byte === HASH ? skipComment(bytes, offset) : offset + 1;
+  }
+  return offset;
+};
+
+const readNumber = (bytes: Uint8Array, start: number): { readonly value: number; readonly next: number } => {
+  let offset = start;
+  let value = 0;
+  while (offset < bytes.length && isDigit(bytes[offset] ?? 0)) {
+    value = value * 10 + ((bytes[offset] ?? 0) - ZERO);
+    offset += 1;
+  }
+  if (offset === start) {
+    throw parseError("Malformed PPM header.");
+  }
+  return { value, next: offset };
+};
 
 /**
  * Parse the P6 header: `P6 <width> <height> <maxval>` with optional `#`
@@ -24,43 +63,93 @@ export const parseP6Header = (
   bytes: Uint8Array
 ): { readonly width: number; readonly height: number; readonly offset: number } => {
   if (bytes[0] !== 0x50 || bytes[1] !== 0x36) {
-    throw PdfToolsError.make({ reason: "parse", message: "Expected a binary PPM (P6) header." });
+    throw parseError("Expected a binary PPM (P6) header.");
   }
-  let offset = 2;
-  const fields: Array<number> = [];
-  while (fields.length < 3) {
-    while (offset < bytes.length && isWhitespace(bytes[offset]!)) {
-      offset += 1;
-    }
-    if (bytes[offset] === HASH) {
-      while (offset < bytes.length && bytes[offset] !== NEWLINE) {
-        offset += 1;
-      }
-      continue;
-    }
-    let value = 0;
-    let digits = 0;
-    while (offset < bytes.length && bytes[offset]! >= 0x30 && bytes[offset]! <= 0x39) {
-      value = value * 10 + (bytes[offset]! - 0x30);
-      offset += 1;
-      digits += 1;
-    }
-    if (digits === 0) {
-      throw PdfToolsError.make({ reason: "parse", message: "Malformed PPM header." });
-    }
-    fields.push(value);
-  }
-  if (fields[2] !== 255) {
-    throw PdfToolsError.make({ reason: "parse", message: `Unsupported PPM maxval ${fields[2]}; expected 255.` });
+  const width = readNumber(bytes, skipBlank(bytes, 2));
+  const height = readNumber(bytes, skipBlank(bytes, width.next));
+  const maxval = readNumber(bytes, skipBlank(bytes, height.next));
+  if (maxval.value !== 255) {
+    throw parseError(`Unsupported PPM maxval ${maxval.value}; expected 255.`);
   }
   // Exactly one whitespace byte separates the header from the raster.
-  offset += 1;
-  const width = fields[0]!;
-  const height = fields[1]!;
-  if (bytes.length < offset + width * height * 3) {
-    throw PdfToolsError.make({ reason: "parse", message: "PPM raster is shorter than its header declares." });
+  const offset = maxval.next + 1;
+  if (bytes.length < offset + width.value * height.value * 3) {
+    throw parseError("PPM raster is shorter than its header declares.");
   }
-  return { width, height, offset };
+  return { width: width.value, height: height.value, offset };
+};
+
+// Rec. 601 luma, integer arithmetic.
+const luma = (r: number, g: number, b: number): number => (r * 299 + g * 587 + b * 114) / 1000;
+
+// Running measurements over one raster; mutated per pixel for speed.
+class Tally {
+  minX: number;
+  minY: number;
+  maxX = -1;
+  maxY = -1;
+  inkPixels = 0;
+  impurePixels = 0;
+  chromaPixels = 0;
+  largest = 0;
+
+  constructor(width: number, height: number) {
+    this.minX = width;
+    this.minY = height;
+  }
+
+  purity(r: number, g: number, b: number): void {
+    if (r !== g || g !== b) {
+      this.chromaPixels += 1;
+      this.impurePixels += 1;
+    } else if (r !== 0 && r !== 255) {
+      this.impurePixels += 1;
+    }
+  }
+
+  ink(x: number, y: number, side: number): void {
+    this.inkPixels += 1;
+    this.minX = Math.min(this.minX, x);
+    this.maxX = Math.max(this.maxX, x);
+    this.minY = Math.min(this.minY, y);
+    this.maxY = Math.max(this.maxY, y);
+    this.largest = Math.max(this.largest, side);
+  }
+}
+
+// Side of the largest all-ink square ending at column x, from the previous row's values.
+const squareSide = (previous: Uint16Array, current: Uint16Array, x: number): number =>
+  Math.min(previous[x] ?? 0, previous[x + 1] ?? 0, current[x] ?? 0) + 1;
+
+// Measure one pixel: purity always, ink bounds and square when dark enough.
+const measurePixel = (row: RowScan, x: number): void => {
+  const i = row.rowStart + x * 3;
+  const r = row.bytes[i] ?? 0;
+  const g = row.bytes[i + 1] ?? 0;
+  const b = row.bytes[i + 2] ?? 0;
+  row.tally.purity(r, g, b);
+  const side = luma(r, g, b) <= row.blackThreshold ? squareSide(row.previous, row.current, x) : 0;
+  row.current[x + 1] = side;
+  if (side > 0) {
+    row.tally.ink(x, row.y, side);
+  }
+};
+
+type RowScan = {
+  readonly bytes: Uint8Array;
+  readonly rowStart: number;
+  readonly y: number;
+  readonly previous: Uint16Array;
+  readonly current: Uint16Array;
+  readonly tally: Tally;
+  readonly blackThreshold: number;
+};
+
+const measureRow = (row: RowScan): void => {
+  const width = row.current.length - 1;
+  for (let x = 0; x < width; x += 1) {
+    measurePixel(row, x);
+  }
 };
 
 /**
@@ -75,45 +164,11 @@ export const measureP6 = (options: {
 }): RasterMetrics => {
   const { bytes, dpi, blackThreshold } = options;
   const { width, height, offset } = parseP6Header(bytes);
-  let minX = width;
-  let minY = height;
-  let maxX = -1;
-  let maxY = -1;
-  let inkPixels = 0;
-  let impurePixels = 0;
-  let chromaPixels = 0;
-  let largest = 0;
-  // Dynamic-programming rows for the largest all-ink square ending at (x, y).
+  const tally = new Tally(width, height);
   let previous = new Uint16Array(width + 1);
   let current = new Uint16Array(width + 1);
   for (let y = 0; y < height; y += 1) {
-    const rowStart = offset + y * width * 3;
-    for (let x = 0; x < width; x += 1) {
-      const i = rowStart + x * 3;
-      const r = bytes[i]!;
-      const g = bytes[i + 1]!;
-      const b = bytes[i + 2]!;
-      if (r !== g || g !== b) {
-        chromaPixels += 1;
-        impurePixels += 1;
-      } else if (r !== 0 && r !== 255) {
-        impurePixels += 1;
-      }
-      // Rec. 601 luma, integer arithmetic.
-      const luma = (r * 299 + g * 587 + b * 114) / 1000;
-      if (luma <= blackThreshold) {
-        inkPixels += 1;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
-        const side = Math.min(previous[x]!, previous[x + 1]!, current[x]!) + 1;
-        current[x + 1] = side;
-        if (side > largest) largest = side;
-      } else {
-        current[x + 1] = 0;
-      }
-    }
+    measureRow({ bytes, rowStart: offset + y * width * 3, y, previous, current, tally, blackThreshold });
     const swap = previous;
     previous = current;
     current = swap;
@@ -123,10 +178,13 @@ export const measureP6 = (options: {
     width,
     height,
     dpi,
-    inkBox: maxX < 0 ? O.none() : O.some(PixelBox.make({ minX, minY, maxX, maxY })),
-    inkPixels,
-    impurePixels,
-    chromaPixels,
-    largestBlackSquare: largest,
+    inkBox:
+      tally.maxX < 0
+        ? O.none()
+        : O.some(PixelBox.make({ minX: tally.minX, minY: tally.minY, maxX: tally.maxX, maxY: tally.maxY })),
+    inkPixels: tally.inkPixels,
+    impurePixels: tally.impurePixels,
+    chromaPixels: tally.chromaPixels,
+    largestBlackSquare: tally.largest,
   });
 };

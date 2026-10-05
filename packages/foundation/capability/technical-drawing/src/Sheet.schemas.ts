@@ -6,7 +6,7 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -52,6 +52,15 @@ export const SheetFormat = SheetFormatBase.pipe(
  */
 export type SheetFormat = typeof SheetFormat.Type;
 
+const PositiveFinite = S.Finite.check(
+  S.isGreaterThan(0, {
+    identifier: $I`PositiveFiniteCheck`,
+    title: "Positive Finite",
+    description: "Page dimensions are strictly positive.",
+    message: "Expected a strictly positive number",
+  })
+);
+
 /**
  * Points per centimetre.
  *
@@ -69,6 +78,36 @@ export const PT_PER_CM = 72 / 2.54;
 export const PT_PER_MM = PT_PER_CM / 10;
 
 /**
+ * Page size in points.
+ *
+ * **Example** (Letter)
+ *
+ * ```ts
+ * import { PagePoints } from "@beep/technical-drawing"
+ *
+ * console.log(PagePoints.make({ width: 612, height: 792 }))
+ * ```
+ *
+ * @category sheets
+ * @since 0.0.0
+ */
+export class PagePoints extends S.Class<PagePoints>($I`PagePoints`)(
+  {
+    width: PositiveFinite.annotateKey({ description: "Page width in points." }),
+    height: PositiveFinite.annotateKey({ description: "Page height in points." }),
+  },
+  $I.annote("PagePoints", {
+    description: "Page width and height in points.",
+  })
+) {}
+
+const PageSizePt = Fn({ input: SheetFormat, output: PagePoints }).pipe(
+  $I.annoteSchema("PageSizePt", {
+    description: "Schema-backed page size of a sheet format in points.",
+  })
+);
+
+/**
  * Page size of a format in points.
  *
  * **Example** (Letter in points)
@@ -82,11 +121,12 @@ export const PT_PER_MM = PT_PER_CM / 10;
  * @category sheets
  * @since 0.0.0
  */
-export const pageSizePt = (format: SheetFormat): { readonly width: number; readonly height: number } =>
+export const pageSizePt: (format: SheetFormat) => PagePoints = PageSizePt.implementSync((format) =>
   SheetFormat.$match(format, {
-    letter: () => ({ width: 612, height: 792 }),
-    a4: () => ({ width: 21 * PT_PER_CM, height: 29.7 * PT_PER_CM }),
-  });
+    letter: () => PagePoints.make({ width: 612, height: 792 }),
+    a4: () => PagePoints.make({ width: 21 * PT_PER_CM, height: 29.7 * PT_PER_CM }),
+  })
+);
 
 /**
  * Minimum margins of 37 CFR 1.84(g), in centimetres.

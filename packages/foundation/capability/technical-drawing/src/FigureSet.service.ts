@@ -85,6 +85,8 @@ export interface FigureSetShape {
   readonly validate: (pdfPath: string, options: ValidationOptions) => Effect.Effect<ValidationReport, DrawingError>;
 }
 
+// shared digest idiom with @beep/occt; no in-family home, future foundation capability candidate.
+// fallow-ignore-next-line code-duplication -- shared digest idiom; no in-family home, future foundation capability candidate
 const hexOf = (bytes: ArrayBuffer): string =>
   pipe(
     A.fromIterable(new Uint8Array(bytes)),
@@ -141,9 +143,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
   });
 
   const render = Effect.fn("FigureSet.render")(function* (request: RenderRequest) {
-    const specBytes = yield* fs
-      .readFile(request.specPath)
-      .pipe(Effect.mapError(io(`Could not read "${request.specPath}".`)));
+    const specPath = path.resolve(request.specPath);
+    const specBytes = yield* fs.readFile(specPath).pipe(Effect.mapError(io(`Could not read "${specPath}".`)));
     const specSha256 = yield* sha256(specBytes);
     const spec = yield* decodeSpec(new TextDecoder().decode(specBytes)).pipe(
       Effect.mapError((cause) => DrawingError.fromUnknown("spec", `Invalid figure-set spec "${specPath}".`, cause))

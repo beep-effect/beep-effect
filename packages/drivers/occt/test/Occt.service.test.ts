@@ -1,4 +1,4 @@
-import { Box, Camera, Occt, OcctError, Part, Prism, ProjectionRequest, SolidSpec } from "@beep/occt";
+import { Box, Camera, ModelSpec, Occt, OcctError, Part, Prism, ProjectionRequest } from "@beep/occt";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -9,7 +9,7 @@ import * as O from "effect/Option";
 
 // A 40 × 30 × 20 box with an off-centre wedge on top, so no two principal
 // views coincide and the top/bottom distinction is observable.
-const fixture = SolidSpec.make({
+const fixture = ModelSpec.make({
   parts: [
     Part.make({
       name: "body",

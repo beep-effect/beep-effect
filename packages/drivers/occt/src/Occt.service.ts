@@ -15,14 +15,14 @@ import * as replicad from "replicad";
 import opencascade from "replicad-opencascadejs";
 import { buildCompound, project, summarize } from "./internal/kernel.ts";
 import { OcctError } from "./Occt.errors.ts";
-import { KernelInfo, ProjectionRequest, SolidSpec } from "./Occt.models.ts";
+import { KernelInfo, ModelSpec, ProjectionRequest } from "./Occt.models.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
-import type { EdgeSet, SolidSummary } from "./Occt.models.ts";
+import type { EdgeSet, ModelSummary } from "./Occt.models.ts";
 
 const $I = $OcctId.create("Occt.service");
 const require = createRequire(import.meta.url);
 const validateProjectionRequest = S.decodeUnknownEffect(S.toType(ProjectionRequest));
-const validateSolidSpec = S.decodeUnknownEffect(S.toType(SolidSpec));
+const validateModelSpec = S.decodeUnknownEffect(S.toType(ModelSpec));
 const PackageVersion = S.fromJsonString(S.Struct({ version: S.NonEmptyString }));
 const decodePackageVersion = S.decodeUnknownEffect(PackageVersion);
 
@@ -49,9 +49,11 @@ const decodePackageVersion = S.decodeUnknownEffect(PackageVersion);
 export interface OcctShape {
   readonly kernel: Effect.Effect<KernelInfo, OcctError>;
   readonly project: (request: ProjectionRequest) => Effect.Effect<ReadonlyArray<EdgeSet>, OcctError>;
-  readonly summarize: (solid: SolidSpec) => Effect.Effect<SolidSummary, OcctError>;
+  readonly summarize: (solid: ModelSpec) => Effect.Effect<ModelSummary, OcctError>;
 }
 
+// shared digest idiom with @beep/technical-drawing; no in-family home, future foundation capability candidate.
+// fallow-ignore-next-line code-duplication -- shared digest idiom; no in-family home, future foundation capability candidate
 const hexOf = (bytes: ArrayBuffer): string =>
   pipe(
     A.fromIterable(new Uint8Array(bytes)),
@@ -89,15 +91,15 @@ const loadKernel = Effect.fn("Occt.loadKernel")(function* () {
 const makeService = Effect.fn("Occt.makeService")(function* () {
   const { oc, kernel } = yield* loadKernel();
 
-  const build = (solid: SolidSpec) =>
+  const build = (solid: ModelSpec) =>
     Effect.try({
       try: () => buildCompound(solid),
       catch: (cause) => OcctError.fromUnknown("solid-build", "The kernel could not build the solid.", cause),
     });
 
-  const summarizeSolid = Effect.fn("Occt.summarize")(function* (rawSolid: SolidSpec) {
-    const solid = yield* validateSolidSpec(rawSolid).pipe(
-      Effect.mapError((cause) => OcctError.fromUnknown("invalid-request", "Invalid solid spec.", cause))
+  const summarizeModel = Effect.fn("Occt.summarize")(function* (rawModel: ModelSpec) {
+    const solid = yield* validateModelSpec(rawModel).pipe(
+      Effect.mapError((cause) => OcctError.fromUnknown("invalid-request", "Invalid model spec.", cause))
     );
     const built = yield* build(solid);
     return yield* Effect.try({
@@ -122,7 +124,7 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
   return {
     kernel: Effect.succeed(kernel),
     project: projectViews,
-    summarize: summarizeSolid,
+    summarize: summarizeModel,
   } satisfies OcctShape;
 });
 
