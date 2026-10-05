@@ -84,8 +84,8 @@ files), `archived_in` (document→email_archive), `continuation_of`
 docket documents mention the number; never membership).
 
 Membership of an anchor (`files_as`) exists only when the anchor's number is
-mentioned by exactly one keyed family's docket documents — file-name mention
-first, then text (D-11c). `corpus_enrichment.docket_families` is read into the
+mentioned by exactly one family's docket documents — file names and text
+counted together — and that family is client-keyed (D-11c). `corpus_enrichment.docket_families` is read into the
 DuckDB `enrichment` table for reference but never creates families or edges.
 
 Node counts (2026-10-05-01 rebuild): 31 clients · 174 families (147

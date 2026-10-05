@@ -28,7 +28,7 @@ WITH applications AS (
   WHERE p.kind = 'patent' AND p.natural_key = $2
   UNION
   SELECT e.object_iri FROM kg_node d JOIN kg_edge e ON e.subject_iri = d.iri AND e.predicate = 'files_as'
-  WHERE d.kind = 'docket' AND d.natural_key = $3
+  WHERE d.kind = 'docket' AND (d.natural_key = $3 OR d.natural_key LIKE '%.' || $3)
 ),
 related AS (
   SELECT iri FROM applications
@@ -131,9 +131,11 @@ documents AS (
 )
 SELECT f.natural_key AS family, d.natural_key AS docket, a.natural_key AS application,
   p.natural_key AS patent, doc.natural_key AS "documentDigest", doc.label AS "documentLabel",
-  (SELECT COUNT(*)::FLOAT8 FROM dockets) AS "docketCount",
-  (SELECT COUNT(*)::FLOAT8 FROM applications) AS "applicationCount",
-  (SELECT COUNT(*)::FLOAT8 FROM documents) AS "documentCount"
+  (SELECT COUNT(*)::FLOAT8 FROM dockets dc WHERE dc.family_iri = f.iri) AS "docketCount",
+  (SELECT COUNT(DISTINCT ap.iri)::FLOAT8 FROM applications ap
+    JOIN dockets dc ON dc.iri = ap.docket_iri WHERE dc.family_iri = f.iri) AS "applicationCount",
+  (SELECT COUNT(*)::FLOAT8 FROM documents dm
+    JOIN dockets dc ON dc.iri = dm.docket_iri WHERE dc.family_iri = f.iri) AS "documentCount"
 FROM family f
 LEFT JOIN dockets d ON d.family_iri = f.iri
 LEFT JOIN applications a ON a.docket_iri = d.iri

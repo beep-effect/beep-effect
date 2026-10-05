@@ -42,23 +42,26 @@ Drizzle column equality including the new columns. The claims test pins
 ## Workstation rebuild (real corpus, base run, emails included)
 
 `bun run apps/practice-kg-mcp/src/build.ts --corpus-root <corpus> --bundle-out
-<corpus>/staging/practice-kg-bundle-p6 --overwrite` — 7 min 08 s wall clock.
+<corpus>/staging/practice-kg-bundle-p6 --overwrite` — about 7 minutes wall clock.
+Numbers below are from the rebuild after the review fixes (graph store format 2).
 The shipped `practice-kg-bundle` was left in place (see "Not done").
 
 | Count | 2026-07-27-01 (shipped) | 2026-10-05-01 (P6) |
 | --- | --- | --- |
 | documents / emails | 7,330 / 118,771 | 7,330 / 118,771 |
 | nodes | 8,092 | 8,249 |
-| edges | 2,799 | 1,766 |
+| edges | 2,799 | 1,761 |
 | `docket_family` nodes | 105 (bare) | 174 = 147 client-keyed + 27 bare remainders |
 | `client` nodes | 1 (client map) | 31 |
 | `docket` nodes | 385 | 442 (client-keyed) |
-| `files_as` edges | cartesian (90 rows / 8 dockets in G-1) | 79; max 4 applications per family; 0 applications filed from more than one family |
+| `files_as` edges | cartesian (90 rows / 8 dockets in G-1) | 74; max 4 applications per family; 0 applications filed from more than one family; 0 from an unattributed family |
 | `mentioned_in_family` edges | — | 246, all `mention-derived` |
 | documents labelled `recycled-unverified` | 0 | 274 (63 docket, 211 unsorted) |
+| spine nodes backed only by recycle stubs (`recycled-unverified`) | 0 | 7 families, 14 dockets, 2 clients |
+| anchors: member / mention-only | — | 41 / 49 |
 
 Attribution of the 643 docket documents: 345 `text-reference`, 169
-`family-consensus`, 129 file-name only (`filename` 123 / `restored-name` 6);
+`family-consensus`, 129 file-name only (`filename` 111 / `restored-name` 18);
 514 carry a client. Of the 105 bare families, 74 resolve to one client, 21 to
 several (max 16), 10 to none.
 
@@ -81,6 +84,30 @@ Exit criteria from `PLAN.md`:
 - **G-1/G-3 spot re-runs on the Windows target — pending** (needs the
   rebuilt bundle copied to the target and a fresh Claude Desktop chat with
   memory cleared; workstation has no Claude Desktop, D-10b).
+
+## Review wave (PR #1430, same day)
+
+Twelve reviewer threads reduced to nine defects, all fixed before the numbers
+above were taken:
+
+- `kg_docket_family` counts are now per matched family, not summed across
+  every family a bare number matches.
+- An anchor is a member only when exactly one family mentions it across file
+  names and text together, and that family is client-keyed; an unattributed
+  bare family never owns an anchor.
+- An anchor's own record replaces a parent stub minted earlier by a child's
+  `continuation_of`.
+- Family, docket, and client nodes whose only evidence is a recycle stub are
+  labelled `recycled-unverified`, not just the document.
+- Reference scans keep the docket code, so a document that cites another
+  client's matter under the same family number is attributed by the reference
+  naming its own docket.
+- The PGlite store format is versioned `2`; the host refuses an older bundle
+  with a message naming both formats instead of a generic invalid-manifest
+  error. The shipped `2026-07-27-01` bundle must be replaced together with
+  the server.
+- `kg_application_lookup` accepts a bare docket as well as a client-keyed one.
+- The rebuild-determinism test no longer depends on a frozen clock.
 
 ## Not done / operator decisions
 

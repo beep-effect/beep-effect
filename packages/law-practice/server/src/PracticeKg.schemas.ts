@@ -315,7 +315,7 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  * ```ts
  * import { PracticeKgSchemaVersions } from "@beep/law-practice-server"
  *
- * const versions = PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" })
+ * const versions = PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" })
  *
  * console.log(versions.duckdb) // "1"
  * ```
@@ -326,7 +326,7 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
 export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>($I`PracticeKgSchemaVersions`)(
   {
     duckdb: S.tag("1"),
-    pglite: S.tag("1"),
+    pglite: S.tag("2"),
   },
   $I.annote("PracticeKgSchemaVersions", {
     description: "Independent schema versions for the two embedded graph stores.",
@@ -436,7 +436,7 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *
@@ -542,7 +542,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *

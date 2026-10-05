@@ -211,24 +211,55 @@ const uniqueMember = (values: HashSet.HashSet<string>): O.Option<string> =>
 const sortedUnique = (values: Iterable<string>): ReadonlyArray<string> =>
   A.sort(A.dedupe(A.fromIterable(values)), Order.String);
 
+const sameDocket = (reference: string, docket: string): boolean =>
+  Str.startsWith(docket)(reference) || Str.startsWith(reference)(docket);
+
+/*
+ * A document may cite another client's matter that shares its bare family
+ * number. When the document has a docket code and some reference names that
+ * same docket, only those references are evidence; the rest are citations.
+ */
+const ownReferences = (
+  row: PracticeKgCatalogRow,
+  references: ReadonlyArray<PracticeKgDocketReferenceRow>
+): ReadonlyArray<PracticeKgDocketReferenceRow> => {
+  const { docket } = row;
+  if (docket === null) {
+    return references;
+  }
+  const own = A.filter(references, (reference) => sameDocket(reference.docket, Str.toUpperCase(docket)));
+  return A.isReadonlyArrayNonEmpty(own) ? own : references;
+};
+
 const clientsByDigestFor = (
   rowsByDigest: MutableHashMap.MutableHashMap<string, PracticeKgCatalogRow>,
   docketReferences: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
-  const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+  const referencesByDigest = MutableHashMap.empty<string, ReadonlyArray<PracticeKgDocketReferenceRow>>();
   A.forEach(docketReferences, (reference) => {
     const row = MutableHashMap.get(rowsByDigest, reference.digest);
     if (O.isSome(row) && row.value.docketFamily === reference.family) {
       MutableHashMap.set(
-        clients,
+        referencesByDigest,
         reference.digest,
-        HashSet.add(
+        A.append(
           pipe(
-            MutableHashMap.get(clients, reference.digest),
-            O.getOrElse(() => HashSet.empty<string>())
+            MutableHashMap.get(referencesByDigest, reference.digest),
+            O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
           ),
-          reference.client
+          reference
         )
+      );
+    }
+  });
+  const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+  MutableHashMap.forEach(referencesByDigest, (references, digest) => {
+    const row = MutableHashMap.get(rowsByDigest, digest);
+    if (O.isSome(row)) {
+      MutableHashMap.set(
+        clients,
+        digest,
+        HashSet.fromIterable(A.map(ownReferences(row.value, references), (reference) => reference.client))
       );
     }
   });
@@ -304,7 +335,9 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
  * restores the client dimension deterministically, with no model in the loop:
  *
  * 1. a document whose own text names exactly one `<client>.<family>` for its
- *    family takes that client (`text-reference`);
+ *    family takes that client (`text-reference`); when the text also cites
+ *    another client's matter under the same family number, references naming
+ *    the document's own docket code win over the citations;
  * 2. otherwise an organizer client-map value is used (`client-map`);
  * 3. otherwise, when every text-attributed, non-recycled document of the bare
  *    family agrees on one client, the document inherits it
@@ -481,12 +514,14 @@ export const reconcileAnchors = (
  * **Details**
  *
  * For each anchor the number mentions of non-recycled docket documents are
- * grouped by the document's keyed family. A file-name mention in exactly one
- * family makes the anchor a member of that family (`filename`); failing that, a
- * text mention in exactly one family does (`text-reference`). Any other shape —
- * no mention, or mentions spread over several families, which is what prior-art
- * citations produce — yields no membership and `mention` as the source. Member
- * dockets are the dockets of the member family's mentioning documents.
+ * grouped by the document's keyed family, file-name and text mentions together.
+ * The anchor is a member only when exactly one family mentions it and that
+ * family is client-keyed; the source is `filename` when a file name carries the
+ * number and `text-reference` otherwise. Any other shape — no mention, mentions
+ * spread over several families (what prior-art citations produce), or a sole
+ * mention by an unattributed bare family — yields no membership and `mention`
+ * as the source. Member dockets are the dockets of the member family's
+ * mentioning documents.
  *
  * **Example** (Resolve nothing)
  *
@@ -543,16 +578,24 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
         )
       );
     const filenameFamilies = familyKeysBySource("filename");
-    const textFamilies = familyKeysBySource("text");
-    const member: O.Option<{ readonly familyKey: string; readonly source: KgAttributionSource }> = pipe(
-      uniqueMember(filenameFamilies),
-      O.map((familyKey) => ({ familyKey, source: "filename" as const })),
-      O.orElse(() =>
-        pipe(
-          uniqueMember(textFamilies),
-          O.map((familyKey) => ({ familyKey, source: "text-reference" as const }))
+    // Membership needs one mentioning family across file names and text alike,
+    // and that family must be client-keyed: an unattributed remainder cannot own
+    // an anchor.
+    const clientKeyedFamilies = HashSet.fromIterable(
+      A.getSomes(
+        A.map(mentions, (mention) =>
+          mention.attribution.client === null ? O.none() : O.fromNullishOr(mention.attribution.familyKey)
         )
       )
+    );
+    const allFamilies = HashSet.union(filenameFamilies, familyKeysBySource("text"));
+    const member: O.Option<{ readonly familyKey: string; readonly source: KgAttributionSource }> = pipe(
+      uniqueMember(allFamilies),
+      O.filter((familyKey) => HashSet.has(clientKeyedFamilies, familyKey)),
+      O.map((familyKey) => ({
+        familyKey,
+        source: HashSet.has(filenameFamilies, familyKey) ? ("filename" as const) : ("text-reference" as const),
+      }))
     );
     const memberAttributions = O.match(member, {
       onNone: A.empty<PracticeKgDocumentAttribution>,

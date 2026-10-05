@@ -262,7 +262,10 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
       "INSERT INTO corpus_enrichment VALUES ('12345678', 'resolved', '87654321', '12345678', NULL, NULL, 'Fixture inventor', '20001', '')"
     );
     yield* db.run(
-      "INSERT INTO corpus_enrichment VALUES ('11223344', 'resolved', '11223344', NULL, 'Shared mention', NULL, NULL, '20001', '')"
+      "INSERT INTO corpus_enrichment VALUES ('11223344', 'resolved', '11223344', NULL, 'Shared mention', NULL, NULL, '20001', '87654321')"
+    );
+    yield* db.run(
+      "INSERT INTO corpus_enrichment VALUES ('55667788', 'resolved', '55667788', NULL, 'Bare family mention', NULL, NULL, '20001', '')"
     );
   }).pipe(withDuckDb(databasePath));
 });
@@ -323,9 +326,9 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-a.txt"),
-    `alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344`
+    `alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001EP09`
   );
-  yield* fs.writeFileString(path.join(textRoot, "operation:op-b.txt"), "family 20001 patent application");
+  yield* fs.writeFileString(path.join(textRoot, "operation:op-b.txt"), "family 20001 patent application 55/667,788");
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-c.txt"),
     `beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344`
@@ -447,7 +450,9 @@ const pgliteDump = Effect.fn("PracticeKgTest.pgliteDump")(function* (dataDir: st
       .unsafe("SELECT row_to_json(e)::text AS line FROM kg_edge e ORDER BY subject_iri, predicate, object_iri")
       .pipe(Effect.flatMap(decodeDumpLines));
     const buildRows = yield* sql
-      .unsafe("SELECT row_to_json(b)::text AS line FROM kg_build b ORDER BY bundle_version, built_from_runs, built_at")
+      .unsafe(
+        "SELECT row_to_json(b)::text AS line FROM (SELECT bundle_version, built_from_runs, counts, corpus_snapshot_at FROM kg_build ORDER BY bundle_version, built_from_runs) b"
+      )
       .pipe(Effect.flatMap(decodeDumpLines));
     return A.join(
       A.map(A.appendAll(A.appendAll(nodeRows, edgeRows), buildRows), (row) => row.line),
@@ -603,13 +608,16 @@ describe("practice KG projections", () => {
 
         expect(firstDuckDump).toBe(secondDuckDump);
         expect(firstPgliteDump).toBe(secondPgliteDump);
-        expect(firstManifest).toBe(secondManifest);
+        // `builtAt` is wall clock by design; every other manifest field must match.
+        const firstDecodedManifest = yield* decodeManifestJson(firstManifest);
+        const secondDecodedManifest = yield* decodeManifestJson(secondManifest);
+        expect({ ...firstDecodedManifest, builtAt: "" }).toStrictEqual({ ...secondDecodedManifest, builtAt: "" });
         expect(first.counts).toStrictEqual(second.counts);
         expect(first.counts.documents).toBe(6);
         expect(refresh.counts.documents).toBe(7);
         expect(first.counts.emails).toBe(3);
-        expect(first.counts.nodes).toBe(19);
-        expect(first.counts.edges).toBe(16);
+        expect(first.counts.nodes).toBe(20);
+        expect(first.counts.edges).toBe(18);
 
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
@@ -620,8 +628,8 @@ describe("practice KG projections", () => {
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(textLines, (row) => row.line)).toStrictEqual([
             `{"operation_id":"operation:op-d","text":"restored ${fixtureClients.alpha}.20001US03 letter"}`,
-            `{"operation_id":"operation:op-a","text":"alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344"}`,
-            '{"operation_id":"operation:op-b","text":"family 20001 patent application"}',
+            `{"operation_id":"operation:op-a","text":"alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001EP09"}`,
+            '{"operation_id":"operation:op-b","text":"family 20001 patent application 55/667,788"}',
             `{"operation_id":"operation:op-c","text":"beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344"}`,
           ]);
           const ftsDocLines = yield* db
@@ -653,6 +661,7 @@ describe("practice KG projections", () => {
           expect(A.headNonEmpty(provenanceRows).count).toBe(0);
           expect(A.map(iriRows, (row) => row.iri)).toStrictEqual([
             "https://ns.beep.sh/practice-kg/application/11223344",
+            "https://ns.beep.sh/practice-kg/application/55667788",
             "https://ns.beep.sh/practice-kg/application/76543210",
             "https://ns.beep.sh/practice-kg/application/87654321",
             `https://ns.beep.sh/practice-kg/docket_family/${fixtureClients.alpha}.20001`,
@@ -677,12 +686,13 @@ describe("practice KG projections", () => {
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(attributionLines, (row) => row.line)).toStrictEqual([
             '{"kind":"application","natural_key":"11223344","client":null,"docket_family":null,"attribution_source":"mention","epistemic_status":"derived-from-official-records"}',
+            '{"kind":"application","natural_key":"55667788","client":null,"docket_family":null,"attribution_source":"mention","epistemic_status":"derived-from-official-records"}',
             '{"kind":"application","natural_key":"76543210","client":null,"docket_family":null,"attribution_source":"official-record","epistemic_status":"derived-from-official-records"}',
             `{"kind":"application","natural_key":"87654321","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"client","natural_key":"${fixtureClients.alpha}","client":null,"docket_family":null,"attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"client","natural_key":"${fixtureClients.beta}","client":null,"docket_family":null,"attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"docket","natural_key":"${fixtureClients.alpha}.20001US01","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
-            `{"kind":"docket","natural_key":"${fixtureClients.alpha}.20001US03","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
+            `{"kind":"docket","natural_key":"${fixtureClients.alpha}.20001US03","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"recycled-unverified"}`,
             `{"kind":"docket","natural_key":"${fixtureClients.beta}.20001US02","client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             `{"kind":"docket_family","natural_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"text-reference","epistemic_status":"derived-from-official-records"}`,
             '{"kind":"docket_family","natural_key":"20001","client":null,"docket_family":"20001","attribution_source":"filename","epistemic_status":"derived-from-official-records"}',
@@ -701,9 +711,28 @@ describe("practice KG projections", () => {
           expect(A.map(anchorEdgeLines, (row) => row.line)).toStrictEqual([
             `{"subject_iri":"https://ns.beep.sh/practice-kg/application/11223344","predicate":"mentioned_in_family","object_iri":"https://ns.beep.sh/practice-kg/docket_family/${fixtureClients.alpha}.20001","epistemic_status":"mention-derived"}`,
             `{"subject_iri":"https://ns.beep.sh/practice-kg/application/11223344","predicate":"mentioned_in_family","object_iri":"https://ns.beep.sh/practice-kg/docket_family/${fixtureClients.beta}.20001","epistemic_status":"mention-derived"}`,
+            '{"subject_iri":"https://ns.beep.sh/practice-kg/application/55667788","predicate":"mentioned_in_family","object_iri":"https://ns.beep.sh/practice-kg/docket_family/20001","epistemic_status":"mention-derived"}',
             `{"subject_iri":"https://ns.beep.sh/practice-kg/application/87654321","predicate":"mentioned_in_family","object_iri":"https://ns.beep.sh/practice-kg/docket_family/${fixtureClients.alpha}.20001","epistemic_status":"mention-derived"}`,
             `{"subject_iri":"https://ns.beep.sh/practice-kg/docket/${fixtureClients.alpha}.20001US01","predicate":"files_as","object_iri":"https://ns.beep.sh/practice-kg/application/87654321","epistemic_status":"derived-from-official-records"}`,
           ]);
+          const familyCountLines = yield* sql
+            .unsafe(
+              `SELECT row_to_json(x)::text AS line FROM (SELECT DISTINCT family, "docketCount", "applicationCount", "documentCount" FROM (${PracticeKgQueries.family}) q ORDER BY family) x`,
+              ["20001"]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(familyCountLines, (row) => row.line)).toStrictEqual([
+            `{"family":"${fixtureClients.alpha}.20001","docketCount":2,"applicationCount":1,"documentCount":2}`,
+            '{"family":"20001","docketCount":0,"applicationCount":0,"documentCount":0}',
+            `{"family":"${fixtureClients.beta}.20001","docketCount":1,"applicationCount":0,"documentCount":1}`,
+          ]);
+          const bareDocketLines = yield* sql
+            .unsafe(
+              `SELECT row_to_json(x)::text AS line FROM (SELECT "naturalKey" FROM (${PracticeKgQueries.application}) q WHERE kind = 'application' ORDER BY "naturalKey") x`,
+              [null, null, "20001US01"]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(bareDocketLines, (row) => row.line)).toContain('{"naturalKey":"87654321"}');
           const buildLines = yield* sql
             .unsafe(
               "SELECT row_to_json(x)::text AS line FROM (SELECT bundle_version, built_from_runs, corpus_snapshot_at FROM kg_build) x"

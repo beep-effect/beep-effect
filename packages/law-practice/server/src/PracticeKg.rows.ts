@@ -146,8 +146,10 @@ export class PracticeKgEnrichmentRow extends S.Class<PracticeKgEnrichmentRow>($I
  *
  * Rows come from scanning the bundle's `document_text` for the practice's own
  * reference form `<client>.<docket><country><seq>`; only the numeric client
- * prefix and the family part are kept. A document contributes one row per
- * distinct `(client, family)` pair it mentions.
+ * prefix, the full docket code, and its family part are kept. A document
+ * contributes one row per distinct `(client, docket)` pair it mentions; the
+ * docket code is what lets attribution tell a document's own reference from a
+ * citation of another client's matter that shares the family number.
  *
  * **Example** (Decode docket reference row)
  *
@@ -158,6 +160,7 @@ export class PracticeKgEnrichmentRow extends S.Class<PracticeKgEnrichmentRow>($I
  * const row = S.decodeUnknownSync(PracticeKgDocketReferenceRow)({
  *   client: "12345",
  *   digest: "sha256:9f2c",
+ *   docket: "10008US01",
  *   family: "10008"
  * })
  *
@@ -173,6 +176,7 @@ export class PracticeKgDocketReferenceRow extends S.Class<PracticeKgDocketRefere
   {
     client: S.NonEmptyString,
     digest: S.NonEmptyString,
+    docket: S.NonEmptyString,
     family: S.NonEmptyString,
   },
   $I.annote("PracticeKgDocketReferenceRow", {

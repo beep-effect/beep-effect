@@ -32,15 +32,16 @@ WITH docket_text AS (
   WHERE d.category = 'docket' AND d.docket_family IS NOT NULL
 ),
 tokens AS (
-  SELECT digest, UNNEST(regexp_extract_all(text, '(?:^|[^0-9.])([0-9]{4,6}\\.[0-9]{5,6})(?:US|WO|EP|CA|AU|CN|JP|PCT)', 1)) AS token
+  SELECT digest, UNNEST(regexp_extract_all(text, '(?:^|[^0-9.])([0-9]{4,6}\\.[0-9]{5,6}(?:US|WO|EP|CA|AU|CN|JP|PCT)[0-9]{0,3})', 1)) AS token
   FROM docket_text
 )
 SELECT DISTINCT
   regexp_extract(token, '^([0-9]+)\\.', 1) AS client,
   digest,
-  regexp_extract(token, '\\.([0-9]+)$', 1) AS family
+  upper(regexp_extract(token, '\\.(.+)$', 1)) AS docket,
+  regexp_extract(token, '\\.([0-9]{5,6})', 1) AS family
 FROM tokens
-ORDER BY digest, client, family`;
+ORDER BY digest, client, docket, family`;
 
 /*
  * Application numbers appear as `14/783,547`; patent numbers as `10,252,356`,

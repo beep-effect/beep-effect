@@ -70,7 +70,8 @@ class ApplicationLookupParams extends S.Class<ApplicationLookupParams>($I`Applic
     patent_number: S.optionalKey(S.NonEmptyString),
   },
   $I.annote("ApplicationLookupParams", {
-    description: "Application lookup by application number, patent number, or docket.",
+    description:
+      "Application lookup by application number, patent number, or docket. A docket may be bare (10008US01) or client-keyed (12345.10008US01).",
   })
 ) {}
 

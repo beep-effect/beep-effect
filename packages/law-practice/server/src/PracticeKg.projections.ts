@@ -11,7 +11,7 @@ import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild"
 import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode";
 import * as O from "@beep/utils/Option";
-import { Context, DateTime, Effect, FileSystem, Layer, MutableHashMap, Order, Path, pipe } from "effect";
+import { Context, DateTime, Effect, FileSystem, HashSet, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -311,8 +311,19 @@ const recycledStatus = (attribution: PracticeKgDocumentAttribution): PracticeKgE
 
 type GraphSink = {
   readonly addEdge: (edge: PracticeKgEdgeRow) => void;
+  /** First write wins: spine nodes are minted once per key, stubs never replace a node. */
   readonly addNode: (node: PracticeKgNodeRow) => void;
+  /** Whether at least one non-recycled document backs this spine key. */
+  readonly isVerified: (kind: "client" | "docket" | "family", key: string) => boolean;
+  /** Last write wins: an anchor's own record replaces a parent stub minted earlier. */
+  readonly putNode: (node: PracticeKgNodeRow) => void;
 };
+
+const spineStatus = (
+  sink: GraphSink,
+  kind: "client" | "docket" | "family",
+  key: string
+): PracticeKgEpistemicStatus | undefined => (sink.isVerified(kind, key) ? undefined : "recycled-unverified");
 
 const projectDocumentNode = (
   sink: GraphSink,
@@ -360,6 +371,7 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
       {
         client,
         docketFamily: family,
+        epistemicStatus: spineStatus(sink, "family", familyKey),
       }
     )
   );
@@ -382,6 +394,7 @@ const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
     createNode("docket", docketKey, docketKey, "organize-row", row.sourceRelativePath, attribution.attributionSource, {
       client,
       docketFamily: family,
+      epistemicStatus: spineStatus(sink, "docket", docketKey),
     })
   );
   sink.addEdge(createEdge("docket_family", familyKey, "has_docket", "docket", docketKey, "organize-row", row.docket));
@@ -397,7 +410,11 @@ const projectClientSpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
   }
   const [provenanceKind, provenanceRef]: readonly [PracticeKgProvenanceKind, string] =
     attribution.attributionSource === "client-map" ? ["organize-row", row.sourceLabel] : ["catalog-digest", row.digest];
-  sink.addNode(createNode("client", client, client, provenanceKind, provenanceRef, attribution.attributionSource));
+  sink.addNode(
+    createNode("client", client, client, provenanceKind, provenanceRef, attribution.attributionSource, {
+      epistemicStatus: spineStatus(sink, "client", client),
+    })
+  );
   sink.addEdge(
     createEdge("client", client, "has_docket_family", "docket_family", familyKey, provenanceKind, provenanceRef)
   );
@@ -424,7 +441,7 @@ const projectApplicationNode = (
   placement: AnchorPlacement
 ) => {
   const { anchor } = resolution;
-  sink.addNode(
+  sink.putNode(
     createNode(
       "application",
       application,
@@ -462,7 +479,7 @@ const projectPatentNode = (
   const { anchor } = resolution;
   const attributionSource: KgAttributionSource =
     anchor.applicationNumber === null ? resolution.attributionSource : "official-record";
-  sink.addNode(
+  sink.putNode(
     createNode("patent", patent, anchor.inventionTitle ?? patent, "uspto-anchor", patent, attributionSource, {
       client: placement.client,
       docketFamily: placement.docketFamily,
@@ -573,6 +590,17 @@ const buildGraphRows = (
   const attributionByDigest = MutableHashMap.fromIterable(
     A.map(attributions, (attribution) => [attribution.digest, attribution] as const)
   );
+  const verifiedKeys = HashSet.fromIterable(
+    A.flatMap(
+      A.filter(attributions, (attribution) => !attribution.recycled),
+      (attribution: PracticeKgDocumentAttribution): ReadonlyArray<string> =>
+        A.getSomes([
+          O.map(O.fromNullishOr(attribution.client), (key) => `client:${key}`),
+          O.map(O.fromNullishOr(attribution.docketKey), (key) => `docket:${key}`),
+          O.map(O.fromNullishOr(attribution.familyKey), (key) => `family:${key}`),
+        ])
+    )
+  );
   const sink: GraphSink = {
     addEdge: (edge) => {
       MutableHashMap.set(edges, edgeKey(edge), edge);
@@ -581,6 +609,10 @@ const buildGraphRows = (
       if (!MutableHashMap.has(nodes, node.iri)) {
         MutableHashMap.set(nodes, node.iri, node);
       }
+    },
+    isVerified: (kind, key) => HashSet.has(verifiedKeys, `${kind}:${key}`),
+    putNode: (node) => {
+      MutableHashMap.set(nodes, node.iri, node);
     },
   };
 
@@ -812,7 +844,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(

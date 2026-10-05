@@ -28,7 +28,7 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "excluded" }),
 });
 
@@ -66,6 +66,24 @@ for (const [adapter, services] of [
           const context = yield* loadPracticeKgBundleContext(bundleDir);
 
           expect(context.corpusRoot).toBeUndefined();
+        })
+      );
+
+      it.effect(
+        "refuses a bundle built for an older graph store format by naming both formats",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
+          yield* fs.writeFileString(
+            path.join(bundleDir, "bundle.manifest.json"),
+            '{"builtAt":"2026-07-03T19:02:49.365Z","bundleVersion":"2026-07-27-01","corpusRootExpected":true,"counts":{"documents":1,"edges":1,"emails":1,"nodes":1},"schemaVersion":{"duckdb":"1","pglite":"1"},"sourceRuns":{"base":"included","refresh202607":"excluded"}}'
+          );
+
+          const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
+
+          expect(error.message).toContain("graph store format 1");
+          expect(error.message).toContain("reads format 2");
         })
       );
 
