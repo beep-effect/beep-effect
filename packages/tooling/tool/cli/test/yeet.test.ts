@@ -2669,7 +2669,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         YeetStatusRemote.make({ available: false, checked: false, detail: "pass --remote" })
       );
 
-      expect(command).toContain("publish --staged-only --pr --monitor");
+      expect(command).toContain("publish --staged-only --message");
     });
 
     it("names unresolved threads and records the same-SHA rerun-failed decision", () => {

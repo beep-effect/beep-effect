@@ -226,9 +226,10 @@ Runbook: `docs/runbooks/agent-pools.md`.
   `job wait` on the same job; the attached fallback also exits 2, so re-run it
   after the push. Any other non-zero exit ended the job: read its summary,
   fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
-  the `Heavy / *` matrix runs (docs-only PRs skip it); apply the label once
-  tier 1 is green — `--until-ready` prints the `gh pr edit` command while it
-  holds.
+  the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
+  it when it creates the draft PR, so add it by hand only for a PR that
+  already existed or whose label edit failed — `--until-ready` prints the
+  `gh pr edit` command while it holds.
   Unanswered review threads are a hard merge gate — answer every one and resolve
   every actionable one via `bun run beep yeet reply`
   (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay

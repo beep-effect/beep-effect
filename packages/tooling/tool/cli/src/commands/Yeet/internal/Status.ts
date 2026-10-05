@@ -1458,9 +1458,9 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
 });
 
 const STAGE_AND_PUBLISH_COMMAND =
-  'stage intended files, then run `bun run beep yeet publish --staged-only --pr --monitor --message "..."`';
+  'stage intended files, then run `bun run beep yeet publish --staged-only --message "..."`';
 const OPEN_PULL_REQUEST_COMMAND =
-  'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
+  'run `bun run beep yeet publish --message "..."` to open the draft PR and submit the readiness monitor';
 const MERGE_READY_COMMAND = "confirm GitHub mergeability, then merge the PR";
 const REPLY_COMMAND = "run `bun run beep yeet reply` to answer the outstanding review threads";
 // No review-bot gate here: which bots review a pull request rotates with the

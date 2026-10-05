@@ -122,6 +122,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const decision = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView()),
         capture: recordingCapture(calls),
+        findMonitor: () => Effect.succeedNone,
       });
       expect(decision._tag).toBe("flip");
       expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
@@ -177,6 +178,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "required-checks-green" });
       expect(error.message).toContain(`on head ${headSha}`);
+    })
+  );
+
+  it.effect("reads a non-draft pull request with an open thread as already ready, never as a pending flip", () =>
+    Effect.gen(function* () {
+      const decision = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView({ isDraft: false, unresolvedReviewThreadCount: 1 })),
+        capture: () => Effect.die("gh must not run"),
+      });
+      expect(decision._tag).toBe("already-ready");
     })
   );
 

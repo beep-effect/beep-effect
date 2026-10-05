@@ -662,9 +662,11 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    after the fix push. Exit 0 with
    `merge-ready: yes` means hand the PR to the operator; it does not merge it.
    On exit 1 or 3, read the summary line, fix the named blocker, publish, and
-   re-submit the monitor. A code PR holds at `heavy-not-admitted` until you
-   apply the `ready-for-heavy` label (see Merge Loop); do that once tier 1 is
-   green, not at publish. Act on unresolved review threads through the reply
+   re-submit the monitor. Publish applies the `ready-for-heavy` label when it
+   creates the draft PR, so a code PR is admitted to the heavy matrix from the
+   first push. A PR that existed before the publish, or one whose label edit
+   failed, holds at `heavy-not-admitted` until you add the label by hand (see
+   Merge Loop). Act on unresolved review threads through the reply
    flow while the loop waits. The loop runs read-first closeout automatically
    after the required checks settle. `monitor --summary` remains a one-shot
    compact read.
@@ -843,12 +845,14 @@ further push is planned.
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
-- **Heavy admission is a deliberate verb.** Publish without the label and let
-  tier 1 (lint shards, unit shards, cheap gates) go green first; `Heavy
-  Admission` in `check.yml` then holds a code PR (`Heavy / *` stays
-  "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
-  Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
-  held loop prints that exact command and does not burn its settle budget.
+- **Heavy admission is applied at creation.** `yeet publish` labels the draft
+  PR `ready-for-heavy` when it creates it (push-first-publish D4), so the heavy
+  matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
+  code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
+  is a PR that already existed before the publish, or one whose label edit
+  failed. Only then run `gh pr edit <n> --add-label ready-for-heavy` yourself;
+  the held `monitor --until-ready` loop prints that exact command and does not
+  burn its settle budget. Never remove and re-add the label.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
   the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,

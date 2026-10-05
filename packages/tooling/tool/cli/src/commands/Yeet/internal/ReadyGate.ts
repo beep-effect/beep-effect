@@ -25,6 +25,8 @@ import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
+import { findLiveReadyMonitorJob } from "./ProofJob.ts";
+import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady, YeetMergeReadyCriterion } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
@@ -32,8 +34,11 @@ import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetReadyOptions } from "../Yeet.schemas.ts";
+import type { ProofJobRecord } from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReadyGate");
+
+const YEET_MONITOR_SUBMIT_COMMAND = "bun run beep yeet monitor --until-ready --detach";
 
 /**
  * The merge-protocol criteria the draft-to-ready flip checks, in the order it
@@ -44,7 +49,9 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ReadyGate");
  * A subset of {@link YeetMergeReadyCriterion}: the pull request must be open,
  * its required checks green on the current head, and every review thread
  * answered (push-first-publish D10). Mergeability and the closeout run are left
- * to `monitor --until-ready`, which keeps watching after the flip.
+ * to `monitor --until-ready`. The job that reported `ready-pending-flip` has
+ * already ended by the time the flip runs, so the flip names the live monitor
+ * for the pull request or prints the command that submits a new one.
  *
  * **Example** (List the gate criteria)
  *
@@ -297,6 +304,12 @@ export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGa
     YeetReadyGateCriterion.literals,
     (criterion) => !O.exists(read.mergeReady, (ready) => mergeReadyCriterionHolds(ready.criteria, criterion))
   );
+  // A pull request that is no longer a draft has nothing to flip, whatever
+  // its checks and threads say: the verb must be idempotent, so a thread that
+  // lands right after the flip reads as `already-ready`, never as a pending
+  // flip an agent might wait on.
+  const alreadyReady = O.filter(O.fromUndefinedOr(read.remote.number), () => read.remote.isDraft === false);
+  if (O.isSome(alreadyReady)) return YeetReadyGateAlreadyReady.make({ prNumber: alreadyReady.value });
   return pipe(
     O.fromUndefinedOr(read.remote.number),
     O.filter(() => O.isNone(blocker)),
@@ -305,10 +318,7 @@ export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGa
         const unmet = O.getOrElse(blocker, () => YeetReadyGateCriterion.literals[0]);
         return YeetReadyGateBlocked.make({ blocker: unmet, detail: blockerDetail(unmet, read.remote) });
       },
-      onSome: (prNumber): YeetReadyGateDecision =>
-        read.remote.isDraft === false
-          ? YeetReadyGateAlreadyReady.make({ prNumber })
-          : YeetReadyGateFlip.make({ prNumber, headSha: read.remote.headSha }),
+      onSome: (prNumber): YeetReadyGateDecision => YeetReadyGateFlip.make({ prNumber, headSha: read.remote.headSha }),
     })
   );
 };
@@ -318,8 +328,25 @@ const readPullRequestForReady = Effect.fn("Yeet.readPullRequestForReady")(functi
   return YeetReadyPullRequestRead.make({ remote: snapshot.remote, mergeReady: snapshot.mergeReady });
 });
 
+// The live `monitor --until-ready` job for the pull request, when one exists.
+// A registry read failure only loses the hint, never the flip.
+const findLiveMonitorForReady = (
+  context: RepoRunContext,
+  prNumber: number
+): Effect.Effect<
+  O.Option<ProofJobRecord>,
+  never,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> =>
+  ProofJobLauncher.make(context.repoRoot).pipe(
+    Effect.flatMap((launcher) => launcher.list),
+    Effect.map(findLiveReadyMonitorJob({ branch: context.branch, prNumber })),
+    Effect.catch(() => Effect.succeedNone)
+  );
+
 interface YeetReadyGateDependencies {
   readonly capture?: typeof runRepoCommandCapture;
+  readonly findMonitor?: typeof findLiveMonitorForReady;
   readonly read?: (
     context: RepoRunContext
   ) => Effect.Effect<
@@ -406,6 +433,17 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
         });
       }
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
+      // The monitor that reported `ready-pending-flip` has ended, and reviewers
+      // that skip drafts post only now: name who is watching, or how to watch.
+      const watching = yield* (dependencies.findMonitor ?? findLiveMonitorForReady)(context, prNumber);
+      yield* Console.log(
+        O.match(watching, {
+          onNone: () =>
+            `[yeet] no readiness monitor is watching #${prNumber}; submit one with: ${YEET_MONITOR_SUBMIT_COMMAND}\n[yeet] then wait with: bun run beep yeet job wait <jobId>`,
+          onSome: (record) =>
+            `[yeet] readiness monitor job ${record.jobId} is still watching #${prNumber}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`,
+        })
+      );
     }),
   });
   return decision;
