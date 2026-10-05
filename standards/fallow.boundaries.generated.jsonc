@@ -3518,7 +3518,6 @@
           "@beep/scratchpad",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -3546,7 +3545,6 @@
           "@beep/scratchpad",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ]
