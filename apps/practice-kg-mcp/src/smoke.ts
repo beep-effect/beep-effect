@@ -133,7 +133,7 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
       CREATE TABLE corpus_organized (
         digest VARCHAR, source_label VARCHAR, source_relative_path VARCHAR, category VARCHAR,
         client VARCHAR, docket VARCHAR, docket_family VARCHAR, organized_relative_path VARCHAR,
-        effective_name VARCHAR
+        effective_name VARCHAR, restored BOOLEAN
       );
       CREATE TABLE corpus_enrichment (
         candidate VARCHAR, status VARCHAR, application_number VARCHAR, patent_number VARCHAR,
@@ -146,7 +146,7 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
       [FixtureDigest]
     );
     yield* db.run(
-      "INSERT INTO corpus_organized VALUES ($1, 'smoke', 'fixture.txt', 'docket', 'fixture-client', '20001US01', '20001', 'dockets/20001/20001US01/fixture.txt', 'fixture.txt')",
+      "INSERT INTO corpus_organized VALUES ($1, 'smoke', 'fixture.txt', 'docket', 'fixture-client', '20001US01', '20001', 'dockets/20001/20001US01/fixture.txt', 'fixture.txt', FALSE)",
       [FixtureDigest]
     );
   });

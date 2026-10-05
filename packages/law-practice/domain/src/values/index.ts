@@ -383,6 +383,13 @@ export * from "./HohfeldPositionKind/index.ts";
  */
 export * from "./JournalCitation/index.ts";
 /**
+ * Practice knowledge-graph attribution-source exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./KgAttributionSource/index.ts";
+/**
  * Practice knowledge-graph edge-predicate exports.
  *
  * @category value-objects
