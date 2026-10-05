@@ -1,22 +1,3 @@
-diff --git a/dist/declarations/src/atom.d.ts b/dist/declarations/src/atom.d.ts
-index 868935814386ad4de885f38c5cf30e0d54ac3910..2836263bf7ab4db9ac2587a35f73f97c6ad4c719 100644
---- a/dist/declarations/src/atom.d.ts
-+++ b/dist/declarations/src/atom.d.ts
-@@ -1,4 +1,4 @@
--import { AsyncResult, Atom } from 'effect/unstable/reactivity';
-+import { AsyncResult, Atom } from 'effect/reactivity';
- import type { AnyActorLogic, ErrorFrom, EventFromLogic, SnapshotFrom } from 'xstate';
- import { type EffectActorOptionsArgs } from "./createEffectActor.js";
- import type { EffectActor } from "./effectActor.js";
-@@ -8,7 +8,7 @@ import type { RequirementsFrom } from "./types.js";
- export { NotReadyError } from "./errors.js";
- /**
-  * Atoms that expose one actor to a reactive UI through
-- * `effect/unstable/reactivity`. Read them with the atom bindings for your
-+ * `effect/reactivity`. Read them with the atom bindings for your
-  * framework, such as `@effect/atom-react`.
-  */
- export interface ActorAtoms<TLogic extends AnyActorLogic, ER = never> {
 diff --git a/dist/declarations/src/setupEffect.d.ts b/dist/declarations/src/setupEffect.d.ts
 index 565f28f3c006d68bd675c1ba8e104e9d5b541ffb..d5769ab559f865b1686bc1562c405f748bcbf61b 100644
 --- a/dist/declarations/src/setupEffect.d.ts
@@ -54,23 +35,3 @@ index 31eb092d06e27ee02d3fbeedd9ce5276932be0d6..a3b852e62818db59a9e2b36cb812e282
  } ? unknown extends R ? EffectRequirements<TAction extends (...args: any[]) => infer TResult ? TResult : never> : Exclude<R, undefined> : EffectRequirements<TAction extends (...args: any[]) => infer TResult ? TResult : never> : never : never;
  /**
   * Recursion budget for walking registered child machines. A machine cannot
-diff --git a/dist/xstate-effect-atom.js b/dist/xstate-effect-atom.js
-index 80786ee950452f1bdaa10a79acee0710baef3566..2bf0eed67d64f953f637fbc6cd530261626b786f 100644
---- a/dist/xstate-effect-atom.js
-+++ b/dist/xstate-effect-atom.js
-@@ -1,5 +1,5 @@
- import { Cause } from 'effect';
--import { Atom, AsyncResult } from 'effect/unstable/reactivity';
-+import { Atom, AsyncResult } from 'effect/reactivity';
- import { c as createEffectActor, N as NotReadyError, t as taggedState } from './state-14a1fecf.js';
- export { N as NotReadyError } from './state-14a1fecf.js';
- import 'xstate';
-@@ -7,7 +7,7 @@ import 'xstate/durable';
- 
- /**
-  * Atoms that expose one actor to a reactive UI through
-- * `effect/unstable/reactivity`. Read them with the atom bindings for your
-+ * `effect/reactivity`. Read them with the atom bindings for your
-  * framework, such as `@effect/atom-react`.
-  */
- 
