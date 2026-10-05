@@ -28,10 +28,10 @@
     "\"Adding automated summarization of evicted history …\": 3-0 ✓",
     "\"Pruning agent context to only the last 5 tool call…\": 0-3 ✗",
     "\"Turborepo shipped native read-only remote-cache su…\": 3-0 ✓",
-    "\"Prior-vendor bills Ubuntu x64 GitHub Actions runners…\": 3-0 ✓",
+    "\"[redacted-vendor] bills Ubuntu x64 GitHub Actions runners…\": 3-0 ✓",
     "\"Turborepo supports cryptographic artifact integrit…\": 0-3 ✗",
     "\"The motivating use case for read-only remote cache…\": 3-0 ✓",
-    "\"Prior-vendor claims its runners are 2x faster than G…\": 3-0 ✓",
+    "\"[redacted-vendor] claims its runners are 2x faster than G…\": 3-0 ✓",
     "\"Context files increase agent inference cost by mor…\": 3-0 ✓",
     "\"Providing repository-level context files (e.g., AG…\": 3-0 ✓",
     "\"Within the tested range of 25 to 500 lines, CLAUDE…\": 3-0 ✓",
@@ -41,8 +41,8 @@
     "Verify done: 25 claims → 23 confirmed, 2 refuted, 0 unverified"
   ],
   "result": {
-    "question": "Best practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimensions: (1) instruction-file architecture — CLAUDE.md/AGENTS.md single-sourcing and generation, per-package nested instruction files, recommended token budgets, machine-enforced rules vs prose; (2) agent context-window economy — skill/progressive-disclosure design patterns, context-optimization tooling such as headroom (github.com/headroomlabs-ai/headroom) and comparable OSS, measured context-cost reduction techniques; (3) agent onboarding & discoverability — symbol indexes, repo navigation aids, conventions that reduce agent churn; (4) CI/local pipeline cycle-time reduction for agent-driven development — local/CI proof parity strategies, turbo remote-cache policies for PR events (read-only cache security tradeoffs), CI runner sizing economics (Prior-vendor per-minute billing), PR review-bot consolidation evidence. Prioritize concrete adoptable practices with evidence over generic advice; flag anything that contradicts current practice in repos like ours.",
-    "summary": "For mid-2026 agent-driven development in a large TS monorepo, the highest-leverage, evidence-backed practices are: (1) keep always-loaded instruction files lean and strictly imperative — controlled evaluations show agents reliably follow explicit instructions but repo-overview prose adds >20% inference cost with no general success gain — and layer per-package CLAUDE.md files, which Claude Code loads lazily only when it touches that directory; (2) push all other knowledge behind progressive disclosure (skills with <500-line bodies, one-level-deep references, executable scripts instead of inlined logic), because model recall measurably degrades as context grows (\"context rot\"); (3) machine-enforce rules that must hold across long sessions via hooks, linters, and CI checks — the largest measured compliance effect is within-session decay (~5.6% lower odds per generated function, median first omission at the 4th function), while file size (25–500 lines) and single-vs-nested file architecture showed no detectable compliance effect; (4) for cycle time, use Turborepo remote caching with a read-only cache policy for PR/untrusted builds (`--remote-cache-read-only`, shipped 2023) and per-minute-billed fast runners like Prior-vendor ($0.004/min Ubuntu x64), where the claimed 2x speed multiplier — not the rate cut — drives both cost savings and wall-clock reduction. Two findings contradict folk practice: instruction-file compactness and nested-file splitting are not supported as compliance levers (only as cost levers), and context files per se are a weak lever — enforcement plus context economy are the strong ones.",
+    "question": "Best practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimensions: (1) instruction-file architecture — CLAUDE.md/AGENTS.md single-sourcing and generation, per-package nested instruction files, recommended token budgets, machine-enforced rules vs prose; (2) agent context-window economy — skill/progressive-disclosure design patterns, context-optimization tooling such as headroom (github.com/headroomlabs-ai/headroom) and comparable OSS, measured context-cost reduction techniques; (3) agent onboarding & discoverability — symbol indexes, repo navigation aids, conventions that reduce agent churn; (4) CI/local pipeline cycle-time reduction for agent-driven development — local/CI proof parity strategies, turbo remote-cache policies for PR events (read-only cache security tradeoffs), CI runner sizing economics ([redacted-vendor] per-minute billing), PR review-bot consolidation evidence. Prioritize concrete adoptable practices with evidence over generic advice; flag anything that contradicts current practice in repos like ours.",
+    "summary": "For mid-2026 agent-driven development in a large TS monorepo, the highest-leverage, evidence-backed practices are: (1) keep always-loaded instruction files lean and strictly imperative — controlled evaluations show agents reliably follow explicit instructions but repo-overview prose adds >20% inference cost with no general success gain — and layer per-package CLAUDE.md files, which Claude Code loads lazily only when it touches that directory; (2) push all other knowledge behind progressive disclosure (skills with <500-line bodies, one-level-deep references, executable scripts instead of inlined logic), because model recall measurably degrades as context grows (\"context rot\"); (3) machine-enforce rules that must hold across long sessions via hooks, linters, and CI checks — the largest measured compliance effect is within-session decay (~5.6% lower odds per generated function, median first omission at the 4th function), while file size (25–500 lines) and single-vs-nested file architecture showed no detectable compliance effect; (4) for cycle time, use Turborepo remote caching with a read-only cache policy for PR/untrusted builds (`--remote-cache-read-only`, shipped 2023) and per-minute-billed fast runners like [redacted-vendor] ($0.004/min Ubuntu x64), where the claimed 2x speed multiplier — not the rate cut — drives both cost savings and wall-clock reduction. Two findings contradict folk practice: instruction-file compactness and nested-file splitting are not supported as compliance levers (only as cost levers), and context files per se are a weak lever — enforcement plus context economy are the strong ones.",
     "findings": [
       {
         "claim": "Layered instruction-file architecture is natively supported and cheap: Claude Code loads the working directory's CLAUDE.md plus all ancestors at launch, and loads per-subdirectory CLAUDE.md files lazily only when it reads files there — so a root file with repo-wide rules plus per-package files costs zero context for packages a task never touches. Directly adoptable in a 92-package monorepo: put slice-specific conventions (e.g. Effect service patterns, schema-first rules per slice) in per-package files rather than the root.",
@@ -132,14 +132,14 @@
         "vote": "3-0 (x3 claims)"
       },
       {
-        "claim": "CI runner economics for agent-driven PR volume: Prior-vendor bills Ubuntu x64 runners at $0.004/min (2 vCPU base; larger sizes bill proportionally; 3,000 free min/mo), framing 'up to 67% total cost savings' vs GitHub-hosted — decomposed by the vendor as 2x faster runtime plus 33% cheaper per-minute. The analytical point for time-to-mergeable-PR: the speed multiplier, not the rate, drives ~75% of the advertised savings and ALL of the cycle-time reduction — so runner selection should be evaluated on measured wall-clock speedup for your workload, with the per-minute rate as a secondary tiebreaker.",
+        "claim": "CI runner economics for agent-driven PR volume: [redacted-vendor] bills Ubuntu x64 runners at $0.004/min (2 vCPU base; larger sizes bill proportionally; 3,000 free min/mo), framing 'up to 67% total cost savings' vs GitHub-hosted — decomposed by the vendor as 2x faster runtime plus 33% cheaper per-minute. The analytical point for time-to-mergeable-PR: the speed multiplier, not the rate, drives ~75% of the advertised savings and ALL of the cycle-time reduction — so runner selection should be evaluated on measured wall-clock speedup for your workload, with the per-minute rate as a secondary tiebreaker.",
         "confidence": "medium",
-        "sources": ["https://prior-ci-vendor.example"],
-        "evidence": "Two unanimous 3-0 claims; pricing and framing verified verbatim on the live pricing page (2026-07-05) and repeated by independent 2026 comparisons (BetterStack, jmduke) without dispute; RunsOn benchmarks place Prior-vendor among top single-thread x64 managed runners. Medium because the 2x/67% figures are vendor marketing, not independent measurement — real speedups vary by workload (vendor case studies claim 2.3x–5.9x); the $0.004/min rate itself is high-confidence.",
+        "sources": ["https://redacted-vendor.example/pricing"],
+        "evidence": "Two unanimous 3-0 claims; pricing and framing verified verbatim on the live pricing page (2026-07-05) and repeated by independent 2026 comparisons (BetterStack, jmduke) without dispute; RunsOn benchmarks place [redacted-vendor] among top single-thread x64 managed runners. Medium because the 2x/67% figures are vendor marketing, not independent measurement — real speedups vary by workload (vendor case studies claim 2.3x–5.9x); the $0.004/min rate itself is high-confidence.",
         "vote": "3-0 (x2 claims)"
       }
     ],
-    "caveats": "Source-quality gradients matter here: (1) Headroom's 60–95% and Prior-vendor's 2x/67% figures are vendor self-reported — accurately attributed but not independently replicated; pilot-measure before budgeting on them. (2) The two most decision-relevant academic results are single non-peer-reviewed preprints with domain gaps: the file-size/architecture/decay factorial study (2605.10039) used one trivial syntactic compliance marker on Claude Code only, and the 91.6%-with-summarization result (2606.10209) is from enterprise expense workflows, not coding; the AGENTS.md evaluation (2602.11988) is Python single-issue tasks, so its null may understate context-file value in a convention-heavy Effect-TS monorepo where non-inferable instructions dominate. (3) Skill/CLAUDE.md loading mechanics are Claude-specific; transfer to Codex agents is asserted nowhere in the verified sources, so a single-sourced AGENTS.md generation pipeline must be validated per-harness. (4) Two refuted claims change recommendations: turbo HMAC artifact signing did NOT survive verification as the documented cache-poisoning mitigation (use read-only token separation), and 'pruning alone improves accuracy' did not survive (pruning needs summarization on top). (5) Coverage gaps: no claims survived on PR review-bot consolidation evidence or on local/CI proof-parity strategies, both explicitly asked in the research question — those dimensions are unanswered, not settled. (6) Time-sensitivity: vendor docs, plugin marketplaces, and runner pricing (including GitHub's March 2026 platform-fee change) are moving targets; lazy per-directory CLAUDE.md loading has open client-specific bug reports (VS Code/WSL2).",
+    "caveats": "Source-quality gradients matter here: (1) Headroom's 60–95% and [redacted-vendor]'s 2x/67% figures are vendor self-reported — accurately attributed but not independently replicated; pilot-measure before budgeting on them. (2) The two most decision-relevant academic results are single non-peer-reviewed preprints with domain gaps: the file-size/architecture/decay factorial study (2605.10039) used one trivial syntactic compliance marker on Claude Code only, and the 91.6%-with-summarization result (2606.10209) is from enterprise expense workflows, not coding; the AGENTS.md evaluation (2602.11988) is Python single-issue tasks, so its null may understate context-file value in a convention-heavy Effect-TS monorepo where non-inferable instructions dominate. (3) Skill/CLAUDE.md loading mechanics are Claude-specific; transfer to Codex agents is asserted nowhere in the verified sources, so a single-sourced AGENTS.md generation pipeline must be validated per-harness. (4) Two refuted claims change recommendations: turbo HMAC artifact signing did NOT survive verification as the documented cache-poisoning mitigation (use read-only token separation), and 'pruning alone improves accuracy' did not survive (pruning needs summarization on top). (5) Coverage gaps: no claims survived on PR review-bot consolidation evidence or on local/CI proof-parity strategies, both explicitly asked in the research question — those dimensions are unanswered, not settled. (6) Time-sensitivity: vendor docs, plugin marketplaces, and runner pricing (including GitHub's March 2026 platform-fee change) are moving targets; lazy per-directory CLAUDE.md loading has open client-specific bug reports (VS Code/WSL2). Anonymization (2026-10-05): one CI runner vendor's name, runner labels and URLs are replaced with [redacted-vendor] and redacted-vendor.example. The placeholder host is not the page that was fetched on 2026-07-05; the verification excerpts quote the original vendor pages.",
     "openQuestions": [
       "Does the within-session compliance-decay effect (and the corresponding hooks/linters-over-prose remedy) replicate for substantive multi-rule instruction sets and for OpenAI Codex harnesses, not just a trivial marker under Claude Code?",
       "What is empirically the best mitigation stack for Turborepo remote-cache poisoning on PR events given the HMAC-signing claim failed verification — is signature verification currently real and sufficient, or is read-only token separation plus artifact provenance the only defensible policy?",
@@ -269,13 +269,13 @@
         "claimCount": 5
       },
       {
-        "url": "https://prior-ci-vendor.example",
+        "url": "https://redacted-vendor.example/pricing",
         "quality": "primary",
         "angle": "CI cycle time, turbo remote cache on PRs & runner economics",
         "claimCount": 5
       },
       {
-        "url": "https://prior-ci-vendor.example",
+        "url": "https://redacted-vendor.example/blog/actions-pricing",
         "quality": "blog",
         "angle": "CI cycle time, turbo remote cache on PRs & runner economics",
         "claimCount": 5
@@ -790,7 +790,7 @@
       "tokens": 34290,
       "toolCalls": 4,
       "durationMs": 47403,
-      "resultPreview": "{\"claims\":[{\"claim\":\"Prior-vendor bills Ubuntu x64 GitHub Actions runners at $0.004 per minute, which the vendor frames as up to 67% total cost savings versus GitHub-hosted runners.\",\"quote\":\"Ubuntu x64: \\\"$0.004/min\\\" ... \\\"Switch to Prior-vendor and start saving up to 67% on your GitHub Actions\\\" ... \\\"67% total cost savings\\\" (Ubuntu x64)\",\"importance\":\"central\"},{\"claim\":\"Prior-vendor claims its run…"
+      "resultPreview": "{\"claims\":[{\"claim\":\"[redacted-vendor] bills Ubuntu x64 GitHub Actions runners at $0.004 per minute, which the vendor frames as up to 67% total cost savings versus GitHub-hosted runners.\",\"quote\":\"Ubuntu x64: \\\"$0.004/min\\\" ... \\\"Switch to [redacted-vendor] and start saving up to 67% on your GitHub Actions\\\" ... \\\"67% total cost savings\\\" (Ubuntu x64)\",\"importance\":\"central\"},{\"claim\":\"[redacted-vendor] claims its run…"
     },
     {
       "type": "workflow_agent",
@@ -811,7 +811,7 @@
       "tokens": 34598,
       "toolCalls": 4,
       "durationMs": 54774,
-      "resultPreview": "{\"claims\":[{\"claim\":\"GitHub is introducing a $0.002-per-minute control-plane (platform) fee on ALL GitHub Actions usage effective March 1, 2026, including jobs executed on third-party runners (e.g., Prior-vendor) and self-hosted infrastructure — a new cost floor for agent-heavy CI regardless of runner provider.\",\"quote\":\"GitHub is introducing a $0.002 per-minute platform fee for all GitHub Actions u…"
+      "resultPreview": "{\"claims\":[{\"claim\":\"GitHub is introducing a $0.002-per-minute control-plane (platform) fee on ALL GitHub Actions usage effective March 1, 2026, including jobs executed on third-party runners (e.g., [redacted-vendor]) and self-hosted infrastructure — a new cost floor for agent-heavy CI regardless of runner provider.\",\"quote\":\"GitHub is introducing a $0.002 per-minute platform fee for all GitHub Actions u…"
     },
     {
       "type": "workflow_agent",
@@ -1950,7 +1950,7 @@
     {
       "type": "workflow_agent",
       "index": 81,
-      "label": "v0:Prior-vendor bills Ubuntu x64 GitHub Actio",
+      "label": "v0:[redacted-vendor] bills Ubuntu x64 GitHub Actio",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "ab9165215bab58b7f",
@@ -1960,18 +1960,18 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Live fetch of https://prior-ci-vendor.example (2026-07-05…",
+      "lastToolSummary": "Live fetch of https://redacted-vendor.example/pricing (2026-07-05…",
       "promptPreview": "## Adversarial Claim Verifier (voter 1/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783291010583,
       "tokens": 37937,
       "toolCalls": 6,
       "durationMs": 68771,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://prior-ci-vendor.example (2026-07-05) confirms \\\"Ubuntu x64: $0.004/min\\\", \\\"3,000 free min/mo\\\", and \\\"67% total cost savings\\\" (vendor derivation: \\\"2x faster than GitHub's runners\\\" x \\\"33% cheaper than GitHub per-minute pricing\\\"). Independent 2026 sources (betterstack.com runner comparison, jmduke.com, aicoolies.com review) repeat $0.004/min…"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://redacted-vendor.example/pricing (2026-07-05) confirms \\\"Ubuntu x64: $0.004/min\\\", \\\"3,000 free min/mo\\\", and \\\"67% total cost savings\\\" (vendor derivation: \\\"2x faster than GitHub's runners\\\" x \\\"33% cheaper than GitHub per-minute pricing\\\"). Independent 2026 sources (betterstack.com runner comparison, jmduke.com, aicoolies.com review) repeat $0.004/min…"
     },
     {
       "type": "workflow_agent",
       "index": 82,
-      "label": "v1:Prior-vendor bills Ubuntu x64 GitHub Actio",
+      "label": "v1:[redacted-vendor] bills Ubuntu x64 GitHub Actio",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "aebb7151491d4f7ff",
@@ -1981,18 +1981,18 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Live fetch of https://prior-ci-vendor.example on 2026-07-…",
+      "lastToolSummary": "Live fetch of https://redacted-vendor.example/pricing on 2026-07-…",
       "promptPreview": "## Adversarial Claim Verifier (voter 2/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783290985753,
       "tokens": 35020,
       "toolCalls": 4,
       "durationMs": 42894,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://prior-ci-vendor.example on 2026-07-05 confirms Ubuntu x64 listed at \\\"$0.004/min\\\" with \\\"67% total cost savings\\\" displayed for that runner type (vendor derives it from claimed 2x speed plus per-minute price advantage vs GitHub's $0.008/min 2-core rate). Corroborated by docs.prior-ci-vendor.example/prior-vendor-runners/pricing, Better Stack's runner compar…"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://redacted-vendor.example/pricing on 2026-07-05 confirms Ubuntu x64 listed at \\\"$0.004/min\\\" with \\\"67% total cost savings\\\" displayed for that runner type (vendor derives it from claimed 2x speed plus per-minute price advantage vs GitHub's $0.008/min 2-core rate). Corroborated by docs.redacted-vendor.example/[redacted-vendor]-runners/pricing, Better Stack's runner compar…"
     },
     {
       "type": "workflow_agent",
       "index": 83,
-      "label": "v2:Prior-vendor bills Ubuntu x64 GitHub Actio",
+      "label": "v2:[redacted-vendor] bills Ubuntu x64 GitHub Actio",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "ad9aaa239a3b1aa86",
@@ -2002,18 +2002,18 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Live fetch of the primary source https://prior-ci-vendor.example",
+      "lastToolSummary": "Live fetch of the primary source https://redacted-vendor.example/…",
       "promptPreview": "## Adversarial Claim Verifier (voter 3/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783291015260,
       "tokens": 37327,
       "toolCalls": 6,
       "durationMs": 67752,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of the primary source https://prior-ci-vendor.example (2026-07-05) confirms both elements verbatim: Ubuntu x64 listed at \\\"$0.004 /min\\\" and \\\"67% total cost savings\\\" versus GitHub, which the page itself decomposes as \\\"2x faster + 33% per-minute cost savings\\\" (other tiers: Ubuntu ARM $0.0025/min \\\"75%\\\", Windows x64 $0.008/min \\\"60%\\\", macOS M4 $0.08/mi…"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of the primary source https://redacted-vendor.example/pricing (2026-07-05) confirms both elements verbatim: Ubuntu x64 listed at \\\"$0.004 /min\\\" and \\\"67% total cost savings\\\" versus GitHub, which the page itself decomposes as \\\"2x faster + 33% per-minute cost savings\\\" (other tiers: Ubuntu ARM $0.0025/min \\\"75%\\\", Windows x64 $0.008/min \\\"60%\\\", macOS M4 $0.08/mi…"
     },
     {
       "type": "workflow_agent",
       "index": 84,
-      "label": "v0:Prior-vendor claims its runners are 2x fas",
+      "label": "v0:[redacted-vendor] claims its runners are 2x fas",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "a00fce6fca608ccc9",
@@ -2023,18 +2023,18 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Live fetch of https://prior-ci-vendor.example (2026-07-05…",
+      "lastToolSummary": "Live fetch of https://redacted-vendor.example/pricing (2026-07-05…",
       "promptPreview": "## Adversarial Claim Verifier (voter 1/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783291009388,
       "tokens": 35932,
       "toolCalls": 4,
       "durationMs": 61597,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://prior-ci-vendor.example (2026-07-05) confirms both quotes verbatim: \\\"We are 2x faster than GitHub's runners\\\" (paired with \\\"Cut runtime by 50%\\\") and \\\"We are 33% cheaper than GitHub per-minute pricing\\\" (paired with \\\"Cut per-minute cost by 33%\\\"). The analytical rider is confirmed by the page's own advertised decomposition: Ubuntu x64 \\\"67% …"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://redacted-vendor.example/pricing (2026-07-05) confirms both quotes verbatim: \\\"We are 2x faster than GitHub's runners\\\" (paired with \\\"Cut runtime by 50%\\\") and \\\"We are 33% cheaper than GitHub per-minute pricing\\\" (paired with \\\"Cut per-minute cost by 33%\\\"). The analytical rider is confirmed by the page's own advertised decomposition: Ubuntu x64 \\\"67% …"
     },
     {
       "type": "workflow_agent",
       "index": 85,
-      "label": "v1:Prior-vendor claims its runners are 2x fas",
+      "label": "v1:[redacted-vendor] claims its runners are 2x fas",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "aed1966556c3db4a0",
@@ -2044,18 +2044,18 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Fresh fetch of https://prior-ci-vendor.example (2026-07-0…",
+      "lastToolSummary": "Fresh fetch of https://redacted-vendor.example/pricing (2026-07-0…",
       "promptPreview": "## Adversarial Claim Verifier (voter 2/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783291059449,
       "tokens": 40771,
       "toolCalls": 5,
       "durationMs": 107247,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Fresh fetch of https://prior-ci-vendor.example (2026-07-05) confirms the supporting quotes verbatim: \\\"We are 2x faster than GitHub's runners.\\\", \\\"We are 33% cheaper than GitHub per-minute pricing\\\", and the page's own savings framing \\\"2x faster + 33% per-minute cost savings\\\". The attribution half of the claim is exactly supported. The interpretive half (\\\"speed m…"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Fresh fetch of https://redacted-vendor.example/pricing (2026-07-05) confirms the supporting quotes verbatim: \\\"We are 2x faster than GitHub's runners.\\\", \\\"We are 33% cheaper than GitHub per-minute pricing\\\", and the page's own savings framing \\\"2x faster + 33% per-minute cost savings\\\". The attribution half of the claim is exactly supported. The interpretive half (\\\"speed m…"
     },
     {
       "type": "workflow_agent",
       "index": 86,
-      "label": "v2:Prior-vendor claims its runners are 2x fas",
+      "label": "v2:[redacted-vendor] claims its runners are 2x fas",
       "phaseIndex": 4,
       "phaseTitle": "Verify",
       "agentId": "a579aef4070afab2a",
@@ -2065,13 +2065,13 @@
       "queuedAt": 1783290765070,
       "attempt": 1,
       "lastToolName": "StructuredOutput",
-      "lastToolSummary": "Live fetch of https://prior-ci-vendor.example (2026-07-05…",
+      "lastToolSummary": "Live fetch of https://redacted-vendor.example/pricing (2026-07-05…",
       "promptPreview": "## Adversarial Claim Verifier (voter 3/3)\n\nBe SKEPTICAL. Try to REFUTE this claim. ≥2/3 refutations kill it.\n\n## Research question\nBest practices, current trends, and tooling (mid-2026) for maximizing coding-agent effectiveness and minimizing time-to-mergeable-PR in a large TypeScript monorepo (bun + turborepo, 92 packages, Effect-TS) operated by Claude Code and OpenAI Codex agents. Four dimension…",
       "lastProgressAt": 1783291043938,
       "tokens": 36102,
       "toolCalls": 4,
       "durationMs": 77810,
-      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://prior-ci-vendor.example (2026-07-05) verifies both quotes verbatim: \\\"We are 2x faster than GitHub's runners.\\\" and \\\"We are 33% cheaper than GitHub per-minute pricing\\\", plus the page's own \\\"Together: 67% savings\\\" — which only holds multiplicatively (0.5 time x 0.67 rate = 0.335 cost). Decomposition: speed alone contributes 50 of the ~67 savi…"
+      "resultPreview": "{\"refuted\":false,\"evidence\":\"Live fetch of https://redacted-vendor.example/pricing (2026-07-05) verifies both quotes verbatim: \\\"We are 2x faster than GitHub's runners.\\\" and \\\"We are 33% cheaper than GitHub per-minute pricing\\\", plus the page's own \\\"Together: 67% savings\\\" — which only holds multiplicatively (0.5 time x 0.67 rate = 0.335 cost). Decomposition: speed alone contributes 50 of the ~67 savi…"
     },
     {
       "type": "workflow_agent",

@@ -473,7 +473,7 @@ Cost already sunk when the queue first sees anything:
 - **N × local `yeet verify`** — and repo memory records that the *local full
   proof is stricter than PR CI* (`yeet-full-proof-vs-ci-affected`), so this is
   tens of minutes of a 32-core workstation, ×N, contending with 12 other clones.
-- **N × PR CI** at 15 min × ~20 jobs — with real Prior-vendor spend (>$50/week
+- **N × PR CI** at 15 min × ~20 jobs — with real [redacted-vendor] spend (>$50/week
   already, per opportunities ledger #24).
 
 What merge queue *does* recover: agent 7's and agent 11's entries either become

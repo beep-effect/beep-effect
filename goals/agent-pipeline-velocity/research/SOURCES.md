@@ -30,7 +30,7 @@ Its 23 sources (all appear in the on-disk report):
 - https://arxiv.org/html/2606.10209 — prune+summarize evictions design point (Microsoft)
 - https://github.com/headroomlabs-ai/headroom — context compression (vendor numbers)
 - https://turborepo.dev/docs/core-concepts/remote-caching · https://github.com/vercel/turborepo/issues/1188 — read-only PR cache control lineage
-- https://prior-ci-vendor.example · https://prior-ci-vendor.example — runner economics
+- https://redacted-vendor.example/pricing · https://redacted-vendor.example/blog/actions-pricing — runner economics (vendor anonymized 2026-10-05; placeholder host, original pages were the ones fetched)
 - https://www.infoq.com/news/2026/03/agents-context-file-value-review/ — corroboration
 - https://dev.to/_vjk/best-ai-code-reviewer-in-2026-we-ran-4-in-parallel-for-3-weeks-146-prs-679-findings-1c0f — 4-parallel-reviewer evidence
 - Remainder (secondary/corroborating, verbatim in report JSON): codegateway.dev agents-md playbook, augmentcode.com agents-md guide, yurukusa gist, morphllm.com agents-md guide, tessl.io agents-md standard, alexop.dev progressive disclosure, dev.to headroom review, yage.ai grep-agents essay, aider.chat repomap, vibecodinghub.org serena, tianpan.co monorepo context, code.claude.com skills truncation, anthropics/claude-plugins-official.

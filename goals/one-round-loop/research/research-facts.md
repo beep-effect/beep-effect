@@ -6,7 +6,7 @@
   lint-policy, repo-sanity, check, test-unit, test-integration, coverage,
   docgen, codegen) + standalone jobs (pr-size, professional-desktop-ipc-stdio,
   fallow-advisory, knip, jsdoc-ratchet, build[push-only], commitlint, secrets,
-  security, nix, sast). Prior-vendor runners; `cancel-in-progress: true`.
+  security, nix, sast). [redacted-vendor] runners; `cancel-in-progress: true`.
 - PR runs export `TURBO_SCM_BASE=origin/$GITHUB_BASE_REF` + `--affected
   --summarize`; turbo cache CSF-001: PR = `local:rw,remote:r`.
 - Docgen lane has 3 modes (none/affected/full) computed by lane-gate.
@@ -111,7 +111,7 @@
   siblings reusing the compiled decoder dropped to ~0.6s). Under v8
   coverage instrumentation this decode is 10x+ slower (documented at
   `vitest.shared.ts:109-111`), and the full-monorepo `sequence.concurrent`
-  coverage lane saturates the 4-vCPU Prior-vendor runner (6 jobs/host
+  coverage lane saturates the 4-vCPU [redacted-vendor] runner (6 jobs/host
   observed), starving it further. Local isolated coverage: ~5s. CI under
   contention: 75.8s → over the 60s clamp.
 - The clamp: `vitest.shared.ts:112` deliberately grants coverage runs

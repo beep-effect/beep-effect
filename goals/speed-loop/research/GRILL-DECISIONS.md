@@ -143,7 +143,7 @@ grills #2–#3.
     AMENDED 2026-08-08: the #24 sequencing is REVERSED to EC2-first, ratified
     by events — the o6 security challenge invalidated the workstation
     downgrade's premises (472 inherited contributors, approval policy weaker
-    than assumed), the Prior-vendor invoice forced a full exit, and the
+    than assumed), the [redacted-vendor] invoice forced a full exit, and the
     operator deployed the EC2 groundwork stack (infra/ci-runners, PR #603)
     and ran a live burst on it. The workstation variant is deferred
     indefinitely; ledger #91 gates the controller on the adopt-vs-build

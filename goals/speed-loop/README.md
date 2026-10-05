@@ -29,7 +29,7 @@ supersession note).
 ## Outcome (2026-08-08)
 
 Completed and retained as the evidence ledger for the campaign from the
-Prior-vendor exit through EC2 groundwork, the supervised runner burst, and the
+[redacted-vendor] exit through EC2 groundwork, the supervised runner burst, and the
 wrap-up widgets. The campaign shipped more than eleven merged PRs; decisions
 51–63 close the loop, disposition the remaining widgets, and graduate the
 runner endgame without stretching this packet into another multi-week arc.
@@ -44,7 +44,7 @@ worker-per-job system and elimination of 20-minute jobs are co-primary.
   (17.79s → 0.445s per barrel importer), CI concurrency caps, bounded docgen.
 - PR #549 (merged): probe-proved leaf boundaries — BlockRepair 15.2M → 2.0M
   instantiations (−86.8%), Md.safe −21.8%.
-- PRs #600, #603, #611, #618, and #620: Prior-vendor exit, EC2 groundwork,
+- PRs #600, #603, #611, #618, and #620: [redacted-vendor] exit, EC2 groundwork,
   hardening, and owned-runner cutover; the supervised burst then landed an
   eight-PR merge wave.
 - `feat/speed-loop-wrapup-widgets`: #84, #88, #89, and #90 shipped together

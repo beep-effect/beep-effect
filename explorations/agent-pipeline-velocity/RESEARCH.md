@@ -45,7 +45,7 @@ reconciliation). Highlights:
 - **[high] Read-only PR remote cache is THE verified poisoning control**
   (turbo #1188/#6624; flag in 2.10.3); HMAC artifact-signing-as-mitigation
   REFUTED 0–3. Mercari measured ~50% turbo task-duration cut from shared cache.
-- **[medium] Prior-vendor economics**: the 2× speed multiplier, not the
+- **[medium] [redacted-vendor] economics**: the 2× speed multiplier, not the
   $0.004/min rate, drives savings — evaluate runner sizing by measured
   wall-clock (validates D6 design).
 
@@ -98,7 +98,7 @@ Full reports (this packet's primary in-repo grounding):
    closeout gate anatomy (`PrCloseoutGateName`: hosted-checks | review-threads |
    greptile | coderabbit | chatgpt; none GitHub-required), merged-PR cycle data
    (size↔duration correlation), worktree standard vs duplicate-clone drift,
-   workstation profile (32c/64t, 128GB), Prior-vendor runner labels (2/4 vCPU).
+   workstation profile (32c/64t, 128GB), [redacted-vendor] runner labels (2/4 vCPU).
 
 Key bricks to compose (not rebuild):
 

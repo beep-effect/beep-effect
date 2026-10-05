@@ -179,7 +179,7 @@ Nx (2026-08-05) opened resource-usage charts (CPU and memory
 enterprise-only.[[23]](https://x.com/NxDevTools/status/2085020784289099810) Anand Pant
 (`@dimethylpant`, 2026-08-26) ranked “nx cloud and the
 affected graph and being able to reliably only rebuild/test
-what changes” above Depot/Prior-vendor when GitHub itself is
+what changes” above Depot/[redacted-vendor] when GitHub itself is
 partially down.[[24]](https://x.com/dimethylpant/status/2092440736880869430) Nx’s 2026-07-28
 promo for Stalk Altan’s talk: “AI didn't break CI — it just
 made the existing breakage obvious.”[[25]](https://x.com/NxDevTools/status/2082149090968965478)

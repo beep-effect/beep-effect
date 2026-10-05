@@ -47,7 +47,7 @@ committed re-run before being cited as fact:
    ~4.6GB).
 4. Domain packages are cheap (ontology-domain ~503K, agents-domain ~2.2M);
    client/server/use-cases layers inherit the lump.
-5. Hosted CI "OOMs" were whole-runner deaths on 4vcpu prior-vendor runners
+5. Hosted CI "OOMs" were whole-runner deaths on 4vcpu [redacted-vendor] runners
    (turbo default concurrency 10 when `isCi()` skips `--concurrency=3` via
    `boundedRootTurboArgs`, `Quality/Tasks.ts`); most lanes were bumped to
    8vcpu, the push-only Build lane reportedly still 4vcpu (`check.yml`).

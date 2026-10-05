@@ -139,7 +139,7 @@ push runs:
 | Surface | Value |
 | --- | --- |
 | Organization group 4 `beep-ec2-heavy` | `visibility: selected`; repositories `beep-effect/beep-effect` only; `allows_public_repositories: true`; `restricted_to_workflows: true`; `selected_workflows` exactly `check.yml`, `fleet-lane-probe.yml`, `fleet-shadow-check.yml`, `heavy.yml` at `refs/heads/main`. |
-| Other organization groups | `Default` (id 1, `visibility: all`, no runners); `Prior-vendor runners …` (id 3, `visibility: all`, 400 offline Prior-vendor registrations). Neither admits fleet runners. |
+| Other organization groups | `Default` (id 1, `visibility: all`, no runners); `[redacted-vendor] runners …` (id 3, `visibility: all`, 400 offline [redacted-vendor] registrations). Neither admits fleet runners. |
 | Group 4 roster during the proof | 13 online `beep-ci-*` runners (the #812 and #814 push bursts), 1 offline. |
 | Scale-up lambda `beep-ci-scale-up` | `ENABLE_ORGANIZATION_RUNNERS=true`, `RUNNER_GROUP_NAME=beep-ec2-heavy`, `ENABLE_EPHEMERAL_RUNNERS=true`, `RUNNER_LABELS=beep-ec2-heavy`. |
 | SSM pin | `/beep-ci/controller/runner-ami-id` version 7, `ami-0738c1b69711969bc`. |

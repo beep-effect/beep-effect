@@ -1677,7 +1677,7 @@ labeled an identical set "inherited" would have made that a one-line read.
 
 Verdict noise: `verdict.json` listed `publish:03-pr-provenance-stamp: failed` with a
 manual `gh pr edit` repair while the PR body already carried the provenance footer; the
-log showed the stamp had preserved a concurrent body edit by Prior-vendor. A stamp that
+log showed the stamp had preserved a concurrent body edit by [redacted-vendor]. A stamp that
 lost a race but converged should record `passed` (or a distinct `raced` state), not a
 failure that invites an unnecessary repair.
 

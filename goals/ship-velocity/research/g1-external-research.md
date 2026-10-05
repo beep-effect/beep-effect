@@ -65,7 +65,7 @@ There is no single published cutoff, but the numbers cluster:
 | **45+ min** | "Nobody is going to merge four times a day." Fix CI first (affected tests, two-step, parallel queues) — a queue on a 45-minute suite is a parking lot ([TBD guide](https://mergify.com/learn/trunk-based-development)). |
 | **1–3 hours (Bazel / hardware)** | FIFO collapses. Batching + two-step is mandatory; Cerebras batches compatible PRs into a single multi-hour hardware cycle ([State of MQ 2026](https://mergify.com/reports/state-of-merge-queues-2026)). |
 
-ThePrimeagen, 2026-05-30, on Prior-vendor-fast Actions: the slowest part of a 10-second CI world is *queueing* (`create PR → Ready to merge → Queueing CI → Running CI`), not the run itself ([X/2060762508088983568](https://x.com/ThePrimeagen/status/2060762508088983568), 335 likes / 47.8k views). Fast runners make the *orchestration* the bottleneck — relevant because this operator already mixes Prior-vendor + self-managed EC2.
+ThePrimeagen, 2026-05-30, on [redacted-vendor]-fast Actions: the slowest part of a 10-second CI world is *queueing* (`create PR → Ready to merge → Queueing CI → Running CI`), not the run itself ([X/2060762508088983568](https://x.com/ThePrimeagen/status/2060762508088983568), 335 likes / 47.8k views). Fast runners make the *orchestration* the bottleneck — relevant because this operator already mixes [redacted-vendor] + self-managed EC2.
 
 ### Graphite / stacking vs GitHub vs Mergify vs trunk trains
 
@@ -86,7 +86,7 @@ ThePrimeagen, 2026-05-30, on Prior-vendor-fast Actions: the slowest part of a 10
 |---|---|---|---|
 | 2026-08-08 | [@sandeeyps](https://x.com/sandeeyps/status/2086119615617491307) | 22 views (thin but technically dense) | Hundreds of agent PRs/week break a serial queue before they break review. Speculative batch + bisect + per-file conflict map. Cap batch by flake rate. |
 | 2026-04-24 | [@kdaigle](https://x.com/kdaigle/status/2047803291988590609) (GitHub COO) | 916 likes / 749k views | Confirmed MQ generated squash/rebase from wrong base; 2,804 PRs. |
-| 2026-05-30 | [@ThePrimeagen](https://x.com/ThePrimeagen/status/2060762508088983568) | 335 likes / 47.8k views | With 10s Prior-vendor CI, *queueing* dominates wall time. |
+| 2026-05-30 | [@ThePrimeagen](https://x.com/ThePrimeagen/status/2060762508088983568) | 335 likes / 47.8k views | With 10s [redacted-vendor] CI, *queueing* dominates wall time. |
 | 2026-08-13 | [@jayw_actwise](https://x.com/jayw_actwise/status/2088020166538117431) quoting Cursor | Cursor parent: 2012 likes / 202k views | Practical split: local worktree agents write, cloud agents review/promote; keep GH CI + a merge queue. |
 | 2026-08-06 | [@cozybearlog](https://x.com/cozybearlog/status/2085465182919410114) | 118 views | "We batch small PRs just to survive the queue." |
 
@@ -206,7 +206,7 @@ From Cachely's 2026 guide, Vercel env-var docs, and issue tracker:
 
 1. **Env fragmenting the key.** Anything in `env` / `globalEnv` that differs per machine or per run (`CI`, `RUNNER_NAME`, `GITHUB_RUN_ID`, a clock, `NODE_OPTIONS` with inspect flags) busts every hash. Undeclared vars that the task *actually reads* cause the opposite: **stale hits**. Strict env mode is how you find undeclared reads ([Turborepo env-var docs](https://turborepo.dev/docs/crafting-your-repository/using-environment-variables)).
 2. **Lockfile skew across sibling checkouts.** Each checkout on a different `pnpm-lock.yaml` (or a dirty install) is a different key. Fleet-wide `pnpm install` after every `main` pull is not optional.
-3. **Toolchain / turbo version not in the hash the way you think.** Node/pnpm version differences between laptop and Prior-vendor/EC2 produce different outputs under the same source hash if those tools are not declared as `globalDependencies` or wrapped by mise.
+3. **Toolchain / turbo version not in the hash the way you think.** Node/pnpm version differences between laptop and [redacted-vendor]/EC2 produce different outputs under the same source hash if those tools are not declared as `globalDependencies` or wrapped by mise.
 4. **Over-broad `inputs` / `globalDependencies`.** Default is "every file in the package." A README edit rebuilds. A frequently-touched root file in `globalDependencies` invalidates *everything*.
 5. **Outputs not declared, or IO errors on write.** Vercel Community (2025-12-06): cache write failed silently on long-path symlinks in Next standalone output; every subsequent build missed even with an identical printed hash.
 6. **Signature-key mismatch.** If CI signs with key A and laptops verify with key B (or unset), every download is a miss. Same for enabling `signature: true` on the server while old unsigned artifacts remain — they are treated as misses.
@@ -278,7 +278,7 @@ A ratchet vs a main-branch baseline is the right *intent* and a notorious false-
 
 ### E. Other local↔CI closers that show up in 2025–2026 writeups
 
-- **Same container / same runner image locally.** Prior-vendor/EC2 images reproduced via `devcontainer` or a pinned Action runner image beats "close enough Ubuntu."
+- **Same container / same runner image locally.** [redacted-vendor]/EC2 images reproduced via `devcontainer` or a pinned Action runner image beats "close enough Ubuntu."
 - **Do not path-filter a *required* check.** Mergify (2026-06-26): a path-filtered required workflow that does not run reports *no* status, so the check sits pending — or you fake it green and gate on nothing. ([Path Filters Are a Convenience, Not a CI Gate](https://mergify.com/blog/path-filters-are-not-a-ci-gate))
 - **Fail-fast pyramid in the agent harness**, not only in CI: format → lint → typecheck → unit → (then) integration/coverage/docgen. DEV.to / Claude Code multi-agent writeup (2026-05-19) puts this in hooks so the agent never opens a PR that would fail the cheap lanes.
 

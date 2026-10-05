@@ -214,7 +214,7 @@ consolidation (deferred pending cache measurements). Per-lane proof resume
     waiting; teach the monitor to distinguish "needs code fix" from "flake →
     rerun-failed". Free and immediate.
 
-24. **Self-hosted/owned CI runners on AWS (+ workstation runner).** Prior-vendor
+24. **Self-hosted/owned CI runners on AWS (+ workstation runner).** [redacted-vendor]
     cost >$50/week; ephemeral spot runners with a pre-baked image (bun +
     installed tree + warmed turbo cache) could cut cost 50-80% (estimate,
     verify pricing) AND erase most of the ~60s/job setup floor. Unlocks:
@@ -1255,7 +1255,7 @@ durability fixes discovery, not trust.
     Check runs and 0s on others; every "delayed" run was `run_attempt`
     2-3 and every 0s run was attempt 1 — the metric measured
     time-until-a-human-clicked-rerun, not runner wait. Actual
-    Prior-vendor pickup, measured at JOB level during the same outage:
+    [redacted-vendor] pickup, measured at JOB level during the same outage:
     19-67 seconds. Job records were garbled too (a job whose
     `created_at` postdates its own `completed_at`), so during an
     incident NO Actions timestamp is trustworthy unaudited.
@@ -1459,7 +1459,7 @@ cost (decision 44).
 91. **[GRADUATED — `goals/ci-fleet-endgame`, decision 54] Controller
     build-vs-adopt is a decision gate: no controller code before
     the research verdict.** (Operator-ordered, 2026-08-08, after the burst
-    landed the merge wave.) The endgame is verbatim: "our own prior-vendor
+    landed the merge wave.) The endgame is verbatim: "our own [redacted-vendor]
     minus the UI & ridiculous spend" — zero manual aws/gh commands per PR.
     Candidate references the research audits against:
     philips-labs/terraform-aws-github-runner (webhook→Lambda→spot,
