@@ -28,7 +28,7 @@ WITH applications AS (
   WHERE p.kind = 'patent' AND p.natural_key = $2
   UNION
   SELECT e.object_iri FROM kg_node d JOIN kg_edge e ON e.subject_iri = d.iri AND e.predicate = 'files_as'
-  WHERE d.kind = 'docket' AND (d.natural_key = $3 OR d.natural_key LIKE '%.' || $3)
+  WHERE d.kind = 'docket' AND (d.natural_key = $3 OR split_part(d.natural_key, '.', 2) = $3)
 ),
 related AS (
   SELECT iri FROM applications

@@ -211,8 +211,15 @@ const uniqueMember = (values: HashSet.HashSet<string>): O.Option<string> =>
 const sortedUnique = (values: Iterable<string>): ReadonlyArray<string> =>
   A.sort(A.dedupe(A.fromIterable(values)), Order.String);
 
+// Exact match only: `20001US01` and `20001US010` are different matters. A
+// national-stage docket such as `10109WO02-US1` also answers to its base code.
 const sameDocket = (reference: string, docket: string): boolean =>
-  Str.startsWith(docket)(reference) || Str.startsWith(reference)(docket);
+  reference === docket ||
+  pipe(
+    Str.split(docket, "-"),
+    A.head,
+    O.exists((base) => base === reference)
+  );
 
 /*
  * A document may cite another client's matter that shares its bare family

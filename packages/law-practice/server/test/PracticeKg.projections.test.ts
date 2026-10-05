@@ -326,7 +326,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-a.txt"),
-    `alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001EP09`
+    `alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001US010`
   );
   yield* fs.writeFileString(path.join(textRoot, "operation:op-b.txt"), "family 20001 patent application 55/667,788");
   yield* fs.writeFileString(
@@ -628,7 +628,7 @@ describe("practice KG projections", () => {
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(textLines, (row) => row.line)).toStrictEqual([
             `{"operation_id":"operation:op-d","text":"restored ${fixtureClients.alpha}.20001US03 letter"}`,
-            `{"operation_id":"operation:op-a","text":"alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001EP09"}`,
+            `{"operation_id":"operation:op-a","text":"alpha docket ${fixtureClients.alpha}.20001US01 response citing application 87/654,321 and 11/223,344 and matter ${fixtureClients.beta}.20001US010"}`,
             '{"operation_id":"operation:op-b","text":"family 20001 patent application 55/667,788"}',
             `{"operation_id":"operation:op-c","text":"beta client ${fixtureClients.beta}.20001US02 response citing 11/223,344"}`,
           ]);
@@ -733,6 +733,8 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(bareDocketLines, (row) => row.line)).toContain('{"naturalKey":"87654321"}');
+          const wildcardDocketRows = yield* sql.unsafe(PracticeKgQueries.application, [null, null, "20001US%"]);
+          expect(A.length(wildcardDocketRows)).toBe(0);
           const buildLines = yield* sql
             .unsafe(
               "SELECT row_to_json(x)::text AS line FROM (SELECT bundle_version, built_from_runs, corpus_snapshot_at FROM kg_build) x"
