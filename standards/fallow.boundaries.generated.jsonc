@@ -498,6 +498,12 @@
         ]
       },
       {
+        "name": "@beep/occt",
+        "patterns": [
+          "packages/drivers/occt/src/**"
+        ]
+      },
+      {
         "name": "@beep/oip-web",
         "patterns": [
           "apps/oip-web/src/**"
@@ -585,6 +591,12 @@
         "name": "@beep/pandoc-ast",
         "patterns": [
           "packages/foundation/modeling/pandoc-ast/src/**"
+        ]
+      },
+      {
+        "name": "@beep/pdf-tools",
+        "patterns": [
+          "packages/drivers/pdf-tools/src/**"
         ]
       },
       {
@@ -753,6 +765,12 @@
         "name": "@beep/tailscale",
         "patterns": [
           "packages/drivers/tailscale/src/**"
+        ]
+      },
+      {
+        "name": "@beep/technical-drawing",
+        "patterns": [
+          "packages/foundation/capability/technical-drawing/src/**"
         ]
       },
       {
@@ -2668,6 +2686,25 @@
         ]
       },
       {
+        "from": "@beep/occt",
+        "allow": [
+          "@beep/identity",
+          "@beep/occt",
+          "@beep/schema",
+          "@beep/technical-drawing",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/occt",
+          "@beep/schema",
+          "@beep/technical-drawing",
+          "@beep/test-runner",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/oip-web",
         "allow": [
           "@beep/hubspot",
@@ -3001,6 +3038,23 @@
         ]
       },
       {
+        "from": "@beep/pdf-tools",
+        "allow": [
+          "@beep/identity",
+          "@beep/pdf-tools",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/pdf-tools",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/pglite",
         "allow": [
           "@beep/fc-runs",
@@ -3327,6 +3381,8 @@
           "@beep/md",
           "@beep/obs",
           "@beep/observability",
+          "@beep/occt",
+          "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
@@ -3337,6 +3393,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/technical-drawing",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3356,6 +3413,8 @@
           "@beep/md",
           "@beep/obs",
           "@beep/observability",
+          "@beep/occt",
+          "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
@@ -3366,6 +3425,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/technical-drawing",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3744,6 +3804,23 @@
           "@beep/schema",
           "@beep/tailscale",
           "@beep/test-runner"
+        ]
+      },
+      {
+        "from": "@beep/technical-drawing",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/technical-drawing",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/technical-drawing",
+          "@beep/test-runner",
+          "@beep/utils"
         ]
       },
       {
