@@ -11,14 +11,22 @@ import { KG_BUILD_TABLE_NAME } from "@beep/law-practice-tables/entities/KgBuild"
 import { KG_EDGE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgEdge";
 import { KG_NODE_TABLE_NAME } from "@beep/law-practice-tables/entities/KgNode";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, FileSystem, Layer, MutableHashMap, Order, Path, pipe } from "effect";
+import { Context, DateTime, Effect, FileSystem, HashSet, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
+import {
+  attributeDocuments,
+  PracticeKgAttributeDocumentsInput,
+  PracticeKgResolveAnchorsInput,
+  reconcileAnchors,
+  resolveAnchors,
+} from "./PracticeKg.families.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { readReferenceScans } from "./PracticeKg.references.ts";
 import { PracticeKgCatalogRow, PracticeKgEnrichmentRow, stripPrefix, withDuckDb } from "./PracticeKg.rows.ts";
 import {
   encodePracticeKgBundleManifestJson,
@@ -34,12 +42,18 @@ import {
   PracticeKgSourceRuns,
   PracticeKgSummary,
 } from "./PracticeKg.schemas.ts";
-import type { KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
-import type { PracticeKgEmailHeaderRow, PracticeKgProvenanceKind } from "./PracticeKg.schemas.ts";
+import type { KgAttributionSource, KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
+import type { PracticeKgAnchorResolution, PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
+import type { PracticeKgReferenceScans } from "./PracticeKg.references.ts";
+import type {
+  PracticeKgEmailHeaderRow,
+  PracticeKgEpistemicStatus,
+  PracticeKgProvenanceKind,
+} from "./PracticeKg.schemas.ts";
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-07-27-01";
+const graphBundleVersion = "2026-10-05-01";
 const graphReadme = `Practice Knowledge Graph Bundle
 
 This folder is a read-only local data bundle for the Practice KG MCP server.
@@ -72,6 +86,7 @@ SELECT
   o.docket_family AS "docketFamily",
   o.organized_relative_path AS "organizedRelativePath",
   o.effective_name AS "effectiveName",
+  COALESCE(o.restored, FALSE) AS restored,
   CAST(COALESCE(s.size_bytes, 0) AS DOUBLE) AS "sizeBytes",
   COALESCE(s.mtime_iso, '1970-01-01T00:00:00.000Z') AS "mtimeIso",
   COALESCE(s.run_label, 'base') AS "runLabel"
@@ -85,6 +100,7 @@ LEFT JOIN (
     ARG_MIN(run_label, run_label || ':' || source_label || ':' || relative_path) AS run_label
     ,STRING_AGG(run_label || ':' || source_label || ':' || relative_path, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
   FROM corpus_source_files
+  ${includeRefresh ? "" : "WHERE run_label <> '2026-07-refresh'"}
   GROUP BY digest
 ) s USING (digest)
 ${
@@ -101,6 +117,7 @@ SELECT
   NULL AS "docketFamily",
   NULL AS "organizedRelativePath",
   regexp_extract(refresh.relative_path, '[^/\\\\]+$', 0) AS "effectiveName",
+  FALSE AS restored,
   CAST(refresh.size_bytes AS DOUBLE) AS "sizeBytes",
   refresh.mtime_iso AS "mtimeIso",
   refresh.run_label AS "runLabel"
@@ -162,6 +179,7 @@ const createKgTables = [
   label TEXT NOT NULL,
   docket_family TEXT,
   client TEXT,
+  attribution_source TEXT NOT NULL,
   epistemic_status TEXT NOT NULL,
   provenance_kind TEXT NOT NULL,
   provenance_ref TEXT NOT NULL,
@@ -180,14 +198,15 @@ const createKgTables = [
   bundle_version TEXT NOT NULL,
   built_from_runs TEXT NOT NULL,
   counts JSONB NOT NULL,
-  built_at TEXT NOT NULL
+  built_at TEXT NOT NULL,
+  corpus_snapshot_at TEXT NOT NULL
 )`,
 ];
 
 const insertKgNode = `
 INSERT INTO ${KG_NODE_TABLE_NAME}
-  (iri, kind, natural_key, label, docket_family, client, epistemic_status, provenance_kind, provenance_ref, payload)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)`;
+  (iri, kind, natural_key, label, docket_family, client, attribution_source, epistemic_status, provenance_kind, provenance_ref, payload)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)`;
 
 const insertKgEdge = `
 INSERT INTO ${KG_EDGE_TABLE_NAME}
@@ -197,9 +216,6 @@ VALUES ($1, $2, $3, $4, $5, $6)`;
 const graphIri = (kind: KgNodeKind, naturalKey: string): string => graphIdentity.create(kind).create(naturalKey).iri;
 
 const edgeKey = (edge: PracticeKgEdgeRow): string => `${edge.subjectIri}\u0000${edge.predicate}\u0000${edge.objectIri}`;
-
-const splitList = (value: string): ReadonlyArray<string> =>
-  A.filter(A.map(Str.split(" | ")(value), Str.trim), Str.isNonEmpty);
 
 const firstOrFail = <A>(rows: ReadonlyArray<A>, label: string): Effect.Effect<A, PracticeKgProjectionError> =>
   A.head(rows).pipe(
@@ -244,13 +260,16 @@ const createNode = (
   label: string,
   provenanceKind: PracticeKgProvenanceKind,
   provenanceRef: string,
+  attributionSource: KgAttributionSource,
   options: {
     readonly client?: string | null | undefined;
     readonly docketFamily?: string | null | undefined;
+    readonly epistemicStatus?: PracticeKgEpistemicStatus | undefined;
     readonly payload?: Readonly<Record<string, unknown>> | undefined;
   } = {}
 ): PracticeKgNodeRow =>
   PracticeKgNodeRow.make({
+    attributionSource,
     iri: graphIri(kind, naturalKey),
     kind,
     label,
@@ -261,6 +280,7 @@ const createNode = (
     ...O.getSomesStruct({
       client: O.fromNullishOr(options.client),
       docketFamily: O.fromNullishOr(options.docketFamily),
+      epistemicStatus: O.fromNullishOr(options.epistemicStatus),
     }),
   });
 
@@ -271,7 +291,8 @@ const createEdge = (
   objectKind: KgNodeKind,
   objectKey: string,
   provenanceKind: PracticeKgProvenanceKind,
-  provenanceRef: string
+  provenanceRef: string,
+  epistemicStatus?: PracticeKgEpistemicStatus
 ): PracticeKgEdgeRow =>
   PracticeKgEdgeRow.make({
     objectIri: graphIri(objectKind, objectKey),
@@ -279,140 +300,248 @@ const createEdge = (
     provenanceKind,
     provenanceRef,
     subjectIri: graphIri(subjectKind, subjectKey),
+    ...O.getSomesStruct({ epistemicStatus: O.fromNullishOr(epistemicStatus) }),
   });
 
-const buildGraphRows = (
-  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
-  enrichmentRows: ReadonlyArray<PracticeKgEnrichmentRow>
-): {
-  readonly edges: ReadonlyArray<PracticeKgEdgeRow>;
-  readonly nodes: ReadonlyArray<PracticeKgNodeRow>;
-} => {
-  const nodes = MutableHashMap.empty<string, PracticeKgNodeRow>();
-  const edges = MutableHashMap.empty<string, PracticeKgEdgeRow>();
-  const docketsByFamily = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  const addNode = (node: PracticeKgNodeRow): void => {
-    MutableHashMap.set(nodes, node.iri, node);
-  };
-  const addEdge = (edge: PracticeKgEdgeRow): void => {
-    MutableHashMap.set(edges, edgeKey(edge), edge);
-  };
+const familyLabel = (attribution: PracticeKgDocumentAttribution, family: string): string =>
+  attribution.client === null ? `${family} (unattributed)` : `${attribution.client}.${family}`;
 
-  A.forEach(catalogRows, (row) => {
-    const { client, docket, docketFamily } = row;
-    addNode(
-      createNode("document", row.digest, row.effectiveName, "catalog-digest", row.digest, {
-        client,
-        docketFamily,
-        payload: {
-          category: row.category,
-          mtimeIso: row.mtimeIso,
-          organizedRelativePath: row.organizedRelativePath,
-          sizeBytes: row.sizeBytes,
-        },
+const recycledStatus = (attribution: PracticeKgDocumentAttribution): PracticeKgEpistemicStatus | undefined =>
+  attribution.recycled ? "recycled-unverified" : undefined;
+
+type GraphSink = {
+  readonly addEdge: (edge: PracticeKgEdgeRow) => void;
+  /** First write wins: spine nodes are minted once per key, stubs never replace a node. */
+  readonly addNode: (node: PracticeKgNodeRow) => void;
+  /** Whether at least one non-recycled document backs this spine key. */
+  readonly isVerified: (kind: "client" | "docket" | "family", key: string) => boolean;
+  /** Last write wins: an anchor's own record replaces a parent stub minted earlier. */
+  readonly putNode: (node: PracticeKgNodeRow) => void;
+};
+
+const spineStatus = (
+  sink: GraphSink,
+  kind: "client" | "docket" | "family",
+  key: string
+): PracticeKgEpistemicStatus | undefined => (sink.isVerified(kind, key) ? undefined : "recycled-unverified");
+
+const projectDocumentNode = (
+  sink: GraphSink,
+  row: PracticeKgCatalogRow,
+  attribution: PracticeKgDocumentAttribution
+) => {
+  const status = recycledStatus(attribution);
+  sink.addNode(
+    createNode("document", row.digest, row.effectiveName, "catalog-digest", row.digest, attribution.attributionSource, {
+      client: attribution.client,
+      docketFamily: attribution.family,
+      epistemicStatus: status,
+      payload: {
+        category: row.category,
+        mtimeIso: row.mtimeIso,
+        organizedRelativePath: row.organizedRelativePath,
+        sizeBytes: row.sizeBytes,
+      },
+    })
+  );
+  if (row.category === "email-archive") {
+    sink.addNode(
+      createNode("email_archive", row.digest, row.effectiveName, "catalog-digest", row.digest, "filename", {
+        client: attribution.client,
+        docketFamily: attribution.family,
       })
     );
-    if (row.category === "email-archive") {
-      addNode(
-        createNode("email_archive", row.digest, row.effectiveName, "catalog-digest", row.digest, {
-          client,
-          docketFamily,
-        })
-      );
-    }
-    if (docketFamily !== null) {
-      addNode(createNode("docket_family", docketFamily, docketFamily, "organize-row", docketFamily, { client }));
-      if (docket === null) {
-        addEdge(
-          createEdge(
-            "docket_family",
-            docketFamily,
-            "family_document",
-            "document",
-            row.digest,
-            "catalog-digest",
-            row.digest
-          )
-        );
-      }
-    }
-    if (docket !== null && docketFamily !== null) {
-      addNode(createNode("docket", docket, docket, "organize-row", row.sourceRelativePath, { client, docketFamily }));
-      addEdge(createEdge("docket_family", docketFamily, "has_docket", "docket", docket, "organize-row", docket));
-      addEdge(createEdge("docket", docket, "has_document", "document", row.digest, "catalog-digest", row.digest));
-      const familyDockets = pipe(MutableHashMap.get(docketsByFamily, docketFamily), O.getOrElse(A.empty<string>));
-      MutableHashMap.set(docketsByFamily, docketFamily, A.dedupe(A.append(familyDockets, docket)));
-    }
-    if (client !== null && docketFamily !== null) {
-      addNode(createNode("client", client, client, "organize-row", row.sourceLabel));
-      addEdge(
-        createEdge(
-          "client",
-          client,
-          "has_docket_family",
-          "docket_family",
-          docketFamily,
-          "organize-row",
-          row.sourceLabel
-        )
-      );
-    }
-  });
+  }
+};
 
-  A.forEach(enrichmentRows, (row) => {
-    if (row.status !== "resolved") {
-      return;
-    }
-    const { applicationNumber: application, patentNumber: patent } = row;
-    const families = splitList(row.docketFamilies);
-    const parents = splitList(row.parentApplicationNumbers);
-    if (application !== null) {
-      addNode(
-        createNode("application", application, row.inventionTitle ?? application, "uspto-anchor", application, {
-          payload: {
-            firstApplicantName: row.firstApplicantName,
-            firstInventorName: row.firstInventorName,
-            inventionTitle: row.inventionTitle,
-          },
-        })
-      );
-      A.forEach(families, (family) => {
-        addNode(createNode("docket_family", family, family, "uspto-anchor", application));
-        addEdge(
-          createEdge(
-            "application",
-            application,
-            "enriched_family",
-            "docket_family",
-            family,
-            "uspto-anchor",
-            application
-          )
-        );
-        A.forEach(pipe(MutableHashMap.get(docketsByFamily, family), O.getOrElse(A.empty<string>)), (docket) =>
-          addEdge(createEdge("docket", docket, "files_as", "application", application, "uspto-anchor", application))
-        );
-      });
-      A.forEach(parents, (parent) => {
-        addNode(createNode("application", parent, parent, "uspto-anchor", application));
-        addEdge(
-          createEdge("application", application, "continuation_of", "application", parent, "uspto-anchor", application)
-        );
-      });
-    }
-    if (patent !== null) {
-      addNode(
-        createNode("patent", patent, row.inventionTitle ?? patent, "uspto-anchor", patent, {
-          payload: { inventionTitle: row.inventionTitle },
-        })
-      );
-      if (application !== null) {
-        addEdge(createEdge("application", application, "granted_as", "patent", patent, "uspto-anchor", patent));
+const projectFamilySpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribution: PracticeKgDocumentAttribution) => {
+  const { client, docketKey, family, familyKey } = attribution;
+  if (family === null || familyKey === null) {
+    return;
+  }
+  const status = recycledStatus(attribution);
+  sink.addNode(
+    createNode(
+      "docket_family",
+      familyKey,
+      familyLabel(attribution, family),
+      "organize-row",
+      family,
+      attribution.attributionSource,
+      {
+        client,
+        docketFamily: family,
+        epistemicStatus: spineStatus(sink, "family", familyKey),
       }
-    }
-  });
+    )
+  );
+  if (docketKey === null || row.docket === null) {
+    sink.addEdge(
+      createEdge(
+        "docket_family",
+        familyKey,
+        "family_document",
+        "document",
+        row.digest,
+        "catalog-digest",
+        row.digest,
+        status
+      )
+    );
+    return;
+  }
+  sink.addNode(
+    createNode("docket", docketKey, docketKey, "organize-row", row.sourceRelativePath, attribution.attributionSource, {
+      client,
+      docketFamily: family,
+      epistemicStatus: spineStatus(sink, "docket", docketKey),
+    })
+  );
+  sink.addEdge(createEdge("docket_family", familyKey, "has_docket", "docket", docketKey, "organize-row", row.docket));
+  sink.addEdge(
+    createEdge("docket", docketKey, "has_document", "document", row.digest, "catalog-digest", row.digest, status)
+  );
+};
 
-  const archiveNodes = A.filter(A.fromIterable(MutableHashMap.values(nodes)), (node) => node.kind === "email_archive");
+const projectClientSpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribution: PracticeKgDocumentAttribution) => {
+  const { client, familyKey } = attribution;
+  if (client === null || familyKey === null) {
+    return;
+  }
+  const [provenanceKind, provenanceRef]: readonly [PracticeKgProvenanceKind, string] =
+    attribution.attributionSource === "client-map" ? ["organize-row", row.sourceLabel] : ["catalog-digest", row.digest];
+  sink.addNode(
+    createNode("client", client, client, provenanceKind, provenanceRef, attribution.attributionSource, {
+      epistemicStatus: spineStatus(sink, "client", client),
+    })
+  );
+  sink.addEdge(
+    createEdge("client", client, "has_docket_family", "docket_family", familyKey, provenanceKind, provenanceRef)
+  );
+};
+
+type AnchorPlacement = {
+  readonly client: string | null;
+  readonly docketFamily: string | null;
+  readonly memberFamilyKey: string | null;
+  readonly mentionedFamilyKeys: ReadonlyArray<string>;
+};
+
+const anchorPlacement = (resolution: PracticeKgAnchorResolution): AnchorPlacement => ({
+  client: resolution.memberClient,
+  docketFamily: resolution.memberFamily,
+  memberFamilyKey: resolution.memberFamilyKey,
+  mentionedFamilyKeys: resolution.mentionedFamilyKeys,
+});
+
+const projectApplicationNode = (
+  sink: GraphSink,
+  resolution: PracticeKgAnchorResolution,
+  application: string,
+  placement: AnchorPlacement
+) => {
+  const { anchor } = resolution;
+  sink.putNode(
+    createNode(
+      "application",
+      application,
+      anchor.inventionTitle ?? application,
+      "uspto-anchor",
+      application,
+      resolution.attributionSource,
+      {
+        client: placement.client,
+        docketFamily: placement.docketFamily,
+        payload: {
+          firstApplicantName: anchor.firstApplicantName,
+          firstInventorName: anchor.firstInventorName,
+          inventionTitle: anchor.inventionTitle,
+          memberFamilyKey: placement.memberFamilyKey,
+          mentionedFamilyKeys: placement.mentionedFamilyKeys,
+        },
+      }
+    )
+  );
+  A.forEach(anchor.parentApplicationNumbers, (parent) => {
+    sink.addNode(createNode("application", parent, parent, "uspto-anchor", application, "official-record"));
+    sink.addEdge(
+      createEdge("application", application, "continuation_of", "application", parent, "uspto-anchor", application)
+    );
+  });
+};
+
+const projectPatentNode = (
+  sink: GraphSink,
+  resolution: PracticeKgAnchorResolution,
+  patent: string,
+  placement: AnchorPlacement
+) => {
+  const { anchor } = resolution;
+  const attributionSource: KgAttributionSource =
+    anchor.applicationNumber === null ? resolution.attributionSource : "official-record";
+  sink.putNode(
+    createNode("patent", patent, anchor.inventionTitle ?? patent, "uspto-anchor", patent, attributionSource, {
+      client: placement.client,
+      docketFamily: placement.docketFamily,
+      payload: {
+        inventionTitle: anchor.inventionTitle,
+        memberFamilyKey: placement.memberFamilyKey,
+        mentionedFamilyKeys: placement.mentionedFamilyKeys,
+      },
+    })
+  );
+  if (anchor.applicationNumber !== null) {
+    sink.addEdge(
+      createEdge("application", anchor.applicationNumber, "granted_as", "patent", patent, "uspto-anchor", patent)
+    );
+  }
+};
+
+const projectAnchorEdges = (
+  sink: GraphSink,
+  resolution: PracticeKgAnchorResolution,
+  anchorKind: KgNodeKind,
+  anchorKey: string
+) => {
+  A.forEach(resolution.memberDocketKeys, (docketKey) =>
+    sink.addEdge(createEdge("docket", docketKey, "files_as", anchorKind, anchorKey, "uspto-anchor", anchorKey))
+  );
+  A.forEach(resolution.mentionedFamilyKeys, (familyKey) =>
+    sink.addEdge(
+      createEdge(
+        anchorKind,
+        anchorKey,
+        "mentioned_in_family",
+        "docket_family",
+        familyKey,
+        "uspto-anchor",
+        anchorKey,
+        "mention-derived"
+      )
+    )
+  );
+};
+
+const projectAnchor = (sink: GraphSink, resolution: PracticeKgAnchorResolution) => {
+  const { applicationNumber: application, patentNumber: patent } = resolution.anchor;
+  const placement = anchorPlacement(resolution);
+  if (application !== null) {
+    projectApplicationNode(sink, resolution, application, placement);
+  }
+  if (patent !== null) {
+    projectPatentNode(sink, resolution, patent, placement);
+  }
+  const anchorKey = application ?? patent;
+  if (anchorKey !== null) {
+    projectAnchorEdges(sink, resolution, application === null ? "patent" : "application", anchorKey);
+  }
+};
+
+const projectArchiveLinks = (
+  sink: GraphSink,
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
+  archiveNodes: ReadonlyArray<PracticeKgNodeRow>
+) => {
   A.forEach(catalogRows, (row) => {
     if (row.category !== "email-export") {
       return;
@@ -424,7 +553,7 @@ const buildGraphRows = (
         O.getOrElse(() => archive.naturalKey)
       );
       if (Str.includes(`artifact:${archiveHex}`)(row.sourceRelativePath)) {
-        addEdge(
+        sink.addEdge(
           createEdge(
             "document",
             row.digest,
@@ -438,6 +567,78 @@ const buildGraphRows = (
       }
     });
   });
+};
+
+/*
+ * Family, docket, and client nodes are minted from the attributed catalog rows
+ * only. Enrichment never creates a family: the `docket_families` fan-out it
+ * carries is mention-derived (prior-art citations included), which is the
+ * cartesian defect the first gauntlet surfaced. Anchors join the spine through
+ * `files_as` only when their number resolves to exactly one keyed family, and
+ * otherwise hang off the families that mention them.
+ */
+const buildGraphRows = (
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
+  attributions: ReadonlyArray<PracticeKgDocumentAttribution>,
+  resolutions: ReadonlyArray<PracticeKgAnchorResolution>
+): {
+  readonly edges: ReadonlyArray<PracticeKgEdgeRow>;
+  readonly nodes: ReadonlyArray<PracticeKgNodeRow>;
+} => {
+  const nodes = MutableHashMap.empty<string, PracticeKgNodeRow>();
+  const edges = MutableHashMap.empty<string, PracticeKgEdgeRow>();
+  const attributionByDigest = MutableHashMap.fromIterable(
+    A.map(attributions, (attribution) => [attribution.digest, attribution] as const)
+  );
+  const verifiedKeys = HashSet.fromIterable(
+    A.flatMap(
+      A.filter(attributions, (attribution) => !attribution.recycled),
+      (attribution: PracticeKgDocumentAttribution): ReadonlyArray<string> =>
+        A.getSomes([
+          O.map(O.fromNullishOr(attribution.client), (key) => `client:${key}`),
+          O.map(O.fromNullishOr(attribution.docketKey), (key) => `docket:${key}`),
+          O.map(O.fromNullishOr(attribution.familyKey), (key) => `family:${key}`),
+        ])
+    )
+  );
+  const sink: GraphSink = {
+    addEdge: (edge) => {
+      MutableHashMap.set(edges, edgeKey(edge), edge);
+    },
+    addNode: (node) => {
+      if (!MutableHashMap.has(nodes, node.iri)) {
+        MutableHashMap.set(nodes, node.iri, node);
+      }
+    },
+    isVerified: (kind, key) => HashSet.has(verifiedKeys, `${kind}:${key}`),
+    putNode: (node) => {
+      MutableHashMap.set(nodes, node.iri, node);
+    },
+  };
+
+  const attributed = A.map(catalogRows, (row) => ({
+    attribution: pipe(
+      MutableHashMap.get(attributionByDigest, row.digest),
+      O.getOrThrowWith(() => new Error(`Graph build lost the attribution for "${row.digest}".`))
+    ),
+    row,
+  }));
+  A.forEach(attributed, ({ attribution, row }) => projectDocumentNode(sink, row, attribution));
+  // Spine nodes are first-write-wins, so verified documents go first: a shared
+  // family or docket takes its attribution source from a live file whenever one
+  // exists, and from a recycle stub only when nothing else backs it.
+  const verified = A.filter(attributed, ({ attribution }) => !attribution.recycled);
+  const recycled = A.filter(attributed, ({ attribution }) => attribution.recycled);
+  A.forEach(A.appendAll(verified, recycled), ({ attribution, row }) => {
+    projectFamilySpine(sink, row, attribution);
+    projectClientSpine(sink, row, attribution);
+  });
+  A.forEach(resolutions, (resolution) => projectAnchor(sink, resolution));
+  projectArchiveLinks(
+    sink,
+    catalogRows,
+    A.filter(A.fromIterable(MutableHashMap.values(nodes)), (node) => node.kind === "email_archive")
+  );
 
   return {
     edges: A.sort(A.fromIterable(MutableHashMap.values(edges)), Order.mapInput(Order.String, edgeKey)),
@@ -448,12 +649,31 @@ const buildGraphRows = (
   };
 };
 
+const projectGraph = (
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
+  enrichmentRows: ReadonlyArray<PracticeKgEnrichmentRow>,
+  scans: PracticeKgReferenceScans
+): ReturnType<typeof buildGraphRows> => {
+  const attributions = attributeDocuments(
+    PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences })
+  );
+  const resolutions = resolveAnchors(
+    PracticeKgResolveAnchorsInput.make({
+      anchors: reconcileAnchors(enrichmentRows),
+      attributions,
+      numberMentions: scans.numberMentions,
+    })
+  );
+  return buildGraphRows(catalogRows, attributions, resolutions);
+};
+
 const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(function* (
   nodes: ReadonlyArray<PracticeKgNodeRow>,
   edges: ReadonlyArray<PracticeKgEdgeRow>,
   counts: PracticeKgCounts,
   sourceRuns: PracticeKgSourceRuns,
-  builtAt: string
+  builtAt: string,
+  corpusSnapshotAt: string
 ) {
   const countsJson = yield* encodePracticeKgCountsJson(counts).pipe(
     PracticeKgProjectionError.mapError("Graph build counts failed JSON encoding.")
@@ -473,6 +693,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
             node.label,
             node.docketFamily ?? null,
             node.client ?? null,
+            node.attributionSource,
             node.epistemicStatus,
             node.provenanceKind,
             node.provenanceRef,
@@ -496,12 +717,13 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
     { discard: true }
   );
   yield* sql.unsafe(
-    `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at) VALUES ($1, $2, $3::jsonb, $4)`,
+    `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at, corpus_snapshot_at) VALUES ($1, $2, $3::jsonb, $4, $5)`,
     [
       graphBundleVersion,
       sourceRuns.refresh202607 === "included" ? "base | 2026-07-refresh" : "base",
       countsJson,
       builtAt,
+      corpusSnapshotAt,
     ]
   );
 });
@@ -598,15 +820,18 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   const emailRows = options.skipEmails
     ? A.empty<PracticeKgEmailHeaderRow>()
     : yield* readEmailRows(path.join(options.corpusRoot, "staging", "extract", "children"));
-  const graph = buildGraphRows(catalogRows, enrichmentRows);
+  const duckDbPath = path.join(bundleOut, "practice.duckdb");
   const duckCounts = yield* buildDuckDb(
-    path.join(bundleOut, "practice.duckdb"),
+    duckDbPath,
     catalogRows,
     enrichmentRows,
     emailRows,
     sourceSpecs,
     options.maxTextBytes
   );
+  const scans = yield* readReferenceScans(duckDbPath);
+  const graph = projectGraph(catalogRows, enrichmentRows, scans);
+  const builtAt = DateTime.formatIso(yield* DateTime.now);
   const counts = PracticeKgCounts.make({
     documents: S.Natural.make(duckCounts.documents),
     edges: S.Natural.make(A.length(graph.edges)),
@@ -617,16 +842,17 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     base: "included",
     refresh202607: options.includeRefresh ? "included" : "excluded",
   });
-  yield* writePgliteProjection(graph.nodes, graph.edges, counts, sourceRuns, reconciliation.snapshotIso).pipe(
+  yield* writePgliteProjection(graph.nodes, graph.edges, counts, sourceRuns, builtAt, reconciliation.snapshotIso).pipe(
     PracticeKgProjectionError.mapError(`Failed building graph PGlite store "${path.join(bundleOut, "kg.pglite")}".`)
   );
 
   const manifest = PracticeKgBundleManifest.make({
-    builtAt: reconciliation.snapshotIso,
+    builtAt,
     bundleVersion: graphBundleVersion,
     corpusRootExpected: true,
+    corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "1" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(
