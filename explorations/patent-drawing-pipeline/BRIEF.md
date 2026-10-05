@@ -60,7 +60,7 @@ validator report
 ```
 
 Operator surface: `bun run beep drawings render --spec <path> --out <dir>`,
-`… validate <pdf>`, `… judge <dir>`, `… sign <dir> --by <attorney> --confirmation <message-id|path>` (the confirmation artifact must contain the verbatim approval line for the sheet-set hash; `--by` is metadata).
+`… validate <pdf>`, `… judge <dir>`, `… sign <dir> --by <attorney> --confirmation <message-id|path>` (the verbatim approval line for the sheet-set hash must sit in content the attorney authored: the reply's own body from the attorney's address, or the initialed PDF page; `--by` is metadata).
 
 ## Rabbit Holes
 

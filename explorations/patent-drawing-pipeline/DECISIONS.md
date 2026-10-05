@@ -131,7 +131,7 @@ design-figure sheet set <hash> for filing.`). A hash quoted in any other
 sentence, a rejection included, is refused. For an email the sender must
 equal the attorney address in the matter spec and the line must sit in the
 attorney-authored portion (Graph `uniqueBody`), never only in the quoted
-thread; `drawings sign` verifies all of it before writing the event.
+thread; for a PDF the line must sit on the initialed page; `drawings sign` verifies all of it before writing the event.
 
 **Rationale:** Reuses the judge machinery and its hallucinated-evidence
 guard; the judge handles semantics only. Rejected: validator-only (misses
