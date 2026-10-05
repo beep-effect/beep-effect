@@ -38,7 +38,15 @@ class TaskSummary extends S.Class<TaskSummary>($I`TaskSummary`)(
     description: "Observed hashes and input membership from Turbo, never synthesized hashes.",
   })
 ) {}
-const Configuration = S.Struct({ tasks: S.Record(S.String, S.Unknown), global: S.Unknown, futureFlags: S.Unknown });
+// `agentGuidance` must reach the fixture: under an agent-detected environment Turbo 2.11.5+
+// otherwise writes an untracked AGENTS.md before every run, which is a declared input of the
+// knowledge rows and would select them under --affected.
+const Configuration = S.Struct({
+  tasks: S.Record(S.String, S.Unknown),
+  global: S.Unknown,
+  futureFlags: S.Unknown,
+  agentGuidance: S.Boolean,
+});
 const Manifest = S.Struct({ scripts: S.Record(S.String, S.String) });
 const Summary = S.Struct({ tasks: S.Array(TaskSummary) });
 const decodeConfiguration = S.decodeEffect(S.fromJsonString(Configuration));
@@ -167,6 +175,7 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   const path = yield* Path.Path;
   const repo = yield* findRepoRoot();
   const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repo, "turbo.json")));
+  expect(configuration.agentGuidance).toBe(false);
   const manifest = yield* decodeManifest(yield* fs.readFileString(path.join(repo, "package.json")));
   const rootEntries = yield* Effect.forEach(
     A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#")(id)),
