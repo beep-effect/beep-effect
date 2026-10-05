@@ -1,0 +1,78 @@
+import { join } from "node:path";
+import { writeFileSync, mkdirSync } from "node:fs";
+import opencascade from "replicad-opencascadejs";
+import {
+  setOC, getOC, makeBaseBox, makeCompound, ProjectionCamera, lookFromPlane,
+  drawProjection, makeProjectedEdges, GCWithScope, cast,
+} from "replicad";
+
+const wasm = join(import.meta.dir, "node_modules/replicad-opencascadejs/dist/replicad_single.wasm");
+const OC = await (opencascade as any)({ locateFile: () => wasm });
+setOC(OC);
+mkdirSync("out", { recursive: true });
+
+// --- test article: two slotted panels half-lapped into a cross (stool-like), plus a notched top
+const t = 4, L = 120, H = 60;
+const slotW = t, slotD = H / 2;
+const panelA = makeBaseBox(L, t, H).translate([-L / 2, -t / 2, 0])
+  .cut(makeBaseBox(slotW, t + 2, slotD).translate([-slotW / 2, -t / 2 - 1, H - slotD]));
+const panelB = makeBaseBox(t, L, H).translate([-t / 2, -L / 2, 0])
+  .cut(makeBaseBox(t + 2, slotW, slotD).translate([-t / 2 - 1, -slotW / 2, 0]));
+const top = makeBaseBox(90, 90, t).translate([-45, -45, H])
+  .cut(makeBaseBox(12, 12, t + 2).translate([30, 30, H - 1]));
+const article = makeCompound([panelA, panelB, top]);
+
+// --- orthographic through the public API (control)
+for (const plane of ["front", "top", "left"] as const) {
+  const { visible } = drawProjection(article, plane);
+  writeFileSync(`out/ortho-${plane}.svg`, visible.toSVG(5));
+}
+
+// --- axonometric "perspective-looking" through the public API (what practitioners might settle for)
+const axoCam = new ProjectionCamera([200, -200, 150]).lookAt(article);
+writeFileSync("out/axonometric.svg", drawProjection(article, axoCam).visible.toSVG(5));
+
+// --- TRUE PERSPECTIVE: same internal recipe, projector built with a focus
+function perspectiveEdges(shape: any, camera: ProjectionCamera, focus: number) {
+  const oc = getOC() as any;
+  const r = GCWithScope();
+  const hlr = r(new oc.HLRBRep_Algo());
+  hlr.Add(shape.wrapped, 0);
+  const projector = r(new oc.HLRAlgo_Projector(camera.wrapped, focus));
+  hlr.Projector(projector);
+  hlr.Update();
+  hlr.Hide();
+  const shapes = new oc.HLRBRep_HLRToShape(hlr);
+  const edgesOf = (s: any) => (s.IsNull() ? [] : (cast(s) as any).edges);
+  const visible = [...edgesOf(shapes.VCompound()), ...edgesOf(shapes.Rg1LineVCompound()), ...edgesOf(shapes.OutLineVCompound())];
+  visible.forEach((e: any) => oc.BRepLib.BuildCurves3d(e.wrapped));
+  return visible;
+}
+// replicad keeps edgesToDrawing private; reach it via drawProjection's module scope is not possible,
+// so emit the perspective edges' projected 2D segments ourselves for the proof.
+const { visible: ctrl } = makeProjectedEdges(article, axoCam, false);
+const persp = perspectiveEdges(article, axoCam, 400);
+const persp2 = perspectiveEdges(article, axoCam, 150);
+
+const summarize = (edges: any[]) => {
+  const pts = edges.flatMap((e) => [e.startPoint, e.endPoint]).map((p) => [p.x, p.y, p.z]);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  return { edges: edges.length, bboxX: [Math.min(...xs), Math.max(...xs)].map((v) => +v.toFixed(2)), bboxY: [Math.min(...ys), Math.max(...ys)].map((v) => +v.toFixed(2)) };
+};
+console.log(JSON.stringify({ axonometric: summarize(ctrl), perspective_f400: summarize(persp), perspective_f150: summarize(persp2) }, null, 2));
+
+// write perspective as raw SVG polylines (edges are projected into the camera plane: use x,y)
+const toSvg = (edges: any[]) => {
+  const segs = edges.map((e) => { const a = e.startPoint, b = e.endPoint; return `M ${a.x.toFixed(3)} ${(-a.y).toFixed(3)} L ${b.x.toFixed(3)} ${(-b.y).toFixed(3)}`; });
+  const pts = edges.flatMap((e) => [e.startPoint, e.endPoint]);
+  const minX = Math.min(...pts.map((p) => p.x)) - 5, maxX = Math.max(...pts.map((p) => p.x)) + 5;
+  const minY = Math.min(...pts.map((p) => -p.y)) - 5, maxY = Math.max(...pts.map((p) => -p.y)) + 5;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}"><path d="${segs.join(" ")}" fill="none" stroke="black" stroke-width="0.5"/></svg>`;
+};
+writeFileSync("out/perspective-f400.svg", toSvg(persp));
+writeFileSync("out/perspective-f150.svg", toSvg(persp2));
+writeFileSync("out/axonometric-raw.svg", toSvg(ctrl));
+// parallel-line test: in perspective, the two long top edges of panel A must NOT stay parallel
+const slopes = (edges: any[]) => edges.filter((e) => e.geomType === "LINE").map((e) => { const a = e.startPoint, b = e.endPoint; return Math.atan2(b.y - a.y, b.x - a.x); });
+const distinct = (arr: number[]) => new Set(arr.map((v) => (Math.round(((v % Math.PI) + Math.PI) % Math.PI * 1000) / 1000))).size;
+console.log(JSON.stringify({ distinctLineAngles: { axonometric: distinct(slopes(ctrl)), perspective_f400: distinct(slopes(persp)), perspective_f150: distinct(slopes(persp2)) } }));

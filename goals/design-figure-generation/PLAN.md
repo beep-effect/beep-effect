@@ -9,7 +9,7 @@ Status: `pending`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Deep-research sweep + align grill (exploration). | `explorations/patent-drawing-pipeline/{RESEARCH,DECISIONS,BRIEF,MAP}.md` exist. |
-| P1 Spike: perspective HLR via replicad | pending | Throwaway Bun script: opencascade.js + replicad, box + wedge, orthographic and perspective projected visible edges to SVG. | Result note in `research/`; kernel route for perspective figures fixed. |
+| P1 Spike: perspective HLR via replicad | complete | Throwaway Bun script: opencascade.js + replicad, box + wedge, orthographic and perspective projected visible edges to SVG. | Done 2026-10-05: [`research/p1-perspective-hlr-spike.md`](./research/p1-perspective-hlr-spike.md) — PASS; perspective via the WASM `HLRAlgo_Projector(CS, focus)` overload, no fallback needed. |
 | P2 Slice 1: unshaded sheets for the live matter | pending | Schemas (`Matter`, `ModelSpec`, `Figure`, view LiteralKit), `GeometryEngine`/`ProjectionEngine`/`SheetComposer`/`DrawingSheetValidator` contracts, replicad + pdf-tool drivers, `beep drawings render` / `validate`, synthetic fixture + goldens, then the live matter spec under the corpus root. | Acceptance items 2–4. |
 | P3 Slice 2: shading, judge rubric, sign-off | pending | `ShadingEngine` (face-exposure hatching through HLR), QA judge drawing rubric, `beep drawings judge` / `sign`, sign-off event schema. | Acceptance item 5. |
 | P4 Yeet: PR to mergeable | pending | Publish through yeet; required checks green; threads answered and resolved. | `merge-ready: yes`; zero unresolved review threads. |

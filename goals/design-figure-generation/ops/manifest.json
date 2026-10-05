@@ -33,7 +33,10 @@
     "goals/design-figure-generation/GOAL.md",
     "goals/design-figure-generation/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p1-perspective-hlr-spike.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -44,11 +47,15 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "complete" },
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
     {
       "id": "P1",
       "name": "Spike: perspective HLR via replicad",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
@@ -60,8 +67,16 @@
       "name": "Slice 2: shading, judge rubric, sign-off",
       "status": "pending"
     },
-    { "id": "P4", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P5", "name": "Close", "status": "pending" }
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/design-figure-generation/GOAL.md)\" -le 4000",

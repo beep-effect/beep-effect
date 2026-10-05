@@ -35,14 +35,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — perspective-HLR spike through replicad's public API. Next concrete
-action: a throwaway Bun script that loads opencascade.js, builds a box, and
-asks replicad for projected visible edges under a perspective camera; record
-the result in `research/`.
+P2 — slice 1. P1 passed: perspective hidden-line removal works in Bun through
+the WASM `HLRAlgo_Projector(CS, focus)` overload, so no build123d fallback is
+needed. Next concrete action: schema first (`Matter`, `ModelSpec`, `Figure`,
+view-name `LiteralKit`), then the `GeometryEngine`/`ProjectionEngine`
+contracts, then the replicad driver package via `bun run beep create-package`.
+Blocked for the live matter until the article is measured and its photos sit
+under the corpus root; the synthetic fixture is not blocked.
 
 ## Latest Evidence
 
-Not started.
+[`research/p1-perspective-hlr-spike.md`](./research/p1-perspective-hlr-spike.md) (2026-10-05).
 
 ## Notes
 
