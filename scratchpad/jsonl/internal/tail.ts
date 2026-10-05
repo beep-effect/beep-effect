@@ -140,16 +140,15 @@ const hasBom = (bytes: Uint8Array): boolean =>
  * **Example** (BOM byte count from a seeded volume)
  *
  * ```ts
- * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem"
  * import { Effect, FileSystem } from "effect"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("/mail.jsonl", "\uFEFF{\"event\":\"started\"}\n")
  *   return yield* probeBomBytes(fs, "/mail.jsonl")
  * })
- * const layer = MemoryFileSystem.layerWith({
- *   "/mail.jsonl": "\uFEFF{\"event\":\"started\"}\n",
- * })
+ * const layer = MemoryFileSystem.layer
  * Effect.runPromise(program.pipe(Effect.provide(layer))).then(console.log)
  * // 3
  * ```
@@ -204,17 +203,16 @@ export const probeBomBytes: {
  * **Example** (Window start rebases to a line boundary)
  *
  * ```ts
- * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem"
  * import { Effect, FileSystem } from "effect"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("/mail.jsonl", "aaaaaaa\nbbbb\n")
  *   const bom = yield* probeBomBytes(fs, "/mail.jsonl")
  *   return yield* readTail(fs, "/mail.jsonl", 8, bom)
  * })
- * const layer = MemoryFileSystem.layerWith({
- *   "/mail.jsonl": "aaaaaaa\nbbbb\n",
- * })
+ * const layer = MemoryFileSystem.layer
  * Effect.runPromise(program.pipe(Effect.provide(layer))).then((tail) => {
  *   console.log(tail.text) // "bbbb\n"
  *   console.log(tail.start) // 8
@@ -295,18 +293,17 @@ export const readTail: {
  *
  * ```ts
  * import { Line } from "@beep/scratchpad/jsonl"
- * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem"
  * import { Effect, FileSystem } from "effect"
  * import * as O from "effect/Option"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("/mail.jsonl", '{"round":1}\n')
  *   const bom = yield* probeBomBytes(fs, "/mail.jsonl")
  *   return yield* readTailUntil(fs, "/mail.jsonl", bom, (window) => Line.lastValid(window.text), 4)
  * })
- * const layer = MemoryFileSystem.layerWith({
- *   "/mail.jsonl": '{"round":1}\n',
- * })
+ * const layer = MemoryFileSystem.layer
  * Effect.runPromise(program.pipe(Effect.provide(layer))).then((found) => {
  *   console.log(O.isSome(found)) // true
  * })
@@ -379,16 +376,15 @@ export const readTailUntil: {
  * **Example** (Read a seeded range as text)
  *
  * ```ts
- * import { MemoryFileSystem } from "@beep/scratchpad/memfs"
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem"
  * import { Effect, FileSystem } from "effect"
  *
  * const program = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
+ *   yield* fs.writeFileString("/mail.jsonl", '{"round":1}\n')
  *   return yield* readRangeText(fs, "/mail.jsonl", 0, 12)
  * })
- * const layer = MemoryFileSystem.layerWith({
- *   "/mail.jsonl": '{"round":1}\n',
- * })
+ * const layer = MemoryFileSystem.layer
  * Effect.runPromise(program.pipe(Effect.provide(layer))).then(console.log)
  * // {"round":1}\n
  * ```
