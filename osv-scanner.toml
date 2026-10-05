@@ -10,7 +10,8 @@
 # artifact; reserve `IgnoredVulns` for advisory-wide exceptions. OSV Scanner
 # enforces both expiry forms natively. The local Bun audit wrapper (runBunAudit
 # in packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) mirrors
-# only active `IgnoredVulns` ids because Bun audit has no package-scoped ignore.
+# active `IgnoredVulns` ids and mirrors exact `PackageOverrides` only while
+# every resolution of that package in bun.lock matches the reviewed version.
 #
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12, form-data

@@ -1,59 +1,53 @@
 import { appendTurboSummary, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { FsUtilsLive } from "@beep/repo-utils";
-import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
 const TestLayer = Layer.mergeAll(
   NodeServices.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   TestConsole.layer
 );
+const ciTest = it.layer(TestLayer, { timeout: "30 seconds" });
 const runCiLaneCommand = Command.runWith(ciLaneCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isString = (value: unknown): value is string => typeof value === "string";
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
+  Effect.scoped(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
       const previousCwd = process.cwd();
       const previousGithubStepSummary = Bun.env.GITHUB_STEP_SUMMARY;
 
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          process.chdir(previousCwd);
+          if (previousGithubStepSummary === undefined) {
+            delete Bun.env.GITHUB_STEP_SUMMARY;
+          } else {
+            Bun.env.GITHUB_STEP_SUMMARY = previousGithubStepSummary;
+          }
+        })
+      );
       process.chdir(tmpDir);
       delete Bun.env.GITHUB_STEP_SUMMARY;
       yield* fs.makeDirectory(".git", { recursive: true });
 
-      return { fs, previousCwd, previousGithubStepSummary, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, previousGithubStepSummary, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        if (previousGithubStepSummary === undefined) {
-          delete Bun.env.GITHUB_STEP_SUMMARY;
-        } else {
-          Bun.env.GITHUB_STEP_SUMMARY = previousGithubStepSummary;
-        }
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  ).pipe(provideScopedLayer(TestLayer));
+      return yield* use;
+    })
+  );
 
 describe("CI commands", () => {
-  it("parses --partition and reports a typed lane-assignment failure", () =>
-    Effect.runPromise(
+  ciTest("parses --partition and reports a typed lane-assignment failure", (it) => {
+    it.effect("runs", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--partition", "unit-a"]));
         const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
@@ -67,22 +61,24 @@ describe("CI commands", () => {
         expect(shardedExit._tag).toBe("Failure");
         expect(shardedErrors).toContain("Partition repo-cli-2 does not belong to lane lint");
         expect(shardedErrors).not.toContain("Invalid value");
-      }).pipe(provideScopedLayer(TestLayer))
-    ));
+      })
+    );
+  });
 
-  it("rejects proof-only --force without a partition", () =>
-    Effect.runPromise(
+  ciTest("rejects proof-only --force without a partition", (it) => {
+    it.effect("runs", () =>
       Effect.gen(function* () {
         const exit = yield* Effect.exit(runCiLaneCommand(["lint", "--force"]));
         const errors = A.join(A.filter(yield* TestConsole.errorLines, isString), "\n");
 
         expect(exit._tag).toBe("Failure");
         expect(errors).toContain("--force requires --partition");
-      }).pipe(provideScopedLayer(TestLayer))
-    ));
+      })
+    );
+  });
 
-  it("fails local planning when Git cannot resolve the current branch", () =>
-    Effect.runPromise(
+  ciTest("fails local planning when Git cannot resolve the current branch", (it) => {
+    it.effect("runs", () =>
       withTempRepo(
         Effect.gen(function* () {
           const error = yield* runCiLocal({
@@ -96,10 +92,11 @@ describe("CI commands", () => {
           expect(error.message).toBe("git branch --show-current failed with exit code 128.");
         })
       )
-    ));
+    );
+  });
 
-  it("renders current Turbo summary files whose tasks are arrays", () =>
-    Effect.runPromise(
+  ciTest("renders current Turbo summary files whose tasks are arrays", (it) => {
+    it.effect("runs", () =>
       withTempRepo(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -145,10 +142,11 @@ describe("CI commands", () => {
           expect(output).toContain("`@beep/repo-cli#test`");
         })
       )
-    ));
+    );
+  });
 
-  it("renders every Turbo summary when aggregation is requested", () =>
-    Effect.runPromise(
+  ciTest("renders every Turbo summary when aggregation is requested", (it) => {
+    it.effect("runs", () =>
       withTempRepo(
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -185,5 +183,6 @@ describe("CI commands", () => {
           expect(output).toContain("`@beep/repo-cli#coverage`");
         })
       )
-    ));
+    );
+  });
 });
