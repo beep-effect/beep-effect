@@ -997,90 +997,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/labs-list.test.ts:121:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
-      "line": 121,
-      "endLine": 141,
-      "symbol": "runPromise",
-      "occurrence": "v2:fd781c1a47896b3e1dbe67b677fc4b4cfc3ea7d92606f919ec9fd61249f9583e",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsRepo( Effect.gen(function* () { yield* writeLab(\"alpha-lab\", O.some(activeManifest(\"Alpha probe\"))); yield* writeLab(\"gamma-lab\", O.some(\"{not json\\n\")); yield* writeLab(\"de",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/labs-list.test.ts:144:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
-      "line": 144,
-      "endLine": 153,
-      "symbol": "runPromise",
-      "occurrence": "v2:4c9da8aa0fc819e2e0959d3989ab4623dc75309cf8d18a6fefa153106f5191e6",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsRepo( Effect.gen(function* () { yield* runLabs([\"list\"]); const lines = A.map(yield* TestConsole.logLines, String); expect(lines).toContain(\"No labs under apps/labs/.\"); })",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/labs-list.test.ts:75:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
-      "line": 75,
-      "endLine": 90,
-      "symbol": "runPromise",
-      "occurrence": "v2:33489ead29202bfd10b0b52cd5d8d0d8ba7ffea29b34a0e9cc3a6ed2a9e64684",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsRepo( Effect.gen(function* () { yield* writeLab(\"alpha-lab\", O.some(activeManifest(\"Alpha probe\"))); yield* writeLab(\"beta-lab\", O.some(expiredManifestWithPostgres)); yield*",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/labs-list.test.ts:93:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/labs-list.test.ts",
-      "line": 93,
-      "endLine": 118,
-      "symbol": "runPromise",
-      "occurrence": "v2:4f072def8fca3b66eed3f68cddaf7cfb058a5c9570214f30b5ef5cbaadfa6435",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsRepo( Effect.gen(function* () { yield* writeLab(\"alpha-lab\", O.some(activeManifest(\"Alpha probe\"))); yield* writeLab(\"beta-lab\", O.some(expiredManifestWithPostgres)); const",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:82:runSync@6#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -1155,153 +1071,6 @@
       "occurrence": "v2:9dc9d60c5e247b86ab5dfe8d2def7dc9cf90978cc122f2a49186d80520dbe12f",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runSync(encodeSummary(decoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:132:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 132,
-      "endLine": 149,
-      "symbol": "runPromise",
-      "occurrence": "v2:e2d3bff9ef784a748c2ff2cfa769d3e5d4c72c62533ddaffe8eb1f950f49cafa",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeCanonical(\"packages/drivers/example\", CANONICAL_WITH_REFERENCE); yield* writeOverlay(\"packages/drivers/example\", MIRR",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:156:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 156,
-      "endLine": 181,
-      "symbol": "runPromise",
-      "occurrence": "v2:fe029ce21d5fcd1705814dab8246c8407f7891fe507bc345537234a43b6cf9b6",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeOverlay(\"packages/drivers/example\", CLEAN_OVERLAY); yield* writeOverlay(\"packages/drivers/widened\", WIDENING_OVERLAY)",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:188:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 188,
-      "endLine": 219,
-      "symbol": "runPromise",
-      "occurrence": "v2:65962a046a7ab17523ba532ce8124cde3932ddb534c887c5eab5b219e78563a6",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { // The pre-switch shape: canonical references, overlay `[]`. yield* writeCanonical(\"packages/drivers/lagging\", CANONICAL_WITH_REF",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:226:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 226,
-      "endLine": 257,
-      "symbol": "runPromise",
-      "occurrence": "v2:a0b3a36ccacecb2f4526987e8b39319462c46823399c039bfedad4f61b36c58c",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const path = yield* Path.Path; yield* writeCanonical(\"packages/drivers/zeta\", CANONICAL_WITH_REFERENCE); yield* writeOverlay(\"pac",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:264:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 264,
-      "endLine": 292,
-      "symbol": "runPromise",
-      "occurrence": "v2:21b14f692634abbe65f9f4434e32888130ac2f5a59a5898a76fbd603f392d387",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const path = yield* Path.Path; // tsconfig-sync writes references into tsconfig.build.json when a // package has one, so the over",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:299:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 299,
-      "endLine": 317,
-      "symbol": "runPromise",
-      "occurrence": "v2:e6eceac31459eb49a134a5a2a4184662bb8ee89f6eec3b9f8d7faa1c89f35239",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { const path = yield* Path.Path; // tsconfig-sync writes both lists in one canonical order, so a // permutation is drift with nothi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts:324:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/lint-tsconfig-overlay.test.ts",
-      "line": 324,
-      "endLine": 334,
-      "symbol": "runPromise",
-      "occurrence": "v2:01664ebf6f8f52e8dd89fb1799111d720f5ccfb995b988c72237cd7bd99046ed",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempWorkingDirectory( Effect.gen(function* () { yield* writeOverlay(\"packages/drivers/broken\", \"[\\n\"); const exit = yield* Effect.exit(runLintCommand([\"tsconfig-overlay\"])); exp",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -28911,7 +28680,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional for the temporary workspace and live labs manifest directory scan. Four tests pass on Node and Bun."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/laws-package.test.ts:11:@effect/platform-node@0#1",
@@ -29079,7 +28849,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is intentional for temporary on-disk tsconfig JSONC fixtures and the live CLI filesystem scan. Seven tests pass on Node and Bun."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:7:@effect/platform-node@0#1",
