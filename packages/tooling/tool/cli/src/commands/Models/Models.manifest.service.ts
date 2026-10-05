@@ -12,8 +12,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as Context from "effect/Context";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parseDocument, stringify as stringifyYaml } from "yaml";
 import { ModelsManifestError } from "./Models.errors.ts";
@@ -32,7 +33,56 @@ const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
  * @category services
  * @since 0.0.0
  */
+/**
+ * Where `adopt` left the manifest and the copy it preserved first.
+ *
+ * **Example** (Read an adoption record)
+ *
+ * ```ts
+ * import { ManifestAdoption } from "@beep/repo-cli/commands/Models/Models.manifest.service"
+ * import * as O from "effect/Option"
+ *
+ * const adoption = ManifestAdoption.make({ file: "/home/op/.config/beep/models.yaml", backup: O.none() })
+ * console.log(O.isNone(adoption.backup)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ManifestAdoption extends S.Class<ManifestAdoption>($I`ManifestAdoption`)(
+  {
+    file: S.NonEmptyString,
+    backup: S.Option(S.NonEmptyString),
+  },
+  $I.annote("ManifestAdoption", {
+    description: "The manifest path `adopt` rewrote and the timestamped backup of the prior file, when one existed.",
+  })
+) {}
+
+/**
+ * The manifest store contract: seed an empty slot, adopt the seed over an
+ * existing file, or load what is there.
+ *
+ * **Details**
+ *
+ * `init` keeps the slice-1 promise and refuses to touch an existing manifest;
+ * `adopt` is the sanctioned rewrite that preserves the prior file as a
+ * timestamped sibling first.
+ *
+ * **Example** (Name the store operations)
+ *
+ * ```ts
+ * import type { ModelsManifestStoreShape } from "@beep/repo-cli/commands/Models/Models.manifest.service"
+ *
+ * const operations: ReadonlyArray<keyof ModelsManifestStoreShape> = ["init", "adopt", "load"]
+ * console.log(operations.length) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export interface ModelsManifestStoreShape {
+  readonly adopt: (path: string, manifest: ModelsManifest) => Effect.Effect<ManifestAdoption, ModelsManifestError>;
   readonly init: (path: string, manifest: ModelsManifest) => Effect.Effect<string, ModelsManifestError>;
   readonly load: (path: string) => Effect.Effect<ModelsManifest, ModelsManifestError>;
 }
@@ -91,6 +141,35 @@ const makeManifestStore = Effect.fnUntraced(function* () {
       });
     }
 
+    yield* writeManifest(file, manifest);
+    return file;
+  });
+
+  // The policy seed moved (2026-10-01) while `init` kept its never-overwrite
+  // promise, so an installation holding the old manifest could not take the
+  // new bindings. `adopt` is the sanctioned rewrite: the prior file survives
+  // as a timestamped sibling and the seed lands in its place.
+  const adopt: ModelsManifestStoreShape["adopt"] = Effect.fnUntraced(function* (
+    file: string,
+    manifest: ModelsManifest
+  ) {
+    const exists = yield* fs
+      .exists(file)
+      .pipe(ModelsManifestError.mapError(`Failed to check whether ${file} exists`, file));
+    const backup = yield* exists ? backupManifest(file) : Effect.succeed(O.none<string>());
+    yield* writeManifest(file, manifest);
+    return ManifestAdoption.make({ file, backup });
+  });
+
+  const backupManifest = Effect.fnUntraced(function* (file: string) {
+    const now = yield* DateTime.now;
+    const stamp = DateTime.formatIso(now).replace(/[:.]/g, "").replace(/-/g, "");
+    const target = `${file}.bak-${stamp}`;
+    yield* fs.copyFile(file, target).pipe(ModelsManifestError.mapError(`Failed to back up ${file} to ${target}`, file));
+    return O.some(target);
+  });
+
+  const writeManifest = Effect.fnUntraced(function* (file: string, manifest: ModelsManifest) {
     const encoded = yield* encodeManifest(manifest).pipe(
       ModelsManifestError.mapError("Failed to encode the seed models manifest", file)
     );
@@ -101,11 +180,9 @@ const makeManifestStore = Effect.fnUntraced(function* () {
     yield* fs
       .writeFileString(file, stringifyYaml(encoded, { lineWidth: 0 }))
       .pipe(ModelsManifestError.mapError(`Failed to write ${file}`, file));
-
-    return file;
   });
 
-  return ModelsManifestStore.of({ load, init });
+  return ModelsManifestStore.of({ load, init, adopt });
 });
 
 /**

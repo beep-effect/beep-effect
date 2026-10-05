@@ -44,8 +44,10 @@ runs its own chain. The meter and recipe below describe that route.
 There is no scraper and no dashboard API for the Anthropic pool; the signal is the request
 itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
 account's rate limit") marks the Opus pool below floor for the session: finish what is already
-running, then hold and notify (step 3) unless the operator has authorized a Cursor lane.
-`claude` shows the live windows with `/usage`.
+running, then step the Claude chain down (2026-10-01 policy): launch the next bounded lane on
+`cursor-agent --model claude-opus-5-5`, and when Cursor is below floor too, on grok-build
+`grok -m grok-4.7 --effort medium`. Hold and notify only when both fallbacks are exhausted.
+Never route the step onto Codex. `claude` shows the live windows with `/usage`.
 
 ### Codex
 
@@ -67,7 +69,7 @@ hold stdin for about 40 s.
 | Field | Meaning |
 | --- | --- |
 | `ordinaryUsageAllowed` | Boolean gate. `null` means unavailable — do not infer availability from percentages alone. |
-| `rateLimits.primary.usedPercent` | Primary window consumption (0–100). Codex is at or below the floor when `usedPercent` ≥ 95. On an opt-in Codex lane that means: stop the lane and return to the Opus pool (step 1); never cascade into a Cursor lane the operator has not authorized. |
+| `rateLimits.primary.usedPercent` | Primary window consumption (0–100). Codex is at or below the floor when `usedPercent` ≥ 95. For a Codex orchestrator that means: finish running lanes, then step the Codex chain down to `cursor-agent --model claude-opus-5-5`, then grok-build; never onto direct Claude. Hold and notify once both fallbacks are exhausted. |
 | `rateLimits.primary.resetsAt` | ISO timestamp when the primary window resets. |
 | `rateLimits.primary.windowDurationMins` | Window length in minutes (CLI account: 10080 = weekly). |
 | `rateLimits.secondary` | Secondary window with the same shape when present. |
@@ -78,9 +80,10 @@ CLIProxyAPI management API when it exposes quota, else probe fallback (D8).
 
 ### Cursor
 
-**Fail-open (D17).** Once the operator has authorized a Cursor lane, Cursor counts as available
-until a lane proves otherwise; fail-open is an availability rule, not a pool cascade — nothing
-falls into Cursor on its own. No official per-account usage endpoint exists for individual Ultra.
+**Fail-open (D17, amended 2026-10-01).** Cursor is step 2 of both chains, so a confirmed quota,
+availability, or unsupported-model failure on step 1 is the only trigger that moves a lane onto
+it; Cursor then counts as available until a lane proves otherwise. Ordinary code failures and
+unfavorable reviews never move a lane. No official per-account usage endpoint exists for individual Ultra.
 Team Admin API routes (`/teams/spend`, `/teams/daily-usage-data`) are team-scoped. `cursor-agent
 about`/`status` carry no usage. stream-json emits no usage or rate-limit events
 (https://cursor.com/docs/cli/reference/output-format).
@@ -420,8 +423,8 @@ interactive picker may lag while `-m gpt-6.1-sol` works.
 | `--mode plan` in CI, no output | Drop plan mode for headless implement lanes. |
 | Stuck subagent holds `-p` | Single-turn `-p` waits for delegated subagents; kill or avoid Explore subagents. |
 | Cursor Models spill zeros Other | Floor-check dashboard; stop Cursor-bucket lanes before 100%. |
-| `Total usage limit reached` | Mark Cursor below floor; hold and notify (D7). |
-| `rate_limit_error` on a `claude-opus-5-5` delegation | Opus pool below floor: finish running children, then hold and notify unless a Cursor lane was authorized. |
+| `Total usage limit reached` | Mark Cursor below floor; step to grok-build (`grok -m grok-4.7 --effort medium`), then hold and notify when that is exhausted too. |
+| `rate_limit_error` on a `claude-opus-5-5` delegation | Opus pool below floor: finish running children, then step the Claude chain to `cursor-agent --model claude-opus-5-5`, then grok-build; hold and notify only after both. |
 | Sudo / YubiKey prompt hang | `Shell(sudo)` and `Shell(pkexec)` in deny list (D21). |
 | Workspace trust hang | `--trust` on every headless lane. |
 | Missing `result/success` + exit 0 | Treat as failure; inspect stderr. |

@@ -363,6 +363,12 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       render: verbatim,
       pointer: ["model"],
     },
+    {
+      _tag: "json-key",
+      binding: at("orchestrator", "claude-code", "effort"),
+      render: verbatim,
+      pointer: ["modelSettings", "claude-opus-5-5", "effortLevel"],
+    },
   ]),
   target("home.beep-graft.env", "home", "$HOME/.config/beep-graft/env", true, [
     {

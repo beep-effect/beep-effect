@@ -32,4 +32,43 @@ layer(testLayer)("models init command", (it) => {
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
     }).pipe(Effect.scoped)
   );
+
+  it.effect("adopt rewrites an existing manifest and keeps a timestamped backup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-adopt-" });
+      const manifestPath = path.join(home, "config", "models.yaml");
+      yield* fs.makeDirectory(path.dirname(manifestPath), { recursive: true });
+      yield* fs.writeFileString(manifestPath, "version: beep-models/v1\nbindings: []\ntargets: []\nsuperseded: []\n");
+
+      yield* runModelsCommand(["init", "--adopt", "--home", home, "--repo", home, "--manifest", manifestPath]);
+
+      const rewritten = yield* fs.readFileString(manifestPath);
+      expect(rewritten).toContain("gpt-6.1-sol");
+      const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
+      const backups = A.filter(siblings, Str.startsWith("models.yaml.bak-"));
+      expect(backups).toHaveLength(1);
+      expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), backups[0]!))).toContain("bindings: []");
+      const lines = A.filter(yield* TestConsole.logLines, P.isString);
+      expect(A.some(lines, Str.startsWith("models: adopted the seed into"))).toBe(true);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect("adopt on an empty slot behaves like init", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-adopt-fresh-" });
+      const manifestPath = path.join(home, "config", "models.yaml");
+
+      yield* runModelsCommand(["init", "--adopt", "--home", home, "--repo", home, "--manifest", manifestPath]);
+
+      expect(yield* fs.exists(manifestPath)).toBe(true);
+      const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
+      expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(0);
+      const lines = A.filter(yield* TestConsole.logLines, P.isString);
+      expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
+    }).pipe(Effect.scoped)
+  );
 });
