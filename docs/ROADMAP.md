@@ -271,7 +271,8 @@ Riding in the slot, not holding it:
    credential, or server-side replay rejection after the original listener
    ends, from both the original and a second host.
    [`schema-utils-selective-codec-statics`](../goals/schema-utils-selective-codec-statics/README.md)
-   (4/6) — P4 Yeet to mergeable, no gate.
+   closed on 2026-10-05 (completed-retained): #927 shipped it on 2026-08-31
+   and #1371 retired the registry on 2026-10-01.
 3. [`knowledge-surface-automation`](../goals/knowledge-surface-automation/README.md)
    (3/7),
    [`coding-agent-effectiveness-evidence-loop`](../goals/coding-agent-effectiveness-evidence-loop/README.md)
