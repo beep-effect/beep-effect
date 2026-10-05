@@ -1,4 +1,63 @@
-## Current continuation: R54, 2026-10-01
+## Partial closeout: 2026-10-02
+
+The operator explicitly replaced the full eradication objective with a partial
+closeout on 2026-10-02. This packet is retained as reference; execution has ended.
+The original acceptance criteria were not achieved and are preserved below as
+historical requirements, not obligations to continue this closed campaign.
+
+The published inventory retains 723 records: 108 qualified, 615 disqualified,
+and zero applied. Historical inventory reconciliation, designs and review
+receipts remain useful reference material. They do not establish current-source
+admission, two complete dry census rounds, replacement independent zero-finding
+campaign review, Gate 2 ratification, implementation, or final exact-main proof.
+Those gates remain unmet. No synthetic audit commit receives campaign credit.
+
+The operator intentionally deleted `~/.cache/beep/boolean-creep` under disk
+pressure reported at 96% usage. Private R54 proposals, runtime experiments,
+unpublished review receipts and build outputs in that directory are unavailable.
+Earlier statements that those artifacts remain preserved are superseded. Do not
+recreate approvals from reported hashes or count deleted evidence as a live gate.
+Tracked packet history and published commits remain the durable record.
+
+PR #1405 carries this reference closeout. The original campaign merge boundary
+is retired with the original objective; a documentation-only partial closeout
+may land after its own review and hosted checks. Any future implementation must
+start with explicit new authority and fresh source-bound evidence.
+
+## Historical continuation before partial closeout: R54, 2026-10-02
+
+PR #1395 merged externally at `0237172e96abb7b1cbcec4b6ce44f8e95c1c3692`
+on 2026-10-02 before the campaign gates passed. Its published head
+`4ddfcfaf845ba9ab93710c1938e84a6cc58fc927` has exactly the merge commit's
+Git tree. This verifies publication of the continuity changes, not completion
+of boolean-creep. The remaining work continues in one successor branch,
+`codex/boolean-creep-r54-continuation-2026-10-02`, from current main
+`0a9cfe92e54d2e6881b47ceb53a956d24efd397a` under the operator's delegated judgment.
+
+The first actual three-owner private dryrun refused at its published-source
+gate after main advanced and GitHub deleted the merged branch. It created no
+candidate output and applied no public changes. The earlier standalone code
+review and its 49 isolated passing fixtures retain their exact historical
+`4ddfcfaf` / `9447997c` source binding; they grant no new execution authority.
+All frozen candidates, failed dryrun streams and independent receipts remain
+preserved. New source relations must be independently reviewed before reuse.
+
+The complete main delta contains 148 changed paths, including 28 product-source
+paths. The boolean-creep packet bytes are unchanged, but CLI cache and JSDoc
+source changed. Recheck affected claims, source exports, scope partition,
+installed observations and admissions against the successor before preparing
+or applying R54 evidence. Packet conservation alone cannot establish current
+source adequacy. The whole-document review remains incomplete.
+
+Current-source admission, two complete dry census rounds, replacement
+independent zero-finding campaign review, ratification, implementation and
+final exact-main closeout remain required. R54 evidence repairs, isolated
+fixtures, green CI and an external merge supply none of those credits. Keep
+all remaining published work in the successor PR. Merge through the authorized
+ChatGPT Chrome extension only after the real campaign gates pass, then verify
+the merged source and complete the required post-merge closeout.
+
+## Historical continuation: R54, 2026-10-01
 
 PR #1388 merged externally at `ed09a085f35c617c352de43152330d52b908f5b5`
 before the campaign gates passed. Benjamin approved continuing all remaining work

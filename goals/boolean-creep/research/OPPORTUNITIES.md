@@ -2105,3 +2105,30 @@ input document naming the exact claim, absolute input/output paths, and hashed
 current-source exports. Complete one owning claim and persist its disposition
 before starting another; prepare exact paths and named historical bindings
 before dispatch. This preserves review independence and the full evidence gates.
+
+R54's first actual three-owner dryrun stopped with
+`ValueError: actual published HEAD/main drift`. GitHub confirmed PR #1395
+merged at `0237172e96abb7b1cbcec4b6ce44f8e95c1c3692`; its branch was deleted
+and main had advanced to `0a9cfe92e54d2e6881b47ceb53a956d24efd397a`. The
+source gate prevented candidate preparation from using stale approvals.
+The failed dryrun and exact prior receipts remain frozen in the private review
+cache. A complete Git-tree comparison proves the PR head landed unchanged;
+it does not prove the campaign gates. The subsequent main delta includes
+148 paths and 28 product-source paths, requiring new admission and affected
+semantic review. Preserving a campaign merge hold beyond ordinary CI readiness
+would prevent premature landing from interrupting evidence preparation. The
+operator's delegated judgment permits one new successor for the remaining
+work; no census, review, implementation or closeout requirement was waived.
+
+## 2026-10-02 — Disk pressure and intentional private-evidence deletion
+
+The operator deleted `~/.cache/beep/boolean-creep` after reporting disk usage at
+96%. Repeated source/dependency snapshots, proposal generations and compilation
+targets accumulated gigabytes. Private artifact reads subsequently failed with
+`FileNotFoundError`; the directory is intentionally not restored. Earlier
+preservation claims are historical and superseded. Published work remains, but
+missing private receipts grant no current authority. The operator subsequently
+ended execution through an explicit partial closeout. Future campaigns should
+retain compact durable receipts, share immutable source inputs, bound scratch
+storage before allocation and remove disposable build outputs after recording
+results. Cache reconstruction is not part of this closeout.

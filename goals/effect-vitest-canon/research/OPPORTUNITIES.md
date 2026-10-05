@@ -6527,3 +6527,87 @@ not run the repository-wide `quality:test-tsgo` gate. Replacing the callbacks'
 plain `Error` values with a tagged test error made that named gate pass, as
 well as the focused 26-test suite. Running `quality:test-tsgo` before the
 costly full proof would have caught this source issue locally.
+
+### Native hook fixture migration exposed the test clock (2026-10-02)
+
+Moving the Yeet inbox hook adapter's nine tests from a custom `Effect.runPromise`
+wrapper to `it.effect` made its 1.1-second stamp comparison hang under the
+instrumented test clock. Both focused Node and Bun runs failed the watchdog in
+that single test while the other eight passed. The shell hook reads real wall
+time, so the wait now uses the pinned `TestClock.withLive` API; both runtimes
+pass 9/9. A migration check that identifies real-time waits beside spawned
+processes before the full proof would avoid this diagnostic cycle.
+
+The detector then surfaced three `EV006` Option assertions that were previously
+outside its Effect-aware test boundary. The positive case now uses `assertSome`;
+the two negative cases compare the parsed payload and retain their inequality
+checks. The initial detector scan reported zero introduced findings and four resolved
+findings. Full package verification later passed, and the inventory baseline
+was reconciled to zero introduced and zero resolved.
+
+### Schema-first exception keyed by source line (2026-10-02)
+
+The full `bun run beep yeet verify` stopped at `lint:schema-first` after this
+test migration moved an existing fixed-fixture codec exception from line 28 to
+line 30. The live advisory and inventory each had 107 entries, but the
+line-sensitive key appeared once as missing and once as stale. Updating only
+the existing exception line restored the named lint gate. A stable occurrence
+key or a reviewable location-update command would prevent a source-only
+line move from consuming a full cheap-gates run.
+
+### Fresh OSV advisories blocked an unchanged lockfile (2026-10-02)
+
+PR #1406's hosted Security job found GHSA-vfj7-8cjw-p6xm in `braces@3.0.3`
+and GHSA-ch52-4w7c-c8xp in `http-cache-semantics@4.2.0`. The branch did not
+change `bun.lock`; both advisories were updated during the local proof, and npm
+had no newer release for either package. `bun pm why` traced the former only to
+shadcn/Storybook tooling and the latter to Pulumi/npm install tooling. Exact
+package-version OSV overrides now expire on 2026-10-16 and carry that rationale;
+the local Security lane passed with the exceptions. A dependency refresh or
+upstream patch before expiry is the real retirement path. The Yeet monitor's
+first red capsule was useful, but an automatic comparison of the failing
+lockfile with the PR base and advisory update time would have shortened
+attribution.
+
+### Shared TestConsole during CI command migration (2026-10-02)
+
+Moving `ci-command.test.ts` into one `it.layer` block shared its captured
+console across five tests: the aggregate Turbo summary assertion saw three
+headings instead of two after an earlier test ran. A fresh per-test
+`Effect.provide(TestConsole.layer)` passed the tests but introduced five
+`EV002` findings. Separate `it.layer` blocks with a hook timeout retained
+isolated console state and passed all five cases on Node and Bun. A migration
+recipe that calls out layer memoization for mutable test services would have
+prevented the failed iteration. The same suite's `withTempRepo` registered
+cwd/env restoration only after `.git` setup; scoped finalizers now register
+before that fallible step so setup failure cannot leak process state.
+
+### Bun audit did not mirror exact OSV package overrides (2026-10-02)
+
+PR #1408's first local Yeet pre-push wave stopped at `repo-sanity:bun-audit`:
+the unchanged lockfile still contains `braces@3.0.3` and
+`http-cache-semantics@4.2.0`, whose expiring exact-version OSV overrides had
+already passed Security. The Bun wrapper mirrored only `IgnoredVulns`, while
+Bun exposes advisory-wide `--ignore` flags and cannot scope them by package
+version. The wrapper now mirrors a package override only when every matching
+`bun.lock` resolution has the reviewed exact version and the override has not
+expired; wrong, additional, malformed and expired lock states fail closed.
+An audit-policy parity check between OSV and Bun in the earlier security PR
+would have prevented this second proof wave.
+
+After the follow-up was pushed early to restart hosted checks, `bun run beep
+yeet publish --start-pr-early` refused the clean branch because its commit was
+no longer ahead of the publish remote. The supported continuation is `yeet
+verify` followed by closeout and the canonical monitor. A published-head
+continuation hint in Yeet's refusal would prevent an unnecessary retry of the
+publish command.
+
+### Nested Bun lock resolutions escaped the exact-version audit guard (2026-10-02)
+
+Greptile's P1 review of PR #1408 found that `bun.lock` can record a nested
+resolution as `parent/braces`. The first guard checked only root package keys,
+so a reviewed root version alongside an older nested version could enable an
+advisory-wide Bun ignore. The guard now checks nested keys too, with regression
+cases for a wrong nested version and a matching one. A lockfile fixture that
+included both root and nested resolutions in the first audit-policy test would
+have caught this before review.

@@ -3,15 +3,15 @@
   "initiative": {
     "id": "boolean-creep",
     "title": "Boolean-Creep Eradication",
-    "status": "active",
+    "status": "reference",
     "created": "2026-08-17",
-    "updated": "2026-10-01",
+    "updated": "2026-10-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/boolean-creep",
-  "lifecycle": "active",
-  "mission": "Confirm every parallel-boolean flattening of a single domain state variable with cited E1-E4 evidence, then refactor confirmed instances to LiteralKit/tagged-union/option-literal shapes that delete their coherence guards.",
-  "executionCapable": true,
+  "lifecycle": "reference",
+  "mission": "Retain the ended boolean-creep campaign as research and design reference following operator-authorized partial closeout; no eradication completion is claimed.",
+  "executionCapable": false,
   "reflectionRequired": true,
   "provenance": {
     "exploration": "",
@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the single remaining PR contains all implementation, reflection and completed-retained lifecycle, is exact-head merge-ready and merged through the authorized Chrome extension route, and two exact-main dry rounds verify completion.",
+    "statement": "Operator-authorized partial closeout only: retain published research and designs, explicitly record unmet eradication gates, publish the reference lifecycle and reflection in PR #1405. Original full eradication acceptance was not achieved.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -36,15 +36,7 @@
     "goals/boolean-creep/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
-  "agentLaunchers": [
-    {
-      "kind": "codex-goal",
-      "path": "GOAL.md",
-      "targetChars": 3500,
-      "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/boolean-creep/GOAL.md"
-    }
-  ],
+  "agentLaunchers": [],
   "phases": [
     {
       "id": "P0",
@@ -96,6 +88,6 @@
     "A design requires persisted/wire encoded-shape changes without a viable byte-compatible proof.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "provides": ["quality/boolean-creep-eradication"],
+  "provides": [],
   "requires": []
 }
