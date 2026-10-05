@@ -54,3 +54,15 @@ ecosystem = "npm"
 ignore = true
 effectiveUntil = 2026-10-16T00:00:00Z
 reason = "GHSA-ch52-4w7c-c8xp has no patched npm release. This lockfile instance comes through Pulumi/npm install tooling via make-fetch-happen, not a shared application response cache; revisit by 2026-10-16."
+
+# Bun audit mirrors only IgnoredVulns. These ids match the package overrides
+# above so repo-sanity:bun-audit honors the same accepted exceptions.
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-10-16T00:00:00Z
+reason = "No patched npm release. Same exception as the braces 3.0.3 package override; tooling-only via shadcn/Storybook fast-glob."
+
+[[IgnoredVulns]]
+id = "GHSA-ch52-4w7c-c8xp"
+ignoreUntil = 2026-10-16T00:00:00Z
+reason = "No patched npm release. Same exception as the http-cache-semantics 4.2.0 package override; Pulumi install tooling only."
