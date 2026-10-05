@@ -14,7 +14,7 @@ import {
 import { it } from "@beep/test-runner";
 import { beforeEach, describe, expect, vi } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import * as A from "effect/Array";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
@@ -242,24 +242,30 @@ describe("internal/cli/Printer tagged logging", () => {
   it.layer(TestConsole.layer, { timeout: "30 seconds" })("prefix", (it) => {
     it.effect(
       "prefixes messages with the tag",
-      Effect.fnUntraced(function* () {
-        const log = makeTaggedLogger("ci");
-        yield* log("done");
-        expect(yield* TestConsole.logLines).toEqual(["[ci] done"]);
-      })
+      Effect.fnUntraced(
+        function* () {
+          const log = makeTaggedLogger("ci");
+          yield* log("done");
+          expect(yield* TestConsole.logLines).toEqual(["[ci] done"]);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
     );
   });
 
   it.layer(TestConsole.layer, { timeout: "30 seconds" })("summary", (it) => {
     it.effect(
       "logs record entries as [tag] key=value in insertion order",
-      Effect.fnUntraced(function* () {
-        yield* logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 });
-        expect(yield* TestConsole.logLines).toEqual([
-          "[schema-first] live_entries=3",
-          "[schema-first] missing_entries=0",
-        ]);
-      })
+      Effect.fnUntraced(
+        function* () {
+          yield* logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 });
+          expect(yield* TestConsole.logLines).toEqual([
+            "[schema-first] live_entries=3",
+            "[schema-first] missing_entries=0",
+          ]);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
     );
   });
 });
