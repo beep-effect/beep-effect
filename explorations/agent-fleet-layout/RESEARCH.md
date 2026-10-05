@@ -6,15 +6,65 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
-## External Landscape
+## External Landscape (2026-10-05, second session)
 
-NOT DONE (2026-10-05). The align round ran on in-repo and workstation evidence
-only. Deferred external sweep, to run before `shape` closes: how other
-multi-agent monorepo operators lay out seats vs lanes (bare object store with
-`git worktree`, `sparse-checkout`, per-agent sandboxes), Bun install-cache
-hardlink/clonefile backends and their measured dedupe, and turbo remote-cache
-usage patterns for many local checkouts. Record every URL in
-`research/SOURCES.md` §3 when it lands.
+- **Bun install backend.** Bun copies packages from its global cache into
+  `node_modules` with the fastest syscall available: hardlinks on Linux and
+  Windows (the default), `clonefile` on macOS, `copyfile` as fallback; the
+  `--backend` flag selects it. With hardlinks a package version exists once on
+  disk no matter how many projects install it.
+  Source: [Bun docs, global cache](https://bun.com/docs/pm/global-cache).
+  Measured here: every file sampled in a lane's `node_modules/effect` has link
+  count 20, and a full walk of this lane's `node_modules` found 4.1 GB
+  hardlinked and 0.0 GB unique. The shared-cache decision is already the
+  default behavior; the 88 GB across lanes is distinct package versions
+  accumulated by stale lanes, not duplication.
+- **Turborepo cache and worktrees.** With no `cacheDir` set, Turborepo detects
+  a linked worktree and redirects its cache to the main worktree's
+  `.turbo/cache`, so branches in linked worktrees share hits; an explicit
+  `cacheDir` disables that. Separate clones never share.
+  Source: [Turborepo caching](https://turborepo.dev/docs/core-concepts/caching),
+  [configuration reference](https://turborepo.dev/docs/reference/configuration).
+  This repo's `turbo.json` sets no `cacheDir`, so lanes already share their
+  seat's cache; seats do not share with each other unless `TURBO_CACHE_DIR`
+  points at `~/.cache/beep/turbo` (today only the reap unit sets it).
+- **Bare-repo worktree layout.** The common pattern for parallel agents is one
+  bare object store (`.bare/`), a `.git` file pointing at it, and one
+  directory per branch checkout, each agent in its own worktree sharing
+  objects and refs. Conflicts move to merge time where normal git tooling
+  sees them. pnpm documents the same shape for its content-addressable store.
+  Sources: [pnpm, git worktrees](https://pnpm.io/git-worktrees),
+  [noqta, worktrees for parallel agents](https://noqta.tn/en/blog/git-worktrees-parallel-ai-coding-agents-guide-2026),
+  [Augment Code guide](https://www.augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution).
+  Fit: matches the deferred bare-store phase; no license concern (patterns,
+  not code).
+
+## Deferred Items Resolved (2026-10-05, second session)
+
+- **`beep-effect0-worktrees` mismatch.** 35 directories, 36 worktrees
+  registered to `beep-effect0` (34 of the directories plus `beep-effect0`
+  itself and `beep-effect-worktrees/pr-1138`). The one unregistered directory,
+  `pr1371-r10-9951f493`, is a worktree of `beep-effect2`. Two lessons: a
+  path under `<x>-worktrees` does not prove `<x>` owns it (supports "seat is
+  a registry fact"), and the fleet mirror attributed only 1 of these 35 to
+  that root, so the mirror's per-root grouping undercounts. Fleet-mirror
+  defect candidate; verify in the registry goal before trusting mirror
+  counts for drain decisions.
+- **`beep-effect-private`.** Not a duplicate clone of this repo: `origin` is
+  `beep-effect/beep-effect-private`, a separate private repo with an
+  `upstream` sync (memory `beep-effect-private-duplicate`). Clean, 0 commits
+  ahead, 24 GB of which 16 GB is `apps/` build output. It is a different
+  fleet with its own three lanes; it gets a home beside, not inside, the
+  beep-effect fleet.
+- **`beep-effect-cutover`.** 1.1 MB of July 2026 census and cutover notes
+  plus `.idea`. Archive candidate, not a checkout.
+- **ai-metrics data root (29 GB).** `raw` 22 GB in 10,047 files, 9,733 of
+  them older than 30 days; `derived` 5.3 GB; `mirror` 1.1 GB;
+  `config-snapshots` 161 MB; everything else under 1 MB. Retention lever is
+  `raw` by age (compress or offload, never delete without the derived set
+  confirmed reproducible).
+- **Filesystem.** `/home` is a single btrfs volume, so hardlinks and
+  reflinks work across every seat, lane and cache.
 
 ## Workstation Census (2026-10-05)
 

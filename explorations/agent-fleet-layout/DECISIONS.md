@@ -139,10 +139,34 @@ recommendation on every question except where noted.
 
 **Rationale:** Doctrine should land with the code that enforces it. Rejected: doc drafts in this PR.
 
-## 2026-10-05 — external-landscape — DEFERRED
+## 2026-10-05 — external-landscape
 
-**Question:** What do other multi-agent monorepo operators do (bare store + worktrees, sparse-checkout, per-agent sandboxes; Bun hardlink dedupe numbers; turbo remote cache with many local checkouts)?
+**Question:** What do other multi-agent monorepo operators do (bare store + worktrees; Bun hardlink dedupe; turbo cache across checkouts)?
 
-**Answer:** DEFERRED to the start of `shape`.
+**Answer:** Resolved in the second session; see `RESEARCH.md` "External Landscape". Deferred at align, closed before shape.
 
-**Rationale:** Align ran on workstation evidence; none of the sixteen decisions above hinges on prior art, but the brief's solution sketch (bare-store phase, Bun backend choice) should cite it.
+**Rationale:** Bare-store pattern confirmed as the later phase's shape; Bun hardlinks confirmed as Linux default; Turborepo confirmed to share cache across linked worktrees of one seat only.
+
+## 2026-10-05 — deps-disk — AMENDED
+
+**Question:** Does the shared-Bun-cache decision still buy anything?
+
+**Answer:** Bun already hardlinks every lane's `node_modules` against its cache (link count 20 on sampled files; 4.1 GB hardlinked, 0 GB unique in this lane). The 88 GB across lanes is distinct dependency versions held open by stale lanes. The lever is drain-on-empty, plus one bootstrap check that a lane's install stays on the hardlink backend. No install-backend work is in scope.
+
+**Rationale:** Measured, not assumed. Rejected: building a shared-install feature that duplicates Bun's default.
+
+## 2026-10-05 — outliers — RESOLVED
+
+**Question:** `beep-effect-private` and `beep-effect-cutover`?
+
+**Answer:** `beep-effect-private` is a different repository (private duplicate with upstream sync), so it is its own fleet beside this one, never a seat or lane of it; the fleet-root config must allow more than one fleet. `beep-effect-cutover` is 1.1 MB of July notes; archive into `~/.local/state/beep` or the research tree, then remove.
+
+**Rationale:** Census showed a separate `origin`, clean tree, 16 GB of app build output. Rejected: treating it as a seat (wrong repo), ignoring it (24 GB).
+
+## 2026-10-05 — telemetry-retention-shape
+
+**Question:** Which ai-metrics class carries the weight and what is the retention shape?
+
+**Answer:** `raw` (22 GB, 97% older than 30 days). Retention = compress or offload `raw` by age once `derived` is proven reproducible from it; `derived`, `mirror`, `config-snapshots` untouched. Exact window is a goal decision.
+
+**Rationale:** Measured per class. Rejected: deleting raw outright (forwarder provenance), relocating the whole root.

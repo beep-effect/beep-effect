@@ -6,11 +6,24 @@
   [`../DECISIONS.md`](../DECISIONS.md),
   [`fleet-census-2026-10-05.md`](./fleet-census-2026-10-05.md).
 
+## 2. Upstream repositories & licenses
+
+No code is ported. The bare-repo worktree layout is a pattern cited from
+documentation and blog posts (reference only, nothing vendored).
+
 ## 3. External research sources
 
-None yet. The external landscape sweep is DEFERRED (see `DECISIONS.md`
-"external-landscape"). Every claim in `RESEARCH.md` today is a workstation
-measurement or an in-repo citation.
+| Title | URL | Used for |
+| --- | --- | --- |
+| Bun docs, global cache and install backends | https://bun.com/docs/pm/global-cache | hardlink default on Linux; `--backend` |
+| Turborepo caching | https://turborepo.dev/docs/core-concepts/caching | linked-worktree cache sharing |
+| Turborepo configuration reference | https://turborepo.dev/docs/reference/configuration | `cacheDir` semantics |
+| pnpm, git worktrees | https://pnpm.io/git-worktrees | bare store + worktree layout |
+| noqta, git worktrees for parallel AI agents (2026) | https://noqta.tn/en/blog/git-worktrees-parallel-ai-coding-agents-guide-2026 | bare-repo pattern |
+| Augment Code, worktrees for parallel agent execution | https://www.augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution | conflicts move to merge time |
+
+All other claims are workstation measurements recorded in `RESEARCH.md`
+"Workstation Census" and "Deferred Items Resolved".
 
 ## 4. In-repo capability references
 

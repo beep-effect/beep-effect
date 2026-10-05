@@ -4,9 +4,11 @@
     "slug": "agent-fleet-layout",
     "title": "Agent Fleet Layout",
     "status": "active",
-    "stage": "shape",
+    "stage": "decompose",
     "openQuestions": [],
-    "sources": ["research/SOURCES.md"],
+    "sources": [
+      "research/SOURCES.md"
+    ],
     "links": {
       "goals": [],
       "docs": [],
