@@ -81,26 +81,29 @@ in the script's order and with the script's paths:
 | Family | Paths |
 | --- | --- |
 | `scheduler-admission` | `packages/tooling/tool/cli/src/internal/repo-run`, `scripts/systemd` |
-| `turbo-cache` | every tracked `turbo.json` (`git ls-files '*turbo.json'`), `.envrc`, `packages/tooling/tool/cli/src/commands/Cache`, `.github/workflows/cache-warm.yml`, `packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`, `packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts`, `standards/cache-qualification.json`, `standards/turbo-remote-cache.md`, `packages/tooling/policy-pack/repo-configs/src/cache`, `scripts/enable-turbo-remote-reads.sh`, `infra/src/CiTurboCache.ts`, `infra/lambda/turbo-cache` |
+| `turbo-cache` | `:(glob)**/turbo.json`, `.envrc`, `packages/tooling/tool/cli/src/commands/Cache`, `.github/workflows/cache-warm.yml`, `packages/tooling/tool/cli/src/internal/cli/TurboCache.ts`, `packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts`, `standards/cache-qualification.json`, `standards/turbo-remote-cache.md`, `packages/tooling/policy-pack/repo-configs/src/cache`, `scripts/enable-turbo-remote-reads.sh`, `infra/src/CiTurboCache.ts`, `infra/lambda/turbo-cache` |
 | `lane-assembly` | `:(glob)**/docgen.json`, `packages/tooling/tool/cli/src/commands/Yeet`, `packages/tooling/tool/cli/src/commands/Quality`, `packages/tooling/tool/cli/src/commands/Ci`, `packages/tooling/tool/cli/src/commands/Lint`, `packages/tooling/tool/cli/src/commands/Docgen/internal`, `packages/tooling/tool/cli/src/internal/package-scripts`, `standards/lint-policy.sweeps.jsonc`, `vitest.shared.ts`, `.github/workflows/check.yml`, `.github/workflows/heavy.yml`, `.github/workflows/heavy-admit.yml`, `.github/actions/setup-monorepo-ci`, `scripts/ci-change-profile.sh`, `scripts/ci-job-env.mjs` |
 | `hosted-runner` | `packages/tooling/tool/cli/src/commands/Runners`, `infra/src/CiFleetController.ts`, `infra/src/CiRunners.ts`, `infra/src/internal/ci-runners-entry.ts`, `infra/ci-runners/Pulumi.production.yaml`, `infra/ci-runners/Pulumi.yaml`, `infra/ci-runners/runner-image.json`, `scripts/ci-runner-resources.sh`, `docs/runbooks/ci-runner-reliability.md`, `docs/runbooks/aws-cost-operations.md`, `.github/workflows/fleet-lane-probe.yml`, `.github/workflows/fleet-shadow-check.yml`, `.github/workflows/rerun-runner-loss.yml`, `.github/workflows/heavy.yml`, `.github/workflows/heavy-admit.yml`, `.github/workflows/check.yml` |
+| `package-scripts` | a probe, not a path list: `git log -G` over task-facing script-entry lines in every `package.json` (`:(glob)**/package.json`); the regex matches a changed line whose key is `beep:*`, any Turbo task name at `8b7392fe00` (`audit`, `build`, `check`, `codegen`, `coverage`, `docgen`, `doctest`, `lint`, `package-test-typecheck`, `storybook`, `test`, `transit`), `typecheck` or `proof`, with or without a `:sub` suffix |
 
 `check.yml`, `heavy.yml` and `heavy-admit.yml` belong to both `lane-assembly` and
-`hosted-runner`. The `turbo.json` glob is evaluated at the checked-out commit; at `8b7392fe00` it
-matches 16 files: the root `turbo.json`, `apps/{labs/api-docs,labs/ciops,oip-web,professional-desktop,storybook,todox}/turbo.json`,
-`infra/turbo.json`, `packages/foundation/modeling/identity/turbo.json`,
-`packages/foundation/primitive/types/turbo.json`, `packages/tooling/library/ai-sync/turbo.json`,
-`packages/tooling/policy-pack/repo-configs/turbo.json`,
-`packages/tooling/test-kit/{fc-runs,test-runner}/turbo.json`, `packages/tooling/tool/cli/turbo.json`
-and `packages/tooling/tool/cli/test/fixtures/proof-epoch/turbo.json`.
+`hosted-runner`.
 
-The `:(glob)**/docgen.json` entry works differently. It is a git pathspec, so `git log` matches
-it against each commit's changed paths and reaches every `docgen.json` a commit added, edited or
-deleted, including the `apps/labs/api-docs/docgen.json` that #1080 deleted (at `8b7392fe00` it
-matches 132 tracked files). The script runs under `set -f` so the shell never expands it. The
-`turbo.json` list comes from `git ls-files` at the checked-out commit, so it cannot reach a
-`turbo.json` deleted before that commit. `.envrc` is one tracked file; it exports
-`TURBO_CACHE_DIR`, which decides which shells share the local Turbo cache store.
+`:(glob)**/turbo.json` and `:(glob)**/docgen.json` are git pathspecs, so `git log` matches them
+against each commit's changed paths and reaches every such file a commit added, edited or
+deleted, including the `apps/labs/api-docs/docgen.json` that #1080 deleted. At `8b7392fe00` they
+match 16 tracked `turbo.json` files (the root file, six app files, `infra/turbo.json`, seven
+package files and one test fixture) and 132 tracked `docgen.json` files; a `turbo.json` deleted
+earlier in the window would still be found (none was, so the pathspec census equals the earlier
+`git ls-files` census at this commit; PR #1424 review). The script runs under `set -f` so the
+shell never expands them. `.envrc` is one tracked file; it exports `TURBO_CACHE_DIR`, which
+decides which shells share the local Turbo cache store.
+
+The `package-scripts` family is a probe (PR #1424 review): workspace `package.json` scripts
+assemble what a Turbo task runs, so a commit enters the census when it adds or removes a
+script-entry line of a task-facing script in any `package.json`. The probe reaches a PR that
+edits scripts without touching their generator (`internal/package-scripts`); at `8b7392fe00` it
+lists 21 PRs, 18 of them already in the other families and three new (#872, #911, #936).
 
 The first pass used four narrower families: `internal/repo-run`; the root and four app
 `turbo.json` files, `commands/Cache` and `cache-warm.yml`; `commands/{Yeet,Quality,Ci}` with
@@ -113,11 +116,13 @@ they missed #1080 and #1254 (P0 Ruling 7).
 
 ### Deliberately not swept
 
-- **Workspace `package.json` scripts.** They are generated by `internal/package-scripts`
-  (`bun run beep lint package-scripts --write`), and that directory is in `lane-assembly`
-  (P0 Ruling 5). A PR that edits package scripts without touching the generator reaches the
-  census only through some other family path: #1053 rewired `beep:check` in 64 packages and
-  was found only because it also edited `infra/lambda/turbo-cache/package.json`.
+- **Script bodies under other keys.** The `package-scripts` probe keys on task-facing script
+  names (every Turbo task name at `8b7392fe00` plus `beep:*`, `typecheck` and `proof`); a
+  `package.json` edit to a script whose key is outside that list (for example `dev`) does not
+  enter the census through the probe, and a Turbo task added later needs the list extended. The generator
+  `internal/package-scripts` (`bun run beep lint package-scripts --write`) stays in
+  `lane-assembly` (P0 Ruling 5), so a generator change that rewrites many manifests is still
+  reached that way.
 - **Two change paths outside the repository.** Both act on AWS fleet state, and the runner
   runbooks (`docs/runbooks/ci-runner-reliability.md`, `docs/runbooks/aws-cost-operations.md`,
   both in `hosted-runner`) are their only record:
@@ -166,24 +171,26 @@ and under P0 Ruling 7 it is classified like a PR from its diff and message but n
 row. The first pass parsed only `(#N)`, so it dropped #891, #892, #893 and #894 (P0 Ruling 5).
 #871 is also a merge-subject commit, and only a widened family reaches it.
 
-**Reproducibility check.** At `8b7392fe00` the census output is 300 lines with sha256
-`acdd01efe21eada8520ee0b13ea2ae16f6ad70ba239c34d42850543538ce4b4d`. The final writer recomputed
-it on 2026-10-05 after the P0 Ruling 7 extensions, and it matched the third-pass census byte for
-byte; the PR parse returned 194 numbers. The second pass's output, before the extensions, was 296
-lines with sha256 `90157c67c93fe44050f8cc0a726ad929a85e08c83385113944170083f7ac28a7`.
+**Reproducibility check.** At `8b7392fe00` the census output is 321 lines with sha256
+`8c95797ed6c2077f7d0b5d88bcc168cef0bfe24a8fa58cc73f435b55e4f1221c` (recomputed on 2026-10-05
+after the PR #1424 review fixes); the PR parse returns 197 numbers. Earlier outputs: 300 lines,
+sha256 `acdd01efe21eada8520ee0b13ea2ae16f6ad70ba239c34d42850543538ce4b4d`, after the P0 Ruling 7
+extensions (194 PRs); 296 lines, sha256
+`90157c67c93fe44050f8cc0a726ad929a85e08c83385113944170083f7ac28a7`, before them (190 PRs).
 
 ## Census (2026-10-05, `8b7392fe00`)
 
-| Measure | Pass 1 (original families) | Pass 2 (widened, P0 Ruling 5) | Pass 3 (extended, P0 Ruling 7) |
-| --- | ---: | ---: | ---: |
-| Family lines (TSV) | 244 | 296 | 300 |
-| `scheduler-admission` lines | 49 | 51 | 51 |
-| `turbo-cache` lines | 40 | 58 | 59 |
-| `lane-assembly` lines | 129 | 153 | 156 |
-| `hosted-runner` lines | 26 | 34 | 34 |
-| Unique first-parent commits | 159 | 191 | 195 |
-| PRs | 155 (4 merge subjects unparsed) | 190 | 194 |
-| Commits with no PR number | 0 | 1 | 1 |
+| Measure | Pass 1 (original families) | Pass 2 (widened, P0 Ruling 5) | Pass 3 (extended, P0 Ruling 7) | Pass 4 (review fixes, Ruling 7 addendum) |
+| --- | ---: | ---: | ---: | ---: |
+| Family lines (TSV) | 244 | 296 | 300 | 321 |
+| `scheduler-admission` lines | 49 | 51 | 51 | 51 |
+| `turbo-cache` lines | 40 | 58 | 59 | 59 |
+| `lane-assembly` lines | 129 | 153 | 156 | 156 |
+| `hosted-runner` lines | 26 | 34 | 34 | 34 |
+| `package-scripts` lines | — | — | — | 21 |
+| Unique first-parent commits | 159 | 191 | 195 | 198 |
+| PRs | 155 (4 merge subjects unparsed) | 190 | 194 | 197 |
+| Commits with no PR number | 0 | 1 | 1 | 1 |
 
 Pass 2 classified 37 PRs:
 
@@ -220,14 +227,14 @@ Pass 3 classified 7 PRs and that commit:
 
 ## Verdicts
 
-| Outcome | Pass 1 (155 PRs) | Pass 2 (37 PRs) | Pass 3 (7 PRs, 1 commit) |
-| --- | ---: | ---: | ---: |
-| Survived both refuters | 19 | 8 | 3 |
-| Contested (one refuter refuted) | 14 | 5 | 1 |
-| Dropped (both refuted) | 0 | 0 | 0 |
-| `excluded-not-a-lever` at classification | 71 | 8 | 3 |
-| `excluded-instrumentation-only` at classification | 47 | 16 | 1 |
-| `excluded-shadow-only` at classification | 4 | 0 | 0 |
+| Outcome | Pass 1 (155 PRs) | Pass 2 (37 PRs) | Pass 3 (7 PRs, 1 commit) | Pass 4 (3 PRs, probe) |
+| --- | ---: | ---: | ---: | ---: |
+| Survived both refuters | 19 | 8 | 3 | 0 |
+| Contested (one refuter refuted) | 14 | 5 | 1 | 1 |
+| Dropped (both refuted) | 0 | 0 | 0 | 0 |
+| `excluded-not-a-lever` at classification | 71 | 8 | 3 | 2 |
+| `excluded-instrumentation-only` at classification | 47 | 16 | 1 | 0 |
+| `excluded-shadow-only` at classification | 4 | 0 | 0 | 0 |
 
 **Pass 1.** Of the 19 survivors, 3 were already rows (#870, #929, #1006) and 16 became new
 rows. Of the 14 contested PRs, the steward admitted 10 at the P0 sitting:
@@ -277,6 +284,13 @@ The classifiers excluded #928, #1192 and #1254 as not levers and #1055 as instru
   deployed scale-up Lambda already applied (`docs/runbooks/aws-cost-operations.md:74` at
   `702e815971`), and the return to Spot (live on 2026-09-15, then #1141) used
   `price-capacity-optimized`.
+
+**Pass 4** (package-scripts probe, PR #1424 review). #872 and #936 are new workspaces whose
+`package.json` arrived with the standard script set and joined existing lanes under the
+workspace glob (not a lever, as #928). #911 was contested: @beep/repo-cli's `beep:audit` gained
+`beep:test:python` and `beep:lint:python`, but only `package-verify` (a standalone handoff
+command, as ruled for #967) and the ad hoc root `audit` script run it, so the criterion refuter
+refuted it and it is excluded on the Ruling 3 pattern. No row.
 
 **Final count: 39 W1 rows** (16 pass-1 survivors + 10 steward-admitted + 10 from pass 2 + 3
 from pass 3). With iv-870, iv-929 and iv-1006 the ledger holds **42 rows**. The other 152
@@ -382,8 +396,8 @@ Every row's evidence still carries
 1. Check out the commit being audited and run the census and PR commands above from the
    repository root. To audit only a later window, set `W1_SINCE` to the committer instant of
    the previous census HEAD.
-2. Recompute the census digest. A change in the tracked `turbo.json` set changes the
-   `turbo-cache` family, because the glob is evaluated at the checked-out commit.
+2. Recompute the census digest. The pathspecs and the probe read history, so the digest changes
+   only when the window or the families change.
 3. Compare the PR list against the ledger rows and the appendix. Any PR in neither is new.
 4. Classify and refute only the new PRs (protocol steps 2 to 4), and take contested PRs to the
    steward.
@@ -393,17 +407,19 @@ Every row's evidence still carries
 
 ## Appendix: PRs that did not become rows
 
-The table rendered below this page covers all three passes: every census PR that is not a W1
-row (152), plus the three pre-existing rows marked "existing row", sorted by PR number, and then
-the commit with no PR (156 lines). It includes the four pass-1 PRs the steward excluded under P0
+The table rendered below this page covers all four passes: every census PR that is not a W1
+row (155), plus the three pre-existing rows marked "existing row", sorted by PR number, and then
+the commit with no PR (159 lines). It includes the four pass-1 PRs the steward excluded under P0
 Ruling 3, the three pass-2 contested PRs whose criterion refuter refuted them, and
-`8ef3213cbf`, the pass-3 contested entry, excluded the same way. #952 and #989 carry their
+`8ef3213cbf`, the pass-3 contested entry, excluded the same way, and #911, the pass-4 contested
+entry, excluded the same way. #952 and #989 carry their
 pass-2 re-review reasons, and #1055 its pass-3 re-review reason.
 
 | PR | Verdict or ruling | Reason |
 | ---: | --- | --- |
 | #858 | excluded-not-a-lever | Only the yeet monitor's PR-babysitting loop changes (watch `--until-event` exit, per-job red classification, deferred flake reruns); no proof decision. |
 | #870 | existing row | iv-870-weighted-admission, recorded before W1; the census boundary is its landing minute. |
+| #872 | excluded-not-a-lever (pass 4, package-scripts probe) | The probe hit is the package.json of the new workspace @beep/lejeune-bolt-workbench (name-status A), with the standard audit, beep:*, build, check, lint and test scripts; under the existing `apps/labs/*` workspace glob it joins existing lanes, as #928 did; the root package.json edit adds only an fflate dependency, and the knip.jsonc and fallow-boundary edits cover only the new workspace. |
 | #878 | excluded-instrumentation-only | Leases gain nonce and enqueuedAtMillis; a best-effort admission transition journal records admitted and released events. |
 | #879 | excluded-instrumentation-only | Journal-lock reaping binds to owner generations; that lock serializes journal writes only. |
 | #882 | steward-excluded (P0 Ruling 3) | The @beep/api-docs#build override only silences the no-outputs warning on a noEmit task nothing depends on; the CiLane cache plan adds a `--cache=` flag, not a task input; GateStaleness is a warning surface. |
@@ -414,12 +430,14 @@ pass-2 re-review reasons, and #1055 its pass-3 re-review reason.
 | #902 | excluded-not-a-lever | Security fix: only a verified dead lease authorizes `scheduler reap --apply` to stop a scope; cleanup authority, not admission. |
 | #903 | excluded-not-a-lever | LangExtract feature; the only swept edit relaxes the Yeet status merge-ready predicate (diagnostic output). |
 | #906 | excluded-not-a-lever | docgen:local's post-Turbo aggregation skips packages whose docgen.json outDir is not the canonical docs tree; it fixes what is written, not what is checked. |
+| #911 | excluded (pass 4, package-scripts probe; criterion refuted) | @beep/repo-cli's `beep:audit` gains `beep:test:python` and `beep:lint:python` (packages/tooling/tool/cli/package.json:162 at bfb20e7688), but only package-verify (a standalone handoff command, as ruled for #967) and the ad hoc root `audit` run that script; no hosted workflow, GithubChecks lane or local full proof does, so Ruling 3 does not reach it, and the knip.jsonc `uv` ignore covers only the new script. |
 | #913 | steward-excluded (P0 Ruling 3) | Only docgen outputs change (a gitignored private-docs path); inputs stay `$TURBO_DEFAULT$` and `!.beep/**`, so no cache-hit rule changes. |
 | #914 | excluded-not-a-lever | Marketing-site feature; RunScope.ts gains type annotations only. |
 | #921 | excluded-not-a-lever | Removes the published-PR ownership lease used by PR-babysitting agents, not quality-run admission. |
 | #927 | excluded-not-a-lever | Schema codec-static migration; decode calls renamed with identical behavior. |
 | #928 | excluded-not-a-lever (pass 3) | A new workspace, @beep/box-provisioning, arrives with its docgen.json, package.json, root workspaces entry and standard `docgen` script, so it joins the Docgen set under the existing discovery rule; no selection rule changes. |
 | #929 | existing row | iv-929-origin-lock-retirement, written by the graduation PR (graduation Ruling 6). |
+| #936 | excluded-not-a-lever (pass 4, package-scripts probe) | The probe hit is the package.json of the new workspace @beep/ciops (name-status A), with the standard script set plus `docgen` and an `evidence:s7` generator that no lane calls at landing; under the existing `apps/labs/*` workspace glob it joins existing lanes, as #928 did, and the fallow-boundary edit adds only its own zone. |
 | #949 | excluded-not-a-lever | Moves the admission and proof-lock root from `/tmp` to a `.beep/runtime` directory under the user home (location cutover, same sharing) and hardens TmpfsReap. |
 | #952 | excluded-instrumentation-only (re-reviewed, pass 2) | Re-reviewed under the #1182 rule: affectedUsingTaskInputs is on, but the coverage task is uncached and never runs under `turbo --affected` (Coverage Regression feeds --affected to its own planner), so the explicit inputs decide nothing. |
 | #954 | excluded-instrumentation-only | Adds ProofFact and ProofLedger schemas and a disconnected ledger service used only by the test kit. |

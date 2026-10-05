@@ -30,8 +30,9 @@ exploration's 2026-10-01 graduation sitting.
 - [x] **W1 change-event backfill** (graduation Ruling 6, amended by P0 Ruling 2). Done
       2026-10-05: the reproducible query
       [`research/scripts/w1_lever_query.sh`](./research/scripts/w1_lever_query.sh) (four path
-      families, widened by P0 Rulings 5 and 7) censused 194 PRs since the iv-870 instant; three
-      classify-and-refute passes and P0 Rulings 2–7 admitted 39 new `OperationalChangeEvent`
+      families widened by P0 Rulings 5 and 7, plus the package-scripts probe from the PR #1424
+      review) censused 197 PRs since the iv-870 instant; four classify-and-refute passes and P0
+      Rulings 2–7 admitted 39 new `OperationalChangeEvent`
       rows into `control-interventions.yaml` (42 rows with iv-870, iv-929 and iv-1006), each
       under adoption-qualified membership; protocol, census, verdicts and the exclusions appendix
       are in [`research/w1-lever-query.md`](./research/w1-lever-query.md). Rows stay seed data
