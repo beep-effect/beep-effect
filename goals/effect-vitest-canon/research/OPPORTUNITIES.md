@@ -6664,3 +6664,13 @@ unchanged rows and reconciled only the eight removed atlas findings plus one
 new, intentional shorter-scope review candidate; the detector then reported
 zero introductions and resolutions. Matching and writing by stable occurrence
 identity instead of source position would avoid this unrelated baseline churn.
+
+### PR closeout hid a GraphQL rate-limit failure (2026-10-05)
+
+While checking PR #1416's new head, `bun run beep yeet closeout --summary
+--require-review-comments 0` reported that the branch had no open pull
+request. The REST pull-request endpoint confirmed the PR was open on that exact
+head, while `gh pr view` returned `GraphQL: API rate limit already exceeded`.
+Closeout should report the transport or rate-limit error instead of converting
+an unavailable GraphQL lookup into a misleading no-PR conclusion. A REST
+fallback for basic PR identity would also keep read-only status available.
