@@ -3,14 +3,18 @@
   "exploration": {
     "slug": "agent-fleet-layout",
     "title": "Agent Fleet Layout",
-    "status": "active",
-    "stage": "decompose",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/fleet-root-registry",
+        "goals/lane-bootstrap",
+        "goals/ops-seat-timers",
+        "goals/legacy-drain",
+        "goals/ai-metrics-raw-retention"
+      ],
       "docs": [],
       "supersededBy": null
     },

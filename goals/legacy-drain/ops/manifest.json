@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "legacy-drain",
+    "title": "Legacy Drain",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/legacy-drain",
+  "lifecycle": "active",
+  "mission": "Register the legacy `beep-effect*` clones read-only and drain them, lane by lane and clone by clone, under a drainable predicate the reaper enforces; land the seats-and-lanes worktree standard.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-fleet-layout",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/legacy-drain/README.md",
+    "goals/legacy-drain/SPEC.md",
+    "goals/legacy-drain/PLAN.md",
+    "goals/legacy-drain/GOAL.md",
+    "goals/legacy-drain/research/SOURCES.md",
+    "explorations/agent-fleet-layout/BRIEF.md",
+    "explorations/agent-fleet-layout/DECISIONS.md",
+    "explorations/agent-fleet-layout/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/legacy-drain/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/legacy-drain/GOAL.md)\" -le 4000",
+    "jq . goals/legacy-drain/ops/manifest.json",
+    "rg -n \"legacy-drain|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/legacy-drain",
+    "git diff --check -- goals/legacy-drain",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "dependsOn": ["goals/fleet-root-registry", "goals/ops-seat-timers"],
+  "provides": ["fleet/drain"],
+  "requires": ["fleet/registry", "fleet/ops-seat"]
+}
