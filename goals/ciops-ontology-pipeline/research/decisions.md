@@ -1058,3 +1058,59 @@ merged-preview stage and work-kind readings survive, the tier reading does not. 
 memory canary passed before launch (it reports nothing in context and loads no memory path), and the
 launch log records the pre-launch checks. Reversal: a re-run of the affected denotation pass before
 the foundational pairs are reviewed.
+
+**Call (ae) — the analysis stage and its check.** The two foundational seats wrote one identity card and
+one foundational analysis per survivor: `chg` 1 (an event, rigid, with two event-grain rivals still
+viable) and `vfy` 16 (ten analysed, six explicitly deferred with named evidence: both work-kind
+readings, the proof stage, the merged-preview stage, the seat grant and the seat request). The blinded
+alternative seats, launched in the call (s) shape from allow-listed roots, wrote the same 17 pairs; the
+init assertions held, no read was denied, no record fell outside the alternative grammar or cited
+anything outside its manifest, and residue and gitleaks scans were clean. With all 68 analysis records
+in place the repository-fidelity scan in the pin worktree shows only the 138 expected lines. The
+primary pairs, which feed synthesis, get one independent check of the denotation kind (record-backed
+claims, criteria, categories, rivals, queue duties), whose checkers never read the blinded pairs so no
+blinded category can reach a primary repair row. The blinded pairs are judged only by the validator and
+by the category comparison the mechanical gate prints as DISPUTED flags for the sitting; they are not
+repaired to chase agreement. Reversal: a repair pass of either seat before synthesis starts.
+
+**Call (af) — foundational repair loop and the unnamed-pair Stop.** The primary pairs went through an
+independent check, then repairs and rechecks: round 1 (52 rows), round 2 (22 rows, after a recheck found
+11 majors and 18 minors) and round 3 (9 rows, majors only). The review-loop rule applies as written:
+blockers and majors are fixed in any round, minors are fixed through round 2, and from round 3 the
+minors become tracked follow-ups carried into synthesis as open issues, not repair rows. After the
+round-3 repair a narrow recheck confirms every row is answered and looks only for new blockers; a new
+major that a repair sentence introduces at that point goes to the adversary stage, whose attacks on
+identity, category or rivals land on the IC, FA or DH anyway. The foundational brief's Stop for "an
+`ic-`/`fa-` file of your prefix exists before you start and `REPAIR` does not name it" guards against
+overwriting work: on a `REPAIR` launch the prefix's unnamed pairs exist by design from earlier passes,
+they are read-only inputs, and their presence is not a Stop; a seat still never rewrites a pair no row
+names. The launch message states this call. Reversal: name every pair of the prefix in a later pass, or
+relaunch the affected pairs from a first pass.
+
+**Call (ag) — the foundational stage closes.** Three repair rounds answered all 83 landed rows (52, 22
+and 9), none declined, and the round-4 recheck found no new blocker. The plain scan and the
+repository-fidelity scan in the pin worktree still show only the 138 expected lines. The pairs now
+stand at: `chg` 1 analyzed (change-landing, an event, with four viable rivals: apply against merge,
+the supersession grain, the ledger row and the change artifact); `vfy` 4 analyzed (committed-failure,
+lane-execution, verification-attempt, verification-evidence-record) and 12 explicitly deferred
+(admission-charge, admission-work-kind, cache-epoch, checkout, merged-preview-stage,
+merged-preview-work-kind, peak-memory-use, proof-stage, seat-grant, seat-request, tree-state,
+verification-lane), most with the category unresolved and each naming the record that would decide
+it. The repairs moved pairs toward deferral because the selected records show shapes, never counts,
+joins or absences, and several first-pass readings had leaned on facts outside their own hypothesis.
+That is the honest yield of this corpus, not a defect to repair away. Queue H stays open: no pair
+rules tier against stage. The 21 minors from rounds 3 and 4 are tracked follow-ups for the
+implementation report. One seat's filename-only grep over all prose observations saw one name off its
+manifest without reading the file; that file is a run-4 observation, not an excluded path, so the
+pass stands. Synthesis starts for `chg` and `vfy`; `lpl` has no surviving chain and goes to index
+rows only. Reversal: reopen a pair with a repair row before synthesis reads it.
+
+**Call (ah) — an interrupted synthesis seat.** The workstation session ended while both synthesis seats
+ran. The `chg` seat had already returned (one decision proposal, `OperationalChangeEvent` on CQ-016,
+with the four viable rivals as steward-choice open issues; `landedAt` is not proposed because its
+chain did not survive denotation, so CQ-016 is half answered and goes to the sitting). The `vfy` seat
+died after writing nine proposals and before its self-check, scan or Return, so nothing vouches for
+those bytes. They are retired outside the repository with their digests, and a fresh `vfy` seat redoes
+the whole batch from the same input manifest; a dead seat's partial output is never continued
+(same-context rule). No upstream record changed after synthesis started. Reversal: restore the retired
+files from their digest list.
