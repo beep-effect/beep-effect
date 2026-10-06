@@ -327,3 +327,12 @@ rules; parity is proven at the pin by checking that every W4 origin label whose 
 names a W3 checkout. (r) The W3 attempt-start census by stage is a capture-time census over ring
 buffers; the P1 sitting's quick counts (107 pre-push, 10 repair-loop starts after the cut) were
 taken over a different file set at a different instant, and the pinned census governs.
+
+**Round cap and two more calls (2026-10-06, after round 3).** Round 4 is the final pre-pin fix
+round under the charter's cap; what it cannot finish becomes a tracked follow-up PR, never a
+further round before the pin. (s) The encoded home marker `-home-` is refused only when it starts
+a path component (the knowledge-refs gate's class); a branch-derived lane name that carries
+`-home-` mid-token is an ordinary public label, and both generators apply the same rule.
+(t) Ruling 8's "post-cut count" is a count of merged-preview FACTS: the reading is "dormant" when
+no post-cut merged-preview fact exists, and a lone post-cut merged-preview shadow whose fact
+tore stays under the tear receipts.
