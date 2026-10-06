@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0-P1 complete; P2 verification in progress)
+Status: `completed-retained` (closed 2026-10-05; implementation merged in PR #520)
 
 ## Phases
 
@@ -10,9 +10,9 @@ Status: `active` (P0-P1 complete; P2 verification in progress)
 | --- | --- | --- | --- |
 | P0 Fixture spike | complete (2026-07-29) | Prove the matching, symmetry, suppression, visibility, and transition rules against the real core before any schema commitment. | PASS — all five spike-B assertions plus the folded boundary fixtures passed in PGlite; evidence is archived in `history/p0/2026-07-29-fixture-spike.md`. |
 | P1 Implement | complete (2026-07-29) | Build the candidate domain, additive tables, use-case ports/commands, server repository, and coordinated full-source human-triage surface. | PASS — the schema/Effect/Atom implementation and browser QA are archived in `history/p1/2026-07-29-implementation-and-browser-qa.md`; candidate writes never touch the core's authority tables. |
-| P2 Verify | in progress | Prove two-axis candidate queries, the approval race lane, restart recovery, and repo-quality compliance. | Focused suites and browser QA are green; formal quality-review closure and `bun run beep yeet verify` remain. |
-| P3 Yeet: PR to mergeable | pending | Drive the work to mergeable through `bun run beep yeet publish --pr` and `monitor`. | Hosted required checks green; PR mergeable. |
-| P4 Close | pending | Closeout reflection and same-PR packet-state flip. | Reflection passes `bun run beep lint reflection-artifacts`; manifest/README state flipped in the same PR as the final work. |
+| P2 Verify | complete (2026-10-05) | Prove two-axis candidate queries, the approval race lane, restart recovery, and repo-quality compliance. | PASS — focused lanes, the real-Postgres race lane, the production-repository restart proof (added in the closing PR), and packet lints are green on `main`; hosted checks on the closing PR are the full proof; evidence in `history/p2/2026-10-05-verification-and-closeout.md`. |
+| P3 Yeet: PR to mergeable | complete | Drive the work to mergeable through `bun run beep yeet publish --pr` and `monitor`. | Implementation merged in PR #520 (2026-08-02); the closeout PR is driven to mergeable via Yeet. |
+| P4 Close | complete (2026-10-05) | Closeout reflection and same-PR packet-state flip. | Reflections (`2026-07-30-codex.md`, `2026-10-05-claude.md`) pass `bun run beep lint reflection-artifacts`; manifest/README flipped in the closing PR. |
 
 ## P0 — Fixture Spike (hard gate)
 

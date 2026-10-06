@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,11 +37,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 verification — active. P1 landed the P0-fixed immutable candidate, receipt,
-proposal, disposition, and narrow review contracts without widening claim
-disposition, together with the coordinated full-source triage UI. Focused
-package, migration, integration, browser, doctrine, and documentation proof is
-green; the formal quality-review loop and Yeet verification remain.
+Closed 2026-10-05 (completed-retained). Reflections:
+[`history/reflections/2026-07-30-codex.md`](./history/reflections/2026-07-30-codex.md)
+and
+[`history/reflections/2026-10-05-claude.md`](./history/reflections/2026-10-05-claude.md).
+The implementation merged in PR #520 (2026-08-02); the closing PR re-proved P2
+on the live `main` head and landed the packet-state flip.
 
 ## Provenance
 
@@ -64,6 +65,11 @@ Back-links, not copies:
   Q1 context on typed verdict families.
 
 ## Latest Evidence
+
+[`history/p2/2026-10-05-verification-and-closeout.md`](./history/p2/2026-10-05-verification-and-closeout.md)
+records the focused package lanes, the opt-in real-Postgres race lane (one
+winner, typed loser, restart recovery), the db-admin migration proof, and the
+packet lints that closed P2.
 
 [`history/p0/2026-07-29-fixture-spike.md`](./history/p0/2026-07-29-fixture-spike.md)
 records the exact command, final `32 passed` result, per-assertion verdicts, and
