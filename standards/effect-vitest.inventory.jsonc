@@ -30664,13 +30664,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-scripted-process.test.ts:50:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-scripted-process.test.ts:53:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-scripted-process.test.ts",
-      "line": 50,
-      "endLine": 50,
+      "line": 53,
+      "endLine": 53,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
