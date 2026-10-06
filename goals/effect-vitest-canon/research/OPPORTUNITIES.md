@@ -6778,3 +6778,43 @@ entry and no missing or enforced candidates. Regenerating the inventory
 removed only that stale exception, and `lint schema-first` returned to zero
 drift. An owning PR check for schema-first inventory freshness would have
 caught the mismatch before another branch tried to publish.
+
+### Merged goal PR retained two red Heavy jobs (2026-10-06)
+
+PR #1445 merged at `64c0696b2d` while its exact head had failed `Heavy / Lint
+Policy` and `Heavy / Coverage Regression`. The lint log named a missing
+`@beep/schema/PatternOntology` Vitest alias from main; the coverage log named
+losses in law-practice-server and repo-cli source plus one uncovered new schema
+branch. The goal branch's local fixes were not pushed before the merge. A
+server-side required-check gate that holds the exact head until all Heavy jobs
+settle green would prevent this closeout gap; the next goal PR must carry and
+prove the repairs rather than treating the merge as proof.
+
+### New main test entered without an Effect/Vitest inventory row (2026-10-06)
+
+After rebasing the goal follow-up over #1444, `bun run beep lint
+effect-vitest` reported ten new rows in `session-ledger.test.ts`. The new
+test entered main without a matching generated baseline or reviewed lens
+receipt, so the goal branch had to migrate runner-owned scopes and reconcile
+the historical and current identities before it could publish. An owning
+Effect/Vitest inventory check on the introducing PR would have made this
+delta visible before merge.
+
+The first Yeet publish attempt also found three untracked schema-first
+interfaces from #1444 (`SessionCheckoutFacts`, `SessionNoteInput`, and
+`StateRepository`) and an absent in-range changeset for this branch's
+law-practice and schema tests. It pushed nothing. The owning PR's schema-first
+lane and an early `quality changeset-status --since origin/main` check would
+have surfaced these before the combined publish gate.
+
+### Yeet loses PR discovery after a GitHub GraphQL rate error (2026-10-06)
+
+Yeet passed all 15 local preflight lanes and pushed the follow-up branch, but
+`gh pr create` failed with `GraphQL: API rate limit already exceeded`.
+GitHub's REST API still allowed PR #1460 to be created at the pushed head.
+The attached `yeet monitor --until-ready` then reported that the current branch
+had no open PR, despite the REST-visible PR; detached monitoring also could
+not start because the systemd user manager was unavailable. A REST fallback
+for PR creation and discovery, followed by an automatic attached monitor
+fallback, would keep an already-pushed Yeet run observable under these
+conditions.
