@@ -1,7 +1,6 @@
 // Bun-API shim for Node-based Vitest runs, including the canonical coverage lane.
 // Explicit Bun coverage runs use Istanbul instrumentation; Node uses V8.
-// Runtime/provider qualification lives in scratchpad/bun-test. The per-file
-// regression baseline still requires Node/V8, so production coverage commands
+// The per-file regression baseline requires Node/V8, so production coverage commands
 // retain that runtime until a compatible baseline migration is validated.
 // Tests calling Bun APIs still execute under Node through this shim. The guard
 // leaves real Bun untouched and only installs when the probed surface is absent.
