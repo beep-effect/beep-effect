@@ -18,8 +18,12 @@ Everything else you decide, record, and keep moving.
    A checkout with no live session but a running process belongs to an
    unlisted lane (Codex, Cursor); leave it alone.
 3. `bash .claude/skills/orchestrate/gate.sh` prints one row per open PR.
-   `GATE-MET` = every required context green, zero unresolved threads, not
-   draft, not conflicting.
+   `GATE-MET` = AGENTS.md "Mergeable": every required context green, no
+   failing non-required check run (Vercel deployments excepted), no
+   outstanding thread (unresolved, or author-resolved with a later human
+   reviewer comment), not draft, not conflicting. It exits non-zero when
+   main's required contexts can't be read, and prints `threads=?` when the
+   thread count is unknown; neither ever means "clear".
 
 ## Loop
 
