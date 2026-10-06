@@ -387,6 +387,7 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
     }),
   },
   $I.annote("Text", {
+    po: "atom",
     description: "Plain escaped inline text.",
   })
 ) {
@@ -448,6 +449,7 @@ export class RawMarkdown extends S.TaggedClass<RawMarkdown>($I`RawMarkdown`)(
     }),
   },
   $I.annote("RawMarkdown", {
+    po: "atom",
     description: "Trusted raw Markdown inline content.",
   })
 ) {
@@ -513,6 +515,7 @@ export class RawHtml extends S.TaggedClass<RawHtml>($I`RawHtml`)(
     }),
   },
   $I.annote("RawHtml", {
+    po: "atom",
     description:
       "Raw HTML inline content for adapters that opt into trusted HTML rendering. The built-in HTML adapter escapes this value by default.",
   })
@@ -575,6 +578,7 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
     }),
   },
   $I.annote("Strong", {
+    po: "inline",
     description: "Strong inline content.",
   })
 ) {
@@ -643,6 +647,7 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
     }),
   },
   $I.annote("Em", {
+    po: "inline",
     description: "Emphasized inline content.",
   })
 ) {
@@ -711,6 +716,7 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
     }),
   },
   $I.annote("Del", {
+    po: "inline",
     description: "Deleted inline content.",
   })
 ) {
@@ -779,6 +785,7 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
     }),
   },
   $I.annote("Code", {
+    po: "atom",
     description: "Inline code span.",
   })
 ) {
@@ -847,6 +854,7 @@ export class A extends S.TaggedClass<A>($I`A`)(
     }),
   },
   $I.annote("A", {
+    po: "inline",
     description: "Inline hyperlink.",
   })
 ) {
@@ -929,6 +937,7 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     }),
   },
   $I.annote("Img", {
+    po: "milestone",
     description: "Inline image.",
   })
 ) {
@@ -998,6 +1007,7 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
   "br",
   {},
   $I.annote("Br", {
+    po: "milestone",
     description: "Inline line break.",
   })
 ) {
@@ -1058,6 +1068,7 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
     }),
   },
   $I.annote("InlineMath", {
+    po: "atom",
     description: "Inline TeX math content.",
   })
 ) {
@@ -1120,6 +1131,7 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
     }),
   },
   $I.annote("FootnoteReference", {
+    po: "milestone",
     description: "Inline footnote reference.",
   })
 ) {
@@ -1587,6 +1599,7 @@ export class P extends S.TaggedClass<P>($I`P`)(
     }),
   },
   $I.annote("P", {
+    po: "block",
     description: "Paragraph block.",
   })
 ) {
@@ -1780,6 +1793,7 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
     }),
   },
   $I.annote("Heading", {
+    po: "block",
     description: "Heading block carrying its level alongside inline content.",
   })
 ) {
@@ -1861,6 +1875,7 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
     }),
   },
   $I.annote("Li", {
+    po: "container",
     description: "List item node used by ordered, unordered, and task lists.",
   })
 ) {
@@ -2001,6 +2016,7 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
     }),
   },
   $I.annote("Ul", {
+    po: "table",
     description: "Unordered list block.",
   })
 ) {
@@ -2114,6 +2130,7 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
     }),
   },
   $I.annote("Ol", {
+    po: "table",
     description: "Ordered list block.",
   })
 ) {
@@ -2184,6 +2201,7 @@ export class TaskItem extends S.TaggedClass<TaskItem>($I`TaskItem`)(
     }),
   },
   $I.annote("TaskItem", {
+    po: "container",
     description: "GFM task list item.",
   })
 ) {
@@ -2372,6 +2390,7 @@ export class TaskList extends S.TaggedClass<TaskList>($I`TaskList`)(
     }),
   },
   $I.annote("TaskList", {
+    po: "table",
     description: "GFM task list block.",
   })
 ) {
@@ -2440,6 +2459,7 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
     }),
   },
   $I.annote("BlockQuote", {
+    po: "container",
     description: "Block quote container.",
   })
 ) {
@@ -2525,6 +2545,7 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
     }),
   },
   $I.annote("Pre", {
+    po: "field",
     description: "Fenced code block.",
   })
 ) {
@@ -2599,6 +2620,7 @@ export class TableCell extends S.TaggedClass<TableCell>($I`TableCell`)(
     }),
   },
   $I.annote("TableCell", {
+    po: "block",
     description: "Table cell containing inline Markdown content.",
   })
 ) {
@@ -2668,6 +2690,7 @@ export class TableRow extends S.TaggedClass<TableRow>($I`TableRow`)(
     }),
   },
   $I.annote("TableRow", {
+    po: "table",
     description: "Table row containing cells in column order.",
   })
 ) {
@@ -2750,6 +2773,7 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
     }),
   },
   $I.annote("Table", {
+    po: "table",
     description: "Markdown table block with inline cell content.",
   })
 ) {
@@ -2832,6 +2856,7 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
     }),
   },
   $I.annote("YouTube", {
+    po: "meta",
     description: "YouTube video embed block.",
   })
 ) {
@@ -2901,6 +2926,7 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
     }),
   },
   $I.annote("MathBlock", {
+    po: "field",
     description: "Display TeX math block.",
   })
 ) {
@@ -2971,6 +2997,7 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
     }),
   },
   $I.annote("FootnoteDefinition", {
+    po: "container",
     description: "Footnote definition block.",
   })
 ) {
@@ -3062,6 +3089,7 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
     }),
   },
   $I.annote("Admonition", {
+    po: "container",
     description: "Typed admonition block.",
   })
 ) {
@@ -3151,6 +3179,7 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
     }),
   },
   $I.annote("Embed", {
+    po: "meta",
     description: "Safe generalized block embed rendered by built-in adapters as inert link or figure content.",
   })
 ) {
@@ -3241,6 +3270,7 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
   "hr",
   {},
   $I.annote("Hr", {
+    po: "meta",
     description: "Horizontal rule block.",
   })
 ) {
@@ -3462,6 +3492,7 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
     }),
   },
   $I.annote("Document", {
+    po: "container",
     description: "Root Markdown document AST.",
   })
 ) {
