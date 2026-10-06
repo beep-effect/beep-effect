@@ -17,6 +17,10 @@ For each new message:
 4. The entries go on the calendar as all-day events with a `Docket - *`
    category, and the message gets the `Docket - entered` category.
 
+Mail in Sent Items, Drafts and Outbox is ignored. Mail in Junk Email and
+Deleted Items is processed like any other, and an entry written for it says
+which of the two folders it was found in.
+
 Every calendar entry carries an idempotency key, so processing a message again
 creates nothing new. The service adds `Docket - *` categories only, and it
 keeps every other category on a message as it found it.

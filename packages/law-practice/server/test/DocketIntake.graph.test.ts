@@ -276,6 +276,13 @@ const MAILBOX_ID = "00000000-0000-4000-8000-000000000001";
 const folderPage = {
   value: [
     { from: fromSelf, id: "sent-by-id", parentFolderId: "folder-sentitems", receivedDateTime: "2030-01-10T12:00:00Z" },
+    {
+      from: fromOther,
+      id: "draft-by-folder",
+      parentFolderId: "folder-drafts",
+      receivedDateTime: "2030-01-10T12:00:10Z",
+    },
+    { from: fromOther, id: "outbox-1", parentFolderId: "folder-outbox", receivedDateTime: "2030-01-10T12:00:20Z" },
     { from: fromOther, id: "junk-1", parentFolderId: "folder-junkemail", receivedDateTime: "2030-01-10T12:01:00Z" },
     {
       from: fromOther,
@@ -425,7 +432,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
   it.layer(graphLayer({ mailbox: MAILBOX_ID }), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "drops mail in Sent Items, Junk Email and Deleted Items by folder, and keeps mail in an inbox subfolder",
+      "drops mail in Sent Items, Drafts and Outbox by folder, and hands over Junk Email and Deleted Items mail marked with its folder",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
         const mailbox = yield* DocketMailbox;
@@ -433,7 +440,12 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
 
         const messages = yield* mailbox.receivedSince(O.none());
 
-        expect(A.map(messages, (received) => received.messageId)).toStrictEqual(["subfolder-1", "unfiled-1"]);
+        expect(A.map(messages, (received) => [received.messageId, received.sourceFolder])).toStrictEqual([
+          ["junk-1", "junk"],
+          ["deleted-1", "deleted"],
+          ["subfolder-1", "mailbox"],
+          ["unfiled-1", "mailbox"],
+        ]);
       })
     );
   });

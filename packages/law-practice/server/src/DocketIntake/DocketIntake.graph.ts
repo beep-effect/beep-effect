@@ -39,13 +39,17 @@ import {
   m365AllDayWindow,
 } from "@beep/m365";
 import { LocalDate } from "@beep/schema/LocalDate";
-import { DateTime, Effect, HashSet, Layer, pipe } from "effect";
+import { DateTime, Effect, HashMap, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { DocketCalendarEntry, DocketIntakeStage } from "@beep/law-practice-use-cases/DocketIntake";
+import type {
+  DocketCalendarEntry,
+  DocketIntakeStage,
+  DocketSourceFolder,
+} from "@beep/law-practice-use-cases/DocketIntake";
 import type { GraphAttachment, GraphCategoryColor, GraphEvent, GraphMessage, M365Error, M365Shape } from "@beep/m365";
 
 const $I = $LawPracticeServerId.create("DocketIntake/DocketIntake.graph");
@@ -121,9 +125,23 @@ const PDF_CONTENT_TYPE = "application/pdf";
 const PDF_EXTENSION = ".pdf";
 const PRECONDITION_FAILED = 412;
 
-// Well-known folders whose mail is never inbound: what the mailbox wrote itself, and what it or
-// its filters threw away. Their ids are resolved once, when the layer is built.
-const EXCLUDED_FOLDERS = ["sentitems", "drafts", "outbox", "junkemail", "deleteditems"] as const;
+// Well-known folders whose mail is never inbound: what the mailbox wrote itself.
+const EXCLUDED_FOLDERS = ["sentitems", "drafts", "outbox"] as const;
+
+// Well-known folders whose mail is still docketed, marked with where it was found: a deadline
+// that a filter or a stray click put away is still a deadline.
+const MARKED_FOLDERS: ReadonlyArray<readonly [folder: string, sourceFolder: DocketSourceFolder]> = [
+  ["junkemail", "junk"],
+  ["deleteditems", "deleted"],
+];
+
+// The folder ids of one mailbox, resolved once when the layer is built.
+type MailboxFolders = {
+  readonly excluded: HashSet.HashSet<string>;
+  readonly marked: HashMap.HashMap<string, DocketSourceFolder>;
+};
+
+const IN_MAILBOX: DocketSourceFolder = "mailbox";
 
 const categoryColor = DocketCategory.$match({
   "Docket - digest": (): GraphCategoryColor => "preset12",
@@ -192,9 +210,16 @@ const senderAddress = (message: GraphMessage): O.Option<string> =>
 // The listing spans every folder. The folder a message sits in decides whether it is inbound;
 // that holds however the mailbox is addressed (by address or by id).
 const isInExcludedFolder =
-  (excludedFolderIds: HashSet.HashSet<string>) =>
+  (folders: MailboxFolders) =>
   (message: GraphMessage): boolean =>
-    O.exists(message.parentFolderId, (folderId) => HashSet.has(excludedFolderIds, folderId));
+    O.exists(message.parentFolderId, (folderId) => HashSet.has(folders.excluded, folderId));
+
+const sourceFolderOf = (folders: MailboxFolders, message: GraphMessage): DocketSourceFolder =>
+  pipe(
+    message.parentFolderId,
+    O.flatMap((folderId) => HashMap.get(folders.marked, folderId)),
+    O.getOrElse(() => IN_MAILBOX)
+  );
 
 // Secondary guards for mail outside those folders: drafts, and mail the mailbox sent to itself
 // when it is configured by address.
@@ -240,7 +265,7 @@ export const docketDayInZone: {
 });
 
 const toDocketMessage =
-  (zone: DateTime.TimeZone) =>
+  (zone: DateTime.TimeZone, folders: MailboxFolders) =>
   (message: GraphMessage): O.Option<DocketMessage> =>
     pipe(
       message.receivedDateTime,
@@ -258,6 +283,7 @@ const toDocketMessage =
           receivedAt: DateTime.formatIso(instant),
           receivedDate: docketDayInZone(instant, zone),
           sender: senderAddress(message),
+          sourceFolder: sourceFolderOf(folders, message),
           subject: message.subject,
           webLink: message.webLink,
         })
@@ -328,7 +354,7 @@ const toEventDraft = (entry: DocketCalendarEntry, timeZone: string): M365EventDr
     subject: entry.subject,
   });
 
-const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, excludedFolderIds: HashSet.HashSet<string>) => {
+const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, folders: MailboxFolders) => {
   const userId = O.some(config.mailbox);
   const zone = config.timeZone;
 
@@ -405,12 +431,15 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, excludedFolderI
           userId,
         })
       ).pipe(Effect.mapError(mailboxError));
-      const inExcludedFolder = isInExcludedFolder(excludedFolderIds);
+      const inExcludedFolder = isInExcludedFolder(folders);
       const elsewhere = A.filter(listed, (received) => !inExcludedFolder(received));
       const inbound = A.filter(elsewhere, isInbound(config.mailbox));
-      const messages = A.getSomes(A.map(inbound, toDocketMessage(zone)));
+      const messages = A.getSomes(A.map(inbound, toDocketMessage(zone, folders)));
       yield* Effect.annotateCurrentSpan({
-        docket_dropped_excluded_folder: A.length(listed) - A.length(elsewhere),
+        docket_dropped_sent_drafts_outbox: A.length(listed) - A.length(elsewhere),
+        docket_found_in_junk_or_deleted: A.length(
+          A.filter(messages, (received) => received.sourceFolder !== IN_MAILBOX)
+        ),
         docket_listed: A.length(listed),
         docket_returned: A.length(messages),
         docket_skipped_undated: A.length(inbound) - A.length(messages),
@@ -480,8 +509,11 @@ const makeCalendar = (m365: M365Shape, config: DocketGraphConfig) => {
  * Building the layer makes sure the six `Docket - *` master categories exist
  * in the mailbox; existing categories are never changed. It also resolves the
  * ids of the Sent Items, Drafts, Outbox, Junk Email and Deleted Items folders
- * once; mail in those folders is never handed to the pipeline. A failed
- * folder lookup fails the build at stage `mailbox`. On a message the
+ * once. Mail in Sent Items, Drafts and Outbox is never handed to the
+ * pipeline. Mail in Junk Email and Deleted Items is handed over with its
+ * `sourceFolder` set to `junk` or `deleted`, so it is docketed and the entry
+ * says where it was found. A failed folder lookup fails the build at stage
+ * `mailbox`. On a message the
  * adapter only ever adds `Docket - entered`, and it writes the category list
  * back with every other category in place.
  *
@@ -517,16 +549,25 @@ export const makeDocketGraphLayer = (
           M365EnsureMasterCategoriesRequest.make({ categories: masterCategories, userId: O.some(config.mailbox) })
         )
         .pipe(Effect.mapError(mailboxError));
-      const excludedFolders = yield* Effect.forEach(
-        EXCLUDED_FOLDERS,
-        (folder) => m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })),
+      const folderId = (folder: string) =>
+        m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })).pipe(
+          Effect.map((resolved) => resolved.id),
+          Effect.mapError(mailboxError)
+        );
+      const excluded = yield* Effect.forEach(EXCLUDED_FOLDERS, folderId, { concurrency: 1 });
+      const marked = yield* Effect.forEach(
+        MARKED_FOLDERS,
+        ([folder, sourceFolder]) => Effect.map(folderId(folder), (id) => [id, sourceFolder] as const),
         { concurrency: 1 }
-      ).pipe(Effect.mapError(mailboxError));
+      );
       yield* Effect.annotateCurrentSpan({ docket_categories_created: A.length(ensured.created) });
       return Layer.merge(
         Layer.succeed(
           DocketMailbox,
-          makeMailbox(m365, config, HashSet.fromIterable(A.map(excludedFolders, (folder) => folder.id)))
+          makeMailbox(m365, config, {
+            excluded: HashSet.fromIterable(excluded),
+            marked: HashMap.fromIterable(marked),
+          })
         ),
         Layer.succeed(DocketCalendar, makeCalendar(m365, config))
       );

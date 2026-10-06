@@ -284,10 +284,27 @@ type AgentCall<Wire extends Record<string, unknown>> = {
 
 const isRetryable = (error: AiError.AiError): boolean => error.isRetryable;
 
+// How one agent call failed. `rejected` is true only when the provider refused the request
+// itself (not a timeout, a defect, or a retryable failure that kept coming back): that is the
+// case where sending less can help.
+class AgentCallFailed extends S.TaggedError<AgentCallFailed>($I`AgentCallFailed`)(
+  "AgentCallFailed",
+  {
+    failure: DocketIntakeError,
+    rejected: S.Boolean,
+  },
+  $I.annote("AgentCallFailed", { description: "How one docket intake agent call failed." })
+) {}
+
+const notRejected = (stage: DocketIntakeStage, cause: string) => () =>
+  AgentCallFailed.make({ failure: failure(stage, cause), rejected: false });
+
+const toIntakeError = (error: AgentCallFailed): DocketIntakeError => error.failure;
+
 const callAgent = <Wire extends Record<string, unknown>>(
   languageModel: LanguageModel.LanguageModel,
   call: AgentCall<Wire>
-): Effect.Effect<Wire, DocketIntakeError> =>
+): Effect.Effect<Wire, AgentCallFailed> =>
   languageModel.generateObject({ objectName: call.name, prompt: call.prompt, schema: call.schema }).pipe(
     Effect.map((response) => response.value),
     // A rate limit, an overloaded provider or a dropped connection is worth another try; a
@@ -297,11 +314,13 @@ const callAgent = <Wire extends Record<string, unknown>>(
       times: MAX_RETRIES,
       while: isRetryable,
     }),
-    Effect.mapError(modelFailure(call.stage)),
-    Effect.catchDefect(() => Effect.fail(failure(call.stage, "model-defect"))),
+    Effect.mapError((error) =>
+      AgentCallFailed.make({ failure: modelFailure(call.stage)(error), rejected: !error.isRetryable })
+    ),
+    Effect.catchDefect(() => Effect.fail(notRejected(call.stage, "model-defect")())),
     Effect.timeoutOrElse({
       duration: call.timeout,
-      orElse: () => Effect.fail(failure(call.stage, "timeout")),
+      orElse: () => Effect.fail(notRejected(call.stage, "timeout")()),
     })
   );
 
@@ -316,7 +335,10 @@ const callAgent = <Wire extends Record<string, unknown>>(
  * Every failure of a call (provider error, timeout, an answer the use-case
  * models reject) becomes a `DocketIntakeError` at stage `enter` or `review`
  * with a short technical label. Source documents are sent to the secretary as
- * PDF file parts of the prompt.
+ * PDF file parts of the prompt. When the provider refuses a review that has
+ * documents attached (for example a PDF past its page limit), the secretary
+ * is asked once more without them, and the review then never claims to have
+ * read a source document.
  *
  * **Example** (Make the agents layer)
  *
@@ -352,7 +374,7 @@ export const makeDocketAgentsLayer = (
             schema: ParalegalWire,
             stage: "enter",
             timeout: options.paralegalTimeout,
-          });
+          }).pipe(Effect.mapError(toIntakeError));
           const entry = yield* decodeEntry(entryEncoded(wire)).pipe(
             Effect.mapError(() => failure("enter", "wire-decode"))
           );
@@ -368,25 +390,42 @@ export const makeDocketAgentsLayer = (
             docket_body_length: Str.length(input.message.bodyText),
             docket_message_id: input.message.messageId,
           });
-          const text = A.join(
-            [
-              messageBlock(input.message, options.maxBodyChars),
-              "",
-              entryBlock(input.entry),
-              "",
-              documentsLine(input.documents),
-            ],
-            "\n"
+          const ask = (documents: ReadonlyArray<DocketSourceDocument>) =>
+            callAgent(languageModel, {
+              name: "docket_review",
+              prompt: promptOf(
+                SECRETARY_SYSTEM,
+                A.join(
+                  [
+                    messageBlock(input.message, options.maxBodyChars),
+                    "",
+                    entryBlock(input.entry),
+                    "",
+                    documentsLine(documents),
+                  ],
+                  "\n"
+                ),
+                documents
+              ),
+              retryBaseDelay: options.retryBaseDelay,
+              schema: SecretaryWire,
+              stage: "review",
+              timeout: options.secretaryTimeout,
+            }).pipe(Effect.map((wire) => ({ hasDocuments: A.isReadonlyArrayNonEmpty(documents), wire })));
+          // A provider can refuse a request because of what is attached, most often a document
+          // past its page limit. Asking once more without the documents still gets the message
+          // reviewed; the pipeline then reports the source document as missing.
+          const askWithoutDocuments = Effect.annotateCurrentSpan({ docket_documents_dropped: true }).pipe(
+            Effect.andThen(ask(A.empty()))
           );
-          const wire = yield* callAgent(languageModel, {
-            name: "docket_review",
-            prompt: promptOf(SECRETARY_SYSTEM, text, input.documents),
-            retryBaseDelay: options.retryBaseDelay,
-            schema: SecretaryWire,
-            stage: "review",
-            timeout: options.secretaryTimeout,
-          });
-          const review = yield* decodeReview(reviewEncoded(wire, A.isReadonlyArrayNonEmpty(input.documents))).pipe(
+          const answer = yield* ask(input.documents).pipe(
+            Effect.catchIf(
+              (error) => error.rejected && A.isReadonlyArrayNonEmpty(input.documents),
+              () => askWithoutDocuments
+            ),
+            Effect.mapError(toIntakeError)
+          );
+          const review = yield* decodeReview(reviewEncoded(answer.wire, answer.hasDocuments)).pipe(
             Effect.mapError(() => failure("review", "wire-decode"))
           );
           yield* Effect.annotateCurrentSpan({

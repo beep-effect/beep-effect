@@ -8,8 +8,9 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { DocketIntakeError, DocketIntakeState, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
-import { thunkEmptyStr, thunkFalse } from "@beep/utils";
-import { DateTime, Effect, FileSystem, Layer, Path, Random } from "effect";
+import { thunkEmptyStr } from "@beep/utils";
+import { DateTime, Effect, FileSystem, Layer, Path, pipe, Random } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -46,9 +47,13 @@ const StateJson = S.fromJsonString(DocketIntakeState);
 const decodeState = S.decodeUnknownEffect(StateJson);
 const encodeState = S.encodeUnknownEffect(StateJson);
 
-// Who holds the state directory: the process, the boot it belongs to, and when it started. The
-// boot id is what keeps a process id from before a reboot from looking alive afterwards.
-const LockJson = S.fromJsonString(S.Struct({ bootId: S.String, pid: S.NonEmptyString, startedAt: S.String }));
+// Who holds the state directory: the process, the boot it belongs to, when the kernel started it,
+// and when it took the lock. A process id alone does not name a process: ids are reused after a
+// reboot, and a restarted container often gets the same id again. The boot id and the kernel's
+// start time for that id are what tell a live holder from a leftover.
+const LockJson = S.fromJsonString(
+  S.Struct({ bootId: S.String, pid: S.NonEmptyString, startedAt: S.String, startTime: S.String })
+);
 const decodeLock = S.decodeUnknownOption(LockJson);
 const encodeLock = S.encodeUnknownEffect(LockJson);
 
@@ -56,10 +61,21 @@ const PROCESS_SELF = "/proc/self";
 const BOOT_ID = "/proc/sys/kernel/random/boot_id";
 const SUFFIX_RANGE = 0xffffffff;
 const HEX = 16;
+// `/proc/<pid>/stat` is "pid (comm) state ...": the start time is field 22, the twentieth field
+// after the command name. The command name can itself hold spaces and parentheses, so fields are
+// counted from the last closing parenthesis.
+const START_TIME_AFTER_COMM = 19;
 
 const storeError = (cause: string) => () => DocketIntakeError.make({ cause, stage: "store" });
+const stateLocked = () => DocketIntakeError.make({ cause: "state-locked", stage: "store" });
 
 const textEncoder = new TextEncoder();
+
+// A name beside `path` that no other process and no other call uses.
+const uniqueName = Effect.fnUntraced(function* (path: string, pid: string, kind: string) {
+  const suffix = (yield* Random.nextIntBetween(0, SUFFIX_RANGE)).toString(HEX);
+  return `${path}.${pid}.${suffix}.${kind}`;
+});
 
 // Write beside the target under a name no other writer uses, flush it to disk, and rename it
 // over the target: a reader never sees a half-written file, and a crash leaves the old one.
@@ -69,8 +85,7 @@ const writeAtomically = Effect.fnUntraced(function* (
   contents: string
 ): Effect.fn.Return<void, DocketIntakeError> {
   const pid = yield* fs.readLink(PROCESS_SELF).pipe(Effect.mapError(storeError("process-id")));
-  const suffix = (yield* Random.nextIntBetween(0, SUFFIX_RANGE)).toString(HEX);
-  const temporary = `${path}.${pid}.${suffix}.tmp`;
+  const temporary = yield* uniqueName(path, pid, "tmp");
   yield* Effect.scoped(
     Effect.gen(function* () {
       const file = yield* fs.open(temporary, { flag: "wx" });
@@ -81,55 +96,105 @@ const writeAtomically = Effect.fnUntraced(function* (
   yield* fs.rename(temporary, path).pipe(Effect.mapError(storeError("rename")));
 });
 
-type LockHolder = { readonly bootId: string; readonly pid: string };
+type LockHolder = { readonly bootId: string; readonly pid: string; readonly startTime: string };
 
 const readBootId = (fs: FileSystem.FileSystem): Effect.Effect<string> =>
   fs.readFileString(BOOT_ID).pipe(Effect.map(Str.trim), Effect.orElseSucceed(thunkEmptyStr));
 
-// The holder recorded in an existing lock file. A lock that cannot be read or does not decode
-// names nobody, so it is stale.
-const readHolder = (fs: FileSystem.FileSystem, lockPath: string): Effect.Effect<O.Option<LockHolder>> =>
-  Effect.option(fs.readFileString(lockPath)).pipe(Effect.map(O.flatMap(decodeLock)));
+const startTimeFromStat = (stat: string): O.Option<string> =>
+  pipe(
+    Str.lastIndexOf(")")(stat),
+    O.flatMap((index) => A.get(Str.split(" ")(Str.trim(Str.slice(index + 1)(stat))), START_TIME_AFTER_COMM))
+  );
 
-// A holder is alive when it belongs to this boot and its process still exists.
+// When the kernel started the process that has this id now, if there is one.
+const processStartTime = (fs: FileSystem.FileSystem, pid: string): Effect.Effect<O.Option<string>> =>
+  Effect.option(fs.readFileString(`/proc/${pid}/stat`)).pipe(Effect.map(O.flatMap(startTimeFromStat)));
+
+// A holder is alive when it is another process of this boot and the process that has its id now
+// is the one that took the lock. A lock naming this very process id is a leftover: this process
+// has only just started and has not taken the lock yet.
 const isAlive = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, self: LockHolder, holder: LockHolder) {
-  const running = yield* fs.exists(`/proc/${holder.pid}`).pipe(Effect.orElseSucceed(thunkFalse));
-  return running && holder.bootId === self.bootId;
+  if (holder.pid === self.pid || holder.bootId !== self.bootId) {
+    return false;
+  }
+  return O.contains(yield* processStartTime(fs, holder.pid), holder.startTime);
+});
+
+const sameContents = O.makeEquivalence(Str.Equivalence);
+
+const discard = (fs: FileSystem.FileSystem, path: string): Effect.Effect<void> =>
+  fs.remove(path, { force: true }).pipe(Effect.ignore);
+
+// Put the complete lock in place in one step: write it under a unique name, then hard-link that
+// name to the lock path. Linking fails when the lock path exists, and the lock file is never
+// visible empty or half written.
+const placeLock = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  lockPath: string,
+  pid: string,
+  contents: string
+) {
+  const temporary = yield* uniqueName(lockPath, pid, "tmp");
+  yield* fs.writeFileString(temporary, contents, { flag: "wx" });
+  yield* fs.link(temporary, lockPath).pipe(Effect.ensuring(discard(fs, temporary)));
+});
+
+// Move a lock judged stale out of the way, and make sure the file that was moved is the one that
+// was judged. If another starter replaced it in between, its lock is put back and this one loses.
+const setStaleLockAside = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  lockPath: string,
+  aside: string,
+  judged: O.Option<string>
+): Effect.fn.Return<void, DocketIntakeError> {
+  yield* fs.rename(lockPath, aside).pipe(Effect.mapError(stateLocked));
+  const moved = yield* Effect.option(fs.readFileString(aside));
+  if (!sameContents(moved, judged)) {
+    yield* fs.link(aside, lockPath).pipe(Effect.ignore);
+    yield* discard(fs, aside);
+    return yield* stateLocked();
+  }
 });
 
 const acquireLock = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   lockPath: string
 ): Effect.fn.Return<void, DocketIntakeError> {
+  const pid = yield* fs.readLink(PROCESS_SELF).pipe(Effect.mapError(storeError("process-id")));
   const self: LockHolder = {
     bootId: yield* readBootId(fs),
-    pid: yield* fs.readLink(PROCESS_SELF).pipe(Effect.mapError(storeError("process-id"))),
+    pid,
+    startTime: O.getOrElse(yield* processStartTime(fs, pid), thunkEmptyStr),
   };
   const startedAt = DateTime.formatIso(yield* DateTime.now);
   const contents = yield* encodeLock({ ...self, startedAt }).pipe(Effect.mapError(storeError("encode")));
-  const create = fs.writeFileString(lockPath, contents, { flag: "wx" });
+  const place = placeLock(fs, lockPath, pid, contents);
 
   // Taking over a dead holder's lock is what lets the service restart unattended after it was
   // killed without a chance to clean up.
   const takeOver = Effect.fnUntraced(function* () {
-    const holder = yield* readHolder(fs, lockPath);
+    const judged = yield* Effect.option(fs.readFileString(lockPath));
+    const holder = O.flatMap(judged, decodeLock);
     const held = yield* O.match(holder, {
       onNone: () => Effect.succeed(false),
       onSome: (value) => isAlive(fs, self, value),
     });
     if (held) {
-      return yield* DocketIntakeError.make({ cause: "state-locked", stage: "store" });
+      return yield* stateLocked();
     }
+    const aside = yield* uniqueName(lockPath, pid, "stale");
+    yield* setStaleLockAside(fs, lockPath, aside, judged);
     yield* Effect.logWarning("docket intake state lock taken over from a holder that is gone", {
       holderPid: O.getOrElse(
         O.map(holder, (value) => value.pid),
         () => "unreadable"
       ),
     });
-    yield* fs.remove(lockPath, { force: true }).pipe(Effect.andThen(create), Effect.mapError(storeError("lock")));
+    yield* place.pipe(Effect.mapError(stateLocked), Effect.ensuring(discard(fs, aside)));
   });
 
-  yield* create.pipe(Effect.catch(takeOver));
+  yield* place.pipe(Effect.catch(takeOver));
 });
 
 /**
@@ -144,9 +209,14 @@ const acquireLock = Effect.fnUntraced(function* (
  *
  * The layer holds `state.lock` in the directory for as long as its scope is
  * open, so one process writes the state at a time. A second process fails to
- * build with cause `state-locked`. A lock left by a process that is gone (its
- * `/proc` entry is missing, it belongs to an earlier boot, or the lock file
- * is unreadable) is taken over, so a killed service restarts on its own.
+ * build with cause `state-locked`. A lock is taken over when its holder is
+ * gone: the process id no longer exists, the kernel started the process that
+ * has that id now at a different time, the lock is from an earlier boot, it
+ * names this very process id, or it cannot be read. A killed service
+ * therefore restarts on its own, including in a container where it gets the
+ * same process id again. The lock is linked into place complete and a stale
+ * one is renamed aside before it is replaced, so two starters cannot both
+ * take it and a lock file is never seen half written.
  * Every save goes to a uniquely named temporary file that is synced to disk
  * before it replaces the state file.
  *
@@ -173,9 +243,7 @@ export const makeDocketFileStoreLayer = (
       const statePath = path.join(options.directory, STATE_FILE);
       const lockPath = path.join(options.directory, LOCK_FILE);
       yield* fs.makeDirectory(options.directory, { recursive: true }).pipe(Effect.mapError(storeError("directory")));
-      yield* Effect.acquireRelease(acquireLock(fs, lockPath), () =>
-        fs.remove(lockPath, { force: true }).pipe(Effect.ignore)
-      );
+      yield* Effect.acquireRelease(acquireLock(fs, lockPath), () => discard(fs, lockPath));
 
       return DocketIntakeStore.of({
         load: Effect.gen(function* () {

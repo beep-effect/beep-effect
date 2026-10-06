@@ -513,4 +513,43 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
       })
     );
   });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reviews once more without the documents when the provider refuses a review that has them attached",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+
+        const review = yield* secretary.review({ documents: [pdf], entry: paralegalEntry, message });
+        const prompts = yield* scripted.prompts;
+
+        expect(review.isDocketItem).toBe(true);
+        // The model still answers "read from the source document"; with nothing attached that cannot be so.
+        expect(review.readFromSourceDocument).toBe(false);
+        expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);
+        assertTrue(O.exists(A.last(prompts), mentions("No source document is attached.")));
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails the review when the provider also refuses it without the documents",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondWith(rejected);
+
+        const failure = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["review", "model:InvalidRequestError"]
+        );
+        expect(yield* scripted.prompts).toHaveLength(2);
+      })
+    );
+  });
 });
