@@ -1,0 +1,63 @@
+# Friction receipts
+
+## 2026-10-06
+
+1. **A safety gate copied from a stale note blocked work it did not govern.**
+   Doing: the GPU stack check. Evidence: the brief required `iommu=pt` in
+   `/proc/cmdline`; the box boots with `iommu.passthrough=0 iommu.strict=1`
+   on purpose. The June note listed the flag beside the thermal gates.
+   Prevention: a gate should name the hazard it guards (heat, power,
+   peer-to-peer transfers) so a reader can tell when it applies. Recorded in
+   `GPU-STACK.md`.
+
+2. **The local model-server notes named the wrong backend.** Doing: choosing
+   the lowest-risk engine path. Evidence: notes said the llama.cpp build is
+   Vulkan; `CMakeCache.txt` of the current build says `GGML_HIP=ON`,
+   `GGML_VULKAN=OFF`. Prevention: read the build cache, not the note.
+
+3. **A fresh worktree cannot type-check a package until its dependencies are
+   built.** Doing: `beep quality package-verify @beep/file-processing --quick`.
+   Evidence: `error TS6305: Output file '.../dist/index.d.ts' has not been
+   built from source file`. Fix used: `turbo run build
+   --filter=@beep/file-processing...` first (7 s). Prevention: package-verify
+   could build upstream `dist` itself or say which command to run.
+
+4. **`vitest.aliases.generated.json` has no generator command an agent can
+   find.** Doing: adding a package subpath export. Evidence: `beep
+   tsconfig-sync` updated `tsconfig.json` and left the generated alias file
+   stale; the quality gate only says "regenerate the alias data". The entry
+   was added by hand to mirror `tsconfig.json`. Prevention: have
+   `tsconfig-sync` write both files, or name the command in the diagnostic.
+
+5. **"Born digital" cannot be decided from character counts.** Doing: picking
+   benchmark controls. Evidence: three of four spot-checked high-text pages
+   were scans with an OCR text layer. Prevention: the page probe proposed in
+   `SEAM-DESIGN.md` section 6 (full-page raster present).
+
+6. **A temperature stop rule checked only between pages let the run cross
+   it.** Doing: the first full GPU engine run. Evidence: stop line 90 C; 17 of
+   58 post-page samples at or above it, peak 94 C. Prevention: sample in a
+   separate thread during inference and kill the server at the line; treat
+   the first sample over the line as terminal, not as a reason to pause.
+
+7. **The port picked for a throwaway local server was already bound.** Doing:
+   starting `llama-server`. Evidence: `couldn't bind HTTP server socket`.
+   Prevention: bind port 0 or probe before launch.
+
+8. **A duty-cycle gate on the hot-spot sensor did nothing.** Doing: the first
+   sustained GPU run under a kill line. Evidence: gate "start a page only
+   under 80 C junction" idled 3% and the run was killed at 98 C after 70 s;
+   the junction sensor falls under 80 C within a second of idle. Fix used:
+   also wait for the edge sensor to fall under 58 C. Prevention: gate on the
+   slow sensor.
+
+9. **A server flag was accepted and ignored.** Doing: reducing image tokens
+   for a 3B vision model. Evidence: `--image-max-tokens 4096` given, 10,751
+   prompt tokens used. Prevention: check the prompt token count on the first
+   page before trusting a size cap.
+
+10. **A list of sources named a corpus root whose top-level manifest did not
+    hold them.** Doing: resolving 1,090 sources to files. Evidence: 3 of 1,090
+    digests found in the root manifest; all found in a per-source manifest one
+    directory down. Prevention: the list should carry the manifest path, or
+    the lookup should read every manifest under the raw directory.

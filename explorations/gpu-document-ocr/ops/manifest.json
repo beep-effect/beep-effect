@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "gpu-document-ocr",
+    "title": "GPU Document OCR",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Build the page-level Tesseract driver before any GPU engine?",
+      "Should the junction kill line move to 100 C or the card be capped at 210 W, so a vision pass need not idle 64% of the time?",
+      "Can dots.ocr run at a reduced image size, and can PaddleOCR-VL run through llama-server instead of PyTorch?",
+      "Which Tesseract signal (mean word confidence, page class) routes a page to the vision engine?",
+      "Page-separated first-reading text: split Tika XHTML output, or re-read every page of a selected source?",
+      "Should image sources keep their OCR text in the first extraction instead of only in a re-read pass?",
+      "What acceptance rule lets a vision-model page reading replace the first reading?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-06",
+    "updated": "2026-10-06"
+  }
+}
