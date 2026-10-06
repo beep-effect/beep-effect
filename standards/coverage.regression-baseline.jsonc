@@ -26145,6 +26145,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Session/Session.command.ts": {
+          "lines": 97.91,
+          "statements": 98.11,
+          "branches": 100,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts": {
           "lines": 89.96,
           "statements": 89.69,
