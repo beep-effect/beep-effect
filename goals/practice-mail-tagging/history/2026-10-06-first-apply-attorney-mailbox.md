@@ -11,14 +11,13 @@ available by run id.
 | Step | Run | Result |
 | --- | --- | --- |
 | Dry-run since 2026-10-01 | | 150 scanned; 25 matched across 7 matters (largest 8); 2 needs-attorney; 0 ambiguous; 0 below threshold; 123 no signal |
-| Gate | | review share 1.3% (< 10%); no matter above 5% of the window → proceed |
+| Gate (as ruled: review share under ~10%, no single matter swallowing the window) | | review share 2/150 = 1.3%; largest matter 8/150 = 5.3%, next 5, 4, 4 → no matter dominates → proceed |
 | Apply, same window | tag-20261006T215609404Z | 25 `M:` categories on 25 messages, 7 matter names created, 2 `P: Unmatched - review`; 27 ledger lines; no errors |
 | Report | | tagged 27, processed 150, checkpoint at the newest message of the day |
 
 50 attachments on matched messages were skipped as `sender-not-routable`
 (no overlay; filing was off in any case).
 
-The checkpoint now stands at today. Mail from 2026-07-01 to 2026-09-30 is not
-tagged; backfilling it needs a pass from a separate state directory with
-`--since 2026-07-01`, sharing nothing with the live checkpoint. That is the
-next decision for the orchestrator.
+The checkpoint now stands at today. Mail from 2026-07-01 to 2026-09-30 was
+tagged afterwards by a separate backfill run
+([record](2026-10-06-backfill-attorney-mailbox.md)).

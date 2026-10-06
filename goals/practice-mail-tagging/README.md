@@ -31,13 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify. Tagging is live on the attorney's mailbox for mail since
-2026-10-01 (categories only). Open: the July-September backfill, the
-attorney's contact-overlay spot-check, switching attachment filing on (Box
-storage is cleared), and enabling the unit.
+P2 Verify. Tagging is live on the attorney's mailbox: 325 messages since
+2026-07-01 carry their matter category. Filing is on (no attachment has been
+routable yet). Open: the attorney's spot-check of the tags, contact evidence
+from the KG correspondent lookup (off until that spot-check), and enabling the
+unit.
 
 ## Latest Evidence
 
+- 2026-10-06: backfill since 2026-07-01 on the attorney's mailbox: 300 more
+  matter tags, 24 review, 20 USPTO; filing on, nothing routable
+  ([record](history/2026-10-06-backfill-attorney-mailbox.md)).
 - 2026-10-06: first live apply on the attorney's mailbox (mail since
   2026-10-01, categories only): 25 messages tagged to 7 matters, 2 flagged
   for review ([record](history/2026-10-06-first-apply-attorney-mailbox.md)).
