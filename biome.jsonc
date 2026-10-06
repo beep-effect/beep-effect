@@ -72,6 +72,8 @@
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic",
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet",
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger",
+      // ciops lab: the gate-order handoff fixture is pinned by sha256 (goal ciops-ontology-pipeline P2 Ruling 2).
+      "!apps/labs/ciops/test/fixtures",
       "!**/modeling/html/data"
     ]
   },
