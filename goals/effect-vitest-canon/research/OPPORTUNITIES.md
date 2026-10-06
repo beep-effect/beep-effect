@@ -6850,3 +6850,13 @@ A server-side gate requiring every Heavy job to complete successfully before
 merge would have kept the red visible as a PR repair rather than a post-merge
 follow-up. The goal follow-up lane must restore coverage from actual tests and
 prove it against the current main floor.
+
+### Parallel Node/Bun Vitest startup collides on shared cache (2026-10-06)
+
+While qualifying the #1467 main merge, simultaneous Node and Bun Vitest runs
+against one checkout made the Node run fail at startup with `ENOTEMPTY:
+directory not empty, rmdir node_modules/.vitest-cache`. Bun's 37 cases passed;
+running Node alone immediately afterward passed the same 37 cases. The failure
+was cache cleanup contention, not a source assertion failure. Distinct cache
+paths per runtime or serialization in the qualification harness would prevent
+this false red.
