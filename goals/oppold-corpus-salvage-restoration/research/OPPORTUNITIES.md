@@ -205,3 +205,17 @@ because the coordinator has no queue.
   "function"`), which the shim's own header comment prescribes, and a note in
   the shim's docs that `Bun` is defined under Node tests so feature probes
   must target members, never the global.
+
+## 2026-10-06 — One backslash aborted the attachment repair apply
+
+- **Doing:** the first `corpus provenance attachments --mode apply` over both
+  mail trees (299,371 proposed renames).
+- **Evidence:** the run stopped after 375 journaled renames with
+  `Unsafe magic extension proposal.`; the row kept a Windows backslash that
+  pffexport preserves inside attachment names, and the guard rejected
+  `/`, `\` and NUL alike. The refresh tree alone holds 793 such proposals.
+  The abort also left `proposals-extract.jsonl` truncated at 377 rows, while
+  the orphaned journal stays valid undo input for the 375 renames it recorded.
+- **Prevented by:** a guard scoped to what is unsafe on the target filesystem
+  (the POSIX separator and NUL), an error that names the row, and a synthetic
+  fixture with a backslash in the name so the rule is pinned by a test.

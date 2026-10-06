@@ -14,12 +14,72 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/ProvenanceIndex.schemas");
+
+const isTraversalSafe = (value: string): boolean =>
+  A.every(Str.split("/")(value), (segment) => Str.isNonEmpty(segment) && segment !== "." && segment !== "..");
+
+/**
+ * Path of a corpus file relative to the corpus home, `/`-separated, with a
+ * backslash allowed as an ordinary name byte.
+ *
+ * **Details**
+ *
+ * pffexport writes Outlook attachment display names verbatim, and those names
+ * carry Windows backslashes (793 of the refresh tree's rename proposals).
+ * `PosixPath` rejects the byte and the earlier normalization turned it into a
+ * separator, which pointed every such row at a path that does not exist. The
+ * schema forbids only what is unsafe on the corpus filesystem: absolute
+ * paths, NUL, and empty, `.` or `..` segments.
+ *
+ * **Example** (Keep a backslash inside a name)
+ *
+ * ```ts
+ * import { CorpusRelativePath } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CorpusRelativePath)("staging/extract/children/x/Attachments/5_memo\\draft.pdf")) // true
+ * console.log(S.is(CorpusRelativePath)("/etc/passwd")) // false
+ * console.log(S.is(CorpusRelativePath)("a/../b")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CorpusRelativePath = S.NonEmptyString.check(
+  S.isPattern(/^(?!\/)[^\u0000]+$/u, {
+    identifier: $I`CorpusRelativePathSyntaxCheck`,
+    title: "Corpus Relative Path Syntax",
+    description: "Corpus-relative paths are not absolute and contain no NUL byte.",
+    message: "Expected a corpus-relative path without NUL.",
+  }),
+  S.makeFilter(isTraversalSafe, {
+    identifier: $I`CorpusRelativePathSegmentCheck`,
+    title: "Corpus Relative Path Segments",
+    description: "Corpus-relative path segments must not be empty, current-directory, or parent-directory markers.",
+    message: "Corpus-relative paths must not contain empty, '.' or '..' segments.",
+  })
+).pipe(
+  S.brand("CorpusRelativePath"),
+  $I.annoteSchema("CorpusRelativePath", {
+    title: "Corpus Relative Path",
+    description: "Traversal-safe path relative to the corpus home; a backslash is a name byte, not a separator.",
+  })
+);
+
+/**
+ * Type for {@link CorpusRelativePath}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type CorpusRelativePath = typeof CorpusRelativePath.Type;
 
 /**
  * Label of one pffexport staging tree under `<corpusRoot>/staging/`.
@@ -239,11 +299,11 @@ export const MailAttachmentKind = LiteralKit(["file", "embedded-message"]).pipe(
  */
 export class MailAttachmentEntry extends S.Class<MailAttachmentEntry>($I`MailAttachmentEntry`)(
   {
-    embeddedMessagePath: S.optionalKey(PosixPath),
+    embeddedMessagePath: S.optionalKey(CorpusRelativePath),
     fileName: S.String,
     kind: MailAttachmentKind,
     ordinal: S.Natural,
-    relativePath: PosixPath,
+    relativePath: CorpusRelativePath,
     sizeBytes: S.Natural,
   },
   $I.annote("MailAttachmentEntry", {
@@ -293,7 +353,7 @@ export class MailMessageIndexRecord extends S.Class<MailMessageIndexRecord>($I`M
     embeddedDepth: S.Natural,
     folderPath: S.String,
     internet: S.optionalKey(InternetMessageHeaders),
-    messagePath: PosixPath,
+    messagePath: CorpusRelativePath,
     outlook: OutlookMessageHeaders,
     recipients: S.Array(MailRecipient),
     sourceArtifactId: S.NonEmptyString,
@@ -499,7 +559,7 @@ export class AttachmentRepairProposal extends S.Class<AttachmentRepairProposal>(
     mimeType: S.String,
     ordinalPrefix: S.String,
     proposedFileName: S.optionalKey(S.String),
-    relativePath: PosixPath,
+    relativePath: CorpusRelativePath,
     remnantExtension: S.String,
     sizeBytes: S.Natural,
     tree: MailExportTreeLabel,
@@ -588,14 +648,14 @@ export const AttachmentRepairOutcome = LiteralKit([
  */
 export class AttachmentRepairJournalRow extends S.Class<AttachmentRepairJournalRow>($I`AttachmentRepairJournalRow`)(
   {
-    fromPath: PosixPath,
+    fromPath: CorpusRelativePath,
     journalRunId: S.NonEmptyString,
     mimeType: S.String,
     mtimeEpoch: S.Int,
     outcome: AttachmentRepairOutcome,
     recordedAt: S.NonEmptyString,
     sizeBytes: S.Natural,
-    toPath: PosixPath,
+    toPath: CorpusRelativePath,
     tree: MailExportTreeLabel,
   },
   $I.annote("AttachmentRepairJournalRow", {
@@ -804,7 +864,7 @@ export class MetadataCensusRecord extends S.Class<MetadataCensusRecord>($I`Metad
     error: S.optionalKey(S.String),
     fields: DocumentMetadataFields,
     mtimeEpoch: S.Int,
-    relativePath: PosixPath,
+    relativePath: CorpusRelativePath,
     root: S.NonEmptyString,
     sizeBytes: S.Natural,
     status: MetadataCensusStatus,

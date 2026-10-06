@@ -75,6 +75,8 @@ const fixture = Effect.fn("test.provenance.fixture")(function* () {
   yield* fs.writeFile(path.join(attachments, "2_photo.j"), jpeg);
   yield* fs.writeFileString(path.join(attachments, "3_notes."), "Synthetic text notes\n");
   yield* fs.writeFile(path.join(attachments, "4_blob"), Uint8Array.from([0, 1, 254, 233, 0, 129, 145, 0]));
+  // pffexport keeps Windows backslashes inside attachment names; the repair must treat them as plain bytes.
+  yield* fs.writeFileString(path.join(attachments, "5_memo\\draft.p"), pdf);
   return { root, first, second, embedded, attachments };
 });
 const lines = (text: string) => A.filter(Str.split(text, /\r?\n/), Str.isNonEmpty);
@@ -136,8 +138,8 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
         internetHeaderCount: 1,
         messageIdCount: 1,
         recipientCount: 2,
-        attachmentCount: 5,
-        attachmentBytes: new TextEncoder().encode(pdf).length + jpeg.length + 21 + 8,
+        attachmentCount: 6,
+        attachmentBytes: 2 * new TextEncoder().encode(pdf).length + jpeg.length + 21 + 8,
       });
       const rows = yield* Effect.forEach(
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"))),
@@ -176,24 +178,26 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       const plan = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "plan" })
       );
-      expect(plan.proposedRenames).toBe(3);
+      expect(plan.proposedRenames).toBe(4);
       expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(false);
       const applied = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "apply", journalPath })
       );
-      expect(applied.byOutcome.renamed).toBe(3);
+      expect(applied.byOutcome.renamed).toBe(4);
       expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(true);
       expect(yield* fs.exists(path.join(attachments, "2_photo.jpg"))).toBe(true);
+      expect(yield* fs.exists(path.join(attachments, "5_memo\\draft.pdf"))).toBe(true);
       // text/plain has no file(1) extension; the fallback table completes the fully eaten name.
       expect(yield* fs.exists(path.join(attachments, "3_notes.txt"))).toBe(true);
       const journal = yield* AttachmentRepairJournal;
-      expect((yield* journal.readAll(journalPath)).map((r) => r.outcome)).toEqual(["renamed", "renamed", "renamed"]);
+      expect((yield* journal.readAll(journalPath)).map((r) => r.outcome)).toEqual(A.makeBy(4, () => "renamed"));
       const undo = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: [], mode: "undo", journalPath })
       );
-      expect(undo.byOutcome.reverted).toBe(3);
+      expect(undo.byOutcome.reverted).toBe(4);
       expect(yield* fs.exists(path.join(attachments, "1_report.p"))).toBe(true);
       expect(yield* fs.exists(path.join(attachments, "2_photo.j"))).toBe(true);
+      expect(yield* fs.exists(path.join(attachments, "5_memo\\draft.p"))).toBe(true);
       yield* fs.writeFileString(path.join(attachments, "1_report.pdf"), "collision content");
       const collision = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({
@@ -224,8 +228,8 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
           journalPath: path.join(root, "staging/provenance/collision.jsonl"),
         })
       );
-      // 2_photo.jpg was removed above and 3_notes.txt was already reverted by the previous undo.
-      expect(missing.byOutcome["skipped-missing"]).toBe(2);
+      // 2_photo.jpg was removed above; 3_notes.txt and 5_memo\draft.pdf were already reverted by the previous undo.
+      expect(missing.byOutcome["skipped-missing"]).toBe(3);
       const malformed = path.join(root, "staging/provenance/malformed.jsonl");
       yield* fs.writeFileString(malformed, '{"fromPath":"incomplete"}\n');
       expect((yield* journal.readAll(malformed).pipe(Effect.result))._tag).toBe("Failure");
@@ -249,7 +253,7 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
           concurrency: 2,
         })
       );
-      expect(summary.fileCount).toBe(4);
+      expect(summary.fileCount).toBe(5);
       expect(summary.engineVersion).not.toBe("");
       const rows = yield* Effect.forEach(
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),

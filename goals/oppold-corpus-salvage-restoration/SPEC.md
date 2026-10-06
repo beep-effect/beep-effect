@@ -331,6 +331,20 @@ tooling with schemas and service contracts first. The attachment repair is
 reversible through its journal. Reversal: `beep corpus provenance attachments
 --mode undo --journal <path>`.
 
+### 2026-10-06: backslash is a name byte in provenance paths
+
+The first attachment-repair apply stopped after 375 renames on a proposal
+whose name kept a Windows backslash: pffexport writes Outlook attachment
+display names verbatim, and the refresh tree alone holds 793 such rename
+proposals. Two defects compounded: the unsafe-name guard rejected `\`
+alongside `/` and NUL, and the relative-path helper rewrote `\` to `/`
+(a `PosixPath` convention), so every such row pointed at a nested path that
+does not exist. Ruling: provenance rows use `CorpusRelativePath`, which is
+`/`-separated, traversal-safe and keeps the backslash byte; the guard rejects
+only `/` and NUL. The orphaned journal of the aborted run stays valid undo
+input for its 375 renames. Reversal: `--mode undo` on each journal in reverse
+order of their run ids.
+
 ## Exception ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

@@ -1,7 +1,6 @@
 /** Corpus provenance services and streaming programs. @since 0.0.0 */
 
 import { parseInternetHeaders, parseOutlookHeaders } from "@beep/libpff";
-import { PosixPath } from "@beep/schema/PosixPath";
 import { O } from "@beep/utils";
 import { DateTime, Effect, FileSystem, HashSet, Layer, Match, Path, Stream } from "effect";
 import * as A from "effect/Array";
@@ -32,8 +31,9 @@ const now = DateTime.now.pipe(Effect.map(DateTime.formatIso));
 const bump = (counts: Record<string, number>, key: string) => {
   counts[key] = (counts[key] ?? 0) + 1;
 };
-const relative = (path: Path.Path, root: string, file: string) =>
-  PosixPath.make(Str.replaceAll("\\", "/")(path.relative(root, file)));
+// Backslashes are name bytes in pffexport trees (Outlook attachment display
+// names); only `/` separates segments, so no normalization happens here.
+const relative = (path: Path.Path, root: string, file: string) => P.CorpusRelativePath.make(path.relative(root, file));
 
 const walk = Effect.fn("Provenance.walk")(function* (
   root: string,
@@ -147,7 +147,7 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
       })
     );
   if (info.type === "Directory" && /^Attachment\d+$/.test(name)) {
-    let embeddedMessagePath: PosixPath | undefined;
+    let embeddedMessagePath: P.CorpusRelativePath | undefined;
     yield* walk(
       attachmentPath,
       Effect.fn(function* (nested) {
@@ -873,8 +873,12 @@ const applyProposal = Effect.fn("Provenance.applyProposal")(function* (
   const path = yield* Path.Path;
   const journal = yield* AttachmentRepairJournal;
   if (row.proposedFileName === undefined) return yield* CorpusCommandError.make({ message: "Missing proposed name." });
-  if (/[/\\\0]/.test(row.proposedFileName))
-    return yield* CorpusCommandError.make({ message: "Unsafe magic extension proposal." });
+  // Only the POSIX separator and NUL are unsafe here: pffexport keeps Windows
+  // backslashes inside attachment names, and the rename stays in one directory.
+  if (/[/\0]/.test(row.proposedFileName))
+    return yield* CorpusCommandError.make({
+      message: `Unsafe magic extension proposal for ${row.relativePath} -> ${row.proposedFileName}`,
+    });
   const target = path.join(path.dirname(path.join(root, row.relativePath)), row.proposedFileName);
   const outcome = yield* renameChecked(root, path.join(root, row.relativePath), target, row.sizeBytes);
   yield* journal.append(
