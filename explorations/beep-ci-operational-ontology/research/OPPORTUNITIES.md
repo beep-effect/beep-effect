@@ -857,3 +857,10 @@
 - Knip flagged the seam commit's one unused export (`PlanEpisodeError`, used only inside its module)
   on the hosted head; un-exported in the body commit. Prevention: `bun run beep ci lane knip` on
   the lane before pushing a seam that exports types for a later commit.
+- Repo Sanity went red on the pushed P2 head on `quality:cache-policy` (six `@beep/ciops`
+  `configuration-drift` blocks) because the four new package-owned evidence scripts move every
+  `@beep/ciops` `commandDigest`; the same trap bit `evidence:s7:write` in #1394 and the fix is the
+  same: a reviewed baseline re-record (`beep cache baseline --request`, review doc under
+  `goals/turborepo-task-qualification/research/`), one more hosted run. Prevention: run
+  `bun run beep quality cache-policy` locally whenever a package's scripts block changes, before the
+  push, and re-record in the same commit as the scripts.
