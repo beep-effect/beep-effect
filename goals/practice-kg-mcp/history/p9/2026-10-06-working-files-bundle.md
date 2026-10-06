@@ -112,6 +112,34 @@ lists every run and path the file appears in and is the column to read for
   and those follow the docket's owner. That is the same no-guessing rule seen
   from Box's side; the numbers are Box's.
 
+### Known gap in `-03`: one application lost its matter
+
+Comparing `matter_dockets.application_numbers` between `-02` and `-03` shows one
+application number that was attached to all 9 dockets of one client-keyed matter
+in `-02` and to none in `-03`. Enrichment is identical in both bundles. The
+cause is the D-11 membership rule: an application is attached to a matter only
+when every document mentioning its number sits in one client-keyed family, and a
+document that became readable in `-03`, attributed to another family, cites it.
+The application stays in the graph as a mention of both families.
+
+This is the rule being brittle, not a correction: one outside citation outweighs
+dozens of documents in the owning matter, so more text made the bundle less
+useful there. Effects and handling:
+
+- Looking the number up returns `none` where `-02` returned the matter. Docket
+  intake routes a `none` on an application that has mentions to review, with the
+  citing matters as candidates.
+- The Box folder-name builder joins dockets to enrichment for the invention
+  title and finds none. Box keeps the title it already has; a title is never
+  blanked or changed because a newer bundle has no application for a matter.
+- The next bundle replaces "every mention in one family" with a dominance rule
+  (file-name evidence and a clear majority of mentioning documents, weaker cases
+  labelled), with its own decision-log entry and measured distributions.
+
+Process change: before announcing a bundle, diff each docket's application and
+patent numbers against the previous bundle, not only the matter and docket keys.
+The Box workstream found this one.
+
 ### Still out of the bundle
 
 19 files over 200 MB (archives, CAD, video); 8 PDFs that time out; pages where
