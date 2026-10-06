@@ -120,6 +120,14 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
 /**
  * Run the smoke check and fail when any step failed.
  *
+ * **Example** (Reference the smoke check)
+ *
+ * ```ts
+ * import { smoke } from "../../src/Smoke.ts"
+ *
+ * console.log(smoke)
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

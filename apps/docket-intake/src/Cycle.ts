@@ -20,6 +20,14 @@ import type { DocketIntakeAppConfig } from "./Config.ts";
  * one at the start time, so a restart continues from there instead of from
  * the time of the restart.
  *
+ * **Example** (Describe a cursor seed)
+ *
+ * ```ts
+ * import { seedCursor } from "../../src/Cycle.ts"
+ *
+ * console.log(seedCursor("2030-01-01T00:00:00.000Z"))
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -56,6 +64,14 @@ const writeDayDigest = Effect.fn("DocketIntakeApp.writeDayDigest")(function* (di
  * One cycle: poll the mailbox for today's practice day, then write
  * yesterday's digest if it has not been written. Logs counts only.
  *
+ * **Example** (Reference one poll cycle)
+ *
+ * ```ts
+ * import { pollCycle } from "../../src/Cycle.ts"
+ *
+ * console.log(pollCycle)
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -88,6 +104,14 @@ const logCycleFailure = (error: DocketIntakeError) =>
 /**
  * Repeat the poll cycle on a schedule. A cycle that fails is logged with its
  * stage and the loop goes on to the next one.
+ *
+ * **Example** (Reference the scheduled loop)
+ *
+ * ```ts
+ * import { pollOnSchedule } from "../../src/Cycle.ts"
+ *
+ * console.log(pollOnSchedule)
+ * ```
  *
  * @category utilities
  * @since 0.0.0

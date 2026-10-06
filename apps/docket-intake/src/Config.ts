@@ -14,6 +14,14 @@ const $I = $DocketIntakeId.create("Config");
 /**
  * Resolved settings of the docket intake service.
  *
+ * **Example** (Read the schema fields)
+ *
+ * ```ts
+ * import { DocketIntakeAppConfig } from "../../src/Config.ts"
+ *
+ * console.log(Object.keys(DocketIntakeAppConfig.fields))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,6 +59,14 @@ const stateDirectory = Config.NonEmptyString("DOCKET_INTAKE_STATE_DIR").pipe(
 /**
  * The service settings, read from the environment. The time zone has no
  * default: a missing or unknown zone is a configuration error.
+ *
+ * **Example** (Reference the environment config)
+ *
+ * ```ts
+ * import { DocketIntakeAppConfigFromEnv } from "../../src/Config.ts"
+ *
+ * console.log(DocketIntakeAppConfigFromEnv)
+ * ```
  *
  * @category configuration
  * @since 0.0.0

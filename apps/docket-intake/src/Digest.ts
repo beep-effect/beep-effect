@@ -14,6 +14,16 @@ import type { LocalDate } from "@beep/schema/LocalDate";
  * The day to write a digest for, if one is owed: yesterday, unless a digest
  * has already been written for yesterday or a later day.
  *
+ * **Example** (Yesterday is due when nothing is digested)
+ *
+ * ```ts
+ * import { digestDayDue } from "../../src/Digest.ts"
+ * import { LocalDate } from "@beep/schema/LocalDate"
+ * import * as O from "effect/Option"
+ *
+ * console.log(digestDayDue(LocalDate.make({ year: 2030, month: 1, day: 10 }), O.none()))
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

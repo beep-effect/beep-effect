@@ -21,6 +21,15 @@ import type { DocketIntakeAppConfig } from "./Config.ts";
 /**
  * The layers the commands run over.
  *
+ * **Example** (Name a wiring member)
+ *
+ * ```ts
+ * import type { DocketIntakeWiring } from "../../src/Commands.ts"
+ *
+ * const member: keyof DocketIntakeWiring<never, never, never, never> = "intake"
+ * console.log(member)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -52,6 +61,15 @@ type IntakeProgram = (
 
 /**
  * The handler of each command.
+ *
+ * **Example** (Build the handlers over the live wiring)
+ *
+ * ```ts
+ * import { makeHandlers } from "../../src/Commands.ts"
+ * import { liveWiring } from "../../src/runtime/Layer.ts"
+ *
+ * console.log(Object.keys(makeHandlers(liveWiring)))
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -91,6 +109,15 @@ export const makeHandlers = <E1, R1, E2, R2>(wiring: DocketIntakeWiring<E1, R1, 
 
 /**
  * The `docket-intake` command with its `poll`, `run` and `smoke` subcommands.
+ *
+ * **Example** (Build the command over the live wiring)
+ *
+ * ```ts
+ * import { makeCommand } from "../../src/Commands.ts"
+ * import { liveWiring } from "../../src/runtime/Layer.ts"
+ *
+ * console.log(makeCommand(liveWiring))
+ * ```
  *
  * @category utilities
  * @since 0.0.0

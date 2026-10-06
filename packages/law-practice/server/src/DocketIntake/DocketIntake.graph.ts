@@ -1,6 +1,8 @@
 /**
  * Microsoft Graph adapters for the docket intake mailbox and calendar ports.
  *
+ * **Details**
+ *
  * The adapters translate between Graph resources and the pipeline's models.
  * They hold no docketing policy and no date arithmetic: the only date they
  * produce is the calendar day a message was received on, in the practice time

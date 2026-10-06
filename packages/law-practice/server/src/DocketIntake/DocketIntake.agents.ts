@@ -2,6 +2,8 @@
  * Language-model adapters for the two docket intake agents: the paralegal who
  * enters a message and the secretary who reviews that entry.
  *
+ * **Details**
+ *
  * Both agents answer through a flat wire schema and are told to copy dates
  * from the text, never to work one out. The secretary's wire schema has no
  * due-date field at all: the pipeline does that arithmetic.

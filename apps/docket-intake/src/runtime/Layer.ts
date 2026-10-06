@@ -62,6 +62,14 @@ const makeDocketIntakeAppLayer = (options: {
 /**
  * The live wiring of the service's commands.
  *
+ * **Example** (List the live wiring members)
+ *
+ * ```ts
+ * import { liveWiring } from "../../src/runtime/Layer.ts"
+ *
+ * console.log(Object.keys(liveWiring))
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

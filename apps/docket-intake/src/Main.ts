@@ -14,6 +14,14 @@ import { liveWiring } from "./runtime/Layer.ts";
 /**
  * The whole program: parse the command line and run the chosen command.
  *
+ * **Example** (Reference the entry program)
+ *
+ * ```ts
+ * import { main } from "../../src/Main.ts"
+ *
+ * console.log(main)
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
