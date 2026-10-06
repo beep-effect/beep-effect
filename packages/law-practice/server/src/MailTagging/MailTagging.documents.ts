@@ -67,13 +67,15 @@ const isNameTaken = (error: BoxError): boolean =>
  * **Example** (Read the conflicting file of a 409)
  *
  * ```ts
- * import { BoxApiFailureContext, BoxError } from "@beep/box"
+ * import { BoxApiFailureConflict, BoxApiFailureContext, BoxError } from "@beep/box"
  * import { boxConflictingFile } from "@beep/law-practice-server/MailTagging"
  * import * as O from "effect/Option"
  *
  * const error = BoxError.fromReason("response status", {
  *   status: 409,
- *   context: BoxApiFailureContext.make({ values: { conflictCount: 1, conflicts: [{ id: "8001", type: "file" }] } })
+ *   context: BoxApiFailureContext.make({
+ *     values: { conflictCount: 1, conflicts: [BoxApiFailureConflict.make({ id: "8001", type: "file" })] }
+ *   })
  * })
  * console.log(O.map(boxConflictingFile(error), (file) => file.fileId)) // Option.some("8001")
  * ```

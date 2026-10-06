@@ -3,7 +3,7 @@
  * SDK client. Every folder id, file name, and byte is synthetic.
  */
 
-import { BoxApiFailureContext, BoxError } from "@beep/box";
+import { BoxApiFailureConflict, BoxApiFailureContext, BoxError } from "@beep/box";
 import { DocumentFolderId } from "@beep/law-practice-domain/values/MailTagging";
 import { boxConflictingFile, DocumentStoreBox, ProviderCallMeter } from "@beep/law-practice-server/MailTagging";
 import {
@@ -83,7 +83,12 @@ const failureOf = Effect.fn("MailTaggingDocumentsTest.failureOf")(function* (rej
 const conflictError = (conflicts: ReadonlyArray<{ readonly id: string; readonly type: "file" | "folder" }>) =>
   BoxError.fromReason("response status", {
     status: 409,
-    context: BoxApiFailureContext.make({ values: { conflictCount: conflicts.length, conflicts } }),
+    context: BoxApiFailureContext.make({
+      values: {
+        conflictCount: conflicts.length,
+        conflicts: A.map(conflicts, (conflict) => BoxApiFailureConflict.make(conflict)),
+      },
+    }),
   });
 
 describe("MailTagging Box conflicting file", () => {
@@ -159,8 +164,9 @@ describe("MailTagging Box document store", () => {
         "name taken",
         1,
       ]);
+      // The upload shape: Box sends one conflict object, which the driver normalizes to a list.
       expect(yield* taken({ contextInfo: { conflicts: { id: "8001", type: "file" } } })).toStrictEqual([
-        "name taken",
+        "name taken by 8001 size=null sha1=null",
         1,
       ]);
       expect(yield* taken({})).toStrictEqual(["name taken", 1]);
