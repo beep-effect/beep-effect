@@ -430,6 +430,7 @@ interactive picker may lag while `-m gpt-6.1-sol` works.
 | Sudo / YubiKey prompt hang | `Shell(sudo)` and `Shell(pkexec)` in deny list (D21). |
 | Workspace trust hang | `--trust` on every headless lane. |
 | Missing `result/success` + exit 0 | Treat as failure; inspect stderr. |
+| `GraphQL: API rate limit exceeded` from `gh pr view\|edit\|ready\|merge\|checks` | GitHub GraphQL is one 5,000-point hourly budget shared by every session on the account (resets at the hour's `resetAt`). Use `bun run beep yeet gh …` (REST for PR status, labels, comments, checks, and merge; the ready flip and thread read go through a budget guard that waits for the reset, or exits 75 with `--no-wait`). `bun run beep yeet gh rate-limit` shows both budgets. An identity with its own budget: `--token-ref op://…` / `BEEP_GH_TOKEN_REF`, or a GitHub App via `BEEP_GH_APP_ID`, `BEEP_GH_APP_INSTALLATION_ID`, `BEEP_GH_APP_KEY_REF`. |
 | Linux sandbox `unshare EPERM` | Host fix `sysctl kernel.apparmor_restrict_unprivileged_userns=0`; if the lane still cannot run, stop and report the blocked path — never `--sandbox disabled` (https://forum.cursor.com/t/agent-cli-linux-sandbox-preflight-fails-unshare-eperm-unless-run-under-strace-apparmor-restrict-unprivileged-userns-1/160039). |
 
 ## Sources

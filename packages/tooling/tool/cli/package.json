@@ -208,6 +208,7 @@
     "@effect/doctest": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@effected/github": "catalog:",
     "@noble/hashes": "catalog:",
     "@openai/codex-sdk": "catalog:",
     "effect": "catalog:",
