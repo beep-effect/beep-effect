@@ -32,8 +32,8 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Stage C capture — complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger` pinned, the
-first irreversible step; P0 complete 2026-10-05). Next: P2 projection on live data (W6 S7-v2
-seam first, then W5 live replay and the `planEpisode` body).
+first irreversible step; P0 complete 2026-10-05). P2 projection on live data opened 2026-10-06
+(W6 S7-v2 seam first, then W5 live replay and the `planEpisode` body; one projection PR).
 
 ## Latest Evidence
 

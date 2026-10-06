@@ -349,3 +349,10 @@ cap): the `released_only_chains` member name needs a ruling to rename; the `-hom
 percent-encoding gap is covered by the verbatim label; the W4 reading wording paraphrases Ruling 8;
 one long docstring line. Reversal: a committed pin is never refreshed; a defect found later is
 repaired under run-3 Ruling 22 (unratified pin) or re-captured under a new sibling root.
+
+## 2026-10-06 — P2 opened (orchestrator under the autonomy charter)
+
+P1 merged as #1434 (squash `9e7742176f`, 2026-10-06T04:10Z). P2 starts at once per the charter:
+W6's S7-v2 seam first (the §3.2 and §6 amendment and the `PlanEpisodeInput` widening, design before
+code), then W5 live differential replay on the `run4-fleet` pin and the `planEpisode` body, as one
+projection PR. Rulings for P2 are appended below as they are taken. Reversal: a later entry.
