@@ -585,3 +585,13 @@ branch; no other current candidate was added. The detector ledger contains
 3,624 rows: 3,081 fixed, 229 exceptions, and 314 open. Existing historical
 `yeet-command-wiring.test.ts` IDs remain in the ledger despite a source line
 shift. See `research/cli-post-main-merge-delta.md`.
+
+The #1463 scripted Yeet process suite has since been adjudicated at source
+`757ae7186e2bfe365e5cea2e297c3947bbbeb779`: 30 cases run on a fresh memory
+filesystem and fail-closed process layer, while the ready-gate case needs the
+real checked-out repository from `process.cwd()`. Node/Bun each pass 31 cases,
+and test-project typechecking passes. The historical line-49 EV010 row is fixed
+with its original identity retained; the new line-50 import is a reviewed
+native-subject exception. The detector still reports 1,920 current findings.
+Full package and hosted proof are pending. See
+`research/cli-post-main-merge-delta.md`.

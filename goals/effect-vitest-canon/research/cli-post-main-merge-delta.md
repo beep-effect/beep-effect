@@ -20,3 +20,16 @@ are unchanged, and the historical ledger IDs and dispositions were not
 renumbered. A detector ratchet, strict inventory validation, and current-base
 package proof are required before publication; those results are separate
 from this merge receipt.
+
+## Scripted Yeet process test adjudication
+
+At source `757ae7186e2bfe365e5cea2e297c3947bbbeb779`, 30 scripted cases use a fresh
+MemoryFileSystem, Path, NodeCrypto, and a fail-closed scripted process layer.
+The remaining ready-gate case locates the real checked-out repository from
+`process.cwd()`; a MemoryFileSystem trial failed with `Failed to locate repo
+root`, so that case retains NodeServices. Node and Bun each pass 31 cases, and
+the test-project typecheck passes. Biome import organization requires the
+combined NodeCrypto/NodeServices import, so the detector baseline now projects
+the old line-49 import as fixed and the new line-50 identity as an explicit
+native-subject exception. The current scan remains 1,920 findings across 1,240
+files. Full package verification and hosted checks are separate gates.
