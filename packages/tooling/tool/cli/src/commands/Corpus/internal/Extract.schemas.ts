@@ -186,9 +186,11 @@ export const encodeCorpusExtractSummaryJson = JsonStringCodec(CorpusExtractSumma
  * format, and are reused only while it still matches; every other failure
  * carries no marker and is retried. `exportChildren`, `ocrEnabled` and the
  * source record's relative path are stored so a resumed run reuses a marker
- * only for the same inputs; a run with `--ocr` reads again every source a run
- * without it settled, since that run never looked at its pages. Markers from
- * before `ocrEnabled` existed decode as written without OCR.
+ * only for the same inputs. `ocrEnabled` says whether the OCR pass actually
+ * ran, not whether `--ocr` was passed: a run whose pass was turned off by a
+ * missing tool writes it as false. A run that does make the pass reads again
+ * every source settled without it, since nothing looked at those pages.
+ * Markers from before `ocrEnabled` existed decode as written without OCR.
  *
  * **Example** (Decode an extract outcome marker)
  *

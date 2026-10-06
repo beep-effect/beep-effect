@@ -2234,6 +2234,45 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       expect(report).toBe(false);
     })
   );
+
+  it.effect(
+    "reads the scans once the missing tool is installed, without --overwrite",
+    Effect.fnUntraced(function* () {
+      const scan = "pages=2";
+      const sources = [{ content: scan, name: "scan.pdf" }];
+      const noTesseract = yield* makeExtractResumeFixture(sources);
+      const noPdfinfo = yield* makeExtractResumeFixture(sources);
+
+      // The pass is requested but turned off by a missing tool. Its markers
+      // must say the pages were not looked at, and stand while the tool is
+      // still missing, so a repeat run does not redo every source.
+      const tesseractMissing = { ocr: true, tesseractPath: "/nonexistent/beep-test-tesseract" };
+      const pdfinfoMissing = { ocr: true, pdfinfoPath: "/nonexistent/beep-test-pdfinfo" };
+      yield* noTesseract.run(tesseractMissing);
+      const stillMissing = yield* noTesseract.run(tesseractMissing);
+      yield* noPdfinfo.run(pdfinfoMissing);
+
+      // The tool is now present: the same output is resumed and the scans are read.
+      const afterTesseract = yield* noTesseract.run({ ocr: true });
+      const afterPdfinfo = yield* noPdfinfo.run({ ocr: true });
+      const settled = yield* noTesseract.run({ ocr: true });
+
+      expect(stillMissing.alreadyCompleteCount).toBe(1);
+      expect(stillMissing.ocrSourceCount).toBe(0);
+
+      expect(afterTesseract.alreadyCompleteCount).toBe(0);
+      expect(afterTesseract.ocrSourceCount).toBe(1);
+      expect(afterTesseract.ocrPageCount).toBe(2);
+      expect(yield* noTesseract.recognitionCalls()).toHaveLength(2);
+      expect(afterPdfinfo.alreadyCompleteCount).toBe(0);
+      expect(afterPdfinfo.ocrSourceCount).toBe(1);
+      expect(yield* noPdfinfo.recognitionCalls()).toHaveLength(2);
+
+      // Once read with the pass on, the source is settled.
+      expect(settled.alreadyCompleteCount).toBe(1);
+      expect(yield* noTesseract.recognitionCalls()).toHaveLength(2);
+    })
+  );
 });
 
 it.layer(testLayer, { timeout: "30 seconds" })("corpus salvage run labels and dedupe", (it) => {
