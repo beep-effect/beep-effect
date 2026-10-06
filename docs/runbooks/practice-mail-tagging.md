@@ -134,7 +134,9 @@ Do these in order. Do not enable the unit before step 6.
 
    - **The review category.** Every `P: Unmatched - review` message is one the
      job would not place on its own (a reference to a matter with no client
-     number, or two matters tied). He decides where each belongs.
+     number, two matters tied, or a matter number with too little support).
+     Mail that only comes from a known contact is not in it. He decides where
+     each belongs.
    - **The contact overlay.** Without `matter-contacts.json` no client
      attachment is filed: in the first live dry-run every attachment on a
      matched message was skipped as `sender-not-routable`. Ask him to confirm,
@@ -213,7 +215,7 @@ Run report (`dry-run`, `apply`):
 | `scanned` | Messages read in this pass. |
 | `matched` | Messages matched to exactly one matter with enough evidence. |
 | `unmatched no-signal` | No matter identifier or known contact. These get no category. |
-| `unmatched below-threshold` | Some evidence, not enough. Tagged `P: Unmatched - review`. |
+| `unmatched below-threshold` | Some evidence, not enough. Tagged `P: Unmatched - review` only when the best guess rests on an application, patent, or docket number or an earlier message in the thread; a message whose only clue is a known contact address or domain gets no review category (a client sender still gets `P: Client`). |
 | `unmatched ambiguous` | Two matters too close to call. Tagged `P: Unmatched - review`. |
 | `unmatched needs-attorney` | Refers to a matter that cannot be tagged safely (no client number, or an unverified recycled number). Tagged `P: Unmatched - review`. |
 | `already tagged` | The ledger covers the message and its categories are present. |

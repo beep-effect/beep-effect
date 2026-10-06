@@ -41,7 +41,7 @@ const officeAction = envelope({
 const mailbox: ReadonlyArray<MailEnvelope> = [
   officeAction,
   envelope({ at: 2, subject: "Re: thanks", conversation: "conv-1", categories: ["Personal"] }),
-  envelope({ at: 3, sender: "paralegal@acme.example.test" }),
+  envelope({ at: 3, sender: "paralegal@acme.example.test", subject: "Filing receipt 15/000,001" }),
   envelope({ at: 4, subject: "Lunch on Friday?" }),
   envelope({ at: 5, subject: "Status of 16/123,456 and 17/654,321" }),
 ];
@@ -111,7 +111,7 @@ const counts = (report: TaggingRunReport) => ({
 const firstRunCounts = {
   scanned: 5,
   matched: 2,
-  unmatched: { "no-signal": 1, "below-threshold": 1, ambiguous: 1, "needs-attorney": 0 },
+  unmatched: { "no-signal": 1, "below-threshold": 0, ambiguous: 1, "needs-attorney": 1 },
   alreadyTagged: 0,
   undoneSkipped: 0,
   repaired: 0,
