@@ -560,14 +560,16 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
   });
 
 // Every publish path opens the pull request as a draft (push-first-publish
-// D4), so the planned create always carries `--draft`.
+// D4), so the planned create always carries `--draft`. The title is resolved
+// at execution: the `--message` first line, else the first non-merge commit
+// subject.
 const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
     label: "publish:pr-create",
     phase: "publish",
     command: "gh",
-    args: ["pr", "create", "--draft", "--title", "<head-commit-subject>", "--body-file", "<run-artifacts>/pr-body.md"],
+    args: ["pr", "create", "--draft", "--title", "<pr-title>", "--body-file", "<run-artifacts>/pr-body.md"],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "publish",
