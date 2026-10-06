@@ -2987,3 +2987,26 @@ full Yeet and final-head hosted verification remain required.
   repo root, where Turbo interpreted file arguments as task names and refused
   them. Retained that failure and reran from the owning CLI package. Use an
   explicit package working directory for focused test commands.
+
+### 2026-10-06 — Baseline re-records conflicted on every merge
+
+- Work: four concurrent PRs (#1471, #1475, #1477, #1439) each re-recorded
+  `standards/cache-qualification-baseline.json` for their own package and
+  then conflicted with `main` every time another of them merged. The same
+  wave also re-generated `vitest.aliases.generated.json`,
+  `standards/fallow.boundaries.generated.jsonc` and
+  `standards/effect-vitest.inventory.jsonc`, but the baseline was the worst.
+- Evidence: the committed baseline was one 2,094,120-byte line, so git had
+  no line regions to merge; and the single whole-file `review` block was
+  rewritten by every re-record. Diffing the last two main revisions showed
+  only ten `@beep/ciops#*` `commandDigest` values plus `review` changed, yet
+  the whole file conflicted. `git merge-file` conflicts only on strictly
+  adjacent edits; one unchanged line between two edits merges cleanly.
+- Prevention: `cache-qualification-baseline/v2` pretty-prints the file with
+  nodes sorted by computation and keeps one review record per subject
+  (package or `//`); `beep cache baseline --request` stamps the review only
+  on changed or named subjects and carries the rest forward byte-for-byte,
+  so independent per-package re-records merge. A regression test drives two
+  re-records through `git merge-file`. The other generated files stay
+  multi-line already; their residual conflicts come from adjacent-row edits
+  and are out of scope here.

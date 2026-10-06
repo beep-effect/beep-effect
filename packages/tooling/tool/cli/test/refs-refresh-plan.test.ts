@@ -54,7 +54,7 @@ const prepare = Effect.fn("RefsTest.prepare")(function* () {
   return f;
 });
 
-// Both real manifest members are deep; give each clean main Git metadata and refresh them with
+// Both fixture manifest members are deep; give each clean main Git metadata and refresh them with
 // the unit's graft settings and a scripted proxy.
 const refreshWithProxy = Effect.fn("RefsTest.refreshWithProxy")(function* (
   respond: () => Response | undefined,
