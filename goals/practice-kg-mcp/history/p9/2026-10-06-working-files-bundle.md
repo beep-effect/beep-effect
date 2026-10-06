@@ -63,3 +63,56 @@ the old and new bundle before announcing a build.
   route `.eml` and `.msg` to Tika, then one full re-extract and a rebuild.
 - 19 oversize files are held out until salvage hashes by streaming.
 - 94 PDFs timed out; pages hit by the Tesseract crashes have no text.
+
+## Fill-in bundle `2026-10-06-03`
+
+Built after the corpus tooling gained `.eml` / `.msg` extraction, a resumable
+extractor and a per-source Tika timeout. Same salvage run and catalog; one full
+re-extract (93 min at concurrency 16, 15-minute Tika timeout), then a rebuild
+with `--bundle-version 2026-10-06-03`, claims carried from `-02`.
+
+| | `-02` | `-03` |
+| --- | --- | --- |
+| Extraction: succeeded / text artifacts | 4,405 / 4,250 | 6,380 / 6,225 |
+| Emails with text | 0 | 1,886 of 1,890 |
+| PDF timeouts | 94 | 8 |
+| Documents with text in the bundle | 9,927 | 11,902 |
+| Documents | 13,940 | 13,940 |
+| Matters / with a client | 187 / 159 | 187 / 159 |
+| Dockets | 572 | 572 |
+| Edges | 6,579 | 6,574 |
+| Documents reporting the base run | 6,301 | 7,330 |
+
+Verify: ok, 0 dangling edges, 0 unresolved references; 16 claims, 14 with a
+source document. Self-check on the built bundle: `ok`, 15,002 nodes, 187
+matters, 10 tools. Against `-02`: no matter or docket added or dropped, no
+matter changed client; one document moved from a bare family to a keyed one.
+
+Correction to the `-02` table above: matters with a client were 159, not 160.
+
+### Defect in `-02` fixed here
+
+A document the organizer had already placed reported the working-files run, and
+that copy's size and date, whenever the same file also sat in the working
+folders (1,029 documents). Matter, docket and client were never affected. In
+`-03` such a document keeps its base run, size and date; `source_origin_chain`
+lists every run and path the file appears in and is the column to read for
+"which runs hold this file". Found by the Box workstream's dry run.
+
+### Consumer notes for `-02` -> `-03`
+
+- Matters, dockets and clients are unchanged; no re-mapping is needed for them.
+- `run_label` on about a thousand documents returns to `base`. Do not filter on
+  `run_label` to mean "came from the old drive only"; read `source_origin_chain`.
+- 1,975 more documents have searchable text, 1,886 of them saved emails. Email
+  attachments are not exported; an email's text and headers are.
+- The Box workstream's map, built from `-02`, moves 48 files out of four
+  existing matters, more than the two matters the matters table shows losing
+  documents: Box also files unsorted old-drive documents by docket reference,
+  and those follow the docket's owner. That is the same no-guessing rule seen
+  from Box's side; the numbers are Box's.
+
+### Still out of the bundle
+
+19 files over 200 MB (archives, CAD, video); 8 PDFs that time out; pages where
+Tesseract crashes in its JPEG 2000 decoder; USPTO enrichment for the new run.

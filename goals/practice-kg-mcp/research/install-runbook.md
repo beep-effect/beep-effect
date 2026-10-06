@@ -45,7 +45,7 @@ store, prints one line and exits. It does not start the MCP server and does
 not read input. A working install prints this shape and exits with code 0:
 
 ```json
-{"ok":true,"extensionVersion":"0.3.0","bundleVersion":"2026-10-06-02","schemaVersion":{"duckdb":"3","pglite":"3"},"nodes":4,"matters":1,"tools":10}
+{"ok":true,"extensionVersion":"0.3.1","bundleVersion":"2026-10-06-02","schemaVersion":{"duckdb":"3","pglite":"3"},"nodes":4,"matters":1,"tools":10}
 ```
 
 Check that `extensionVersion` and `bundleVersion` are the pair that was handed
