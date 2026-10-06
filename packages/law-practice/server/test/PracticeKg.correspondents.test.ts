@@ -8,6 +8,7 @@ import {
   PracticeKgEmailMessage,
   PracticeKgEmailMessagesInput,
   PracticeKgEmailParticipant,
+  parsePracticeKgCorrespondentAddress,
   readPracticeKgContacts,
   readPracticeKgEmailMessages,
 } from "@beep/law-practice-server";
@@ -135,6 +136,70 @@ describe("practice KG correspondents", () => {
       ["shared@example.com", "c_bbbbbbbbbbbb", false],
     ]);
   });
+
+  it("treats one contact listing an address twice as one owner, a role mailbox if either listing says so", () => {
+    const tables = buildPracticeKgCorrespondentTables(
+      PracticeKgCorrespondentTablesInput.make({
+        attributions: [attribution("m1", "11111.20001")],
+        contacts: [
+          PracticeKgContact.make({
+            contactId: "c_aaaaaaaaaaaa",
+            displayName: "Example Docketing",
+            emails: [
+              { address: "Docketing@Example.com", role: false },
+              { address: "docketing@example.com", role: true },
+            ],
+            links: [],
+            organization: null,
+            sources: ["csv"],
+          }),
+          PracticeKgContact.make({
+            contactId: "c_bbbbbbbbbbbb",
+            displayName: "Example Info",
+            emails: [
+              { address: "info@example.com", role: true },
+              { address: "INFO@example.com", role: false },
+            ],
+            links: [],
+            organization: null,
+            sources: ["vcf"],
+          }),
+        ],
+        messages: [
+          PracticeKgEmailMessage.make({
+            createdAt: null,
+            digest: "m1",
+            participants: [participant("docketing@example.com", "to"), participant("info@example.com", "cc")],
+          }),
+        ],
+        practiceDomains: [],
+      })
+    );
+    const owners = [
+      ["docketing@example.com", "c_aaaaaaaaaaaa", true],
+      ["info@example.com", "c_bbbbbbbbbbbb", true],
+    ];
+    expect(A.map(tables.correspondents, (row) => [row.address, row.contactId, row.roleAddress])).toStrictEqual(owners);
+    expect(A.map(tables.addresses, (row) => [row.address, row.contactId, row.roleAddress])).toStrictEqual(owners);
+  });
+
+  it.effect(
+    "reads one address from a bare address or one header entry, and refuses none or several",
+    Effect.fnUntraced(function* () {
+      expect(yield* parsePracticeKgCorrespondentAddress(" Pat@Example.com ")).toBe("pat@example.com");
+      expect(yield* parsePracticeKgCorrespondentAddress('"Example, Pat" <Pat@Example.com>')).toBe("pat@example.com");
+      expect(yield* parsePracticeKgCorrespondentAddress("pat@example.com, Pat <PAT@example.com>")).toBe(
+        "pat@example.com"
+      );
+      const several = yield* Effect.flip(parsePracticeKgCorrespondentAddress("pat@example.com, sam@other.test"));
+      const none = yield* Effect.flip(parsePracticeKgCorrespondentAddress("Pat Example"));
+      expect([several.addressCount, none.addressCount, none.message]).toStrictEqual([
+        2,
+        0,
+        "Expected one email address; the input holds 0.",
+      ]);
+    })
+  );
 
   it("compares PracticeKgContactsError by its diagnostic fields, not its cause", () => {
     const same = S.toEquivalence(PracticeKgContactsError);

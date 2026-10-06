@@ -27,7 +27,11 @@ const $I = $LawPracticeServerId.create("PracticeKg.verify");
  * `kg_provenance` tool serves, every `catalog-digest` reference names a
  * document in the bundle, every `uspto-anchor` reference names a USPTO record
  * the bundle carries, no edge dangles, the matter tables agree with the
- * graph, and every `matter_correspondents` row names a matter in `matters`. This is the repeatable proof that every graph row resolves to
+ * graph, and every `matter_correspondents` row names a matter in `matters`.
+ * `contactLinksWithoutMatter` counts contact links whose family key names no
+ * matter; it is reported but does not fail the sweep, because the contacts
+ * table comes from outside the build and the correspondent lookup already
+ * refuses to resolve on such a link. This is the repeatable proof that every graph row resolves to
  * provenance.
  *
  * **Example** (Make a passing summary)
@@ -40,6 +44,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.verify");
  *   catalogReferencesUnresolved: 0,
  *   claims: 0,
  *   claimsWithSourceDocument: 0,
+ *   contactLinksWithoutMatter: 0,
  *   correspondents: 0,
  *   correspondentsWithoutMatter: 0,
  *   danglingEdges: 0,
@@ -64,6 +69,7 @@ export class PracticeKgVerifySummary extends S.Class<PracticeKgVerifySummary>($I
     catalogReferencesUnresolved: S.Finite,
     claims: S.Finite,
     claimsWithSourceDocument: S.Finite,
+    contactLinksWithoutMatter: S.Finite,
     correspondents: S.Finite,
     correspondentsWithoutMatter: S.Finite,
     danglingEdges: S.Finite,
@@ -111,6 +117,10 @@ SELECT patent_number FROM enrichment WHERE patent_number IS NOT NULL`;
 const correspondentsWithoutMatterSql = `
 SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_correspondents c
 WHERE NOT EXISTS (SELECT 1 FROM matters m WHERE m.family_key = c.family_key)`;
+
+const contactLinksWithoutMatterSql = `
+SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM contact_client_links l
+WHERE l.family_key IS NOT NULL AND NOT EXISTS (SELECT 1 FROM matters m WHERE m.family_key = l.family_key)`;
 
 const danglingEdgesSql = `
 SELECT COUNT(*)::FLOAT8 AS count FROM kg_edge e
@@ -180,6 +190,7 @@ export const verifyPracticeKgBundle: Effect.Effect<
   const matterDockets = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_dockets");
   const correspondents = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_correspondents");
   const correspondentsWithoutMatter = yield* duckCount(correspondentsWithoutMatterSql);
+  const contactLinksWithoutMatter = yield* duckCount(contactLinksWithoutMatterSql);
   const claimTables = yield* sql.unsafe(PracticeKgQueries.claimsTableProbe).pipe(Effect.flatMap(decodeTableRows));
   const claimsLoaded = A.length(claimTables) === 2;
   const claims = claimsLoaded
@@ -194,6 +205,7 @@ export const verifyPracticeKgBundle: Effect.Effect<
     catalogReferencesUnresolved,
     claims,
     claimsWithSourceDocument,
+    contactLinksWithoutMatter,
     correspondents,
     correspondentsWithoutMatter,
     danglingEdges,

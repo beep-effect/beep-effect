@@ -12,6 +12,7 @@ import { HashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { PracticeKgMatterResolution } from "./PracticeKg.matter-lookup.ts";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.correspondent-lookup");
@@ -127,6 +128,91 @@ export const PracticeKgInferredLinkSource = LiteralKit(
 const isAttorneyLinkSource = S.is(PracticeKgAttorneyLinkSource);
 
 /**
+ * Resolution shown on one row of a correspondent lookup.
+ *
+ * **Details**
+ *
+ * Only the row a `unique` lookup decided carries `unique`. Every other row of
+ * that lookup carries `candidate`, so a row read on its own, or kept when a
+ * budget truncates the rest, can never look actionable. Rows of an
+ * `ambiguous` or `none` lookup carry that resolution.
+ *
+ * **Example** (Decode a row resolution)
+ *
+ * ```ts
+ * import { PracticeKgCorrespondentRowResolution } from "@beep/law-practice-use-cases/server"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(PracticeKgCorrespondentRowResolution)("candidate")) // "candidate"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PracticeKgCorrespondentRowResolution = LiteralKit([
+  ...PracticeKgMatterResolution.literals,
+  "candidate",
+]).pipe(
+  $I.annoteSchema("PracticeKgCorrespondentRowResolution", {
+    description: "Per-row resolution of a correspondent lookup; only the decided row is unique.",
+  })
+);
+
+/**
+ * Runtime type for {@link PracticeKgCorrespondentRowResolution}.
+ *
+ * **Example** (Type a row resolution)
+ *
+ * ```ts
+ * import type { PracticeKgCorrespondentRowResolution } from "@beep/law-practice-use-cases/server"
+ *
+ * const resolution: PracticeKgCorrespondentRowResolution = "candidate"
+ * console.log(resolution) // "candidate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgCorrespondentRowResolution = typeof PracticeKgCorrespondentRowResolution.Type;
+
+/**
+ * The lookup input is not exactly one email address.
+ *
+ * **Details**
+ *
+ * The input may be a bare address or one header entry such as
+ * `Pat Example <pat@example.com>`. `addressCount` is how many addresses the
+ * input held: zero, or more than one. The input itself is not echoed.
+ *
+ * **Example** (Make an address error)
+ *
+ * ```ts
+ * import { PracticeKgCorrespondentAddressError } from "@beep/law-practice-use-cases/server"
+ *
+ * const error = PracticeKgCorrespondentAddressError.make({
+ *   addressCount: 2,
+ *   message: "Expected one email address; the input holds 2."
+ * })
+ * console.log(error._tag) // "PracticeKgCorrespondentAddressError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PracticeKgCorrespondentAddressError extends S.TaggedError<PracticeKgCorrespondentAddressError>(
+  $I`PracticeKgCorrespondentAddressError`
+)(
+  "PracticeKgCorrespondentAddressError",
+  {
+    addressCount: S.Finite,
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<PracticeKgCorrespondentAddressError>("PracticeKgCorrespondentAddressError", {
+    description: "Correspondent lookup input that holds no email address or more than one.",
+  })
+) {}
+
+/**
  * One email address to look up.
  *
  * **Example** (Make a correspondent request)
@@ -146,7 +232,8 @@ export class PracticeKgCorrespondentLookupRequest extends S.Class<PracticeKgCorr
 )(
   {
     address: S.NonEmptyString.annotateKey({
-      description: "One email address; case and surrounding whitespace do not matter.",
+      description:
+        "One email address, bare or as one header entry (Pat Example <pat@example.com>); case and whitespace do not matter.",
     }),
   },
   $I.annote("PracticeKgCorrespondentLookupRequest", {
@@ -280,6 +367,7 @@ export class PracticeKgCorrespondentCandidate extends S.Class<PracticeKgCorrespo
  *   candidates: [],
  *   contacts: [],
  *   links: [],
+ *   matterFamilyKeys: [],
  *   practiceAddress: false
  * })
  * console.log(evidence.links.length) // 0
@@ -295,6 +383,9 @@ export class PracticeKgCorrespondentEvidence extends S.Class<PracticeKgCorrespon
     candidates: S.Array(PracticeKgCorrespondentCandidate),
     contacts: S.Array(PracticeKgCorrespondentContact),
     links: S.Array(PracticeKgCorrespondentLink),
+    matterFamilyKeys: S.Array(S.String).annotateKey({
+      description: "Family keys named by the contact's links that are matters in this bundle.",
+    }),
     practiceAddress: S.Boolean.annotateKey({
       description: "True when the address is on one of the practice's own domains.",
     }),
@@ -346,6 +437,7 @@ export class PracticeKgCorrespondentDecision extends S.Class<PracticeKgCorrespon
  *   contacts: [],
  *   familyKey: null,
  *   links: [],
+ *   matterFamilyKeys: [],
  *   practiceAddress: false,
  *   resolution: "none"
  * })
@@ -375,15 +467,27 @@ const isSoleContact = (evidence: PracticeKgCorrespondentEvidence): boolean =>
     O.exists((contact) => A.length(evidence.contacts) === 1 && !contact.roleAddress)
   );
 
-const attorneyFamilyKey = (links: ReadonlyArray<PracticeKgCorrespondentLink>): O.Option<string> => {
-  const attorneyLinks = A.filter(links, (link) => isAttorneyLinkSource(link.source));
+// The link's family key must be keyed to the link's own client and name a
+// matter the bundle holds: the attorney's `<client>.<0NNNN>` matter numbers
+// share the dotted shape (D-20) and are never matters.
+const linkedMatterKey =
+  (matterFamilyKeys: ReadonlyArray<string>) =>
+  (link: PracticeKgCorrespondentLink): O.Option<string> =>
+    pipe(
+      O.fromNullishOr(link.familyKey),
+      O.filter(Str.startsWith(`${link.clientNumber}.`)),
+      O.filter((familyKey) => A.contains(matterFamilyKeys, familyKey))
+    );
+
+const attorneyFamilyKey = (evidence: PracticeKgCorrespondentEvidence): O.Option<string> => {
+  const attorneyLinks = A.filter(evidence.links, (link) => isAttorneyLinkSource(link.source));
   const targets = HashSet.fromIterable(
     A.map(attorneyLinks, (link) => `${link.clientNumber}\u0000${link.familyKey ?? ""}`)
   );
   return pipe(
     A.head(attorneyLinks),
     O.filter(() => HashSet.size(targets) === 1),
-    O.flatMap((link) => O.fromNullishOr(link.familyKey))
+    O.flatMap(linkedMatterKey(evidence.matterFamilyKeys))
   );
 };
 
@@ -395,7 +499,8 @@ const attorneyFamilyKey = (links: ReadonlyArray<PracticeKgCorrespondentLink>): O
  * `unique` needs the attorney's own word: the address belongs to exactly one
  * contact, that contact is not a role mailbox, the address is not the
  * practice's own, and every attorney-sourced link of the contact names the
- * same client-keyed matter. Message counts and inferred links
+ * same client-keyed matter: a family key that starts with the link's own
+ * client number and is one of the bundle's matters (`matterFamilyKeys`). Message counts and inferred links
  * (`org-name-match`, `email-subject-ref`) never make a lookup `unique`;
  * they make it `ambiguous`, with the candidates to show a person. With no
  * candidate and no link the lookup is `none`.
@@ -430,6 +535,7 @@ const attorneyFamilyKey = (links: ReadonlyArray<PracticeKgCorrespondentLink>): O
  *         source: "attorney-answer"
  *       })
  *     ],
+ *     matterFamilyKeys: ["12345.10008"],
  *     practiceAddress: false
  *   })
  * )
@@ -446,7 +552,7 @@ export const resolvePracticeKgCorrespondent = (
 ): PracticeKgCorrespondentDecision =>
   pipe(
     O.liftPredicate(evidence, (candidate) => !candidate.practiceAddress && isSoleContact(candidate)),
-    O.flatMap((candidate) => attorneyFamilyKey(candidate.links)),
+    O.flatMap(attorneyFamilyKey),
     O.match({
       onNone: () =>
         PracticeKgCorrespondentDecision.make({

@@ -693,6 +693,15 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
     contact("c_aaaaaaaaaaaa", "Pat Example", "pat@example.com", false, [
       [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-answer"],
       [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
+      [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
+    ]),
+    // The attorney's own matter number has the dotted shape of a family key but is no matter (D-20).
+    contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
+      [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
+    ]),
+    // A family key keyed to another client than the link's own.
+    contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
+      [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
     ]),
     contact("c_bbbbbbbbbbbb", "Example Docketing", "docketing@example.com", true, [
       [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
@@ -1365,7 +1374,7 @@ describe("practice KG projections", () => {
             yield* lines(
               "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS links FROM contact_client_links) x"
             )
-          ).toStrictEqual(['{"links":6}']);
+          ).toStrictEqual(['{"links":9}']);
         }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
 
         const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
@@ -1413,7 +1422,8 @@ describe("practice KG projections", () => {
                 ])
               )
             );
-          expect(yield* correspondent(" Pat@Example.com ")).toStrictEqual([
+          // Only the decided row says unique, and it leads; header-entry input works too.
+          const patRows = [
             [
               "unique",
               `${fixtureClients.alpha}.20001`,
@@ -1422,6 +1432,48 @@ describe("practice KG projections", () => {
               "attorney-answer | attorney-pc-folder",
               true,
             ],
+            ["candidate", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
+          ];
+          expect(yield* correspondent(" Pat@Example.com ")).toStrictEqual(patRows);
+          expect(yield* correspondent("Pat Example <pat@example.com>")).toStrictEqual(patRows);
+          // Under a budget that keeps one minimal row, the kept row is the decided one,
+          // and the minimal tier still says decided; with room for two, the other is a candidate.
+          const budgeted = (budgetBytes: number) =>
+            callToolText("kg_correspondent_lookup", { address: "pat@example.com", budgetBytes }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => ({
+                note: result.note ?? "",
+                rows: A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))),
+                tier: result.tier,
+                truncated: result.truncated,
+              }))
+            );
+          const oneRow = yield* budgeted(200);
+          expect([oneRow.tier, oneRow.truncated]).toStrictEqual(["minimal", true]);
+          expect(A.map(oneRow.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, true, "unique"],
+          ]);
+          expect(oneRow.note).toContain(`decided matter: ${fixtureClients.alpha}.20001.`);
+          const twoRows = yield* budgeted(250);
+          expect([twoRows.tier, twoRows.truncated]).toStrictEqual(["minimal", false]);
+          expect(A.map(twoRows.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, true, "unique"],
+            [`${fixtureClients.beta}.20001`, false, "candidate"],
+          ]);
+          // A family key that is no matter, or is keyed to another client, never decides.
+          expect(yield* correspondent("lee@example.com")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.00012`, fixtureClients.alpha, 0, "attorney-answer", false],
+          ]);
+          expect(yield* correspondent("kim@example.com")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.beta, 0, "attorney-answer", false],
+          ]);
+          const invalid = yield* callToolText("kg_correspondent_lookup", {
+            address: "Pat Example <pat@example.com>, sam@other.test",
+          }).pipe(Effect.flatMap(decodeToolErrorJson));
+          expect([invalid.tool, invalid.reason, invalid.message]).toStrictEqual([
+            "kg_correspondent_lookup",
+            "invalid-input",
+            "Expected one email address; the input holds 2.",
           ]);
           // A role mailbox never resolves, however clear its link.
           expect(yield* correspondent("docketing@example.com")).toStrictEqual([
@@ -1438,11 +1490,12 @@ describe("practice KG projections", () => {
           ]);
           expect(yield* correspondent("nobody@nowhere.test")).toStrictEqual([]);
           const verified = yield* verifyPracticeKgBundle;
-          expect([verified.ok, verified.correspondents, verified.correspondentsWithoutMatter]).toStrictEqual([
-            true,
-            4,
-            0,
-          ]);
+          expect([
+            verified.ok,
+            verified.correspondents,
+            verified.correspondentsWithoutMatter,
+            verified.contactLinksWithoutMatter,
+          ]).toStrictEqual([true, 4, 0, 1]);
           // A store that cannot answer is reported as a typed store fault.
           const duckdb = yield* DuckDb;
           yield* duckdb.run("DROP TABLE contact_addresses");

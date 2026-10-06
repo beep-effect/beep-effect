@@ -9,6 +9,7 @@ import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCorrespondentAddressError,
   PracticeKgCorrespondentLookupRequest,
   PracticeKgCorrespondentToolRow,
   PracticeKgGraphToolRow,
@@ -27,7 +28,7 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
 import * as O from "@beep/utils/Option";
-import { Effect, Path } from "effect";
+import { Effect, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -48,6 +49,7 @@ import {
 import type {
   PracticeKgCorrespondentLink,
   PracticeKgCorrespondentLookupResult,
+  PracticeKgCorrespondentRowResolution,
   PracticeKgToolFailureReason,
 } from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
@@ -91,6 +93,14 @@ const linksFor =
       familyKey === null ? link.familyKey === null && link.clientNumber === clientNumber : link.familyKey === familyKey
     );
 
+// Only the decided row of a unique lookup may say unique; its siblings are
+// candidates, so no row read alone looks actionable.
+const rowResolution = (
+  result: PracticeKgCorrespondentLookupResult,
+  decided: boolean
+): PracticeKgCorrespondentRowResolution =>
+  decided ? "unique" : result.resolution === "unique" ? "candidate" : result.resolution;
+
 // One row per matter the address is tied to: the filed-mail candidates first,
 // in their rank order, then matters and clients named only by contact links.
 const correspondentRows = (
@@ -103,16 +113,17 @@ const correspondentRows = (
     contactId: O.getOrNull(O.map(contact, (owner) => owner.contactId)),
     displayName: O.getOrNull(O.map(contact, (owner) => owner.displayName)),
     practiceAddress: result.practiceAddress,
-    resolution: result.resolution,
     roleAddress: A.some(result.contacts, (owner) => owner.roleAddress),
   };
   const row = (familyKey: string | null, clientNumber: string | null, counts: CorrespondentCounts) => {
     const links = linked(familyKey, clientNumber);
+    const decided = familyKey !== null && familyKey === result.familyKey;
     return PracticeKgCorrespondentToolRow.make({
       ...shared,
       ...counts,
       clientNumber,
-      decided: familyKey !== null && familyKey === result.familyKey,
+      decided,
+      resolution: rowResolution(result, decided),
       familyKey,
       linkEvidence: A.join(
         A.map(links, (link) => link.evidence),
@@ -127,10 +138,15 @@ const correspondentRows = (
     (left: PracticeKgCorrespondentLink, right: PracticeKgCorrespondentLink) =>
       left.familyKey === right.familyKey && left.clientNumber === right.clientNumber
   );
-  return A.appendAll(
-    A.map(result.candidates, (candidate) => row(candidate.familyKey, candidate.client, candidate)),
-    A.map(linkOnly, (link) => row(link.familyKey, link.clientNumber, noCounts))
+  // The decided row leads so a budget that keeps one row keeps that one.
+  const [decided, undecided] = A.partition(
+    A.appendAll(
+      A.map(result.candidates, (candidate) => row(candidate.familyKey, candidate.client, candidate)),
+      A.map(linkOnly, (link) => row(link.familyKey, link.clientNumber, noCounts))
+    ),
+    (entry) => (entry.decided ? Result.succeed(entry) : Result.fail(entry))
   );
+  return A.appendAll(decided, undecided);
 };
 
 const withheldColumnsFor = (
@@ -192,10 +208,12 @@ const projectRows = (
 };
 
 const isToolError = S.is(PracticeKgToolError);
+const isAddressError = S.is(PracticeKgCorrespondentAddressError);
 
 const failureMessages: Readonly<Record<PracticeKgToolFailureReason, string>> = {
   "row-decode-failed":
     "The bundle returned rows this server version does not understand; the bundle and server were probably built from different versions.",
+  "invalid-input": "The request cannot be answered as given; check the tool's parameter description.",
   "store-query-failed": "The bundle store rejected the query; the bundle is damaged or does not match this server.",
 };
 
@@ -442,10 +460,21 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             practiceKgCorrespondentFieldTiers,
             request.budgetBytes,
             version,
-            `${correspondentLookupNote} resolution: ${result.resolution}.`
+            `${correspondentLookupNote} resolution: ${result.resolution}.${
+              result.familyKey === null ? "" : ` decided matter: ${result.familyKey}.`
+            }`
           );
         },
-        Effect.mapError(toolFailure("kg_correspondent_lookup"))
+        Effect.mapError(
+          (cause): PracticeKgToolError =>
+            isAddressError(cause)
+              ? PracticeKgToolError.make({
+                  message: cause.message,
+                  reason: "invalid-input",
+                  tool: "kg_correspondent_lookup",
+                })
+              : toolFailure("kg_correspondent_lookup")(cause)
+        )
       ),
       kg_provenance: Effect.fn("PracticeKgTools.kg_provenance")(
         function* (request) {

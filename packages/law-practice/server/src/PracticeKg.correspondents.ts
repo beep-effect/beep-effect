@@ -12,6 +12,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   PracticeKgContactLinkSource,
+  PracticeKgCorrespondentAddressError,
   PracticeKgCorrespondentCandidate,
   PracticeKgCorrespondentContact,
   PracticeKgCorrespondentEvidence,
@@ -598,16 +599,23 @@ const contactsByAddress = (
     contacts,
     Order.mapInput(Order.String, (contact: PracticeKgContact) => contact.contactId)
   );
+  // One owner per contact: a contact listing an address twice (case variants)
+  // is one owner, a role mailbox if either listing says so.
   A.forEach(sorted, (contact) =>
     A.forEach(contact.emails, (email) => {
       const address = normalizeAddress(email.address);
+      const owners = pipe(MutableHashMap.get(index, address), O.getOrElse(A.empty<AddressContact>));
+      const isSame = (owner: AddressContact) => owner.contact.contactId === contact.contactId;
       MutableHashMap.set(
         index,
         address,
-        A.append(pipe(MutableHashMap.get(index, address), O.getOrElse(A.empty<AddressContact>)), {
-          contact,
-          role: email.role,
-        })
+        A.append(
+          A.filter(owners, (owner) => !isSame(owner)),
+          {
+            contact,
+            role: email.role || A.some(owners, (owner) => isSame(owner) && owner.role),
+          }
+        )
       );
     })
   );
@@ -725,17 +733,15 @@ export const buildPracticeKgCorrespondentTables = (
     A.map(contact.links, (link) => PracticeKgContactClientLinkRow.make({ ...link, contactId: contact.contactId }))
   );
   const addresses = A.flatMap(A.fromIterable(byAddress), ([address, owners]) =>
-    A.map(
-      A.dedupeWith(owners, (left, right) => left.contact.contactId === right.contact.contactId),
-      ({ contact }) =>
-        PracticeKgContactAddressRow.make({
-          address,
-          contactId: contact.contactId,
-          displayName: contact.displayName,
-          isPracticeAddress: isPractice(address),
-          organization: contact.organization,
-          roleAddress: A.some(owners, (owner) => owner.contact.contactId === contact.contactId && owner.role),
-        })
+    A.map(owners, ({ contact, role }) =>
+      PracticeKgContactAddressRow.make({
+        address,
+        contactId: contact.contactId,
+        displayName: contact.displayName,
+        isPracticeAddress: isPractice(address),
+        organization: contact.organization,
+        roleAddress: role,
+      })
     )
   );
   return PracticeKgCorrespondentTables.make({
@@ -896,10 +902,61 @@ const practiceAddressSql = `
 SELECT EXISTS (SELECT 1 FROM matter_correspondents WHERE address = $1 AND is_practice_address)
   OR EXISTS (SELECT 1 FROM contact_addresses WHERE address = $1 AND is_practice_address) AS "practiceAddress"`;
 
+// Family keys the address's contacts link to that are matters of this bundle.
+const linkedMattersSql = `
+SELECT DISTINCT m.family_key AS "familyKey"
+FROM contact_client_links l JOIN matters m ON m.family_key = l.family_key
+WHERE l.contact_id IN (SELECT contact_id FROM contact_addresses WHERE address = $1)
+ORDER BY 1`;
+
+const decodeFamilyKeys = S.decodeUnknownEffect(S.Array(S.Struct({ familyKey: S.NonEmptyString })));
 const decodeContacts = S.decodeUnknownEffect(S.Array(PracticeKgCorrespondentContact));
 const decodeLinks = S.decodeUnknownEffect(S.Array(PracticeKgCorrespondentLink));
 const decodeCandidates = S.decodeUnknownEffect(S.Array(PracticeKgCorrespondentCandidate));
 const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ practiceAddress: S.Boolean })));
+
+/**
+ * Read the one email address a correspondent lookup input holds.
+ *
+ * **Details**
+ *
+ * The input may be a bare address or one header entry
+ * (`Pat Example <pat@example.com>`), read with the same parser the build uses
+ * for From, To, and Cc headers. The address comes back lower-cased. Input
+ * holding no address, or several (a whole header), fails with
+ * `PracticeKgCorrespondentAddressError`.
+ *
+ * **Example** (Read a header entry)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import { parsePracticeKgCorrespondentAddress } from "@beep/law-practice-server"
+ *
+ * Effect.runPromise(parsePracticeKgCorrespondentAddress("Pat Example <Pat@Example.com>")).then(console.log)
+ * // "pat@example.com"
+ * ```
+ *
+ * @param input - A bare address or one header entry.
+ * @returns The lower-cased address.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const parsePracticeKgCorrespondentAddress = (
+  input: string
+): Effect.Effect<string, PracticeKgCorrespondentAddressError> => {
+  const addresses = A.dedupe(A.map(participantsOf(input, "to"), (participant) => participant.address));
+  return pipe(
+    A.head(addresses),
+    O.filter(() => A.length(addresses) === 1),
+    Effect.fromOption,
+    Effect.mapError(() =>
+      PracticeKgCorrespondentAddressError.make({
+        addressCount: A.length(addresses),
+        message: `Expected one email address; the input holds ${A.length(addresses)}.`,
+      })
+    )
+  );
+};
 
 /**
  * Resolve one email address to the matters it corresponds about, against the
@@ -907,7 +964,9 @@ const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ p
  *
  * **Details**
  *
- * Reads the contacts that own the address and their links, the matters the
+ * The address may be given bare or as one header entry; see
+ * {@link parsePracticeKgCorrespondentAddress}. Reads the contacts that own the
+ * address and their links, the matters the
  * address appears on in filed email (ranked by message count, then most
  * recent message), and whether it is a practice address. The resolution is
  * decided by `resolvePracticeKgCorrespondent`: `unique` only from the
@@ -931,10 +990,14 @@ const decodePracticeAddress = S.decodeUnknownEffect(S.NonEmptyArray(S.Struct({ p
  */
 export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorrespondents")(function* (
   request: PracticeKgCorrespondentLookupRequest
-): Effect.fn.Return<PracticeKgCorrespondentLookupResult, PracticeKgMatterLookupError, DuckDb | PracticeKgBundle> {
+): Effect.fn.Return<
+  PracticeKgCorrespondentLookupResult,
+  PracticeKgCorrespondentAddressError | PracticeKgMatterLookupError,
+  DuckDb | PracticeKgBundle
+> {
   const db = yield* DuckDb;
   const bundle = yield* PracticeKgBundle;
-  const address = normalizeAddress(request.address);
+  const address = yield* parsePracticeKgCorrespondentAddress(request.address);
   const read = <Row>(statement: string, decode: (rows: unknown) => Effect.Effect<Row, S.SchemaError>) =>
     db.query(statement, [address]).pipe(
       Effect.flatMap(decode),
@@ -949,6 +1012,7 @@ export const lookupPracticeKgCorrespondents = Effect.fn("PracticeKg.lookupCorres
     candidates: yield* read(candidatesSql, decodeCandidates),
     contacts: yield* read(contactsSql, decodeContacts),
     links: yield* read(linksSql, decodeLinks),
+    matterFamilyKeys: A.map(yield* read(linkedMattersSql, decodeFamilyKeys), (row) => row.familyKey),
     practiceAddress: A.headNonEmpty(yield* read(practiceAddressSql, decodePracticeAddress)).practiceAddress,
   });
   return PracticeKgCorrespondentLookupResult.make({

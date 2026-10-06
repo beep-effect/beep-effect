@@ -41,6 +41,7 @@ const decide = (fields: Partial<PracticeKgCorrespondentEvidence>) => {
       candidates: [],
       contacts: [contact("c_aaaaaaaaaaaa")],
       links: [],
+      matterFamilyKeys: ["11111.20001", "22222.30002"],
       practiceAddress: false,
       ...fields,
     })
@@ -71,6 +72,15 @@ describe("practice KG correspondent lookup contract", () => {
       decide({ links: [link("attorney-answer", "11111.20001"), link("attorney-pc-folder", null)] }),
       decide({ links: [link("attorney-answer", null)] }),
     ]).toStrictEqual(A.replicate(["ambiguous", null], 6));
+  });
+
+  it("refuses a family key that is not keyed to the link's client or is not a matter of the bundle", () => {
+    expect([
+      // the attorney's own matter number has the dotted shape but is no matter (D-20)
+      decide({ links: [link("attorney-answer", "11111.00012")] }),
+      decide({ links: [link("attorney-answer", "22222.30002")] }),
+      decide({ links: [link("attorney-answer", "11111.20001")], matterFamilyKeys: [] }),
+    ]).toStrictEqual(A.replicate(["ambiguous", null], 3));
   });
 
   it("refuses role mailboxes, practice addresses, shared and unknown addresses", () => {

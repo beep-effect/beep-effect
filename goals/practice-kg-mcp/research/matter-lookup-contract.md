@@ -193,15 +193,26 @@ candidates for a person and never decide.
 
 - `unique` only when the address belongs to exactly one contact, the contact
   is not a role mailbox, the address is not on a practice domain, and every
-  attorney-sourced link of the contact names the same client-keyed matter.
-  `familyKey` is that matter.
+  attorney-sourced link of the contact names the same client-keyed matter: a
+  family key that starts with the link's own client number and is one of the
+  bundle's `matters`. The attorney's `<client>.<0NNNN>` matter numbers have
+  the same dotted shape and never qualify (D-20). `familyKey` is that matter.
 - `ambiguous` whenever there is any candidate or link but no unique answer.
 - `none` when the address appears nowhere.
 
+**Input.** `address` is a bare address or one header entry
+(`Pat Example <pat@example.com>`), read with the build's own header parser.
+Input holding no address or several (a whole header) fails with reason
+`invalid-input`; look each address up on its own.
+
 The tool returns one row per matter the address is tied to: the filed-mail
-candidates first (by message count, then most recent message), then matters
-and clients named only by contact links, with message counts zero. `decided`
-marks the row a `unique` resolution chose.
+candidates (by message count, then most recent message), then matters and
+clients named only by contact links, with message counts zero. On a `unique`
+lookup the decided row comes first, carries `decided: true` and is the only
+row whose `resolution` is `unique`; every other row says `candidate`. Rows of
+an `ambiguous` or `none` lookup carry that resolution. `decided` is in every
+field tier, so a budget that keeps one row keeps the decided one, and the
+note names the decided matter.
 
 **Rules for callers.** Act on `unique` only. A role mailbox (`docketing@`,
 `info@`) and the practice's own addresses never resolve uniquely however many
