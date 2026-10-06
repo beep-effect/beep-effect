@@ -5,6 +5,7 @@ import { Console, Effect, Layer } from "effect";
 import {
   decodeEvidenceMode,
   EvidenceMode,
+  EvidenceWriteScript,
   generateLiveReplayEvidence,
   run4FleetCanonicalWindow,
   run4FleetLiveEvidencePaths,
@@ -20,7 +21,10 @@ const paths = run4FleetLiveEvidencePaths;
 // Check-by-default: the bare script compares the committed evidence bytes with
 // the recomputed render; only `--write` rewrites the file.
 const generate = Effect.gen(function* () {
-  const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv);
+  const mode: EvidenceMode = yield* decodeEvidenceMode(
+    process.argv,
+    EvidenceWriteScript.Enum["evidence:s7-live:write"]
+  );
   const run: LiveEvidenceRun = yield* generateLiveReplayEvidence(mode, paths, run4FleetCanonicalWindow);
   const { agreement } = run.summary.live;
   yield* Console.log(

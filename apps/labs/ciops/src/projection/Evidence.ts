@@ -132,10 +132,49 @@ export class EvidencePaths extends S.Class<EvidencePaths>($I`EvidencePaths`)(
   })
 ) {}
 
-const conflictingModes = PolicyDecodeError.make({
-  message:
-    "`--check` and `--write` are mutually exclusive; regenerate the frozen evidence with `bun run evidence:s7:write`.",
-});
+/**
+ * The package-owned `:write` script that regenerates one frozen evidence record.
+ *
+ * **Details**
+ *
+ * Each evidence script passes its own write sibling to {@link decodeEvidenceMode}
+ * so the mode-conflict refusal points the operator at the right command: the
+ * admission replay (`evidence:s7:write`), the live replay
+ * (`evidence:s7-live:write`) or the lane-plan golden (`evidence:lane-plan:write`).
+ *
+ * **Example** (Name the lane-plan write script)
+ *
+ * ```ts
+ * import { EvidenceWriteScript } from "@/projection/Evidence"
+ *
+ * console.log(EvidenceWriteScript.is["evidence:lane-plan:write"]("evidence:lane-plan:write")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EvidenceWriteScript = LiteralKit([
+  "evidence:s7:write",
+  "evidence:s7-live:write",
+  "evidence:lane-plan:write",
+]).pipe(
+  $I.annoteSchema("EvidenceWriteScript", {
+    description: "The package script that regenerates one frozen evidence record (`:write` sibling of a check script).",
+  })
+);
+
+/**
+ * Type of {@link EvidenceWriteScript}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type EvidenceWriteScript = typeof EvidenceWriteScript.Type;
+
+const conflictingModes = (writeScript: EvidenceWriteScript) =>
+  PolicyDecodeError.make({
+    message: `\`--check\` and \`--write\` are mutually exclusive; regenerate the frozen evidence with \`bun run ${writeScript}\`.`,
+  });
 
 /**
  * Decodes the script argv into an {@link EvidenceMode}.
@@ -144,7 +183,9 @@ const conflictingModes = PolicyDecodeError.make({
  *
  * The absence of `--write` is the read-only `check` mode, so a bare
  * `bun run evidence:s7` can never rewrite the dated record. Passing both
- * flags is a typed failure rather than a silent precedence choice.
+ * flags is a typed failure rather than a silent precedence choice, and the
+ * refusal names the caller's own `writeScript` so the hint is never another
+ * record's regenerate command.
  *
  * **Example** (Default to check mode)
  *
@@ -152,18 +193,19 @@ const conflictingModes = PolicyDecodeError.make({
  * import { Effect } from "effect"
  * import { decodeEvidenceMode } from "@/projection/Evidence"
  *
- * console.log(Effect.runSync(decodeEvidenceMode(["bun", "script.ts"]))) // "check"
+ * console.log(Effect.runSync(decodeEvidenceMode(["bun", "script.ts"], "evidence:s7:write"))) // "check"
  * ```
  *
  * @category decoding
  * @since 0.0.0
  */
 export const decodeEvidenceMode = Effect.fn("Evidence.decodeEvidenceMode")(function* (
-  argv: ReadonlyArray<string>
+  argv: ReadonlyArray<string>,
+  writeScript: EvidenceWriteScript
 ): Effect.fn.Return<EvidenceMode, PolicyDecodeError> {
   const write = A.contains(argv, "--write");
   if (write && A.contains(argv, "--check")) {
-    return yield* conflictingModes;
+    return yield* conflictingModes(writeScript);
   }
   return write ? EvidenceMode.Enum.write : EvidenceMode.Enum.check;
 });

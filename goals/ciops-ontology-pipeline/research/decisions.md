@@ -553,3 +553,10 @@ so the entry is amended rather than superseded); (hh) call (cc) is corrected in 
 digest failure is a typed `HandoffReadError`, as the code, contract §8.1 and the test assert.
 Reversal: a later entry here; the script's live check is one `planEpisode` call and can be removed
 if a Turbo input or a hosted step ever names the live handoff.
+
+Round 2 (one P2 thread, fixed under the charter's cap): (ii) the shared mode-conflict refusal named
+`evidence:s7:write` for every caller, so `decodeEvidenceMode` now takes the caller's own `:write`
+script (`EvidenceWriteScript`, a named literal domain of the three regenerate scripts) and the hint
+names it; each of the three scripts passes its sibling and the test asserts the lane-plan hint never
+mentions the admission replay. From round 3 on, P2-and-below threads become tracked follow-ups
+with a resolve and no push.

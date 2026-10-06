@@ -84,6 +84,14 @@
     },
     {
       "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "EvidenceWriteScript",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "EvidenceWriteScript",
+      "description": "The package script that regenerates one frozen evidence record (`:write` sibling of a check script)."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
       "symbol": "LiveEvidencePaths",
       "kind": "schema-class",
       "owner": "@beep/ciops",

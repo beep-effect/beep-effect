@@ -4,10 +4,11 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { Console, Effect, FileSystem, Layer } from "effect";
 import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection";
-import { decodeEvidenceMode, EvidenceDriftError, EvidenceMode } from "@/projection/Evidence";
+import { decodeEvidenceMode, EvidenceDriftError, EvidenceMode, EvidenceWriteScript } from "@/projection/Evidence";
 import { GateOrderHandoffRef, PlanEpisodeInput } from "@/projection/Schemas";
 
 const goldenPath = "test/fixtures/lane-plan-v1.ttl";
+const writeScript: EvidenceWriteScript = EvidenceWriteScript.Enum["evidence:lane-plan:write"];
 
 // The pinned handoff digest (P2 Ruling 2) and the fixed episode id no admission document uses
 // (contract §8.3). Paths are relative to the lab directory, where the package scripts run.
@@ -54,7 +55,7 @@ const checkGolden = Effect.fnUntraced(function* (content: string) {
 // Check-by-default: only `--write` regenerates the golden, and `--check --write` is a typed refusal.
 // The live handoff is checked in both modes so a golden is never rewritten from a stale fixture.
 const generate = Effect.gen(function* () {
-  const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv);
+  const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv, writeScript);
   yield* checkLiveHandoff();
   const projection = yield* CiOpsProjection;
   const plan = yield* projection.planEpisode(fixtureInput);
