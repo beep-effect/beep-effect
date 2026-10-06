@@ -136,111 +136,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:295:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 295,
-      "endLine": 315,
-      "symbol": "runPromise",
-      "occurrence": "v2:1924939bae54c8aba254efa019c70eb26e218c91cc6cc5d550f526dc5cfba511",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"apps/labs/cognee/src/main.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeLabApp(tmpDir); yield* runChangesetStatus(t",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:318:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 318,
-      "endLine": 343,
-      "symbol": "runPromise",
-      "occurrence": "v2:60631839e76540345bd9d663c4a79428cc6327abb78327e9096bcebec7d71035",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeRepoFile( tmpDir, \".changeset/base-backlog.md",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:346:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 346,
-      "endLine": 366,
-      "symbol": "runPromise",
-      "occurrence": "v2:4bb57c9ad0927ec4dee64eaab8298ad31cbadd48bbfe649b7c6f20f723c26285",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeRepoFile(tmpDir, \"packages/demo/src/index.ts\"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:369:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 369,
-      "endLine": 400,
-      "symbol": "runPromise",
-      "occurrence": "v2:2f8e6878d48feadcaeaacb643e68c0655c3d1086f1ba2480e4359101ec4f81f7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\", \".changeset/demo-change.md\"], [\".changeset/demo-change.md\"], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); y",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:404:runPromise@13#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 404,
-      "endLine": 428,
-      "symbol": "runPromise",
-      "occurrence": "v2:e72b1921477805e19553698cd70e5abc3d8aa3080a73e1fd15e67a0a5fe209da",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\", \".changeset/demo-change.md\"], [\".changeset/demo-change.md\"], spawned, Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/codegen-command.test.ts:20:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -12790,48 +12685,6 @@
       "occurrence": "v2:f664b95fa4c79b60145c12bff2cab1844e620096e05ff263a5c57fb8bcaafbe8",
       "class": "resource-wrapper",
       "evidence": "<A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()), use, (dir) => Effect.flatMap(FileSystem.File",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-status.test.ts:26:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 26,
-      "endLine": 28,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3824c2cc1cd7970503272d6b9ed4325e1e635eeba272a27f5f93a9c1272143e1",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.fla",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-status.test.ts:73:withTempRepo@21#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 73,
-      "endLine": 94,
-      "symbol": "withTempRepo",
-      "occurrence": "v2:b5884996647ebc12977155f472e165c627c0810b0ff9804abddc0278eafea3be",
-      "class": "resource-wrapper",
-      "evidence": "<A2, E, R>( changedFiles: ReadonlyArray<string>, addedChangesets: ReadonlyArray<string>, spawned: Array<string>, use: (tmpDir: string) => Effect.Effect<A2, E, R> ) => Effect.scoped( Effect.acquireUseR",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -27228,27 +27081,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "NodeServices is intentional because the release-path tests run real git against scoped temporary repository files; TestConsole captures the actual command error. All 11 cases pass with CI=true on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/changeset-status.test.ts:12:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/check-census.test.ts:9:@effect/platform-node@0#1",
