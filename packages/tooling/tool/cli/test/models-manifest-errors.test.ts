@@ -7,10 +7,14 @@ import {
   ModelsManifestError,
   ModelsManifestStore,
   ModelsManifestStoreLive,
+  seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
+import * as PlatformError from "effect/PlatformError";
 
 // Every `beep models` error carries a `mapError` that wraps the upstream cause
 // with a message and an optional origin; the command-boundary error folds the
@@ -86,36 +90,115 @@ describe("surface effort domain", () => {
 
 const storeLayer = Layer.provide(ModelsManifestStoreLive, NodeServices.layer);
 
-layer(Layer.mergeAll(storeLayer, NodeServices.layer))("models manifest store failures", (it) => {
-  it.effect("reports a YAML parse failure with the manifest path", () =>
+layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "10 seconds" })(
+  "models manifest store failures",
+  (it) => {
+    it.effect("cleans up the temporary YAML when atomic replacement fails", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-write-failure-" });
+        const file = path.join(home, "models.yaml");
+        const failingFs = FileSystem.FileSystem.of({
+          ...fs,
+          rename: Effect.fn("ModelsManifestTest.rename")(() =>
+            Effect.fail(
+              PlatformError.systemError({
+                _tag: "PermissionDenied",
+                module: "ModelsManifestTest",
+                method: "rename",
+                pathOrDescriptor: file,
+              })
+            )
+          ),
+        });
+        const error = yield* ModelsManifestStore.use((store) => store.init(file, seedModelsManifest)).pipe(
+          provideScopedLayer(
+            Layer.fresh(ModelsManifestStoreLive).pipe(
+              Layer.provide(Layer.mergeAll(Layer.succeed(FileSystem.FileSystem, failingFs), Path.layer))
+            )
+          ),
+          Effect.flip
+        );
+        expect(error.message).toContain("Failed to write");
+        expect(yield* fs.readDirectory(home)).toEqual([]);
+      })
+    );
+    it.effect("reports a YAML parse failure with the manifest path", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* ModelsManifestStore;
+        const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-manifest-" });
+        const file = path.join(home, "models.yaml");
+        // An alias to an anchor that was never set is the one shape `yaml` parses
+        // but refuses to materialise, so `toJS` throws inside the store.
+        yield* fs.writeFileString(file, "version: beep-models/v1\nbindings: *missing\n");
+
+        const error = yield* Effect.flip(store.load(file));
+        expect(error._tag).toBe("ModelsManifestError");
+        expect(error.path).toBe(file);
+        expect(error.message).toContain("Failed to parse YAML");
+      }).pipe(Effect.scoped)
+    );
+
+    it.effect("reports a missing manifest as a read failure", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* ModelsManifestStore;
+        const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-manifest-" });
+        const file = path.join(home, "absent.yaml");
+
+        const error = yield* Effect.flip(store.load(file));
+        expect(error._tag).toBe("ModelsManifestError");
+        expect(error.message).toContain("Failed to read the models manifest");
+      }).pipe(Effect.scoped)
+    );
+  }
+);
+
+// The platform file system with a rename that always fails: the manifest's
+// temporary sibling is written, then cannot be moved onto the live path.
+const renameRefused = Effect.fail(
+  PlatformError.systemError({
+    _tag: "PermissionDenied",
+    module: "ModelsManifestErrorsTest",
+    method: "rename",
+    pathOrDescriptor: "models.yaml",
+  })
+);
+const renameRefusedLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.map(FileSystem.FileSystem, (fs) =>
+    FileSystem.FileSystem.of({
+      ...fs,
+      rename: Effect.fnUntraced(function* () {
+        return yield* renameRefused;
+      }),
+    })
+  )
+).pipe(Layer.provide(NodeServices.layer));
+
+layer(
+  Layer.mergeAll(
+    Layer.provide(ModelsManifestStoreLive, Layer.merge(NodeServices.layer, renameRefusedLayer)),
+    NodeServices.layer
+  ),
+  { timeout: "30 seconds" }
+)("models manifest store interrupted write", (it) => {
+  it.effect("removes the temporary manifest when it cannot be moved into place", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const store = yield* ModelsManifestStore;
       const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-manifest-" });
       const file = path.join(home, "models.yaml");
-      // An alias to an anchor that was never set is the one shape `yaml` parses
-      // but refuses to materialise, so `toJS` throws inside the store.
-      yield* fs.writeFileString(file, "version: beep-models/v1\nbindings: *missing\n");
 
-      const error = yield* Effect.flip(store.load(file));
-      expect(error._tag).toBe("ModelsManifestError");
-      expect(error.path).toBe(file);
-      expect(error.message).toContain("Failed to parse YAML");
-    }).pipe(Effect.scoped)
-  );
-
-  it.effect("reports a missing manifest as a read failure", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const store = yield* ModelsManifestStore;
-      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-manifest-" });
-      const file = path.join(home, "absent.yaml");
-
-      const error = yield* Effect.flip(store.load(file));
-      expect(error._tag).toBe("ModelsManifestError");
-      expect(error.message).toContain("Failed to read the models manifest");
-    }).pipe(Effect.scoped)
+      const error = yield* Effect.flip(store.init(file, seedModelsManifest));
+      expect(error).toMatchObject({ _tag: "ModelsManifestError", path: file });
+      expect(error.message).toContain(`Failed to write ${file}`);
+      expect(A.fromIterable(yield* fs.readDirectory(home))).toEqual([]);
+    })
   );
 });

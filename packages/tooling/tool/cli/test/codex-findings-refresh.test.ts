@@ -2,6 +2,7 @@ import { runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex";
 import { renderPrettyCommandJson } from "@beep/repo-cli/test/Cli";
 import {
   CODEX_CSV_COLUMNS,
+  CodexPacketPlan,
   CodexTriageFinding,
   CodexTriageLane,
   CodexTriageLedger,
@@ -549,6 +550,34 @@ describe("codex findings preservation-safe refresh", () => {
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(countDrift, "refresh-metadata-drift");
+      })
+    )
+  );
+
+  it.effect("rejects source URL drift before rewriting an existing packet", () =>
+    testEffect(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { alphaText } = yield* bootstrapAuthoredPacket();
+        const source = yield* loadCodexRefreshLedgerSource({ repoRoot: process.cwd(), slug: SLUG });
+        const stable = yield* planFor([alpha, beta], source);
+        const plan = CodexPacketPlan.make({
+          ...stable,
+          sourceUrl: "https://chatgpt.com/mcp-app/connector_openai_defense_factory/open_defense_factory#/findings",
+        });
+        const reason = yield* refreshCodexFindingsPacket({
+          repoRoot: process.cwd(),
+          slug: SLUG,
+          source,
+          plan,
+          documents: yield* documentsFor(plan),
+          dryRun: false,
+        }).pipe(
+          Effect.map(() => "accepted"),
+          Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
+        );
+        assert.strictEqual(reason, "refresh-metadata-drift");
+        assert.strictEqual(yield* fs.readFileString(`goals/${SLUG}/findings/CSF-001.md`), alphaText);
       })
     )
   );

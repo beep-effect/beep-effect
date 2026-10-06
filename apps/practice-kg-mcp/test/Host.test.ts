@@ -28,8 +28,12 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
-  sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "excluded" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+  sourceRuns: PracticeKgSourceRuns.make({
+    base: "included",
+    includedRuns: ["2026-10-working-files"],
+    refresh202607: "excluded",
+  }),
 });
 
 for (const [adapter, services] of [
@@ -82,8 +86,26 @@ for (const [adapter, services] of [
 
           const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
-          expect(error.message).toContain("graph store format 1");
-          expect(error.message).toContain("reads format 2");
+          expect(error.message).toContain("store format pglite 1 / duckdb 1");
+          expect(error.message).toContain("reads pglite 3 / duckdb 3");
+        })
+      );
+
+      it.effect(
+        "refuses the previous store format, which has no client names, by naming both formats",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
+          yield* fs.writeFileString(
+            path.join(bundleDir, "bundle.manifest.json"),
+            '{"builtAt":"2026-10-06T00:00:00.000Z","bundleVersion":"2026-10-06-01","corpusRootExpected":true,"corpusSnapshotAt":"2026-10-05T00:00:00.000Z","counts":{"documents":1,"edges":1,"emails":1,"nodes":1},"schemaVersion":{"duckdb":"2","pglite":"2"},"sourceRuns":{"base":"included","refresh202607":"excluded"}}'
+          );
+
+          const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
+
+          expect(error.message).toContain("store format pglite 2 / duckdb 2");
+          expect(error.message).toContain("reads pglite 3 / duckdb 3");
         })
       );
 

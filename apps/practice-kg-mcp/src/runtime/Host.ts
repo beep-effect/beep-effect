@@ -17,14 +17,15 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
+import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
 import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
 import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-// Mirrors `PracticeKgSchemaVersions.pglite`; bumped with every breaking kg_node/kg_edge layout change.
-const supportedPgliteStoreVersion = "2";
+// Mirrors `PracticeKgSchemaVersions`; bumped with every breaking kg_node/kg_edge or DuckDB table layout change.
+const supportedStoreVersions = { duckdb: "3", pglite: "3" } as const;
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
-  S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ pglite: S.String }) }))
+  S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
 
 /**
@@ -68,13 +69,19 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
       })
     )
   );
-  // A pre-P6 bundle keys families on the bare docket number and lacks the
-  // attribution columns the tools read, so it is refused by store version
-  // before the strict decode can report it as merely "invalid".
+  // An older bundle lacks columns the tools read (format 1 keys families on
+  // the bare docket number; format 2 has no `matters.client_name`), so it is
+  // refused by store version before the strict decode can report it as merely
+  // "invalid".
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
-  if (O.isSome(storeVersion) && storeVersion.value.schemaVersion.pglite !== supportedPgliteStoreVersion) {
+  if (
+    O.isSome(storeVersion) &&
+    (storeVersion.value.schemaVersion.pglite !== supportedStoreVersions.pglite ||
+      storeVersion.value.schemaVersion.duckdb !== supportedStoreVersions.duckdb)
+  ) {
+    const found = storeVersion.value.schemaVersion;
     return yield* PracticeKgHostError.make({
-      message: `Practice KG bundle at "${bundleDir}" uses graph store format ${storeVersion.value.schemaVersion.pglite}; this server reads format ${supportedPgliteStoreVersion}. Install the rebuilt bundle that matches this server.`,
+      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${supportedStoreVersions.pglite} / duckdb ${supportedStoreVersions.duckdb}. Install the rebuilt bundle that matches this server.`,
     });
   }
   const manifest = yield* decodeManifest(manifestText).pipe(
@@ -121,7 +128,7 @@ export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
       return makePracticeKgServerLayer(
         PracticeKgMcpServerConfig.make({
           name: "beep-practice-kg",
-          version: "0.0.0",
+          version: PRACTICE_KG_EXTENSION_VERSION,
         })
       ).pipe(Layer.provide(resources));
     })

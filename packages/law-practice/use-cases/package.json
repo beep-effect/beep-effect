@@ -40,6 +40,7 @@
     "./server": "./src/server.ts",
     "./CandorPolicy": "./src/CandorPolicy/index.ts",
     "./CandorRecord": "./src/CandorRecord/index.ts",
+    "./DocketIntake": "./src/DocketIntake/index.ts",
     "./IrToLaw": "./src/IrToLaw/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
@@ -66,8 +67,10 @@
     "@beep/law-practice-domain": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
     "@beep/nlp": "workspace:^",
+    "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -26,10 +26,17 @@ const notUsedInThisTest = Effect.fn("MockM365.notUsedInThisTest")(() => Effect.d
 const MockM365Layer = Layer.succeed(
   M365,
   M365.of({
+    createEvent: notUsedInThisTest,
+    createMasterCategory: notUsedInThisTest,
+    deleteEvent: notUsedInThisTest,
     deltaDriveItems: notUsedInThisTest,
     downloadDriveItemContent: notUsedInThisTest,
+    downloadMessageAttachment: notUsedInThisTest,
+    ensureMasterCategories: notUsedInThisTest,
+    findEventsByIdempotencyKey: notUsedInThisTest,
     getEvent: notUsedInThisTest,
     getListItem: notUsedInThisTest,
+    getMailFolder: notUsedInThisTest,
     getMessage: notUsedInThisTest,
     getSite: Effect.fn("MockM365.getSite")(function* () {
       return site;
@@ -37,8 +44,12 @@ const MockM365Layer = Layer.succeed(
     listDriveItemVersions: notUsedInThisTest,
     listDrives: notUsedInThisTest,
     listEvents: notUsedInThisTest,
+    listMasterCategories: notUsedInThisTest,
+    listMessageAttachments: notUsedInThisTest,
     listMessages: notUsedInThisTest,
     listSites: notUsedInThisTest,
+    updateEvent: notUsedInThisTest,
+    updateMessageCategories: notUsedInThisTest,
   })
 );
 

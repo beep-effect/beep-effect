@@ -36,7 +36,7 @@ type JsonEncodeEffect<Input> = {
  *
  * const formats = [
  *   "doc", "docx", "docm", "rtf", "html", "xhtml", "pdf-text-layer",
- *   "pst", "plain-text", "markdown", "image-metadata", "xls", "xlsx", "unknown"
+ *   "pst", "eml", "msg", "plain-text", "markdown", "image-metadata", "xls", "xlsx", "unknown"
  * ]
  * const statusCounts = { succeeded: 0, skipped: 0, failed: 0 }
  *
@@ -82,7 +82,7 @@ export const encodeProcessRunManifestJson = ProcessRunManifest.encodeJson;
  *
  * const formats = [
  *   "doc", "docx", "docm", "rtf", "html", "xhtml", "pdf-text-layer",
- *   "pst", "plain-text", "markdown", "image-metadata", "xls", "xlsx", "unknown"
+ *   "pst", "eml", "msg", "plain-text", "markdown", "image-metadata", "xls", "xlsx", "unknown"
  * ]
  * const statusCounts = { succeeded: 0, skipped: 0, failed: 0 }
  *

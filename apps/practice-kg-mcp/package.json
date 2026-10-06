@@ -39,6 +39,7 @@
   "bin": {
     "practice-kg-build": "./src/build.ts",
     "practice-kg-claims": "./src/claims.ts",
+    "practice-kg-verify": "./src/verify.ts",
     "practice-kg-mcp": "./src/bin.ts"
   },
   "dependencies": {

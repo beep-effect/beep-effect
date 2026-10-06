@@ -27,10 +27,19 @@
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/rdf/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/utils/tsconfig.json"
     },
     {
       "path": "../config/tsconfig.json"
+    },
+    {
+      "path": "../domain/tsconfig.json"
     },
     {
       "path": "../use-cases/tsconfig.json"

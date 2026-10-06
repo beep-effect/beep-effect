@@ -10,9 +10,9 @@ import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
 import {
   composeGatedLayers,
   gatedLayer,
+  handshakeMcpProtocols,
   SourceAuthRegistration,
   sanitizedToolkit,
-  statelessMcpProtocols,
 } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
@@ -20,6 +20,8 @@ import * as S from "effect/Schema";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
 import type { Path } from "effect";
+import type * as Arr from "effect/Array";
+import type * as McpProtocol from "effect/ai/McpProtocol";
 import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
@@ -113,7 +115,36 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 );
 
 /**
- * Instructions the host advertises through `server/discover`.
+ * MCP protocol versions the practice KG host answers: the kit's
+ * `handshakeMcpProtocols`, under this host's own name.
+ *
+ * **Gotchas**
+ *
+ * This host is installed into Claude Desktop, which opens every server with an
+ * `initialize` handshake (it offered `2025-11-25` on 2026-10-06). A host that
+ * lists only the stateless `2026-07-28` adapter refuses that handshake and
+ * never starts, so the handshake-era adapters stay listed. The stateless
+ * adapter comes first, which keeps it the default for clients that send no
+ * handshake. The list itself lives in `@beep/mcp-kit`; do not point this
+ * alias at a narrower one without proving the result against a real Claude
+ * Desktop install.
+ *
+ * **Example** (Count the supported versions)
+ *
+ * ```ts
+ * import { practiceKgMcpProtocols } from "@beep/law-practice-server"
+ *
+ * console.log(practiceKgMcpProtocols.map((protocol) => protocol.protocolVersion))
+ * // ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.ProtocolAdapter> = handshakeMcpProtocols;
+
+/**
+ * Instructions the host advertises on `initialize` and through `server/discover`.
  *
  * **Example** (Reading the advertised instructions)
  *
@@ -128,19 +159,20 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
  * @since 0.0.0
  */
 export const PRACTICE_KG_MCP_INSTRUCTIONS =
-  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Call tools directly; the host is stateless and needs no initialize handshake.";
+  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Build the stdio MCP server layer from the toolkit registration.
  *
  * **Details**
  *
- * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
- * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
- * and call tools with request metadata; a legacy `initialize` is answered
- * with `-32022` and the supported list. There is no session. The kit
- * conformance runner mounts {@link PracticeKgToolkitLayer} on its own
- * transport, which is how the host proves the protocol.
+ * The host serves {@link practiceKgMcpProtocols}: the stateless `2026-07-28`
+ * adapter first, then the handshake-era adapters. Stateless clients open with
+ * `server/discover` and call tools with request metadata; a client that opens
+ * with a classic `initialize`, as Claude Desktop does, gets a negotiated
+ * result. The kit conformance runner mounts {@link PracticeKgToolkitLayer} on
+ * its own stateless transport, which is how the host proves the `2026-07-28`
+ * revision.
  *
  * **Example** (Build the server layer)
  *
@@ -165,7 +197,7 @@ export const makePracticeKgServerLayer = (
         name: config.name,
         version: config.version,
         instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
-        protocols: statelessMcpProtocols,
+        protocols: practiceKgMcpProtocols,
       })
     ),
     Layer.orDie
