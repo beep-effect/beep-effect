@@ -102,10 +102,30 @@ const claimedDueDate = (claims: Claims): O.Option<LocalDate> =>
 export const extractorDueDate: (entry: ParalegalEntry) => O.Option<LocalDate> = flow(claimsOf, claimedDueDate);
 
 /**
- * The due date the critic's reading stands for: the mail date it read plus
- * the response period it read. The critic never reports a finished date.
+ * The due date the critic's own arithmetic gives: the mail date it read plus
+ * the response period it read.
  *
- * **Example** (A reading without a period has no date)
+ * **Example** (A reading without a period computes no date)
+ *
+ * ```ts
+ * import { criticComputedDueDate, SecretaryReview } from "@beep/law-practice-use-cases/DocketIntake";
+ * import * as O from "effect/Option";
+ *
+ * const reading = SecretaryReview.make({ isDocketItem: true, notes: "No period." });
+ * console.log(O.isNone(criticComputedDueDate(reading))); // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const criticComputedDueDate = (reading: SecretaryReview): O.Option<LocalDate> => mailPlusPeriod(reading);
+
+/**
+ * The due date the critic's reading stands for: the date it read stated
+ * outright in the source, or failing that its mail date plus period. This is
+ * the same precedence the extractor's side uses.
+ *
+ * **Example** (A reading without a stated date or a period has no date)
  *
  * ```ts
  * import { criticDueDate, SecretaryReview } from "@beep/law-practice-use-cases/DocketIntake";
@@ -117,7 +137,7 @@ export const extractorDueDate: (entry: ParalegalEntry) => O.Option<LocalDate> = 
  * @category utilities
  * @since 0.0.0
  */
-export const criticDueDate = (reading: SecretaryReview): O.Option<LocalDate> => mailPlusPeriod(reading);
+export const criticDueDate: (reading: SecretaryReview) => O.Option<LocalDate> = claimedDueDate;
 
 // True unless a value is present and breaks the rule: a check on something the entry does not
 // state has nothing to fail on.
@@ -236,10 +256,12 @@ const citedSpanExists = (claims: Claims, source: ReviewSourceText): boolean =>
  *
  * **Details**
  *
- * Every check passes on a value the entry does not state. A reported date
- * must be findable in the cited text as ISO, `M/D/YYYY`, `Month D, YYYY` or
- * `D Month YYYY`; a reported period as its number (digits, or the English
- * word for 1 to 12) plus its unit. The cited text is compared line by line,
+ * These run on the extractor's side; `runCriticChecks` runs the citation
+ * checks on the critic's. Every check passes on a value the entry does not
+ * state. A reported date must be findable in the cited text as ISO,
+ * `M/D/YYYY`, `Month D, YYYY` or `D Month YYYY`; a reported period as its
+ * number (digits, or the English word for 1 to 12) plus its unit. An entry
+ * that reports a date or a period and cites nothing fails. The cited text is compared line by line,
  * ignoring case and runs of whitespace. When a document is attached and its
  * text is not available, a citation that is not in the message is not failed.
  *
@@ -275,6 +297,46 @@ export const runDeterministicChecks: {
     DeterministicCheck.make({ check: "cited-span-exists", passed: citedSpanExists(claims, source) }),
   ];
 });
+
+/**
+ * Run the citation checks on the critic's own reading.
+ *
+ * **Details**
+ *
+ * A critic that cites text is held to it like the extractor: every date and
+ * period it read must appear in that text, and the text must be in the
+ * source. A reading that cites nothing passes both, because the critic's
+ * citation is optional.
+ *
+ * **Example** (A reading that cites nothing passes)
+ *
+ * ```ts
+ * import { ReviewSourceText, runCriticChecks, SecretaryReview } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const checks = runCriticChecks(
+ *   SecretaryReview.make({ isDocketItem: true, notes: "Fixture." }),
+ *   ReviewSourceText.make({ messageText: "Fixture body." })
+ * );
+ * console.log(checks.map((check) => [check.side, check.passed])); // [["critic", true], ["critic", true]]
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const runCriticChecks: {
+  (source: ReviewSourceText): (reading: SecretaryReview) => ReadonlyArray<DeterministicCheck>;
+  (reading: SecretaryReview, source: ReviewSourceText): ReadonlyArray<DeterministicCheck>;
+} = dual(
+  2,
+  (reading: SecretaryReview, source: ReviewSourceText): ReadonlyArray<DeterministicCheck> => [
+    DeterministicCheck.make({
+      check: "values-appear-in-cited-text",
+      passed: O.isNone(reading.citedText) || valuesAppearInCitedText(reading),
+      side: "critic",
+    }),
+    DeterministicCheck.make({ check: "cited-span-exists", passed: citedSpanExists(reading, source), side: "critic" }),
+  ]
+);
 
 /**
  * Whether every deterministic check of a round passed.
@@ -326,8 +388,8 @@ const referencesRead: (references: ReadonlyArray<string>) => O.Option<HashSet.Ha
  * **Details**
  *
  * The classification is always compared. The mail date, the response period,
- * the due date and the matter references are compared only when at least one
- * side read them. Matter references are compared as sets, ignoring case and
+ * the stated due date, the due date and the matter references are compared
+ * only when at least one side read them, so up to six fields are compared. Matter references are compared as sets, ignoring case and
  * surrounding space.
  *
  * **Example** (Compare the classification)
@@ -354,6 +416,7 @@ export const compareReadings: {
     O.some(FieldAgreement.make({ agreed: isDocketEntry(entry) === reading.isDocketItem, field: "classification" })),
     compared("mail-date", claims.mailDate, reading.mailDate, sameDate),
     compared("response-period", claims.responsePeriod, reading.responsePeriod, periodEquivalence),
+    compared("stated-due-date", claims.statedDueDate, reading.statedDueDate, sameDate),
     compared("due-date", claimedDueDate(claims), criticDueDate(reading), sameDate),
     compared(
       "matter-references",
@@ -445,8 +508,33 @@ export class ReviewRoundDraft extends S.Class<ReviewRoundDraft>($I`ReviewRoundDr
   $I.annote("ReviewRoundDraft", { description: "What a docket review round is assessed from." })
 ) {}
 
+const sameFinding = S.toEquivalence(ReviewFinding);
+
+const SOURCE_DATES_DIFFER = ReviewFinding.make({
+  field: "due-date",
+  reason: "The due date the source states and the reviewer's mail date plus response period differ.",
+  severity: "P1",
+});
+
+// A source that states one due date while its own mail date and period give another is
+// inconsistent in itself. That is material whatever the extractor read, so code raises it.
+const sourceDateFindings = (reading: SecretaryReview): ReadonlyArray<ReviewFinding> =>
+  O.exists(
+    O.all({ computed: criticComputedDueDate(reading), stated: reading.statedDueDate }),
+    (dates) => !sameDate(dates.stated, dates.computed)
+  )
+    ? [SOURCE_DATES_DIFFER]
+    : [];
+
 /**
  * Assess one round: run the checks, compare the fields and score it.
+ *
+ * **Details**
+ *
+ * The checks are those on the extractor's entry plus the citation checks on
+ * the critic's reading. When the critic read a stated due date that differs
+ * from its own mail date plus period, a `P1` finding on `due-date` is added:
+ * the source contradicts itself, and the item cannot be accepted as it is.
  *
  * **Example** (Assess a round both sides dismiss)
  *
@@ -477,8 +565,13 @@ export class ReviewRoundDraft extends S.Class<ReviewRoundDraft>($I`ReviewRoundDr
 export const assessReviewRound = (draft: ReviewRoundDraft): ReviewRound => {
   const evidence = ReviewEvidence.make({
     agreement: compareReadings(draft.entry, draft.reading),
-    checks: runDeterministicChecks(draft.entry, draft.source),
-    findings: draft.findings,
+    checks: [...runDeterministicChecks(draft.entry, draft.source), ...runCriticChecks(draft.reading, draft.source)],
+    // The finding about the source's own dates is written here from the reading of this round;
+    // one carried over from an earlier round is dropped first, so it never outlives its cause.
+    findings: [
+      ...A.filter(draft.findings, (finding) => !sameFinding(finding, SOURCE_DATES_DIFFER)),
+      ...sourceDateFindings(draft.reading),
+    ],
   });
   return ReviewRound.make({
     agreement: evidence.agreement,
@@ -581,8 +674,15 @@ type DisputeReason = { readonly field: ReviewField; readonly text: string };
 
 const DISAGREEMENT_REASON = "Your reading of this field differs from the reviewer's independent reading.";
 
+// A failed check on the critic's own citation disputes the due date, which makes the critic read
+// its dates and period again in the next round.
+const CRITIC_CHECK_REASON: DisputeReason = {
+  field: "due-date",
+  text: "The reviewer's own reading could not be checked against the text it cited, so the dates are read again.",
+};
+
 // A failed check is put to the extractor as a dispute of the field it can correct.
-const checkReason: (check: DeterministicCheckName) => DisputeReason = DeterministicCheckName.$match({
+const extractorCheckReason: (check: DeterministicCheckName) => DisputeReason = DeterministicCheckName.$match({
   "cited-span-exists": (): DisputeReason => ({
     field: "source-document",
     text: "The text you cited was not found in the message.",
@@ -605,6 +705,9 @@ const checkReason: (check: DeterministicCheckName) => DisputeReason = Determinis
   }),
 });
 
+const checkReason = (check: DeterministicCheck): DisputeReason =>
+  check.side === "critic" ? CRITIC_CHECK_REASON : extractorCheckReason(check.check);
+
 const disputeReasons = (round: ReviewRound): ReadonlyArray<DisputeReason> => [
   ...A.map(disagreedFields(round), (field): DisputeReason => ({ field, text: DISAGREEMENT_REASON })),
   ...A.map(
@@ -616,7 +719,7 @@ const disputeReasons = (round: ReviewRound): ReadonlyArray<DisputeReason> => [
   ),
   ...A.map(
     A.filter(round.checks, (check) => !check.passed),
-    (check) => checkReason(check.check)
+    checkReason
   ),
 ];
 
@@ -663,14 +766,15 @@ const REREAD_FIELDS: ReadonlyArray<ReviewField> = [
   "classification",
   "mail-date",
   "response-period",
+  "stated-due-date",
   "due-date",
   "matter-references",
 ];
 
 /**
  * The disputed fields the critic can read again for itself: the
- * classification, the mail date, the response period, the due date and the
- * matter references.
+ * classification, the mail date, the response period, the stated due date,
+ * the due date and the matter references.
  *
  * **Example** (A disputed title is not re-read)
  *
@@ -715,7 +819,8 @@ export class RereadMerge extends S.Class<RereadMerge>($I`RereadMerge`)(
 
 const DATE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "due-date"];
 const PERIOD_FIELDS: ReadonlyArray<ReviewField> = ["response-period", "due-date"];
-const SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period", "due-date"];
+const STATED_FIELDS: ReadonlyArray<ReviewField> = ["stated-due-date", "due-date"];
+const SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period", "stated-due-date", "due-date"];
 
 /**
  * Merge a re-reading into the critic's earlier reading: only the fields that
@@ -723,9 +828,10 @@ const SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period
  *
  * **Details**
  *
- * A disputed due date means the mail date and the response period are both
- * read again, because the critic never reports a finished date. The notes are
- * always those of the re-reading.
+ * A disputed due date means the stated due date, the mail date and the
+ * response period are all read again, because the critic never works a date
+ * out. The text the critic cites follows its dates: it is replaced whenever
+ * one of them was read again. The notes are always those of the re-reading.
  *
  * **Example** (Keep a field that was not read again)
  *
@@ -750,11 +856,13 @@ export const mergeRereading = (merge: RereadMerge): SecretaryReview => {
   const pick = <Value>(readAgain: ReadonlyArray<ReviewField>, next: Value, kept: Value): Value =>
     A.some(readAgain, (field) => A.contains(fields, field)) ? next : kept;
   return SecretaryReview.make({
+    citedText: pick(SOURCE_FIELDS, reread.citedText, previous.citedText),
     isDocketItem: pick(["classification"], reread.isDocketItem, previous.isDocketItem),
     mailDate: pick(DATE_FIELDS, reread.mailDate, previous.mailDate),
     matterReferences: pick(["matter-references"], reread.matterReferences, previous.matterReferences),
     notes: reread.notes,
     readFromSourceDocument: pick(SOURCE_FIELDS, reread.readFromSourceDocument, previous.readFromSourceDocument),
     responsePeriod: pick(PERIOD_FIELDS, reread.responsePeriod, previous.responsePeriod),
+    statedDueDate: pick(STATED_FIELDS, reread.statedDueDate, previous.statedDueDate),
   });
 };

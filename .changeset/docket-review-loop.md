@@ -30,6 +30,13 @@ saved in the message's ledger record before the next begins, so a restart
 continues from the next round. Reminder entries now carry the Junk Email or
 Deleted Items line as the other entries do.
 
+The secretary reads a due date the source states outright for itself:
+`SecretaryReview` gains `statedDueDate` and `citedText`, `stated-due-date` is
+a compared field when either side read one, the citation checks also run on
+the secretary's reading when it cites text (`DeterministicCheck.side`), and a
+source whose stated date differs from its own mail date plus period gets a
+code-written `P1` finding and an entry on the earlier date.
+
 `@beep/law-practice-server` implements the three new agent calls, and the file
 store now reports a state directory it cannot write its lock to as `store` /
 `lock` instead of `state-locked`.

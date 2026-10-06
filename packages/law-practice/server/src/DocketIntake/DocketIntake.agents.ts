@@ -6,8 +6,9 @@
  * **Details**
  *
  * Every call answers through a plain wire schema and is told to copy dates
- * from the text, never to work one out. The secretary's wire schema has no
- * due-date field at all: the pipeline does that arithmetic.
+ * from the text, never to work one out. The secretary's wire schema has a
+ * field for a due date the source states outright and none for a computed
+ * one: the pipeline does that arithmetic.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -171,9 +172,14 @@ const CritiqueWire = S.Struct({
   ).annotateKey({ description: "Every concrete problem found; empty when there is none." }),
 });
 
-// Wire shape the secretary agent answers in. It has no due-date field: the reviewer reports the
-// mail date and the response period, and the pipeline computes the date.
+// Wire shape the secretary agent answers in. It has no field for a computed due date: the
+// reviewer reports the mail date and the response period, and the pipeline computes the date. A
+// due date the source states outright is a reading like any other and has its own field.
 const SecretaryWire = S.Struct({
+  citedText: S.NullOr(S.String).annotateKey({
+    description:
+      "The exact text, copied character for character from the message or the attached document, that states the dates and the period you report. Put each separate passage on its own line. Null when you report none.",
+  }),
   isDocketItem: S.Boolean.annotateKey({
     description: "Your own finding: true when there is any deadline or required action with a date.",
   }),
@@ -187,6 +193,9 @@ const SecretaryWire = S.Struct({
   }),
   responsePeriod: S.NullOr(ResponsePeriodWire).annotateKey({
     description: "Response period you read for yourself, or null when none is stated.",
+  }),
+  statedDueDate: S.NullOr(S.String).annotateKey({
+    description: `Due date the source states outright, read for yourself. ${DATE_FIELD}`,
   }),
 });
 
@@ -209,6 +218,9 @@ const REFERENCE_FORMS =
 const CITE_SOURCE =
   "In citedText, quote the exact text of the message that states the dates and the period you report, each separate passage on its own line. Never paraphrase it.";
 
+const CITE_READING =
+  "In citedText, quote the exact text of the message or the attached document that states the dates and the period you report, each separate passage on its own line. Never paraphrase it.";
+
 const PARALEGAL_SYSTEM = A.join(
   [
     "You are a careful paralegal docketing mail for a solo patent attorney.",
@@ -229,7 +241,8 @@ const SECRETARY_SYSTEM = A.join(
     "You are an exacting legal secretary reviewing a paralegal's docket entry. Assume it may be wrong.",
     "Decide for yourself whether the message carries a deadline or required action with a date.",
     "When a source document is attached, read the mail or notification date and the response period from that document itself and set readFromSourceDocument true. When none is attached, read them from the message and set readFromSourceDocument false.",
-    "Do not return a due date. Report only the mail date and the response period you read yourself.",
+    "Never work a due date out. Report the mail date and the response period you read yourself, and put a date in statedDueDate only when the source itself states a due date outright; leave it null otherwise.",
+    CITE_READING,
     REFERENCE_FORMS,
     "In notes, say in two sentences what you checked and where you read it.",
     NEVER_COMPUTE,
@@ -272,7 +285,8 @@ const REREAD_SYSTEM = A.join(
     "You are an exacting legal secretary. A paralegal's docket entry was disputed, and the paralegal has revised or defended each disputed field and quoted the text it relies on.",
     "Read the listed fields again for yourself, in the message and any attached document. The quoted text is a claim to check against the source, not a fact: when it is not there, or says something else, report what the source says.",
     "Answer only for the listed fields. Leave every other date and period null and every other list empty. isDocketItem is always your own finding.",
-    "Do not return a due date. For a disputed due date, report the mail date and the response period you read yourself.",
+    "Never work a due date out. For a disputed due date, report the mail date and the response period you read yourself, and put a date in statedDueDate only when the source itself states a due date outright.",
+    CITE_READING,
     "Set readFromSourceDocument true only when the mail date and the response period came from an attached document.",
     REFERENCE_FORMS,
     "In notes, say in two sentences what you checked and where you read it.",
@@ -431,8 +445,10 @@ const reviewEncoded = (wire: SecretaryWire, hasDocuments: boolean): unknown => (
   // A reviewer that was handed no document cannot have read one.
   readFromSourceDocument: hasDocuments && wire.readFromSourceDocument,
   ...O.getSomesStruct({
+    citedText: stated(wire.citedText),
     mailDate: stated(wire.mailDate),
     responsePeriod: O.fromNullOr(wire.responsePeriod),
+    statedDueDate: stated(wire.statedDueDate),
   }),
 });
 
@@ -552,7 +568,9 @@ const annotateCall = (message: DocketMessage, attachmentCount: number): Effect.E
  * answers with the whole entry again plus what it did with each field. Its
  * self-reported confidence is passed on when it is between 0 and 1 and
  * dropped otherwise. The secretary's `critique` sees the entry without its
- * dates, and `reread` sees the text the paralegal says it relies on.
+ * dates, and `reread` sees the text the paralegal says it relies on. In
+ * `review` and `reread` the secretary also reports a due date the source
+ * states outright, and the text it read its dates from.
  *
  * **Example** (Make the agents layer)
  *

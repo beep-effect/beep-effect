@@ -276,10 +276,13 @@ export type ParalegalEntry = typeof ParalegalEntry.Type;
  *
  * **Details**
  *
- * The reviewer does not return a due date. It returns the mail date and the
+ * The reviewer never works a due date out. It returns the mail date and the
  * response period it read for itself, and the pipeline does the arithmetic.
- * `readFromSourceDocument` says whether those came from an attached document
- * rather than from the message text.
+ * `statedDueDate` is a due date the source states outright, read
+ * independently of the paralegal's. `citedText` is the source text the
+ * reviewer read its dates and period from; when it is given, the review
+ * checks those values against it. `readFromSourceDocument` says whether they
+ * came from an attached document rather than from the message text.
  *
  * **Example** (Make a review)
  *
@@ -295,6 +298,7 @@ export type ParalegalEntry = typeof ParalegalEntry.Type;
  */
 export class SecretaryReview extends S.Class<SecretaryReview>($I`SecretaryReview`)(
   {
+    citedText: opt(S.String, "Exact source text the reviewer read its dates and period from (never logged)."),
     isDocketItem: S.Boolean.annotateKey({ description: "Whether the reviewer finds a deadline or required action." }),
     mailDate: opt(LocalDateFromString, "Trigger date the reviewer read for itself."),
     matterReferences: stringList("Matter references the reviewer read for itself, verbatim."),
@@ -304,6 +308,7 @@ export class SecretaryReview extends S.Class<SecretaryReview>($I`SecretaryReview
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ).annotateKey({ description: "Whether the date and period came from an attached document." }),
     responsePeriod: opt(DocketResponsePeriod, "Response period the reviewer read for itself."),
+    statedDueDate: opt(LocalDateFromString, "Due date the source states outright, read by the reviewer for itself."),
   },
   $I.annote("SecretaryReview", { description: "Agent 2 review of one entry." })
 ) {}

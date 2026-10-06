@@ -67,7 +67,7 @@ import {
 } from "./DocketIntake.schemas.ts";
 import {
   assessReviewRound,
-  criticDueDate,
+  criticComputedDueDate,
   extractorDueDate,
   mergeRereading,
   RereadMerge,
@@ -534,10 +534,23 @@ const reminderEntry = Effect.fnUntraced(function* (
   );
 });
 
+// The reviewer's stated date is shown only when it read one; its computed date always has a line.
 const dateLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<string> => [
   dateLine("Date from the email (paralegal entry)", extractorDueDate(entry), statedDerivation(entry)),
-  dateLine("Date recomputed by the reviewer", criticDueDate(reading), derivationText(reading)),
+  ...A.map(
+    A.fromOption(reading.statedDueDate),
+    (date) => `Due date the reviewer read stated in the source: ${iso(date)}`
+  ),
+  dateLine("Date recomputed by the reviewer", criticComputedDueDate(reading), derivationText(reading)),
 ];
+
+const earliestDate = (dates: ReadonlyArray<LocalDate>): O.Option<LocalDate> =>
+  O.map(O.liftPredicate(dates, A.isReadonlyArrayNonEmpty), A.min(LocalDateOrder));
+
+// Both dates the reviewer has: the one it read stated and the one its mail date and period give.
+// When they differ the earlier one is the reviewer's candidate.
+const criticDates = (reading: SecretaryReview): ReadonlyArray<LocalDate> =>
+  A.getSomes([reading.statedDueDate, criticComputedDueDate(reading)]);
 
 const noteLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<string> => [
   `Paralegal note: ${entry.rationale}`,
@@ -562,7 +575,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
   const matter = yield* lookupMatter(ports, matterReferences(entry, review));
   const missingSource = sourceFlags(review, input.hasDocuments);
   const resolved = resolveDocketDueDate(
-    DocketDueDateCandidates.make({ computed: criticDueDate(review), stated: extractorDueDate(entry) })
+    DocketDueDateCandidates.make({ computed: earliestDate(criticDates(review)), stated: extractorDueDate(entry) })
   );
 
   if (O.isNone(resolved)) {
@@ -831,7 +844,7 @@ const findingLine = (finding: ReviewFinding): string => `- ${finding.severity} $
 const openLines = (round: ReviewRound): ReadonlyArray<string> => [
   ...A.map(
     A.filter(round.checks, (check) => !check.passed),
-    (check) => `- failed check: ${check.check}`
+    (check) => `- failed check (${check.side}): ${check.check}`
   ),
   ...A.map(
     A.filter(round.agreement, (field) => !field.agreed),
@@ -839,9 +852,6 @@ const openLines = (round: ReviewRound): ReadonlyArray<string> => [
   ),
   ...A.map(round.findings, findingLine),
 ];
-
-const earliestDate = (dates: ReadonlyArray<LocalDate>): O.Option<LocalDate> =>
-  O.map(O.liftPredicate(dates, A.isReadonlyArrayNonEmpty), A.min(LocalDateOrder));
 
 // A flagged item is shown to the attorney, never entered as an accepted deadline: one
 // needs-review entry on the earliest date either agent read, with no reminder ladder.
@@ -853,11 +863,13 @@ const writeFlagged = Effect.fnUntraced(function* (
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
   const { message, ports, today } = context;
   const { entry, reading } = round;
-  const date = earliestDate(A.getSomes([extractorDueDate(entry), criticDueDate(reading)]));
+  const candidates = [...A.fromOption(extractorDueDate(entry)), ...criticDates(reading)];
+  const date = earliestDate(candidates);
   const matter = yield* lookupMatter(ports, matterReferences(entry, reading));
   return yield* writeNeedsReview(ports, message, today, {
     date,
     flags: [
+      ...whenFlag(A.length(A.dedupeWith(candidates, sameDate)) > 1, "dates-differ"),
       ...matterFlags(matter),
       ...sourceFlags(reading, A.isReadonlyArrayNonEmpty(context.documents)),
       ...whenFlag(

@@ -161,14 +161,27 @@ const paralegalWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
 });
 
 const secretaryWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
+  citedText: "Mailed January 8, 2030. A response is due within three months",
   isDocketItem: true,
   mailDate: "2030-01-08",
   matterReferences: ["FIX-0001"],
   notes: "Read the attached fixture action. The period is on its first page.",
   readFromSourceDocument: true,
   responsePeriod: { amount: 3, unit: "months" },
+  statedDueDate: null,
   ...overrides,
 });
+
+const SECRETARY_FIELDS = [
+  "citedText",
+  "isDocketItem",
+  "mailDate",
+  "matterReferences",
+  "notes",
+  "readFromSourceDocument",
+  "responsePeriod",
+  "statedDueDate",
+];
 
 const paralegalEntry = ParalegalDocketEntry.make({
   matterReferences: ["FIX-0001"],
@@ -433,12 +446,13 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(review.responsePeriod, (period) => [period.amount, period.unit]),
           [3, "months"]
         );
-        // The schema the provider answers in has nowhere to put a due date.
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
-          ["isDocketItem", "mailDate", "matterReferences", "notes", "readFromSourceDocument", "responsePeriod"],
-        ]);
+        // The schema the provider answers in takes a due date the source states and has nowhere to
+        // put a computed one.
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
+        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
         expect(R.keys(review)).not.toContain("dueDate");
-        expect(R.keys(review)).not.toContain("statedDueDate");
+        assertSome(iso(review.statedDueDate), "2030-04-08");
+        assertSome(review.citedText, "Mailed January 8, 2030. A response is due within three months");
         expect(A.map(files, (file) => [file.mediaType, file.data])).toStrictEqual([
           ["application/pdf", new Uint8Array([1, 2, 3])],
         ]);
@@ -454,7 +468,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
-        yield* scripted.respondWith(json(secretaryWire({ mailDate: "", responsePeriod: null })));
+        yield* scripted.respondWith(json(secretaryWire({ citedText: " ", mailDate: "", responsePeriod: null })));
 
         const review = yield* secretary.review({ documents: [], entry: paralegalEntry, message });
         const prompt = A.last(yield* scripted.prompts);
@@ -462,6 +476,9 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         expect(review.readFromSourceDocument).toBe(false);
         assertNone(review.mailDate);
         assertNone(review.responsePeriod);
+        // The fixture states no due date and the blank citation is no citation.
+        assertNone(review.statedDueDate);
+        assertNone(review.citedText);
         assertTrue(O.exists(prompt, mentions("No source document is attached.")));
       })
     );
@@ -511,10 +528,12 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
 
         yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
         const badDate = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
+        yield* scripted.respondWith(json(secretaryWire({ statedDueDate: "mid April" })));
+        const badStated = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
         yield* scripted.respondWith(json(secretaryWire({ responsePeriod: { amount: -1, unit: "days" } })));
         const badPeriod = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
 
-        for (const failure of [badDate, badPeriod]) {
+        for (const failure of [badDate, badStated, badPeriod]) {
           assertSome(
             O.map(failure, (error) => [error.stage, error.cause]),
             ["review", "wire-decode"]
@@ -789,7 +808,13 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
         yield* scripted.respondWith(
-          json(secretaryWire({ matterReferences: [], responsePeriod: { amount: 2, unit: "months" } }))
+          json(
+            secretaryWire({
+              matterReferences: [],
+              responsePeriod: { amount: 2, unit: "months" },
+              statedDueDate: "2030-04-15",
+            })
+          )
         );
 
         const reading = yield* secretary.reread(rereadInput([pdf]));
@@ -810,10 +835,9 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           assertTrue(O.exists(prompt, mentions(fragment)));
         }
         expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
-        // The same answer shape as the first reading: nowhere to put a due date.
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
-          ["isDocketItem", "mailDate", "matterReferences", "notes", "readFromSourceDocument", "responsePeriod"],
-        ]);
+        // The same answer shape as the first reading.
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
+        assertSome(iso(reading.statedDueDate), "2030-04-15");
       })
     );
   });

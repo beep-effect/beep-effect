@@ -165,7 +165,50 @@ export const DeterministicCheckName = LiteralKit([
 export type DeterministicCheckName = typeof DeterministicCheckName.Type;
 
 /**
+ * Whose reading a deterministic check was run on.
+ *
+ * **Example** (Guard a side)
+ *
+ * ```ts
+ * import { ReviewSide } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(ReviewSide.is.critic("critic")); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ReviewSide = LiteralKit(["extractor", "critic"]).pipe(
+  $I.annoteSchema("ReviewSide", { description: "Whose reading a deterministic check was run on." })
+);
+
+/**
+ * Type for {@link ReviewSide}.
+ *
+ * **Example** (Type a side)
+ *
+ * ```ts
+ * import type { ReviewSide } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const side: ReviewSide = "extractor";
+ * console.log(side);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReviewSide = typeof ReviewSide.Type;
+
+const deterministicCheckSideDefault: ReviewSide = "extractor";
+
+/**
  * Result of one deterministic check.
+ *
+ * **Details**
+ *
+ * `side` says whose reading was checked. The citation checks run on the
+ * extractor's entry and, when the critic cites text, on the critic's reading
+ * too; the others run on the extractor's entry only.
  *
  * **Example** (Make a check result)
  *
@@ -181,9 +224,13 @@ export type DeterministicCheckName = typeof DeterministicCheckName.Type;
 export class DeterministicCheck extends S.Class<DeterministicCheck>($I`DeterministicCheck`)(
   {
     check: DeterministicCheckName.annotateKey({ description: "Which check ran." }),
-    passed: S.Boolean.annotateKey({ description: "Whether the entry passed it." }),
+    passed: S.Boolean.annotateKey({ description: "Whether the reading passed it." }),
+    side: ReviewSide.pipe(
+      S.withConstructorDefault(Effect.succeed(deterministicCheckSideDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(deterministicCheckSideDefault))
+    ).annotateKey({ description: "Whose reading was checked; the extractor's unless stated." }),
   },
-  $I.annote("DeterministicCheck", { description: "Result of one deterministic check on an extractor entry." })
+  $I.annote("DeterministicCheck", { description: "Result of one deterministic check on a reading." })
 ) {}
 
 /**

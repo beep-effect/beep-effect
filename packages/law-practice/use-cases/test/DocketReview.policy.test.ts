@@ -9,6 +9,7 @@ import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDea
 import {
   assessReviewRound,
   compareReadings,
+  criticComputedDueDate,
   criticDueDate,
   DeterministicCheck,
   DeterministicCheckName,
@@ -29,6 +30,7 @@ import {
   rereadFields,
   reviewDisputes,
   reviewGatePassed,
+  runCriticChecks,
   runDeterministicChecks,
   SecretaryReview,
   scoreRound,
@@ -86,6 +88,29 @@ const readingOf = (overrides: Partial<ConstructorParameters<typeof SecretaryRevi
 
 const dismissed = ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." });
 
+const iso = (date: LocalDate): string => date.toISOString();
+
+// The common notice that states only its due date: no mail date and no period.
+const STATED_BODY = "Synthetic fixture notice for FIX-0001. Your response is due April 15, 2030.";
+const statedSource = ReviewSourceText.make({ messageText: STATED_BODY });
+const statedDue = LocalDate.make({ year: 2030, month: 4, day: 15 });
+const otherDue = LocalDate.make({ year: 2030, month: 4, day: 16 });
+const statedOnly = ParalegalDocketEntry.make({
+  citedText: O.some("Your response is due April 15, 2030."),
+  matterReferences: ["FIX-0001"],
+  rationale: "States a due date.",
+  statedDueDate: O.some(statedDue),
+  title: "Due Date: fixture response",
+});
+const statedReading = (date: LocalDate) =>
+  SecretaryReview.make({
+    citedText: O.some("Your response is due April 15, 2030."),
+    isDocketItem: true,
+    matterReferences: ["FIX-0001"],
+    notes: "Read the fixture notice.",
+    statedDueDate: O.some(date),
+  });
+
 const passedOf = (entry: ParalegalEntry, text: ReviewSourceText, check: DeterministicCheckName): O.Option<boolean> =>
   O.map(
     A.findFirst(runDeterministicChecks(entry, text), (result) => result.check === check),
@@ -135,6 +160,16 @@ const decide = (overrides: Partial<ConstructorParameters<typeof ReviewDecisionIn
   );
 
 const FiveFlags = S.Tuple([S.Boolean, S.Boolean, S.Boolean, S.Boolean, S.Boolean]);
+const ComparedCount = S.Int.check(S.isBetween({ maximum: 6, minimum: 1 }));
+const SixFlags = S.Tuple([S.Boolean, S.Boolean, S.Boolean, S.Boolean, S.Boolean, S.Boolean]);
+const ALL_COMPARED: ReadonlyArray<ReviewField> = [
+  "classification",
+  "mail-date",
+  "response-period",
+  "stated-due-date",
+  "due-date",
+  "matter-references",
+];
 const Flags = S.Array(S.Boolean);
 const Findings = S.Array(ReviewFinding);
 const MaterialSeverity = S.Literals(["P0", "P1"]);
@@ -236,6 +271,19 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     assertSome(agreedOn(entryOf(), readingOf({ matterReferences: ["FIX-0002"] }), "matter-references"), false);
     assertSome(agreedOn(entryOf({ matterReferences: [" "] }), readingOf(), "matter-references"), false);
     assertNone(agreedOn(entryOf({ matterReferences: [] }), readingOf({ matterReferences: [] }), "matter-references"));
+    // A stated due date is a sixth field, compared only when at least one side read one.
+    assertNone(agreedOn(entryOf(), readingOf(), "stated-due-date"));
+    assertSome(agreedOn(statedOnly, statedReading(statedDue), "stated-due-date"), true);
+    assertSome(agreedOn(statedOnly, statedReading(statedDue), "due-date"), true);
+    assertSome(agreedOn(statedOnly, statedReading(otherDue), "stated-due-date"), false);
+    assertSome(agreedOn(statedOnly, statedReading(otherDue), "due-date"), false);
+    assertSome(agreedOn(statedOnly, readingOf(), "stated-due-date"), false);
+    expect(A.map(compareReadings(statedOnly, statedReading(statedDue)), (field) => field.field)).toStrictEqual([
+      "classification",
+      "stated-due-date",
+      "due-date",
+      "matter-references",
+    ]);
   });
 
   it("reads the due date each side stands for", () => {
@@ -255,6 +303,11 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       "2030-04-08"
     );
     assertNone(criticDueDate(readingOf({ responsePeriod: O.none() })));
+    // A date the critic read stated outright comes before its own arithmetic, as on the extractor's side.
+    assertSome(O.map(criticDueDate(readingOf({ statedDueDate: O.some(stated) })), iso), "2030-05-01");
+    assertSome(O.map(criticComputedDueDate(readingOf({ statedDueDate: O.some(stated) })), iso), "2030-04-08");
+    assertSome(O.map(criticDueDate(statedReading(statedDue)), iso), "2030-04-15");
+    assertNone(criticComputedDueDate(statedReading(statedDue)));
   });
 
   it("scores a round as half material findings, half agreement", () => {
@@ -334,6 +387,33 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
   );
 
   it.prop(
+    "accepts under the defaults with no disagreement, or with exactly one when at least four fields were compared",
+    {
+      compared: Arbitrary.schema(ComparedCount),
+      findings: Arbitrary.schema(Findings),
+      flags: Arbitrary.schema(SixFlags),
+    },
+    ({ compared, findings, flags }) => {
+      const agreement = A.take(
+        A.zipWith(ALL_COMPARED, flags, (field, agreed) => FieldAgreement.make({ agreed, field })),
+        compared
+      );
+      const round = roundOf({
+        agreement,
+        findings,
+        score: scoreRound(ReviewEvidence.make({ agreement, checks: [], findings })),
+      });
+      const hasMaterial = A.some(findings, (finding) => finding.severity === "P0" || finding.severity === "P1");
+      const disagreements = A.length(A.filter(agreement, (field) => !field.agreed));
+      const tolerated = disagreements === 0 || (disagreements === 1 && compared >= 4);
+      const acceptable = !hasMaterial && tolerated;
+
+      strictEqual(O.contains(decide({ round }), "accepted"), acceptable);
+    },
+    { arbitrary: fcRuns(300) }
+  );
+
+  it.prop(
     "accepts exactly when the gate passed and the score reached the threshold",
     {
       config: Arbitrary.schema(DocketReviewConfig),
@@ -391,10 +471,19 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       "source-document",
     ]);
     expect(A.map(disputes, (dispute) => A.length(dispute.reasons))).toStrictEqual([3, 1, 2, 2]);
+    // A failed check on the critic's own citation disputes the due date, so its dates are read again.
+    expect(
+      A.map(
+        reviewDisputes(
+          roundOf({ checks: [DeterministicCheck.make({ check: "cited-span-exists", passed: false, side: "critic" })] })
+        ),
+        (dispute) => dispute.field
+      )
+    ).toStrictEqual(["due-date"]);
     expect(
       reviewDisputes(roundOf({ checks: [DeterministicCheck.make({ check: "cited-span-exists", passed: true })] }))
     ).toStrictEqual([]);
-    expect(rereadFields(disputes)).toStrictEqual(["mail-date", "matter-references"]);
+    expect(rereadFields(disputes)).toStrictEqual(["mail-date", "matter-references", "stated-due-date"]);
     expect(rereadFields([ReviewDispute.make({ field: "title", reasons: ["Fixture."] })])).toStrictEqual([]);
   });
 
@@ -416,6 +505,17 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
         matterReferences: ["FIX-0002"],
         notes: "Second fixture reading.",
         readFromSourceDocument: true,
+      })
+    );
+    // A disputed stated date takes the re-read date and the text cited for it, and nothing else.
+    expect(
+      mergeRereading(RereadMerge.make({ fields: ["stated-due-date"], previous, reread: statedReading(statedDue) }))
+    ).toStrictEqual(
+      readingOf({
+        citedText: O.some("Your response is due April 15, 2030."),
+        notes: "Read the fixture notice.",
+        readFromSourceDocument: false,
+        statedDueDate: O.some(statedDue),
       })
     );
     expect(merged(["due-date"])).toStrictEqual(
@@ -440,7 +540,67 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       })
     );
 
-    expect([round.index, round.score, A.length(round.checks), A.length(round.agreement)]).toStrictEqual([2, 0.4, 5, 5]);
+    expect([round.index, round.score, A.length(round.checks), A.length(round.agreement)]).toStrictEqual([2, 0.4, 7, 5]);
     assertTrue(reviewGatePassed(round.checks));
+  });
+
+  it("holds a critic that cites text to it, and lets one that cites nothing pass", () => {
+    const passed = (reading: SecretaryReview, text: ReviewSourceText) =>
+      A.map(runCriticChecks(reading, text), (check) => [check.side, check.check, check.passed]);
+
+    expect(passed(statedReading(statedDue), statedSource)).toStrictEqual([
+      ["critic", "values-appear-in-cited-text", true],
+      ["critic", "cited-span-exists", true],
+    ]);
+    // The date it reports is not in the text it cites.
+    expect(A.map(pipe(statedReading(otherDue), runCriticChecks(statedSource)), (check) => check.passed)).toStrictEqual([
+      false,
+      true,
+    ]);
+    // The text it cites is not in the source.
+    expect(A.map(runCriticChecks(statedReading(statedDue), source), (check) => check.passed)).toStrictEqual([
+      true,
+      false,
+    ]);
+    expect(A.map(runCriticChecks(readingOf(), source), (check) => check.passed)).toStrictEqual([true, true]);
+  });
+
+  it("accepts a stated-date-only item both sides read alike, and not one they read differently", () => {
+    const assess = (reading: SecretaryReview) =>
+      assessReviewRound(
+        ReviewRoundDraft.make({ entry: statedOnly, findings: [], index: 1, reading, source: statedSource })
+      );
+    const same = assess(statedReading(statedDue));
+    const different = assess(
+      SecretaryReview.make({
+        isDocketItem: true,
+        matterReferences: ["FIX-0001"],
+        notes: "Read the fixture notice.",
+        statedDueDate: O.some(otherDue),
+      })
+    );
+
+    expect([same.score, reviewGatePassed(same.checks)]).toStrictEqual([1, true]);
+    assertSome(decide({ round: same }), "accepted");
+    // Two of four fields disagree: the stated date and the due date it stands for.
+    expect([different.score, reviewGatePassed(different.checks)]).toStrictEqual([0.75, true]);
+    assertSome(decide({ round: different }), "flagged-max-rounds");
+  });
+
+  it("raises a material finding when the source's stated date and its own mail date plus period differ", () => {
+    const assess = (reading: SecretaryReview, findings: ReadonlyArray<ReviewFinding>) =>
+      assessReviewRound(ReviewRoundDraft.make({ entry: entryOf(), findings, index: 2, reading, source })).findings;
+    const inconsistent = readingOf({ statedDueDate: O.some(statedDue) });
+    const consistent = readingOf({ statedDueDate: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })) });
+    const raised = assess(inconsistent, [minor]);
+
+    expect(A.map(raised, (finding) => [finding.severity, finding.field])).toStrictEqual([
+      ["P3", "title"],
+      ["P1", "due-date"],
+    ]);
+    // Carried into the next round it is written once, and it goes when its cause does.
+    expect(assess(inconsistent, raised)).toStrictEqual(raised);
+    expect(assess(consistent, raised)).toStrictEqual([minor]);
+    expect(assess(readingOf(), [])).toStrictEqual([]);
   });
 });

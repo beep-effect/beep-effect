@@ -40,7 +40,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Context, Effect, HashMap, Layer, pipe, Ref } from "effect";
+import { Context, Effect, Exit, HashMap, Layer, pipe, Ref } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
@@ -151,6 +151,34 @@ const distinctReview = SecretaryReview.make({
   notes: "Read the attached fixture action.",
   readFromSourceDocument: true,
   responsePeriod: O.some(fortySevenDays),
+});
+
+// The common notice from a foreign associate: it states its due date and nothing else.
+const STATED_CITED = "Your response is due April 15, 2030";
+const statedDue = LocalDate.make({ year: 2030, month: 4, day: 15 });
+const statedMessage = DocketMessage.make({
+  bodyText: `Synthetic fixture body. ${STATED_CITED}. A later notice may say April 16, 2030. Reference FIX-0001.`,
+  messageId: "m-stated",
+  receivedAt: "2030-01-09T10:00:00Z",
+  receivedDate: RECEIVED,
+});
+const statedEntry = () =>
+  Effect.succeed(docketEntry({ citedText: O.some(STATED_CITED), statedDueDate: O.some(statedDue) }));
+const statedReview = (overrides: Partial<ConstructorParameters<typeof SecretaryReview>[0]> = {}) =>
+  SecretaryReview.make({
+    citedText: O.some(STATED_CITED),
+    isDocketItem: true,
+    matterReferences: ["FIX-0001"],
+    notes: "Read the due date in the attached fixture letter.",
+    readFromSourceDocument: true,
+    statedDueDate: O.some(statedDue),
+    ...overrides,
+  });
+// The source states 15 April, while its own mail date and period give 8 April.
+const inconsistentReview = statedReview({
+  citedText: O.some(`${STATED_CITED}\n${CITED}`),
+  mailDate: O.some(mailDate),
+  responsePeriod: O.some(threeMonths),
 });
 
 const materialTitleFinding = ReviewFinding.make({
@@ -1154,7 +1182,8 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
         expect(tagOf(outcome)).toBe("DocketNeedsReview");
         expect(reasonOf(outcome)).toBe("flagged-low-confidence");
-        expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual([]);
+        // The two candidate dates differ, and the entry says so.
+        expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual(["dates-differ"]);
         // Exactly one entry: no due-date entry and no reminder ladder.
         expect(entries).toHaveLength(1);
         assertSome(
@@ -1257,7 +1286,9 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         ]);
         expect(entries).toHaveLength(1);
         assertTrue(O.exists(flagged, (entry) => Str.startsWith("[CHECK FAILED] ")(entry.subject)));
-        assertTrue(O.exists(flagged, (entry) => Str.includes("- failed check: cited-span-exists")(entry.bodyText)));
+        assertTrue(
+          O.exists(flagged, (entry) => Str.includes("- failed check (extractor): cited-span-exists")(entry.bodyText))
+        );
         expect(yield* Ref.get(harness.revises)).toHaveLength(0);
       })
     );
@@ -1409,6 +1440,181 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
         expect([report.processed, report.entered]).toStrictEqual([1, 1]);
         expect(again.processed).toBe(0);
+      })
+    );
+  });
+  it.layer(testLayer({ enter: statedEntry, review: () => Effect.succeed(statedReview()) }), {
+    timeout: "5 seconds",
+  })((it) => {
+    it.effect(
+      "accepts a stated-date-only item in the first round when the critic reads and cites the same stated date",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(statedMessage, TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        assertSome(
+          O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore]),
+          ["accepted", 1, 1]
+        );
+        expect(outcome._tag === "DocketEntered" ? [outcome.dueDate.basis, outcome.flags] : []).toStrictEqual([
+          "agreed",
+          [],
+        ]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, statedDue)));
+        assertTrue(
+          O.exists(due, (entry) =>
+            Str.includes("Due date the reviewer read stated in the source: 2030-04-15")(entry.bodyText)
+          )
+        );
+        expect(yield* Ref.get(harness.revises)).toHaveLength(0);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: statedEntry,
+      reread: () => Effect.succeed(statedReview({ citedText: O.none(), statedDueDate: O.some(addDays(statedDue, 1)) })),
+      review: () => Effect.succeed(statedReview({ citedText: O.none(), statedDueDate: O.some(addDays(statedDue, 1)) })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "flags a stated-date-only item when the critic reads a different stated date, on the earlier of the two",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(statedMessage, TODAY);
+        const entries = yield* entriesOf;
+        const flagged = A.head(entries);
+
+        expect(reasonOf(outcome)).toBe("flagged-max-rounds");
+        assertSome(
+          O.map(reviewOf(outcome), (review) => [review.rounds, review.finalScore]),
+          [3, 0.75]
+        );
+        expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual(["dates-differ"]);
+        expect(entries).toHaveLength(1);
+        assertTrue(O.exists(flagged, (entry) => sameDate(entry.date, statedDue)));
+        for (const fragment of [
+          "- the two readings differ on: stated-due-date",
+          "- the two readings differ on: due-date",
+          "Due date the reviewer read stated in the source: 2030-04-16",
+        ]) {
+          assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
+        }
+        // The critic read its stated date again each round; the extractor was never shown it.
+        expect(A.map(yield* Ref.get(harness.rereads), (input) => input.fields)).toStrictEqual([
+          ["stated-due-date", "due-date"],
+          ["stated-due-date", "due-date"],
+        ]);
+        assertTrue(
+          A.every(yield* Ref.get(harness.revises), (input) =>
+            A.every(input.disputes, (dispute) => A.every(dispute.reasons, (reason) => !Str.includes("16")(reason)))
+          )
+        );
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      { enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
+      { review: DocketReviewConfig.make({ maxRounds: 1 }) }
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "raises a material finding when the source's stated date and its mail date plus period differ, and uses the earlier date",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(statedMessage, TODAY);
+        const entries = yield* entriesOf;
+        const flagged = A.head(entries);
+
+        expect(reasonOf(outcome)).toBe("flagged-max-rounds");
+        expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual(["dates-differ"]);
+        expect(entries).toHaveLength(1);
+        // 8 April (mail date plus period) is earlier than the 15 April both sides read stated.
+        assertTrue(O.exists(flagged, (entry) => sameDate(entry.date, computedDue)));
+        for (const fragment of [
+          "- P1 due-date: The due date the source states and the reviewer's mail date plus response period differ.",
+          "Date from the email (paralegal entry): 2030-04-15",
+          "Due date the reviewer read stated in the source: 2030-04-15",
+          "Date recomputed by the reviewer: 2030-04-08 (mail date 2030-01-08 + 3 months)",
+        ]) {
+          assertTrue(O.exists(flagged, (entry) => Str.includes(fragment)(entry.bodyText)));
+        }
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      { enter: statedEntry, review: () => Effect.succeed(inconsistentReview) },
+      { review: DocketReviewConfig.make({ acceptThreshold: UnitInterval.make(0.3), maxRounds: 1 }) }
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "puts even an accepted entry on the earlier date when the source's two dates differ",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(statedMessage, TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        expect(outcome._tag === "DocketEntered" ? [outcome.dueDate.basis, outcome.flags] : []).toStrictEqual([
+          "earlier-of-differing",
+          ["dates-differ"],
+        ]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      {
+        enter: () => Effect.succeed(datedEntry({ responsePeriod: O.some(twoMonths) })),
+        messages: [message("m1")],
+        // The process is killed between rounds: the first re-reading dies instead of failing.
+        reread: (_input, asked) => (asked === 1 ? Effect.die("killed") : Effect.succeed(agreeingReview)),
+        revise: () => Effect.succeed(ParalegalRevision.make({ entry: datedEntry() })),
+      },
+      { maxAttempts: 1 }
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "does not spend the retry budget on a loop that was interrupted, only on steps that failed",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const killed = yield* Effect.exit(intake.pollOnce(TODAY));
+        const interrupted = yield* ledgerRecord("m1");
+        const resumed = yield* intake.pollOnce(TODAY);
+        const settled = yield* ledgerRecord("m1");
+
+        assertTrue(Exit.isFailure(killed));
+        // The kill left round 1 in the ledger and no attempt counted against the message.
+        assertSome(
+          O.map(interrupted, (record) => [tagOf(record.outcome), record.attempts, O.isSome(record.review)]),
+          ["IntakeFailed", 0, true]
+        );
+        // With a budget of one attempt, the resumed loop still finishes instead of being given up on.
+        expect([resumed.entered, resumed.needsReview, resumed.failed]).toStrictEqual([1, 0, 0]);
+        assertSome(
+          O.map(settled, (record) => [tagOf(record.outcome), record.attempts]),
+          ["DocketEntered", 1]
+        );
       })
     );
   });
