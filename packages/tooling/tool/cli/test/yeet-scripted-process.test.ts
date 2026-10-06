@@ -1203,10 +1203,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
         })
       )
     ).toMatchObject({ _tag: "blocked", blocker: "pr-open", detail: "pull request #? is CLOSED" });
-    expect(decideYeetReadyGate(readOf(remoteOf({ headSha: O.none(), pendingRequiredCheckCount: 1 })))).toMatchObject({
+    // A pending required check never holds the content-final flip (D11).
+    expect(decideYeetReadyGate(readOf(remoteOf({ headSha: O.none(), pendingRequiredCheckCount: 1 })))._tag).toBe(
+      "flip"
+    );
+    expect(decideYeetReadyGate(readOf(remoteOf({ headSha: O.none(), failingRequiredCheckCount: 1 })))).toMatchObject({
       _tag: "blocked",
-      blocker: "required-checks-green",
-      detail: "required checks are not green on head unknown: 0 failing, 1 pending of 1 required",
+      blocker: "no-required-red",
+      detail:
+        "1 required check(s) are failing on head unknown; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip",
     });
     // Every criterion holds, yet the read carries no pull request number to
     // flip: the gate refuses on its first criterion instead of guessing one.

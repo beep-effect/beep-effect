@@ -217,6 +217,11 @@ export const YeetFailureKind = LiteralKit(["step-exit", "handler-error"]).pipe(
  * on {@link YeetMergeReadyCriteria} for display and can never be the value of
  * {@link YeetMergeReady.failing}.
  *
+ * `review-window-elapsed` is the review window of the 2026-10-06 ruling: the
+ * pull request has been ready for review, on its current head, for the whole
+ * window. It is named last, so it reads as the blocker only once everything
+ * else holds. It gates on time alone and never on a reviewer having posted.
+ *
  * **Example** (List the merge-ready criteria)
  *
  * ```ts
@@ -237,6 +242,7 @@ export const YeetMergeReadyCriterion = LiteralKit([
   "mergeable",
   "merge-state-acceptable",
   "review-decision-acceptable",
+  "review-window-elapsed",
 ]).pipe(
   $I.annoteSchema("YeetMergeReadyCriterion", {
     title: "Yeet Merge Ready Criterion",
@@ -270,6 +276,7 @@ export type YeetMergeReadyCriterion = typeof YeetMergeReadyCriterion.Type;
  *   mergeable: true,
  *   mergeStateAcceptable: true,
  *   reviewDecisionAcceptable: true,
+ *   reviewWindowElapsed: true,
  *   greptileScore: O.some("5/5"),
  * })
  * console.log(criteria.requiredChecksGreen)
@@ -288,6 +295,7 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
     mergeable: S.Boolean,
     mergeStateAcceptable: S.Boolean,
     reviewDecisionAcceptable: S.Boolean,
+    reviewWindowElapsed: S.Boolean,
     greptileScore: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("YeetMergeReadyCriteria", {
@@ -305,7 +313,7 @@ export class YeetMergeReadyCriteria extends S.Class<YeetMergeReadyCriteria>($I`Y
  *
  * const criteria = YeetMergeReadyCriteria.make({
  *   prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: false,
- *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ *   threadsResolved: true, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true, reviewWindowElapsed: true
  * })
  * console.log(mergeReadyCriterionHolds(criteria, "required-checks-green")) // false
  * ```
@@ -329,6 +337,7 @@ export const mergeReadyCriterionHolds: {
     mergeable: () => criteria.mergeable,
     "merge-state-acceptable": () => criteria.mergeStateAcceptable,
     "review-decision-acceptable": () => criteria.reviewDecisionAcceptable,
+    "review-window-elapsed": () => criteria.reviewWindowElapsed,
   })
 );
 
@@ -396,6 +405,9 @@ const YeetMergeReadyEncoded = S.Struct({
     mergeable: S.optionalKey(S.Boolean),
     mergeStateAcceptable: S.optionalKey(S.Boolean),
     reviewDecisionAcceptable: S.optionalKey(S.Boolean),
+    // Absent from records written before the review window gated merges; a
+    // record without it reads as not elapsed, never as satisfied.
+    reviewWindowElapsed: S.optionalKey(S.Boolean),
     // Written while `closeout-gates-passed` was a criterion; read and dropped.
     closeoutGatesPassed: S.optionalKey(S.Boolean),
     greptileScore: S.optionalKey(S.String),
@@ -417,6 +429,7 @@ const normalizeLegacyMergeReadyCriteria = (value: EncodedMergeReady) => ({
   mergeable: value.criteria.mergeable ?? false,
   mergeStateAcceptable: value.criteria.mergeStateAcceptable ?? false,
   reviewDecisionAcceptable: value.criteria.reviewDecisionAcceptable ?? false,
+  reviewWindowElapsed: value.criteria.reviewWindowElapsed ?? false,
   ...O.getSomesStruct({ greptileScore: O.fromUndefinedOr(value.criteria.greptileScore) }),
 });
 
@@ -427,7 +440,8 @@ const legacyMergeReadyCriteriaComplete = (value: EncodedMergeReady): boolean =>
   value.criteria.requiredChecksGreen !== undefined &&
   value.criteria.mergeable !== undefined &&
   value.criteria.mergeStateAcceptable !== undefined &&
-  value.criteria.reviewDecisionAcceptable !== undefined;
+  value.criteria.reviewDecisionAcceptable !== undefined &&
+  value.criteria.reviewWindowElapsed !== undefined;
 
 const currentMergeReadyCriterion = (
   criterion: YeetMergeReadyCriterion | typeof LegacyMergeReadyCriterion.Type
@@ -495,7 +509,7 @@ const normalizeLegacyYeetMergeReady = (value: typeof YeetMergeReadyEncoded.Type)
  *   failing: O.some("threads-resolved"),
  *   criteria: YeetMergeReadyCriteria.make({
  *     prOpen: true, notDraft: true, closeoutRun: true, requiredChecksGreen: true,
- *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true
+ *     threadsResolved: false, mergeable: true, mergeStateAcceptable: true, reviewDecisionAcceptable: true, reviewWindowElapsed: true
  *   }),
  * })
  * console.log(mergeReady.ready)
