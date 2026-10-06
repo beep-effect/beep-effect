@@ -47,7 +47,7 @@ answer; the retained retirement command output records their removal.
 | Honest legacy classification | The reproduced ordinary-profile population remains 1,980 unassessed and four excluded, including 1,259 legacy cache-enabled computations. Earlier portability/concurrency receipts retain their earlier source/client boundaries. No ordinary or broad task-family activation is inferred. |
 | Adoption handoff | The [handoff](adoption-handoff.md) retains sixteen semantic families, decomposition obligations, shell/special terminal sites, reviewed Cache/CI/Quality/Yeet dispatch, policy API and invalidation/rollback instructions. The rebuild checks source bindings and exact reviewed command inventory. |
 | Package/protocol and final-head quality | Live REST results for the final PR head show 35 successful check runs, one skipped check run and three successful commit statuses: 38 successful, one skipped, zero failed or pending. Published receipts and direct historical tool output support the original proof; missing original private files prevent a new check of their bytes and per-lane digests. |
-| Readiness and reviews | The operator's accepted exception governs the missed pre-merge ordering. An October 2 GraphQL result records eight resolved threads with complete pagination and no unanswered human follow-up. October 6 REST comments have no later updates than October 2 at 14:38:17 UTC. GraphQL rate limiting prevented a fresh resolution-flag check; unchanged comments do not prove those flags. |
+| Readiness and reviews | The operator's accepted exception governs the missed pre-merge ordering. The historical October 2 result and a successful October 6 publication-time GraphQL refresh both show eight resolved threads with complete pagination. Comment timestamps show no later human follow-up; the latest thread update remains October 2 at 14:38:17 UTC. The initial recovery audit was rate limited; that observation limit was cleared before this addendum was finalized. |
 | Same-PR closeout and retirement | The actual merge contains the acceptance audit, signed qualification, adoption bundle, quality receipt, reflection and completed-retained lifecycle. The former implementation worktree and branch remain absent. The residue archive recorded by the retirement command is now missing. |
 
 The pilot remains `@beep/identity#lint` × `turbo-task-result` ×
@@ -89,9 +89,6 @@ The following evidence could not be located:
    original records and issuer authority from a protected backup would permit
    revalidation of the authenticated 103-fragment import. A new execution would
    create new evidence with a new identity, not authenticate missing originals.
-3. **Fresh review-resolution flags.** A successful GraphQL refresh is still
-   needed to independently observe today's flags. Historical resolution and
-   unchanged REST comments are established; the audit does not claim more.
 
 The search did not inspect offline/external backups or inaccessible snapshot
 storage. Permission-denied paths and skipped dependency/Git-object directories
@@ -108,5 +105,6 @@ hashes passed 2/2; adoption hashes 11/11; reproduced artifacts 8/8.
 No implementation defect was demonstrated. Expensive native experiments and
 full proofs were not repeated merely because their archive is missing. The
 accepted lifecycle remains `completed-retained`; broad adoption remains separate.
+The publication-time review refresh closes the initial API observation gap.
 This documentation follow-up publishes the chronology and recovery limits while
 preserving all historical receipts under their original identities.
