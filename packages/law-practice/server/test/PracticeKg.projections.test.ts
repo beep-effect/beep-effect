@@ -437,6 +437,95 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.makeDirectory(path.join(archiveCollectionRoot, "not-an-artifact"));
 });
 
+// A later source run the organizer never saw, laid out like the attorney's
+// working folders. Every name and number here is invented.
+const workingRun = "2026-10-working-files";
+const workingDigests = {
+  ambiguous: `sha256:${Str.repeat(64)("2")}`,
+  keyed: `sha256:${Str.repeat(64)("9")}`,
+  newMatter: `sha256:${Str.repeat(64)("8")}`,
+  registered: `sha256:${Str.repeat(64)("6")}`,
+  textKeyed: `sha256:${Str.repeat(64)("7")}`,
+};
+const workingClients = { register: "33333", text: "44444" } as const;
+const workingFiles = [
+  [
+    workingDigests.keyed,
+    `Clients/Example Client ${fixtureClients.alpha}/20001US01 - ${fixtureClients.alpha}.00012/Filing receipt.txt`,
+  ],
+  [
+    workingDigests.newMatter,
+    `Clients/Second Client ${fixtureClients.beta}/30002BR01 - ${fixtureClients.beta}.00003/Annuity notice.txt`,
+  ],
+  [workingDigests.textKeyed, "Loose files/40004ZA01/Notice.txt"],
+  // no client in the path or the text, and no other document in its family: the register may speak
+  [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
+  [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
+  // a second copy of an organized file adds no document
+  [fixtureDigests.family, "Loose files/family-notes copy.txt"],
+] as const;
+
+const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(function* (corpusRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.gen(function* () {
+    const db = yield* DuckDb;
+    yield* Effect.forEach(
+      workingFiles,
+      ([digest, relativePath], index) =>
+        db.run(
+          `INSERT INTO corpus_source_files VALUES ('${workingRun}', 'source-b', $1, $2, '2026-01-02T03:04:07.000Z', $3)`,
+          [relativePath, index + 30, digest]
+        ),
+      { discard: true }
+    );
+  }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
+  const extractRoot = path.join(corpusRoot, "staging", `extract-${workingRun}`);
+  yield* fs.makeDirectory(path.join(extractRoot, "text"), { recursive: true });
+  const texts = [
+    // the text names another client for the folder's docket: the folder wins
+    ["keyed", workingDigests.keyed, `filing receipt for ${fixtureClients.beta}.20001US01`],
+    // only the text names a client, under a country stage the old scan did not know
+    ["text", workingDigests.textKeyed, `notice for ${workingClients.text}.40004ZA01`],
+  ] as const;
+  const sourceLines = yield* Effect.forEach(texts, ([name, digest]) =>
+    encodeFixtureSource(
+      FixtureSourceRow.make({
+        artifactId: `artifact-working-${name}`,
+        digest,
+        engine: "tika",
+        format: "text",
+        operationId: `operation:op-working-${name}`,
+        relativePath: `text/operation:op-working-${name}.txt`,
+        sizeBytes: 20,
+        status: "succeeded",
+      })
+    )
+  );
+  yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
+  yield* Effect.forEach(
+    texts,
+    ([name, , text]) => fs.writeFileString(path.join(extractRoot, "text", `operation:op-working-${name}.txt`), text),
+    { discard: true }
+  );
+  const registerPath = path.join(corpusRoot, "docket-register.jsonl");
+  yield* fs.writeFileString(
+    registerPath,
+    A.join(
+      [
+        `{"client":"${fixtureClients.alpha}","docket":"20001US09","clientName":"Example Client"}`,
+        // the beta document's own text names its client; the register must not move it
+        `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`,
+        `{"client":"${workingClients.register}","docket":"50005US01","clientName":"Register Client"}`,
+        `{"client":"${fixtureClients.beta}","docket":"30002BR01","clientName":"Second Client"}`,
+        `{"client":"${fixtureClients.beta}","docket":"30002BR02","clientName":"Second Client LLC"}`,
+      ],
+      "\n"
+    )
+  );
+  return registerPath;
+});
+
 const makeFixtureCorpus = Effect.fn("PracticeKgTest.makeFixtureCorpus")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -786,7 +875,7 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
-            '{"bundle_version":"2026-10-06-01","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
+            '{"bundle_version":"2026-10-06-02","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
           ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
       }),
@@ -1044,6 +1133,222 @@ describe("practice KG projections", () => {
 
         expect(result.counts.emails).toBe(0);
         expect(result.counts.documents).toBe(6);
+      }),
+      { timeout: 120_000 }
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "folds an included run in, reads its folder paths, and keeps the docket register for unnamed families",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const registerPath = yield* addWorkingFilesRun(corpusRoot);
+        const baseOut = path.join(corpusRoot, "bundle-base");
+        const bundleOut = path.join(corpusRoot, "bundle-working");
+
+        // Left out, the run changes nothing: not the documents, not their origin chains.
+        const base = yield* runBuild(
+          PracticeKgOptions.make({ ...graphOptions(corpusRoot, baseOut), skipEmails: true }),
+          baseOut
+        );
+        expect([base.counts.documents, base.baseDigests, base.includedRuns]).toStrictEqual([6, 6, []]);
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          const originLines = yield* db
+            .query(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, source_origin_chain FROM documents WHERE digest = $1) x",
+              [fixtureDigests.family]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(originLines, (row) => row.line)).toStrictEqual([
+            '{"run_label":"base","source_origin_chain":"base:fixture-source:family-notes.txt"}',
+          ]);
+        }).pipe(withDuckDb(path.join(baseOut, "practice.duckdb")));
+
+        const summary = yield* runBuild(
+          PracticeKgOptions.make({
+            ...graphOptions(corpusRoot, bundleOut),
+            docketRegisterPath: registerPath,
+            includeRuns: [workingRun],
+            skipEmails: true,
+          }),
+          bundleOut
+        );
+        expect([summary.counts.documents, summary.baseDigests, summary.includeRefresh]).toStrictEqual([11, 6, false]);
+        expect(summary.includedRuns).toStrictEqual([workingRun]);
+        const manifest = yield* fs
+          .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+          .pipe(Effect.flatMap(decodeManifestJson));
+        expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
+          "2026-10-06-02",
+          "3",
+          "3",
+        ]);
+        expect([
+          manifest.sourceRuns.base,
+          manifest.sourceRuns.includedRuns,
+          manifest.sourceRuns.refresh202607,
+        ]).toStrictEqual(["included", [workingRun], "excluded"]);
+
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          const lines = (statement: string) =>
+            db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
+          // One docket in the path files the row under it; two leave it unsorted.
+          expect(
+            yield* lines(
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' AND digest <> '${fixtureDigests.family}' ORDER BY digest) x`
+            )
+          ).toStrictEqual([
+            '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
+            '{"category":"docket","docket":"50005US01","docket_family":"50005","effective_name":"Letter.txt"}',
+            '{"category":"docket","docket":"40004ZA01","docket_family":"40004","effective_name":"Notice.txt"}',
+            '{"category":"docket","docket":"30002BR01","docket_family":"30002","effective_name":"Annuity notice.txt"}',
+            '{"category":"docket","docket":"20001US01","docket_family":"20001","effective_name":"Filing receipt.txt"}',
+          ]);
+          expect(
+            yield* lines("SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS text_rows FROM document_text) x")
+          ).toStrictEqual(['{"text_rows":6}']);
+          expect(
+            yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, client, client_name, attribution_source, document_count FROM matters ORDER BY family_key) x"
+            )
+          ).toStrictEqual([
+            `{"family_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","client_name":"Example Client","attribution_source":"folder-path","document_count":2}`,
+            '{"family_key":"20001","client":null,"client_name":null,"attribution_source":"filename","document_count":2}',
+            // the register lists another client for 20001US02, and names this client two ways
+            `{"family_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
+            `{"family_key":"${fixtureClients.beta}.30002","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"folder-path","document_count":1}`,
+            `{"family_key":"${workingClients.register}.50005","client":"${workingClients.register}","client_name":"Register Client","attribution_source":"docket-register","document_count":1}`,
+            `{"family_key":"${workingClients.text}.40004","client":"${workingClients.text}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
+          ]);
+        }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
+
+        const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+        const resources = Layer.mergeAll(
+          Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }),
+          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
+          Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
+        );
+        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer, PracticeKgMatterLookupLive).pipe(
+          Layer.provideMerge(resources)
+        );
+        yield* Effect.gen(function* () {
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          const documentLines = yield* sql
+            .unsafe(
+              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
+              [
+                workingDigests.registered,
+                workingDigests.ambiguous,
+                workingDigests.textKeyed,
+                workingDigests.newMatter,
+                workingDigests.keyed,
+                fixtureDigests.beta,
+              ]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(documentLines, (row) => row.line)).toStrictEqual([
+            '{"client":null,"docket_family":null,"attribution_source":"filename"}',
+            `{"client":"${workingClients.register}","docket_family":"50005","attribution_source":"docket-register"}`,
+            `{"client":"${workingClients.text}","docket_family":"40004","attribution_source":"text-reference"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"30002","attribution_source":"folder-path"}`,
+            `{"client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"folder-path"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference"}`,
+          ]);
+          const buildLines = yield* sql
+            .unsafe("SELECT row_to_json(x)::text AS line FROM (SELECT built_from_runs FROM kg_build) x")
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(buildLines, (row) => row.line)).toStrictEqual([`{"built_from_runs":"base | ${workingRun}"}`]);
+
+          const toolRows = (name: string, args: Readonly<Record<string, unknown>>) =>
+            callToolText(name, { budgetBytes: 20_000, ...args }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))))
+            );
+          const registered = yield* toolRows("kg_matter_lookup", { reference: "50005us01" });
+          expect(A.map(registered, (row) => [row.resolution, row.familyKey, row.clientName])).toStrictEqual([
+            ["unique", `${workingClients.register}.50005`, "Register Client"],
+          ]);
+          const notMoved = yield* toolRows("kg_matter_lookup", { reference: "20001US02" });
+          expect(A.map(notMoved, (row) => [row.resolution, row.familyKey])).toStrictEqual([
+            ["unique", `${fixtureClients.beta}.20001`],
+          ]);
+          const newStage = yield* toolRows("kg_matter_lookup", { reference: "30002BR01" });
+          // null cells are stripped before the envelope is built, so an all-null column is absent
+          expect(A.map(newStage, (row) => [row.resolution, row.docketKey, row.clientName ?? null])).toStrictEqual([
+            ["unique", `${fixtureClients.beta}.30002BR01`, null],
+          ]);
+          const clients = yield* toolRows("kg_clients", {});
+          expect(
+            A.map(
+              A.filter(clients, (row) => row.kind === "client"),
+              (row) => [row.naturalKey, row.label]
+            )
+          ).toStrictEqual([
+            [fixtureClients.alpha, "Example Client"],
+            [fixtureClients.beta, fixtureClients.beta],
+            [workingClients.register, "Register Client"],
+            [workingClients.text, workingClients.text],
+          ]);
+
+          const service = yield* PracticeKgMatterLookup;
+          const byClient = yield* service.lookup(
+            PracticeKgMatterLookupRequest.make({ reference: fixtureClients.alpha })
+          );
+          expect(A.map(byClient.matters, (matter) => [matter.familyKey, matter.clientName])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, "Example Client"],
+          ]);
+          const verified = yield* verifyPracticeKgBundle;
+          expect(verified.ok).toBe(true);
+        }).pipe(provideScopedLayer(host));
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "builds from an included run that has no extract tree, and will not replace a bundle unasked",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const bundleOut = path.join(corpusRoot, "bundle-unextracted-run");
+        const options = PracticeKgOptions.make({
+          ...graphOptions(corpusRoot, bundleOut),
+          includeRuns: ["never-extracted"],
+          skipEmails: true,
+        });
+
+        const summary = yield* runBuild(options, bundleOut);
+        expect([summary.counts.documents, summary.includedRuns]).toStrictEqual([6, ["never-extracted"]]);
+
+        const error = yield* Effect.flip(runBuild(options, bundleOut));
+        expect(error.message).toBe(`Graph bundle already exists at "${bundleOut}"; pass --overwrite to replace it.`);
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "refuses to build from a docket register with a bad line, naming the line",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const registerPath = path.join(corpusRoot, "docket-register.jsonl");
+        yield* fs.writeFileString(registerPath, '{"client":"11111","docket":"20001US01"}\n{"client":"11111"}\n');
+        const bundleOut = path.join(corpusRoot, "bundle-bad-register");
+
+        const error = yield* Effect.flip(
+          runBuild(
+            PracticeKgOptions.make({ ...graphOptions(corpusRoot, bundleOut), docketRegisterPath: registerPath }),
+            bundleOut
+          )
+        );
+
+        expect(error._tag).toBe("PracticeKgProjectionError");
+        expect(error.message).toBe(`Docket register "${registerPath}" line 2 is not a valid register row.`);
       }),
       { timeout: 120_000 }
     );
