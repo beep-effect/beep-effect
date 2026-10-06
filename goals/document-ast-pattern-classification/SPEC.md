@@ -39,11 +39,11 @@ tests are derived.
 
 ## Acceptance Criteria
 
-- [ ] Every live tagged constructor has exactly one valid PO annotation.
-- [ ] A derived report covers Md/Pandoc/Lexical correspondence exhaustively.
-- [ ] Property tests prove preserved-or-explicitly-demoted behavior.
-- [ ] Existing Pandoc and Lexical diagnostics remain canonical.
-- [ ] Adding an unannotated constructor fails focused exhaustiveness proof.
+- [x] Every live tagged constructor has exactly one valid PO annotation.
+- [x] A derived report covers Md/Pandoc/Lexical correspondence exhaustively.
+- [x] Property tests prove preserved-or-explicitly-demoted behavior.
+- [x] Existing Pandoc and Lexical diagnostics remain canonical.
+- [x] Adding an unannotated constructor fails focused exhaustiveness proof.
 
 ## Decision Log
 

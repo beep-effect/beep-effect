@@ -334,7 +334,7 @@
     "pdfjs-dist": "catalog:",
     "postcss": "^8.5.23",
     "postcss-selector-parser": "^7.1.6",
-    "proxy-addr": "^2.0.8",
+    "proxy-addr": "2.0.8",
     "protobufjs": "^7.6.6",
     "sharp": "catalog:",
     "smol-toml": "^1.9.0",
