@@ -50,6 +50,7 @@
     "@beep/agents-server": "workspace:^",
     "@beep/agents-use-cases": "workspace:^",
     "@beep/anthropic": "workspace:^",
+    "@beep/box": "workspace:^",
     "@beep/cosmos": "workspace:^",
     "@beep/doc-text": "workspace:^",
     "@beep/dock": "workspace:^",

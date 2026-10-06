@@ -71,6 +71,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/provenance": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-browser": "catalog:",

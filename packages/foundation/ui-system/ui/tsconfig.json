@@ -19,6 +19,9 @@
   },
   "references": [
     {
+      "path": "../../modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../modeling/schema/tsconfig.json"
     },
     {

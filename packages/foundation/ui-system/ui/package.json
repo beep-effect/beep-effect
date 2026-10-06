@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
+    "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/atom-react": "catalog:",

@@ -222,6 +222,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
+    "@beep/fc-runs": "workspace:^",
+    "@beep/test-runner": "workspace:^",
     "@commitlint/is-ignored": "catalog:",
     "@effect/platform-node-shared": "catalog:",
     "@effect/vitest": "catalog:",

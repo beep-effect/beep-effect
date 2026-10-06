@@ -60,6 +60,7 @@
     "./values/CourtReporterVocabulary": "./src/values/CourtReporterVocabulary/index.ts",
     "./values/DocketDeadline": "./src/values/DocketDeadline/index.ts",
     "./values/KindCode": "./src/values/KindCode/index.ts",
+    "./values/MailTagging": "./src/values/MailTagging/index.ts",
     "./values/ObservationVersionRef": "./src/values/ObservationVersionRef/index.ts",
     "./values/OfficeCode": "./src/values/OfficeCode/index.ts",
     "./values/PatentDocument": "./src/values/PatentDocument/index.ts",
@@ -81,6 +82,7 @@
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
