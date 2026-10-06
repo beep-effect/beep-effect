@@ -154,9 +154,11 @@ attachment and hashes its bytes, and refuses with a typed mismatch unless:
 
 A stored attachment that cannot be verified refuses the send with
 `attachments`: an item or reference attachment, an inline one, one without a
-name, one for which Graph reports no size, or one that cannot be downloaded. So does a draft with more attachments
-than the configured count limit, or whose attachments Graph reports as more
-than twice the per-message byte limit; neither is downloaded.
+name, one for which Graph reports no size, or one that cannot be downloaded.
+So does an attachment listing that continues on another page, a draft with
+more attachments than the configured count limit, and a draft whose
+attachments Graph reports as more than twice the per-message byte limit; none
+of these is downloaded.
 
 A draft this server created and that was edited in Outlook afterwards is
 still sendable, but it cannot be sent on a stale description, whether the edit changed a recipient or swapped
@@ -224,8 +226,11 @@ leaves a partial record at the end of a file, the next record still starts
 on a line of its own; readers skip empty lines and lines that do not decode
 (D-25).
 
-After an `unknown` outcome the caller calls `get_draft`: a draft that is gone
-from Drafts was sent. The send is never replayed blindly.
+After an `unknown` outcome the caller calls `get_draft`. A draft that is still
+there was not sent. A draft that is gone from Drafts was probably sent; the
+caller confirms it in Sent Items before reporting it as sent, because a draft
+can also be deleted or moved by another client. The send is never replayed
+blindly.
 
 ### Authentication
 

@@ -89,7 +89,7 @@ The result's `outcome` is one of:
 | --- | --- | --- |
 | `sent` | Graph accepted the send. | Nothing. |
 | `refused` | Nothing was sent. `mismatches` names the differing fields. | Read the draft with `get_draft` and restate it. |
-| `unknown` | The request may or may not have reached Graph. | Call `get_draft`. A draft that is gone, or is no longer a draft, was sent. Never send again blindly. |
+| `unknown` | The request may or may not have reached Graph. | Call `get_draft`. A draft that is still there was not sent. One that is gone, or is no longer a draft, was probably sent: confirm it in Sent Items before reporting it as sent, since a draft can also be deleted or moved elsewhere. Never send again blindly. |
 
 A request Graph rejects outright is a tool error; nothing was sent.
 

@@ -137,8 +137,12 @@ pipe(
               const toolkit = yield* OutboxToolkit;
               const prepared = yield* prepare(`beep outbox live smoke (draft only) ${yield* Clock.currentTimeMillis}`);
 
-              const view = yield* head(
-                yield* toolkit.handle("m365_outbox_get_draft", { draftId: prepared.draft.draftId })
+              // A failed readback must not leave the synthetic draft in the mailbox.
+              const view = yield* toolkit.handle("m365_outbox_get_draft", { draftId: prepared.draft.draftId }).pipe(
+                Effect.flatMap(head),
+                Effect.onError(() =>
+                  Effect.ignore(toolkit.handle("m365_outbox_delete_draft", { draftId: prepared.draft.draftId }))
+                )
               );
               const deleted = yield* head(
                 yield* toolkit.handle("m365_outbox_delete_draft", { draftId: prepared.draft.draftId })

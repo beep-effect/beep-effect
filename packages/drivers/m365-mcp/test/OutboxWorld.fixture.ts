@@ -109,6 +109,7 @@ type WorldState = {
   /** Draft ids an earlier server run recorded creating, beyond what `records` holds. */
   readonly knownDraftIds: ReadonlyArray<string>;
   readonly nextId: number;
+  readonly pagedListing: boolean;
   readonly records: ReadonlyArray<OutboxAuditRecord>;
   readonly sendFailure: O.Option<M365Error>;
   readonly userIds: ReadonlyArray<O.Option<string>>;
@@ -125,6 +126,7 @@ const initialState: WorldState = {
   files: [fixtureFile],
   knownDraftIds: [DRAFT_ID],
   nextId: 1,
+  pagedListing: false,
   records: [],
   sendFailure: O.none(),
   userIds: [],
@@ -246,8 +248,10 @@ const StubM365Layer = Layer.effect(
       // Like Graph, the listing reports a size that is not the content length.
       listMessageAttachments: Effect.fn("StubM365.listMessageAttachments")(function* (request) {
         yield* called("listMessageAttachments", request);
+        const current = yield* Ref.get(state);
         return M365AttachmentCollection.make({
-          value: A.map((yield* Ref.get(state)).files, (file) =>
+          "@odata.nextLink": current.pagedListing ? O.some("https://graph.example.test/v1.0/next-page") : O.none(),
+          value: A.map(current.files, (file) =>
             GraphAttachment.make({
               "@odata.type": O.some(file.odataType),
               id: file.id,

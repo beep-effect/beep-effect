@@ -280,7 +280,7 @@ export class OutboxSendResult extends S.Class<OutboxSendResult>($I`OutboxSendRes
     ),
     outcome: OutboxSendOutcome.annotateKey({
       description:
-        "`sent`: Graph accepted the send. `refused`: nothing was sent. `unknown`: the send may or may not have happened; call get_draft and do not send again blindly.",
+        "`sent`: Graph accepted the send. `refused`: nothing was sent. `unknown`: the send may or may not have happened; call get_draft (a draft that is gone was probably sent: confirm in Sent Items) and do not send again blindly.",
     }),
   },
   $I.annote("OutboxSendResult", { description: "How a send ended, with its audit id." })

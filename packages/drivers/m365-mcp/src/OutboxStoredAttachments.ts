@@ -227,6 +227,14 @@ export const readStoredAttachments = Effect.fn("OutboxStoredAttachments.read")(f
   );
   const attachments = listed.value;
   const count = A.length(attachments);
+  // A further page would hold attachments that none of the checks below, nor the send guard, would see.
+  if (O.isSome(listed["@odata.nextLink"])) {
+    return yield* failure(
+      "unreadable",
+      count,
+      "The draft's attachment listing continues on another page, so its attachments cannot all be verified."
+    );
+  }
   const reported = reportedBytes(attachments);
   yield* Effect.annotateCurrentSpan({
     m365_outbox_stored_attachment_count: count,

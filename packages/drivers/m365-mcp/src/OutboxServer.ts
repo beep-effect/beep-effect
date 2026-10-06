@@ -45,7 +45,7 @@ import type { M365McpServerConfig } from "./Server.ts";
  * @since 0.1.0
  */
 export const M365_OUTBOX_MCP_INSTRUCTIONS =
-  "Microsoft 365 outbox for one configured mailbox: prepare a mail draft with attachments from local paths, read or delete that draft, send it, and create or update calendar events. Only m365_outbox_send_draft sends mail. It sends exactly the stored draft and refuses when the draft differs from the expect block, so restate the recipients, subject and attachments (name, size and sha256 exactly as create_draft or get_draft returned them). After an outcome of unknown, call m365_outbox_get_draft: a draft that is gone was sent. Never send again blindly. Clients may open with an initialize handshake or call tools directly; both work.";
+  "Microsoft 365 outbox for one configured mailbox: prepare a mail draft with attachments from local paths, read or delete that draft, send it, and create or update calendar events. Only m365_outbox_send_draft sends mail. It sends exactly the stored draft and refuses when the draft differs from the expect block, so restate the recipients, subject and attachments (name, size and sha256 exactly as create_draft or get_draft returned them). After an outcome of unknown, call m365_outbox_get_draft: a draft that is still there was not sent; a draft that is gone was probably sent, so confirm it in Sent Items before reporting it as sent. Never send again blindly. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Services the outbox handlers need: the driver, the attachment source and the
