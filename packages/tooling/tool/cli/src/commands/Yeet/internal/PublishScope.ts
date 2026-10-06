@@ -1316,26 +1316,7 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
  * @since 0.0.0
  */
 export const postCommitProofChangedBeforePushMessage =
-  "yeet publish stopped because the full proof changed files after the local commit. Regenerate them, then amend or reset the commit that has not yet been pushed before retrying.";
-
-/**
- * Failure message used when start-pr-early proof changes files after the early
- * push.
- *
- * **Example** (Check the post-push remediation text)
- *
- * ```ts
- * import { strictEqual } from "node:assert"
- * import { postCommitProofChangedAfterEarlyPushMessage } from "@beep/repo-cli/test/Yeet"
- *
- * strictEqual(postCommitProofChangedAfterEarlyPushMessage.includes("follow-up fix"), true)
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const postCommitProofChangedAfterEarlyPushMessage =
-  "yeet publish --start-pr-early stopped because the full proof changed files after the commit was already pushed. Commit a follow-up fix and publish again.";
+  "yeet publish stopped because the local proof changed files after the local commit. Regenerate them, then amend or reset the commit that has not yet been pushed before retrying.";
 
 /**
  * Confirm that the post-commit full proof left the worktree unchanged.

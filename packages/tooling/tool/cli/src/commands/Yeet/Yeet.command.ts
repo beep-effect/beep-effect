@@ -62,10 +62,11 @@ import {
 } from "./internal/ProofJob.ts";
 import { ProofJobLauncher, ProofJobWaitResult, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
 import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
+import { runYeetReady } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
 import { parsePrRef, runYeetResume } from "./internal/Resume.ts";
 import { YeetCommandError } from "./Yeet.errors.ts";
-import { YeetRunOptions } from "./Yeet.schemas.ts";
+import { YeetReadyOptions, YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 import type { ProofJobLauncherShape } from "./internal/ProofJobLauncher.ts";
 
@@ -153,19 +154,18 @@ const messageFlag = Flag.String("message").pipe(
   Flag.withDefault("")
 );
 
-const fastFlag = Flag.Boolean("fast").pipe(
+const proveFirstFlag = Flag.Boolean("prove-first").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Skip local full pre-push proof only when paired with --monitor on a PR branch")
-);
-
-const startPrEarlyFlag = Flag.Boolean("start-pr-early").pipe(
-  Flag.withDefault(false),
-  Flag.withDescription("Push with hooks skipped before full local proof, then run proof and monitor hosted checks")
+  Flag.withDescription(
+    "Run the full local proof and CI parity before the push (the pre-push-first order) instead of cheap-gates only"
+  )
 );
 
 const monitorFlag = Flag.Boolean("monitor").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Monitor hosted PR checks after publish instead of stopping at push")
+  Flag.withDescription(
+    "Watch hosted PR checks attached after publish instead of submitting the detached --until-ready monitor"
+  )
 );
 
 const untilReadyFlag = Flag.Boolean("until-ready").pipe(
@@ -241,8 +241,10 @@ const allowStaleBaseFlag = Flag.Boolean("allow-stale-base").pipe(
 );
 
 const prFlag = Flag.Boolean("pr").pipe(
-  Flag.withDefault(false),
-  Flag.withDescription("Create a ready (non-draft) pull request after the push succeeds, unless one is already open")
+  Flag.withDefault(true),
+  Flag.withDescription(
+    "Open a draft pull request labelled ready-for-heavy after the push unless one is already open (default); --no-pr pushes without one, so no hosted checks run"
+  )
 );
 
 const noEditFlag = Flag.Boolean("no-edit").pipe(
@@ -461,16 +463,15 @@ const publishFlags = {
   ...sharedFlags,
   allowStaleBase: allowStaleBaseFlag,
   amend: amendFlag,
-  fast: fastFlag,
   message: messageFlag,
   monitor: monitorFlag,
   noEdit: noEditFlag,
   pr: prFlag,
+  proveFirst: proveFirstFlag,
   pushOnly: pushOnlyFlag,
   reuseVerified: reuseVerifiedFlag,
   stagedOnly: stagedOnlyFlag,
   stateRoot: yeetStateRootFlag,
-  startPrEarly: startPrEarlyFlag,
   summary: summaryFlag,
 } as const;
 
@@ -613,10 +614,6 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
-    fast: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ),
     head: S.String,
     json: S.Boolean,
     merged: S.Boolean.pipe(
@@ -638,6 +635,10 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
     packetDir: S.String,
     plan: S.Boolean,
     pr: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    proveFirst: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
@@ -679,10 +680,6 @@ class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
-    startPrEarly: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ),
     summary: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
@@ -712,13 +709,13 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       bots: sharedOptions.bots,
       ciParity: sharedOptions.ciParity,
       collectAll: sharedOptions.collectAll || sharedOptions.noFailFast,
-      fast: sharedOptions.fast,
       merged: sharedOptions.merged,
       message: options.message ?? "",
       mode,
       monitor: sharedOptions.monitor,
       noEdit: sharedOptions.noEdit,
       pr: sharedOptions.pr,
+      proveFirst: sharedOptions.proveFirst,
       pushOnly: sharedOptions.pushOnly,
       remote: sharedOptions.remote,
       replyBody: sharedOptions.replyBody,
@@ -730,7 +727,6 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       retriggerGreptile: sharedOptions.retriggerGreptile,
       reuseVerified: sharedOptions.reuseVerified,
       stagedOnly: sharedOptions.stagedOnly,
-      startPrEarly: sharedOptions.startPrEarly,
       summary: sharedOptions.summary,
       tier: sharedOptions.tier,
     })
@@ -993,7 +989,11 @@ const yeetRepairCommand = Command.make("repair", { ...sharedFlags, ...detachedFl
 
 const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, ...options }) =>
   provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
-).pipe(Command.withDescription("Commit reviewed staged changes, prove the commit, then push"));
+).pipe(
+  Command.withDescription(
+    "Commit reviewed staged changes, run cheap-gates, push to a draft PR, and submit the detached readiness monitor"
+  )
+);
 
 const YeetMonitorCommandRoute = LiteralKit([
   "classic",
@@ -1135,6 +1135,14 @@ const yeetMergeCommand = Command.make("merge", porcelainFlags, (options) => runY
 
 const yeetReplyCommand = Command.make("reply", porcelainFlags, (options) => runYeetReplyPass(options)).pipe(
   Command.withDescription("Post and resolve the drafted review-thread replies for this branch's pull request")
+);
+
+const yeetReadyCommand = Command.make("ready", porcelainFlags, (options) =>
+  runYeetReady(YeetReadyOptions.make(options))
+).pipe(
+  Command.withDescription(
+    "Flip this branch's draft pull request to ready once every review thread is answered and required checks are green"
+  )
 );
 
 const yeetCloseoutCommand = Command.make("closeout", closeoutFlags, (options) => runYeetMode("closeout", options)).pipe(
@@ -1330,6 +1338,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetSweepCommand,
     yeetMergeCommand,
     yeetReplyCommand,
+    yeetReadyCommand,
     yeetInboxCommand,
     yeetJobCommand,
     yeetProofReportCommand,

@@ -60,6 +60,17 @@ console.log(safeHtmlValue(safeHtml))
 the canonical deny-by-default policy, and returns that package's opaque,
 runtime-issued `SafeHtml`.
 
+## Pattern Ontology classification
+
+Every tagged constructor carries a `po` schema annotation naming its Pattern
+Ontology content-model pattern (`atom`, `inline`, `block`, `milestone`, `meta`,
+`field`, `container`, `table`, ...), read through `@beep/schema/PatternOntology`.
+The pattern is part of the constructor's meaning, not a sidecar table: inline
+members are flow patterns, block members are container-level patterns, and the
+`Li`/`TaskItem` tight-list shorthand classifies as `container` because that is
+the content it must hold. The Pandoc and Lexical packages derive their
+correspondence and conservation proofs from these annotations.
+
 ## Rendering contract
 
 `Md.render`, `Md.renderHtml`, and `Md.renderWith` are synchronous pure render APIs that return

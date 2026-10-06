@@ -27,6 +27,7 @@ import { hasStrictNodeChildren, isStrictLexicalNode } from "./internal/conforman
 import { PosInt } from "./internal/PosInt.ts";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
+import type * as PatternOntology from "@beep/schema/PatternOntology";
 import type * as R from "effect/Record";
 import type * as AST from "effect/SchemaAST";
 
@@ -1322,7 +1323,10 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
   {
     type: S.tag("text"),
   },
-  $I.annote("TextNode", { description: "A serialized Lexical text leaf node." })
+  $I.annote("TextNode", {
+    po: "atom",
+    description: "A serialized Lexical text leaf node.",
+  })
 ) {}
 
 /**
@@ -1395,6 +1399,7 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
     text: S.Literal("\t"),
   },
   $I.annote("TabNode", {
+    po: "atom",
     description: "A serialized Lexical tab leaf node with canonical tab text, mode, and unmergeable detail.",
   })
 ) {}
@@ -1467,7 +1472,10 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
   {
     type: S.tag("linebreak"),
   },
-  $I.annote("LineBreakNode", { description: "A serialized Lexical line-break leaf node." })
+  $I.annote("LineBreakNode", {
+    po: "milestone",
+    description: "A serialized Lexical line-break leaf node.",
+  })
 ) {}
 
 /**
@@ -1528,7 +1536,10 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
   {
     type: S.tag("root"),
   },
-  $I.annote("RootNode", { description: "The serialized Lexical document root element." })
+  $I.annote("RootNode", {
+    po: "container",
+    description: "The serialized Lexical document root element.",
+  })
 ) {}
 
 /**
@@ -1589,7 +1600,10 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
   {
     type: S.tag("paragraph"),
   },
-  $I.annote("ParagraphNode", { description: "A serialized Lexical paragraph element node." })
+  $I.annote("ParagraphNode", {
+    po: "block",
+    description: "A serialized Lexical paragraph element node.",
+  })
 ) {}
 
 /**
@@ -1651,7 +1665,10 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
     type: S.tag("heading"),
     tag: HeadingTag.annotateKey({ description: "Heading level tag." }),
   },
-  $I.annote("HeadingNode", { description: "A serialized Lexical heading element node." })
+  $I.annote("HeadingNode", {
+    po: "block",
+    description: "A serialized Lexical heading element node.",
+  })
 ) {}
 
 /**
@@ -1700,6 +1717,12 @@ export declare namespace HeadingNode {
 /**
  * Mirrors `SerializedQuoteNode` from `@lexical/rich-text`.
  *
+ * **Gotchas**
+ *
+ * The class-level `po` annotation is `block`, the legacy inline-children
+ * realization. Use `QuoteNode.poPatternOf(node)` for an instance: a
+ * shadow-root quote is a `container`.
+ *
  * **Example** (Use the lexical model)
  *
  * ```ts import.meta.vitest name="Use the lexical model"
@@ -1723,9 +1746,39 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
     ),
   },
   $I.annote("QuoteNode", {
+    po: "block",
     description: "A serialized Lexical quote whose optional shadow-root mode controls its child grammar.",
   })
-) {}
+) {
+  /**
+   * Resolves the Pattern Ontology pattern of one quote instance.
+   *
+   * **Details**
+   *
+   * `QuoteNode` is a multi-pattern constructor. The class-level `po`
+   * annotation names the legacy realization, whose children are inline text
+   * (`block`). A shadow-root quote holds block children and no direct text, so
+   * that instance is a `container`.
+   *
+   * **Example** (Refine legacy and shadow-root quotes)
+   *
+   * ```ts import.meta.vitest name="Refine legacy and shadow-root quotes"
+   * import * as O from "effect/Option"
+   * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
+   *
+   * const legacy = QuoteNode.make({ children: [] })
+   * const shadowRoot = QuoteNode.make({ children: [], shadowRoot: O.some(true) })
+   *
+   * QuoteNode.poPatternOf(legacy) // => "block"
+   * QuoteNode.poPatternOf(shadowRoot) // => "container"
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  static readonly poPatternOf = (node: QuoteNode): PatternOntology.PoPattern =>
+    O.contains(node.shadowRoot, true) ? "container" : "block";
+}
 
 /**
  * Companion namespace for {@link QuoteNode}.
@@ -1813,7 +1866,10 @@ const ListNodeFields = S.Struct({
  */
 export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
   ListNodeFields,
-  $I.annote("ListNode", { description: "A serialized Lexical list element node." })
+  $I.annote("ListNode", {
+    po: "table",
+    description: "A serialized Lexical list element node.",
+  })
 ) {
   /**
    * Type guard narrowing an arbitrary Lexical node to a list node.
@@ -1957,7 +2013,10 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
     ),
     value: LexicalListItemValue.annotateKey({ description: "Ordinal value within the list." }),
   },
-  $I.annote("ListItemNode", { description: "A serialized Lexical list-item element node." })
+  $I.annote("ListItemNode", {
+    po: "container",
+    description: "A serialized Lexical list-item element node.",
+  })
 ) {
   /**
    * Type guard narrowing an arbitrary Lexical node to a list-item node.
@@ -2044,7 +2103,10 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
       S.annotateKey({ description: "Optional anchor title attribute." })
     ),
   },
-  $I.annote("LinkNode", { description: "A serialized Lexical hyperlink element node." })
+  $I.annote("LinkNode", {
+    po: "inline",
+    description: "A serialized Lexical hyperlink element node.",
+  })
 ) {}
 
 /**
@@ -2125,7 +2187,10 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
       S.annotateKey({ description: "Optional code highlight theme." })
     ),
   },
-  $I.annote("CodeNode", { description: "A serialized Lexical fenced code-block element node." })
+  $I.annote("CodeNode", {
+    po: "block",
+    description: "A serialized Lexical fenced code-block element node.",
+  })
 ) {}
 
 /**
@@ -2204,7 +2269,10 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
       })
     ),
   },
-  $I.annote("ArtifactRefNode", { description: "A serialized block-level reference to a runtime artifact." })
+  $I.annote("ArtifactRefNode", {
+    po: "meta",
+    description: "A serialized block-level reference to a runtime artifact.",
+  })
 ) {}
 
 /**
@@ -2285,7 +2353,10 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
       S.annotateKey({ description: "Block alignment format token applied to the embed." })
     ),
   },
-  $I.annote("YouTubeNode", { description: "A serialized YouTube decorator block node." })
+  $I.annote("YouTubeNode", {
+    po: "meta",
+    description: "A serialized YouTube decorator block node.",
+  })
 ) {}
 
 /**
@@ -2383,7 +2454,10 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
       })
     ),
   },
-  $I.annote("TableCellNode", { description: "A serialized Lexical table cell element node." })
+  $I.annote("TableCellNode", {
+    po: "container",
+    description: "A serialized Lexical table cell element node.",
+  })
 ) {
   /**
    * Type guard narrowing an arbitrary Lexical node to a table cell node.
@@ -2470,7 +2544,10 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
       S.annotateKey({ description: "Optional row height emitted by Lexical table nodes." })
     ),
   },
-  $I.annote("TableRowNode", { description: "A serialized Lexical table row element node." })
+  $I.annote("TableRowNode", {
+    po: "table",
+    description: "A serialized Lexical table row element node.",
+  })
 ) {
   /**
    * Type guard narrowing an arbitrary Lexical node to a table row node.
@@ -2561,7 +2638,10 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
       S.annotateKey({ description: "Optional number of frozen rows emitted by Lexical table nodes." })
     ),
   },
-  $I.annote("TableNode", { description: "A serialized Lexical table element node." })
+  $I.annote("TableNode", {
+    po: "table",
+    description: "A serialized Lexical table element node.",
+  })
 ) {}
 
 /**

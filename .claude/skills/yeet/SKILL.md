@@ -7,8 +7,9 @@ description: Canonical repo-quality operator workflow for beep-effect. Use when 
 
 Use this skill when a user asks to repair, verify, publish, push, open a PR, or
 make a branch mergeable in this repository. Yeet is the canonical operator path
-for End-to-End Green: deterministic local repair, full local proof, reviewed
-commit, push, PR checks, review closeout, and merge readiness.
+for End-to-End Green: deterministic local repair, cheap-gates before the push,
+reviewed commit, push to a draft PR, hosted checks and review as the
+authoritative proof, review closeout, and merge readiness.
 
 ## Ground First
 
@@ -129,10 +130,34 @@ bun run beep yeet verify --tier cheap-gates
 bun run beep yeet verify --tier review-fix
 ```
 
-- Commit reviewed staged changes, run the full local pre-push proof, then push:
+- Commit reviewed staged changes, run cheap-gates and the head-install
+  preflight, push, open a draft PR labelled `ready-for-heavy`, submit the
+  detached readiness monitor, and exit with the PR URL and job id
+  (push-first-publish D1–D8; this is the default and needs no extra flag):
 
 ```bash
 bun run beep yeet publish --message "type(scope): summary"
+```
+
+- Push without opening a pull request (no hosted checks run until one exists):
+
+```bash
+bun run beep yeet publish --no-pr --message "type(scope): summary"
+```
+
+- Run the full local proof and CI parity before the push (the pre-2026-10-05
+  order; use only when a local full proof is explicitly wanted first):
+
+```bash
+bun run beep yeet publish --prove-first --message "type(scope): summary"
+```
+
+- Flip this branch's draft PR to ready once every review thread is answered
+  and the required checks are green on the current head (refuses otherwise and
+  names the blocker; there is no `--force`):
+
+```bash
+bun run beep yeet ready
 ```
 
 - Publish exactly the staged index from a dirty worktree (unstaged/untracked
@@ -144,12 +169,11 @@ bun run beep yeet publish --message "type(scope): summary"
 bun run beep yeet publish --staged-only --message "type(scope): summary"
 ```
 
-- Create the pull request in-flow after a green push (skips when an open PR
-  already exists; composes with --staged-only, --monitor, and
-  --start-pr-early):
+- Stay attached to hosted PR checks after the push instead of submitting the
+  detached readiness monitor (opt-in; the fleet default is detached):
 
 ```bash
-bun run beep yeet publish --pr --monitor --message "type(scope): summary"
+bun run beep yeet publish --monitor --message "type(scope): summary"
 ```
 
 - Reply to and resolve addressed review threads during closeout (explicit
@@ -157,13 +181,6 @@ bun run beep yeet publish --pr --monitor --message "type(scope): summary"
 
 ```bash
 bun run beep yeet closeout --reply-thread <thread-id> --reply-body "Fixed in <sha>." --resolve-threads <thread-id>[,<thread-id>...]
-```
-
-- Create or reuse the PR, start hosted review/checks immediately, then keep
-  proving locally:
-
-```bash
-bun run beep yeet publish --start-pr-early --monitor --pr --message "type(scope): summary"
 ```
 
 - Retry after a separately verified amend without creating a new commit:
@@ -302,12 +319,13 @@ cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep 
 
   `--json` prints one document; `--branch` is refused with `--retire`. Both
   the plan and the report name every goal packet the retired branch touched
-  whose lifecycle is still `active` (`[yeet] packet still active after merge:
-  goals/<slug> …`, `activePackets` in JSON): that packet's lifecycle flip
-  belonged in the merged PR, so open the closeout PR before moving on.
-  `bun run beep goals doctor` keeps flagging it as `active-after-merge` while
-  a merge commit cites the slug, nobody touches the packet, and its manifest
-  carries no `statusNote` or `blockedBy` saying why it stays open.
+  whose lifecycle is still `active` and whose manifest carries no
+  `statusNote` or `blockedBy` saying why it stays open (`[yeet] packet still
+  active after merge: goals/<slug> …`, `activePackets` in JSON): that packet's
+  lifecycle flip belonged in the merged PR, so open the closeout PR before
+  moving on. `bun run beep goals doctor` applies the same deferral and keeps
+  flagging the packet as `active-after-merge` while a merge commit cites the
+  slug and nobody touches it.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
@@ -412,10 +430,13 @@ bun run beep yeet sweep --plan --json
 prints the branch-deletion and ref-update steps with the git facts behind each
 one.
 
-## Authoritative Gates (green local must mean green CI)
+## Gates: cheap-gates before the push, hosted CI after
 
-`bun run beep yeet verify` (full tier) is the authoritative local gate. Its
-first step runs the cheap-gates tier. This tier runs 12 deterministic gates in
+Since 2026-10-05 (push-first-publish D1–D2) `yeet publish` gates the push on
+the cheap-gates tier and the head-install preflight only; hosted CI is the
+authoritative proof, and `bun run beep yeet verify` (full tier) is an
+on-demand tool for iterating on a red hosted lane locally, never an automatic
+publish step. The full tier's first step still runs the cheap-gates tier. This tier runs 12 deterministic gates in
 one collected wave, including config sync, tsgo rule parity, Effect imports,
 schema-first, goals checks, Knip, Fallow, changeset status, and the JSDoc
 ratchet against the committed inventory. It reports every failure before any
@@ -429,7 +450,8 @@ place (hosted lanes never carry those files, so that red was always
 local-only); drift in the tracked README status regions still fails
 `explore:atlas-check`.
 
-The full proof then dispatches the *hosted lane bodies themselves* — `beep ci lane`
+The full proof (`yeet verify`, or `publish --prove-first`) then dispatches
+the *hosted lane bodies themselves* — `beep ci lane`
 `check`, bare `lint`, `lint-policy`, bare `test-unit`, and `test-integration`,
 each with the affected shape used to select work in `check.yml`. Hosted Lint
 and Test Unit intersect that selected set with their deterministic package
@@ -462,8 +484,9 @@ authoritative** — do not conclude "it's green" from them:
 - `bun run beep yeet verify --tier cheap-gates` proves only the first tier. It
   never replaces the full proof.
 
-When in doubt, prove with `yeet verify` before trusting "green", and always
-prove with it before `publish`.
+When in doubt, prove with `yeet verify` before trusting "green". Do not run
+it to unblock a publish: push, let hosted CI prove the head, and run the full
+tier only to reproduce a hosted red locally.
 
 ## CI / security fixes: validate against the CI token's permissions
 
@@ -620,18 +643,22 @@ under the wave-exempt rule. Clear the answered ones once: list them with
 2. Stage the reviewed files explicitly.
 3. Run `bun run beep yeet status` when you need a compact local readiness
    snapshot before publishing.
-4. Run `bun run beep yeet publish --message "type(scope): summary"`.
-5. If no pull request exists for the pushed branch, prefer publishing with
-   `--pr` so Yeet creates a ready PR from the commit log and local proof
-   summary; `gh pr create --draft --fill` remains the manual fallback.
-6. As soon as the PR exists, submit the babysit loop as a detached job from
-   the checkout you are working in, and block on it from a background tool
-   call: `bun run beep yeet monitor --until-ready --detach`, then
-   `bun run beep yeet job wait <jobId>`. The job survives session restarts and
+4. Run `bun run beep yeet publish --message "type(scope): summary"`. It runs
+   cheap-gates and the head-install preflight, pushes, opens a **draft** PR
+   labelled `ready-for-heavy` when none is open (docs-only diffs skip the
+   label), submits `monitor --until-ready --detach`, prints the PR URL and job
+   id, and exits. A cheap-gates red blocks the push: read the gate line, run
+   `yeet repair`, publish again. Never wait on a queued full proof to publish.
+5. Push budget (D6): one push per fully addressed wave of inbox rows or review
+   threads, never per file or per comment. Every push costs a hosted run.
+6. Block on the job publish submitted: `bun run beep yeet job wait <jobId>`. The job survives session restarts and
    the ten-minute tool-call cap, but not a reboot: re-submit it after one.
    A required red or a base conflict does not end the monitor: it writes inbox
    rows and keeps polling across your fix pushes, so do not re-submit it after
-   a red. `job wait` returns 0 for green (the loop ended `ready`), 2 for a wave
+   a red. A fix `publish` on the same branch reads the job registry and reuses
+   the running monitor (it prints the existing job id and `job wait` command
+   and records the submit step as skipped); it submits a new job only when no
+   `submitted` or `running` monitor follows the PR. `job wait` returns 0 for green (the loop ended `ready`), 2 for a wave
    (new P0 rows or P1 thread and comment rows on this PR, or a required red
    that came back red on a rerun: read the gate line, act on the rows, publish
    any fix, then re-run `bun run beep yeet job wait <jobId>` on the same job),
@@ -643,23 +670,31 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    after the fix push. Exit 0 with
    `merge-ready: yes` means hand the PR to the operator; it does not merge it.
    On exit 1 or 3, read the summary line, fix the named blocker, publish, and
-   re-submit the monitor. A code PR holds at `heavy-not-admitted` until you
-   apply the `ready-for-heavy` label (see Merge Loop); do that once tier 1 is
-   green, not at publish. Act on unresolved review threads through the reply
+   re-submit the monitor. Publish applies the `ready-for-heavy` label when it
+   creates the draft PR, so a code PR is admitted to the heavy matrix from the
+   first push. A PR that existed before the publish, or one whose label edit
+   failed, holds at `heavy-not-admitted` until you add the label by hand (see
+   Merge Loop). Act on unresolved review threads through the reply
    flow while the loop waits. The loop runs read-first closeout automatically
    after the required checks settle. `monitor --summary` remains a one-shot
    compact read.
 7. Run `bun run beep yeet closeout --summary --require-review-comments 0`
    to inspect unresolved actionable review threads and review-bot findings.
-8. Use `bun run beep yeet verify --tier review-fix` while fixing PR comments,
-   then use normal Yeet publish or the exact-match amend retry when appropriate.
+8. While fixing PR comments, `bun run beep yeet verify --tier review-fix` is
+   optional local iteration; the fix wave still publishes through the default
+   push-first path.
 9. Address failed checks or actionable review comments with follow-up commits
    through the same Yeet publish path.
-10. Mark the PR ready only when checks are green, no review thread is
-    outstanding — unresolved, or resolved by the author with a later human
-    reviewer comment nobody answered, outdated threads included until they are
-    explicitly resolved — and GitHub reports the branch as mergeable or not
-    conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
+10. When the job ends `ready-pending-flip` (exit 0: threads answered, required
+    checks green, the draft flag is the only blocker) and no further push is
+    planned, run `bun run beep yeet ready`. It flips the draft only under that
+    gate on the current head and names the first blocker otherwise. Do not
+    flip while a fix wave is still coming: this account merges within minutes
+    of required-green, and a late push is dropped. Mergeable still means no
+    outstanding review thread — unresolved, or resolved by the author with a
+    later human reviewer comment nobody answered, outdated threads included
+    until they are explicitly resolved — and GitHub reports the branch as
+    mergeable or not conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
     that names the first failing criterion instead of making you read three
     surfaces.
 11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
@@ -781,31 +816,36 @@ position; a comment posted between an earlier monitor's exit and this submit
 is the accepted miss. Inline review comments reach the inbox as
 `review-thread` rows instead.
 
-## Fast Plus Monitor
+## Push-First Publish
 
-`bun run beep yeet publish --fast --monitor --message "..."` is opt-in only. Use
-it only on an existing PR branch when the user explicitly accepts replacing the
-local full pre-push wait with hosted PR-check monitoring. It must remain paired
-with `--monitor`; Yeet rejects `--fast` without it.
+`yeet publish` is push-first by default (push-first-publish, 2026-10-05):
 
-`bun run audit:github pre-push` remains the named full local fallback for
-secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
+- Gate before the push: cheap-gates tier + head-install preflight. No
+  admission ticket is taken; the publish never queues behind another
+  session's full proof.
+- After the push: `gh pr create --draft`, `ready-for-heavy` label (skipped on
+  docs-only diffs and on PRs that already existed), provenance stamp, then
+  `monitor --until-ready --detach` is submitted and publish exits with the PR
+  URL and job id. `--monitor` stays attached instead (opt-in).
+- `--no-pr` pushes without a PR and warns: `check.yml` runs only on
+  `pull_request`, so no hosted checks run until a PR exists.
+- `--prove-first` restores the previous proof order (full proof + CI parity
+  before the push). It is the only way to put the full proof on the publish
+  path. `--push-only` still pushes an already-proven commit. Both share the
+  same draft, label, and detached-monitor tail as the default. `--fast` and
+  `--start-pr-early` no longer exist.
+- `bun run audit:github pre-push` remains the named full local fallback for
+  secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
 
-## Start PR Early
+## Ready
 
-`bun run beep yeet publish --start-pr-early --monitor --pr --message "..."` is
-the explicit fail-faster path. It requires `--pr` so a PR-less branch creates
-the PR immediately after its clean-HEAD preflight and early push; an existing PR
-is reused. Omitting `--pr` fails at guard time before commit or push. The flow
-then runs the full local pre-push proof and hosted PR monitor. Unlike `--fast`,
-it does not skip the local full proof; it only overlaps that proof with hosted
-CI and reviewer startup time.
-
-Use it when the user wants remote checks and reviewers moving in parallel with a
-local proof cycle. If the post-push local proof fails or writes files, fix the
-issue in a follow-up commit and publish again. Treat commit/pre-push hooks as
-local tripwires and proof-reuse adapters; Yeet full proof plus hosted checks are
-the authoritative gates.
+`monitor --until-ready` ends `ready-pending-flip` (exit 0) when the PR is a
+draft and the draft flag is the only remaining readiness blocker. It prints
+`bun run beep yeet ready`. That command reads the PR with the monitor's own
+status read and runs `gh pr ready` only when, on the current head, every
+review thread is answered and the required checks are green; otherwise it
+refuses with the first blocker named. There is no `--force`. Flip only when no
+further push is planned.
 
 ## Merge Loop
 
@@ -813,12 +853,14 @@ the authoritative gates.
 the merge-loop porcelain. They read the clone and the PR; none of them plan
 turbo work, so they are cheap to run mid-loop.
 
-- **Heavy admission is a deliberate verb.** Publish without the label and let
-  tier 1 (lint shards, unit shards, cheap gates) go green first; `Heavy
-  Admission` in `check.yml` then holds a code PR (`Heavy / *` stays
-  "Expected", merge blocked) until `gh pr edit <n> --add-label ready-for-heavy`.
-  Apply it yourself, then run `bun run beep yeet monitor --until-ready` — the
-  held loop prints that exact command and does not burn its settle budget.
+- **Heavy admission is applied at creation.** `yeet publish` labels the draft
+  PR `ready-for-heavy` when it creates it (push-first-publish D4), so the heavy
+  matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
+  code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
+  is a PR that already existed before the publish, or one whose label edit
+  failed. Only then run `gh pr edit <n> --add-label ready-for-heavy` yourself;
+  the held `monitor --until-ready` loop prints that exact command and does not
+  burn its settle budget. Never remove and re-add the label.
   The label triggers `heavy-admit.yml`, which runs only the admission job and
   the heavy matrix for that head; tier 1 is neither cancelled nor re-run.
   Docs-only PRs (`docs/**`, `explorations/**`, `research/**`, `.changeset/*.md`,
@@ -896,7 +938,7 @@ turbo work, so they are cheap to run mid-loop.
   a disagreement; the report is shadow-only and never skips a lane.
   `--since <iso-timestamp>` counts only rows recorded at or after that instant
   toward the enforcement bar (ruling 80's flip condition) and prints the bound.
-- The local pre-push proof includes `beep quality changeset-status --since
+- The cheap-gates tier includes `beep quality changeset-status --since
   origin/main` (parity with hosted Repo Sanity). It enforces in-process: every
   changed, versioned, non-ignored product workspace must be named by a
   changeset **added in-branch** (the base backlog never counts, and empty
@@ -908,8 +950,8 @@ turbo work, so they are cheap to run mid-loop.
 - If Yeet fails after creating a local commit but before pushing, fix the issue.
   When you prove the exact current worktree with `bun run beep yeet verify`, you
   may retry with `bun run beep yeet publish --amend --no-edit --reuse-verified`.
-  Yeet reuses only exact matching full-proof state; if the state is stale, rerun
-  full proof or publish normally.
+  Yeet reuses only exact matching full-proof state; if the state is stale,
+  publish normally (push-first) instead of re-proving.
 - If the current clean commit was already verified and only the push was blocked
   or skipped, prefer `bun run beep yeet publish --push-only --reuse-verified`.
   Yeet still requires exact reusable proof state and a clean worktree, and it
@@ -920,12 +962,10 @@ turbo work, so they are cheap to run mid-loop.
   attempt, at most 3 times per job and only while the head is current; check
   the run's `run_attempt` (`gh run view <id> --json attempt`) and its
   `Rerun Runner Loss` summary before re-running it by hand.
-- There is no pre-push git hook; `yeet publish` runs the full local pre-push
-  proof itself before pushing, so the proof is the gate. (The former pre-push
-  catalog hook was removed with the repo-exports catalog.)
-- `--start-pr-early` requires both `--monitor` and `--pr`. It runs the clean-HEAD
-  install preflight before the early push, creates or reuses the PR immediately
-  afterward, and still runs full local proof after pushing.
+- There is no pre-push git hook; `yeet publish` runs the cheap-gates tier and
+  the head-install preflight itself before pushing, and hosted CI proves the
+  head after. (The former pre-push catalog hook was removed with the
+  repo-exports catalog.)
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
 - Full proofs use machine-wide weighted admission as the sole current-version
