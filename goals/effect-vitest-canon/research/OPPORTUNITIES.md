@@ -6892,7 +6892,7 @@ is inferred from these provisional runs.
 ### Strict row decoding does not validate graph-reference membership (2026-10-06)
 
 The continuation's 15,503-row public schema/ID check passed, while a separate
-primitive-graph membership probe found 135 inherited fixed rows using six
+primitive-graph membership probe found 135 inherited rows (131 fixed and four exceptions) using six
 non-graph replacement labels, including two spellings of a utils-module
 reference, the instrumented runner and native helpers. The selected 67
 changed/added rows all use graph IDs. This is a historical metadata/validator

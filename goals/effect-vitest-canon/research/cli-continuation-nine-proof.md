@@ -133,8 +133,8 @@ public schema decoding, unique IDs, directory/lens relation and fixed-SHA
 presence pass for **15,503 rows**, zero errors. All 67 changed/added rows
 reference entries in the 102-entry pinned primitive graph. This remains
 narrower than the missing historical full-validator contract. A broader
-reference membership probe found 135 inherited fixed rows with replacement
-labels outside that graph; those require separate metadata/contract
+reference membership probe found 135 inherited rows with replacement
+labels outside that graph (131 fixed and four exceptions); those require separate metadata/contract
 reconciliation and do not establish 135 source defects.
 
 The refreshed ratchet passes introduced=0/resolved=0 with 1,881 findings.
