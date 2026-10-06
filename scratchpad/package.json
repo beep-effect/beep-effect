@@ -6,7 +6,6 @@
   "homepage": "https://github.com/beep-effect/beep-effect/tree/main/scratchpad",
   "exports": {
     "./beep": "./beep/index.ts",
-    "./semver": "./semver/index.ts",
     "./*": "./*.ts"
   },
   "scripts": {
