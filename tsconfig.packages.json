@@ -190,6 +190,9 @@
       "path": "packages/drivers/phoenix"
     },
     {
+      "path": "packages/drivers/poppler"
+    },
+    {
       "path": "packages/drivers/postgres"
     },
     {
@@ -209,6 +212,9 @@
     },
     {
       "path": "packages/drivers/tailscale"
+    },
+    {
+      "path": "packages/drivers/tesseract"
     },
     {
       "path": "packages/drivers/tika"

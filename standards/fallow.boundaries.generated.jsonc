@@ -618,6 +618,12 @@
         ]
       },
       {
+        "name": "@beep/poppler",
+        "patterns": [
+          "packages/drivers/poppler/src/**"
+        ]
+      },
+      {
         "name": "@beep/postgres",
         "patterns": [
           "packages/drivers/postgres/src/**"
@@ -777,6 +783,12 @@
         "name": "@beep/technical-drawing",
         "patterns": [
           "packages/foundation/capability/technical-drawing/src/**"
+        ]
+      },
+      {
+        "name": "@beep/tesseract",
+        "patterns": [
+          "packages/drivers/tesseract/src/**"
         ]
       },
       {
@@ -3180,6 +3192,25 @@
         ]
       },
       {
+        "from": "@beep/poppler",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/postgres",
         "allow": [
           "@beep/colors",
@@ -3475,6 +3506,7 @@
           "@beep/occt",
           "@beep/pdf-tools",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3485,6 +3517,7 @@
           "@beep/schema",
           "@beep/skill-contract",
           "@beep/technical-drawing",
+          "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
@@ -3510,6 +3543,7 @@
           "@beep/occt",
           "@beep/pdf-tools",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3520,6 +3554,7 @@
           "@beep/schema",
           "@beep/skill-contract",
           "@beep/technical-drawing",
+          "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
@@ -3916,6 +3951,25 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/technical-drawing",
+          "@beep/test-runner",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/tesseract",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
           "@beep/test-runner",
           "@beep/utils"
         ]

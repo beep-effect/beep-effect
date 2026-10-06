@@ -1536,6 +1536,25 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/poppler": {
+      "name": "@beep/poppler",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/postgres": {
       "name": "@beep/postgres",
       "version": "0.0.2",
@@ -1665,6 +1684,24 @@
         "@beep/test-runner": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+      },
+    },
+    "packages/drivers/tesseract": {
+      "name": "@beep/tesseract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/drivers/tika": {
@@ -3153,6 +3190,7 @@
         "@beep/occt": "workspace:^",
         "@beep/pdf-tools": "workspace:^",
         "@beep/phoenix": "workspace:^",
+        "@beep/poppler": "workspace:^",
         "@beep/qa-capture": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
         "@beep/repo-configs": "workspace:^",
@@ -3162,6 +3200,7 @@
         "@beep/schema": "workspace:^",
         "@beep/skill-contract": "workspace:^",
         "@beep/technical-drawing": "workspace:^",
+        "@beep/tesseract": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/tika": "workspace:^",
         "@beep/uspto": "workspace:^",
@@ -3994,6 +4033,8 @@
 
     "@beep/phoenix": ["@beep/phoenix@workspace:packages/drivers/phoenix"],
 
+    "@beep/poppler": ["@beep/poppler@workspace:packages/drivers/poppler"],
+
     "@beep/postgres": ["@beep/postgres@workspace:packages/drivers/postgres"],
 
     "@beep/practice-kg-mcp": ["@beep/practice-kg-mcp@workspace:apps/practice-kg-mcp"],
@@ -4047,6 +4088,8 @@
     "@beep/tailscale": ["@beep/tailscale@workspace:packages/drivers/tailscale"],
 
     "@beep/technical-drawing": ["@beep/technical-drawing@workspace:packages/foundation/capability/technical-drawing"],
+
+    "@beep/tesseract": ["@beep/tesseract@workspace:packages/drivers/tesseract"],
 
     "@beep/test-runner": ["@beep/test-runner@workspace:packages/tooling/test-kit/test-runner"],
 
