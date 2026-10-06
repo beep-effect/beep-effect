@@ -177,7 +177,9 @@ export class PracticeKgAnchorResolution extends S.Class<PracticeKgAnchorResoluti
 
 const recycleStubPattern = /^\$R/u;
 
-const basenameOf = (relativePath: string): string => pipe(Str.split(relativePath, /[\\/]/u), A.lastNonEmpty);
+const directoryPrefixPattern = /^.*[\\/]/u;
+
+const basenameOf = (relativePath: string): string => pipe(relativePath, Str.replace(directoryPrefixPattern, ""));
 
 /**
  * Whether a catalogued path names a recycle-bin restore stub (`$R…`).
@@ -239,33 +241,38 @@ const clientsByDigestFor = (
   rowsByDigest: MutableHashMap.MutableHashMap<string, PracticeKgCatalogRow>,
   docketReferences: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
-  const referencesByDigest = MutableHashMap.empty<string, ReadonlyArray<PracticeKgDocketReferenceRow>>();
+  // Keyed by digest; each entry keeps its row beside the references that name
+  // the row's own family, so the second pass needs no further lookup.
+  const referencesByDigest = MutableHashMap.empty<
+    string,
+    { readonly references: ReadonlyArray<PracticeKgDocketReferenceRow>; readonly row: PracticeKgCatalogRow }
+  >();
   A.forEach(docketReferences, (reference) => {
-    const row = MutableHashMap.get(rowsByDigest, reference.digest);
-    if (O.isSome(row) && row.value.docketFamily === reference.family) {
-      MutableHashMap.set(
-        referencesByDigest,
-        reference.digest,
-        A.append(
+    const row = pipe(
+      MutableHashMap.get(rowsByDigest, reference.digest),
+      O.filter((candidate) => candidate.docketFamily === reference.family)
+    );
+    if (O.isSome(row)) {
+      MutableHashMap.set(referencesByDigest, reference.digest, {
+        references: A.append(
           pipe(
             MutableHashMap.get(referencesByDigest, reference.digest),
+            O.map((entry) => entry.references),
             O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
           ),
           reference
-        )
-      );
+        ),
+        row: row.value,
+      });
     }
   });
   const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-  MutableHashMap.forEach(referencesByDigest, (references, digest) => {
-    const row = MutableHashMap.get(rowsByDigest, digest);
-    if (O.isSome(row)) {
-      MutableHashMap.set(
-        clients,
-        digest,
-        HashSet.fromIterable(A.map(ownReferences(row.value, references), (reference) => reference.client))
-      );
-    }
+  MutableHashMap.forEach(referencesByDigest, ({ references, row }, digest) => {
+    MutableHashMap.set(
+      clients,
+      digest,
+      HashSet.fromIterable(A.map(ownReferences(row, references), (reference) => reference.client))
+    );
   });
   return clients;
 };
@@ -601,14 +608,11 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
         source: HashSet.has(filenameFamilies, familyKey) ? ("filename" as const) : ("text-reference" as const),
       }))
     );
+    // A member exists only when every mention sits in that one family, so the
+    // member's documents are exactly the mentioning documents.
     const memberAttributions = O.match(member, {
       onNone: A.empty<PracticeKgDocumentAttribution>,
-      onSome: ({ familyKey }) =>
-        A.getSomes(
-          A.map(mentions, (mention) =>
-            mention.attribution.familyKey === familyKey ? O.some(mention.attribution) : O.none()
-          )
-        ),
+      onSome: () => A.map(mentions, (mention) => mention.attribution),
     });
     const memberHead = A.head(memberAttributions);
     return PracticeKgAnchorResolution.make({
