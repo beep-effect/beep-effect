@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:fc75c895d1ba5461d5ed42ab2b3f63deb1e89f01887b5c20f9a594f65ee7abb0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1071,
+    "end_line": 1078
+  },
+  "quote": "- id: iv-1389-deprecated-apis-tool-shards\n  title: \"PR #1389 — the deprecated-apis ESLint pass splits packages/tooling/tool into tool/cli and tool/docgen shards\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-02T18:58:02Z\"\n  mergeCommit: 28b28fa551a4aa30c3cfd5b5a3a899a739328aa2\n  pr: 1389\n  mechanismChanged: sharding",
+  "epistemic_status": "quoted_prose"
+}

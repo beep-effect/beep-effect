@@ -1,0 +1,78 @@
+id: "ic:vfy-committed-failure:001"
+hypothesis_ref: "dh:vfy-committed-failure:001"
+referent_grain: >-
+  A dated occurrence inside one verification attempt: the exit of one step under a fail-fast
+  policy that commits the attempt to a failing verdict, individuated by its attempt and that step.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two committed failures are the same iff they are the committing failure of the same attempt at
+    the same step; that under fail-fast an attempt has at most one is inferred from the policy name,
+    not shown by a record. The verdict members (failedStepId, failureKind) are evidence of the
+    occurrence, never its identity. When the failure committed (the failing step's exit instant) is
+    not recorded: none of the record's instants (createdAt, endedAt and recordedAt, one instant) is
+    that exit instant, and its per-step durationMs gives no exit instant of the failing step.
+  reidentification_key:
+    - failedStepId within the attempt's verdict (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One step exit; no parts.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - the verdict members recording the failure (information object; rejected as the referent)
+    - failed phase of the attempt (the state the event initiates, a different referent)
+    - >-
+      the commitment or obsoletion point CQ-022 names (the point after which no running execution of
+      the attempt can improve its verdict), which may not coincide with the step exit
+  existential_dependencies:
+    - the verification attempt it occurs in
+    - the step (lane execution) whose exit it is
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Policy: under a failure policy other than fail-fast several steps of one attempt could fail;
+      the (attempt, step) criterion would then count several failures, while CQ-022's "committed"
+      failure is the one after which no running execution can improve the verdict. The single
+      cited record carries failurePolicy=fail-fast and cannot test this.
+  - description: >-
+      Termination without a verdict (hypothetical): if an attempt ended by an attempt-terminated
+      reason is counted red and carries no failedStepId, this criterion gives it no committed
+      failure, although its in-flight executions would be equally unable to improve a verdict. No
+      record of this hypothesis shows a terminated attempt; a terminated-attempt verdict record is
+      the needed evidence.
+status: proposed
+evidence_refs:
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - CQ-022
+rationale:
+  identity: >-
+    so-ca8b3f90e57c locates the failure at prepare:05-docgen with failureKind=step-exit, beside a
+    step entry prepare:01-effect-imports at status=passed: the failure sits at one step of one
+    attempt. That the passed step ran earlier is inferred from the step numbering; the record
+    carries no per-step instants.
+  rigidity: >-
+    Unresolved. An individual could lose this classification while persisting if the step exit it
+    is stayed recorded but stopped counting as the committing failure, for example a failed step
+    retried within the attempt and then passing, or a verdict revised to name another step. The
+    single cited record carries one verdict for one attempt and no retry or revision, so it neither
+    shows nor rules out such a loss. A record of one attempt whose failed step is retried, or whose
+    verdict's failedStepId changes, would be the evidence.
+  dependence: >-
+    Marked relational in the external-dependence sense: it exists only as the exit of one step in one
+    attempt.
+  category: >-
+    UFO event. The failed condition of the attempt that follows is a phase of the attempt, a
+    different referent that this event initiates.
+  temporality: >-
+    Left unresolved whether it is instantaneous (the exit instant) or the failing step's interval.
+    The record carries createdAt, endedAt and recordedAt (one instant), the attempt's elapsedMs and a
+    per-step durationMs, and none of these instants is the failing step's exit instant. That the
+    failure came before the attempt's end is inferred from fail-fast, not recorded.

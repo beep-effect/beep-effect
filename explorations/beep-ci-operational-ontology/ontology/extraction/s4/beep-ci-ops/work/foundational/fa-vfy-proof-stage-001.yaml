@@ -1,0 +1,69 @@
+id: "fa:vfy-proof-stage:001"
+hypothesis_ref: "dh:vfy-proof-stage:001"
+identity_card_ref: "ic:vfy-proof-stage:001"
+referent_grain: >-
+  A classifier at workflow grain: one of the four deployed stage values (repair-loop, pre-push,
+  merged-preview, hosted) under which a verification attempt runs and its evidence is produced;
+  what individuates a stage beyond its spelling (a position in a stage order or not) is unresolved.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: unresolved
+  context_reification_needed: unresolved
+rival_models:
+  - label: categorizer over attempts, stages as rigid subkinds of verification attempt
+    still_viable: true
+  - label: phase of a run or verification episode
+    still_viable: true
+  - label: step of the verification workflow specification (plan part)
+    still_viable: true
+  - label: the deployed proofTier under another name
+    still_viable: false
+  - label: >-
+      an assurance tier (AssuranceTierId) under another name, deferred until a
+      proofTier-to-AssuranceTierId mapping is evidenced
+    still_viable: true
+strongest_counterexample: >-
+  One runId shows a repair-loop attempt and then a pre-push attempt as two start rows
+  (so-eefbf95beb8d, so-10c2570fe2f6), and the ledger facts of a different run show pre-push and then
+  repair-loop under two attemptIds (so-12d5a26fbfac, so-40abdcaf1156). For the cited attempts the
+  stage is fixed per attempt, yet per run it changes, so a rigid reading and a phase reading are
+  each right for one bearer.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Which bearer the stage classifies: either an attempt whose stage member changes between two of its
+  own records under one attemptId (that favours a phase of the attempt and refutes the subkind
+  reading), or a surviving analysis of the run or episode as an enduring individual (that is the
+  phase reading's bearer). For the plan-step reading and the identity criterion: a deployed record
+  that orders the stages or gives a stage properties of its own (lanes or obligations declared per
+  stage) independent of any attempt. For the assurance-tier rival: a record mapping proofTier
+  values to AssuranceTierId members.
+evidence_refs:
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+rationale:
+  spec_vs_execution: >-
+    The stage (a value of the workflow) and the attempts started at it (occurrences) separate:
+    one stage, many dated attempts.
+  world_vs_information: >-
+    Unresolved: under the plan-step reading the stage is itself part of an information object,
+    the workflow specification.
+  role_vs_bearer: >-
+    Unresolved: being at pre-push may be a phase or role-like condition of a run, which is the bearer
+    question itself.
+  context_reification_needed: >-
+    Unresolved pending the bearer evidence. Under the subkind reading no context beyond the attempt
+    is needed; under the phase reading the stage holds of a run or episode over an interval, which
+    may have to be indexed by that bearer and time; under the plan-step reading a stage is a
+    position within a workflow specification, which would have to be named. The bearer record named
+    in needed_evidence decides it.
+  rivals: >-
+    The deployed-proofTier rival fails because proofTier=full occurs at three stages, so stage and
+    proofTier vary apart. That does not show proofTier is the assurance tier, so stage as an
+    AssuranceTierId tier stays viable and deferred until a mapping is evidenced. The subkind, phase
+    and plan-step readings remain viable, and only bearer evidence splits them. Queue H: the stage
+    reading of merged preview rests on this class, so its member pair defers with it.

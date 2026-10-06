@@ -1,0 +1,60 @@
+id: "fa:vfy-admission-work-kind:001"
+hypothesis_ref: "dh:vfy-admission-work-kind:001"
+identity_card_ref: "ic:vfy-admission-work-kind:001"
+referent_grain: >-
+  A classifier over seat requests and grants: one member of a closed domain of requested-work
+  kinds, individuated by what kind of work it asks capacity for, not by its spelling.
+tests:
+  spec_vs_execution: unresolved
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: >-
+      categorizer over requested work, members as rigid subkinds (merged-tree preview work, full
+      proof work, review-fix work, publish work)
+    still_viable: true
+  - label: >-
+      controlled-vocabulary code list, members as scheduling classes that fix charge only
+    still_viable: true
+  - label: >-
+      a priority class under another name
+    still_viable: false
+strongest_counterexample: >-
+  so-a8d270b5e19d is a grant of kind merged-preview whose own stage member is pre-push and whose
+  proof tier is full, and whose span carries a command line (in its source excerpt, not among its
+  parsed facts) naming the gate commands launched under the grant: the cheap-gates and pre-push
+  github-checks runs and an affected local CI run against origin/main, a pre-push gate set. That is
+  consistent with the code reading, a merged-preview ticket whose work is not a merged-tree preview.
+  It does not settle subkind against code: it is one quarantined record, possibly anomalous; the
+  command line is launched work, not shown realized, and no attempt or ledger record joined by its
+  attemptId shows the stage, tree or outcome of that work; it cannot tell whether the kind or the
+  stage member chose the commands; and one kind cannot show whether work differs by kind.
+verdict: explicitly_deferred
+needed_evidence: >-
+  A record that joins one admission chain to the work run under its grant (an attempt-journal start
+  row or proof-ledger facts sharing the chain's attemptId), for at least two different kind values,
+  showing whether the stage, lanes or tree grain of the work differ by kind (subkind reading) or not
+  (code reading); or the deployed definition of what each AdmissionWorkKind member causes the
+  scheduler to run.
+evidence_refs:
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"
+  - CQ-021
+rationale:
+  spec_vs_execution: >-
+    Whether the member is a specification of work to run or only a class label is the open
+    question, so the test cannot run on these records.
+  world_vs_information: >-
+    Under the code reading the member is information; under the subkind reading it classifies a
+    worldly kind of work. The records do not discriminate.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    Membership is fixed per chain with no context parameter.
+  rivals: >-
+    The priority rival is not viable: merged-preview carries 5 under priority verify
+    (so-d99a3c53086c) and under priority publish (so-0d75ae7174ed), so kind and priority vary apart.
+    The other two remain, and the join named in needed_evidence splits them.

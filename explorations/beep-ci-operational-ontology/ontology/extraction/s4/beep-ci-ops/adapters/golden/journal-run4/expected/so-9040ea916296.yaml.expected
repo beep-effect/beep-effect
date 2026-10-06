@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:9040ea916296b491ce8519b5bb5fb230bb1051ccde5c952175ebb4763077b4b0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/alpha/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 41,
+    "end_line": 50,
+    "content_sha256": "3969466a94b8bdb8e547ed68aa37f8629430d8e34ed6086e1960b048d719209b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/alpha/proof-ledger.properties:record=3",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-three"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "factRecordedAt=2026-01-01T00:00:00.000Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=hit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 3\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=attempt-three\nlaneId=lint:alpha\nstage=pre-push\nkind=hit\nkey=first\nobserved=passed\nfactRecordedAt=2026-01-01T00:00:00.000Z\n",
+  "epistemic_status": "parser_derived"
+}

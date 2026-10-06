@@ -1,0 +1,30 @@
+id: dh:vfy-peak-memory-use:001
+observation_refs:
+- so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c
+- so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+- so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+- so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71
+cq_warrants: []
+proposed_referent:
+  label: peak memory use of granted work (the measured consumption over one grant)
+  description: 'One instance is the highest memory the work under one grant used, read at release (`memoryPeakBytes` on an
+    `_tag=admission-released` row); it depends on that grant''s work and has no identity apart from it. Instances: two full-proof
+    grants (so-95b7d78a061f, so-363f9b7f07dc) and the record-10 pair (so-df1f4d8ba41f, so-3013eedf6f82, one span seen twice).
+    No pinned CQ needs the reading itself; it disambiguates the CQ-warranted admission charge (dh:vfy-admission-charge:001,
+    CQ-010 and CQ-021) from the consumption it is not, so it is judged on evidence with no warrant of its own.'
+representation_status: domain_referent
+alternatives:
+- label: a recorded reading (an information artifact about consumption), not the quantity itself
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The null reading is that the value is a stored number with no domain counterpart. The records show it varying
+    widely between grants of the same kind and charge, which is a measurement of what the work did and not a setting.
+  discriminator: 'so-95b7d78a061f and so-363f9b7f07dc are both `kind=full-proof` grants with `weightTokens=3`, yet their `memoryPeakBytes`
+    readings differ by about a factor of ten: the value follows the work actually run, not any configured member of the request.'
+epistemic_status: proposed
+confidence:
+  value: 0.45
+  use_for_acceptance: false

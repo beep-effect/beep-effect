@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5869fd732b3efaa57740a082efd8f19fdfb32e678a591573a100f4193de7b768",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 26,
+    "end_line": 31
+  },
+  "quote": "1. **No punning.** `ContendedResource` members are named INDIVIDUALS, not classes.\n   `SharedCacheResource` (the contended mount, an individual) is distinct from the class\n   `SharedCache` (CQ-015's machine-shared turbo cache mount concept); an A-Box may type\n   `SharedCacheResource` as an instance of `SharedCache`, but the two names never\n   collapse into one unqualified term. The same discipline applies to every domain\n   above: members are individuals of the domain class.",
+  "epistemic_status": "quoted_prose"
+}

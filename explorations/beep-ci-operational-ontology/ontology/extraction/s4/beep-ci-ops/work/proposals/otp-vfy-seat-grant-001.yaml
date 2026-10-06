@@ -1,0 +1,79 @@
+id: otp:vfy-seat-grant:001
+hypothesis_ref: dh:vfy-seat-grant:001
+identity_card_ref: ic:vfy-seat-grant:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: seat grant
+  local_name: SeatGrant
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatGrant
+  owl_entity_kind: class
+definition:
+  text: 'A held admission to shared verification capacity: the held span of one admission chain, begun
+    at an admission-admitted row (admittedAtMillis) of a chain first enqueued, holding one checkout (checkoutRoot)
+    at one charge (weightTokens), carrying the holder''s last heartbeat (lastHeartbeatAtMillis) where
+    recorded, and ended by release (admission-released, releasedAtMillis) or eviction (admission-lease-evicted,
+    reason owner-dead-or-reused); individuated by the admission that began it.'
+  source:
+  - so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1
+  - so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+  - so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+  - CQ-008
+  - CQ-009
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: 'none asserted: UFO category deferred on the card'
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatGrant
+    compatibility: 'Same grain as the ratified SeatGrant, the lease side of the ruled ticket/lease split
+      recorded in CQ-021''s notes: one admission chain''s held span, from admission to release or eviction.
+      Account-copy identity and effective authorization continuity stay deferred.'
+operational_warrant:
+  competency_questions:
+  - CQ-008
+  - CQ-009
+  semantic_support_for: []
+alternatives_rejected:
+- 'The lease file or journal rows as the referent: rejected by the analysis; the lease state record (so-a8d270b5e19d)
+  and the rows record the hold.'
+- 'A scheduler variable with no domain counterpart: rejected by the analysis on the lease-evicted chains,
+  which carry a last heartbeat instant and an eviction reason of their own.'
+open_issues:
+- flag SeatGrant persists; no lift claimed
+- No cited chain shows a renewal or a transfer of a grant, so effective allocation continuity stays deferred
+  and the synthetic operational SeatGrant reading of the run-3 withdrawal is not re-presented.
+- 'Warrant: CQ-008 (must_have) types ?grant rdf:type ciops:SeatGrant and loses every holder row without
+  it; CQ-009 (must_have) types ?g1 and ?g2 the same way, and without it the exclusion invariant is vacuously
+  zero on both arms. CQ-010 is not cited: its query reaches the grant only through admittedBy and admissionChargeTokens
+  and types nothing (the charge is otp:vfy-admission-charge:001).'
+- 'CQ-009: hasCheckout and hasCoordinationProtocol are seed-only predicates, which is not ratification.
+  The protocol predicate carries the decoded value: a record without the field decodes as legacy-origin-lock/v1.
+  The one cited lease state record carries scheduler-origin-concurrency/v1; the cited records show the
+  legacy arm neither present nor absent, and a missing field is never read as no protocol.'
+- 'Steward choice (category rivals still viable on fa:vfy-seat-grant:001): a rigid relator founded at
+  admission, or the held phase of one admission engagement that began at enqueue. Not two proposals: the
+  readings differ in category and rigidity on this hypothesis''s one card.'
+- 'Needed evidence (fa:vfy-seat-grant:001, verbatim): The same discriminating chain as the seat-request
+  pair: a grant released or evicted and then re-admitted under the same nonce, one request admitted into
+  two grants, a lease whose nonce differs from its ticket''s, or a grant renewed or transferred to another
+  holder while keeping its admission instant. For CQ-009''s legacy-origin arm, a grant record carrying
+  the legacy-origin-lock/v1 protocol, or a grant persisted without the protocol field (which decodes as
+  legacy-origin-lock/v1). For a dependence on a capacity pool: a record stating the capacity a grant is
+  charged against (a pool or capacity snapshot member on a grant row).'
+- 'Cluster dependency: one discriminating chain decides this term and otp:vfy-seat-request:001 together;
+  the ratified admittedBy ranges over SeatGrant. Holder and checkout dependence is relational on the card;
+  otp:vfy-checkout:001 is the held checkout.'
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-seat-grant:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

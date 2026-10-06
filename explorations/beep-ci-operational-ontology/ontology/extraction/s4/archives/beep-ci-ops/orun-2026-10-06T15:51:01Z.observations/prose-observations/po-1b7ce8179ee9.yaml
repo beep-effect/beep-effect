@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:1b7ce8179ee9ea1bd29260242a48fa76c3f2039a9d37ae1baf3790a6b03b3281",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 36,
+    "end_line": 39
+  },
+  "quote": "3. **Deployed-literal fidelity.** Domains extracted from deployed LiteralKits record the\n   verbatim source literals beside the ontology member names; the mapping is part of the\n   domain declaration, and S4 lanes cite the LiteralKit call site as evidence\n   (`source_domain` required on every `literal-domain-member` candidate).",
+  "epistemic_status": "quoted_prose"
+}

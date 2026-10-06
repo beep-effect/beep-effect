@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:874e05a50374b20b243f536f3a8faef0eb241d70ea08d2cb188125e62b100340",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/live/scoped.properties"
+  },
+  "source_span": {
+    "start_line": 4,
+    "end_line": 6,
+    "content_sha256": "e4820dff86430260c7e80bdae9af4ea34069e326fbcb1d3adb76b75644a0d037"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/scoped.properties:record=1",
+    "lexical_name": "scoped",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "scoped=word"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "scopedpeer=1"
+    }
+  ],
+  "source_excerpt": "# record 1\nscoped=word\nscopedpeer=1\n",
+  "epistemic_status": "parser_derived"
+}

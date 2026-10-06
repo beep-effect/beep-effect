@@ -1,0 +1,29 @@
+id: "dh:lpl-planner-implementation:001"
+observation_refs: ["po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca", "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd", "po:sha256:e97f691ea561b37b93db3bee1bdb0de54a0c40a1b9809a47a459e3ec3025e248"]
+cq_warrants: []
+proposed_referent:
+  label: "lane-order planner implementation surface (service method, schemas, tagged errors, graph mechanics)"
+  description: >-
+    The observed construct is the planner's code contract: the planEpisode method and its input
+    schema, the projection layer's captured platform services, the handoff reference and view
+    schemas, the tagged errors (handoff read, digest mismatch, decode, cyclic plan), the graph
+    construction, cycle check and topological order, the self-check defect path, and the
+    determinism and permutation-test scoping. Cited as the construct under evaluation so that no
+    record goes uncited; the referent-bearing parts of the same blocks are denoted by the lane-plan,
+    lane-step, specification, order-rule and handoff hypotheses.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "a planning activity (a repeatable process whose runs produce lane plans)"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands: these are service signatures, error types, layer requirements, graph-library
+    calls and test scoping, all of which exist only in the representation; nothing in them would be
+    false if they were pure implementation. A planning activity as a referent would need run
+    observations of the planner, which this batch does not carry.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.6, use_for_acceptance: false}

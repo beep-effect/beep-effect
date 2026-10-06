@@ -1,0 +1,46 @@
+id: "ic:vfy-committed-failure-alt:001"
+hypothesis_ref: "dh:vfy-committed-failure:001"
+referent_grain: >-
+  The occurrence by which one attempt's verdict becomes failure at one named step under its failure policy,
+  as against the failed step run itself and the verdict fields that record it.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two committed failures are the same iff they commit the same attempt to failure; the attempt supplies
+    identity and the failing step is the locus, so an attempt has at most one. failedStepId is evidence of the
+    locus, never the criterion.
+  reidentification_key:
+    - "attempt plus failedStepId (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    A single occurrence with no parts of its own; the verdict record carries one failedStepId and one
+    failureKind for it.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "role played by a failed step execution (the step run whose failure fixes the verdict under fail-fast)"
+    - "phase of the attempt (failed)"
+    - "the verdict fields that record it (information object)"
+  existential_dependencies:
+    - "the attempt it commits"
+    - "the step execution whose exit it consists in"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The same verdict record so-ca8b3f90e57c carries committed=false; on that record "committed" is about the
+      attempt's git commit, not the failure. A reader who reads committed=false as "the failure was not
+      committed" would count no committed failure where my card counts one: the shared word decides nothing.
+  - description: >-
+      Under fail-fast the failing step's exit and the commitment of the verdict coincide, so my event and the
+      failed step execution may be one occurrence described twice; if so, a separate CommittedFailure individual
+      double counts each failing step.
+status: proposed
+evidence_refs:
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"

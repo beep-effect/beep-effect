@@ -1,0 +1,13 @@
+id: rat:71
+proposal_ref: otp:chg-change-landing:001
+proposal_sha256: 8164d4c90e0a82696649f379c4c8add11b90d6afdca085e5be83feed7e994157
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: 'Accept otp:chg-change-landing:001 as OperationalChangeEvent, the class of dated landing
+  acts of one change set, warranted by CQ-016''s typed subject. Retained as flags: identity unresolved
+  with the pull request and merge commit as evidence only; the apply-or-go-live act against the merge;
+  one landing spanning superseding rows; the ledger row and the change artifact as information-object
+  rivals; and CQ-016 answered for its subject only while landedAt stays seed-only.'

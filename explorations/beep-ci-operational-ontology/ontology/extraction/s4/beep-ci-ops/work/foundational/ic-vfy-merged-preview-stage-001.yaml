@@ -1,0 +1,105 @@
+id: "ic:vfy-merged-preview-stage:001"
+hypothesis_ref: "dh:vfy-merged-preview-stage:001"
+referent_grain: >-
+  One member of the proof-stage classifier: the position in the verification workflow at which an
+  attempt produces evidence against the merge-preview tree, individuated by that position once a
+  stage order is established (unresolved), not by the literal merged-preview.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: under the stage reading the merged-preview stage would be the same stage wherever
+    one workflow position recurs, whatever its spelling, but no cited record establishes a stage
+    order, so the position cannot be stated (the deployed list po-581b06759057 is an array, not a
+    stated order). A record fixing the stage order (a deployed transition rule or a workflow
+    specification that orders the stages) is the needed evidence. As a member it inherits its
+    category from the proof-stage class, whose category is deferred. Whether it supplies identity
+    is unresolved with the class: under the plan-step reading the stage would supply its own
+    identity as a position in the order, while under the categorizer and phase readings the attempts
+    it classifies keep their own identity. The stage-order record decides that too.
+  reidentification_key:
+    - stage=merged-preview on attempt-started rows (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: ""
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - subkind of verification attempt (if the class is a categorizer over attempts)
+    - phase of a run or episode (if the class is a phase partition)
+    - step of the workflow specification (if the class is a plan part)
+    - >-
+      a fourth assurance tier: an assurance target state an episode is verified toward (the tier
+      reading, dh:vfy-merged-preview-tier:001)
+    - >-
+      the admission work kind merged-preview (the work-kind reading, dh:vfy-merged-preview-work-kind:001;
+      retired as the same individual on the fixed reading that the admission work kind is not stage
+      activity)
+  existential_dependencies:
+    - >-
+      on the stage reading in its plan-step variant only: the verification workflow specification
+      whose ordered steps it would belong to. The subkind and phase variants of the stage reading,
+      the fourth-tier reading and the work-kind reading claim no workflow dependence. Dependence is
+      unresolved and reading-relative; the deciding evidence is a stage-order record (a deployed
+      transition rule or a workflow specification that orders the stages), which no cited record
+      supplies, so this entry holds only if that reading wins.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Work kind and stage on one record: the lease so-a8d270b5e19d carries kind=merged-preview with
+      stage=pre-push. A model that reads the shared word as one referent would put that grant at the
+      merged-preview stage while its own stage member says pre-push. One quarantined record is
+      consistent with the fixed reading that a work kind is not stage activity; it does not show it.
+  - description: >-
+      Stage inside a tier or a tier of its own: so-3bf9cacb55b4 carries stage=merged-preview with
+      proofTier=full, the deployed tier value the lease so-a8d270b5e19d also carries at pre-push.
+      The record carries proofTier full and nothing more: proofTier is the deployed proof-tier
+      value, its mapping onto the three AssuranceTierId levels is unmapped by any cited record, and
+      the record cannot place the attempt in an assurance tier or decide between a stage inside a
+      tier and a tier of its own.
+status: proposed
+evidence_refs:
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - "po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900"
+  - "po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c"
+  - "po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+rationale:
+  identity: >-
+    One attempt began at this stage under mode=verify and envProfile=pr-posture (so-3bf9cacb55b4),
+    and the fleet census retains merged-preview starts (po-58c65850834f). The ledger census reads
+    the stage as dormant in the capture window (po-563da43a9f12, po-82648cf8d37a), which is never
+    observed-and-empty, and no argument here rests on a zero count.
+  identity_under_rivals: >-
+    Fourth-tier reading: two episodes would be verified to the same tier iff they discharge the same
+    assurance level, individuated by the lane obligations that level requires rather than by the
+    literal; a record of lane obligations required at a merged-preview level and not for
+    TierLocalFullProof would supply it. Work-kind reading: two requests would fall under the same
+    member iff their tickets carry the same kind of requested work or the same charge code (see the
+    work-kind pair, where that question is open). Neither criterion is testable on the cited records.
+  rigidity: >-
+    Stage reading: inherited from the class, which is bearer-relative and unresolved (see the
+    proof-stage pair).
+  rigidity_under_rivals: >-
+    Fourth-tier reading: unresolved; as a target state an episode is verified toward, it would be
+    anti-rigid for the episode if one episode could be verified to it and later to another tier,
+    which no cited record shows. Work-kind reading: unresolved; it turns on whether a request's kind
+    could change without the request ending, which no cited chain shows.
+  dependence: >-
+    Inherited from the class.
+  category: >-
+    A member's category cannot be ruled while its class's category is deferred. The stage and tier
+    readings are kept as alternatives. The work-kind identity is retired on the fixed reading that
+    the admission work kind is not stage activity; so-a8d270b5e19d carries the work-kind literal and
+    the stage literal with different values on one record, which is consistent with that reading
+    and is not its ground. The KPI law's sub-partition of
+    TierLocalFullProof (po-fd56d2b008d1) is a reporting rule, quoted here, not a category ruling.
+  temporality: >-
+    Inherited from the class.

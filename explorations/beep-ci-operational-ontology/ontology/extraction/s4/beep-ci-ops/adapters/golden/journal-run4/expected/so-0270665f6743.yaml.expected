@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:0270665f6743896e827c42601de04d0cd5ce60f69e2ca95b9c11aae271a2ce4e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/attempts/a/a/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 18,
+    "end_line": 24,
+    "content_sha256": "a03e501ace3351afd7bc07fa551535562ac041fc93450fb9d0b0a89f2f951813"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/a/a/attempts.properties:record=2",
+    "lexical_name": "outcome",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=success"
+    }
+  ],
+  "source_excerpt": "# record 2\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=attempt-two\noutcome=success\nstage=merged-preview\n_tag=attempt-started\n",
+  "epistemic_status": "parser_derived"
+}

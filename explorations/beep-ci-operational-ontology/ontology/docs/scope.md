@@ -108,3 +108,18 @@ certainty gate over post-#929 admission state, and any live-data suite run befor
 pin evaluates CQ-009 on pre-#929 data only or reports it as temporally out of scope, never as
 a pass or a failure over post-#929 rows (graduation Ruling 9; goal `ciops-ontology-pipeline`
 P2 runs under this rule).
+
+Folded at the run-4 pin (2026-10-06), under goal `ciops-ontology-pipeline` P3 Ruling 5: the
+re-scope this amendment scheduled has landed. `competency-questions.yaml` CQ-009 now asks the
+post-#929 law (same-checkout exclusion plus the legacy-origin drain, both arms bound in `?arm`)
+and `../tests/cq-009.sparql` is regenerated from it. The pre-#929 origin-keyed query moved to the
+hand-authored `../tests/temporal/cq-009-pre929.sparql`, which keeps
+`../tests/fixtures/must-fail/cq009-two-grants.ttl` (bytes unchanged) as its regression. Each new
+arm has its own falsifier: `../tests/fixtures/must-fail/cq009-same-checkout.ttl` and
+`../tests/fixtures/must-fail/cq009-legacy-drain.ttl`. The seed grant in
+`../tests/fixtures/seed.ttl` gained `ciops:hasCheckout` and `ciops:hasCoordinationProtocol`, both
+`seed-only` in `../extraction/s6/PREDICATES.yaml` until a ratification says otherwise. The errata
+of this amendment are folded into the notes of `pre-glossary.csv` (SeatGrant, Checkout,
+hasOriginKey, enqueuedAt, MachineProofLock), `closed-world.yaml` (`hasOriginKey`) and
+`use-cases.yaml` (UC-002). The "until that pin" and "before the re-scope" sentences above
+describe the state before this fold and stay as provenance.

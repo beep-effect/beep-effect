@@ -1,0 +1,54 @@
+id: "ic:vfy-proof-stage-alt:001"
+hypothesis_ref: "dh:vfy-proof-stage:001"
+referent_grain: >-
+  A position in the verification workflow (repair-loop, pre-push, merged-preview, hosted) that a verification
+  run passes through, at which an attempt starts and its facts are issued.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two attempts are at the same proof stage iff they occupy the same position in the verification workflow;
+    the stage literal is evidence of that position, never the criterion, and the position is the same across
+    runs and clones.
+  reidentification_key:
+    - "stage literal on attempt-started rows, the lease state record and ledger facts (evidence only)"
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    No unity of its own; a stage is a classification. One run passes through more than one stage: so-eefbf95beb8d
+    (repair-loop) and so-10c2570fe2f6 (pre-push) carry one runId and one resolvedHeadSha, in time order.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: phase
+  alternatives:
+    - "subkind of verification attempt (each attempt carries exactly one stage, fixed at its start)"
+    - "situation in which evidence is produced (an environment posture: the merged-preview start so-3bf9cacb55b4 carries envProfile=pr-posture, the other cited starts envProfile=local)"
+    - "stage literal only (lexical code)"
+  existential_dependencies:
+    - "the verification run or episode whose phase it is"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      A phase needs a bearer that persists through it. The only bearer that changes stage in the records is the run
+      (one runId across so-eefbf95beb8d and so-10c2570fe2f6), and whether a run is an individual that persists, or
+      only a label grouping attempts, is not established. If the run is only a label, nothing persists through the
+      stages and my phase reading collapses into a rigid classification of attempts.
+  - description: >-
+      The kind=hit shadow so-dc1dce23ac11 at stage=pre-push names a prior fact by factRecordedAt equal to the write
+      instant of the repair-loop facts so-40abdcaf1156 and so-c997b4851faa. If that hit refers to a repair-loop fact,
+      the reuse checker judged repair-loop evidence eligible at pre-push, which fits stage as a phase of one
+      workflow rather than as a context that bounds evidence validity; the hit is hypothetical and grounds nothing
+      realized.
+status: proposed
+evidence_refs:
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0"
+  - "po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1"
+  - "po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900"

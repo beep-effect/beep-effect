@@ -1,0 +1,33 @@
+id: "fa:vfy-verification-lane-alt:001"
+hypothesis_ref: "dh:vfy-verification-lane:001"
+identity_card_ref: "ic:vfy-verification-lane-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "lane as a procedure specification (information object) individuated by its procedure (this card, one reading)"
+    still_viable: true
+  - label: "lane as a named slot that persists across command revisions"
+    still_viable: true
+  - label: "label grouping ledger rows only"
+    still_viable: false
+  - label: "the lane's runs"
+    still_viable: false
+strongest_counterexample: >-
+  Name versus content: every cited run of one laneId carries one commandDigest, so identity by name and identity
+  by command content predict identical records; on current evidence the two are observationally equivalent, and
+  the identity criterion is left unresolved.
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (name-individuated slot versus content-individuated procedure).
+  Decisive observation: one laneId with two commandDigest values over time (a command revision) and whether facts
+  or tier obligations treat the two as one lane. For CQ-001's lane kind: a second laneClass value or the deployed
+  lane-class domain; the single value cli-runnable cannot discriminate kinds.
+rationale: >-
+  The label rival fails: one laneId with one commandDigest recurs in eight clone ledgers over different heads and
+  durations, one procedure run against many trees. The lane is the specification, each fact records an execution
+  (spec_vs_execution separated); the procedure is kept apart from the world activity it governs
+  (world_vs_information separated) and from the anti-rigid "required lane" role it plays for a tier in CQ-006 and
+  CQ-017 (role_vs_bearer separated).

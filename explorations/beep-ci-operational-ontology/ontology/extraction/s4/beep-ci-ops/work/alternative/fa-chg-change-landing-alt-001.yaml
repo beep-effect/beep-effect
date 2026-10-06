@@ -1,0 +1,106 @@
+id: "fa:chg-change-landing-alt:001"
+hypothesis_ref: "dh:chg-change-landing:001"
+identity_card_ref: "ic:chg-change-landing-alt:001"
+referent_grain: >-
+  A dated occurrence: one alteration of a verification mechanism becoming effective.
+  Not the row that records it and not the artifact that carries it.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: >-
+      Model A (this card): an event, the landing of one alteration of a verification
+      mechanism, dated by landedAt. The pr and mergeCommit values are reidentification
+      evidence only.
+    still_viable: true
+  - label: >-
+      Change artifact: the class denotes the pull request and its merge commit, and
+      landedAt is an attribute of that artifact (its merge time). Every one of the 44 rows
+      carries exactly one pr and one mergeCommit, the 'applied'/'live' rows included. On
+      current evidence this is observationally equivalent to Model A for the rows that are
+      not marked 'applied'/'live'.
+    still_viable: true
+  - label: >-
+      Merge-landing versus apply-landing: the rows titled 'applied <date>' (#1050, #1364,
+      #1422) and 'live 2026-09-15' (#1141) each record two occurrences, a merge and an
+      infrastructure apply or go-live. Under this reading the class needs two event
+      subkinds, or the row conflates two landings.
+    still_viable: true
+  - label: >-
+      Revision reading: a superseding row (the #1019 row 'superseded by #1022'; #870's lock
+      'RETAINED (until #929)') records the revision of ONE change, not a landing of its
+      own. Model A absorbs this by counting landings and leaving revision to the change
+      continuant, so the readings differ only on what the change is, not on what a landing
+      is.
+    still_viable: true
+  - label: >-
+      Process: a landing is a rollout that runs from merge through apply to fleet
+      adoption, not an instantaneous event. The KPI law keeps the wall-clock partition
+      point apart from per-checkout adoption ('Merge time is never the fleet boundary'),
+      which weakens this reading but does not exclude it for the merge-to-apply span.
+    still_viable: true
+  - label: >-
+      Information object: the class denotes the curated ledger row. The rows carry
+      knowledge written after the landing they record. The #1019 title names #1022, which
+      landed later. The #870 comment names #929, which landed four days later. So a row
+      and the occurrence it records come apart, and CQ-016 asks about the occurrence
+      ('when did it land').
+    still_viable: false
+  - label: >-
+      Causal control intervention: the KPI law section 2 quote forbids this reading
+      without a supporting design (paired pre/post cohorts under adoption qualification),
+      and no such design is among the observations.
+    still_viable: false
+strongest_counterexample: >-
+  The hosted-runner-capacity rows. The #1141 row is titled 'live 2026-09-15' and carries a
+  landedAt on 2026-09-16 UTC. The #1364 and #1422 rows are titled 'applied <date>' and carry
+  whole-minute landedAt values. Each of these rows also carries a mergeCommit and a pr. If
+  the infrastructure apply and the merge are distinct occurrences, a single row records two
+  candidate landings, and neither landedAt nor the merge commit says which one the class
+  instance is. That breaks a one-row-one-landing reading and leaves Model A's identity
+  criterion incomplete.
+verdict: analyzed
+needed_evidence: >-
+  Artifact vs landing (observationally equivalent on current evidence for the rows not
+  marked 'applied'/'live'): a source record giving the merge time and the apply or live
+  time separately for one change, for example the #1364 or #1422 change, set beside its
+  landedAt. This also settles merge-landing versus apply-landing and whether a landing
+  spans an interval. Revision vs distinct landing: a record saying whether the #1019
+  alteration still holds after #1022 lands, or naming the later row a revision of the
+  earlier change. Information object vs occurrence: a record of the ledger's revision
+  history showing a row corrected while its landedAt and mergeCommit stay fixed would
+  confirm the separation further. Context: post-period membership is adoption-qualified
+  per checkout (HEAD ancestry against the event's merge commit), and that needs an
+  adoption-census observation. Ruling 12 applies to the decision that needs adoption
+  itself (which episodes of which checkout fall after a landing): a Must/Should CQ is
+  required and run 4 admits no CQ edit beyond CQ-009.
+evidence_refs:
+  - "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f"
+  - "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf"
+  - "po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b"
+  - "po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2"
+  - "po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6"
+  - "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+  - "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+  - "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+  - "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+rationale: >-
+  spec_vs_execution is separated. The alteration carried by a pull request or applied
+  configuration can be reverted and re-applied. Its landing is a dated occurrence of it
+  becoming effective. The 'applied <date>' titles show the carrier and its taking effect
+  named apart. world_vs_information is separated. The ledger rows hold content written
+  after the landing they date: #1019's title names its later superseder #1022, and #870's
+  comment names #929. So the row is a record about the occurrence, not the occurrence
+  itself. role_vs_bearer is separated. The observational/causal standing is held relative
+  to a supporting design (KPI law section 2: 'unless a supporting design ... upgrades
+  it'), so it is a context-relative standing of the landing, not part of what the landing
+  is. context_reification_needed is true. Whether a landing's alteration holds for an
+  episode depends on the checkout's HEAD ancestry ('a checkout is in the post-period ONLY
+  when its HEAD ancestry includes the event's merge commit'), and causal standing depends
+  on a study design. Both are contexts outside the landing. CQ-016 is the warrant. Its
+  query reads only the class and landedAt, so it is satisfied by Model A and by the
+  artifact rival alike and does not decide between them. The verdict is analyzed: the
+  category is ruled as event, and the open identity questions are carried as viable
+  rivals with their discriminating evidence named.

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:6fa7edcaaf52ffbd41207ca29fcd39f018ab4a4530ea3d7807eefa5a1f7732fb",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 43,
+    "end_line": 47
+  },
+  "quote": "5. **Member licensing (round-3 H-09/W-09).** The validator parses this table: each\n   DOMAIN class must be CQ-licensed (blocker), and each MEMBER is audited — licensed by\n   exact `ciops:<member>` occurrence in a testable query, by seed exercise, or by an\n   inline `*(supports: X)*` annotation on the member; members with none are reported\n   (visibility for S5, warn-level — the domain, not the member, is the admission unit).",
+  "epistemic_status": "quoted_prose"
+}

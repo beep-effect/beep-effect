@@ -95,6 +95,8 @@ ciops:grant-1 a ciops:SeatGrant ;
     ciops:contendsFor ciops:MachineProofLock ;
     ciops:hasGrantState ciops:ActiveGrant ;
     ciops:hasOriginKey "origin-beep-effect" ;
+    ciops:hasCheckout ciops:checkout-example ;
+    ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" ;
     ciops:admissionChargeTokens 3 ;
     ciops:capacityAtAdmissionTokens 8 ;
     ciops:usedCostEstimate ciops:ce-1 ;

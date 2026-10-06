@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 2287,
+    "end_line": 2292,
+    "content_sha256": "7eb00c2e12f01ea94e5bb12ef55ee8331f4885005909955efdfe8389c8961bb0"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties:record=69",
+    "lexical_name": "reason",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "reason=legacy-unowned-start"
+    }
+  ],
+  "source_excerpt": "# record 69\n_tag=attempt-terminated\nschemaVersion=yeet-attempt-journal/v1\nattemptId=72af6e70-b2a9-48c7-bce0-62c871d7bc9e\nrecordedAt=2026-09-04T12:03:24.230Z\nreason=legacy-unowned-start\n",
+  "epistemic_status": "parser_derived"
+}

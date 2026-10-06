@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:b754409ff756f696e06de016e1fab4b65cbaab4201c75bbb1707a0477dad7568",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 947,
+    "end_line": 954
+  },
+  "quote": "- id: iv-1269-cache-policy-seed\n  title: \"PR #1269 — quality:cache-policy seeded into the gate-order ladder at rank 19 (TTC D1)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-25T21:46:53Z\"\n  mergeCommit: b2a654bc4347d33862d815368e7ca56a9c86da28\n  pr: 1269\n  mechanismChanged: ordering",
+  "epistemic_status": "quoted_prose"
+}

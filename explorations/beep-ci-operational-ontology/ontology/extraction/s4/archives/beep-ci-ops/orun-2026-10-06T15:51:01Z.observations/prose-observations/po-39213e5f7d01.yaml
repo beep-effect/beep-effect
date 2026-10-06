@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:39213e5f7d01487ba0df48376cf630d5c8f722af131ec4296f6268f08c1e7cc1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 48,
+    "end_line": 52
+  },
+  "quote": "6. **Not deployed enums** (round-3 J U3): `GrantState`, `ExecutionState`, and\n   `CancelClass` are PACKET-SIDE closed domains with no deployed LiteralKit carrier —\n   the live store's states are structural (ticket-file vs lease-file vs absent;\n   verdict outcome + optional failedStepId). S4 lanes must NOT hunt for source enums\n   bearing these names; the ETL derives the members from store/verdict structure.",
+  "epistemic_status": "quoted_prose"
+}

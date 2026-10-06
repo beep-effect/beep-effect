@@ -1,0 +1,54 @@
+id: "ic:vfy-admission-work-kind-alt:001"
+hypothesis_ref: "dh:vfy-admission-work-kind:001"
+referent_grain: >-
+  A type of requested verification work under which seat requests fall (one per request), as against the
+  stage an attempt runs at and the proof-tier value it requests.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two requests fall under the same work kind iff they ask shared capacity for the same category of
+    verification work; the kind member is the same across requests by that category, not by its spelling,
+    and the kind literal is evidence of membership, never the criterion.
+  reidentification_key:
+    - "kind literal on the request chain (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    No unity of its own as a collective; each member is a classification of whole requests. Members differ in
+    the shape of the request they classify: review-fix chains carry no attemptId, branch or originKey member
+    (so-1c04b858cf47, so-1c24614d224d, so-382a5d07e3cc, so-b091bfd365c5, so-c01a58325c68), while merged-preview and
+    full-proof chains carry all three.
+  dependence: none
+ufo_analysis:
+  candidate_category: subkind
+  alternatives:
+    - "categorizing individuals (a closed set of classifier individuals related to requests by hasWorkKind, a powertype pattern)"
+    - "a code list as information object with no work category behind it"
+  existential_dependencies:
+    - "the seat-request kind it specializes"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Rigidity is asserted for requests, but no record shows a request that could have changed kind: each
+      chain is short (enqueue then one end), and a member that never varies in a sample is not evidence of
+      invariance. A request re-kinded in place (same chain, new kind) would make the classification a phase
+      and break this card.
+  - description: >-
+      The quarantined lease so-a8d270b5e19d carries kind=merged-preview beside stage=pre-push; if the kind
+      named the stage the work runs at, that record would be inconsistent. It is not, so on this card kind and
+      stage are two classifications; a reader who counts merged-preview requests as merged-preview stage work
+      would double count.
+status: proposed
+evidence_refs:
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:c01a58325c68c56c5ce297399e92f0844bdd2c041a5c11b1dddf5fcaf32772cb"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:6087c33b5bbd69d66ddedb67da1e0fcad5f35d1cf15f776db2d97820ed9a87ee",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 13,
+    "end_line": 13
+  },
+  "quote": "| `AssuranceTierId` | `TierRepairGreen` *(supports: AssuranceTier — repair-green is the prerequisite assurance state)*, `TierLocalFullProof`, `TierCiMergeGreen` | CQ-006 individuals; DECISIONS kpi-shape ruling (renamed from `CertaintyTierId` with the AssuranceTier rename; vernacular \"certainty tier\" is an altLabel) |",
+  "epistemic_status": "quoted_prose"
+}

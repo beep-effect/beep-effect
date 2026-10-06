@@ -1,0 +1,40 @@
+id: "fa:vfy-verification-attempt-alt:001"
+hypothesis_ref: "dh:vfy-verification-attempt:001"
+identity_card_ref: "ic:vfy-verification-attempt-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "attempt as a dated occurrence (event) with lane runs as parts (this card)"
+    still_viable: true
+  - label: "the seat request under a second key"
+    still_viable: false
+  - label: "grouping label for lane runs only"
+    still_viable: false
+  - label: "the journal, ledger and admission rows only"
+    still_viable: false
+  - label: "the episode the attempt belongs to"
+    still_viable: false
+strongest_counterexample: >-
+  Attempt and grant: on the quarantined lease so-a8d270b5e19d the attempt members (startedAt, stage, proofTier,
+  resolvedHeadSha) and the admission members (admittedAtMillis, kind, weightTokens) sit on one record, and startedAt
+  equals admittedAtMillis to the millisecond. Nothing in the cited rows shows an attempt running before or without
+  its grant for kinds that carry an attemptId, so the separation of attempt and grant is a modelling claim the rows
+  do not yet force.
+verdict: analyzed
+needed_evidence: >-
+  For attempt versus request or grant (Queue A): an attempt-started row sharing its attemptId with an admission chain
+  whose admittedAtMillis differs from the attempt's startedAt, or two admission chains under one attemptId (one
+  attempt queuing twice). For the unity of attempts in an episode: an episode-level record, which none of the
+  observations carries. Whether an attempt changes state (unterminated to terminated) as an occurrence or only in
+  its record needs an attempt observed mid-run.
+rationale: >-
+  The label rival fails: the attempt has its own start row (so-6390d5f857ae) and its own verdict (so-ca8b3f90e57c)
+  whose elapsedMs equals the start-to-end span exactly. The alias rival fails for requests in general: review-fix
+  chains carry no attemptId at all (so-b091bfd365c5), so a request is not an attempt under another key, and every
+  attempt-bearing chain carries a different attemptId. The episode rival fails as identity: one run holds several
+  attempts. The pipeline mode is a specification and the attempt its run (spec_vs_execution separated); the attempt
+  is kept apart from its rows and from its anti-rigid outcome classifications such as red or terminated
+  (role_vs_bearer separated). CQ-022 needs the attempt as the scope of inAttempt.

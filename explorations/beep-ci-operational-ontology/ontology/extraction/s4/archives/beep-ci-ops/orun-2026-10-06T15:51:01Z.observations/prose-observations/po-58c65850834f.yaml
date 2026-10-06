@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/MANIFEST.yaml"
+  },
+  "source_span": {
+    "start_line": 37190,
+    "end_line": 37216
+  },
+  "quote": "attempt_starts_by_stage:\n  cut: '2026-09-28T15:09:38.000Z'\n  cut_basis: 'committer instant of 9d52d8f587 (#1321), the P1 sitting''s cut (named in prose: the goal\n    decisions log is not yet in the origin/main tree); compared with attempt-started startedAt'\n  census_basis: 'a capture-time census over ring buffers: attempt journals keep a bounded tail, so these\n    counts are the starts retained in the pinned files at capture; a count taken over a different file\n    set or at a different instant differs, and this pinned census governs (P1 recorded call r)'\n  row_basis: attempt-started rows in the pinned attempt journals, by their stage member (absent on rows\n    written before the stage field shipped); a start without startedAt counts in all only\n  starts_without_started_at: 0\n  stages:\n    repair-loop:\n      all: 67\n      since_cut: 5\n    pre-push:\n      all: 987\n      since_cut: 110\n    merged-preview:\n      all: 3\n      since_cut: 0\n    hosted:\n      all: 0\n      since_cut: 0\n    <absent>:\n      all: 3200\n      since_cut: 0\nlast_merged_preview_start: '2026-09-09T03:41:38.790Z'",
+  "epistemic_status": "quoted_prose"
+}

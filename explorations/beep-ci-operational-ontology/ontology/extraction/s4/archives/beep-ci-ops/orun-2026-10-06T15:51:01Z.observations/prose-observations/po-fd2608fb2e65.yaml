@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:fd2608fb2e655c02344a1d2b0f9e78e96b045caa6d56d2600979e46fc11e7ff4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 156,
+    "end_line": 163
+  },
+  "quote": "- id: iv-891-per-user-runtime-root\n  title: \"PR #891 — admission queue and proof locks resolve one per-user runtime root\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-08-30T09:20:21Z\"\n  mergeCommit: 187f72069e8dcb1bb1b7cdf6536b467e1604d38c\n  pr: 891\n  mechanismChanged: admission",
+  "epistemic_status": "quoted_prose"
+}

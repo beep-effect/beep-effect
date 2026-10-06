@@ -1,0 +1,56 @@
+{
+  "id": "so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 385,
+    "end_line": 473,
+    "content_sha256": "72199f461442873b831e93ed85479fb16956df42175e18fad87e3a6c91450dca"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties:record=15",
+    "lexical_name": "prOpen",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "greptileScore=5/5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeStateAcceptable=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mergeable=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "notDraft=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "prOpen=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "requiredChecksGreen=true"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reviewDecisionAcceptable=true"
+    }
+  ],
+  "source_excerpt": "# record 15\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=a696316c-ef87-4179-b00e-188bba0fda53\nrecordedAt=2026-09-08T21:04:28.771Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=@chore/deps-update-09-05-26\ncommitted=true\ncreatedAt=2026-09-08T21:04:28.771Z\nfailurePolicy=fail-fast\nhead=88c0bd5d9041aa036b650e9e3d5feb88abf9db41\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1629.465691\npeakRssKb=506152\nexitCode=0\ntier=full\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=4002.830876\npeakRssKb=5132044\nexitCode=0\ntier=full\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=12486.269184\nexitCode=0\ntier=full\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=1576.503809\npeakRssKb=52260\nexitCode=0\ntier=full\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=475.843434\npeakRssKb=57812\nexitCode=0\ntier=full\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=passed\ndurationMs=1571993.292571\npeakRssKb=59840\nexitCode=0\ntier=full\nmessage=yeet publish succeeded.\nmode=publish\noutcome=success\npushed=true\nrunId=chore_deps-update-09-05-26-64c41f08b79f\nattemptId=a696316c-ef87-4179-b00e-188bba0fda53\nresolvedHeadSha=88c0bd5d9041aa036b650e9e3d5feb88abf9db41\ndiffFingerprint=50d6e44f7b2e04118093e3cfc7ca9434958c57daec50b4714da2daa385be342d\nproofTier=full\nstartedAt=2026-09-08T20:37:45.505Z\nendedAt=2026-09-08T21:04:28.771Z\nelapsedMs=1603267\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=be8995e66aeefedf0dabf131deaeaaf25c8e6fc8\nready=true\nprOpen=true\nnotDraft=true\ncloseoutRun=true\nrequiredChecksGreen=true\nthreadsResolved=true\nmergeable=true\nmergeStateAcceptable=true\nreviewDecisionAcceptable=true\ngreptileScore=5/5\nresolvedHeadSha=88c0bd5d9041aa036b650e9e3d5feb88abf9db41\ndiffFingerprint=50d6e44f7b2e04118093e3cfc7ca9434958c57daec50b4714da2daa385be342d\nproofTier=full\nenvProfile=local\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

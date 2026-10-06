@@ -1,0 +1,77 @@
+id: "ic:vfy-merged-preview-work-kind:001"
+hypothesis_ref: "dh:vfy-merged-preview-work-kind:001"
+referent_grain: >-
+  One member of the admission work-kind classifier over seat requests and grants: the kind
+  merged-preview, carried on a ticket's kind member, individuated by its place in the closed
+  work-kind domain, not by the word it shares with a proof stage.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    unresolved: what makes two classifications by this member the same member depends on the open
+    kind-of-work versus charge-code question of the work-kind class. Under the kind-of-work reading,
+    two requests fall under the same member iff the work they ask capacity for is of one kind
+    (merged-tree preview work); under the charge-code reading, iff their tickets carry one code that
+    fixes one charge and priority treatment. The deciding record is an admission chain of kind
+    merged-preview joined by attemptId to an attempt-journal start or a proof-ledger fact that shows
+    the stage and tree its granted work ran at. It supplies no identity to the requests it
+    classifies.
+  reidentification_key:
+    - kind=merged-preview on admission chains and leases (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: false
+  unity: ""
+  dependence: none
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - subkind of requested work (merged-tree preview work), if the class is a categorizer
+    - a code fixing charge 5 and nothing else, if the class is a controlled vocabulary
+    - the proof stage merged-preview (retired as the same individual on the fixed reading)
+    - an assurance tier (not this pair's to rule; see the tier and stage pairs)
+  existential_dependencies: []
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      so-a8d270b5e19d is a held grant of kind merged-preview whose own stage member is pre-push and
+      whose proof tier is full. That is consistent with the fixed reading that the admission work
+      kind is not stage activity, and so with one shared spelling over members of two domains; one
+      record cannot show it, and the record is a quarantined lease that may be anomalous.
+  - description: >-
+      Under both priority classes the member carries charge 5 (so-d99a3c53086c verify,
+      so-0d75ae7174ed publish), against 3 for full-proof (so-95b7d78a061f, so-363f9b7f07dc). If
+      charge were all a member fixed, the code reading would suffice and nothing would show a kind of
+      work behind the value.
+status: proposed
+evidence_refs:
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677"
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+rationale:
+  identity: >-
+    The member classifies requests through every observed end: withdrawal, ticket eviction
+    (so-29a5ac8607a2), release and lease eviction (so-860cff0d673e). Under the fixed reading, no
+    kind=merged-preview chain is a stage occurrence. CQ-021 warrants the work-kind class, not this
+    member, and is not cited as evidence for it.
+  rigidity: >-
+    Inherited from the work-kind class, unresolved.
+  dependence: >-
+    None shown: the member depends on no particular request, and no cited record shows a policy or
+    other individual it depends on; the literal-domains row (po-2f209664dde0) quotes the deployed
+    list it belongs to, which is a record of the domain, not a dependence of the member.
+  category: >-
+    A member cannot be ruled while its class is deferred. Queue H reading (c), merged preview as a
+    work kind, is held apart from reading (b), the stage, on the fixed reading. Whether it is
+    work-of-a-kind or a charge code is the class's open question.
+  temporality: >-
+    Inherited from the class.

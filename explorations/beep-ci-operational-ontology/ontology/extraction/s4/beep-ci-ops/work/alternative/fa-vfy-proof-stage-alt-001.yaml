@@ -1,0 +1,37 @@
+id: "fa:vfy-proof-stage-alt:001"
+hypothesis_ref: "dh:vfy-proof-stage:001"
+identity_card_ref: "ic:vfy-proof-stage-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: unresolved
+rival_models:
+  - label: "phase of a verification run or episode (this card)"
+    still_viable: true
+  - label: "rigid subkind of verification attempt"
+    still_viable: true
+  - label: "situation (environment posture) in which evidence is produced"
+    still_viable: true
+  - label: "an assurance tier under another name"
+    still_viable: false
+strongest_counterexample: >-
+  Each attempt carries one stage for its whole record, and the run that changes stage across attempts is not
+  shown to be a persisting individual; a rigid classification of attempts predicts every cited record as well
+  as a phase of runs does. The two readings are observationally equivalent on current evidence.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Observationally equivalent on current evidence (phase of a run versus subkind of attempt). Decisive
+  observation: an attempt whose stage changes during the attempt (phase of the attempt), or an episode-level
+  record that opens and closes a verification run and orders its stages (phase of the episode), or two attempts
+  at one stage whose evidence is treated differently by stage alone (context). The episode record is the same
+  missing evidence the run-grouping null left standing. The tier rival fails on records: proofTier=full occurs
+  under repair-loop (so-eefbf95beb8d), pre-push (so-10c2570fe2f6) and merged-preview (so-3bf9cacb55b4), so stage and
+  proof tier vary apart. Censuses (po-58c65850834f, po-563da43a9f12) show hosted with no start, fact or shadow and
+  merged-preview dormant in the capture window; no category is argued from those counts.
+rationale: >-
+  The stage is a position in a workflow specification and an attempt at that stage is an execution
+  (spec_vs_execution separated); the position is kept apart from its literal (world_vs_information separated).
+  Whether the stage is a phase borne by a run or a sortal of attempts is the open role/phase question, and
+  whether stage must be part of an evidence-validity context depends on a validity rule none of the records
+  states.

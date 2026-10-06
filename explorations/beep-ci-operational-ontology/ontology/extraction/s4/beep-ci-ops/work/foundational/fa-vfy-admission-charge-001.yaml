@@ -1,0 +1,82 @@
+id: "fa:vfy-admission-charge:001"
+hypothesis_ref: "dh:vfy-admission-charge:001"
+identity_card_ref: "ic:vfy-admission-charge:001"
+referent_grain: >-
+  The share of shared verification capacity that one queued request or held grant claims; on the
+  bearer readings it is individuated by its bearer, not by its value, and on the open
+  work-kind-attribute reading by the work kind.
+tests:
+  spec_vs_execution: unresolved
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: unresolved
+rival_models:
+  - label: quality individual inhering in the request or grant (kept as the card's alternative)
+    still_viable: true
+  - label: >-
+      quality value only, a token count attached to the bearer with no individual of its own
+    still_viable: true
+  - label: >-
+      relational claim mode, a commitment on the capacity pool that depends on the pool or a
+      capacity snapshot as well as on its bearer
+    still_viable: true
+  - label: >-
+      measured resource use of the granted work
+    still_viable: false
+  - label: >-
+      attribute of the work kind (one charge per kind, shared by every request of that kind)
+    still_viable: true
+strongest_counterexample: >-
+  A chain whose enqueue row and admit row carry different weightTokens values would split the
+  quality and value-only rivals: the quality reading keeps one charge with a new value, the
+  value-only reading counts two values and no persisting charge. No cited chain shows it, and that
+  is a sample limit.
+verdict: explicitly_deferred
+needed_evidence: >-
+  The category stays unresolved among four viable readings. To retire one of the quality and
+  value-only rivals: an admission chain whose weightTokens differs
+  between its admission-enqueued and admission-admitted rows (repricing), or a deployed statement
+  that the charge is recomputed at admission. To decide the relational claim mode: a record showing
+  whether the charge can exist apart from a capacity pool or snapshot (a charge stated with no pool,
+  or one restated against a second pool). To decide the work-kind attribute: one work kind carrying
+  two weights, or a charge recomputed per request.
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - CQ-010
+  - CQ-021
+rationale:
+  spec_vs_execution: >-
+    Unresolved. No cited record carries a weight rule: the records carry only one weightTokens value
+    per chain, and those values match the work kind across the cited chains (merged-preview 5,
+    full-proof 3, review-fix 1). If a per-kind weight rule exists, it would be a specification and
+    the charge borne by one request its application, separable because the rule would exist with no
+    request. The work-kind-attribute rival merges the two: the charge is the kind's value and there
+    is no per-request application. The discriminator is one work kind carrying two weights, or a
+    charge recomputed per request; no cited record shows either.
+  world_vs_information: >-
+    The weightTokens member is the record of the charge; the charge is what the admission check
+    compares against remaining capacity (CQ-010).
+  role_vs_bearer: >-
+    No role is in play on any viable reading. On the quality and claim-mode readings the charge
+    would inhere in a request or grant and is kept apart from that bearer; on the value-only reading
+    it is a value attached to the bearer; on the work-kind reading it belongs to the kind. None of
+    these makes the charge a role its bearer plays.
+  context_reification_needed: >-
+    Unresolved. On the quality and value-only readings the charge needs no context to be true of its
+    bearer, and capacity at admission is a separate quantity the CQ-010 query supplies. On the viable
+    relational claim mode the charge would be a claim stated against a capacity pool or snapshot,
+    which that context would have to carry. A record stating a charge against a pool, or with no
+    pool, would decide it.
+  rivals: >-
+    Measured use is not viable: equal charges co-occur with memory peaks about ten times apart. The
+    relational claim mode stays viable: the card leaves dependence unresolved (intrinsic to a bearer
+    on the quality reading, relational on this one, on the kind on the work-kind reading), and no
+    cited record states a pool or capacity snapshot, so nothing shows whether the charge can exist
+    apart from one. The work-kind attribute stays viable: every cited chain carries the
+    value of its kind, which fits a charge borne per request and a charge that is the kind's
+    attribute alike; only one kind carrying two weights, or a charge recomputed per request, would
+    separate them. Quality individual and value-only both remain, and only repricing evidence
+    splits them.

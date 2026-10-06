@@ -1070,3 +1070,213 @@ because an adapter can observe them.
   ratification decisions, frozen evidence, or corpus pins.
 - CQ, seed, fixture or contract edits; edits under `ontology/extraction/`, `.claude/`, or `goals/`.
 - Commits, staging, tags or PR publication by any lane.
+
+## At-pin addendum (2026-10-06; re-verified at the pin; goal P3 launch sitting Rulings 5, 7, 10, 13)
+
+Appended by the run-4 pin lane's docket step under the launch sitting ("2026-10-06 — P3 opened;
+run-4 launch sitting", `goals/ciops-ontology-pipeline/research/decisions.md`; "GD" below, repo-relative).
+Every byte above this heading is unchanged, the title's "pre-pin draft" words included: they are
+provenance (recorded call (o)). This section records pin-lane work; the docket-lane scope in "Not in
+scope" above is unchanged. Values were read on branch `feat/ciops-p3-run4` at `515ebe2070`, which
+contains the #1459 merge `41a7b0717e`, with the CQ-009 package (Ruling 5) in the working tree. The
+launch sitting and the goal log win over any sentence in this docket.
+
+#### Re-verification at the pin
+
+"P2 head" is `37f7937f1f`, the tree the launch survey read. A row that differs keeps both values and
+names the cause; nothing was corrected at a source.
+
+| Item | At the pin | P2 head / docket | Source | Match |
+| --- | --- | --- | --- | --- |
+| Prior index digest | `b9c140ccd31b` | `b9c140ccd31b` | `INDEX`, plain file bytes | yes |
+| Prior index rows | 284 = 37 proposed / 77 mapped / 32 irrelevant / 138 unresolved (84 live + 54 carried; 91 `so` + 47 `po`) | same | `INDEX` | yes |
+| Queue C coverage | 138 ids in Queue C, 138 unresolved ids in `INDEX`, symmetric difference 0; buckets 14 / 2 / 68 / 54 | 138, each once | this docket, `INDEX` | yes |
+| Queue A | 52 TAXONOMY terms, 15 with `flags`; 18 `accept` decisions in rat-053..070 | 52 / 15 / 18 | `ontology/extraction/s5/TAXONOMY.yaml`; shelter ratifications | yes |
+| Validator v15 | `fdbcefc9fd70` | same | `.claude/skills/ontology-foundational-auditor/scripts/validate_artifacts.py` | yes |
+| Framed contracts | 21 files, `dcc8da4cc7f9` | same | `.claude/skills/_shared/**` plus auditor templates, framed recipe | yes |
+| SKILL.md | `a12de4055976` | same | auditor skill | yes |
+| Prompts | denotation `ddec132ee905`, ufo-analysis `3d94feb0629c`, synthesis `117d82b29904`, ontoclean-adversary `9dbfb7fc9d4c`, alternative-model `4563e5726438` | same | auditor skill `prompts/` | yes |
+| Sandbox runner | `ecb6dcab421b` | same | `scripts/run_adapter_sandbox.sh` | yes |
+| Chain digest script | `617bc6828995` | same | `ONT/adapters/chain_digest.py` | yes |
+| CQ suite | `e1ed9c0f65f5`, 26 CQs (read from the committed blob of the CQ-009 package, `4af5ca6981`) | `e99e30cd8015`, 26 CQs | `ontology/docs/competency-questions.yaml` | no: Ruling 5 package |
+| Scope document | `750657e0c5b7` (read from the same committed blob) | `9ff61c839a08` | `ontology/docs/scope.md` | no: dated fold paragraph |
+| S6 predicate registry | `93b8172adc08`, 89 predicates, CQ coverage 2/25 fully ratified | 87 predicates, 2/25 | `ontology/extraction/s6/PREDICATES.yaml` | no: two `seed-only` records |
+| S6 POLICY | `a6cac3b03944` | same | `ontology/extraction/s6/POLICY.yaml` | yes (Queue F carry below) |
+| `run4-fleet` pin | manifest `7d22f37b879c`; 937 tracked files (467 ndjson, 468 properties, 1 json, 1 yaml); 11,179 events | same | `CORPUS/run4-fleet/` | yes |
+| `run4-ledger` pin | manifest `bff7da48e0e8`; 19 tracked files (9 ndjson, 9 properties, 1 yaml); 8,082 events; 4,041 pairs; 125 hits, 15 cross-origin, 0 disagreements, "hypothetical would-reuse, never realized" | same | `CORPUS/run4-ledger/` | yes |
+| Launch gate, C4.1 | checked at `goals/time-to-certainty/PLAN.md:171` (needle "C4.1 shadow mode — done 2026-09-21"); whole-file digest `e5bfe622d649` equals `gate.c4_1.sha256`; C4.2 unchecked at `:176` | same | committed blob at the pin; `CORPUS/run4-ledger/MANIFEST.yaml:45-59` | yes |
+| Launch gate, ledger half | `post_cut_pre_push_facts: 3628`, `holds: true` | same | `CORPUS/run4-ledger/MANIFEST.yaml:52-53` | yes |
+| Merged preview | facts 0 pre / 0 post, shadows 0 pre / 0 post, "dormant in capture window (P1 Ruling 1)" | same | `CORPUS/run4-ledger/MANIFEST.yaml:1368-1375` | yes |
+| Queue D pin census | 689 observed and retained rows; chains win 196, withdrawn 44, lease-evicted 2, ticket-evicted 1, in-flight 0, pre-v3 3, unclassified 0 | same | `CORPUS/run4-fleet/MANIFEST.yaml:61-62`, `:40365-40372` | yes |
+| Queue D snapshot projection | 695 rows, sha256 `8cceaf171636…`; `SHA256SUMS.txt` verifies; `redact_journal_snapshot.py --check` exits 0, "VERDICT PASS" (the raw payload is absent, so only the committed projection is verified) | same | `research/evidence/journal-snapshot-2026-10-01/`; `CORPUS/run4-fleet/MANIFEST.yaml:40400-40405` | yes |
+
+The gate holds from pinned bytes and no lane re-read the fleet. The 692-row figure in "Organic
+eviction census (2026-10-01T11:30Z)" above is that day's live count, not the pin census: the pin
+census is the 689 retained rows of `run4-fleet`, read beside the 695-row snapshot projection. Queue D
+did not fail closed.
+
+#### Prior chain
+
+The run manifest must carry exactly these three lines (re-verified above):
+
+```yaml
+first_run: false
+prior_index: runs/orun-2026-09-10T02:10:52Z.index.yaml
+prior_index_sha256_12: b9c140ccd31b
+```
+
+#### Queue G: change-event vocabulary (graduation Ruling 6(2))
+
+The pair only, presented for intake:
+
+| Term | Kind | Where it stands | Warrant |
+| --- | --- | --- | --- |
+| `OperationalChangeEvent` | class | `ontology/docs/pre-glossary.csv:25` (source CQ-016); in no S5 or S6 artifact | CQ-016 (`should_have`, `direct_lookup`), `ontology/docs/competency-questions.yaml:401` |
+| `ciops:landedAt` | data property, `xsd:dateTime` | `ontology/extraction/s6/PREDICATES.yaml:492`, `seed-only`; `pre-glossary.csv:83` | CQ-016 |
+
+Seed data: `research/control-interventions.yaml` as it stands at the pin, after the orchestrator's W1
+pass 5 (launch sitting, recorded calls (p) and (r)): sha256 `f520b302424f`, 44 rows, W1 census head
+`50b79e470b` (`goals/ciops-ontology-pipeline/research/w1-lever-query.md`, "Pass 5"). The two rows
+pass 5 added are `iv-1427-push-first-publish` and `iv-1422-spot-pool-drop-r6a`.
+
+| `mechanismChanged` | Rows |
+| --- | ---: |
+| admission | 7 |
+| gate-selection | 8 |
+| hosted-runner-capacity | 4 |
+| lane-assembly | 9 |
+| ordering | 2 |
+| sharding | 4 |
+| turbo-cache-inputs | 10 |
+| Total | 44 |
+
+`landedAt` spans 2026-08-27T19:52:03Z to 2026-10-06T02:22:00Z.
+
+Reading rules for the seats:
+
+- The admission criterion is graduation Ruling 6(1) as amended by goal P0 Ruling 2 (GD:39-48).
+  `mechanismChanged` is ledger-field governance (P0 Ruling 4, GD:58-67) and is never proposed as
+  vocabulary. A `landedAt` for a change applied outside the repository follows P0 Ruling 6
+  (GD:80-88). `causalStatus` is observational by default (the ledger's header, `:19-22`).
+- Rows are seed data. A seat reads them as evidence that such events are recorded with an instant
+  and claims no cause from them.
+- The evidence reaches the seats as prose observations only, one per ledger row, spanning the row's
+  `- id:` line through its first `mechanismChanged:` line (recorded call (j)).
+- The class and the property need distinct observations: an index row references one proposal per
+  observation ("Engine follow-ups NOT in this pin" above; engine v15 is pinned as it stands).
+- No row gains a structured `tier` member in this phase. Tier derivation for change-event rows is a
+  P4 hand-off (Ruling 10).
+
+#### Queue H: the fourth `AssuranceTier` member (graduation Ruling 10)
+
+- **Candidate.** A merged-preview member of the `AssuranceTierId` domain. The deployed stage literal
+  is `ProofStage` = `repair-loop | pre-push | merged-preview | hosted`
+  (`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts:194`, repo-relative).
+  KPI law v1.1 reports merged preview as a sub-partition of `TierLocalFullProof` until an auditor
+  run ratifies a fourth member (`research/kpi-measurement-rules.md:142-148`).
+- **Blocker.** `AssuranceTierId` is a parked domain (`ontology/extraction/s5/TAXONOMY.yaml:20-24`;
+  `ontology/extraction/s5/scripts/build_dispositions.py:82-84`) with three members
+  (`ontology/docs/literal-domains.md:13`). Adding a member is a T-Box change that needs a Must/Should
+  CQ requiring it or a named semantic-support license (`literal-domains.md:40-42`), and run 4 admits
+  no CQ edit beyond CQ-009. The available warrants are therefore CQ-002, CQ-006 or CQ-017 as they
+  stand, or `semantic_support_for` a same-run `AssuranceTier` class proposal.
+- **Evidence line.** Merged preview is read as dormant in the capture window, never as
+  observed-and-empty:
+  `CORPUS/run4-ledger/MANIFEST.yaml:1368-1375` (0 facts, 0 shadows) and
+  `CORPUS/run4-fleet/MANIFEST.yaml:37190-37216` (merged-preview starts: 3 retained, 0 since the cut;
+  last start 2026-09-09T03:41:38Z). The admission work kind `merged-preview` is not stage activity
+  (`CORPUS/run4-fleet/MANIFEST.yaml:37169-37174`). Goal P1 Ruling 1 (GD:149-166) fixes this reading.
+- **Seat question.** Is merged preview an assurance tier, or a stage inside an existing tier?
+- **Prior refutation to answer.** `ARCH/orun-2026-09-03T02:46:18Z.work/foundational/fa-pb-yeet-proof-tier-001.yaml`.
+
+#### Queue E addendum: the eleven provisional lane-plan terms
+
+The S7 contract's 2026-10-06 amendment hands these to this intake
+(`ontology/docs/s7-projection-contract.md:461-479`, inside §8.3). All eleven live in the provisional
+emission namespace `https://oip.law/ontology/ci-ops-prov#`; none is ratified.
+
+| Term | Kind | Signature |
+| --- | --- | --- |
+| `LanePlan` | class | one sha256-pinned lane-order plan |
+| `LaneStep` | class | one ordered lane position in a lane plan |
+| `LanePlanSpecification` | class | the governing lane-plan specification |
+| `hasLanePlan` | object property | `VerificationEpisode` → `LanePlan` |
+| `hasLaneStep` | object property | `LanePlan` → `LaneStep` |
+| `hasLanePlanSpecification` | object property | `LanePlan` → `LanePlanSpecification` |
+| `precedesLaneStep` | object property | `LaneStep` → `LaneStep`; derived from `laneStepIndex`, never independent evidence for the order (`:497-501`) |
+| `laneStepIndex` | data property | `LaneStep` → `xsd:integer`, 0-based |
+| `laneIdRef` | data property | `LaneStep` → `xsd:string` |
+| `handoffDigest` | data property | `LanePlanSpecification` → `xsd:string` |
+| `laneOrderRule` | data property | `LanePlanSpecification` → `xsd:string` |
+
+- Evidence: `apps/labs/ciops/test/fixtures/lane-plan-v1.ttl` (repo-relative; sha256 `58e9061ebbaa`,
+  33 lane steps) under goal P2 Ruling 3 (GD:400-418).
+- The contract's never-used list (`s7-projection-contract.md:481-485`) binds any proposal: no
+  ratified ordering-cluster term is reused for a lane plan.
+- `LanePlan` is listed beside `VerificationPlanSpecification` under rat-049 (`:520-521`; the
+  2026-10-06 addendum in "Gate" above). No `subClassOf`, `rdf:type` or equivalence is emitted, and
+  the plan-identity contract stays rat-049's to decide.
+
+#### Queue F: carried to the next S6 refresh (Ruling 7)
+
+`ontology/extraction/s6/POLICY.yaml` stays as it is (`a6cac3b03944`). Regenerating it at a new commit
+re-extracts the S6 policy, which is a baseline re-run the goal's SPEC stops on, and both run-4 pin
+manifests already carry the tree-pinned citation convention the edit was to adopt. The schedule in
+"Queue F" above ("for the run-4 pin lane as a regenerate-and-verify step") is superseded: the edit
+is carried to the next S6 refresh.
+
+#### Numbering (Ruling 13)
+
+| Directory | Ratifications | Rejections |
+| --- | --- | --- |
+| `ARCH/orun-2026-08-29T08:20:55Z.governance/` | 31 (rat-001..031) | 0 |
+| `ARCH/orun-2026-09-03T02:46:18Z.governance/` | 21 (rat-032..052) | 0 |
+| `ARCH/orun-2026-09-10T02:10:52Z.governance/` | 18 (rat-053..070, sheltered at this pin) | 0 |
+| `ONT/governance/ratifications/` (live) | 0 | 0 |
+
+Run 4 continues at `rat-071` and `rej-001`: each is the maximum over the live directory and every
+shelter, because the skill's `LAST` probe reads only the live directory, which is now empty.
+Proposal slugs are fresh and never equal an archived id (a collision breaks the archived digest
+checks in `validate_packet.py --s5`). The orchestrator scribes; no lane picks a number.
+
+#### Dated corrections and the shelter remap
+
+Each sentence named here stays above as written and is read as follows from 2026-10-06.
+
+1. **Queue E item 3, "no CQ, seed or fixture edit is owed to run 4"**, and **Engine deltas item 4,
+   "(none is scheduled)"**: superseded by graduation Ruling 9 and launch-sitting Ruling 5. One CQ
+   re-scope (CQ-009) and the errata fold in four other CQ notes landed before the pin, in one
+   commit of their own: the CQ-009 re-scope to same-checkout exclusion plus the legacy-origin
+   drain. Its contents: the CQ-009 entry
+   (`ontology/docs/competency-questions.yaml:217`, both arms bound in `?arm`); two must-fail
+   fixtures, `ontology/tests/fixtures/must-fail/cq009-same-checkout.ttl` and `cq009-legacy-drain.ttl`;
+   the seed grant's `ciops:hasCheckout` and `ciops:hasCoordinationProtocol`
+   (`ontology/tests/fixtures/seed.ttl:98-99`); the retained pre-#929 query
+   `ontology/tests/temporal/cq-009-pre929.sparql` over the unchanged `cq009-two-grants.ttl`; the
+   harness and validator antecedents; dated fold text in the notes of CQ-008, CQ-010, CQ-021 and
+   CQ-023 (no query, oracle or priority change); the regenerated `ontology/tests/cq-009.sparql` and
+   `ontology/docs/traceability-matrix.csv`; the errata fold in `pre-glossary.csv` (two new rows at
+   `:69-70`, census 42 / 72 / 4 = 118), `closed-world.yaml:90`, `use-cases.yaml:28`, `scope.md:112`
+   and `orsd.md:128`; and two `seed-only` records in `ontology/extraction/s6/PREDICATES.yaml`
+   (`:279`, `:288`), which are not ratifications. The CQ-suite and scope digests the run pins are the
+   two "no" rows of the table above, re-read by the orchestrator from the committed blob. No other CQ
+   edit is admitted in run 4.
+2. **Gate, "Only a steward ruling scribed in `DECISIONS.md` can amend the gate"**: since graduation
+   Ruling 7 the live ruling log is `goals/ciops-ontology-pipeline/research/decisions.md`;
+   `DECISIONS.md` is provenance. The gate amendments in force are the addenda above: 2026-10-01
+   under graduation Ruling 1 (scribed in `DECISIONS.md`, the prior log) and 2026-10-05 and
+   2026-10-06 under goal P1 rulings (scribed in the goal log).
+3. **Shelter remap (Ruling 3).** The run-3 trees moved byte-identically at this pin. Every
+   `ONT/work/**` path in this docket (the "Path abbreviations" bullet, the C(iv) cluster source, the
+   Queue D sources and re-open keys, Queue E item 1 and the S8 carry-forward) resolves under
+   `ARCH/orun-2026-09-10T02:10:52Z.work/`, and rat-053..070 under
+   `ARCH/orun-2026-09-10T02:10:52Z.governance/ratifications/`. The relocation note is
+   `ARCH/orun-2026-09-10T02:10:52Z.work/README.md`. Run-4 seat output lands in a fresh `ONT/work/`.
+
+| Sittings file cited above | Resolves to |
+| --- | --- |
+| `ONT/work/sittings/carried-clusters.yaml` | `ARCH/orun-2026-09-10T02:10:52Z.work/sittings/carried-clusters.yaml` |
+| `ONT/work/sittings/ratification-docket.md` | `ARCH/orun-2026-09-10T02:10:52Z.work/sittings/ratification-docket.md` |
+| `ONT/work/sittings/withdrawals-bind-ver-r1.yaml` | `ARCH/orun-2026-09-10T02:10:52Z.work/sittings/withdrawals-bind-ver-r1.yaml` |
+| `ONT/work/sittings/withdrawals-ver-r2.yaml` | `ARCH/orun-2026-09-10T02:10:52Z.work/sittings/withdrawals-ver-r2.yaml` |
+| `ONT/work/sittings/withdrawals-sitting-3.yaml` | `ARCH/orun-2026-09-10T02:10:52Z.work/sittings/withdrawals-sitting-3.yaml` |

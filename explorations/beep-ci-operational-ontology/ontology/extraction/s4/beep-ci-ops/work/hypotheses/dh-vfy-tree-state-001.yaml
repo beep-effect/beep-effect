@@ -1,0 +1,79 @@
+id: dh:vfy-tree-state:001
+observation_refs:
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants:
+- CQ-005
+- CQ-006
+- CQ-014
+proposed_referent:
+  label: tree state a verification fact is about (the committed tree at headSha)
+  description: 'One instance is one committed tree named by `headSha`, individuated by its content as the commit fixes it;
+    several facts of one attempt share it (so-12d5a26fbfac, so-d6adeec15c79, so-fcbe894799ea; so-40abdcaf1156, so-c997b4851faa).
+    Attempt-started rows and the quarantined lease carry the head an attempt resolves as `resolvedHeadSha` and, beside it,
+    a `diffFingerprint`: so-eefbf95beb8d (with its twin so-ff071fc9a2a9) and so-10c2570fe2f6 share one `resolvedHeadSha` value
+    across a repair attempt and a later closeout attempt while carrying different `diffFingerprint` values, and so-3bf9cacb55b4
+    and so-a8d270b5e19d carry their own of each. At the head-commit grain this reading takes, those two attempts are about
+    one tree; at the head-plus-diff grain (the viable rival below) they are about two states. Answers TreeState for CQ-005,
+    CQ-006 and CQ-014. Whether the referent is the tree content or the commit (a commit can be re-made over the same tree)
+    is not decided by these records. Record pairs so-d6adeec15c79/so-fcbe894799ea are each one record span seen twice (the
+    vocabulary record a strict subset of its twin): one individual, both cited.'
+representation_status: unresolved
+alternatives:
+- label: the commit object (a record naming the tree)
+  representation_status: information_artifact
+  plausibility: viable
+- label: 'the verified working state at the grain of resolved head plus working diff (`resolvedHeadSha` with `diffFingerprint`,
+    carried on the attempt-started rows and the quarantined lease, not on ledger facts), hypothesized on its own as dh:vfy-working-state:001;
+    told apart from the head-commit grain
+    by so-eefbf95beb8d and so-10c2570fe2f6, which share a resolved head and differ in diff fingerprint: the head grain counts
+    one state there and this grain two. What would decide: a fact, verdict or reuse decision that holds for one diff fingerprint
+    and not for another over the same resolved head (favours this grain), or one fact applied across attempts whose diff fingerprints
+    differ (favours the head grain)'
+  representation_status: domain_referent
+  plausibility: viable
+- label: a branch head pointer at write time
+  representation_status: implementation_artifact_only
+  plausibility: weak
+- label: 'a writer stamp scoped to one attempt or one run, with no tree behind it; every head value the cited records show
+    recurring recurs only inside one attempt (so-12d5a26fbfac, so-d6adeec15c79, so-fcbe894799ea; so-40abdcaf1156, so-c997b4851faa)
+    or one run (so-eefbf95beb8d, so-ff071fc9a2a9, so-10c2570fe2f6), so this reading makes every cited fact true. What would
+    decide: one head value carried by records of two runs (or of two attempts that share no run)'
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands. The earlier discriminator (one head value under opposite verdicts from two lanes, so-40abdcaf1156
+    and so-c997b4851faa) is true of a per-attempt writer stamp, since both records share one `attemptId`; every other head
+    value the batch shows recurring recurs only within one attempt or within one run (the repair and closeout attempt-started
+    rows so-eefbf95beb8d and so-10c2570fe2f6 share one `runId`). One run carrying two head values (the `runId` shared by
+    so-d6adeec15c79 and so-40abdcaf1156) is false of a purely run-scoped stamp, and two attempts of one run sharing one
+    value is false of a purely attempt-scoped stamp, but a stamp the writer reissues at some attempts of a run and carries across others makes both true; no cited
+    record carries one head value across two runs. The referent stays plausible for CQ-005,
+    CQ-006 and CQ-014, so the status is unresolved, not implementation_artifact_only. Needed evidence: a ledger fact or
+    attempt-started record of a second run (or of an attempt sharing no run) that carries a head value already seen under
+    another run, which would be false of an attempt- or run-scoped writer stamp; and, for the tree/commit split, two headSha
+    values with one tree content.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

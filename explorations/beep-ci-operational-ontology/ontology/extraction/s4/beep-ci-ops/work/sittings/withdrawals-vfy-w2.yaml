@@ -1,0 +1,63 @@
+run: orun-2026-10-06T15:51:01Z
+seat: orchestrator (transcribed from the synthesis seat return of the ROUND r1 launch r1b; call ai)
+pass: revision
+batch: vfy
+date: '2026-10-06'
+authority:
+- id: otp:vfy-tree-state:001
+  ruling: 26
+  sentence: Withdrawn because its chain dh:vfy-tree-state:001 no longer survives after the sitting-landed
+    null-discriminator attack.
+- id: otp:vfy-merged-preview-work-kind:001
+  ruling: 26
+  sentence: Withdrawn because its chain dh:vfy-merged-preview-work-kind:001 no longer survives after the
+    sitting-landed null-discriminator attack.
+scope: Ruling 26 withdrawals; the synthesis seat stopped before writing because withdrawals-vfy-r1.yaml
+  (Ruling 18) already exists. Digests are the seat-computed values, each re-verified by the orchestrator
+  against its pre-pass digests and the files.
+withdrawals:
+- id: otp:vfy-tree-state:001
+  hypothesis: dh:vfy-tree-state:001
+  term: TreeState
+  proposal_sha256: a56d89865e42f63c4ce8a78ed65ac076aeb1178ded4882276a413ace15ebdf37
+  reviews:
+  - file: work/proposals/otp-vfy-tree-state-001.review.yaml
+    sha256: 14128873e1bc4cc004ac90e4eac7aaf342778b1578d8280d8861cb3830acc332
+  landed_rules_unanswered:
+  - discriminator-true-of-dto (landed by sitting 1, Ruling 19)
+  dependents: []
+  reason: The hypothesis null now stands (not rejected), so the chain no longer survives and the proposal
+    cannot stand.
+  retained_evidence:
+  - so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+  - so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+  - so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+  needed_evidence: One head value across two runs, or across two attempts that share no run, so that a
+    per-attempt or per-run writer stamp cannot account for the recurrence.
+  rivals_preserved:
+  - committed tree content as an information object
+  - the commit object as the referent
+  - working state at resolved-head-plus-diff grain
+- id: otp:vfy-merged-preview-work-kind:001
+  hypothesis: dh:vfy-merged-preview-work-kind:001
+  term: MergedPreviewWork
+  proposal_sha256: 205d7cbc721f5f316b2a72271d5d7e1d01f63e3881cc660744c15d53af24c358
+  reviews:
+  - file: work/proposals/otp-vfy-merged-preview-work-kind-001.review.yaml
+    sha256: cbb2067936291b8c92b7401544122a74c73d2e29c95b3e8398d19917db95647f
+  landed_rules_unanswered:
+  - discriminator-true-of-dto (landed by sitting 1, Ruling 19)
+  dependents: []
+  reason: The hypothesis null now stands (not rejected), so the chain no longer survives and the proposal
+    cannot stand.
+  retained_evidence:
+  - po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f
+  - so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c
+  - so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+  - so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+  needed_evidence: A merged-preview admission chain charged other than 5, or a work fact beside kind=merged-preview
+    that no full-proof record carries, so that a charge code cannot account for the facts.
+  rivals_preserved:
+  - subkind of requested work (merged-tree preview work)
+  - charge-and-scheduling code with no kind of work behind it
+  - an assurance tier (not this pair's to rule; the tier and stage pairs carry it)

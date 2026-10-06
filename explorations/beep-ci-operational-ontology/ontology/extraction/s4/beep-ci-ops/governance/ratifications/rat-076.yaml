@@ -1,0 +1,13 @@
+id: rat:76
+proposal_ref: otp:vfy-seat-grant:001
+proposal_sha256: 050395fdde0cb4423ffb205a05413358a39a0b68b5cde54807d270dff13a8cbd
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: Accept otp:vfy-seat-grant:001 as an exact reuse of SeatGrant at the lease grain, warranted
+  by CQ-008 and CQ-009, affirming the ratified rigid value and the CQ-009 re-scope built over it. The
+  SeatGrant flag persists with no lift claimed; run 4 adds as flags the relator-against-held-phase question,
+  the unshown legacy-origin arm, the absent capacity-pool dependence, and the superseded mention of the
+  withdrawn checkout proposal.

@@ -38,7 +38,7 @@ UNBOUND_ALLOWED = {"cq-013": {"lane", "p50"}}
 ANTECEDENTS = {
     "cq-009": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
         ASK { ?g a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
-                 ciops:hasOriginKey ?o . FILTER(?o != "") }""",
+                 ciops:hasCheckout ?c . }""",
     "cq-010": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
         ASK { ?wu ciops:admittedBy ?g .
               ?g ciops:admissionChargeTokens ?ch ; ciops:capacityAtAdmissionTokens ?cap . }""",
@@ -63,7 +63,9 @@ FIXTURES = [
     ("must-fail/cq006-invalidated-proof.ttl", "cq-006", "rows_ge_1"),
     ("must-fail/cq006-unrelated-proof.ttl", "cq-006", "rows_ge_1"),
     ("must-fail/cq008-ticket-not-grant.ttl", "cq-008", "rows_eq_0"),
-    ("must-fail/cq009-two-grants.ttl", "cq-009", "rows_ge_1"),
+    ("must-fail/cq009-two-grants.ttl", "temporal/cq-009-pre929", "rows_ge_1"),
+    ("must-fail/cq009-same-checkout.ttl", "cq-009", "rows_ge_1_all_bound"),
+    ("must-fail/cq009-legacy-drain.ttl", "cq-009", "rows_ge_1_all_bound"),
     ("must-fail/cq010-oversize.ttl", "cq-010", "rows_ge_1"),
     ("must-fail/cq010-string-tokens.ttl", "cq-010", "rows_ge_1"),
     ("must-fail/cq019-filtered-trust.ttl", "cq-019", "rows_ge_1"),

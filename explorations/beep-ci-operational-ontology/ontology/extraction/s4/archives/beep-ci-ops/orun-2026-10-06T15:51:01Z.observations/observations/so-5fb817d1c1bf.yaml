@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:5fb817d1c1bf32b5c176eca953fa9b728159d6401e238f6e341cf2704a02ac92",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 5555,
+    "end_line": 5596,
+    "content_sha256": "555285a42f6743a6338a5da7cb2b208d7ac5318a9c45935637c9bdea7e7a841d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=0db74fdb-06d7-4bb6-8dc4-cffd38764932",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=11c046ef-9561-4bb4-830b-9451e684ab60"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/effect-vitest-package-scripts-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-package-scripts-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790964004283"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=0db74fdb-06d7-4bb6-8dc4-cffd38764932"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=8d05fd272440"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1790965334262"
+    }
+  ],
+  "source_excerpt": "# record 470\nownerRef=8d05fd272440\nownerRefVariant=pid_pair\nattemptId=11c046ef-9561-4bb4-830b-9451e684ab60\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-package-scripts-next\nbranch=codex/effect-vitest-package-scripts-next\nenqueuedAtMillis=1790964004283\nnonce=0db74fdb-06d7-4bb6-8dc4-cffd38764932\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 471\nownerRef=6027c37e9287\nownerRefVariant=pid_pair\nattemptId=2a15e4dc-3d13-49e4-9491-019771ea65ab\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation\nbranch=codex/qualification-signed-implementation\nenqueuedAtMillis=1790964381260\nnonce=c48a969b-83af-4999-88ef-202738c6dccf\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 472\nownerRef=8d05fd272440\nownerRefVariant=pid_pair\nattemptId=11c046ef-9561-4bb4-830b-9451e684ab60\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-package-scripts-next\nbranch=codex/effect-vitest-package-scripts-next\nenqueuedAtMillis=1790964004283\nnonce=0db74fdb-06d7-4bb6-8dc4-cffd38764932\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790965334262\n",
+  "epistemic_status": "parser_derived"
+}

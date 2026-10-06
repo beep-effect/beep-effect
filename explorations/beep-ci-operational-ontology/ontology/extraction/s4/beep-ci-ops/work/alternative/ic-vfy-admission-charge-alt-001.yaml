@@ -1,0 +1,52 @@
+id: "ic:vfy-admission-charge-alt:001"
+hypothesis_ref: "dh:vfy-admission-charge:001"
+referent_grain: >-
+  A quantity borne by one seat request (and carried on into the grant founded from it): the share of
+  shared admission capacity that bearer claims, as against what the admitted work later consumed.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two charges are the same charge iff they inhere in the same bearer (one request, or the grant
+    founded from it) as the same capacity-claim quality; equal token numbers on two bearers are two
+    charges with equal values, and the weightTokens field is evidence of the value, never the criterion.
+  reidentification_key:
+    - "bearer chain (one nonce chain) plus quality type; nonce is evidence only"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    No parts of its own; a single magnitude read on the enqueue row and repeated unchanged on the admitted
+    row and the lease state record of the same chain.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - "mode of the AdmissionWorkKind member (a policy-table value per kind, borne by the kind, not the request)"
+    - "property of the grant relator only (the claim exists only once capacity is held)"
+    - "plain field with no referent (null reading; rejected by the hypothesis and here)"
+  existential_dependencies:
+    - "the seat request it inheres in (the grant inherits it only if request and grant are one engagement)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Every cited chain shows the value fixed by work kind (merged-preview 5 on so-0d75ae7174ed and
+      so-d99a3c53086c, full-proof 3 on so-95b7d78a061f and so-363f9b7f07dc, review-fix 1 on so-0ddb10ca516c
+      and so-c01a58325c68) under both priority classes. If the value is a pure function of the kind, the
+      charge is a mode of the kind and a per-request quality is redundant: my card would count fifty-odd
+      charges where the domain holds three.
+  - description: >-
+      A charge read on the enqueue row and again on the admitted row of so-95b7d78a061f is, on my criterion,
+      one quality only if request and grant are one bearer; if they are two individuals a quality cannot
+      migrate between bearers and there are two charges per admitted chain, which my card does not count.
+status: proposed
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0ddb10ca516c6c4510a411df4cf8b5dbc0c021f06e690afe5b8ac507928e19cd"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"

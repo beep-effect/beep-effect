@@ -1,0 +1,68 @@
+{
+  "id": "so:sha256:9745b56d91436f97089aa1b549b85f13062e5615aacaf491c21e70493f98d425",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 159,
+    "end_line": 175,
+    "content_sha256": "b570bdffe44d14d75dedb0a220dc8914baf628a7ef55719c8491f2b9e8c30b58"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=late-evicted",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=820"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=810"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=830"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=late-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=high"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 27\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=late-evicted\nenqueuedAtMillis=810\nkind=full\npriority=high\n# record 28\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=late-evicted\nadmittedAtMillis=820\n# record 29\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=late-evicted\nevictedAtMillis=830\n",
+  "epistemic_status": "parser_derived"
+}

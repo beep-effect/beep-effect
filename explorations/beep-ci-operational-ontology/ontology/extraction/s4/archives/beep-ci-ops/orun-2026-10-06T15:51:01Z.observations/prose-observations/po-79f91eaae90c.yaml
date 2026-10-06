@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:79f91eaae90c87e6a30b77aead2a836deadc1fe4d307a39f3c1532a9078a45cd",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 481,
+    "end_line": 495
+  },
+  "quote": "Never used for a lane plan: `hasCurrentProposal`, `hasProjectionSpecification`,\n`hasStep`, `hasScopeTag`, `stepIndex`, `ScheduleStep`, `ciops:ScheduleProposal`\ntyping, `ciops:VerificationLane` typing, `schedulesWorkUnit`, and `hasScope` or\n`Scope` in any namespace. The lane scope stays a member of the specification\ntuple below, not an emitted scope term. The episode node keeps the §3.5 rule\n(`ciops-prov:episode-${pnLocalSlug(episodeId)}`, typed\n`ciops-prov:VerificationEpisode`). That class carries run 3's episode-unity\nflag (rat-065) into the run-4 intake, so a lane-plan caller **must** use an\nepisode id distinct from every admission episode id. Reusing one would assert\nthat a single occurrence is both an admission verification and a lane-planned\nrun, deciding the deferred unity flag, and the two documents would each\nreplace the other under §3.5's replace-the-document rule. The lane-plan\nepisode stays typed; the body test emits an admission document and a\nlane-plan document with distinct episode ids and asserts that their episode\nnodes are disjoint.",
+  "epistemic_status": "quoted_prose"
+}

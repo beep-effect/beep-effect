@@ -1,0 +1,63 @@
+target: "otp:vfy-verification-attempt:001"
+target_sha256: "2986e1d5b2c45ff6427681e99511ccf8d29440c9ff853b6ac3c4fa6f88fdc189"
+chain_sha256: "8c1b5ec350030fad2b33dd488f5d4b8f90d5333f2fafc4defd6b3ef022deb17f"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking: the hypothesis says an attempt is "individuated by its attempt identifier
+    (attemptId)", which is identifier-as-identity; the card and the definition individuate by the
+    start event with attemptId as evidence. Align the hypothesis wording with the card.
+  - >-
+    Non-blocking: open_issues says "flag VerificationAttempt persists", but the status lookup row for
+    VerificationAttempt (TAXONOMY.yaml) carries no flags field. Name where the flag is recorded or
+    drop the flag phrasing.
+attacks:
+  - surface: taxonomy
+    rule: reuse-semantic-match
+    counterexample: >-
+      Tried a grain other than the ratified VerificationAttempt (rigid): so-6390d5f857ae
+      (attempt-started, startedAt 16:59:45.919Z) and so-ca8b3f90e57c (verdict, endedAt 17:01:07.524Z,
+      elapsedMs=81605) share one attemptId, and 81605 ms is exactly that span: one started pipeline
+      run. The gufo:Event alignment fits; the card's unresolved rigidity is a deferral, not an
+      anti-rigid claim. No parent asserted. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Tried run file or attemptId as the criterion: two attempts of one runId start at different
+      stages (so-eefbf95beb8d repair-loop, so-10c2570fe2f6 closeout) and are kept distinct; the card
+      makes attemptId evidence and the start event the criterion. The seat-request alias rival is
+      named with its discriminator. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether CQ-022 answers without the term: its query joins the committed failure and each
+      execution through one ?attempt by inAttempt and lists VerificationAttempt in required_classes.
+      Without an attempt node the attempt-scoped join is lost. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: a bookkeeping label grouping lane rows. A label has no start row or verdict of its own;
+      so-6390d5f857ae and so-ca8b3f90e57c give the attempt its own start, end, outcome and an
+      elapsedMs equal to the span between them. Survived.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    alias of the seat request (one individual under two names); discriminating fact: an
+    attempt-started row and an admission chain sharing one attemptId, or two admission chains under
+    one attemptId
+evidence:
+  - "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - CQ-022

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/MANIFEST.yaml"
+  },
+  "source_span": {
+    "start_line": 1353,
+    "end_line": 1382
+  },
+  "quote": "stage_census:\n    repair-loop:\n      facts:\n        pre: 5\n        post: 0\n      shadows:\n        pre: 5\n        post: 0\n    pre-push:\n      facts:\n        pre: 408\n        post: 3628\n      shadows:\n        pre: 408\n        post: 3628\n    merged-preview:\n      facts:\n        pre: 0\n        post: 0\n      shadows:\n        pre: 0\n        post: 0\n      reading: dormant in capture window (P1 Ruling 1)\n    hosted:\n      facts:\n        pre: 0\n        post: 0\n      shadows:\n        pre: 0\n        post: 0",
+  "epistemic_status": "quoted_prose"
+}

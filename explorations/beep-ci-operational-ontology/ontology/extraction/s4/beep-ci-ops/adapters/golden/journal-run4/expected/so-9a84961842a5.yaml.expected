@@ -1,0 +1,48 @@
+{
+  "id": "so:sha256:9a84961842a549119de8dd2c5670766b96e3a9686cfbebb6df6ffb29347b90b2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 44,
+    "end_line": 49,
+    "content_sha256": "f052757e63abc7c4425a1946e458c9fa5dcbbc7528e5aa6e49d758fe6de322da"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=dead-lease",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=150"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lastHeartbeatAtMillis=145"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=dead-lease"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=dead-lease\nevictedAtMillis=150\nlastHeartbeatAtMillis=145\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,102 @@
+id: dh:vfy-merged-preview-work-kind:001
+observation_refs:
+- po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+- so:sha256:1454a58421d5c34bb5b5042185ded5f010c59eed9bf8f4618a1b47a21d6ac2f2
+- so:sha256:1c1a47ab0a24f2030f9adbd35e1cb70302f0537ccd94a8b6f815a15956f246e9
+- so:sha256:202cf1353ee3399c439c50514382b75898bd0053f07e0155cff135e5da1ea695
+- so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677
+- so:sha256:39551747b60d66e8780875439fb941c0339e58f319cca5683cf4ba4ddb7ee932
+- so:sha256:3a6e1d02992aae92c9a6c655f58d27b6c4c7ba00cd998571250028f6d21c086e
+- so:sha256:40e26d2f06727f6b3e5744a8fe251564521f144cbfab9eefc21417ec3b8cfe5c
+- so:sha256:43780f21666c853c77fd6ef57de4d096353d8a00786d6574a8929611e521b1b7
+- so:sha256:5692f872f1193ed1a7d8f272a60b3e1dcfa452cd5872acc36f37a903e9489da7
+- so:sha256:5fb817d1c1bf32b5c176eca953fa9b728159d6401e238f6e341cf2704a02ac92
+- so:sha256:69757556b71cebe4be46d5cab890d3ff69f72565175f9091db832efb135a9319
+- so:sha256:6bbe438d1133f37eabc818032603da718d67a632b1f9f5a527419a06a6007746
+- so:sha256:7b7e3ae102981a7b4ed16f6344f2ac3efba21fd762b1d36d4110ff9c2acbc75e
+- so:sha256:7fa2e91b7760f2d323b1a2e0d60cbc5a19a46728da1b51e9b4be41a2e3c2e29e
+- so:sha256:8528aeede357e4f01207fa81b86236e75172b001db41d098a0268ec09a1a84c1
+- so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1
+- so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20
+- so:sha256:95c548d11f0d4f662c747129c4775a26ee6905f8216e04311a00479a137388da
+- so:sha256:97294ad8ff802b8ce62ad6a705ddcfe554f20c25c0083ea42fb52fe31625d60c
+- so:sha256:9832cf3344c12caa7ae6cff6da206198b15c1af557d740d9c1578bc84e40f1db
+- so:sha256:9883ccc4fb4caf307adb1bb3e1a46c2cfc8a083abdfe4e65e61fbe37ad8381c9
+- so:sha256:9944009915a62c907bc1be0456d2b69c272f61ff4fc0473bfbd14db7ab35cf94
+- so:sha256:9de2dc5d014be58e691270bfb19f1ca4245a9986e9f2ad3589663a144a8ffcb9
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+- so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020
+- so:sha256:acd8b44fb47d2f6e9c65ee598627835b64adaecc2625bef8df8378d4dcc508e7
+- so:sha256:b091bfd365c5afccdb62bb90465dca6e835585ffe53b09d26e9e0a2b9c61cfd4
+- so:sha256:b0d1acea3324393c2a51494ffc72b20bf5565e9ff96f2416f0d9921e99c0cfd7
+- so:sha256:b62e6964ef692ce7d92d198216dcd03098feac6f8bed9a81da2a3047caaa7f79
+- so:sha256:b7f9da9330672e476e84fb60392273c964dd625ee9362e24c5491fcdee3169a6
+- so:sha256:bf5548d0d5fe5a450c6e46569ef87b75f2e98ed886c06b7628f69ba61c68947b
+- so:sha256:c4f41caf9b1e088de028c28e67075f3f6f63dd6a47de296744c1088cf69c966b
+- so:sha256:cc2d16f12d1c71cdb72b426099b406a519b08c7141b788e89607b19ebd8e5302
+- so:sha256:d17c4d8c00d96fbd6d5f2c854ab9936e75c26a06b12025ab2219d430837ae83d
+- so:sha256:d463fed2f96706ee297f431b9d928824649d40b80aeca6cd0bc0e6e429c8c450
+- so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c
+- so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c
+- so:sha256:ffdc0da640dfeee162c38c8230428e04e4f407c42d3ea2369f22a3f9e8c309ab
+- so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+- so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+cq_warrants: []
+proposed_referent:
+  label: merged preview as an admission work kind (reading c)
+  description: 'One instance is the merged-preview member of the admission work kind (dh:vfy-admission-work-kind:001): the
+    kind of work a seat request asks capacity for, carried on its ticket as `kind=merged-preview` and spelled in the deployed
+    AdmissionWorkKind list the literal-domains row quotes (po-2f209664dde0); the KPI law (po-fd56d2b008d1) notes that AdmissionWorkKind
+    includes `merged-preview`. The admission chains carry it on enqueued-and-withdrawn requests, on a queued request evicted
+    for its submitter''s death (so-29a5ac8607a2), on admitted-and-released chains (so-8fcf58cfd24c, so-d99a3c53086c), on lease-evicted
+    chains (so-860cff0d673e, so-a9ed1352e2bc) and on the quarantined lease so-a8d270b5e19d, with `weightTokens=5` in every
+    cited chain, against `weightTokens=3` on the cited `kind=full-proof` chains (so-95b7d78a061f, so-363f9b7f07dc, cited for the contrast). Individuated
+    by its place in the closed work-kind domain. Fixed reading: the admission work kind is not stage activity, so no `kind=merged-preview`
+    chain is counted as a stage occurrence; the lease so-a8d270b5e19d carries `kind=merged-preview` beside `stage=pre-push`
+    and `proofTier=full`, so on one record the work kind is neither the stage nor the proof tier. No direct warrant: CQ-021
+    binds the work kind of each queued request generically (its required class is AdmissionWorkKind) and names no merged-preview
+    member, the same ground on which the tier member dh:vfy-merged-preview-tier:001 has no direct warrant from the tier CQs.
+    The member supports the CQ-021-warranted work-kind class dh:vfy-admission-work-kind:001 (it is one of the values that
+    class ranges over), so it is judged on evidence with `cq_warrants` empty; whether that support licenses it is the synthesis
+    seat''s call. Rivals: dh:vfy-merged-preview-tier:001 (a) and dh:vfy-merged-preview-stage:001
+    (b).'
+representation_status: unresolved
+alternatives:
+- label: merged preview as a proof stage (dh:vfy-merged-preview-stage:001); told apart by whether the value is carried by
+    an attempt or ledger `stage` member rather than a ticket `kind`, and so-a8d270b5e19d shows the two apart on one record
+  representation_status: domain_referent
+  plausibility: viable
+- label: merged preview as an assurance tier (dh:vfy-merged-preview-tier:001); told apart by a record verifying an episode
+    to a merged-preview level
+  representation_status: unresolved
+  plausibility: viable
+- label: a shared word across two deployed domains with no work kind behind the ticket value
+  representation_status: lexical_alias
+  plausibility: weak
+- label: 'a charge code: the ticket value fixes a capacity charge (`weightTokens=5`) and names no kind of work behind it.
+    Every cited charge fact is true under it (a charge of 5 under `priority=verify`, so-d99a3c53086c, and under `priority=publish`,
+    so-0d75ae7174ed, against 3 for `kind=full-proof`, so-95b7d78a061f, so-363f9b7f07dc), and the one record that shows the
+    work behind a `kind=merged-preview` lease (so-a8d270b5e19d) carries `stage=pre-push` and `proofTier=full`, no work fact of
+    its own. What would decide: a record where `kind=merged-preview` co-occurs with work no `kind=full-proof` record carries (a merged-preview
+    stage or a merged-tree input on the lease or attempt it admits), or a `kind=merged-preview` chain whose charge is not 5'
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands. The earlier discriminator (a charge of 5 under two priority classes against 3 for `kind=full-proof`)
+    is true of a code that fixes a charge with no kind of work behind it, so it does not tell a work kind from a charge code;
+    no cited record is false under that reading. The literal-domains row (po-2f209664dde0) grounds the member in a distinct
+    scheduler weight, which the code reading also makes true, and its glosses and the KPI law (po-fd56d2b008d1) are naming,
+    not discriminators. The member stays plausible as one of the values the CQ-021-warranted work-kind class ranges over
+    (dh:vfy-admission-work-kind:001), so the status is unresolved, not implementation_artifact_only. Needed evidence: an
+    admission chain, lease or attempt record on which `kind=merged-preview` co-occurs with a merged-preview stage, a merged-tree
+    input or another work fact no `kind=full-proof` record carries; or a `kind=merged-preview` chain with a charge other
+    than 5, which would be false of a code that fixes the charge.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

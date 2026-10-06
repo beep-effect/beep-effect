@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 53,
+    "end_line": 60
+  },
+  "quote": "- id: iv-929-origin-lock-retirement\n  title: \"PR #929 — weighted scheduler becomes sole admission authority; per-origin lock retired after drain\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-08-31T08:20:46Z\"\n  mergeCommit: e76c4db079e62155b1c03e8b77a8b210cac6e1d2\n  pr: 929\n  mechanismChanged: admission",
+  "epistemic_status": "quoted_prose"
+}

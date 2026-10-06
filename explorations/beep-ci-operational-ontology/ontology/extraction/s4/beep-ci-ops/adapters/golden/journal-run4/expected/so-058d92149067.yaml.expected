@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:058d9214906724503de6832636322b14fc9c95763813238cde600ccb1ee9936e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 118,
+    "end_line": 129,
+    "content_sha256": "761efc6bea7363fe35522dae18030fa0084f94e6b8948d31f2a5508a4e085321"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=quick-kind",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=750"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=740"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=quick"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=quick-kind"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=high"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 20\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=quick-kind\nenqueuedAtMillis=740\nkind=quick\npriority=high\n# record 21\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=quick-kind\nadmittedAtMillis=750\n",
+  "epistemic_status": "parser_derived"
+}

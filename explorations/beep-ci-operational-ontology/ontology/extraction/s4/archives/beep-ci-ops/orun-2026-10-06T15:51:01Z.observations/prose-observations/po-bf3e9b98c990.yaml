@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:bf3e9b98c9907b6e670ba25e920d836bdec14c3f2414c5aa885a905bf4cdeca2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 620,
+    "end_line": 627
+  },
+  "quote": "- id: iv-1068-cache-policy-gate\n  title: \"PR #1068 — quality:cache-policy gate joins repo-sanity and cheap-gates; lint caching off for identity and types\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-10T22:38:53Z\"\n  mergeCommit: 2086a0a090c1ed441cc5099defda4acbd53a2ee0\n  pr: 1068\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

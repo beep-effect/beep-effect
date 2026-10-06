@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:1148f500b10eb3bfc06c86ce61c235eaa3108aa8ac2171bbe4b47421e5ea502b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/attempts/a/a/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 11,
+    "content_sha256": "9536ef0b66ab5754a1649182b27e6b4a6552eaabb25f7024f4903c1db8cb2dc3"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/a/a/attempts.properties:record=0",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-started"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-one"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=fixture-owner"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=ownerpid"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nownerRef=fixture-owner\nownerRefVariant=ownerpid\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=attempt-one\nmode=publish\nproofTier=full\nenvProfile=local\nstage=pre-push\nnote=two words\n",
+  "epistemic_status": "parser_derived"
+}

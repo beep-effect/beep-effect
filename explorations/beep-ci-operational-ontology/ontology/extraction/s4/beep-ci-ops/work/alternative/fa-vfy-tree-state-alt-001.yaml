@@ -1,0 +1,38 @@
+id: "fa:vfy-tree-state-alt:001"
+hypothesis_ref: "dh:vfy-tree-state:001"
+identity_card_ref: "ic:vfy-tree-state-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "content snapshot as an information object (this card)"
+    still_viable: true
+  - label: "committed tree at head-commit grain as a domain kind"
+    still_viable: true
+  - label: "verified working state at head-plus-diff grain"
+    still_viable: true
+  - label: "the commit object"
+    still_viable: true
+  - label: "branch head pointer at write time"
+    still_viable: false
+strongest_counterexample: >-
+  Grain: the attempts so-eefbf95beb8d and so-10c2570fe2f6 share a resolved head and differ in diffFingerprint, while
+  every ledger fact carries headSha alone. Head grain counts one tree state there, head-plus-diff grain two; my
+  content criterion sides with two, but no fact, verdict or reuse decision in the records is keyed by the diff, so
+  head grain and content grain are observationally equivalent for the facts on current evidence.
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (head grain versus content or head-plus-diff grain, and content
+  snapshot versus commit). Decisive observations: a fact, verdict or reuse decision that holds for one diff
+  fingerprint and not another over one resolved head (favours content grain), one fact applied across attempts
+  whose diff fingerprints differ (favours head grain), or two headSha values recorded with one content digest
+  (separates content from commit).
+rationale: >-
+  The pointer rival fails: one headSha is the common subject of opposite verdicts from two lanes in one attempt
+  (so-40abdcaf1156 passed, so-c997b4851faa failed), so it names what the evidence is about, not a value private to a
+  record. A content snapshot is neither plan nor run (spec_vs_execution not_applicable); it is kept apart from the
+  headSha that names it (world_vs_information separated) and from the anti-rigid "current tree of a checkout" that
+  CQ-014 reads (role_vs_bearer separated). CQ-005 and CQ-006 condition validity jointly on tree and epoch, so the
+  context is reified.

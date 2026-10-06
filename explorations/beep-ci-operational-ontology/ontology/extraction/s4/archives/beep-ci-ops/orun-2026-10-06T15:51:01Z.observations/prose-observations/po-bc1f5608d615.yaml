@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:bc1f5608d615e7d78e834be1f177a297532c9cc240321ec70cb554620873aa36",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 22,
+    "end_line": 22
+  },
+  "quote": "| `CachePosture` | `LocalOnly` *(supports: CachePosture — fail-closed local read/write is the default output)*, `LocalWriteRemoteRead`, `CallerControlled` *(supports: CachePosture — CI and explicit cache flags preserve caller ownership)* | CQ-024; DEPLOYED `TurboCachePlan` union (`internal/cli/TurboCache.ts`): `local:rw` -> LocalOnly, `local:rw,remote:r` -> LocalWriteRemoteRead, plus CallerControlled (CI / explicit `--cache=` arg — flags NOT rewritten). Fail-closed precision (round-3 J W2): \"everything else -> local-only\" holds on the ENV-QUAD resolution path only; `TURBO_CACHE` accepts only the remote-read posture as input — `local:rw` is the fail-closed OUTPUT, not an honored input |",
+  "epistemic_status": "quoted_prose"
+}

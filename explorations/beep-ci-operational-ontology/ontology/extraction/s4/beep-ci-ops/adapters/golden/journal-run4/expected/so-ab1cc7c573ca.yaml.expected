@@ -1,0 +1,48 @@
+{
+  "id": "so:sha256:ab1cc7c573ca9a8f13dfc44a479cb53992c9d8d0c20d50b20c1bac5eba4bef75",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/alpha/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 15,
+    "end_line": 30,
+    "content_sha256": "996cbe69fe570172b75316db5121f5990b56bac2e5970acacdc577b561fb8749"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/alpha/proof-ledger.properties:record=1",
+    "lexical_name": "laneClass",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=turbo-task-hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=<fixture>/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 1\nkind=fact\nschemaVersion=proof-fact/v1\nschemaVersion=proof-fact/v1\nlaneId=lint:alpha\nlaneClass=cli-runnable\nenvProfile=local\ninputSource=turbo-task-hash\nkey=first\noutcome=passed\ndurationMs=10.5\nattemptId=attempt-one\noriginKey=<fixture>/alpha\ntier=full\nstage=pre-push\nrecordedAt=2026-01-01T00:00:00.000Z\n",
+  "epistemic_status": "parser_derived"
+}
