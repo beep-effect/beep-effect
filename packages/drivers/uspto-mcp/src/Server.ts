@@ -14,7 +14,7 @@
  */
 
 import { $UsptoMcpId } from "@beep/identity/packages";
-import { composeGatedLayers, gatedLayer, sanitizedToolkit, statelessMcpProtocols } from "@beep/mcp-kit";
+import { composeGatedLayers, gatedLayer, handshakeMcpProtocols, sanitizedToolkit } from "@beep/mcp-kit";
 import { Uspto } from "@beep/uspto";
 import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
@@ -57,7 +57,7 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
 ) {}
 
 /**
- * Instructions the host advertises through `server/discover`.
+ * Instructions the host advertises on `initialize` and through `server/discover`.
  *
  * **Example** (Reading the advertised instructions)
  *
@@ -72,7 +72,7 @@ export class UsptoMcpServerConfig extends S.Class<UsptoMcpServerConfig>($I`Uspto
  * @since 0.0.0
  */
 export const USPTO_MCP_INSTRUCTIONS =
-  "USPTO Open Data Portal tools: search patent applications by query expression and read an application's file-wrapper documents, reshaped to a named field tier under a byte budget. Without USPTO_API_KEY the tools answer with an api_key_required envelope instead of failing. Call tools directly; the host is stateless and needs no initialize handshake.";
+  "USPTO Open Data Portal tools: search patent applications by query expression and read an application's file-wrapper documents, reshaped to a named field tier under a byte budget. Without USPTO_API_KEY the tools answer with an api_key_required envelope instead of failing. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Registrations only: the soft-gated, sanitized USPTO toolkit with no
@@ -108,10 +108,16 @@ export const UsptoMcpRegistrationsLive: Layer.Layer<never, Config.ConfigError, U
  *
  * **Details**
  *
- * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
- * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
- * and call tools with request metadata; a legacy `initialize` is answered
- * with `-32022` and the supported list. There is no session.
+ * The host serves the kit's `handshakeMcpProtocols`: the stateless
+ * `2026-07-28` adapter first, then the handshake-era adapters. Stateless
+ * clients open with `server/discover` and call tools with request metadata;
+ * a client that opens with a classic `initialize`, as Claude Desktop does,
+ * gets a negotiated result instead of `-32022`.
+ *
+ * **Gotchas**
+ *
+ * Do not narrow the list to `statelessMcpProtocols`: a stateless-only host
+ * refuses the handshake and never starts under Claude Desktop.
  *
  * **Example** (Launch stdio MCP server)
  *
@@ -138,7 +144,7 @@ export const makeServerLayer = (config: UsptoMcpServerConfig): Layer.Layer<never
         name: config.name,
         version: config.version,
         instructions: USPTO_MCP_INSTRUCTIONS,
-        protocols: statelessMcpProtocols,
+        protocols: handshakeMcpProtocols,
       })
     ),
     Layer.orDie
