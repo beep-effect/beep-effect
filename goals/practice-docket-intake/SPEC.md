@@ -216,11 +216,10 @@ implementation is stricter than this text.
 The score is built from things that can be measured. A model's own statement
 of confidence is recorded for the attorney but is not part of the score.
 
-1. **Deterministic gate.** Every check must pass: each date parses as a real
-   calendar day; the due date equals the mail date plus the stated period;
-   the due date is not before the mail date; every date and period the
-   extractor reports appears in the text it cites; the cited span exists in
-   the message or the attached document. If any check fails on the final
+1. **Deterministic gate.** Every check must pass: the due date equals the
+   mail date plus the stated period; the due date is not before the mail
+   date; every date and period the extractor reports appears in the text it
+   cites; the cited span exists in the message or the attached document. If any check fails on the final
    round the status is `deterministic-failure`, whatever the score.
 2. **Material findings** `M`: 1 when the critic raised no `P0` or `P1`
    finding in the final round, otherwise 0.
@@ -292,6 +291,8 @@ rounds are read back, not run again.
   loop is in progress its rounds, including quoted source text, sit in the
   local state file. Resuming an interrupted loop does not use the retry
   budget.
+- Impossible dates are rejected when the model's answer is decoded, so they
+  fail the step and are retried rather than reaching the gate.
 
 ## Known Limits
 
@@ -354,6 +355,7 @@ autonomy charter.
 | D-37 | A field read by only one side is a disagreement, and the extractor must cite the text behind a dated entry. | "Agreement" between a reading and nothing is not confirmation. A date with no citation cannot be checked against the source. |
 | D-38 | In-progress rounds are kept in the ledger under a placeholder outcome and dropped when the message settles; resumption does not consume the retry budget. | The loop must resume after a kill without repeating model calls, and an interruption is not a failed step. Settled records stay free of message text. |
 | D-39 | Review round 3 findings on slice 3 (#1496) are fixed in slice 3b: a lock that cannot be written reports `store` / `lock`, and reminder entries carry the Junk or Deleted folder line. | Round rule: after round 2, P2 findings get a tracked follow-up instead of another push. |
+| D-40 | The text the extractor quotes for each revised or defended field is checked in code (the field's value must appear in it and it must be in the source; a failure is a dispute on that field) and is never shown to the critic, which re-reads from its own earlier findings and the revised/defended actions only. The real-calendar-day check is removed from the gate: decoding the model's answer already rejects an impossible date. | Showing the extractor's quotes to the critic would let it copy them, the mirror of D-35. A gate check that decoding makes unreachable only looks like protection. |
 
 ## Exception Ledger
 

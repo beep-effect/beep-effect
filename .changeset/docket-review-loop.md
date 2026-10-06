@@ -37,6 +37,14 @@ the secretary's reading when it cites text (`DeterministicCheck.side`), and a
 source whose stated date differs from its own mail date plus period gets a
 code-written `P1` finding and an entry on the earlier date.
 
+A response period counts as appearing in cited text only as one phrase of its
+number (digits or English words) and its unit word. The text the extractor
+quotes for each revised or defended field is checked in code (rows carry
+`DeterministicCheck.field`) and never shown to the critic, whose re-read gets
+its own earlier findings instead. A partial re-read adds to the critic's
+earlier citation instead of replacing it. `DeterministicCheckName` no longer
+has `dates-are-real-days`: decoding already rejects impossible dates.
+
 `@beep/law-practice-server` implements the three new agent calls, and the file
 store now reports a state directory it cannot write its lock to as `store` /
 `lock` instead of `state-locked`.

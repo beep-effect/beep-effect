@@ -181,6 +181,22 @@ const inconsistentReview = statedReview({
   responsePeriod: O.some(threeMonths),
 });
 
+// A notice that states its mail date, its period and its due date. The extractor first reads the
+// wrong mail date from a later line.
+const MAILED_LINE = "Mailed January 8, 2030.";
+const STATED_LINE = "A response is due within three months, by April 8, 2030";
+const statedNotice = DocketMessage.make({
+  bodyText: `Synthetic fixture body. ${MAILED_LINE} ${STATED_LINE}. Also noted on January 9, 2030. Reference FIX-0001.`,
+  messageId: "m-notice",
+  receivedAt: "2030-01-09T10:00:00Z",
+  receivedDate: RECEIVED,
+});
+const wrongMailEntry = {
+  citedText: O.some(`Also noted on January 9, 2030\n${STATED_LINE}`),
+  mailDate: O.some(addDays(mailDate, 1)),
+  statedDueDate: O.some(computedDue),
+};
+
 const materialTitleFinding = ReviewFinding.make({
   field: "title",
   reason: "The title names a response that is not what is due.",
@@ -1614,6 +1630,113 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         assertSome(
           O.map(settled, (record) => [tagOf(record.outcome), record.attempts]),
           ["DocketEntered", 1]
+        );
+      })
+    );
+  });
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(datedEntry(wrongMailEntry)),
+      reread: () =>
+        Effect.succeed(
+          SecretaryReview.make({
+            citedText: O.some(`${MAILED_LINE}\nby April 8, 2030`),
+            isDocketItem: true,
+            mailDate: O.some(mailDate),
+            notes: "Re-read the mail date.",
+            statedDueDate: O.some(computedDue),
+          })
+        ),
+      review: () =>
+        Effect.succeed(
+          SecretaryReview.make({
+            citedText: O.some(`${MAILED_LINE}\n${STATED_LINE}`),
+            isDocketItem: true,
+            mailDate: O.some(mailDate),
+            matterReferences: ["FIX-0001"],
+            notes: "Read the fixture notice.",
+            responsePeriod: O.some(threeMonths),
+            statedDueDate: O.some(computedDue),
+          })
+        ),
+      revise: () =>
+        Effect.succeed(
+          ParalegalRevision.make({
+            entry: datedEntry({
+              ...wrongMailEntry,
+              citedText: O.some(`${MAILED_LINE}\n${STATED_LINE}`),
+              mailDate: O.some(mailDate),
+            }),
+            responses: [
+              ExtractorFieldResponse.make({ action: "revised", citedText: O.some(MAILED_LINE), field: "mail-date" }),
+              ExtractorFieldResponse.make({
+                action: "defended",
+                citedText: O.some("by April 8, 2030"),
+                field: "stated-due-date",
+              }),
+            ],
+          })
+        ),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "accepts in round 2 after a partial re-read, keeping the critic's earlier citation for the kept period",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(statedNotice, TODAY);
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        assertSome(
+          O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore]),
+          ["accepted", 2, 1]
+        );
+        expect(A.map(yield* Ref.get(harness.rereads), (input) => input.fields)).toStrictEqual([
+          ["mail-date", "stated-due-date"],
+        ]);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      {
+        documents: false,
+        enter: () => Effect.succeed(datedEntry(wrongMailEntry)),
+        review: () => Effect.succeed(agreeingReview),
+        revise: () =>
+          Effect.succeed(
+            ParalegalRevision.make({
+              entry: datedEntry(),
+              responses: [
+                ExtractorFieldResponse.make({
+                  action: "revised",
+                  citedText: O.some("Mailed January 8, 2030, by an invented courier"),
+                  field: "mail-date",
+                }),
+              ],
+            })
+          ),
+      },
+      { review: DocketReviewConfig.make({ maxRounds: 2 }) }
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "fails the gate when a revision quotes text for a field that is not in the source",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const flagged = A.head(yield* entriesOf);
+
+        expect(reasonOf(outcome)).toBe("deterministic-failure");
+        assertTrue(
+          O.exists(flagged, (entry) =>
+            Str.includes("- failed check (extractor): cited-span-exists for mail-date")(entry.bodyText)
+          )
         );
       })
     );

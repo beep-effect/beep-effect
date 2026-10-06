@@ -750,7 +750,13 @@ const nextRound = Effect.fnUntraced(function* (
     onEmpty: () => Effect.succeed(previous.reading),
     onNonEmpty: (fields) =>
       ports.secretary
-        .reread({ documents, extractorResponses: revision.responses, fields, message })
+        .reread({
+          documents,
+          extractorResponses: revision.responses,
+          fields,
+          findings: A.filter(previous.findings, (finding) => A.contains(fields, finding.field)),
+          message,
+        })
         .pipe(Effect.map((reread) => mergeRereading(RereadMerge.make({ fields, previous: previous.reading, reread })))),
   });
   const findings = yield* sameCriticView(criticView(previous.entry), criticView(revision.entry))
@@ -844,7 +850,11 @@ const findingLine = (finding: ReviewFinding): string => `- ${finding.severity} $
 const openLines = (round: ReviewRound): ReadonlyArray<string> => [
   ...A.map(
     A.filter(round.checks, (check) => !check.passed),
-    (check) => `- failed check (${check.side}): ${check.check}`
+    (check) =>
+      `- failed check (${check.side}): ${check.check}${O.getOrElse(
+        O.map(check.field, (field) => ` for ${field}`),
+        () => ""
+      )}`
   ),
   ...A.map(
     A.filter(round.agreement, (field) => !field.agreed),

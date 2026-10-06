@@ -138,7 +138,6 @@ export class ReviewFinding extends S.Class<ReviewFinding>($I`ReviewFinding`)(
  * @since 0.0.0
  */
 export const DeterministicCheckName = LiteralKit([
-  "dates-are-real-days",
   "due-equals-mail-plus-period",
   "due-not-before-mail",
   "values-appear-in-cited-text",
@@ -208,7 +207,9 @@ const deterministicCheckSideDefault: ReviewSide = "extractor";
  *
  * `side` says whose reading was checked. The citation checks run on the
  * extractor's entry and, when the critic cites text, on the critic's reading
- * too; the others run on the extractor's entry only.
+ * too; the others run on the extractor's entry only. `field` is set on the
+ * rows that check the text the extractor quoted for one disputed field, so a
+ * failure is disputed on that field.
  *
  * **Example** (Make a check result)
  *
@@ -224,6 +225,7 @@ const deterministicCheckSideDefault: ReviewSide = "extractor";
 export class DeterministicCheck extends S.Class<DeterministicCheck>($I`DeterministicCheck`)(
   {
     check: DeterministicCheckName.annotateKey({ description: "Which check ran." }),
+    field: opt(ReviewField, "The disputed field whose quoted text was checked, on per-field rows."),
     passed: S.Boolean.annotateKey({ description: "Whether the reading passed it." }),
     side: ReviewSide.pipe(
       S.withConstructorDefault(Effect.succeed(deterministicCheckSideDefault)),

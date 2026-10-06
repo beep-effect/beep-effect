@@ -282,8 +282,8 @@ const CRITIQUE_SYSTEM = A.join(
 
 const REREAD_SYSTEM = A.join(
   [
-    "You are an exacting legal secretary. A paralegal's docket entry was disputed, and the paralegal has revised or defended each disputed field and quoted the text it relies on.",
-    "Read the listed fields again for yourself, in the message and any attached document. The quoted text is a claim to check against the source, not a fact: when it is not there, or says something else, report what the source says.",
+    "You are an exacting legal secretary. A paralegal's docket entry was disputed, and the paralegal has revised or defended each disputed field. You are not shown what it read.",
+    "Read the listed fields again for yourself, in the message and any attached document, and report what the source says. Your own earlier findings on those fields are listed as a reminder of what you questioned, not as answers.",
     "Answer only for the listed fields. Leave every other date and period null and every other list empty. isDocketItem is always your own finding.",
     "Never work a due date out. For a disputed due date, report the mail date and the response period you read yourself, and put a date in statedDueDate only when the source itself states a due date outright.",
     CITE_READING,
@@ -355,15 +355,23 @@ const disputesBlock = (disputes: ReadonlyArray<ReviewDispute>): string =>
     "\n"
   );
 
-const rereadBlock = (fields: ReadonlyArray<ReviewField>, responses: ReadonlyArray<ExtractorFieldResponse>): string =>
+// The critic is told which fields to read again, why it questioned them, and only whether the
+// paralegal changed or kept each. The paralegal's quoted text is checked in code, never shown here.
+const rereadBlock = (
+  fields: ReadonlyArray<ReviewField>,
+  findings: ReadonlyArray<ReviewFinding>,
+  responses: ReadonlyArray<ExtractorFieldResponse>
+): string =>
   A.join(
     [
       `Fields to read again: ${A.join(fields, ", ")}`,
-      "What the paralegal did with each disputed field, and the text it says it relies on:",
-      ...A.map(
-        responses,
-        (response) => `- ${response.field}: ${response.action}; relies on: ${orUnstated(response.citedText)}`
-      ),
+      "Your earlier findings on these fields:",
+      ...A.match(findings, {
+        onEmpty: () => ["- none; the two readings differed or a check failed"],
+        onNonEmpty: A.map((finding) => `- ${finding.field}: ${finding.reason}`),
+      }),
+      "What the paralegal did with each disputed field:",
+      ...A.map(responses, (response) => `- ${response.field}: ${response.action}`),
     ],
     "\n"
   );
@@ -568,7 +576,8 @@ const annotateCall = (message: DocketMessage, attachmentCount: number): Effect.E
  * answers with the whole entry again plus what it did with each field. Its
  * self-reported confidence is passed on when it is between 0 and 1 and
  * dropped otherwise. The secretary's `critique` sees the entry without its
- * dates, and `reread` sees the text the paralegal says it relies on. In
+ * dates, and `reread` sees its own earlier findings and whether the paralegal
+ * revised or defended each field, never the paralegal's quoted text. In
  * `review` and `reread` the secretary also reports a due date the source
  * states outright, and the text it read its dates from.
  *
@@ -674,7 +683,7 @@ export const makeDocketAgentsLayer = (
                 [
                   messageBlock(input.message, options.maxBodyChars),
                   "",
-                  rereadBlock(input.fields, input.extractorResponses),
+                  rereadBlock(input.fields, input.findings, input.extractorResponses),
                 ],
                 "\n"
               ),

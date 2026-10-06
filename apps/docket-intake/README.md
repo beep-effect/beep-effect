@@ -175,7 +175,7 @@ is confirmed. The subject says why it is there:
 | --- | --- | --- |
 | `[LOW CONFIDENCE]` | The round limit was reached with the score under the threshold. The agents still read some fields differently, but no serious objection is open and no single field stayed in dispute through every round. | Open the message, read the dates and the matter yourself, and enter the deadline by hand. The body lists the fields the agents differ on. |
 | `[REVIEW LIMIT REACHED]` | The round limit was reached with a serious objection still open, or with the agents disagreeing on the same field in every round. | Treat it as a standing dispute about the item: read the listed objection first, then the message, and enter the deadline by hand. |
-| `[CHECK FAILED]` | An automatic check still failed on the last round: a date that is not a real day, a due date that does not match the mail date plus the period, a due date before the mail date, or a date or period that is not in the text the agent that reported it quoted. | Do not rely on the dates on the entry. Read the source document and enter the deadline by hand. |
+| `[CHECK FAILED]` | An automatic check still failed on the last round: a due date that does not match the mail date plus the period, a due date before the mail date, or a date or period that is not in the text the agent that reported it quoted. | Do not rely on the dates on the entry. Read the source document and enter the deadline by hand. |
 
 `[NEEDS REVIEW]` entries are the older cases: no usable date was found, the
 agents disagree on whether the message is a docket item at all, or the

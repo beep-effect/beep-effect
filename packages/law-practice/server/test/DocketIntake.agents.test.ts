@@ -16,6 +16,7 @@ import {
   ParalegalDocketEntry,
   ParalegalNotDocketItem,
   ReviewDispute,
+  ReviewFinding,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -232,10 +233,16 @@ const extractorResponses = [
   ExtractorFieldResponse.make({ action: "defended", field: "mail-date" }),
 ];
 
-const rereadInput = (documents: ReadonlyArray<DocketSourceDocument>) => ({
+const rereadInput = (
+  documents: ReadonlyArray<DocketSourceDocument>,
+  findings: ReadonlyArray<ReviewFinding> = [
+    ReviewFinding.make({ field: "response-period", reason: "The period looks misread.", severity: "P1" }),
+  ]
+) => ({
   documents,
   extractorResponses,
   fields: ["mail-date", "response-period"] as const,
+  findings,
   message,
 });
 
@@ -828,12 +835,17 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         );
         for (const fragment of [
           "Fields to read again: mail-date, response-period",
-          "- response-period: revised; relies on: A response is due within two months",
-          "- mail-date: defended; relies on: (not given)",
+          "Your earlier findings on these fields:",
+          "- response-period: The period looks misread.",
+          "- response-period: revised",
+          "- mail-date: defended",
           "1 source document(s) are attached to this request.",
         ]) {
           assertTrue(O.exists(prompt, mentions(fragment)));
         }
+        // The paralegal's quoted text is checked in code and never shown to the critic.
+        assertTrue(!O.exists(prompt, mentions("within two months")));
+        assertTrue(!O.exists(prompt, mentions("relies on")));
         expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
         // The same answer shape as the first reading.
         expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
@@ -853,8 +865,10 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         const reading = yield* secretary.reread(rereadInput([pdf]));
         const prompts = yield* scripted.prompts;
         yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
-        const badDate = yield* failureOf(secretary.reread(rereadInput([])));
+        const badDate = yield* failureOf(secretary.reread(rereadInput([], [])));
+        const noFindings = A.last(yield* scripted.prompts);
 
+        assertTrue(O.exists(noFindings, mentions("- none; the two readings differed or a check failed")));
         // With nothing attached, the reading cannot have come from a source document.
         expect(reading.readFromSourceDocument).toBe(false);
         expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);

@@ -18,7 +18,7 @@ import {
   DocketResponsePeriod,
   DocketResponsePeriodUnit,
 } from "@beep/law-practice-domain/values/DocketDeadline";
-import { daysInMonth, isBefore, equals as sameDate } from "@beep/schema/LocalDate";
+import { isBefore, equals as sameDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, HashSet, pipe } from "effect";
 import * as A from "effect/Array";
@@ -182,7 +182,38 @@ const NUMBER_WORDS: ReadonlyArray<string> = [
   "ten",
   "eleven",
   "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
 ];
+
+const TENS_WORDS: ReadonlyArray<string> = [
+  "twenty",
+  "thirty",
+  "forty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety",
+];
+
+const TEN = 10;
+
+// The English words for a whole number from 1 to 99: "three", "thirty", "forty-five" or "forty five".
+const amountWords = (amount: number): ReadonlyArray<string> => {
+  const tens = A.get(TENS_WORDS, (amount - (amount % TEN)) / TEN - 2);
+  const ones = A.get(NUMBER_WORDS, (amount % TEN) - 1);
+  return [
+    ...A.fromOption(A.get(NUMBER_WORDS, amount - 1)),
+    ...A.fromOption(O.filter(tens, () => amount % TEN === 0)),
+    ...A.flatMap(A.fromOption(O.all([tens, ones])), ([ten, one]) => [`${ten}-${one}`, `${ten} ${one}`]),
+  ];
+};
 
 const twoDigits = (value: number): string => Str.padStart(2, "0")(`${value}`);
 
@@ -198,27 +229,29 @@ const dateForms = (date: LocalDate): ReadonlyArray<string> => [
   ]),
 ];
 
-const amountForms = (amount: number): ReadonlyArray<string> => [
-  `${amount}`,
-  ...A.fromOption(A.get(NUMBER_WORDS, amount - 1)),
-];
+const amountForms = (amount: number): ReadonlyArray<string> => [`${amount}`, ...amountWords(amount)];
 
-const unitStem: (unit: DocketResponsePeriodUnit) => string = DocketResponsePeriodUnit.$match({
-  days: () => "day",
-  months: () => "month",
+const unitWord: (unit: DocketResponsePeriodUnit) => string = DocketResponsePeriodUnit.$match({
+  days: () => "days?",
+  months: () => "months?",
 });
 
 const dateAppears = (text: string, date: LocalDate): boolean => A.some(dateForms(date), (form) => mentions(text, form));
 
-// A period appears as its number, in digits or as the English word for 1 to 12, plus its unit.
+// A period appears as one phrase: its number, in digits or English words, then at most a space
+// or a hyphen, then its unit word, with nothing word-like on either side. "three (3) months" also
+// counts. A number and a unit that only occur apart ("8 January ... 30 days") do not. The text is
+// already lower-cased with single spaces, and every form is digits, letters, hyphens and spaces.
+const periodPattern = (period: DocketResponsePeriod): RegExp =>
+  new RegExp(
+    `(?<![0-9a-z])(?:${A.join(amountForms(period.amount), "|")})(?: ?\\([0-9]{1,4}\\))?[ -]?${unitWord(period.unit)}(?![0-9a-z])`,
+    "u"
+  );
+
 const periodAppears = (text: string, period: DocketResponsePeriod): boolean =>
-  A.some(amountForms(period.amount), (form) => mentions(text, form)) && pipe(text, Str.includes(unitStem(period.unit)));
+  O.isSome(Str.match(periodPattern(period))(text));
 
 const reportedDates = (claims: Claims): ReadonlyArray<LocalDate> => A.getSomes([claims.mailDate, claims.statedDueDate]);
-
-const isRealDay = (date: LocalDate): boolean => date.day <= daysInMonth(date.year, date.month);
-
-const datesAreRealDays = (claims: Claims): boolean => A.every(reportedDates(claims), isRealDay);
 
 const dueEqualsMailPlusPeriod = (claims: Claims): boolean =>
   holds(O.all({ due: claims.statedDueDate, mail: claims.mailDate, period: claims.responsePeriod }), (stated) =>
@@ -245,7 +278,7 @@ const searchableText = (source: ReviewSourceText): string =>
 // told from one that quotes the document, so it is not failed.
 const isUnverifiable = (source: ReviewSourceText): boolean => source.hasDocuments && O.isNone(source.documentText);
 
-const citedSpanExists = (claims: Claims, source: ReviewSourceText): boolean =>
+const citedSpanExists = (claims: { readonly citedText: O.Option<string> }, source: ReviewSourceText): boolean =>
   isUnverifiable(source) ||
   holds(claims.citedText, (cited) =>
     A.every(passagesOf(cited), (passage) => pipe(searchableText(source), Str.includes(passage)))
@@ -290,7 +323,6 @@ export const runDeterministicChecks: {
 } = dual(2, (entry: ParalegalEntry, source: ReviewSourceText): ReadonlyArray<DeterministicCheck> => {
   const claims = claimsOf(entry);
   return [
-    DeterministicCheck.make({ check: "dates-are-real-days", passed: datesAreRealDays(claims) }),
     DeterministicCheck.make({ check: "due-equals-mail-plus-period", passed: dueEqualsMailPlusPeriod(claims) }),
     DeterministicCheck.make({ check: "due-not-before-mail", passed: dueNotBeforeMail(claims) }),
     DeterministicCheck.make({ check: "values-appear-in-cited-text", passed: valuesAppearInCitedText(claims) }),
@@ -508,6 +540,44 @@ export class ReviewRoundDraft extends S.Class<ReviewRoundDraft>($I`ReviewRoundDr
   $I.annote("ReviewRoundDraft", { description: "What a docket review round is assessed from." })
 ) {}
 
+// The values of an entry that the text quoted for one field must contain. A field that holds no
+// date or period (the classification, say) has nothing to find in it.
+const quotedValues = (claims: Claims): ((field: ReviewField) => Claims) =>
+  ReviewField.$match({
+    classification: () => NO_CLAIMS,
+    "due-date": () => claims,
+    "mail-date": (): Claims => ({ ...NO_CLAIMS, mailDate: claims.mailDate }),
+    "matter-references": () => NO_CLAIMS,
+    "response-period": (): Claims => ({ ...NO_CLAIMS, responsePeriod: claims.responsePeriod }),
+    "source-document": () => NO_CLAIMS,
+    "stated-due-date": (): Claims => ({ ...NO_CLAIMS, statedDueDate: claims.statedDueDate }),
+    title: () => NO_CLAIMS,
+  });
+
+// The text the extractor quoted for each revised or defended field is checked in code, never
+// shown to the critic: the field's current value must appear in it, and it must be in the source.
+// One row per quoted field and check, carrying the field.
+const quotedTextChecks = (
+  entry: ParalegalEntry,
+  responses: ReadonlyArray<ExtractorFieldResponse>,
+  source: ReviewSourceText
+): ReadonlyArray<DeterministicCheck> =>
+  A.flatMap(
+    A.filter(responses, (response) => O.isSome(response.citedText)),
+    (response: ExtractorFieldResponse) => {
+      const quoted: Claims = { ...quotedValues(claimsOf(entry))(response.field), citedText: response.citedText };
+      const field = O.some(response.field);
+      return [
+        DeterministicCheck.make({
+          check: "values-appear-in-cited-text",
+          field,
+          passed: valuesAppearInCitedText(quoted),
+        }),
+        DeterministicCheck.make({ check: "cited-span-exists", field, passed: citedSpanExists(quoted, source) }),
+      ];
+    }
+  );
+
 const sameFinding = S.toEquivalence(ReviewFinding);
 
 const SOURCE_DATES_DIFFER = ReviewFinding.make({
@@ -531,8 +601,9 @@ const sourceDateFindings = (reading: SecretaryReview): ReadonlyArray<ReviewFindi
  *
  * **Details**
  *
- * The checks are those on the extractor's entry plus the citation checks on
- * the critic's reading. When the critic read a stated due date that differs
+ * The checks are those on the extractor's entry, the citation checks on the
+ * text the extractor quoted for each disputed field (rows carrying that
+ * field), and the citation checks on the critic's reading. When the critic read a stated due date that differs
  * from its own mail date plus period, a `P1` finding on `due-date` is added:
  * the source contradicts itself, and the item cannot be accepted as it is.
  *
@@ -565,7 +636,11 @@ const sourceDateFindings = (reading: SecretaryReview): ReadonlyArray<ReviewFindi
 export const assessReviewRound = (draft: ReviewRoundDraft): ReviewRound => {
   const evidence = ReviewEvidence.make({
     agreement: compareReadings(draft.entry, draft.reading),
-    checks: [...runDeterministicChecks(draft.entry, draft.source), ...runCriticChecks(draft.reading, draft.source)],
+    checks: [
+      ...runDeterministicChecks(draft.entry, draft.source),
+      ...quotedTextChecks(draft.entry, draft.extractorResponse, draft.source),
+      ...runCriticChecks(draft.reading, draft.source),
+    ],
     // The finding about the source's own dates is written here from the reading of this round;
     // one carried over from an earlier round is dropped first, so it never outlives its cause.
     findings: [
@@ -687,10 +762,6 @@ const extractorCheckReason: (check: DeterministicCheckName) => DisputeReason = D
     field: "source-document",
     text: "The text you cited was not found in the message.",
   }),
-  "dates-are-real-days": (): DisputeReason => ({
-    field: "mail-date",
-    text: "A date you reported is not a real calendar day.",
-  }),
   "due-equals-mail-plus-period": (): DisputeReason => ({
     field: "stated-due-date",
     text: "The due date you reported is not your mail date plus your response period.",
@@ -705,8 +776,22 @@ const extractorCheckReason: (check: DeterministicCheckName) => DisputeReason = D
   }),
 });
 
+// A failed check of the text the extractor quoted for one field disputes that field.
+const quotedFieldReason = (check: DeterministicCheck, field: ReviewField): DisputeReason => ({
+  field,
+  text:
+    check.check === "cited-span-exists"
+      ? "The text you quoted for this field was not found in the message."
+      : "The value of this field does not appear in the text you quoted for it.",
+});
+
 const checkReason = (check: DeterministicCheck): DisputeReason =>
-  check.side === "critic" ? CRITIC_CHECK_REASON : extractorCheckReason(check.check);
+  check.side === "critic"
+    ? CRITIC_CHECK_REASON
+    : O.match(check.field, {
+        onNone: () => extractorCheckReason(check.check),
+        onSome: (field) => quotedFieldReason(check, field),
+      });
 
 const disputeReasons = (round: ReviewRound): ReadonlyArray<DisputeReason> => [
   ...A.map(disagreedFields(round), (field): DisputeReason => ({ field, text: DISAGREEMENT_REASON })),
@@ -821,6 +906,27 @@ const DATE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "due-date"];
 const PERIOD_FIELDS: ReadonlyArray<ReviewField> = ["response-period", "due-date"];
 const STATED_FIELDS: ReadonlyArray<ReviewField> = ["stated-due-date", "due-date"];
 const SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period", "stated-due-date", "due-date"];
+const READ_SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period", "stated-due-date"];
+
+const citedLines = (citation: O.Option<string>): ReadonlyArray<string> =>
+  A.filter(A.map(A.flatMap(A.fromOption(citation), Str.split("\n")), Str.trim), Str.isNonEmpty);
+
+// The critic's citation after a re-reading: the new one when every dated value was read again,
+// else the earlier lines plus the new ones, each once.
+const mergedCitation = (
+  fields: ReadonlyArray<ReviewField>,
+  previous: SecretaryReview,
+  reread: SecretaryReview
+): O.Option<string> =>
+  A.contains(fields, "due-date") || A.every(READ_SOURCE_FIELDS, (field) => A.contains(fields, field))
+    ? reread.citedText
+    : O.map(
+        O.liftPredicate(
+          A.dedupe([...citedLines(previous.citedText), ...citedLines(reread.citedText)]),
+          A.isReadonlyArrayNonEmpty
+        ),
+        A.join("\n")
+      );
 
 /**
  * Merge a re-reading into the critic's earlier reading: only the fields that
@@ -830,8 +936,11 @@ const SOURCE_FIELDS: ReadonlyArray<ReviewField> = ["mail-date", "response-period
  *
  * A disputed due date means the stated due date, the mail date and the
  * response period are all read again, because the critic never works a date
- * out. The text the critic cites follows its dates: it is replaced whenever
- * one of them was read again. The notes are always those of the re-reading.
+ * out. The text the critic cites follows its dates: it is replaced when the
+ * mail date, the response period and the stated due date were all read
+ * again, and otherwise the re-read citation is added to the earlier one, so
+ * a value kept from the earlier reading still appears in it. The notes are
+ * always those of the re-reading.
  *
  * **Example** (Keep a field that was not read again)
  *
@@ -856,7 +965,7 @@ export const mergeRereading = (merge: RereadMerge): SecretaryReview => {
   const pick = <Value>(readAgain: ReadonlyArray<ReviewField>, next: Value, kept: Value): Value =>
     A.some(readAgain, (field) => A.contains(fields, field)) ? next : kept;
   return SecretaryReview.make({
-    citedText: pick(SOURCE_FIELDS, reread.citedText, previous.citedText),
+    citedText: pick(SOURCE_FIELDS, mergedCitation(fields, previous, reread), previous.citedText),
     isDocketItem: pick(["classification"], reread.isDocketItem, previous.isDocketItem),
     mailDate: pick(DATE_FIELDS, reread.mailDate, previous.mailDate),
     matterReferences: pick(["matter-references"], reread.matterReferences, previous.matterReferences),

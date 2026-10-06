@@ -170,11 +170,15 @@ export interface DocketSecretaryShape {
     readonly entry: ParalegalEntry;
     readonly message: DocketMessage;
   }) => Effect.Effect<ReadonlyArray<ReviewFinding>, DocketIntakeError>;
-  /** Read the disputed fields again, against the text the extractor says it relies on. Other fields are ignored. */
+  /**
+   * Read the disputed fields again. The critic is told its own earlier findings on them and whether
+   * the extractor revised or defended each, never the text the extractor quoted. Other fields are ignored.
+   */
   readonly reread: (input: {
     readonly documents: ReadonlyArray<DocketSourceDocument>;
     readonly extractorResponses: ReadonlyArray<ExtractorFieldResponse>;
     readonly fields: ReadonlyArray<ReviewField>;
+    readonly findings: ReadonlyArray<ReviewFinding>;
     readonly message: DocketMessage;
   }) => Effect.Effect<SecretaryReview, DocketIntakeError>;
   /** The independent first reading of the message and its source documents. */

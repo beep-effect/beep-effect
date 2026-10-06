@@ -14,6 +14,7 @@ import {
   DeterministicCheck,
   DeterministicCheckName,
   DocketReviewConfig,
+  ExtractorFieldResponse,
   extractorDueDate,
   FieldAgreement,
   mergeRereading,
@@ -212,15 +213,39 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     assertSome(cites("Respond within 45 days.", fortyFiveDays), true);
     assertSome(cites("Respond within 3 days.", threeMonths), false);
     assertSome(cites("Respond within 13 months.", threeMonths), false);
-    assertSome(cites("Respond within forty-five days.", fortyFiveDays), false);
+    assertSome(cites("Respond within forty-five days.", fortyFiveDays), true);
   });
 
-  it("fails a date that is not a real day, a due date that is not mail plus period, and one before the mail date", () => {
-    const impossible = LocalDate.make({ year: 2030, month: 2, day: 31 });
+  it("finds a period only as one phrase of its number and its unit word", () => {
+    const periodOf = (amount: number, unit: "days" | "months") => DocketResponsePeriod.make({ amount, unit });
+    const cites = (citedText: string, responsePeriod: DocketResponsePeriod) =>
+      passedOf(
+        entryOf({ citedText: O.some(citedText), mailDate: O.none(), responsePeriod: O.some(responsePeriod) }),
+        source,
+        "values-appear-in-cited-text"
+      );
+    const notice = "Mailed January 8, 2030. A response is due within 30 days.";
+
+    // The number and the unit only occur apart: 8 is part of the date.
+    assertSome(cites(notice, periodOf(8, "days")), false);
+    assertSome(cites(notice, periodOf(30, "days")), true);
+    assertSome(cites("Respond within thirty days.", periodOf(30, "days")), true);
+    assertSome(cites("A three-month period applies.", threeMonths), true);
+    assertSome(cites("RESPOND WITHIN THREE MONTHS.", threeMonths), true);
+    assertSome(cites("Respond within a month.", periodOf(1, "months")), false);
+    assertSome(cites("Respond within one month.", periodOf(1, "months")), true);
+    assertSome(cites("Due 8 January; extensions are counted in days.", periodOf(8, "days")), false);
+    // "monday" and "yesterday" never count as the unit.
+    assertSome(cites("Filed 3 monday.", periodOf(3, "days")), false);
+    assertSome(cites("Filed 3 yesterday.", periodOf(3, "days")), false);
+    assertSome(cites("Respond within 3 daysx.", periodOf(3, "days")), false);
+    assertSome(cites("Respond within twenty one days.", periodOf(21, "days")), true);
+  });
+
+  it("fails a due date that is not mail plus period, and one before the mail date", () => {
     const wrongDue = LocalDate.make({ year: 2030, month: 4, day: 9 });
     const earlyDue = LocalDate.make({ year: 2030, month: 1, day: 2 });
 
-    assertSome(passedOf(entryOf({ mailDate: O.some(impossible) }), source, "dates-are-real-days"), false);
     assertSome(passedOf(entryOf({ statedDueDate: O.some(wrongDue) }), source, "due-equals-mail-plus-period"), false);
     assertSome(
       passedOf(
@@ -470,7 +495,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       "stated-due-date",
       "source-document",
     ]);
-    expect(A.map(disputes, (dispute) => A.length(dispute.reasons))).toStrictEqual([3, 1, 2, 2]);
+    expect(A.map(disputes, (dispute) => A.length(dispute.reasons))).toStrictEqual([2, 1, 2, 2]);
     // A failed check on the critic's own citation disputes the due date, so its dates are read again.
     expect(
       A.map(
@@ -540,7 +565,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
       })
     );
 
-    expect([round.index, round.score, A.length(round.checks), A.length(round.agreement)]).toStrictEqual([2, 0.4, 7, 5]);
+    expect([round.index, round.score, A.length(round.checks), A.length(round.agreement)]).toStrictEqual([2, 0.4, 6, 5]);
     assertTrue(reviewGatePassed(round.checks));
   });
 
@@ -602,5 +627,97 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     expect(assess(inconsistent, raised)).toStrictEqual(raised);
     expect(assess(consistent, raised)).toStrictEqual([minor]);
     expect(assess(readingOf(), [])).toStrictEqual([]);
+  });
+  it("adds a partial re-reading's citation to the earlier one, and replaces it after a full re-reading", () => {
+    // The extractor's mail date was wrong; the stated date and the period were agreed. The critic
+    // re-read only the mail date and the stated date and cited only those.
+    const PERIOD = "A response is due within THREE (3) months";
+    const STATED = "Response due by April 8, 2030.";
+    const MAILED = "Mailed   January 8, 2030.";
+    const withStated = ReviewSourceText.make({ messageText: `${BODY}\n${STATED}` });
+    const stated = O.some(LocalDate.make({ year: 2030, month: 4, day: 8 }));
+    const previous = readingOf({ citedText: O.some(`${PERIOD}\n${STATED}`), statedDueDate: stated });
+    const reread = SecretaryReview.make({
+      citedText: O.some(`${MAILED}\n${STATED}`),
+      isDocketItem: true,
+      mailDate: O.some(mailDate),
+      notes: "Re-read the mail date.",
+      statedDueDate: stated,
+    });
+    const merged = (fields: ReadonlyArray<ReviewField>) =>
+      mergeRereading(RereadMerge.make({ fields, previous, reread }));
+    const partial = merged(["mail-date", "stated-due-date"]);
+
+    assertSome(partial.citedText, `${PERIOD}\n${STATED}\n${MAILED}`);
+    expect(A.map(runCriticChecks(partial, withStated), (check) => check.passed)).toStrictEqual([true, true]);
+    // The period was kept from the earlier reading, so the re-read citation alone would not hold it.
+    expect(
+      A.map(
+        runCriticChecks(readingOf({ citedText: reread.citedText, statedDueDate: stated }), withStated),
+        (check) => check.passed
+      )
+    ).toStrictEqual([false, true]);
+    assertSome(merged(["mail-date", "response-period", "stated-due-date"]).citedText, `${MAILED}\n${STATED}`);
+    assertSome(merged(["due-date"]).citedText, `${MAILED}\n${STATED}`);
+    assertNone(
+      mergeRereading(
+        RereadMerge.make({
+          fields: ["mail-date"],
+          previous: readingOf(),
+          reread: SecretaryReview.make({ isDocketItem: true, notes: "No citation." }),
+        })
+      ).citedText
+    );
+  });
+
+  it("checks the text the extractor quoted for each field and disputes that field when it fails", () => {
+    const assess = (responses: ReadonlyArray<ExtractorFieldResponse>) =>
+      assessReviewRound(
+        ReviewRoundDraft.make({
+          entry: entryOf(),
+          extractorResponse: responses,
+          findings: [],
+          index: 2,
+          reading: readingOf({ matterReferences: ["FIX-0001"] }),
+          source,
+        })
+      );
+    const quoted = (field: ReviewField, citedText: string) =>
+      ExtractorFieldResponse.make({ action: "defended", citedText: O.some(citedText), field });
+    const good = assess([
+      quoted("mail-date", "Mailed January 8, 2030."),
+      quoted("response-period", "A response is due within THREE (3) months"),
+      quoted("due-date", "Mailed January 8, 2030.\nwithin three (3) months"),
+      quoted("title", "Synthetic fixture notice"),
+      quoted("classification", "A response is due"),
+      quoted("matter-references", "FIX-0001"),
+      quoted("source-document", "Synthetic fixture notice"),
+      quoted("stated-due-date", "Mailed January 8, 2030."),
+      ExtractorFieldResponse.make({ action: "revised", field: "stated-due-date" }),
+    ]);
+    const invented = assess([quoted("mail-date", "Mailed January 8, 2030, as invented.")]);
+    const wrongValue = assess([quoted("response-period", "A shorter period of 45 days applies")]);
+    const rows = (round: ReviewRound) =>
+      A.flatMap(round.checks, (check) =>
+        O.isSome(check.field) ? [[O.getOrElse(check.field, () => "none"), check.check, check.passed]] : []
+      );
+
+    assertTrue(reviewGatePassed(good.checks));
+    expect(A.length(rows(good))).toBe(16);
+    expect(rows(invented)).toStrictEqual([
+      ["mail-date", "values-appear-in-cited-text", true],
+      ["mail-date", "cited-span-exists", false],
+    ]);
+    expect(rows(wrongValue)).toStrictEqual([
+      ["response-period", "values-appear-in-cited-text", false],
+      ["response-period", "cited-span-exists", true],
+    ]);
+    assertTrue(!reviewGatePassed(invented.checks));
+    expect(A.map(reviewDisputes(invented), (dispute) => [dispute.field, dispute.reasons])).toStrictEqual([
+      ["mail-date", ["The text you quoted for this field was not found in the message."]],
+    ]);
+    expect(A.map(reviewDisputes(wrongValue), (dispute) => [dispute.field, dispute.reasons])).toStrictEqual([
+      ["response-period", ["The value of this field does not appear in the text you quoted for it."]],
+    ]);
   });
 });
