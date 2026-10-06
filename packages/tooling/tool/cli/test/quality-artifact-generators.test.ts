@@ -5,16 +5,17 @@ import {
   writeJSDocDocumentationInventory,
 } from "@beep/repo-cli/test/Quality";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
-import { it as effectIt } from "@beep/test-utils/Vitest";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { assertExitFailure, assertTrue } from "@effect/vitest/utils";
+import { Cause, Effect, Exit, FileSystem, flow, Layer, Path, Ref, Result } from "effect";
 import * as A from "effect/Array";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as jsonc from "jsonc-parser";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -99,7 +100,7 @@ const parseJsoncText = (text: string): unknown => {
 const acquireFixtureRepo = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* fs.makeTempDirectory();
+  const repoRoot = yield* fs.makeTempDirectoryScoped();
   const packageRoot = path.join(repoRoot, "packages", "demo");
 
   yield* fs.makeDirectory(path.join(packageRoot, "src"), { recursive: true });
@@ -120,17 +121,6 @@ const acquireFixtureRepo = Effect.fnUntraced(function* () {
   yield* fs.writeFileString(path.join(packageRoot, "src", "index.ts"), packageSource);
 
   return repoRoot;
-});
-
-const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {
-  return yield* Effect.acquireUseRelease(
-    acquireFixtureRepo(),
-    use,
-    Effect.fnUntraced(function* (repoRoot) {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(repoRoot, { recursive: true });
-    })
-  ).pipe(provideScopedLayer(PlatformLayer));
 });
 
 const acquireLabsFixtureRepo = Effect.fnUntraced(function* () {
@@ -163,27 +153,84 @@ const acquireLabsFixtureRepo = Effect.fnUntraced(function* () {
   return repoRoot;
 });
 
-const withLabsFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {
-  return yield* Effect.acquireUseRelease(
-    acquireLabsFixtureRepo(),
-    use,
-    Effect.fnUntraced(function* (repoRoot) {
-      const fs = yield* FileSystem.FileSystem;
-      yield* fs.remove(repoRoot, { recursive: true });
-    })
-  ).pipe(provideScopedLayer(PlatformLayer));
-});
+it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality artifact generators", (it) => {
+  // The old bracket acquired the whole fixture before registering cleanup.
+  // Inject into the real setup seam, then observe removal outside that shorter scope.
+  for (const [labs, interrupted] of A.cartesian([false, true], [false, true])) {
+    it.effect(
+      `removes the ${labs ? "labs" : "package"} root when setup ${interrupted ? "is interrupted" : "fails"}`,
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const allocated = yield* Ref.make("");
+        const attemptedDirectories = yield* Ref.make(A.empty<string>());
+        const injectedDirectories = yield* Ref.make(A.empty<string>());
+        const targetDirectory = labs ? "apps/labs/demo/src" : "packages/demo/src";
+        const isTargetDirectory = Str.endsWith(`/${targetDirectory}`);
+        const failure = PlatformError.systemError({
+          _tag: "PermissionDenied",
+          module: "FileSystem",
+          method: "makeDirectory",
+          pathOrDescriptor: "fixture setup",
+          description: "injected setup failure",
+        });
+        const failingFs = FileSystem.FileSystem.of({
+          ...fs,
+          makeTempDirectoryScoped: Effect.fn("FixtureSetup.makeTempDirectoryScoped")(
+            (options: Parameters<FileSystem.FileSystem["makeTempDirectoryScoped"]>[0]) =>
+              fs.makeTempDirectoryScoped(options).pipe(Effect.tap((root) => Ref.set(allocated, root)))
+          ),
+          makeDirectory: Effect.fnUntraced(function* (
+            directory: string,
+            options: Parameters<FileSystem.FileSystem["makeDirectory"]>[1]
+          ) {
+            const root = yield* Ref.get(allocated);
+            const relativeDirectory = path.relative(root, directory);
+            yield* Ref.update(attemptedDirectories, A.append(relativeDirectory));
+            if (isTargetDirectory(directory)) {
+              expect(directory).toBe(path.join(root, targetDirectory));
+              if (labs) {
+                // Labs setup must reach its own mkdir after package setup has completed.
+                expect(yield* fs.readFileString(path.join(root, "packages", "demo", "src", "index.ts"))).toBe(
+                  packageSource
+                );
+              }
+              yield* Ref.update(injectedDirectories, A.append(relativeDirectory));
+              return yield* interrupted ? Effect.interrupt : Effect.fail(failure);
+            }
+            return yield* fs.makeDirectory(directory, options);
+          }),
+        });
+        const exit = yield* (labs ? acquireLabsFixtureRepo() : acquireFixtureRepo()).pipe(
+          Effect.provideService(FileSystem.FileSystem, failingFs),
+          Effect.scoped,
+          Effect.exit
+        );
+        if (interrupted) {
+          assertTrue(Exit.isFailure(exit));
+          assertTrue(Cause.hasInterrupts(exit.cause));
+          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+        } else {
+          assertExitFailure(exit, Cause.fail(failure));
+        }
+        const root = yield* Ref.get(allocated);
+        expect(root).not.toBe("");
+        expect(yield* Ref.get(attemptedDirectories)).toEqual(
+          labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]
+        );
+        expect(yield* Ref.get(injectedDirectories)).toEqual([targetDirectory]);
+        expect(yield* fs.exists(root)).toBe(false);
+      })
+    );
+  }
 
-describe("quality artifact generators", () => {
-  effectIt.layer(PlatformLayer, { timeout: "30 seconds" })("inline schema annotations", (it) => {
+  describe("inline schema annotations", () => {
     it.effect(
       "recognizes annotations without accepting field metadata or empty annotations",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const repoRoot = yield* Effect.acquireRelease(acquireFixtureRepo(), (root) =>
-          fs.remove(root, { recursive: true }).pipe(Effect.orDie)
-        );
+        const repoRoot = yield* acquireFixtureRepo();
         yield* fs.writeFileString(
           path.join(repoRoot, "packages", "demo", "src", "index.ts"),
           `import * as S from "effect/Schema";
@@ -210,101 +257,97 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
     );
   });
 
-  it("writes the JSDoc inventory to explicit artifact paths", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.fnUntraced(function* (repoRoot) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
-          const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
+  it.effect(
+    "writes the JSDoc inventory to explicit artifact paths",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
 
-          const result = yield* writeJSDocDocumentationInventory({
-            rootDir: repoRoot,
-            outputJsonPath,
-            outputMarkdownPath,
-            generatedAt: fixedGeneratedAt,
-          });
-          const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
-            readonly generatedAt: string;
-            readonly packages: ReadonlyArray<{
-              readonly packageName: string;
-              readonly counts: { readonly schemaAnnotationFindings: number };
-            }>;
-          };
-          const markdown = yield* fs.readFileString(outputMarkdownPath);
+      const result = yield* writeJSDocDocumentationInventory({
+        rootDir: repoRoot,
+        outputJsonPath,
+        outputMarkdownPath,
+        generatedAt: fixedGeneratedAt,
+      });
+      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+        readonly generatedAt: string;
+        readonly packages: ReadonlyArray<{
+          readonly packageName: string;
+          readonly counts: { readonly schemaAnnotationFindings: number };
+        }>;
+      };
+      const markdown = yield* fs.readFileString(outputMarkdownPath);
 
-          expect(result.outputJsonPath).toBe(outputJsonPath);
-          expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-          expect(inventory.generatedAt).toBe(fixedGeneratedAt);
-          expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
-          expect(inventory.packages[0]?.counts.schemaAnnotationFindings).toBe(0);
-          expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
-        })
-      )
-    ));
+      expect(result.outputJsonPath).toBe(outputJsonPath);
+      expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
+      expect(inventory.generatedAt).toBe(fixedGeneratedAt);
+      expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+      expect(inventory.packages[0]?.counts.schemaAnnotationFindings).toBe(0);
+      expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+    })
+  );
 
-  it("mirrors the JSDoc inventory into the CI output paths from the same scan", () =>
-    Effect.runPromise(
-      withFixtureRepo(
-        Effect.fnUntraced(function* (repoRoot) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const outputJsonPath = path.join(repoRoot, "standards", "jsdoc.inventory.jsonc");
-          const outputMarkdownPath = path.join(repoRoot, "standards", "jsdoc.inventory.md");
-          const ciOutputJsonPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.jsonc");
-          const ciOutputMarkdownPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.md");
+  it.effect(
+    "mirrors the JSDoc inventory into the CI output paths from the same scan",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outputJsonPath = path.join(repoRoot, "standards", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "standards", "jsdoc.inventory.md");
+      const ciOutputJsonPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.jsonc");
+      const ciOutputMarkdownPath = path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.md");
 
-          const result = yield* writeJSDocDocumentationInventory({
-            rootDir: repoRoot,
-            outputJsonPath,
-            outputMarkdownPath,
-            ciOutputJsonPath,
-            ciOutputMarkdownPath,
-            generatedAt: fixedGeneratedAt,
-          });
+      const result = yield* writeJSDocDocumentationInventory({
+        rootDir: repoRoot,
+        outputJsonPath,
+        outputMarkdownPath,
+        ciOutputJsonPath,
+        ciOutputMarkdownPath,
+        generatedAt: fixedGeneratedAt,
+      });
 
-          expect(result.outputJsonPath).toBe(outputJsonPath);
-          expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-          expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
-          expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
-        })
-      )
-    ));
+      expect(result.outputJsonPath).toBe(outputJsonPath);
+      expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
+      expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
+      expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
+    })
+  );
 
-  it("excludes lab workspaces from the JSDoc inventory while both writers still emit", () =>
-    Effect.runPromise(
-      withLabsFixtureRepo(
-        Effect.fnUntraced(function* (repoRoot) {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
-          const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
+  it.effect(
+    "excludes lab workspaces from the JSDoc inventory while both writers still emit",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireLabsFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
 
-          const result = yield* writeJSDocDocumentationInventory({
-            rootDir: repoRoot,
-            outputJsonPath,
-            outputMarkdownPath,
-            generatedAt: fixedGeneratedAt,
-          });
-          const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
-            readonly packages: ReadonlyArray<{ readonly packageName: string }>;
-          };
-          const markdown = yield* fs.readFileString(outputMarkdownPath);
+      const result = yield* writeJSDocDocumentationInventory({
+        rootDir: repoRoot,
+        outputJsonPath,
+        outputMarkdownPath,
+        generatedAt: fixedGeneratedAt,
+      });
+      const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+        readonly packages: ReadonlyArray<{ readonly packageName: string }>;
+      };
+      const markdown = yield* fs.readFileString(outputMarkdownPath);
 
-          expect(result.outputJsonPath).toBe(outputJsonPath);
-          expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
-          expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
-          expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
-          expect(markdown).not.toContain("@beep/lab-demo");
-        })
-      )
-    ));
+      expect(result.outputJsonPath).toBe(outputJsonPath);
+      expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
+      expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+      expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+      expect(markdown).not.toContain("@beep/lab-demo");
+    })
+  );
 
-  it("summarizes Turbo affected query output with banner text", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16
+  it.effect("summarizes Turbo affected query output with banner text", () =>
+    Effect.gen(function* () {
+      const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16
 {
   "data": {
     "affectedTasks": {
@@ -330,16 +373,15 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 }
 `);
 
-        expect(summary.total).toBe(3);
-        expect(summary.byTask).toEqual({ check: 1, lint: 2 });
-        expect(summary.byReason).toEqual({ TaskFileChanged: 2, TaskGlobalDepsChanged: 1 });
-      })
-    ));
+      expect(summary.total).toBe(3);
+      expect(summary.byTask).toEqual({ check: 1, lint: 2 });
+      expect(summary.byReason).toEqual({ TaskFileChanged: 2, TaskGlobalDepsChanged: 1 });
+    })
+  );
 
-  it("summarizes Turbo dry-run output by task and cache status", () =>
-    Effect.runPromise(
-      Effect.gen(function* () {
-        const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16
+  it.effect("summarizes Turbo dry-run output by task and cache status", () =>
+    Effect.gen(function* () {
+      const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16
 {
   "packages": ["@beep/demo", "@beep/other"],
   "tasks": [
@@ -362,10 +404,10 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
 }
 `);
 
-        expect(summary.total).toBe(3);
-        expect(summary.packages).toBe(2);
-        expect(summary.byTask).toEqual({ check: 1, lint: 2 });
-        expect(summary.byStatus).toEqual({ HIT: 1, MISS: 2 });
-      })
-    ));
+      expect(summary.total).toBe(3);
+      expect(summary.packages).toBe(2);
+      expect(summary.byTask).toEqual({ check: 1, lint: 2 });
+      expect(summary.byStatus).toEqual({ HIT: 1, MISS: 2 });
+    })
+  );
 });

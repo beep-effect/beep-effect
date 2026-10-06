@@ -1,0 +1,117 @@
+target: "otp:vfy-lane-execution:001"
+target_sha256: "5e095484e0cd590a20d1958bc8e2abc29d3b75d73762a69627f50255a8ade081"
+chain_sha256: "71ccee7e0e8e3a1fe41b13b469f42fe3ab946678d57d90bbf1eebf2ff995941c"
+seat: ontoclean-adversary
+verdict: FAIL
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Blocking (definition-excludes-warrant-rows): the definition makes "ended by a verdict" a
+    membership condition, so an invocation that has started and has no verdict yet (the rows CQ-022's
+    query selects with hasExecutionState RunningExecution) is not an instance, and an invocation
+    cancelled as a CQ-022 cancel candidate never becomes one. Either restate membership as one started
+    invocation of one lane's procedure inside one attempt, with a verdict (status, outcome, observed)
+    or a cancellation as the ways it can end, in line with the card's terminal_states and its
+    unresolved may_change_state_without_losing_identity; or drop CQ-022 from the warrant and say why
+    the class is warranted without it.
+  - >-
+    Non-blocking: the hypothesis description still says "no cited pair shows a verdict lane entry and a
+    ledger lane record of the same attempt" and individuates by "(attempt, lane id)", while the analysis
+    joins so-5d4b45aa3226 to so-2601c6b77d87 and the card individuates by invocation. Align the
+    hypothesis text with the repaired analysis.
+  - >-
+    Non-blocking: the null rationale calls the duration "recorded independently by two record kinds",
+    but the journal entry on so-5d4b45aa3226 and the fact so-2601c6b77d87 carry one durationMs to the
+    microsecond and were written within a second of each other, which fits one measurement written
+    twice. Rest the discriminator on the exit code and the started/ended instants, not on independence.
+  - >-
+    Non-blocking: so-ca8b3f90e57c carries lane entries with status=not-run and no durationMs or exitCode
+    (feedback:01-build and the rest after a fail-fast failure). Say that a not-run entry records no
+    invocation and so no execution, so ETL does not mint one from a status alone.
+attacks:
+  - surface: warrant
+    rule: definition-excludes-warrant-rows
+    counterexample: >-
+      CQ-022 (must_have) selects ?exec rdf:type ciops:WorkUnitExecution with hasExecutionState
+      ciops:RunningExecution: invocations that have started and not ended. On so-5d4b45aa3226 the lane
+      quality:coverage started 2026-10-01T15:30:00.847Z and ended 15:40:19.556Z with status failed; at
+      any instant between those two it was such a running invocation with no verdict, and under the
+      definition ("one invocation ... ended by a verdict") it was not yet an instance, so CQ-022 could
+      not return it. An invocation the S7 stopping rule then cancels ends with no verdict at all and
+      never becomes an instance, although the card lists cancellation as a terminal state. The cited
+      must_have query therefore returns no row by construction under the definition as written, and its
+      expected_result is non_empty. Landed.
+    outcome: landed
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether CQ-024 or CQ-025 answers without the class: both queries type ?exec rdf:type
+      ciops:WorkUnitExecution, and CQ-025's notes name verdict.lanes[].durationMs, the per-lane entry
+      this definition individuates, as the actualWallMs carrier, so the lane grain matches the CQ's
+      own carrier. Neither is a listing warrant. Survived.
+    outcome: survived
+  - surface: taxonomy
+    rule: gufo-alignment-check
+    counterexample: >-
+      Tried gufo:Event against the state change CQ-022 and CQ-025 attach (RunningExecution, then
+      CompletedExecution): an immutable event bearing a changing state. The card leaves state change
+      unresolved and the proposal names the process reading as a still-viable steward choice with its
+      discriminator (a running-state record written before the verdict); a snapshot-indexed state on an
+      event is a modelling option, so the alignment alone is not shown wrong. No parent edge is
+      asserted. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: >-
+      Tried the wrapper/child case on so-5d4b45aa3226: 32 entries name parentLaneId=full:01-pre-push,
+      their start-to-end span is 3133022 ms, the wrapper's durationMs is 3137528.733036, and wrapper
+      plus children sum to more than the attempt's elapsedMs 3814445; the attempt verdict's
+      failedStepId names the wrapper while the failing child is quality:coverage. Under the invocation
+      criterion the wrapper and each child are distinct invocations, so no two are merged; the
+      definition states that executions nest and the proposal leaves parthood open with its needed
+      evidence. Tried the journal/ledger join: the quality:coverage entry and so-2601c6b77d87 share
+      attemptId, inputDigest and durationMs 618708.236225, one execution recorded twice, which the
+      criterion counts once. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Tried the ledger key or (attemptId, laneId) as the criterion: so-b1c417f14329 and
+      so-2601c6b77d87 share key, attemptId and laneId as two records of one execution, and a rerun
+      inside one attempt would be two executions under one pair. The card makes the invocation the
+      criterion and keeps the pair and key as evidence that fails under reruns. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: one lane-result object serialized to the journal and the ledger. That twin makes the
+      fact/journal agreement on durationMs true without any second witness, so the agreement adds
+      nothing. The rest of the discriminator holds against the twin only if a run occurred: the
+      quality:coverage entry carries exitCode=1 with startedAt and endedAt 618709 ms apart, matching
+      its durationMs, and so-ca8b3f90e57c records exitCode=0 for prepare:01-effect-imports. A process
+      exit over a measured interval is a run, not a label. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: hypothetical-read-as-realized
+    counterexample: >-
+      Tried a shadow read as realized reuse: so-b1c417f14329 is a miss shadow (reason
+      changed-package-tripwire). The proposal reads only its observed verdict and duration as a record
+      of the run that happened, and claims no reuse, copy or transfer. Survived.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    execution as a process counted while running rather than an event; discriminating fact: a
+    running-state record of a lane execution written before its verdict
+evidence:
+  - "so:sha256:5d4b45aa3226c4c535dbfc1d052a7d78900d8244f6417a238f327d8f6f8b8c27"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - "so:sha256:b1c417f143294008bf47a9b1d6e8030b874e0644de3d12599b1f585937e4462d"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - CQ-022
+  - CQ-024
+  - CQ-025

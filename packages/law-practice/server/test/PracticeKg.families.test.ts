@@ -3,10 +3,12 @@ import {
   attributeDocuments,
   buildMatterTables,
   isRecycleStubPath,
+  PRACTICE_KG_ANCHOR_DOMINANCE,
   PracticeKgAttributeDocumentsInput,
   PracticeKgCatalogRow,
   PracticeKgDocketReferenceRow,
   PracticeKgDocketRegisterRow,
+  PracticeKgDocumentAttribution,
   PracticeKgEdgeRow,
   PracticeKgEnrichmentRow,
   PracticeKgMatterGraph,
@@ -302,6 +304,115 @@ describe("practice KG family attribution", () => {
       ["10000004", "mention", null, [], ["20001"]],
       ["10000005", "mention", null, [], []],
     ]);
+  });
+});
+
+describe("practice KG anchor membership by dominance", () => {
+  // `count` documents in a family, all mentioning the anchor's application number in their text.
+  type FamilyMentions = {
+    readonly client: string | null;
+    readonly count: number;
+    readonly family: string;
+    readonly filename?: boolean;
+    readonly patentToo?: boolean;
+  };
+  const resolveOne = (families: ReadonlyArray<FamilyMentions>) => {
+    const documents = A.flatMap(families, ({ client, count, family, filename, patentToo }) =>
+      A.map(A.range(1, count), (index) => ({
+        attribution: PracticeKgDocumentAttribution.make({
+          attributionSource: client === null ? "filename" : "text-reference",
+          client,
+          digest: `${client ?? "bare"}-${family}-${index}`,
+          docket: `${family}US0${index}`,
+          docketKey: client === null ? `${family}US0${index}` : `${client}.${family}US0${index}`,
+          family,
+          familyKey: client === null ? family : `${client}.${family}`,
+          recycled: false,
+        }),
+        filename: filename === true && index === 1,
+        numbers: patentToo === true ? ["10000001", "20000002"] : ["10000001"],
+      }))
+    );
+    const mentions = A.flatMap(documents, ({ attribution, filename, numbers }) =>
+      A.map(numbers, (number) =>
+        PracticeKgNumberMentionRow.make({ digest: attribution.digest, number, source: filename ? "filename" : "text" })
+      )
+    );
+    const [resolution] = resolveAnchors(
+      PracticeKgResolveAnchorsInput.make({
+        anchors: reconcileAnchors([enrichment("10000001", "10000001", "20000002")]),
+        attributions: A.map(documents, ({ attribution }) => attribution),
+        numberMentions: mentions,
+      })
+    );
+    return [resolution?.attributionSource, resolution?.memberFamilyKey, resolution?.mentionedFamilyKeys];
+  };
+
+  it("names its thresholds in one constant", () => {
+    expect(PRACTICE_KG_ANCHOR_DOMINANCE).toStrictEqual({ minimumDocuments: 3, minimumShare: 0.8 });
+  });
+
+  it("keeps unanimous membership as it was", () => {
+    expect(resolveOne([{ client: "11111", count: 3, family: "20001" }])).toStrictEqual([
+      "text-reference",
+      "11111.20001",
+      ["11111.20001"],
+    ]);
+  });
+
+  it("makes a dominant client-keyed family the member and keeps the other family as a mention", () => {
+    expect(
+      resolveOne([
+        { client: "11111", count: 8, family: "20001" },
+        { client: "22222", count: 1, family: "30002" },
+      ])
+    ).toStrictEqual(["mention-dominance", "11111.20001", ["11111.20001", "22222.30002"]]);
+  });
+
+  it("counts documents, not mentions", () => {
+    // 4 of 5 documents (80%); the outside document also names the patent, so mentions are only 4 of 6.
+    expect(
+      resolveOne([
+        { client: "11111", count: 4, family: "20001" },
+        { client: "22222", count: 1, family: "30002", patentToo: true },
+      ])[0]
+    ).toBe("mention-dominance");
+  });
+
+  it("refuses dominance below the document minimum, below the share, to a bare family, or against an outside file name", () => {
+    const refused = [
+      [
+        { client: "11111", count: 2, family: "20001" },
+        { client: "22222", count: 1, family: "30002" },
+      ],
+      [
+        { client: "11111", count: 5, family: "20001" },
+        { client: "22222", count: 2, family: "30002" },
+      ],
+      [
+        { client: null, count: 8, family: "20001" },
+        { client: "22222", count: 1, family: "30002" },
+      ],
+      [
+        { client: "11111", count: 8, family: "20001" },
+        { client: "22222", count: 1, family: "30002", filename: true },
+      ],
+    ] as const;
+    expect(A.map(refused, (families) => resolveOne(families).slice(0, 2))).toStrictEqual([
+      ["mention", null],
+      ["mention", null],
+      ["mention", null],
+      ["mention", null],
+    ]);
+  });
+
+  it("accepts a file-name mention inside the dominant family", () => {
+    expect(
+      resolveOne([
+        { client: "11111", count: 8, family: "20001", filename: true },
+        { client: "22222", count: 1, family: "30002" },
+      ]).slice(0, 2)
+    ).toStrictEqual(["mention-dominance", "11111.20001"]);
   });
 });
 

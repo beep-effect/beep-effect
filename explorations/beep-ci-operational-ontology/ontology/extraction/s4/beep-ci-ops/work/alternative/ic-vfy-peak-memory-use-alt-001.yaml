@@ -1,0 +1,47 @@
+id: "ic:vfy-peak-memory-use-alt:001"
+hypothesis_ref: "dh:vfy-peak-memory-use:001"
+referent_grain: >-
+  The highest memory the work run under one grant occupied over the held span, a magnitude of that work,
+  as against the charge claimed for it and the reading written at release.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two peak-memory magnitudes are the same iff they are the peak-memory quality of the same run of granted
+    work; equal byte counts on two grants are two magnitudes of equal value, and the memoryPeakBytes value is
+    evidence of the magnitude, never the criterion.
+  reidentification_key:
+    - "release row of one chain plus quality type (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    A single magnitude; the record-10 pair so-df1f4d8ba41f and so-3013eedf6f82 is one release span seen twice and
+    yields one magnitude, not two.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: quality
+  alternatives:
+    - "a recorded reading taken at release (information object), not the magnitude"
+    - "quality of the grant rather than of the work run under it"
+  existential_dependencies:
+    - "the work (process) run under the grant"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Only release rows carry the value, and only some of them; a held span whose release row lacks memoryPeakBytes
+      would, on my card, still have a peak magnitude that no record shows. If the reading were instead a property
+      of the release event (sampled at release time), the "peak over the held span" reading would be wrong.
+  - description: >-
+      The two full-proof grants differ by about a factor of ten (so-95b7d78a061f about 23.5 GB, so-363f9b7f07dc about
+      2.4 GB) and also differ greatly in held span (admitted to released about 51 minutes against about 13 seconds),
+      so the value may follow how long the work ran rather than what it did; either way it is not the charge.
+status: proposed
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71"
+  - "so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c"

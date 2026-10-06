@@ -1,0 +1,50 @@
+id: "dh:vfy-working-state:001"
+observation_refs:
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants:
+- CQ-005
+- CQ-006
+- CQ-014
+proposed_referent:
+  label: verified working state (resolved head plus working diff)
+  description: 'One instance would be the state an attempt verifies at the grain of its resolved head commit together with
+    its working diff, individuated by the pair (`resolvedHeadSha`, `diffFingerprint`): two attempts over one resolved head
+    with different diff fingerprints are about two states. The pair is carried on attempt-started rows (`_tag=attempt-started`:
+    so-eefbf95beb8d with its twin so-ff071fc9a2a9 at `stage=repair-loop`, `mode=repair`; so-10c2570fe2f6 at `stage=pre-push`,
+    `mode=closeout`; so-3bf9cacb55b4 at `stage=merged-preview`, `mode=verify`) and on the quarantined admission lease so-a8d270b5e19d
+    (`schemaVersion=yeet-admission-lease/v1`, `stage=pre-push`); no ledger fact carries `diffFingerprint`. so-eefbf95beb8d
+    and so-10c2570fe2f6 share one `resolvedHeadSha` value across a repair attempt and a later closeout attempt of one run
+    while carrying different `diffFingerprint` values: at this grain they are two states, at the head-commit grain of dh:vfy-tree-state:001
+    one. Proposed as a candidate carrier of the TreeState kind that CQ-005, CQ-006 and CQ-014 need in their pinned queries
+    (the tree state a verification record proves and a cache epoch is current for), rival to the head-commit reading; it
+    carries their warrants under the same rule the vfy records apply (a warrant follows need, not the null''s standing).
+    The record pair so-eefbf95beb8d/so-ff071fc9a2a9 is one record span seen twice (the vocabulary record a strict subset
+    of its twin): one individual, both cited.'
+representation_status: unresolved
+alternatives:
+- label: 'the committed tree at the head-commit grain (dh:vfy-tree-state:001), which counts so-eefbf95beb8d and so-10c2570fe2f6
+    as one state because they share a resolved head. What would decide between the two: a fact, verdict or reuse decision
+    that holds for one diff fingerprint and not for another over the same resolved head (favours this grain), or one fact
+    applied across attempts whose diff fingerprints differ (favours the head grain)'
+  representation_status: domain_referent
+  plausibility: viable
+- label: the diff fingerprint as an attempt-local digest with no state of its own (a field of the attempt record)
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: every cited record carries its own `diffFingerprint` value (the twin pair being one span),
+    so no two distinct attempts are shown to share a working state, and no ledger fact, verdict or reuse decision is keyed
+    by the diff fingerprint; a pair that differs per attempt is also what an attempt-local digest would show. Needed evidence:
+    two attempt-started rows or a lease and an attempt with one `resolvedHeadSha` and one `diffFingerprint`, or a fact or
+    reuse decision bound to a `diffFingerprint`.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

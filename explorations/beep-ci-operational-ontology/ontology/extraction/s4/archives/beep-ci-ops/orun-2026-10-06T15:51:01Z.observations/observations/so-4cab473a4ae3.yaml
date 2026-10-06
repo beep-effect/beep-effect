@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:4cab473a4ae30a83a496368b6cd6ebcdabeb17571a4dc8fc10e232b1479b09f1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect9/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "baaecf9428221685683f802e5016259025152ba69fc369d0fb6aa09107c4246d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect9/proof-ledger.properties:record=0",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=7a81659c-b033-44c9-9add-c0ed70122f76"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/boolean-creep-refresh-2026-09-22"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=10871.375826"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=c3526842981"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-24T21:33:31.731Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=7a81659c-b033-44c9-9add-c0ed70122f76\nlaneId=fallow:audit\nbranch=codex/boolean-creep-refresh-2026-09-22\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=c3526842981\nreason=no-fact\nobserved=passed\ndurationMs=10871.375826\nrecordedAt=2026-09-24T21:33:31.731Z\n",
+  "epistemic_status": "parser_derived"
+}

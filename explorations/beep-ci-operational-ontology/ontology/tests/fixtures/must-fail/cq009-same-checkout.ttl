@@ -1,0 +1,11 @@
+# Falsifiability (run-4 pin, same-checkout arm; #929 hasSameCheckoutLease): two active
+# grants on ONE CHECKOUT with DIFFERENT origins and the current protocol are the
+# deployed-prohibited state — CQ-009 must violate with ?arm = "same-checkout" (rows_ge_1_all_bound).
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:co-1 a ciops:Checkout .
+ciops:g1 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "origin-a" ; ciops:hasCheckout ciops:co-1 ;
+    ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .
+ciops:g2 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "origin-b" ; ciops:hasCheckout ciops:co-1 ;
+    ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .

@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:9f79eccd515d1afa395ee22444a8916aca0d97f85d5050848ecd76d9fb3ae5f7",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 94,
+    "end_line": 105,
+    "content_sha256": "b94a56e39bb5ee2f0a562877b2929534f7208ef17bd9674062b64948f6602d9c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=base",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=710"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=700"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=base"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=high"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 16\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=base\nenqueuedAtMillis=700\nkind=full\npriority=high\n# record 17\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=base\nadmittedAtMillis=710\n",
+  "epistemic_status": "parser_derived"
+}

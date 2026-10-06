@@ -1,0 +1,29 @@
+id: "dh:lpl-contract-governance:001"
+observation_refs: ["po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c", "po:sha256:7a2db1a40efc039f328ff3f118d30d11f8a3177e137759662d092b680a0f94d8", "po:sha256:ac0e9748dda063cf0252cc6c413fc56e2bca830b84a46b151ee1b6b589d87d76", "po:sha256:79f91eaae90c87e6a30b77aead2a836deadc1fe4d307a39f3c1532a9078a45cd"]
+cq_warrants: []
+proposed_referent:
+  label: "contract amendment and governance text (authority, supersession, provisional-status and never-emit notes)"
+  description: >-
+    The observed construct is the contract's own governance prose: the section 8 amendment header
+    (its authority, which bullets it supersedes, the commit order of the projection PR), the
+    provisional-namespace status of the lane-plan vocabulary pending an auditor review, and the
+    never-used and never-emitted term lists (schedulesWorkUnit, hasScope, Scope and the rest). The
+    listed terms are mentions and ground no referent. The live-replay evidence rendering note is a
+    different construct and is named by dh:lpl-live-replay-evidence:001. Cited as the construct
+    under evaluation; the referent-bearing statements in the same blocks are cited by the
+    lane-plan, verification-lane and episode hypotheses.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "an information artifact recording design decisions about the projection"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands: document authority, supersession and term-usage prohibitions are bookkeeping
+    about the representation, not occurrences in the CI domain, and no pinned CQ asks about
+    contract provenance.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.6, use_for_acceptance: false}

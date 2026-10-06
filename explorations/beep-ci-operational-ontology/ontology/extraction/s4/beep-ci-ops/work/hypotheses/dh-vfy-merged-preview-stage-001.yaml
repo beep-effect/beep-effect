@@ -1,0 +1,53 @@
+id: dh:vfy-merged-preview-stage:001
+observation_refs:
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900
+- po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c
+- po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants: []
+proposed_referent:
+  label: merged preview as a proof stage (reading b)
+  description: 'One instance is the merged-preview stage: the point in the verification workflow at which evidence is produced
+    against the merged tree, a member of the proof-stage kind dh:vfy-proof-stage:001. Deployed spelling: the `ProofStage`
+    literal list (po-581b06759057: `repair-loop`, `pre-push`, `merged-preview`, `hosted`) and the `stage` member of attempt-started
+    rows (so-3bf9cacb55b4). Individuated by its position in the stage order, not by the literal. It does not answer the Queue
+    H question: the record carries `proofTier=full`, the deployed proof-tier value whose mapping into assurance tiers is open
+    (dh:vfy-deployed-proof-tier:001), so it places the attempt in no assurance tier. Tier or stage is told apart in assurance-tier
+    terms: a record tying a merged-preview attempt or episode to one of the three AssuranceTierId levels as the level it is
+    verified toward favours a stage inside that tier, and a level of its own, with lane obligations not required for TierLocalFullProof
+    (the CQ-017 asymmetry shape), favours a fourth tier. No pinned CQ needs it directly;
+    it disambiguates the CQ-warranted tier class (dh:vfy-assurance-tier:001), so it is judged on evidence with no warrant.
+    The stage and the admission work kind come apart on one record: the quarantined lease so-a8d270b5e19d carries `kind=merged-preview`
+    at `stage=pre-push`. Merged preview is dormant in the capture window (ledger census po-563da43a9f12 and reading po-82648cf8d37a:
+    no fact and no shadow on either side of the cut; fleet census po-58c65850834f: starts retained from before the cut, none
+    since), never observed-and-empty.'
+representation_status: domain_referent
+alternatives:
+- label: an assurance tier (dh:vfy-merged-preview-tier:001); discriminated by a record verifying an attempt or episode to
+    a merged-preview assurance level distinct from the three AssuranceTierId levels, or by a lane obligation required at that
+    level and not for TierLocalFullProof
+  representation_status: unresolved
+  plausibility: viable
+- label: an admission work kind (dh:vfy-merged-preview-work-kind:001); the fixed reading keeps a ticket's work kind out of
+    stage occurrences
+  representation_status: domain_referent
+  plausibility: viable
+- label: a scheduler literal with no workflow counterpart
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The null falls: an attempt actually began at this stage under a stated mode and environment, so the value marks
+    where a real verification occurrence ran. Whether a stage is a phase of an episode or a kind of activity is left to the
+    foundational seat.'
+  discriminator: 'so-3bf9cacb55b4 is an `_tag=attempt-started` row carrying `stage=merged-preview` with `mode=verify`, `envProfile=pr-posture`
+    and `proofTier=full`, and po-58c65850834f retains merged-preview starts in the fleet journals: a verification attempt
+    began at this stage, which would be false if the literal named no point in the verification workflow.'
+epistemic_status: proposed
+confidence:
+  value: 0.5
+  use_for_acceptance: false

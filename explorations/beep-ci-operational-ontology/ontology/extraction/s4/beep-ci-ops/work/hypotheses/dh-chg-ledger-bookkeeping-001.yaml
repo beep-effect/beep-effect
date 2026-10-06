@@ -1,0 +1,64 @@
+id: "dh:chg-ledger-bookkeeping:001"
+observation_refs:
+- "po:sha256:0258120378b55876a0457e1548e119aa5cdf844af23f0da49661a58b98e3449a"
+- "po:sha256:08cf23fabaa45189e9e6710eb5ed66fddf66416358b540ed6fe85bce6014e209"
+- "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+- "po:sha256:136c4cb2ebee9bf5b7b6b51ae56fff3937a695071e167b695fb31d66bb48b836"
+- "po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b"
+- "po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2"
+- "po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6"
+- "po:sha256:29ec308ddb8ba42273b33b41212d92fc8dcb32afcc10bf4c04bccce61750e450"
+- "po:sha256:3c219ae9a67306b44262ce221588e8a5ba129806c5bca6cc2e857a0d32ade524"
+- "po:sha256:4f2194be0321759c7240f0581c5c16ddc108a72a73c1fb883eea6156e574eb59"
+- "po:sha256:5397ff7a760ea1513b6970820c3b93465e633b05efe6f0fa32dea382425a467e"
+- "po:sha256:55f2cd5382bf4d12effffe37768a446ba2650c80a1a9a37f7ab3e3eba9a41f8b"
+- "po:sha256:598f326644533c1d3d340286dc326e7fe66ce0ad3b3be578d07a5f12f1db3956"
+- "po:sha256:5c76596eb2ee73cc00d6e73430145466369d86c2e2b2a95246f36195f8f9a872"
+- "po:sha256:5e7f91c5f572ae0bfeb423d2b11232a959c987cb174979bdb92603a3ed47de83"
+- "po:sha256:61be88bdc8e728ab88dd3f3c3eaeb891737003f013f50aac2d484578b072b09e"
+- "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+- "po:sha256:702c9ad1e7b9982dde9e8d3f63c4f83d4b1bbfafd5527ce6ddc302c9f21e639f"
+- "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+- "po:sha256:85169b5374bfc407cfa0dfb1aae29a6712f5748f7ee00e4dbab776a9b4e4b321"
+- "po:sha256:8bd00f950c715a284a1513cfd6fc6989fc1dbd63838db80369f2a906bb83def2"
+- "po:sha256:8c81693c678e2a600ba135176c5290919381ab31f3b914a22284c1c2d68844a5"
+- "po:sha256:9389cb99afdae9d9d738725da15a3bec96ff83d4280d73c899ed9d400c29e03e"
+- "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+- "po:sha256:99af3e66ee3c31b939f46bf2bf738f23dab5d528e3d33f2b689c334745b70d40"
+- "po:sha256:a48d2b4f63642d8415fa3248c76a25fae15d6e1b21cc0d5f96d0d59e0a7a8fb0"
+- "po:sha256:ab2046e4d8c1dbe7ca21fac8029f50f5bf547eb6076d95566c51888613e5a1b0"
+- "po:sha256:ae86a035a2b303af5fbe1e2407ef8c8353dee26c3248ffcce434a31e103f2fe8"
+- "po:sha256:b4578e170e3ab95485e9caff8f42b1cf7880ce26e730438f9f91b9d1eab3d940"
+- "po:sha256:b74a72ab063a9397c7f157e4683423bfd2f22abd1055ce360789e9e3e0574763"
+- "po:sha256:b754409ff756f696e06de016e1fab4b65cbaab4201c75bbb1707a0477dad7568"
+- "po:sha256:bf3e9b98c9907b6e670ba25e920d836bdec14c3f2414c5aa885a905bf4cdeca2"
+- "po:sha256:bf6c75787a7d8ff2492b0054431e6b4f7a9c8e8f34009187fcefa7bbf31ae51d"
+- "po:sha256:c1e5823a17169f61139ee8782f7f97e45533ca31792c47cb840fc9e7e315b7ea"
+- "po:sha256:c44335db46ef1faada673625348a66831c800d20182303aed0e3996cbcbe72b3"
+- "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf"
+- "po:sha256:c5e4a3fa5cb9cca578d93207a4aadc2c418e7d3186187c27493b1a5467c54826"
+- "po:sha256:d2f81ee522b55c797dc675442f919ca37dca39ea57eebc214da66495efffa312"
+- "po:sha256:d5b4a4eadd3fc86fca26be407d25a681ce732593df4a3e9320a1f222a7518401"
+- "po:sha256:db48832ece458c823c749f99c0f7b0731ce9bdf3109f379f4371d509a934ccfb"
+- "po:sha256:e5be2e63348a4fc1c8ceff39348a8a3db79ff4157f2b21a88d43d1dbcb49f707"
+- "po:sha256:f3f68fe22e119fcd646d8a5b9a28ebef53fb4f243baa2c47f3e3d99bf2faea5f"
+- "po:sha256:fc75c895d1ba5461d5ed42ab2b3f63deb1e89f01887b5c20f9a594f65ee7abb0"
+- "po:sha256:fd2608fb2e655c02344a1d2b0f9e78e96b045caa6d56d2600979e46fc11e7ff4"
+cq_warrants: []
+proposed_referent:
+  label: "change-ledger bookkeeping fields"
+  description: "The ledger's own row slug ('id: iv-...'), its 'mechanismChanged' tag and the self-applied 'class: OperationalChangeEvent' label on each of the 44 rows, evaluated as constructs. 'mechanismChanged' is ledger-field governance (its comments cite a ruling that sorts a check step under gate selection), not a candidate: no mechanism-kind referent is floated behind it. The class line is the emitter's own typing."
+representation_status: implementation_artifact_only
+alternatives:
+- label: "the row as a curated record about a change (dh:chg-change-record:001)"
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: "The null stands: these fields organise and tag the ledger. 'mechanismChanged' is governance of a ledger field, never proposed vocabulary and not a candidate referent. A self-applied class label and a row slug are true of pure bookkeeping and discriminate nothing."
+  discriminator: ""
+epistemic_status: proposed
+confidence:
+  value: 0.7
+  use_for_acceptance: false

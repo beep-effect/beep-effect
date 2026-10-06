@@ -7,10 +7,10 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Effect, pipe } from "effect";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { sqlStringLiteral } from "./internal/Sql.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { withDuckDb } from "./PracticeKg.rows.ts";
 import type { DuckDbShape } from "@beep/duckdb";
@@ -173,8 +173,6 @@ FROM fts_postings p
 JOIN fts_terms t USING (term)
 JOIN fts_docstats d USING (doc_id)
 CROSS JOIN corpus c`;
-
-const sqlStringLiteral = (value: string): string => `'${pipe(value, Str.replaceAll("'", "''"))}'`;
 
 const insertRows = <Row>(
   db: DuckDbShape,

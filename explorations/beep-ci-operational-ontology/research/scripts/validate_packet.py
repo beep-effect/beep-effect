@@ -380,7 +380,7 @@ if _args.s6:
     antecedents = {
         "CQ-009": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
             ASK { ?g a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
-                     ciops:hasOriginKey ?o . FILTER(?o != \"\") }""",
+                     ciops:hasCheckout ?c . }""",
         "CQ-010": """PREFIX ciops: <https://oip.law/ontology/ci-ops#>
             ASK { ?wu ciops:admittedBy ?g .
                   ?g ciops:admissionChargeTokens ?ch ; ciops:capacityAtAdmissionTokens ?cap . }""",

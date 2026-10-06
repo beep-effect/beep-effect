@@ -1,30 +1,30 @@
-## 2026-09-10 — run-3 sitting 2 (carried-row adjudication, steward: Benjamin)
+## 2026-10-06 — run-4 sitting 2 (carried-row adjudication, orchestrator under the autonomy charter)
 
-Docket: the 68 carried prior-index rows (run-2 observations that cannot re-emit under the
-run-3 pin), clustered into 15 referent groups against the run-3 surface
-(`work/sittings/carried-rows-docket.md` + `carried-clusters.yaml`, committed with the run
-artifacts). All three rulings resolved to the docket's recommendation.
+Docket: the 138 prior unresolved rows (91 source, 47 prose; 84 live in Queue C(i)–C(iii), 54 carried
+run-2 rows in C(iv)), clustered on the intake docket's groups and the run-3 fifteen-cluster frame
+(`work/sittings/carried-rows-docket.md` and `carried-clusters.yaml`). No run-4 observation re-observes
+a prior chain (no shared nonce or attempt id) and no run-4 analysis cites a prior id, so nothing
+re-clusters and nothing retires by re-identification. The lane's checks hold: 138 ids, each once,
+equal to the prior unresolved set; every row `unresolved`, `carried_from_prior: true`,
+`since: 2026-10-06`; no needed evidence repeats the prior text; the 48 rows on duties that need a new
+Must/Should CQ name "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009".
 
-**Ruling 1 — supersession retirements (14 rows, 3 clusters):** the fleet-checkout-identity
-row retires as superseded by the timestamped bindings pin and the run-3 checkout-cache-binding
-chain; the three failure-signature rows retire as re-identified against the captured
-failureKind/failedStepId tuples in the run-3 verdict observations (signature identity stays
-open on the new chain); the ten CQ-020 ordering and governing-specification concessions retire
-as superseded by the run-3 ordering-cluster proposals and the emission-v2 observations, the
-cluster itself being judged at sitting 3. Rejected: holding the ten ordering rows open until
-sitting 3.
+**Ruling 24 — all 138 rows re-park with fresh evidence; none retires.** The index-close lane writes
+the carried rows exactly as `carried-clusters.yaml` gives them. The four retirement candidates are
+rejected for run 4: recovery-durations (the run-4 chain holds that observation on policy recurrence,
+not on execution boundaries, so re-identification would drop the duty); comparison-operand-binding
+with the freshness duty (the ground is the workspace-bookkeeping null, a hypothesis no proposal or
+review has tested); governing-specification-comparison (the contract's diagnostic-only wording speaks
+of the admission model; whether any gate consumes the comparison stays the open question); and the
+origin-block rows (the change ledger row that retires the per-origin lock is observational seed data,
+and CQ-009's legacy-drain arm still needs the origin regime). Rejected: retiring the synthetic-corpus
+rows because run 4 dropped that corpus (the duties concern boundaries an organic record leaves just as
+open).
 
-**Ruling 2 — parks with partial run-3 evidence (17 rows, 7 clusters):** grant/resource
-contention and proof-lock paths, request and lease lifecycles with the memory rider, the
-cache-plan rider (the verdict schema carries no resolver field), passed-step execution
-boundaries, memory-measurement semantics, duration individuals and carrier issuance, and QA
-workflow / projection-conformance evidence stay `unresolved` with NEW needed_evidence naming
-what run 3 now shows and what run 4 must add. Rejected: promoting the lifecycle rows onto the
-under-revision admission proposals.
-
-**Ruling 3 — parks on missing governance contracts (37 rows, 5 clusters):** freshness /
-review-score / attribution / proof-tier governance, workspace package continuity, package
-topology and affected/docgen selection, admission capacity computation and pre-grant
-snapshot, and origin blocking / heartbeat suspicion stay `unresolved` with fresh wording
-recording what run 3 checked and why it is insufficient (run-3 corpora Rulings 6 and 16).
-Rejected: retiring the wrapper-like rows as irrelevant.
+**Ruling 25 — the zero-ledger premise has changed.** Run 4 captures writer-issued proof-ledger facts
+and shadows, so the issuance duties that rested on there being no ledger now narrow to copy,
+correction (the time-to-certainty C4.2 check) and custody, plus their CQ duties; the fresh needed
+evidence says so row by row. The frozen-replay rows stay bound to the frozen S6 snapshot; moving them
+to the live-replay report needs a transcription lane in a later run. The deferred-tail row stays
+decision-gated, with the same-checkout skip named as the candidate consumer for the next capture.
+Reversal: the next run's sitting 2 re-adjudicates.

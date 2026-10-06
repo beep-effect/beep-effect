@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:ef0798dae0088dd92334fecae7b6d1b65b2dd1aadf2f80c48baae549cb409844",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 19,
+    "end_line": 19
+  },
+  "quote": "| `ExecutionState` | `RunningExecution`, `CompletedExecution`, `CancelledExecution` *(supports: ExecutionState — lifecycle terminal for cancelled work; S7's stopping rule writes it)* | CQ-022/CQ-025 (spec/execution split) |",
+  "epistemic_status": "quoted_prose"
+}

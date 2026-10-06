@@ -1,0 +1,29 @@
+id: dh:vfy-flake-detection:001
+observation_refs:
+- so:sha256:8f99dd0086080f972c55de23dc0457bea7fb782bf92c2ef41686163dbc03ebbc
+cq_warrants: []
+proposed_referent:
+  label: detected lane-rerun anomaly under a detection policy
+  description: 'The observed construct: a detection entry with `policy=ts2589-no-location`, `detectedAt`, `task=build`, `taskId`,
+    `packageName`, `laneLabel=quality:build`, `laneRerunDurationMs` and `standaloneDurationMs` (so-8f99dd008608). One instance
+    would be one detection of a failure pattern on one task. It may support the FailureSignature kind CQ-013 needs; no warrant
+    is claimed here.'
+representation_status: unresolved
+alternatives:
+- label: an occurrence of a failure signature
+  representation_status: domain_referent
+  plausibility: viable
+- label: diagnostic bookkeeping of the rerun machinery
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: one detection entry shows the shape but not whether `policy` names a recurring failure signature
+    or a rerun heuristic. Needed evidence: entries under the same `policy` on other tasks or attempts, or a record tying the
+    policy to a failure signature.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.25
+  use_for_acceptance: false

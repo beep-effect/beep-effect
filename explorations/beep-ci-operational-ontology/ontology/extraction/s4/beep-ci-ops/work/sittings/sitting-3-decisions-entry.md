@@ -1,51 +1,50 @@
-## 2026-09-10 — run-3 sitting 3 (ratification docket, steward: Benjamin)
+## 2026-10-06 — run-4 sitting 3 (ratification, orchestrator under the autonomy charter)
 
-Docket: 21 converged proposals after three adversary rounds (final reviews 17 PASS / 4
-INDETERMINATE / 0 FAIL; mechanical gate ARTIFACTS VALID — GATE PASSED at the pin with 112
-flags), presented individually as flagged submissions (every proposal carries a still-viable
-rival flag; no clean ratify-candidate), plus five withdrawals from the run
-(`work/sittings/ratification-docket.md`, committed with the run artifacts). Three shared-IRI
-grain questions surfaced before locking: SeatGrant, SeatRequest, and
-VerificationResultArtifact were each claimed by proposals with different identity criteria.
-All four rulings resolved to the docket's recommended arm.
+Docket: the eight proposals that stand after three adversary rounds and six withdrawals
+(`work/sittings/ratification-docket.md` and `.yaml`, advisory only). Latest reviews: 8 PASS, 0 FAIL,
+0 INDETERMINATE. The pre-scribe gate at the pin printed ARTIFACTS VALID — GATE PASSED with 154 flags
+(138 carried rows, 12 DISPUTED, 4 explicitly deferred) and an unresolved fraction of 54/198 = 27%, so
+no waiver is in play (Ruling 16). The blinded seat agreed with the primary seat's event category on the
+four event proposals; it named a category (quality, relator, relator, information object) where the
+primary seat left four deferred reuses unresolved. Every ratification below names the orchestrator role
+as steward under Ruling 2 and is in the orchestrator's own words.
 
-**Ruling 1 — ordering cluster ratified together, flagged:** the thirteen `ov-` proposals
-(ScheduleProposal and SeatRequest reuse, ScheduleStep, hasStep, stepIndex zero-based,
-schedulesSeatRequest, hasScopeTag, VerificationEpisode, hasCurrentProposal,
-AdmissionProjectionSpecification, hasProjectionSpecification, hasOriginKey and
-admissionChargeTokens reuse) are adopted as drafted at fixed-prescription-content,
-immutable-component, repeatable-rule grain, with the four sitting-1 Ruling-4 deferrals
-(token-charge repricing, rule-versus-application identity, demand continuity, episode unity)
-retained as flags for run 4. This discharges the run-2 sitting-3 deferral without dangling
-ends. Rejected: parking the cluster (63% unresolved, waiver required).
+**Ruling 28 — a reuse ratification affirms denotation under the ratified values.** When a run-4 chain is
+mapped to an already ratified term at the same grain, ratifying the mapping affirms that run 4 denotes
+that term; it does not overwrite the ratified row's category, rigidity or identity. The run-4 card's
+unresolved values and still-viable rivals enter the row as flags with their discriminating evidence, and
+a Queue A flag that the proposal says persists keeps persisting. The step-8 OntoClean rule therefore does
+not fire for the five reuses (VerificationAttempt, SeatRequest, SeatGrant, admissionChargeTokens,
+VerificationLane): none submits a new core sortal, and each ratified rigid value stands. The seat cluster
+takes this one position together, and no SeatRequest flag lifts singly. Rejected: rejecting the reuses for
+unresolved rigidity, which would re-disposition 96 mapped index rows and erase run 4's re-examination
+while the ratified rows stand regardless.
 
-**Ruling 2 — recorded-value grain governs reuse:** admb-seat-grant and
-att-admission-allocation ratify as SeatGrant recorded accounts, admb-seat-request as the
-SeatRequest recorded account, att-verification-attempt as the VerificationAttempt recorded
-history, and att-attempt-verdict as VerificationResultArtifact at assessment-origin grain,
-each adopted as drafted with its run-4 deferrals flagged. bind-admission-grant and
-bind-admission-request (synthetic operational readings; sitting-1 Ruling 3's "else
-unresolved" arm) and ver-attempt-verdict (the content-snapshot rival) are withdrawn with
-named organic and issuance evidence (`work/sittings/withdrawals-sitting-3.yaml`). Rejected:
-accepting two identity criteria per IRI as flags, and withdrawing all eight.
+**Ruling 29 — the new event classes are not core sortals.** The step-8 rule's core sortal is an endurant
+type that supplies identity to other types, a kind or subkind anchor. CommittedFailure and
+WorkUnitExecution are events whose criteria derive from an attempt and a step or a lane; nothing takes
+identity from them. Their rigidity doubts (a retried step or revised failed step; a wrapper absorbing its
+children, or a relabelled lane) become flags. OperationalChangeEvent's rigidity is resolved. Rejected:
+holding them for revision until wrapper parthood and the obsoletion point are decided; the review loop is
+closed (Ruling 11) and each doubt carries its discriminating record.
 
-**Ruling 3 — Queue B:** no run-2 flag is discharged. rat-047, rat-048, rat-051 and rat-052
-re-park to run 4 under Ruling 17 (issuance and custody provenance wait for the proof-ledger
-writer); the partial result-record evidence is recorded against rat-048/051 without lifting
-their flags; rat-049 (verification-plan continuity) and rat-050 (priority-class registry
-authority) stay open as separate contract and governance duties. Rejected: lifting
-rat-048/051 on partial evidence.
+**Ruling 30 — all eight are accepted as flagged accepts,** scribed individually as rat-071 to rat-078:
+OperationalChangeEvent, VerificationAttempt, WorkUnitExecution, CommittedFailure, SeatRequest,
+SeatGrant, admissionChargeTokens and VerificationLane. VerificationLane's run-4 doubts become the first
+flags on an unflagged ratified row; projection stays additive (Ruling 14).
 
-**Ruling 4 — Queue D, withdrawals, index:** the object-valued `hasScope`/`Scope` pair parks
-with the no-punning record (run-3 fixtures exercise only the `hasScopeTag` literal);
-`schedulesWorkUnit` remains the CQ-019 arm-3 historical carrier; the five run withdrawals
-(AdmissionJournalEntry, CheckoutCacheBindingRecord, AdmissionGrantTermination,
-AdmissionRequestTermination, ExecutionDurationAssertion) stand as deferrals with named run-4
-evidence and are removed at close per the run-1/run-2 precedent; no unresolved-fraction
-waiver is entered. Rejected: converting the withdrawals to rejections.
+**Ruling 31 — what the accepted terms answer, stated plainly.** CQ-016 is answered for its subject only:
+`landedAt` stays seed-only and unproposed because its chain did not survive. CQ-022 returns no row on run-4
+vocabulary even with its three terms accepted, since `inAttempt`, `hasExecutionState` and
+RunningExecution are parked and `hasCancelClass` is seed-only. VerificationLane's CQ-006 citation is void
+under Ruling 20 (the query binds the lane untyped); its warrant stands on CQ-001. Prose in the
+admission-charge and seat-grant proposals that names the withdrawn admission-work-kind and checkout
+proposals is superseded by Rulings 27 and 18; the bound bytes are not revised.
 
-**Closure:** eighteen ratifications scribed as rat-053..rat-070 (per-proposal verbatim
-decisions adopted as drafted); the eight withdrawn proposals and their reviews removed
-(bytes preserved in git history) and their observation rows parked with named evidence; the
-68 carried run-2 rows adjudicated at sitting 2 (14 retired, 54 re-parked with fresh
-evidence); post-scribe gate re-run at the pin.
+**Ruling 32 — Queue H's prior refutation stands.** The run-2 analysis `fa-pb-yeet-proof-tier-001` refuted
+reading Yeet proof tiers as AssuranceTiers because both use the word tier; run 4 affirms it: the
+literal-domains table keeps YeetProofTier apart from AssuranceTierId, every cited `proofTier` is `full`,
+and no tier chain survived denotation. No tier proposal exists, so no fourth AssuranceTier member is
+ratified: the member stays blocked on the parked AssuranceTierId domain, and KPI law §6 keeps merged
+preview a sub-partition of TierLocalFullProof. This goes to the P4 hand-off. Reversal for Rulings 28–32:
+a later sitting supersedes with revise or reject ratifications; a scribed ratification is never deleted.

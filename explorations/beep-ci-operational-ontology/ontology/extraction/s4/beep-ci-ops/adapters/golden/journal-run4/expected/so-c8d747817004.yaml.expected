@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:c8d747817004d09d2189d8fdb45e1b130ad30f12a75ec4e7efd030d8e19660bc",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/live/formfeed.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 5,
+    "content_sha256": "a8206d507a68b30448c1353f53a7268b5a6f5c55a3859445b74238b02c88063b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/formfeed.properties",
+    "lexical_name": "next",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "lastkey=kept"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "next=line"
+    }
+  ],
+  "source_excerpt": "ffkey=refused\n\f# note\n next=line\nlastkey=kept\n",
+  "epistemic_status": "parser_derived"
+}

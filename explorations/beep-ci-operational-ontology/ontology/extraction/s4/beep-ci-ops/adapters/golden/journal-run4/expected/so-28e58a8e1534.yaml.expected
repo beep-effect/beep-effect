@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:28e58a8e15349d95661651a66c62717104db5a42111c26cadca6f792cfaee8d1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/attempts/a/d/other.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 6,
+    "content_sha256": "755113c5cc8550c1253ee6ca1c394549a07101430c1f4282350706ae44784623"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/a/d/other.properties:record=0",
+    "lexical_name": "sidecar",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "sidecar=present"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=attempt-seven\nstage=hosted\nsidecar=present\n",
+  "epistemic_status": "parser_derived"
+}

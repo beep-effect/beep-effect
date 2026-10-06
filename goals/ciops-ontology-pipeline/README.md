@@ -33,10 +33,20 @@ Use this command for execution-capable sessions:
 
 P2 Projection on live data — complete 2026-10-06 (W6 S7-v2 seam and `planEpisode` body, W5 live
 replay: 197 of 200 first-choice agreement on the `run4-fleet` pin beside the golden's 41 of 41; P1
-and P0 complete). Next: P3 auditor run 4 (W7), fed by the P1 pins and the P2 projection.
+and P0 complete). P3 auditor run 4 (W7) opened 2026-10-06, fed by the P1 pins and the P2 projection:
+the launch sitting (Rulings 1–17) is in `research/decisions.md`, and the change-event ledger was
+refreshed to 44 rows by W1 pass 5 before the pin. Run 4 is ratified and rotated (eight flagged accepts,
+`rat-071..078`; gate PASSED at the pin before and after the scribe); P3 closes with the lab's CQ-009
+lift (Ruling 15).
 
 ## Latest Evidence
 
+- 2026-10-06, W7: auditor run 4 (`orun-2026-10-06T15:51:01Z`, pin `71c7357adc`) ratified eight
+  flagged accepts (`OperationalChangeEvent`, `WorkUnitExecution`, `CommittedFailure`; reuses of
+  `VerificationAttempt`, `SeatRequest`, `SeatGrant`, `admissionChargeTokens`, `VerificationLane`) and
+  withdrew six with named evidence; index 342 rows, unresolved 54/198 = 27%; gate PASSED at the pin
+  before and after the scribe; S5/S6 projection green. Rulings 18–32, calls ae–aj and the P4 hand-off
+  in `research/decisions.md`; run report in the exploration's `research/run4-lanes/p3-run4-report.md`.
 - 2026-10-06, W5+W6: `apps/labs/ciops` plans the 33-lane gate-order handoff by path and sha256
   (`LanePlanProposal`, provisional `ciops-prov:` lane vocabulary, S7 contract §8) and replays the
   pinned canonical journal with surrogate custody (`research/s7-live-replay-evidence.md`: 197/200

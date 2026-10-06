@@ -87,7 +87,7 @@
   source: "deployed lease records (originKey — proof-lock basename of remote.origin.url; round-3 H-04/J-B3 correction from checkoutRoot)"
   freshness: snapshot_instant
   negations: [CQ-009]
-  note: "closed-membership (uniqueness) rather than negation: the pair-detection is only sound if every active lease is present; empty originKey = origin-exempt work (review-fix)"
+  note: "closed-membership (uniqueness) rather than negation: the pair-detection is only sound if every active lease is present; empty originKey = origin-exempt work (review-fix). Folded at the run-4 pin (2026-10-06): since the CQ-009 re-scope this closure binds the legacy-origin-drain arm only; the same-checkout arm joins on hasCheckout, whose closure is undeclared (no closed-world row in run 4); the legacy arm also needs hasCoordinationProtocol present on every active grant (the decoded value: a record without the field decodes as legacy-origin-lock/v1), closure likewise undeclared"
 
 - predicate: p50Ms
   world: closed

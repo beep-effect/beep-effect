@@ -1,0 +1,104 @@
+{
+  "id": "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 4127,
+    "end_line": 4236,
+    "content_sha256": "580dbc522417e4626473fa818dbbca51cdc14511a36906248179d56255bb07ad"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=afaf621b-8811-40e7-9126-ba61b48b888f",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1790932872491"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=84c198d0-f592-4508-a667-0b5b80fdfe1e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/effect-vitest-backlog-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-backlog-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790932872470"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=afaf621b-8811-40e7-9126-ba61b48b888f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=36d4b553d471"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=f2c0b33e4ce2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1790934576457"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 339\nownerRef=36d4b553d471\nownerRefVariant=pid_pair\nattemptId=84c198d0-f592-4508-a667-0b5b80fdfe1e\nkind=merged-preview\npriority=verify\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-backlog-next\nbranch=codex/effect-vitest-backlog-next\nenqueuedAtMillis=1790932872470\nnonce=afaf621b-8811-40e7-9126-ba61b48b888f\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 340\nownerRef=36d4b553d471\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=afaf621b-8811-40e7-9126-ba61b48b888f\nkind=merged-preview\nweightTokens=5\npriority=verify\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790932872470\nadmittedAtMillis=1790932872491\nattemptId=84c198d0-f592-4508-a667-0b5b80fdfe1e\n# record 341\nownerRef=cb8f80a69945\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation\nbranch=codex/qualification-signed-implementation\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=4f13c5e6-7dad-460d-86e1-46cf9012e842\nreleasedAtMillis=1790932918042\nattemptId=dd341e9f-534b-44e4-a253-527034276a23\n# record 342\nownerRef=cdd0ae67dc0a\nownerRefVariant=pid_pair\nattemptId=c79ec791-109c-4f9f-a6d6-7ddc62357ea9\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation\nbranch=codex/qualification-signed-implementation\nenqueuedAtMillis=1790933066846\nnonce=f55d73fe-230a-481b-ae25-2f7796a6ab9b\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 343\nownerRef=cdd0ae67dc0a\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=f55d73fe-230a-481b-ae25-2f7796a6ab9b\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790933066846\nadmittedAtMillis=1790933066865\nattemptId=c79ec791-109c-4f9f-a6d6-7ddc62357ea9\n# record 344\nownerRef=48eb2b544786\nownerRefVariant=pid_pair\nattemptId=b26583c9-dab0-4a89-9cc4-5bae1b9dca08\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01\nbranch=codex/boolean-creep-r54-remainder-2026-10-01\nenqueuedAtMillis=1790933115617\nnonce=897c4930-de2f-441a-85c0-305ad62f1ce7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 345\nownerRef=41f1e132be14\nownerRefVariant=pid_pair\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nenqueuedAtMillis=1790933283299\nnonce=fe2ff044-d52f-4364-8a2c-0edaa513a6cf\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=1\n# record 346\nownerRef=076cbb9f7dbf\nownerRefVariant=pid_pair\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nenqueuedAtMillis=1790933283396\nnonce=b33c5227-400a-44b5-a4c0-a1cb5fb2cd0a\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=1\n# record 347\nownerRef=f2c0b33e4ce2\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-backlog-next\nbranch=codex/effect-vitest-backlog-next\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=afaf621b-8811-40e7-9126-ba61b48b888f\nreleasedAtMillis=1790934576457\nattemptId=84c198d0-f592-4508-a667-0b5b80fdfe1e\n",
+  "epistemic_status": "parser_derived"
+}

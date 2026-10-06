@@ -1,0 +1,61 @@
+id: "ic:vfy-seat-request-alt:001"
+hypothesis_ref: "dh:vfy-seat-request:001"
+referent_grain: >-
+  One queued claim on shared admission capacity, founded by an enqueue occurrence and placed by a requesting
+  party, as against the underlying demand that may be resubmitted under new claims and the ticket rows about it.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two requests are the same iff they are founded by the same enqueue occurrence; a later enqueue for the same
+    checkout, branch and kind founds a new request even when it resubmits the same demand. The nonce and
+    enqueuedAtMillis carried by a chain are evidence of the founding occurrence, never the criterion.
+  reidentification_key:
+    - "nonce chain (evidence only)"
+    - "enqueuedAtMillis (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Unified from its enqueue row to one end: admission, withdrawal or queued eviction. Its members (kind, priority,
+    weightTokens, enqueuedAtMillis) are fixed on the enqueue row and repeated unchanged on the end row of the same
+    chain (for example so-cac0a9e757f0, so-1454a58421d5).
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - "queued phase of one nonce-bounded admission engagement that continues as the grant"
+    - "one submission of an enduring demand (the demand being the individual, each chain an attempt to satisfy it)"
+    - "ticket file or journal rows only (information object)"
+  existential_dependencies:
+    - "the requesting party that placed it"
+    - "the shared admission queue it waits in"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "admitted"
+    - "withdrawn"
+    - "ticket-evicted"
+counterexamples:
+  - description: >-
+      Resubmission series: from one checkout and branch, merged-preview requests so-69757556b71c, so-acda65bb57eb,
+      so-1454a58421d5 and so-202cf1353ee3 are each withdrawn and followed within about 25 to 92 seconds by a new
+      enqueue with a fresh nonce and attemptId; so-8528aeede357, so-9883ccc4fb4c and so-9944009915a6 show the same
+      pattern on another checkout. My criterion counts each chain as a new request, so CQ-023's per-request wait
+      (observedQueueWaitMs) restarts at every resubmission and a demand that waits for hours never exceeds a bound
+      if each submission is withdrawn in time; if the demand is the individual, my card hides starvation.
+  - description: >-
+      Three requests on three different checkouts end as withdrawn within 15 ms of each other (so-d463fed2f967,
+      so-cc2d16f12d1c, so-b62e6964ef69). A withdrawal that ends several requests at once may be one fleet-level act
+      rather than each requester's own decision; a card that reads withdrawal as the requester's act would be wrong
+      for these.
+status: proposed
+evidence_refs:
+  - "so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677"
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "so:sha256:69757556b71cebe4be46d5cab890d3ff69f72565175f9091db832efb135a9319"
+  - "so:sha256:acda65bb57eb58a2f3d8c39fb082a572099a69a0a8d5200d8287b3013535b87a"
+  - "so:sha256:1454a58421d5c34bb5b5042185ded5f010c59eed9bf8f4618a1b47a21d6ac2f2"
+  - "so:sha256:202cf1353ee3399c439c50514382b75898bd0053f07e0155cff135e5da1ea695"
+  - "so:sha256:d463fed2f96706ee297f431b9d928824649d40b80aeca6cd0bc0e6e429c8c450"

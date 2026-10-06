@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:ae86a035a2b303af5fbe1e2407ef8c8353dee26c3248ffcce434a31e103f2fe8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 849,
+    "end_line": 856
+  },
+  "quote": "- id: iv-1195-repo-cli-vitest-shards\n  title: \"PR #1195 — the hosted Test Unit repo-cli partition splits into two Vitest shards\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-22T12:49:42Z\"\n  mergeCommit: 7a2bb50a2b883bf43895978d41c87b1da397c556\n  pr: 1195\n  mechanismChanged: sharding",
+  "epistemic_status": "quoted_prose"
+}

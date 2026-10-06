@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:b4578e170e3ab95485e9caff8f42b1cf7880ce26e730438f9f91b9d1eab3d940",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 597,
+    "end_line": 604
+  },
+  "quote": "- id: iv-1067-effect-vitest-cheap-gate\n  title: \"PR #1067 — the lint:effect-vitest gate joins the cheap-gates lane list\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-10T22:38:37Z\"\n  mergeCommit: 955528adb46b8f62d311f5e06db2acfa9642aa08\n  pr: 1067\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

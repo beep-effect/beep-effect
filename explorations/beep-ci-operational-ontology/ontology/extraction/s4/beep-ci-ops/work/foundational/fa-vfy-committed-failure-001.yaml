@@ -1,0 +1,52 @@
+id: "fa:vfy-committed-failure:001"
+hypothesis_ref: "dh:vfy-committed-failure:001"
+identity_card_ref: "ic:vfy-committed-failure:001"
+referent_grain: >-
+  A dated occurrence inside one verification attempt: the exit of one step under a fail-fast
+  policy that commits the attempt to a failing verdict, individuated by its attempt and that step.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: failure event at one step of one attempt (the card's reading)
+    still_viable: true
+  - label: verdict members as the referent (the record of the failure)
+    still_viable: false
+  - label: failed phase of the attempt as the referent
+    still_viable: false
+  - label: >-
+      the commitment or obsoletion point CQ-022 names, after which no running execution of the
+      attempt can improve its verdict, as a referent distinct from the step exit
+    still_viable: true
+strongest_counterexample: >-
+  If an attempt terminated without a verdict is counted red and carries no failedStepId, this
+  criterion gives it no committed failure, although CQ-022's obsoletion logic would want its
+  in-flight executions treated alike. No cited record shows such an attempt.
+verdict: analyzed
+needed_evidence: >-
+  For the commitment instant CQ-022 needs, and to split the step-exit event from the obsoletion
+  point: a record carrying the failing step's exit instant together with executions of the same
+  attempt still running at that instant; one cited record supports the category and no record
+  supports the instant. For the termination counterexample: a terminated-attempt verdict record.
+evidence_refs:
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - CQ-022
+rationale:
+  spec_vs_execution: >-
+    failurePolicy=fail-fast is the rule; the failure at prepare:05-docgen is one occurrence under it.
+  world_vs_information: >-
+    The verdict members are written at the attempt's end and record the failure; the failure is
+    the step's exit they name. That it came before that end is inferred from fail-fast: none of the
+    record's instants (createdAt, endedAt, recordedAt) is the failing step's exit instant.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    The attempt scopes the failure, as CQ-022's inAttempt edge does. No further context is needed.
+  rivals: >-
+    The phase rival names the attempt's failed condition, which does not sit at one step; the
+    hypothesis's referent does (failedStepId). The record rival confuses the verdict with what it
+    records. The obsoletion-point rival stays viable: CQ-022 defines the committed failure by what
+    it does to running executions, and the cited record carries no step exit instant and no running
+    execution, so whether that point is the step exit or a later one cannot be tested.

@@ -45,6 +45,15 @@ const bundleVersion = Flag.String("bundle-version").pipe(
   Flag.withSchema(S.NonEmptyString),
   Flag.optional
 );
+const contacts = Flag.File("contacts", { mustExist: true }).pipe(
+  Flag.withDescription("Contacts table as JSONL, one contact with its emails and client links per line."),
+  Flag.optional
+);
+const practiceDomain = Flag.String("practice-domain").pipe(
+  Flag.withDescription("One of the practice's own mail domains, so its addresses are marked. Repeatable."),
+  Flag.withSchema(S.NonEmptyString),
+  Flag.atLeast(0)
+);
 const skipEmails = Flag.Boolean("skip-emails").pipe(Flag.withDefault(false));
 const maxTextBytes = Flag.Int("max-text-bytes").pipe(Flag.optional);
 const overwrite = Flag.Boolean("overwrite").pipe(Flag.withDefault(false));
@@ -54,12 +63,14 @@ const buildCommand = Command.make(
   {
     bundleOut,
     bundleVersion,
+    contacts,
     corpusRoot,
     docketRegister,
     includeRefresh,
     includeRun,
     maxTextBytes,
     overwrite,
+    practiceDomain,
     skipEmails,
   },
   Effect.fnUntraced(function* (flags) {
@@ -77,9 +88,11 @@ const buildCommand = Command.make(
       includeRefresh: flags.includeRefresh,
       includeRuns: flags.includeRun,
       overwrite: flags.overwrite,
+      practiceDomains: flags.practiceDomain,
       skipEmails: flags.skipEmails,
       ...OptionUtils.getSomesStruct({
         bundleVersion: flags.bundleVersion,
+        contactsPath: flags.contacts,
         docketRegisterPath: flags.docketRegister,
         maxTextBytes: O.map(flags.maxTextBytes, PosInt.make),
       }),

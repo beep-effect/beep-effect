@@ -1,0 +1,12 @@
+id: rat:77
+proposal_ref: otp:vfy-admission-charge:001
+proposal_sha256: e79c5e12a08c3f131fe3ed1e7fb9aeea2839925539c540c5093344370e5e1696
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: Accept otp:vfy-admission-charge:001 as an exact reuse of the data property admissionChargeTokens
+  at the recorded-value grain, warranted by CQ-010 and CQ-021, which read the property directly. The flag
+  persists with no lift claimed; run 4 adds as flags the four category readings and the ungrounded capacity
+  at admission, and its mention of the withdrawn work-kind proposal is superseded.

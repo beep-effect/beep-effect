@@ -1,0 +1,47 @@
+id: "dh:lpl-verification-lane:001"
+observation_refs: ["po:sha256:dde7bf22ace08b78ded1cc81c449d2fad695a3bda9a3d03574c1a488d0e08897", "po:sha256:db8366e7780e92846d2c2454b651a5e31d975b34772c83ef2cdf49b2dcc8c22f", "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd", "po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca", "po:sha256:7a2db1a40efc039f328ff3f118d30d11f8a3177e137759662d092b680a0f94d8", "po:sha256:e97f691ea561b37b93db3bee1bdb0de54a0c40a1b9809a47a459e3ec3025e248"]
+cq_warrants: ["CQ-001"]
+proposed_referent:
+  label: "verification lane (a lane of the pre-push gate that a handoff ranks and a lane step names)"
+  description: >-
+    One instance is one verification lane, the unit the handoff ranks and the lane step places,
+    named by a lane id (the golden step names "fallow:audit"; the contract pattern-checks lane ids as
+    colon-separated lowercase segments). Added in repair because laneIdRef and the handoff's lanes
+    refer to it and no hypothesis of this batch denoted it. What the records show: a handoff lists
+    lanes, each with a rank, a lane id and a declaration index, and a duplicate lane id is a decode
+    failure, so a lane id is unique within one handoff; the pinned handoff carries 33 lanes, counted
+    from the decoded document; the planner orders the handoff's existing lanes only (no lane
+    admission, no lane execution); the contract says the deployed pre-push runs one single-lane wave
+    per lane in rank order and that the deployed orderWaveLanes stays the only writer of real
+    pre-push order; laneIdRef is lane-grain evidence with no lane IRI. Individuation the records
+    support only within a handoff (by lane id); whether a lane is the same across handoffs, or is
+    the lane id string only, no record shows. Warrant, weighed: CQ-001 (must_have) needs the
+    verification lane kind, so the kind is CQ-warranted; but CQ-001's query also needs a lane kind
+    (turbo task, script, collected gate) through hasLaneKind, and no record in this batch shows a
+    lane kind, so these records cannot by themselves answer CQ-001 and serve only as partial,
+    lane-id-grain evidence for its lane class. The never-used block's mention of VerificationLane
+    typing is a mention and grounds nothing; no lane-plan document types a lane.
+representation_status: unresolved
+alternatives:
+  - label: "a lane id string only (a key in the handoff and the plan, with no lane referent behind it in these records); discriminated by an observation of a lane carrying facts of its own beyond its id (its kind, its runs, its outcomes)"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+  - label: "a position in the handoff document (an information-artifact entry: rank, lane id, declaration index) rather than the lane it lists; discriminated by an observation of one lane id appearing in two handoffs with different ranks"
+    representation_status: information_artifact
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands for these records. The candidate fact against it is the contract's statement
+    that the deployed pre-push runs one single-lane wave per lane in rank order, but that is the
+    contract author's prose about deployed behaviour, not an observation of a lane run, and every
+    other mention is a lane id string inside the planner's input or output. CQ-001 warrants the
+    kind, so this is judged on evidence, and the evidence here is insufficient: no lane kind, no
+    lane run and no lane outside a handoff or a plan. Needed evidence: source observations of
+    deployed lane runs or lane facts (for example ledger facts carrying laneId and laneClass, which
+    are not in this batch) and a lane-kind observation for CQ-001; likely a cross-batch duplicate of
+    a lane kind denoted from the ledger or attempt records.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.45, use_for_acceptance: false}

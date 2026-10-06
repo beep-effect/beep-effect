@@ -10,7 +10,7 @@ scan:
   - does not expand variable predicates or property paths
   - does not inspect SERVICE clauses or runtime-generated query text
   - matches direct triple heads and semicolon predicate continuations only
-predicate_count: 87
+predicate_count: 89
 coverage_count: 25
 predicates:
 - predicate: ciops-prov:dependsOnWorkspace
@@ -275,6 +275,24 @@ predicates:
   closure: open
   used_by:
   - CQ-022
+  - tests/fixtures/seed.ttl
+- predicate: ciops:hasCheckout
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-009
+  - tests/fixtures/seed.ttl
+- predicate: ciops:hasCoordinationProtocol
+  status: seed-only
+  term_ref: null
+  domain: unknown
+  range: unknown
+  closure: open
+  used_by:
+  - CQ-009
   - tests/fixtures/seed.ttl
 - predicate: ciops:hasCostEstimate
   status: seed-only
@@ -991,14 +1009,20 @@ coverage:
   - predicate: ciops:hasGrantState
     status: parked-run-2
 - cq: CQ-009
-  predicate_count: 3
+  predicate_count: 5
   ratified_count: 2
   full_predicate_set_ratified: false
   predicates:
+  - ciops:hasCheckout
+  - ciops:hasCoordinationProtocol
   - ciops:hasGrantState
   - ciops:hasOriginKey
   - rdf:type
   unratified:
+  - predicate: ciops:hasCheckout
+    status: seed-only
+  - predicate: ciops:hasCoordinationProtocol
+    status: seed-only
   - predicate: ciops:hasGrantState
     status: parked-run-2
 - cq: CQ-010

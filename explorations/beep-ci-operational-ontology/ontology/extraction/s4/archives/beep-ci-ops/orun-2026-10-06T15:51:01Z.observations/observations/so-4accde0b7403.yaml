@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:4accde0b7403b3bfa743e9534085d27bb63f925628831dd1d24daf2e873f2f58",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 567,
+    "end_line": 580,
+    "content_sha256": "469e0ca3a8033c7ef9f822e71b4200da79c2edfaba9cf8b1579a9f733a484406"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:record=51",
+    "lexical_name": "withdrawnAtMillis",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1790856558178"
+    }
+  ],
+  "source_excerpt": "# record 51\nownerRef=478ef4243816\nownerRefVariant=pid_pair\nattemptId=17b99725-bc1a-4dfa-ae2f-fd66f3a0308f\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5-worktrees/notification-click-routes\nbranch=fix/notification-click-routes\nenqueuedAtMillis=1790853953934\nnonce=fbeb5b44-025d-4091-9f23-63cfd101ab7e\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790856558178\n",
+  "epistemic_status": "parser_derived"
+}

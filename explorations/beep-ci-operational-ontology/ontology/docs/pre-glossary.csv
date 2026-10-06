@@ -16,11 +16,11 @@ TreeState,class,CQ-005,"a concrete tree (branch, head, merged-base state)"
 InvalidationEvent,class,CQ-011,"a change that kills evidence validity; carries a blast radius"
 HashSurface,class,CQ-011,"the input set feeding a lane's hash (incl. global.inputs membership)"
 SeatRequest,class,CQ-021,"an agent's queued ask for machine admission; DEPLOYED carrier = YeetAdmissionTicket (yeet-admission-ticket/v1); the ticket half of the ruled ticket/lease split; an ingested SeatRequest IS a queued ticket (the store deletes the ticket at admission — round-3 H-05/J-B4)"
-SeatGrant,class,CQ-008,"an admitted lease charged against capacity; DEPLOYED carrier = YeetAdmissionLease (yeet-admission-lease/v1); the lease half of the ruled ticket/lease split; NO stored edge to its ticket (linkage = lease filename stem nonce-pid only); lifecycle in GrantState"
+SeatGrant,class,CQ-008,"an admitted lease charged against capacity; DEPLOYED carrier = YeetAdmissionLease (yeet-admission-lease/v1); the lease half of the ruled ticket/lease split; NO stored edge to its ticket (linkage = lease filename stem nonce-pid only); lifecycle in GrantState. Folded at the run-4 pin (2026-10-06): since #878 (a9497e66ca) the lease carries the ticket nonce and enqueuedAtMillis (legacy lease files decode an empty nonce and 0), so the no-stored-edge text is pre-#878 state"
 GrantState,class,CQ-008,"grant lifecycle state; closed domain: ActiveGrant | ReleasedGrant (WaitingGrant REMOVED round-3 H-10 — a waiting contender is a SeatRequest under the split; see literal-domains.md)"
 ResourceBudget,class,CQ-026,"advisory per-grant budget (softP95BudgetMs); demoted from hard-limit framing by the tri-split ruling"
 ContendedResource,class,CQ-008,"contended machine resource; members are INDIVIDUALS (MachineProofLock, TurboDaemonResource, CpuCoresResource, MemoryPoolResource, SharedCacheResource) — no punning with class SharedCache; see literal-domains.md"
-Checkout,class,CQ-015,"one clone/worktree; evidence-transferability endpoint (shared cache mounts). NOT an exclusion unit — the deployed admission law is ORIGIN-keyed (round-3 H-04/J-B3); checkoutRoot is a lease owner attribute S4 may re-propose with a warrant"
+Checkout,class,CQ-015,"one clone/worktree; evidence-transferability endpoint (shared cache mounts). NOT an exclusion unit — the deployed admission law is ORIGIN-keyed (round-3 H-04/J-B3); checkoutRoot is a lease owner attribute S4 may re-propose with a warrant. Folded at the run-4 pin (2026-10-06): since #929 a checkout IS an exclusion unit (hasSameCheckoutLease; CQ-009 same-checkout arm joins on hasCheckout); the NOT-an-exclusion-unit text is pre-#929 state"
 FailureSignature,class,CQ-013,"failedStepId x failureKind equivalence class"
 OperationalChangeEvent,class,CQ-016,"a tagged change landing that partitions the KPI time-series; RENAMED from ControlIntervention (final grill round 3) — OBSERVATIONAL by default, causal status requires supporting design; vernacular altLabel 'control intervention'"
 SharedCache,class,CQ-015,"machine-shared turbo cache mount"
@@ -65,7 +65,9 @@ repairGapMs,property,CQ-007,data property
 ciWaitMs,property,CQ-007,data property
 contendsFor,property,CQ-008,
 hasGrantState,property,CQ-008,
-hasOriginKey,property,CQ-009,"data property xsd:string; verbatim deployed originKey (proof-lock basename of remote.origin.url); empty string = origin-exempt work (review-fix); the deployed exclusion identity (round-3 H-04/J-B3)"
+hasOriginKey,property,CQ-009,"data property xsd:string; verbatim deployed originKey (proof-lock basename of remote.origin.url); empty string = origin-exempt work (review-fix); the deployed exclusion identity (round-3 H-04/J-B3). Folded at the run-4 pin (2026-10-06): since #929 originKey is an exclusion identity only in the legacy-origin drain, the fresh blockedOnOriginAtMillis stamp and the below-envelope fallback origin lease; current-version same-origin grants in distinct checkouts are capacity peers"
+hasCheckout,property,CQ-009,"object property SeatGrant -> Checkout; deployed carrier = lease checkoutRoot; CQ-009 same-checkout arm (#929 hasSameCheckoutLease); seed-only until ratified"
+hasCoordinationProtocol,property,CQ-009,"data property xsd:string; decoded deployed coordinationProtocol (a persisted record without the field decodes as legacy-origin-lock/v1, which marks the drain; scheduler-origin-concurrency/v1 is the constructor default; the ETL materializes the decoded value on every grant, an absent triple is a false green); CQ-009 legacy-origin-drain arm (#929 hasLegacySameOriginOwner); no literal domain; seed-only until ratified"
 admittedBy,property,CQ-010,
 hasBudget,property,CQ-026,"grant -> advisory ResourceBudget (demoted with the tri-split)"
 softP95BudgetMs,property,CQ-026,"data property xsd:integer; ADVISORY p95 duration screen (né maxGrantCostMs — 'max' claimed a guarantee the tri-split forbids)"
@@ -98,7 +100,7 @@ requestedBy,property,CQ-021,"SeatRequest -> Agent; carrier = ticket owner identi
 hasWorkKind,property,CQ-021,"request -> AdmissionWorkKind member; carrier = ticket kind field"
 hasPriorityClass,property,CQ-021,"request -> AdmissionPriorityClass member; carrier = ticket priority field"
 admissionChargeTokens,property,CQ-021,"data property xsd:integer; the tri-split's AdmissionCharge — carrier = weightTokens verbatim (token units; the 5 GiB gloss is the default slotSizeGib in a reserve+floor capacity formula, not a per-token measurement — round-3 J W1)"
-enqueuedAt,property,CQ-021,"data property xsd:dateTime; carrier = enqueuedAtMillis (ETL-converted; ticket-only — the lease does not carry it)"
+enqueuedAt,property,CQ-021,"data property xsd:dateTime; carrier = enqueuedAtMillis (ETL-converted; ticket-only — the lease does not carry it). Folded at the run-4 pin (2026-10-06): since #878 (a9497e66ca) the lease carries enqueuedAtMillis too (legacy lease files decode 0)"
 capacityAtAdmissionTokens,property,CQ-010,"data property xsd:integer; remaining token capacity BEFORE the new charge at the admission instant (deployed check: activeTokenTotal + weight <= capacityTokens) — ETL-reconstructed, never read from a post-grant snapshot (round-3 H W-06)"
 inAttempt,property,CQ-022,"failure/execution -> the VerificationAttempt it belongs to; the stopping join (round-3 H-06)"
 hasExecutionState,property,CQ-022,"execution -> ExecutionState member"
@@ -111,7 +113,7 @@ hasCachePosture,property,CQ-024,"WorkUnitExecution -> CachePosture member; carri
 ofWorkUnit,property,CQ-025,"WorkUnitExecution -> the WorkUnit specification it executes; semantic-support (two-kind law): supports=WorkUnitExecution|WorkUnit — the spec/execution bridge"
 usedCostEstimate,property,CQ-025,"execution/grant -> the IMMUTABLE CostEstimate snapshot that governed its admission (ETL-stamped; round-3 H W-05); actualWallMs carrier = verdict.lanes[].durationMs (round-3 J B2)"
 actualWallMs,property,CQ-025,"data property xsd:integer; measured wall cost of a completed execution — carrier = verdict.lanes[].durationMs nested in attempt-finished (per-lane wall; attempt-level verdict.elapsedMs only when the execution IS the whole attempt — round-3 J B2)"
-MachineProofLock,individual,CQ-008,"the per-origin machine-wide yeet proof lock (vernacular 'proof lock' altLabel lives here)"
+MachineProofLock,individual,CQ-008,"the per-origin machine-wide yeet proof lock (vernacular 'proof lock' altLabel lives here). Folded at the run-4 pin (2026-10-06): since #929 this denotes the legacy per-origin lock (drain only) and the below-envelope fallback origin lease"
 TierRepairGreen,individual,CQ-006,
 TierLocalFullProof,individual,CQ-006,
 TierCiMergeGreen,individual,CQ-006,

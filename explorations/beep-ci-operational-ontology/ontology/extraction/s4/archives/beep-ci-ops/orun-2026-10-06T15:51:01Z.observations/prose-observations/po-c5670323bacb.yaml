@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 285,
+    "end_line": 292
+  },
+  "quote": "- id: iv-1019-proof-reuse-key-narrowed\n  title: \"PR #1019 — lane-proof reuse key stops hashing ambient settings for ordinary lanes (superseded by #1022)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T00:51:25Z\"\n  mergeCommit: 52fcc8d1353db9481ef9edb6cc9619500f95568d\n  pr: 1019\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

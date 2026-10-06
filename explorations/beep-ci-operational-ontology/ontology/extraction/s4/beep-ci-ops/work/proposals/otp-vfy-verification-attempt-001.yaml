@@ -1,0 +1,89 @@
+id: otp:vfy-verification-attempt:001
+hypothesis_ref: dh:vfy-verification-attempt:001
+identity_card_ref: ic:vfy-verification-attempt:001
+foundational_status: analyzed
+term:
+  preferred_label: verification attempt
+  local_name: VerificationAttempt
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationAttempt
+  owl_entity_kind: class
+definition:
+  text: 'An event: one started run of the verification pipeline, opened by an attempt-started row that
+    carries its mode (repair, verify or closeout) and closed by an attempt-finished verdict (outcome,
+    elapsedMs) or by an attempt-terminated reason; individuated by its start, not by the run file that
+    groups several attempts nor by the request it may submit. The verdict''s elapsedMs spans from the
+    start row to the verdict''s end.'
+  source:
+  - so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321
+  - so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610
+  - so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200
+  - so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+  - so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+  - so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+foundational:
+  ufo_category: event
+  gufo_alignment: gufo:Event
+ontoclean:
+  rigidity: unresolved
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log:
+- from_sha256: 2986e1d5b2c45ff6427681e99511ccf8d29440c9ff853b6ac3c4fa6f88fdc189
+  addressed:
+  - 'ruling 20: CQ-022 joins executions to the attempt without typing it, so it warrants no decision
+    term; support arm taken'
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#VerificationAttempt
+    compatibility: 'Same grain as the ratified VerificationAttempt, whose carrier CQ-022''s notes name
+      as the attemptId on yeet-attempt-journal/v1 events: one started pipeline run from its start to its
+      verdict or termination. This chain''s card leaves rigidity unresolved where the ratified row records
+      rigid, because the seat-request alias rival stays viable.'
+operational_warrant:
+  competency_questions: []
+  semantic_support_for:
+  - otp:vfy-committed-failure:001
+  - otp:vfy-lane-execution:001
+alternatives_rejected:
+- 'The journal, ledger and admission rows about an attempt as the referent: rejected by the analysis;
+  the rows record the run they bound.'
+- 'A grouping label over lane runs: rejected by the analysis; the attempt has its own start and verdict,
+  and elapsedMs equals the span between them (so-6390d5f857ae, so-ca8b3f90e57c).'
+- 'The verification episode or run the attempt belongs to: rejected by the analysis; one run file holds
+  several attempts that start at different stages (so-eefbf95beb8d, so-10c2570fe2f6).'
+open_issues:
+- flag VerificationAttempt persists; no lift claimed
+- 'The recorded-value reuse deferral on VerificationAttempt (account-version identity, effective invocation
+  continuity) is not settled by any cited run-4 observation: no record shows an attempt invoked again
+  or copied, so the deferral stands.'
+- 'Support warrant (revised under ruling 20, which found that CQ-022 joins executions to the attempt
+  without typing it and so warrants no decision term): the class is necessary to define the decision
+  term otp:vfy-committed-failure:001, an event inside one verification attempt individuated by its attempt
+  and the failing step, and the decision term otp:vfy-lane-execution:001, one invocation of one lane''s
+  procedure inside one verification attempt. Both definitions individuate their referent within an attempt,
+  and neither can say which attempt without this class. No CQ is cited on this term.'
+- 'Earlier decision warrant withdrawn, kept for the record: CQ-022 (must_have) joins the committed failure
+  and each execution to one ?attempt by inAttempt and carries no rdf:type triple for it; ruling 20 holds
+  that this warrants no decision term.'
+- 'Steward choice (rival still viable): the attempt as an alias of the seat request, one individual under
+  two names. Not stated as a second proposal because it differs in identity on this hypothesis''s one
+  card. Needed evidence: an attempt-started row and an admission chain sharing one attemptId, or two admission
+  chains under one attemptId.'
+- 'Steward choice (rival still viable): the attempt as a process counted while running (CQ-022''s in-flight
+  queries). Needed evidence: a record of an attempt while running, before its verdict.'
+- 'Reach beyond the journal: no cited proof-ledger fact or admission chain carries an attemptId equal
+  to a cited attempt-journal start row''s, so lane-execution parthood and the tie to a seat request are
+  not shown.'
+- 'Retention: the KPI law (po-fd56d2b008d1) evicts whole terminal attempts per run-id file; the criterion
+  is not journal presence, so an evicted attempt still occurred.'
+- 'VerificationEpisode keeps its flags: this chain carries no attempt-membership or closure record, so
+  it touches no episode question.'
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-verification-attempt:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

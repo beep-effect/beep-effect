@@ -1,0 +1,93 @@
+id: dh:vfy-seat-request:001
+observation_refs:
+- so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+- so:sha256:1454a58421d5c34bb5b5042185ded5f010c59eed9bf8f4618a1b47a21d6ac2f2
+- so:sha256:1c04b858cf47c27e42fb1943f6e276c9bd9eca169b934a9bd2cb1904ff530563
+- so:sha256:1c1a47ab0a24f2030f9adbd35e1cb70302f0537ccd94a8b6f815a15956f246e9
+- so:sha256:1c24614d224d000137cf6f3d3cea93d13e81c64b3521d5035febc1e728bbf000
+- so:sha256:202cf1353ee3399c439c50514382b75898bd0053f07e0155cff135e5da1ea695
+- so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677
+- so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa
+- so:sha256:361532c73eb06bc97aeb7078285bf045977246406fca122fcb7e250d75fb0ab1
+- so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+- so:sha256:382a5d07e3cc46c51351202c7851dadd9368eca5afec4bb5c5b607b9f7b6736e
+- so:sha256:39551747b60d66e8780875439fb941c0339e58f319cca5683cf4ba4ddb7ee932
+- so:sha256:3a6e1d02992aae92c9a6c655f58d27b6c4c7ba00cd998571250028f6d21c086e
+- so:sha256:3cc89e1b48c31fd2d27dc7c01c9daeafb5174c3f160f8f899019a4f055e9f67e
+- so:sha256:40e26d2f06727f6b3e5744a8fe251564521f144cbfab9eefc21417ec3b8cfe5c
+- so:sha256:43780f21666c853c77fd6ef57de4d096353d8a00786d6574a8929611e521b1b7
+- so:sha256:5692f872f1193ed1a7d8f272a60b3e1dcfa452cd5872acc36f37a903e9489da7
+- so:sha256:5fb817d1c1bf32b5c176eca953fa9b728159d6401e238f6e341cf2704a02ac92
+- so:sha256:69757556b71cebe4be46d5cab890d3ff69f72565175f9091db832efb135a9319
+- so:sha256:6bbe438d1133f37eabc818032603da718d67a632b1f9f5a527419a06a6007746
+- so:sha256:73cab1dda09f584b59981c05c286bd18867965a67aa36377c3353143cc88681e
+- so:sha256:7b7e3ae102981a7b4ed16f6344f2ac3efba21fd762b1d36d4110ff9c2acbc75e
+- so:sha256:7fa2e91b7760f2d323b1a2e0d60cbc5a19a46728da1b51e9b4be41a2e3c2e29e
+- so:sha256:8528aeede357e4f01207fa81b86236e75172b001db41d098a0268ec09a1a84c1
+- so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1
+- so:sha256:8e590f9d864514fad0c6dabd528e210f5b972a8cf4d35f109c0388991cf13f18
+- so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20
+- so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+- so:sha256:95c548d11f0d4f662c747129c4775a26ee6905f8216e04311a00479a137388da
+- so:sha256:97294ad8ff802b8ce62ad6a705ddcfe554f20c25c0083ea42fb52fe31625d60c
+- so:sha256:9832cf3344c12caa7ae6cff6da206198b15c1af557d740d9c1578bc84e40f1db
+- so:sha256:9883ccc4fb4caf307adb1bb3e1a46c2cfc8a083abdfe4e65e61fbe37ad8381c9
+- so:sha256:9944009915a62c907bc1be0456d2b69c272f61ff4fc0473bfbd14db7ab35cf94
+- so:sha256:9de2dc5d014be58e691270bfb19f1ca4245a9986e9f2ad3589663a144a8ffcb9
+- so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020
+- so:sha256:acd8b44fb47d2f6e9c65ee598627835b64adaecc2625bef8df8378d4dcc508e7
+- so:sha256:acda65bb57eb58a2f3d8c39fb082a572099a69a0a8d5200d8287b3013535b87a
+- so:sha256:b091bfd365c5afccdb62bb90465dca6e835585ffe53b09d26e9e0a2b9c61cfd4
+- so:sha256:b0d1acea3324393c2a51494ffc72b20bf5565e9ff96f2416f0d9921e99c0cfd7
+- so:sha256:b62e6964ef692ce7d92d198216dcd03098feac6f8bed9a81da2a3047caaa7f79
+- so:sha256:b7f9da9330672e476e84fb60392273c964dd625ee9362e24c5491fcdee3169a6
+- so:sha256:bf5548d0d5fe5a450c6e46569ef87b75f2e98ed886c06b7628f69ba61c68947b
+- so:sha256:c01a58325c68c56c5ce297399e92f0844bdd2c041a5c11b1dddf5fcaf32772cb
+- so:sha256:c4f41caf9b1e088de028c28e67075f3f6f63dd6a47de296744c1088cf69c966b
+- so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff
+- so:sha256:cc2d16f12d1c71cdb72b426099b406a519b08c7141b788e89607b19ebd8e5302
+- so:sha256:d17c4d8c00d96fbd6d5f2c854ab9936e75c26a06b12025ab2219d430837ae83d
+- so:sha256:d463fed2f96706ee297f431b9d928824649d40b80aeca6cd0bc0e6e429c8c450
+- so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c
+- so:sha256:ddaa6047c00c3e114ea6491cd76ef891362ec00f970e8e38dcc5a03542958075
+- so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c
+- so:sha256:ffdc0da640dfeee162c38c8230428e04e4f407c42d3ea2369f22a3f9e8c309ab
+cq_warrants:
+- CQ-021
+- CQ-023
+proposed_referent:
+  label: seat request (a queued request for admission to shared verification capacity)
+  description: 'One instance is one request an agent''s run places in the admission queue: it is opened by an `_tag=admission-enqueued`
+    row that carries the requested work kind (`kind`), priority class (`priority`), admission charge (`weightTokens`) and
+    an `enqueuedAtMillis` instant, and it is individuated by its chain (one per `nonce`; the observation id is the citation).
+    It ends either by being granted (`_tag=admission-admitted`, after which the same chain continues as a held grant, see
+    dh:vfy-seat-grant:001), by withdrawal (`_tag=admission-withdrawn` with `withdrawnAtMillis`), or by eviction while still
+    queued (`_tag=admission-ticket-evicted` with `reason=queued-submitter-death`, so-29a5ac8607a2). The 52 chain records and
+    the record-0 stanza (which carries the request members on an admitted row) instantiate it. Every chain here is organic.
+    Answers CQ-021 (queued requests with kind, priority, charge, enqueue time, owner) and CQ-023 (requests waiting beyond
+    a bound). Not shown by any record here: a chain whose enqueue and admit charges differ (repricing), a later chain for
+    the same attempt after a withdrawal (resubmission under one attempt), or a renewal or transfer chain; these are absences,
+    never findings.'
+representation_status: domain_referent
+alternatives:
+- label: queued phase of one admission engagement (request and grant as phases of a single nonce-bounded admission; see dh:vfy-admission-engagement:001)
+  representation_status: unresolved
+  plausibility: viable
+- label: ticket file or journal row only (the store's bookkeeping record of the request; see dh:vfy-admission-store-record:001)
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: The null reading is that the queued ticket is scheduler bookkeeping with no counterpart in the domain. The records
+    show a request that exists over time apart from any grant and that can end while still waiting for a reason about the
+    party that placed it, a lifecycle the bookkeeping reading does not predict. What would separate this kind from the engagement
+    reading is a record in which the waiting request and the later grant carry incompatible members (a different charge or
+    owner under one nonce); no record here shows one.
+  discriminator: so-29a5ac8607a2 carries `_tag=admission-enqueued`, `_tag=admission-ticket-evicted` and `reason=queued-submitter-death`,
+    while the held grant of so-860cff0d673e ends under `_tag=admission-lease-evicted` with `reason=owner-dead-or-reused`;
+    a waiting request is ended for the death of its submitter by an end of its own, distinct from the end of a held grant.
+epistemic_status: proposed
+confidence:
+  value: 0.6
+  use_for_acceptance: false

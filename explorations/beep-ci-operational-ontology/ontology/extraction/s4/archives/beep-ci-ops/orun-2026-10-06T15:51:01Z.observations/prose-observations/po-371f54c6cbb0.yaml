@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:371f54c6cbb03e72c9dafaa66ba7b1e3afb74917225a437f14b7f42d1265b392",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 14,
+    "end_line": 14
+  },
+  "quote": "| `CostProvenance` | `measured`, `census` *(supports: CostProvenance — fleet census observations seed estimates)*, `default` *(supports: CostProvenance — an explicit fallback provenance prevents invented precision)* | CQ-003 |",
+  "epistemic_status": "quoted_prose"
+}

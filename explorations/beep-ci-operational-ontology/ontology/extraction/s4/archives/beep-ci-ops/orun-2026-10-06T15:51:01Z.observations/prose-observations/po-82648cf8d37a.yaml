@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/MANIFEST.yaml"
+  },
+  "source_span": {
+    "start_line": 1368,
+    "end_line": 1375
+  },
+  "quote": "merged-preview:\n      facts:\n        pre: 0\n        post: 0\n      shadows:\n        pre: 0\n        post: 0\n      reading: dormant in capture window (P1 Ruling 1)",
+  "epistemic_status": "quoted_prose"
+}

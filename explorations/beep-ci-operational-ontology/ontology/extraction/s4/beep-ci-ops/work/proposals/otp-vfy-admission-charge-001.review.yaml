@@ -1,0 +1,66 @@
+target: "otp:vfy-admission-charge:001"
+target_sha256: "e79c5e12a08c3f131fe3ed1e7fb9aeea2839925539c540c5093344370e5e1696"
+chain_sha256: "81d86e0e20e30629c4ff54fb1d9ac8e236f0c7dd5366aa3853b309cc2f727879"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking: restate the null discriminator as what it shows, a claim made at enqueue and held
+    fixed against measured use (it separates the charge from the measured-use reading), not a
+    refutation of every implementation-only reading; a per-kind constant written at enqueue would
+    show the same facts.
+attacks:
+  - surface: taxonomy
+    rule: reuse-semantic-match
+    counterexample: >-
+      Tried a bearer outside the ratified domain (SeatRequest or SeatGrant, xsd:integer recorded
+      value, flagged). The chain shows weightTokens on the enqueue row of a request withdrawn without
+      a grant (so-0d75ae7174ed, 5) and on a lease state record of a held grant (so-a8d270b5e19d,
+      schemaVersion yeet-admission-lease/v1, 5), both bearers inside the ratified domain, with integer
+      values 1, 3 and 5 only. No placement beyond the ratified domain is asserted. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: >-
+      Tried request-versus-grant charge continuity: so-95b7d78a061f carries one weightTokens=3 across
+      enqueue, admit and release under one nonce; a bearer criterion counts two charges if request and
+      grant are two bearers, the value-only reading one value. The card leaves this unresolved and the
+      proposal claims no lift of the request/grant continuity flag, so no criterion conflicts with the
+      ratified row. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether either CQ answers without the term. CQ-010's query reads ?charge only through
+      ciops:admissionChargeTokens on ?grant and filters it against capacity: without the property it
+      returns zero rows on a must_have invariant whatever the data, a vacuous green. CQ-021's query
+      projects ?charge through the same property on each queued ?req. Both queries bind it. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Built the twin of a per-kind constant written at enqueue with no domain meaning: it would also
+      sit on a never-granted request and ignore memory use. For a flagged ratified term reused with
+      no lift claimed, the attack is on semantic match: the discriminator shows the chain's value is
+      a claim fixed before use (so-95b7d78a061f and so-363f9b7f07dc both full-proof with
+      weightTokens=3, memoryPeakBytes 23492841472 against 2393948160), which is the ratified
+      recorded-value charge grain and not a usage reading. Survived on that test.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    charge as an attribute of the work kind rather than of the bearer; discriminating fact: one work
+    kind carrying two weightTokens values, or one chain whose enqueue and admit rows carry different
+    values
+evidence:
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - CQ-010
+  - CQ-021

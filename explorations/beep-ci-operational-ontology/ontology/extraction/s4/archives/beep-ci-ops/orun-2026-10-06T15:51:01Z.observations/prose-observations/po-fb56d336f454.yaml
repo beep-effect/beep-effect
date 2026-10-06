@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:fb56d336f45445d9d55b113ad26e30e87c04adfa1ac69204cc0edf969d2863d1",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 523,
+    "end_line": 539
+  },
+  "quote": "- **Plan IRI.** `ciops-prov:${pnLocalSlug(planId)}`.\n- **Lane-step IRI.** `${planNode}-lane-${laneStepIndex}`. `pnLocalSlug`\n  escapes `-` in `planId`, so the structural `-lane-` suffix cannot be forged,\n  by the same argument as `-step-` and `-request-`.\n- **Specification IRI.** `ciops-prov:specification-` followed by the ordered\n  tuple `(s7-lane-plan/v1, handoffSha256, orderRule, scope)`. Each component\n  is encoded with `pnLocalSlug`, and a literal `-` separates them. The first\n  component keeps lane-plan specifications disjoint from admission\n  `s7-emission/v2` specifications.\n- **Identity.** Authority is this contract. The lane-plan emission version is\n  `s7-lane-plan/v1`. Any tuple member change changes specification identity.\n  The handoff path (`LanePlanProposal.handoffPath`), `repoRoot`, `episodeId`\n  and `planId` do not. Plan nodes stay disjoint from admission proposal nodes\n  because `planId` must start `lane-plan-` (a decode check) while admission\n  proposal ids start `schedule-`. The new suffix\n  and tuple stay inside the existing `pnLocalSlug` scheme; they are not S8\n  IRI-scheme work. Admission `s7-emission/v2` bytes are unchanged.",
+  "epistemic_status": "quoted_prose"
+}

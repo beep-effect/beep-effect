@@ -1,0 +1,54 @@
+id: "fa:vfy-tree-state:001"
+hypothesis_ref: "dh:vfy-tree-state:001"
+identity_card_ref: "ic:vfy-tree-state:001"
+referent_grain: >-
+  The source tree state a verification fact is about: the committed file content as a commit fixes
+  it (one tree named by several commits), the commit itself, or the head-plus-diff working state;
+  which grain individuates it is unresolved.
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: committed tree content as an information object
+    still_viable: true
+  - label: the commit object as the referent
+    still_viable: true
+  - label: working state at resolved-head-plus-diff grain
+    still_viable: true
+  - label: branch head pointer at write time
+    still_viable: false
+strongest_counterexample: >-
+  Two attempts on one resolved head with different diff fingerprints (so-eefbf95beb8d,
+  so-10c2570fe2f6): the head-commit grain counts one state, the head-plus-diff grain two. The cited
+  ledger facts carry headSha and no diff fingerprint, so they cannot say which state they verified.
+verdict: explicitly_deferred
+needed_evidence: >-
+  The category and identity criterion wait on these records. For the commit rival: two headSha values with one tree content (an amend or rebase with no content
+  change). For the working-state rival: a fact, verdict or reuse decision that holds for one diff
+  fingerprint and not another over the same resolved head (favours head-plus-diff), or one fact
+  applied across attempts whose diff fingerprints differ (favours the head grain).
+evidence_refs:
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - CQ-005
+  - CQ-006
+rationale:
+  spec_vs_execution: >-
+    A tree state is neither a plan nor a run.
+  world_vs_information: >-
+    The fact (a ledger record) separates from the tree it is about: one tree, two facts with
+    opposite outcomes.
+  role_vs_bearer: >-
+    Being the tree a fact proves is a relation the fact bears (CQ-005 provesTree). It is not part of
+    the tree's identity.
+  context_reification_needed: >-
+    Validity of a fact for a tree is relative to an epoch (CQ-005), but that context belongs to the
+    fact, not to the tree.
+  rivals: >-
+    The branch-pointer rival fails because each fact records a fixed sha, not a ref name, and a
+    pointer that moves after the write would change what an old fact is about. The commit and working-state rivals remain viable, and needed_evidence names
+    what splits each.

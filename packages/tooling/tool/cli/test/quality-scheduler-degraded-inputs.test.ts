@@ -6,12 +6,12 @@ import {
   QualitySchedulerError,
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
 import * as PlatformError from "effect/PlatformError";
 
@@ -51,30 +51,45 @@ const expectHostFallback = (gib: number) => {
 };
 
 describe("quality scheduler memory stats", () => {
-  it.effect("parses MemAvailable and MemTotal from /proc/meminfo in GiB", () =>
-    Effect.gen(function* () {
-      const stats = yield* readMemoryStats;
-      expect(stats).toEqual({ availableGib: 62.5, totalGib: 125 });
-    }).pipe(provideScopedLayer(memoryStatsFrom(() => Effect.succeed(meminfoFixture))))
-  );
+  it.layer(
+    memoryStatsFrom(() => Effect.succeed(meminfoFixture)),
+    { concurrent: false, timeout: "30 seconds" }
+  )((it) => {
+    it.effect("parses MemAvailable and MemTotal from /proc/meminfo in GiB", () =>
+      Effect.gen(function* () {
+        const stats = yield* readMemoryStats;
+        expect(stats).toEqual({ availableGib: 62.5, totalGib: 125 });
+      })
+    );
+  });
 
-  it.effect("falls back to the host reading when /proc/meminfo cannot be read", () =>
-    Effect.gen(function* () {
-      const stats = yield* readMemoryStats;
-      expectHostFallback(stats.availableGib);
-      expectHostFallback(stats.totalGib);
-    }).pipe(provideScopedLayer(memoryStatsFrom(() => Effect.fail(meminfoReadError))))
-  );
+  it.layer(
+    memoryStatsFrom(() => Effect.fail(meminfoReadError)),
+    { concurrent: false, timeout: "30 seconds" }
+  )((it) => {
+    it.effect("falls back to the host reading when /proc/meminfo cannot be read", () =>
+      Effect.gen(function* () {
+        const stats = yield* readMemoryStats;
+        expectHostFallback(stats.availableGib);
+        expectHostFallback(stats.totalGib);
+      })
+    );
+  });
 
-  it.effect("falls back per field when a meminfo line is missing its value or is not numeric", () =>
-    Effect.gen(function* () {
-      const stats = yield* readMemoryStats;
-      expectHostFallback(stats.availableGib);
-      expectHostFallback(stats.totalGib);
-      expect(stats.availableGib).not.toBe(62.5);
-      expect(stats.totalGib).not.toBe(125);
-    }).pipe(provideScopedLayer(memoryStatsFrom(() => Effect.succeed(degradedMeminfoFixture))))
-  );
+  it.layer(
+    memoryStatsFrom(() => Effect.succeed(degradedMeminfoFixture)),
+    { concurrent: false, timeout: "30 seconds" }
+  )((it) => {
+    it.effect("falls back per field when a meminfo line is missing its value or is not numeric", () =>
+      Effect.gen(function* () {
+        const stats = yield* readMemoryStats;
+        expectHostFallback(stats.availableGib);
+        expectHostFallback(stats.totalGib);
+        expect(stats.availableGib).not.toBe(62.5);
+        expect(stats.totalGib).not.toBe(125);
+      })
+    );
+  });
 });
 
 const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
@@ -88,7 +103,10 @@ const FixedMemoryStatsLayer = Layer.succeed(
 
 const RunScopesOffLayer = ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }));
 
-describe("quality scheduler admission entries", () => {
+it.layer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer), {
+  concurrent: false,
+  timeout: "30 seconds",
+})("quality scheduler admission entries", (it) => {
   it.effect("rejects an existing admission directory with unsafe permissions", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -106,7 +124,7 @@ describe("quality scheduler admission entries", () => {
       expect(failure).toBeInstanceOf(QualitySchedulerError);
       expect(failure.message).toBe(`Admission directory ${admitRoot} has mode 755; expected 0700. Refusing to use it.`);
       expect((yield* fs.stat(admitRoot)).mode & 0o777).toBe(0o755);
-    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer)), Effect.scoped)
+    })
   );
 
   it.effect("skips empty lease and ticket files instead of quarantining them", () =>
@@ -135,6 +153,6 @@ describe("quality scheduler admission entries", () => {
       expect(snapshot.quarantined).toHaveLength(0);
       expect(yield* fs.exists(emptyLease)).toBe(true);
       expect(yield* fs.exists(emptyTicket)).toBe(true);
-    }).pipe(provideScopedLayer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer)), Effect.scoped)
+    })
   );
 });

@@ -9,9 +9,9 @@ Status: `in-progress`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Ground in `@beep/m365`, `@beep/box`, the Box tree, and the practice KG; settle the design. | `SPEC.md` design and Decision Log D-1..D-8 recorded. |
-| P1 Implement | in-progress | PR 1 (#1464): domain schemas, ports, tagger, job, filer, undo, file ledgers. PR 2: `@beep/m365`, practice-KG, and Box adapters behind one service layer. PR 3: `bin` subcommand, sample user unit, runbook. | Acceptance criteria 1-8 are met. |
-| P2 Verify | pending | Live dry-run over mail since 2026-07-01 (counts only), attorney spot-check of a sample, operator-attended apply, undo drill on one message. | Reports recorded in `history/`. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P1 Implement | complete | Capability core (#1464), Outlook / practice-KG / Box adapters (#1480), entrypoint app, sample unit and runbook (#1495), known-documents fix (#1511), first-apply checklist (#1515), review-category fix (#1518). | Acceptance criteria 1-8 and 10 met. |
+| P2 Verify | in-progress | Live dry-run since 2026-07-01 done ([record](history/2026-10-06-live-dry-run.md)). Remaining: attorney spot-check (counts, review category, contact overlay), the attended bounded apply with an undo drill, then the full apply and the unit. Attachment filing is blocked on Box storage (D-42). | Apply and undo-drill reports recorded in `history/`. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist

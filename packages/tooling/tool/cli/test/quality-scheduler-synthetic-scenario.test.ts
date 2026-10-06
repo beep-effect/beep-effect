@@ -28,9 +28,9 @@ import {
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import { decodeYeetAttemptJournalEvent } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
-import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { assertDefined, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import {
   Clock,
@@ -41,7 +41,6 @@ import {
   Effect,
   Fiber,
   FileSystem,
-  Layer,
   Path,
   pipe,
   Ref,
@@ -166,25 +165,6 @@ const withPrependedPath = <Value, Failure, Requirements>(
       })
   );
 
-const withAdmissionTempRoot = Effect.fn("SyntheticAdmission.withTempRoot")(
-  function* <Value, Failure, Requirements>(
-    use: (runtimeDir: string, exportTarget: O.Option<string>) => Effect.Effect<Value, Failure, Requirements>
-  ) {
-    const fs = yield* FileSystem.FileSystem;
-    const runtimeDir = yield* fs.makeTempDirectoryScoped();
-    const exportTarget = O.filter(yield* Config.option(Config.String("BEEP_CIOPS_SYNTHETIC_ROOT")), Str.isNonEmpty);
-    return yield* use(runtimeDir, exportTarget).pipe(
-      provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
-      provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }))),
-      provideScopedLayer(
-        Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(25), totalGib: Effect.succeed(128) }))
-      )
-    );
-  },
-  Effect.scoped,
-  provideScopedLayer(NodeServices.layer)
-);
-
 const copySettledState = Effect.fn("SyntheticAdmission.copySettledState")(function* (source: string, target: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -294,10 +274,13 @@ const expectExportCheck = Effect.fnUntraced(function* (
   expect(A.filter(yield* fs.readDirectory(exportCheck, { recursive: true }), isLockPath)).toStrictEqual([]);
 });
 
-describe("synthetic admission scenario", () => {
+it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })("synthetic admission scenario", (it) => {
   it.effect("journals contention, withdrawal, fixture evictions, and release with an optional synthetic export", () =>
-    withAdmissionTempRoot(
-      Effect.fnUntraced(function* (runtimeDir, exportTarget) {
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const runtimeDir = yield* fs.makeTempDirectoryScoped();
+      const exportTarget = O.filter(yield* Config.option(Config.String("BEEP_CIOPS_SYNTHETIC_ROOT")), Str.isNonEmpty);
+      return yield* Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = path.join(runtimeDir, "beep", "admit");
@@ -547,8 +530,15 @@ describe("synthetic admission scenario", () => {
         if (O.isSome(exportTarget)) {
           yield* exportScenario(runtimeDir, exportTarget.value, chains);
         }
-      })
-    ).pipe(TestClock.withLive)
+      }).pipe(
+        provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+        Effect.provideService(
+          MemoryStats,
+          MemoryStats.of({ availableGib: Effect.succeed(25), totalGib: Effect.succeed(128) })
+        )
+      );
+    }).pipe(TestClock.withLive)
   );
   it.effect.prop(
     "property: dead-owner lease and ticket fixtures round-trip through the JSON codecs the scenario writes",

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:ed915fad850ac373459d8a97baa970bde072b7cc7cda3aeb0db0a4a2c3e89b75",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 21,
+    "end_line": 21
+  },
+  "quote": "| `StarvationException` | `HardFloorException` | CQ-023; ETL-derived per-request from the snapshot-GLOBAL `AdmissionSnapshot.hardFloorEngaged` flag (round-3 J W5). `QuarantineException` REMOVED (round-3 J-B1): deployed `quarantined` is an array of file paths for UNDECODABLE ticket/lease JSON (corrupt-record isolation) and dead owners are REAPED, not quarantined — no owner-quarantine state exists to waive starvation |",
+  "epistemic_status": "quoted_prose"
+}

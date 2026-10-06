@@ -1,0 +1,37 @@
+id: "fa:vfy-verification-evidence-record-alt:001"
+hypothesis_ref: "dh:vfy-verification-evidence-record:001"
+identity_card_ref: "ic:vfy-verification-evidence-record-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "issued information object individuated by its issuing write (this card)"
+    still_viable: true
+  - label: "information object individuated by content (equal content is one fact wherever written)"
+    still_viable: true
+  - label: "the lane-run verdict occurrence itself"
+    still_viable: false
+  - label: "build-cache entry kept only to skip work"
+    still_viable: false
+strongest_counterexample: >-
+  Issuance versus content: no cited record shows two writes of equal content or a copy of a fact into another
+  ledger, so individuation by issuing write and individuation by content predict the same records and are
+  observationally equivalent on current evidence. Realization (a fact used to skip a run), copy and correction are
+  not observable at this pin.
+verdict: analyzed
+needed_evidence: >-
+  Queue B, deferred by name: realization (a record of a fact consumed as a realized skip; the kind=hit shadow is
+  hypothetical and grounds no realized reuse), copy (the same content in two ledgers), and correction (a later
+  record superseding a fact). Any of these separates issuance identity from content identity. Custody: presence
+  under one clone's ledger path shows where the item is held, not who may consult or transfer it; a record of
+  cross-ledger consultation would show custody as a relation.
+rationale: >-
+  The occurrence rival fails: the fact outlives its write and carries its own validity window (expiresAt thirty days
+  after recordedAt on so-12d5a26fbfac and so-2601c6b77d87), and a later write consults an earlier one by its instant
+  (so-dc1dce23ac11, 25 minutes later), which is true of a record, not of the run. The cache-entry rival fails because
+  failed outcomes are issued too. The lane is a specification, the run an execution, the fact a record of the run
+  (spec_vs_execution separated, world_vs_information separated); "valid proof" is an anti-rigid status the fact holds
+  until expiry or invalidation (role_vs_bearer separated), and validity is jointly conditioned on tree and epoch
+  (CQ-005, CQ-006), so the context is reified.

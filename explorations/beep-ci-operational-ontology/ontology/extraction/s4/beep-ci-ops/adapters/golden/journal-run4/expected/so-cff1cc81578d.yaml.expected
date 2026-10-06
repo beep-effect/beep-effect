@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:cff1cc81578d36e2d75494a4f047d18dddfb1382899dd8e0c0e5d159ec446221",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 188,
+    "end_line": 199,
+    "content_sha256": "0c980c873fb184f5cd55f6ecbc7fa54c970e55f94f98ee70d2eae937ed6013cb"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=after-withdrawn",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=870"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=860"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=slow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=after-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=low"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 32\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=after-withdrawn\nenqueuedAtMillis=860\nkind=slow\npriority=low\n# record 33\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=after-withdrawn\nadmittedAtMillis=870\n",
+  "epistemic_status": "parser_derived"
+}

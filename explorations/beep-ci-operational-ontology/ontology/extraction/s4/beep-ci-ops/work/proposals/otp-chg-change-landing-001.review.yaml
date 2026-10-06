@@ -1,0 +1,69 @@
+target: "otp:chg-change-landing:001"
+target_sha256: "c771b3345865aedff11207763aa4c1791c6eaf3634a2632668318ec066196d43"
+chain_sha256: "7f98badadad5d6ddbf4eca5d7548afcf765628182a40cb4007c03a9d985297b5"
+seat: ontoclean-adversary
+verdict: FAIL
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - "record-property-as-differentia: remove the record-side conjuncts from the class definition. 'that is recorded with one wall-clock landing instant at which KPI series are partitioned' makes membership depend on a ledger row being written and on the KPI ETL partitioning at it, both acts of curation and measurement separate from the landing. State the differentia on the occurrence alone (the landing of one change set altering how verification works), and carry the recorded instant through the landedAt property and the partitioning through the KPI-law consumer, not through the class definition. Then re-check the rigidity rationale against the reworded definition."
+  - "If the synthesis seat means the class to denote only tagged (curated) landings, as the CQ-016 natural language 'For each tagged operational change event' reads, it must say so and then argue rigidity anew: tagging is an act done after landing (the 'P0 Ruling 3' comments on the #1029 and #1098 rows assign their mechanism tag by a later ruling), so 'tagged landing' is anti-rigid and cannot be a rigid event class; that reading also moves the term toward the ledger-row rival."
+  - "Optional, for the merge-versus-apply rival already carried: the closure holds a further discriminating hint the open issues do not name. The landedAt values of two 'applied' rows end on whole minutes (#1364 at 12:05:00Z, #1422 at 02:22:00Z) while merge-like rows carry seconds, which suggests some landedAt values date an apply rather than a merge. Name it as a lead, not as evidence of either reading, beside the needed record of one change's merge and apply times."
+attacks:
+  - surface: taxonomy
+    rule: record-property-as-differentia
+    counterexample: "The definition's differentia includes 'is recorded with one wall-clock landing instant at which KPI series are partitioned'. Being recorded and being a partition point are properties of a ledger row and of the KPI ETL (po-d63c0a7e9e45: the series partition point is the recorded landedAt), not of the occurrence. The closure shows recording and tagging as acts distinct from the landing: the #1029 and #1098 rows (po-08cf23fabaa4, po-d2f81ee522b5) carry their mechanism tag under a comment naming a later 'P0 Ruling 3', and the #1006 row (po-0258120378b5) marks its tag 'new value' from a handoff document. A landing of a verification change that the curated ledger has not (yet) recorded satisfies 'landing of one change set' but fails the definition, and enters the class when a row is written; so the class as defined is extensionally the curated ledger's coverage (a world-information merge under the event genus) and is not rigid, contradicting ontoclean.rigidity 'rigid', whose card rationale argues rigidity only for 'landing of a change', not for the recorded conjunct."
+    outcome: landed
+  - surface: taxonomy
+    rule: category-event-versus-information-object
+    counterexample: "Tried: read the gufo:Event placement as unsupported because every row pairs one pr, one mergeCommit and one landedAt, so nothing splits row or artifact from landing. Failed as a landed attack: the proposal does not argue the rivals away; it carries the ledger-row and change-artifact readings as steward-choice open issues with discriminators (a corrected row with the landing unchanged; one change's merge and apply times given separately), and the discriminator rows (po-95263f790b62, po-6a21b95a56d8) date changes to the heavy CI pool, which the ledger does not hold. The rivals stay listed below."
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: "Tried: the criterion reduces to one landing per row keyed on pr or mergeCommit. Failed: the card names pr and mergeCommit as re-identification evidence only, declares supplies_identity and carries_identity unresolved, and the proposal mirrors ontoclean.identity 'unresolved' without claiming a finished criterion; it names the deciding records (change-set content, merge versus apply, supersession)."
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: "Tried: landedAt dates different acts on different rows, so one class mixes merge landings and apply landings with incompatible criteria. In the closure the #1364 and #1422 'applied' rows (po-846d044b5a5d, po-1123c7cf085b) carry landedAt on whole minutes while merge-like rows carry seconds, and the #1141 row (po-6a21b95a56d8) dates 'live 2026-09-15' against a landedAt on 2026-09-16 UTC. Failed as a landed attack: the proposal asserts no act, keeps identity unresolved and carries the apply or go-live rival with its discriminator; the whole-minute pattern is a lead, not a record of an apply time."
+    outcome: survived
+  - surface: identity
+    rule: landing-versus-adoption
+    counterexample: "Tried: the class collapses landing into adoption or first use, against KPI law section 2 (po-d63c0a7e9e45: post-period membership needs HEAD ancestry including the event's merge commit; merge time is never the fleet boundary). Failed: the definition places per-checkout membership in a further adoption-qualified relation outside the landing, and the card separates the landing act from each checkout's adoption instant."
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: "Tried: CQ-016 answers without this term. Failed: its executable query binds '?iv a ciops:OperationalChangeEvent ; ciops:landedAt ?landedAt'; without the class the type pattern selects nothing and the non_empty oracle cannot hold, so the query, not only required_classes, needs the class. CQ-016 is should_have and present in the pinned suite (12-hex matches). The proposal claims nothing beyond the class side of the pair: it states landedAt is seed-only in effect (no surviving chain) and leaves it unproposed, which matches PREDICATES.yaml status seed-only."
+    outcome: survived
+  - surface: warrant
+    rule: ledger-governance-as-vocabulary
+    counterexample: "Tried: mechanismChanged, or a tier read from caveat prose, enters the term as a subclass, criterion or discriminator. Failed: the definition names arrangements by the rows' titles, the proposal rejects subclassing by mechanismChanged and the card excludes mechanismChanged values from its dependence targets; no tier member is proposed."
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: "Tried: a pure bookkeeping twin (curated YAML rows with a title, an id and a timestamp) makes the discriminator true anyway, since the 'pool moves' wording is itself row text. Failed: the discriminator does not rest on the row having an id or a timestamp; it rests on the rows describing dated changes to the heavy CI pool (po-95263f790b62, po-6a21b95a56d8), which exist outside the ledger, and on KPI law section 2 (po-d63c0a7e9e45) partitioning series at those changes with membership tied to the event's merge commit; the self-applied class label, row ids and causalStatus are excluded as evidence."
+    outcome: survived
+  - surface: null_discriminator
+    rule: temporal-association-as-causation
+    counterexample: "Tried: the null is rejected on a causal reading (the change moved a KPI). Failed: the definition and the alternatives keep every comparison at the landing observational unless a supporting design upgrades it, as KPI law section 2 (po-d63c0a7e9e45) requires, and the rows' causalStatus value is not used as evidence."
+    outcome: survived
+rival_models_still_viable:
+  - "The landing is the apply or go-live occurrence for rows titled 'applied' or 'live', distinct from the merge; discriminating fact: one such change's merge time and apply or go-live time given separately beside its landedAt, with the zone of the titled date (#1141: 'live 2026-09-15' against landedAt 2026-09-16T00:18:38Z)."
+  - "One change revised or superseded across several rows is one landing at a coarser grain (#1019 'superseded by #1022'; #870 lock retained until #929); discriminating fact: a record saying whether the earlier row's alteration still holds after the later row lands, or naming the later row a revision."
+  - "The referent is the curated ledger row (an information object); discriminating fact: a record of a ledger row corrected while the landed change stays the same."
+  - "The referent is the change artifact, the pull request or merge commit; discriminating fact: one change's merge time and its applied or live time given separately."
+evidence:
+  - "CQ-016"
+  - "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f"
+  - "po:sha256:08cf23fabaa45189e9e6710eb5ed66fddf66416358b540ed6fe85bce6014e209"
+  - "po:sha256:d2f81ee522b55c797dc675442f919ca37dca39ea57eebc214da66495efffa312"
+  - "po:sha256:0258120378b55876a0457e1548e119aa5cdf844af23f0da49661a58b98e3449a"
+  - "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+  - "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+  - "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+  - "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+  - "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf"
+  - "po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b"

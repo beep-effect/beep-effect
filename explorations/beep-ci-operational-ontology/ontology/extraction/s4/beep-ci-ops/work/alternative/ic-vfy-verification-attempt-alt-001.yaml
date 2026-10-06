@@ -1,0 +1,58 @@
+id: "ic:vfy-verification-attempt-alt:001"
+hypothesis_ref: "dh:vfy-verification-attempt:001"
+referent_grain: >-
+  One dated run of the verification pipeline from its start to its verdict or termination, containing lane runs,
+  as against the run-id grouping it falls in, the seat request placed for it, and the journal rows about it.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two attempts are the same iff they are one occurrence: one start of the pipeline and the span that follows it
+    to one verdict or termination. The attemptId stamped on journal, ledger and admission rows is evidence that rows
+    concern one attempt, never the criterion.
+  reidentification_key:
+    - "attemptId (evidence only)"
+    - "startedAt on the start row, endedAt and elapsedMs on the verdict (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Unified as one span: the verdict so-ca8b3f90e57c carries elapsedMs=81605, exactly the interval from the start
+    row so-6390d5f857ae (startedAt 16:59:45.919Z) to the verdict's endedAt (17:01:07.524Z), with lane runs as its
+    temporal parts.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "the journal, ledger and admission rows about an attempt (information object)"
+    - "the seat request under a second key (lexical alias)"
+    - "a grouping label for lane runs with no occurrence of its own"
+    - "the episode the attempt belongs to"
+  existential_dependencies:
+    - "the pipeline specification it runs (mode)"
+    - "the agent process that starts it"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - "finished (verdict)"
+    - "terminated"
+counterexamples:
+  - description: >-
+      The quarantined lease so-a8d270b5e19d carries startedAt equal to its admittedAtMillis to the millisecond. If
+      that startedAt is the attempt's start, the attempt began at the instant of admission and attempt and grant may
+      be two descriptions of one held run; if it is the grant's own start, the lease mixes attempt and admission
+      members and my separation of attempt from grant rests on rows that do not separate them.
+  - description: >-
+      so-f8f678d23c44 records only reason=legacy-unowned-start on a termination row: an attempt ended by the
+      journal's ownership rule rather than by a verdict. If termination is bookkeeping applied to a start row with no
+      run behind it, my card counts an occurrence where only a stale record existed (the KPI law po-fd56d2b008d1
+      counts a terminated attempt as red either way).
+status: proposed
+evidence_refs:
+  - "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - "so:sha256:b091bfd365c5afccdb62bb90465dca6e835585ffe53b09d26e9e0a2b9c61cfd4"

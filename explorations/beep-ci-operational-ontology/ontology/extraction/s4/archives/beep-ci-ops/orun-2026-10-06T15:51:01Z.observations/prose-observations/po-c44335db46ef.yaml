@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:c44335db46ef1faada673625348a66831c800d20182303aed0e3996cbcbe72b3",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1048,
+    "end_line": 1055
+  },
+  "quote": "- id: iv-1384-rerun-runner-loss\n  title: \"PR #1384 — a hosted automation re-runs jobs lost to a dead self-hosted runner\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-01T20:15:29Z\"\n  mergeCommit: f05e1a698d4116ec29adec33111c1195228c5c97\n  pr: 1384\n  mechanismChanged: admission",
+  "epistemic_status": "quoted_prose"
+}

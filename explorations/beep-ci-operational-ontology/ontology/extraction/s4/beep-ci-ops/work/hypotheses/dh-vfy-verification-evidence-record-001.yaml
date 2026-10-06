@@ -1,0 +1,63 @@
+id: dh:vfy-verification-evidence-record:001
+observation_refs:
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0
+- so:sha256:e66e1190087c8409cfabc00e8361ad9c3643e76ea166589a0140234282c0f04c
+cq_warrants:
+- CQ-005
+- CQ-006
+- CQ-014
+- CQ-015
+proposed_referent:
+  label: issued verification evidence record (a proof fact in a clone's proof ledger)
+  description: 'One instance is one `kind=fact` record the proof ledger issues for one lane run: it records the run''s verdict
+    (`outcome=passed` or `outcome=failed`), the tree it was run against (`headSha`), the epoch (`epochDigest`), the command
+    (`commandDigest`), the declared inputs (`inputDigest`, `inputSource`), `envProfile`, `tier`, `stage`, `recordedAt` and
+    an `expiresAt` thirty days later. What individuates an issued item is the issuing write (one ledger record, recordedAt
+    plus laneId within its attempt), not its content: two facts with equal content issued at different writes would be two
+    items, and a copy in another ledger would be a copy, not the item; no cited record shows a copy, a correction or a realized
+    reuse. Presence in one clone''s ledger (the `ledgers/<clone>/` path) shows only where the record is held; custody as a
+    relation (who may consult or transfer the item) is not shown by any cited record. `outcome=failed` facts (so-2601c6b77d87,
+    so-c997b4851faa) are issued like passed ones. The `kind=hit` shadow so-dc1dce23ac11 (with its twin so-e66e1190087c) is
+    cited because it consults a prior fact by `factRecordedAt`. Answers the VerificationEvidence term of CQ-005, CQ-006, CQ-014
+    and CQ-015. Record pairs so-dc1dce23ac11/so-e66e1190087c, so-d6adeec15c79/so-fcbe894799ea are each one record span seen
+    twice (the vocabulary record a strict subset of its twin): one individual, both cited.'
+representation_status: unresolved
+alternatives:
+- label: the lane-run verdict occurrence itself (what the record is about)
+  representation_status: domain_referent
+  plausibility: viable
+- label: a build-cache entry kept only to skip work (bookkeeping; the null reading, which a cited fact consulted for something
+    other than a skip decision would discriminate)
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands. The `kind=hit` shadow so-dc1dce23ac11 names a prior fact by `factRecordedAt` some twenty-five
+    minutes before its own `recordedAt`, and every cited fact carrying both stamps carries an `expiresAt` thirty days after
+    `recordedAt`; both are equally true of a build-cache entry kept only to skip work, which a later run looks up and which
+    carries its own expiry. The other cited members do not separate the two either: the verdict, head, epoch, command and
+    input digests are what such an entry is keyed and validated on, and the `outcome=failed` facts (so-2601c6b77d87, so-c997b4851faa)
+    are consistent with a cache that also holds negative results. The one cited consultation is a shadow skip decision, not
+    a use of the fact as evidence for anything else. Needed evidence: a record of a fact consulted for something
+    other than skipping work (a readiness or closeout verdict citing it, or a review naming it), or a fact copied to another
+    ledger or corrected as the same item.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.55
+  use_for_acceptance: false

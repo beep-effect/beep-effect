@@ -1,0 +1,37 @@
+id: "fa:vfy-seat-request-alt:001"
+hypothesis_ref: "dh:vfy-seat-request:001"
+identity_card_ref: "ic:vfy-seat-request-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "relator founded by one enqueue occurrence (this card)"
+    still_viable: true
+  - label: "queued phase of one admission engagement continuing as the grant"
+    still_viable: true
+  - label: "submission of an enduring demand; the demand is the individual across resubmitted chains"
+    still_viable: true
+  - label: "ticket file or journal row only"
+    still_viable: false
+strongest_counterexample: >-
+  Demand continuity (Queue A): the resubmission series so-69757556b71c, so-acda65bb57eb, so-1454a58421d5,
+  so-202cf1353ee3 (one checkout, one branch, one kind, each withdrawn and re-enqueued within about a minute and a
+  half) are four requests on my criterion and one demand on the rival. Nothing in the rows links the chains: each
+  carries a fresh nonce and attemptId, so the rival's demand has no recorded carrier, yet the timing pattern is what
+  a single persisting demand would produce.
+verdict: analyzed
+needed_evidence: >-
+  For demand continuity: a record linking successive chains (a resubmission counter, a shared demand or episode key,
+  or a reason on the withdrawal row such as a timeout) would show whether a resubmitted request is the same demand;
+  a CQ-023 consequence follows (starvation measured per request resets at resubmission). For request versus
+  engagement: a chain whose admitted row changes a member the enqueued row fixed. For withdrawal agency: a reason
+  member on withdrawal rows. None is among the observations.
+rationale: >-
+  The record-only rival fails: a waiting request is ended while still queued for its submitter's death by an end of
+  its own (so-29a5ac8607a2: admission-ticket-evicted, reason=queued-submitter-death), distinct from the end of a held
+  grant (so-860cff0d673e: admission-lease-evicted, reason=owner-dead-or-reused). Review-fix requests carry no
+  attemptId (so-1c04b858cf47 and others), so a request is not an alias of an attempt. The admission policy is a
+  specification and the request one claim under it (spec_vs_execution separated); the request is kept apart from
+  its rows and from the requester role of the party that placed it (role_vs_bearer separated).

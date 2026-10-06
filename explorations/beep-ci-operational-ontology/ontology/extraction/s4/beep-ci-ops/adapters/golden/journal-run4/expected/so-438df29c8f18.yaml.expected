@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:438df29c8f181beb53210da91203028a121d63a43662ec65bc0dec5913a76e24",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 94,
+    "end_line": 100,
+    "content_sha256": "194a2bc69fb7fe868a1d8427752fd7e983ca387f53b517037dda8ab7386cf86c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:record=16",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=high"
+    }
+  ],
+  "source_excerpt": "# record 16\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=base\nenqueuedAtMillis=700\nkind=full\npriority=high\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,67 @@
+id: "fa:vfy-verification-evidence-record:001"
+hypothesis_ref: "dh:vfy-verification-evidence-record:001"
+identity_card_ref: "ic:vfy-verification-evidence-record:001"
+referent_grain: >-
+  An issued information item: one proof fact written into a proof ledger, individuated by its
+  issuing write and the lane execution it is written for (one write can carry several facts, one
+  per lane execution), not by its content or by the run it records.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: issued proof-fact record as an information object (the card's reading)
+    still_viable: true
+  - label: the lane-run verdict occurrence as the referent
+    still_viable: false
+  - label: >-
+      valid proof as a rigid kind (validity merged into the record's identity)
+    still_viable: true
+  - label: >-
+      environment fingerprint as the referent (dismissed conceptually, not on a record)
+    still_viable: false
+  - label: >-
+      build-cache entry kept only to skip work (dismissed conceptually, not on a record)
+    still_viable: false
+strongest_counterexample: >-
+  If an expired or invalidated fact stays in the ledger, it is the same record but no longer valid
+  evidence, and a model that makes VerificationEvidence a rigid kind of currently valid proof would
+  have the record cease to exist at expiry. No cited fact is past its expiresAt, so the records do not
+  show which reading holds.
+verdict: analyzed
+needed_evidence: >-
+  For the custody, copy and correction legs: a realized-reuse record (a skip licensed by a prior
+  fact), a fact copied into another clone's ledger, or a corrected fact. None is cited, and shadow
+  hits are hypothetical. For the validity role and the rigid-valid-proof rival: a fact past its
+  expiresAt still held in the ledger, or a record of a fact invalidated before its expiry.
+evidence_refs:
+  - "so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - CQ-005
+  - CQ-015
+rationale:
+  spec_vs_execution: >-
+    The lane (specification) and its execution are what the fact is about; the fact is a third
+    thing, a record issued for the execution.
+  world_vs_information: >-
+    The fact carries the execution's durationMs and its own recordedAt; that the execution was over
+    when the fact was written is inferred from durationMs being a completed measure, since no end
+    instant of the execution is recorded. The fact carries an expiresAt thirty days on and a later
+    hit shadow names its recording instant (so-dc1dce23ac11), so the record is consulted after the
+    write and is not that execution.
+  role_vs_bearer: >-
+    Being valid evidence for a tree and epoch is a role the record plays, ended by expiry or
+    invalidation; the record is the bearer.
+  context_reification_needed: >-
+    True: validity holds only relative to a tree state and a cache epoch (CQ-005, CQ-006), a
+    jointly conditioned relation that a binary edge would flatten.
+  rivals: >-
+    The occurrence rival confuses record and recorded. The rigid-valid-proof rival stays viable: every
+    cited fact carries an expiresAt, but none is past it, so no record shows a fact persisting after
+    expiry; a fact past its expiresAt still in the ledger would retire it. The environment-fingerprint
+    and build-cache-entry rivals are dismissed conceptually, not on a record: the fingerprint is one
+    member of the fact (its epoch and input digests), not the issued item, and a build-cache entry
+    is the same written item under a description of its use.

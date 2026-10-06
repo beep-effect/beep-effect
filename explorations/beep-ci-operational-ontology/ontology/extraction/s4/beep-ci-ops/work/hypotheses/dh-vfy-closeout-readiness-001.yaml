@@ -1,0 +1,31 @@
+id: dh:vfy-closeout-readiness:001
+observation_refs:
+- so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa
+- so:sha256:968fbd04dbf5aae6a2984398964aafb8cf6bca2d9c60ae793b6aa1602556bde6
+cq_warrants: []
+proposed_referent:
+  label: pull-request closeout readiness assessment
+  description: 'The observed construct: the closeout''s readiness checks on a pull request, `prOpen`, `notDraft`, `mergeable`,
+    `mergeStateAcceptable`, `requiredChecksGreen`, `reviewDecisionAcceptable`, `greptileScore` (so-93883668edee) and `checksGreen`,
+    `threadsResolved`, `closeoutRun`, `failing=closeout-run`, `ready` (so-968fbd04dbf5). One instance would be one assessment
+    of one pull request at closeout. It may support the TierCiMergeGreen member of the CQ-warranted assurance tier (dh:vfy-assurance-tier:001
+    cites so-93883668edee).'
+representation_status: unresolved
+alternatives:
+- label: merge readiness of a pull request as a state
+  representation_status: domain_referent
+  plausibility: viable
+- label: closeout bookkeeping
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: no record ties a readiness assessment to a tier or to a lane obligation. Needed evidence: a
+    record linking a closeout check to the assurance level it certifies. If no tier support is found, the named missing decision
+    is: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.25
+  use_for_acceptance: false

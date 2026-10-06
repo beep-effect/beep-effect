@@ -116,7 +116,7 @@ export type PracticeKgRunLabel = typeof PracticeKgRunLabel.Type;
  */
 export const PRACTICE_KG_REFRESH_RUN = "2026-07-refresh";
 
-const emptyRunLabels = Effect.succeed(A.empty<string>());
+const emptyStringList = Effect.succeed(A.empty<string>());
 
 /**
  * Validated options used by `corpus graph`.
@@ -136,6 +136,9 @@ const emptyRunLabels = Effect.succeed(A.empty<string>());
  * {@link PracticeKgOptions.includedRuns} to read the combined list.
  * `docketRegisterPath` points at the attorney's docket register as JSONL.
  * `bundleVersion` stamps the bundle; omit it for the build's default version.
+ * `contactsPath` points at the practice's contacts table as JSONL, and
+ * `practiceDomains` names the practice's own mail domains, so the
+ * correspondent tables can mark the practice's own addresses.
  *
  * **Example** (Make options with defaults)
  *
@@ -160,18 +163,23 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
   {
     bundleOut: S.optionalKey(S.String),
     bundleVersion: S.optionalKey(S.NonEmptyString),
+    contactsPath: S.optionalKey(S.String),
     corpusRoot: S.String,
     docketRegisterPath: S.optionalKey(S.String),
     includeRefresh: S.Boolean,
     includeRuns: S.Array(PracticeKgRunLabel).pipe(
-      S.withConstructorDefault(emptyRunLabels),
-      S.withDecodingDefaultTypeKey(emptyRunLabels)
+      S.withConstructorDefault(emptyStringList),
+      S.withDecodingDefaultTypeKey(emptyStringList)
     ),
     maxTextBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(practiceKgOptionsMaxTextBytesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(practiceKgOptionsMaxTextBytesDefault))
     ),
     overwrite: S.Boolean,
+    practiceDomains: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(emptyStringList),
+      S.withDecodingDefaultTypeKey(emptyStringList)
+    ),
     skipEmails: S.Boolean,
   },
   $I.annote("PracticeKgOptions", {
@@ -436,16 +444,16 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  *
  * The two stores version independently, so a reader can support a new DuckDB
  * layout without re-reading every PGlite bundle. Both are currently pinned at
- * `"3"`; a change to either is a breaking change for bundle consumers.
+ * `"4"`; a change to either is a breaking change for bundle consumers.
  *
  * **Example** (Pin both store versions)
  *
  * ```ts
  * import { PracticeKgSchemaVersions } from "@beep/law-practice-server"
  *
- * const versions = PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" })
+ * const versions = PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" })
  *
- * console.log(versions.duckdb) // "3"
+ * console.log(versions.duckdb) // "4"
  * ```
  *
  * @category models
@@ -453,8 +461,8 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  */
 export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>($I`PracticeKgSchemaVersions`)(
   {
-    duckdb: S.tag("3"),
-    pglite: S.tag("3"),
+    duckdb: S.tag("4"),
+    pglite: S.tag("4"),
   },
   $I.annote("PracticeKgSchemaVersions", {
     description: "Independent schema versions for the two embedded graph stores.",
@@ -488,7 +496,7 @@ export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>(
 export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`PracticeKgSourceRuns`)(
   {
     base: S.tag("included"),
-    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyRunLabels)),
+    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyStringList)),
     refresh202607: LiteralKit(["included", "excluded"]),
   },
   $I.annote("PracticeKgSourceRuns", {
@@ -567,7 +575,7 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *
@@ -639,7 +647,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
     docketFamilies: S.Natural,
     familyAnchors: S.Natural,
     includeRefresh: S.Boolean,
-    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyRunLabels)),
+    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyStringList)),
     sourceRows: S.Natural,
   },
   $I.annote("PracticeKgSummary", {
@@ -674,7 +682,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *

@@ -1,580 +1,514 @@
-# Carried-row sitting docket
-
-Prepared for run 3 (orun-2026-09-10T02:10:52Z) of beep-ci-ops at frozen HEAD 1c7cd98289150f481fd40721efa6b7fe6109e711.
+# Run 4 carried-rows docket
 
-Status: provisional analyst recommendations for the steward. The recommendation retires an obsolete
-observation identity or records the evidence still needed. A proposal remains subject to its current
-analysis, review and ratification obligations.
-
-**Census: 68/68 prior unresolved IDs, exactly once, across 15 clusters and 33 distinct prior evidence
-requests. Recommended outcomes: 14 irrelevant retirements and 54 unresolved parks; 0 mapped and
-0 proposed.** Every recommended row carries carried_from_prior: true. Every park uses new
-needed_evidence and since: 2026-09-10.
-
-The prior index was read through git show HEAD:explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/runs/orun-2026-09-03T02:46:18Z.index.yaml.
-Its full SHA-256 is a207a106de68750929b99dea0e8f2b4c74f934508737362510ff3cac21a524b3. The 387 prior rows comprise
-268 irrelevant, 44 mapped, 7 proposed and the 68 unresolved rows covered here.
+Run `orun-2026-10-06T15:51:01Z`, ontology `beep-ci-ops`. Advisory: the orchestrator rules at sitting 2. Machine-readable twin: `carried-clusters.yaml` (same directory). Prior index `runs/orun-2026-09-10T02:10:52Z.index.yaml`, sha256 `b9c140ccd31b`.
 
-Current evidence comprises 152 SourceObservations, 64 ProseObservations, 66 hypotheses, 90
-foundational records and 26 proposals. Reviews were excluded. The machine-readable companion
-[carried-clusters.yaml](carried-clusters.yaml) contains full row IDs, exact index recommendations,
-per-duty prior/new wording, evidence references and the input-file digest census.
+## Summary
 
-## Cluster table
+- 138 carried rows: 91 source and 47 prose observations; 84 live (C(i) 14, C(ii) 2, C(iii) 68) and 54 carried run-2 rows (C(iv)).
+- Recommendation: all 138 stay `unresolved` with fresh `needed_evidence` and `since: 2026-10-06`. None is mapped, proposed or retired.
+- 48 rows sit on duties that need a new Must/Should CQ; each names the missing decision: "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009".
+- 38 distinct prior duties across 25 non-empty clusters; three frame clusters are empty and kept for the frame.
+- No re-clustering. No run-4 source observation re-observes a prior chain (zero shared nonce or attemptId), and no run-4 analysis cites a prior id. Where run-4 records do bear on a cluster, the evidence is in that cluster's fresh text, not in a new grouping.
+- Retirement candidates the sitting may want to revisit, each rejected below for now: `recovery-durations` (re-identification as so-8f99dd008608), `comparison-operand-binding` with the freshness duty (run-4 bookkeeping reading), `governing-specification-comparison` (contract says diagnostic only), and the origin-block rows (per-origin lock retired at #929).
 
-| Cluster | Rows | Recommended outcome | One-line reason |
-| --- | ---: | --- | --- |
-| 1. Checkout and cache binding | 1 | irrelevant | The timestamped binding corpus and named run-3 proposal supersede C1's declaration. |
-| 2. Grant/resource contention and proof-lock paths | 2 | unresolved | Admission histories are present; the actual resource/lock ownership join remains absent. |
-| 3. Request and lease lifecycles, including the memory rider | 5 | unresolved | New boundaries and heartbeat snapshots leave causal/carrier continuity, separate CQs and the memory rider open. |
-| 4. Failure-signature occurrence evidence | 3 | irrelevant | Re-identify the old field rows against a captured failure tuple; preserve the current signature-analysis gaps. |
-| 5. Resolved cache plan applied to an execution | 1 | unresolved | The promoted rider has zero serialized resolver/execution occurrences. |
-| 6. CQ-020 ordering and governing specification | 10 | irrelevant | Current proposals and emission-v2 observations replace the 10 amendment-gated rows; the cluster still rules together. |
-| 7. Freshness, review score, attribution and proof-tier governance | 9 | unresolved | Recorded assessment values do not supply the four governing contracts and decision uses. |
-| 8. Passed-step execution boundaries and elapsed scope | 2 | unresolved | Attempt bounds and component statuses are present; per-execution boundaries and measured-extent authority remain missing. |
-| 9. Memory measurement semantics | 1 | unresolved | A release-attached peak still lacks process, sampling and measurement-family provenance. |
-| 10. Duration individuals, carrier issuance and diagnostic comparison | 2 | unresolved | Duration assertions and recovery timings leave separate-individual CQs and issuance/custody unresolved. |
-| 11. QA workflow and projection conformance evidence | 4 | unresolved | S7 replay evidence supplies neither a QA stage chain nor independently issued conformance artifacts. |
-| 12. Workspace package continuity | 7 | unresolved | Checkout bindings do not establish identity across package rename, move, version, fork or recreation. |
-| 13. Package topology and affected/docgen selection | 9 | unresolved | Admission ordering and stored applicability fields do not supply package-report or selection contracts. |
-| 14. Admission capacity computation and pre-grant snapshot | 7 | unresolved | Token charges and later state do not supply the omitted capacity computation/stamp joins or snapshot CQ. |
-| 15. Origin blocking and heartbeat suspicion | 5 | unresolved | Zero origin markers and eviction reports leave deployed threshold, authority and policy-use joins open. |
+## What changed on the run-4 surface
 
-## Evidence limits governing the sitting
+- **Proof ledgers are on record.** run4-ledger supplies writer-issued `proof-fact/v1` facts and shadows. This undoes the zero-ledger premise behind Ruling 17's issuance duties. Copy, correction (C4.2 unchecked) and custody are still absent.
+- **Organic evictions.** Two lease evictions (so-860cff0d673e, so-a9ed1352e2bc) and one ticket eviction (so-29a5ac8607a2), each with its own enqueue row; the protocol stanza is `yeet-admission-protocol/v2` with `eviction=on` (so-a815a77c32ca). The lease evictions sit on one checkout about nine hours apart under new nonces. Their heartbeat-to-eviction gaps are about 4 s and about 30 min under the same reason.
+- **Not present anywhere on the surface:** `blockedOnOriginAtMillis`, a capacity stamp or `capacityAtAdmissionTokens`, lock-file or proof-lock records, a package graph, a QA run, a checkout-binding pin, and any two-emission journal duplicate.
+- **The S7 contract was amended (section 8).** The frozen replay report is never re-rendered, live replay evidence goes to a separate report that no run-4 observation transcribes, and same-checkout skips are a diagnostic attribution that is never modelled.
 
-- Run-2 sitting 2 retired superseded observation IDs and wrappers while keeping C1/C2/C3 open.
-  This docket applies that precedent without promoting evidence replacement into ratification.
-- The checkout manifest has 107 bindings. The two organic manifests each describe 96 captured
-  checkouts. Their capture populations and instants differ; they are not interchangeable censuses.
-- Stage A records 1,902 structured failure tuples and zero cache-plan resolver occurrences.
-  Stage B records 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and
-  112 pre-v3 chains. The canonical/session-tmp/system-tmp roots retain 347/2/0 admission rows.
-  These are reported root/nonce histories, not unique failures, a closed fleet census or current state.
-- Synthetic admission and attempt-termination records stay labeled synthetic. Join each event
-  and time to its own nonce/attempt; do not combine the dead-lease start with another contender.
-  Last heartbeat bounds an observation. Eviction and reconciliation times do not establish death time.
-- Proof-lock files are excluded. Proof-ledger existence is zero in both fleet captures. Ruling 17
-  therefore keeps the issuance/custody duties open to run 4.
-- The original 13 scope-surprise families cover 26 unique prior rows before the two promotions.
-  The promoted riders account for 4 rows: 3 failure rows retire by re-identification and the cache
-  row stays open. Eleven remaining families account for 22 parked rows. A further memory duty
-  remains on the mixed lifecycle row, counted only in cluster 3. The other 24 Ruling-6 rows retain
-  their contract, identity, governance and new-CQ duties.
-- Two historical ordering-contract quotations were superseded by emission v2. The unchanged
-  target-correction quotation reappears as po:add8e23aa967.
-  The ordering cluster still ratifies or parks together; the current specification identity and
-  step representation choices remain explicit. The deferred-tail hypothesis also remains unresolved.
+## C(i) ov-token-charge-removal (3 rows)
 
-## Per-cluster detail
+*Inferred token-charge removal in the frozen S7 replay.*
 
-### 1. Checkout and cache binding (1)
+**Run 4 shows.** Run 4 shows what an observed reaping looks like (two organic lease evictions with their own admit instant, charge, last heartbeat and eviction instant, and the protocol stanza's eviction switch), but neither chain is the nonce the frozen replay infers, and the contract now freezes that report and routes replay evidence to a live report that no run-4 observation transcribes.
 
-Recommendation: irrelevant. The timestamped binding corpus and named run-3 proposal supersede C1's declaration.
+**Recommendation.** `unresolved` for all 3 rows, with fresh needed evidence per duty below.
 
-Primary trace: `otp:bind-checkout-cache-binding:001`.
+**Rejected alternative.** Retire the three rows as superseded by the W5 live replay. Rejected: the live-replay report is not on the run-4 observation surface (only the contract sentence po-a4d81c76e170 points to it), so supersession cannot be shown by an observation id.
 
-fleet-checkout-identity (1 row).
+**Sitting decision.** Whether the inferred-eviction duty stays bound to the frozen S6 snapshot (re-park as written here), or is moved to the live-replay report, which would need a transcription lane before any row can retire.
 
-- `so:sha256:0d096342f5ba116307ca177adcbc3fc775b860ae0e5fd62dfd4d090d86c660a3`
+- Duty `ov-token-charge-removal-d1` (3 rows; prior text sha256 `3d2dc0172c14`)
+  - Fresh needed evidence: Run 4 checked its admission surface for the eviction the frozen S6 replay infers. The run4-fleet chains carry two organic lease evictions, each with its own admit instant, charge (weightTokens=5), last heartbeat and evictedAtMillis under reason owner-dead-or-reused (so-860cff0d673e, so-a9ed1352e2bc), and the protocol stanza sets eviction=on (so-a815a77c32ca). Neither chain is the nonce the frozen report infers, and the S7 contract now freezes that report and routes replay evidence to a live report (po-a4d81c76e170) that no run-4 observation transcribes. Still needed: the S6 snapshot journal row, or a transcribed live-replay row, that records the inferred eviction's nonce, grant and instant, so the removed charge rests on an observed reaping rather than on active-count arithmetic.
+  - Consulted: `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020`, `so:sha256:6f5b7aebafecd74f1991f241f2ab447da364d854ef9a8f3d6a8352a532a8dcf8`, `so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677`, `so:sha256:a815a77c32ca00312a65d7b9c83e4bd0fc2a08938f4a1203e6072e1ab1fccefa`, `po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792`, `dh:vfy-admission-termination:001`, `dh:vfy-seat-grant:001`
+  - Rows: `po:sha256:519764a98f511e5f2137e8eb2d6b072d92d27b62a4417db97040359034bb3282`, `po:sha256:a3b740b147b88dd94b092bee660c397cabadbbed2f35ddd14b6347c6ccb2f3fe`, `po:sha256:f41f8934b51e0e14a0344efa0b46898ea051035f811e3cee5e8de69c1bf43e2a`
 
-Retirement reason: Retire the historical FleetCheckout declaration by supersession through otp:bind-checkout-cache-binding:001. Run 3 supplies the timestamped checkout/cache binding required by run-2 sitting 2 and narrowed by run-3 Ruling 5: 107 inventory bindings, with observed clone and linked-worktree examples that share Git administration but differ in local cache availability. Enduring identity across rename and CQ-015 proof-transfer authorization remain open in the current proposal; this retirement accepts neither.
+## C(i) seat-grant-organic-chains (1 row)
 
-Evidence:
+*Synthetic SeatGrant reading and organic renewal/transfer chains.*
 
-- [so:a90c39610e4a](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-a90c39610e4a.yaml): Clone binding at scannedAt 2026-09-09T03:13:49.440Z, with later binding_probe_at 03:13:52.201Z: origin, branch/head and Git-directory context; local cache present at <fleet>/beep-effect/.turbo/cache with 36399 immediate entries.
-- [so:f4532e29f3f1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-f4532e29f3f1.yaml): Linked-worktree binding shares <fleet>/beep-effect/.git as git_common_dir but reports its distinct local cache path absent and zero entries. Its supplementary probe is at 03:13:52.406Z. This demonstrates why Git linkage alone cannot establish shared cache access.
-- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
-- `otp:bind-checkout-cache-binding:001`: otp:bind-checkout-cache-binding:001 proposes a temporally qualified binding-content record and explicitly preserves accessible-cache relator and situation alternatives, enduring path/checkout identity gaps, and the remaining CQ-015 prerequisites.
+**Run 4 shows.** Run 4 replaces the synthetic reading with organic chains (two lease evictions and one ticket eviction at the pin), but none shows a renewal or a transfer, and the holder is carried only by a capture surrogate.
 
-### 2. Grant/resource contention and proof-lock paths (2)
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-Recommendation: unresolved. Admission histories are present; the actual resource/lock ownership join remains absent.
+**Rejected alternative.** Retire the synthetic row because organic eviction chains now exist. Rejected: the withdrawal receipt names renewal/transfer continuity joined to an independently identified holder, and fa:vfy-seat-grant:001 is explicitly deferred on exactly that missing chain.
 
-grant-resource-contention-and-paths (2 rows).
+**Sitting decision.** Confirm that organic eviction alone does not discharge the receipt, and that the run-4 SeatGrant deferral and this row share one named chain requirement.
 
-- `so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123`
-- `po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278`
+- Duty `seat-grant-organic-chains-d1` (1 row; prior text sha256 `a8d94efade56`)
+  - Fresh needed evidence: Run 4 checked the organic run4-fleet chains against the synthetic SeatGrant reading. It has two organic lease evictions and one ticket eviction (so-860cff0d673e, so-a9ed1352e2bc, so-29a5ac8607a2), and the two lease chains sit on one checkout about nine hours apart under new nonces, which reads as two grants. No chain shows a renewal or a transfer, the holder is carried only by the capture surrogate ownerRef (dh:vfy-owning-agent:001), and fa:vfy-seat-grant:001 is deferred on the same gap. Still needed: an organic renewal or transfer chain that keeps or moves one admission, joined to a holder identified by something other than a capture surrogate.
+  - Consulted: `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020`, `so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677`, `dh:vfy-seat-grant:001`, `fa:vfy-seat-grant:001`, `dh:vfy-owning-agent:001`, `otp:vfy-seat-grant:001`
+  - Rows: `so:sha256:27fc89410ea6dbdacff098a5500ba7a968df33a96e89d47c65b107e436fc301f`
 
-New needed_evidence: Run 3 now captures root/nonce-scoped enqueue, admission, withdrawal, release and eviction reports, including synthetic attempt-termination joins. The run3-fleet and run3b-fleet manifests exclude lock files and proof-locks directories, and dh:att-overlap-diagnostic:001 still establishes only a logged overlapping path. To decide C2/C3, obtain the run-2 sitting-2 Ruling-3 join for the actual contended resource or proof-lock path: grant/lease and lock ownership identifiers, acquisition and release boundaries, and a waiting/winning/losing outcome in one provenance chain. Identify the rule linking FleetContestedPath to that contention and distinguish admission authorization from proof-lock ownership. Admission counts, a common origin key and worktree overlap cannot supply that missing relation.
+## C(i) recovery-durations (2 rows)
 
-Since: 2026-09-10.
+*Recovery detection durations without execution boundaries.*
 
-Evidence:
+**Run 4 shows.** Run 4 re-observes the same detection entry (same detectedAt, policy, task and both durations) as so-8f99dd008608, but no run-4 record gives either measured run its own start and end.
 
-- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
-- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
-- [so:650d8047f7ef](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-650d8047f7ef.yaml): Synthetic attempt-terminated notice for attemptId b4e72342-45a5-4a1b-95db-5ab4ef30a93f matches the dead-lease eviction; reason=lease-eviction and recordedAt=2026-09-09T05:26:26.737Z. recordedAt is notice/reconciliation time, not observed execution cessation.
-- [so:68c2cc4f0ebf](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-68c2cc4f0ebf.yaml): Synthetic attempt-terminated notice for attemptId a2fdba81-945f-4f44-8d93-6f71f706d5cd matches the dead-ticket eviction; reason=queued-submitter-death and recordedAt=2026-09-09T05:26:26.731Z.
-- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (loss_population.chain_counts, loss_population.roots, loss_population.heartbeat_check, loss_population.classification_basis): Organic retained chains: 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and 112 pre-v3; 0 unclassified. Canonical root has 347 rows; session-tmp has 2; system-tmp has 0. Heartbeat check covers 4 rows, records 1 legacy row without heartbeat and 0 violations. These are root/nonce histories within retained windows, not a complete fleet or liveness census.
-- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (excluded_sources): The explicit exclusions include lock files and proof-locks directories. run3b-fleet/MANIFEST.yaml retains the same exclusions; lock ownership cannot be reconstructed from this capture by equating it with admission authorization.
-- [so:34a817e0c13c](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-34a817e0c13c.yaml): The selected observed fact is overlappingPaths=explorations/ATLAS.md. Its attempt-journal context is not a grant-to-resource ownership or causal contention relation.
-- [dh:att-overlap-diagnostic:001](../hypotheses/dh-att-overlap-diagnostic-001.yaml): The implementation-only null remains. The hypothesis requires an observed overlap-to-scope, invalidation or blocking rule; co-located behind-count and terminal failure do not establish causation.
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-### 3. Request and lease lifecycles, including the memory rider (5)
+**Rejected alternative.** Retire both rows by re-identification as so-8f99dd008608, as run 3 did for the failure-signature rows. Rejected: dh:vfy-flake-detection:001 parks that observation on policy recurrence, not on execution boundaries, so re-identification would drop the CQ-007/CQ-013 duration duty.
 
-Recommendation: unresolved. New boundaries and heartbeat snapshots leave causal/carrier continuity, separate CQs and the memory rider open.
+**Sitting decision.** Re-identify only if the run-4 index row for so-8f99dd008608 also carries the boundary duty; otherwise keep these two rows as the duty's carrier.
 
-jv-admission-lifecycle with memory rider (1 row).
+- Duty `recovery-durations-d1` (2 rows; prior text sha256 `9a233b8c5b35`)
+  - Fresh needed evidence: Run 4 re-observes this detection entry unchanged as so-8f99dd008608 (same detectedAt, policy, task and both durations), and dh:vfy-flake-detection:001 parks it on whether the policy names a recurring signature. No run-4 record gives the standalone run or the lane rerun its own start and end; fa:vfy-lane-execution:001 reads durationMs as a per-lane wall measure, not a bounded interval. Still needed: start and end instants for each measured run, joined to the detection, task, lane and attempt, before any complete recovery duration is derived; CQ-007 and CQ-013 stay unanswerable from these two values.
+  - Consulted: `so:sha256:8f99dd0086080f972c55de23dc0457bea7fb782bf92c2ef41686163dbc03ebbc`, `dh:vfy-flake-detection:001`, `dh:vfy-lane-execution:001`, `fa:vfy-lane-execution:001`
+  - Rows: `so:sha256:37968f126c464470a069ac2051cb358a0a29720dd49df7256625cb4d17bfa2c6`, `so:sha256:928e7ce7acb4292bbd03703746cd347b6fd0aeeb2c144ee33188512f3ff91939`
 
-- `so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb`
+## C(i) assertion-boundary (2 rows)
 
-New needed_evidence: Run 3 supplies an organic same-root/nonce enqueue-admit-release history, plus synthetic withdrawal and eviction reports with two attempt-termination joins. The pure lifecycle duty still needs authoritative causal continuity from one request's submission through grant and release/cancellation, and a Must/Should CQ requiring a lifecycle distinct from its request, grant and boundary reports. The memory rider remains independently parked under Ruling 6: the release now carries memoryPeakBytes, but the resource-using occurrence/process boundary, sampling method and interval, metric/unit, measurement provenance and its relationship to peakRssKb are still missing. Different capture-scoped ownerRef values and an administrative termination notice cannot decide either missing identity.
+*Termination notices versus attempt boundaries.*
 
-Since: 2026-09-10.
+**Run 4 shows.** Run 4 carries no synthetic corpus; its only attempt-terminated notice is organic and carries a reason and a recording instant but no start or admission join.
 
-jv-admission-lifecycle (1 row).
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-- `so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6`
+**Rejected alternative.** Retire the two synthetic notices because run 4 dropped the synthetic corpus. Rejected: the duty is about notice-versus-attempt boundaries, which the organic notice leaves just as open.
 
-New needed_evidence: Run 3 now provides a same-root/nonce organic enqueue-admit-release chain and explicit synthetic withdrawal, grant-eviction and ticket-eviction boundaries. Synthetic attempt-terminated records match the two eviction attemptIds. What remains is authoritative causal-continuity evidence connecting one submitted request to its grant and release/cancellation, together with a Must/Should decision CQ requiring that composite lifecycle separately from SeatRequest, SeatGrant and their boundary reports. The terminal-only synthetic eviction chains lack their own retained starts, and recordedAt is a reconciliation time rather than proof of actual execution cessation.
+**Sitting decision.** Keep the duty and accept that it now has an organic carrier (so-f8f678d23c44) for the next capture to join to an attempt start.
 
-Since: 2026-09-10.
+- Duty `assertion-boundary-d1` (2 rows; prior text sha256 `60f999a131ff`)
+  - Fresh needed evidence: Run 4 has no synthetic corpus. Its one attempt-terminated notice is organic (so-f8f678d23c44, reason=legacy-unowned-start) and, like the synthetic pair, carries only a recording instant; the attempt-finished verdict so-ca8b3f90e57c shows what a bounded attempt looks like, and the KPI law now counts a terminated attempt as red (po-fd56d2b008d1). No terminated notice is joined to its attempt start or admission. Still needed: a terminated attempt whose start row and admission chain are captured beside the notice, so the notice's recording instant can be kept apart from the attempt's end and from any queue interval.
+  - Consulted: `so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200`, `so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610`, `po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e`, `dh:vfy-verification-attempt:001`
+  - Rows: `so:sha256:650d8047f7efde8b68d19380b2c6229f038cc3c6c0290f1045d4feaca7b71a98`, `so:sha256:68c2cc4f0ebf9f6acb48375aa66da02ca62db1610e969434dc8e714502ef2d1f`
 
-pa-admission-lease-lifecycle (3 rows).
+## C(i) checkout-cache-binding (2 rows)
 
-- `po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4`
-- `po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a`
-- `po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f`
+*Checkout-cache binding identity experiment.*
 
-New needed_evidence: Run 3 adds two live lease snapshots with the same nonce, grant instant and charge but different heartbeat instants, organic release/eviction reports, and explicitly synthetic eviction-to-attempt-termination joins. It still lacks one provenance chain that binds a grant's creation, complete heartbeat-rewrite history, release/eviction, actual ledger decrement and carrier lineage. Capture-scoped ownerRef values cannot prove cross-capture owner continuity; a terminal lastHeartbeatAtMillis is not a rewrite history, and the synthetic evicted lease has no retained admission start. A Must/Should CQ must also require this lifecycle separately from SeatGrant. Keep both the provenance and separate-warrant duties open.
+**Run 4 shows.** Run 4 has no checkout-binding pin; the ledger shows cross-origin would-reuse hits that were never realized, and the checkout, cache-epoch and task-input hypotheses stay deferred or null.
 
-Since: 2026-09-10.
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-Evidence:
+**Rejected alternative.** Retire because CQ-015 needs only Checkout and SharedCache, not a binding object. Rejected: the withdrawal receipt keeps the class withdrawn pending the experiment, and the rows are its evidence carriers, not proposals.
 
-- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
-- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
-- [so:650d8047f7ef](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-650d8047f7ef.yaml): Synthetic attempt-terminated notice for attemptId b4e72342-45a5-4a1b-95db-5ab4ef30a93f matches the dead-lease eviction; reason=lease-eviction and recordedAt=2026-09-09T05:26:26.737Z. recordedAt is notice/reconciliation time, not observed execution cessation.
-- [so:68c2cc4f0ebf](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-68c2cc4f0ebf.yaml): Synthetic attempt-terminated notice for attemptId a2fdba81-945f-4f44-8d93-6f71f706d5cd matches the dead-ticket eviction; reason=queued-submitter-death and recordedAt=2026-09-09T05:26:26.731Z.
-- [MANIFEST.yaml](../../corpus/run3b-synthetic/MANIFEST.yaml) (provenance, termination_join, loss_population.chain_counts): Synthetic provenance is explicit. Both termination_join entries have attemptId_match=true. Retained chains are one win, one withdrawal, one lease eviction and one ticket eviction; they are not organic fleet outcomes.
-- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
-- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
-- [fa:adm-admission:001](../foundational/fa-adm-admission-001.yaml): The foundational analysis separates conferral, grant holding and journal assertion, and retains information-only and grant-boundary rivals. Its evidence reading identifies a joined enqueue/admit/release history and a second history lacking a terminal report. This does not supply a separately warranted composite lifecycle.
+**Sitting decision.** Record the CQ barrier as the binding row's named missing decision, beside the still-unrun same-cache experiment.
 
-### 4. Failure-signature occurrence evidence (3)
+- Duty `checkout-cache-binding-d1` (2 rows; prior text sha256 `9d8e9ddd790d`; CQ barrier)
+  - Fresh needed evidence: Run 4 carries no checkout-binding pin. Its ledger records cross-origin would-reuse hits that were never realized (so-dc1dce23ac11 is one hit), the checkout and cache-epoch analyses are explicitly deferred, and dh:vfy-task-input-state:001 keeps its null at task-hash grain. The same-cache experiment (two checkout identities, separate probe times, positive access and bounded absence, a binding change) was not run. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 that addresses the binding object's identity rather than the qualified checkout/cache relation; the experiment and an observed consumer are still needed beside it.
+  - Consulted: `dh:vfy-checkout:001`, `fa:vfy-checkout:001`, `dh:vfy-cache-epoch:001`, `fa:vfy-cache-epoch:001`, `dh:vfy-task-input-state:001`, `so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0`
+  - Rows: `so:sha256:a90c39610e4a49911ace23bfa329876914961182bc6fbf2b9e8049b49ad3e3b9`, `so:sha256:f4532e29f3f1752921effc1f49c1712e5662464ce09f553e1f81130927db3e6b`
 
-Recommendation: irrelevant. Re-identify the old field rows against a captured failure tuple; preserve the current signature-analysis gaps.
+## C(i) comparison-operand-binding (2 rows)
 
-Primary trace: [so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml).
+*Comparison operands (behindCount, mergeBase, overlappingPaths).*
 
-pa-failure-signature (3 rows).
+**Run 4 shows.** Run 4 re-observes the same field family and reads it as workspace bookkeeping (dh:vfy-workspace-bookkeeping:001, null standing, CQ barrier named); no comparison-operand binding or validity decision appears.
 
-- `po:sha256:2d69bdb38dd2c7618a64b60834a6993abe999b6776d721aef8b6eb947c9b2e91`
-- `po:sha256:4ce41ce65957b0594e01c672972fb68722ee30c3df62444b2d323fe6d70e07cf`
-- `po:sha256:4ec767a335e920a2a80204127a6c3146cded1e5eb3d748b11a87dfc4579fc735`
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-Retirement reason: Retire the three prior literal/field rows by re-identification as the run-3 observation so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda. It binds an attemptId to failureKind=step-exit, failedStepId=publish:01-git-push and that component's failed result under yeet-verdict/v2. The manifest records 1902 structured tuple occurrences and pins the component vocabulary/serialization sources. Rat-032 already accepted FailureSignature at recorded-classification grain; this is an occurrence-evidence replacement, not another signature ratification. Cross-attempt semantic compatibility, normalization, delay attribution and full execution joins remain explicit in dh:ver-failure-signature:001. Do not infer those from tuple equality or treat every tuple as a completed execution.
+**Rejected alternative.** Retire both rows as implementation bookkeeping on the run-4 reading. Rejected for now: that reading is an unreviewed run-4 hypothesis, and the C(iv) freshness duty over the same fields is still open.
 
-Evidence:
+**Sitting decision.** Whether the run-4 implementation-only reading, once reviewed, is accepted as a retirement ground for these rows and for the freshness duty in assessment-and-selector-governance together.
 
-- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
-- [so:18fe73166f5b](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-18fe73166f5b.yaml): A separate identified yeet-verdict/v2 attempt records failureKind=handler-error and failedStepId=publish:00-head-install-preflight while planned components are status=not-run. The parent attempt has 11ms elapsed time. A tuple or planned component therefore cannot be assumed to identify a completed component execution.
-- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (rider_evidence.pa-failure-signature): rider_evidence=present; structured_occurrences=1902. These are retained tuple occurrences across verdict and embedded-verdict sources, not a count of unique failures or signatures. The optional attemptId must be checked per record.
-- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (source_facts.verdict_schema, source_facts.failure_signature_domain, source_facts.failure_signature_serialization, source_facts.failed_step_serialization): The manifest cites yeet-verdict/v2 and the step-exit/handler-error domain, plus failureKind and failedStepId serialization, to Verdict.ts source bytes c05da661e2bb3c60bfbdc071b6e1eac0b25406a5b3ff693c158ffdd0569388d7. These bound source meanings do not establish vocabulary compatibility for all historical tuples.
-- [rat-032.yaml](../../../archives/beep-ci-ops/orun-2026-09-03T02:46:18Z.governance/ratifications/rat-032.yaml): rat:32 accepts otp:jv-failure-signature:001 at failedStepId/failureKind recorded-classification grain, explicitly separating signature from occurrence. The archived proposal retains the governed-coordinate meaning/version caveat.
-- [dh:ver-failure-signature:001](../hypotheses/dh-ver-failure-signature-001.yaml): The current candidate remains unresolved with the null unrejected: different failed steps share failureKind, and the same failedStepId occurs under different failure kinds. Normalization/identity, same-versus-different examples and attributed-delay/consumer joins remain required. Retiring the old field observations does not discharge this current chain.
+- Duty `comparison-operand-binding-d1` (2 rows; prior text sha256 `8a5abe72f249`)
+  - Fresh needed evidence: Run 4 re-observes behindCount and mergeBase on a verdict (so-759ba7836a3c) and overlappingPaths on an attempt (so-ba38c5b8d80c), and dh:vfy-workspace-bookkeeping:001 reads all three as tool bookkeeping, its null standing. No run-4 record binds the operands of a comparison or shows a validity decision that changes with its result. Still needed: an explicit operand binding (which branch, which base, at which instant) and an observed decision that depends on the outcome; otherwise the sitting may adopt the bookkeeping reading as this row's retirement ground once it is reviewed.
+  - Consulted: `so:sha256:759ba7836a3c2ec434bebcece5db53d4985f8d001bf84b7baef48eeb9a2d4ecc`, `so:sha256:ba38c5b8d80ccd24f9ea2714629fe1a0e82d998621fc35d72a1826ab837e2ed4`, `dh:vfy-workspace-bookkeeping:001`
+  - Rows: `so:sha256:d8cf8154d2e1435f81698ec0c8d67ea4bce53283ef275029392ce1a2d2f2f03f`, `so:sha256:f353b053a061870ff15017fd51401ea9165d54f608052fa1ea8daea981cf5d73`
 
-### 5. Resolved cache plan applied to an execution (1)
+## C(i) wall-time-evidence-class (2 rows)
 
-Recommendation: unresolved. The promoted rider has zero serialized resolver/execution occurrences.
+*Separately identified wall-time evidence class.*
 
-pa-cache-plan-resolution (1 row).
+**Run 4 shows.** Run 4 adds proof-ledger durationMs on fact/shadow pairs and per-lane durations, which the lane-execution proposal carries as qualified values; no pinned query needs a separate wall-time class.
 
-- `po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61`
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-New needed_evidence: Run 3's verdict-corpus search is now complete within its captured fields: run3-fleet/MANIFEST.yaml reports pa-cache-plan-resolution rider_evidence=absent with zero structured occurrences. Its source_facts name the resolver domain and the resolver-to-command-arguments site, but the verdict schema has no cache-plan field. Obtain an observed governed resolver result with its applicable domain/version, joined to a particular Turbo execution and the cache posture actually applied. Checkout cache topology, cacheStatus and enablement flags do not supply that execution join. This promoted Ruling-6 rider remains open; the docket authorizes no new capture or runtime change.
+**Rejected alternative.** Retire because CQ-025 is answered by qualified execution values. Rejected: the withdrawal receipt names a CQ as the reopening condition, so the row parks on that named decision rather than retiring.
 
-Since: 2026-09-10.
+**Sitting decision.** Record the CQ barrier as the named missing decision.
 
-Evidence:
+- Duty `wall-time-evidence-class-d1` (2 rows; prior text sha256 `714e8d48343a`; CQ barrier)
+  - Fresh needed evidence: Run 4 adds proof-ledger durationMs on matching fact/shadow pairs (so-0d463294884b, so-e26c033721f6) and attempt elapsedMs (so-ca8b3f90e57c); otp:vfy-lane-execution:001 carries these as qualified values on an execution, which is what CQ-025 consumes. No run-4 query or consumer selects or rejects a verdict on a separate wall-time class. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009; an observed consumer of that class is also still missing.
+  - Consulted: `otp:vfy-lane-execution:001`, `dh:vfy-lane-execution:001`, `so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4`, `so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385`, `so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610`
+  - Rows: `so:sha256:ebe4cdcf6e9eec35f3ac468a4e21b559e27b550b221042d8266b1bb55b3d3b30`, `so:sha256:f025dca6b8335e444986f450f43d7970deb3f4209456efce8a23a5e1c065d446`
 
-- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (rider_evidence.pa-cache-plan-resolution): rider_evidence=absent; structured_occurrences=0; occurrences is empty. The bounded search explicitly distinguishes a resolver/execution join from cacheStatus or cache flags.
-- [MANIFEST.yaml](../../corpus/run3-fleet/MANIFEST.yaml) (source_facts.cache_plan_domain, source_facts.cache_plan_execution): Source receipts identify caller-controlled/local-only/remote-read and the resolver result feeding command arguments. They explicitly record that the verdict schema has no cache-plan field; source routing does not create a captured execution result.
-- [so:f4532e29f3f1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-f4532e29f3f1.yaml): Linked-worktree binding shares <fleet>/beep-effect/.git as git_common_dir but reports its distinct local cache path absent and zero entries. Its supplementary probe is at 03:13:52.406Z. This demonstrates why Git linkage alone cannot establish shared cache access.
+## C(ii) governing-specification-comparison (1 row)
 
-### 6. CQ-020 ordering and governing specification (10)
+*Replay comparison and its governing specification.*
 
-Recommendation: irrelevant. Current proposals and emission-v2 observations replace the 10 amendment-gated rows; the cluster still rules together.
+**Run 4 shows.** The amended S7 contract freezes the replay report, routes live evidence elsewhere and says live-replay disagreements are reported with a diagnostic attribution and never modelled; no run-4 record shows a decision consuming the comparison.
 
-Primary trace: [otp:ov-schedule-proposal:001](../proposals/otp-ov-schedule-proposal-001.yaml).
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-sitting-3 hasStep (2 rows).
+**Rejected alternative.** Retire as irrelevant because the contract makes the comparison diagnostic. Rejected: 'never modelled' is said of the engine's admission model, not of every gate, and the old section 5 still lists the replay outcome under evidence and gates.
 
-- `po:sha256:736ad92a1de7991caa17d905c310e2dac02d5a4d9b7cd3b709adfcabd690e4cc`
-- `po:sha256:35a69c5bcbf7493cc0aa7f248d138d65f2d5c8beff49e80308ef85b43a0f559d`
+**Sitting decision.** Whether the section 8 diagnostic-only wording is read as a ruling that no decision consumes the replay comparison (then retire next run), or the row waits for a consuming gate.
 
-Retirement reason: Retire the two historical hasStep rows by supersession through otp:ov-proposal-step-membership:001. The current emitter and fixture identify two steps belonging to one proposal, while the contract limits steps to admitted actions and amended CQ-020 requires that membership. The two original contract quotations were superseded by emission v2, so their old observation IDs are preserved only as carried retirements. ScheduleStep identity and the complete cluster's joint ratify-or-park obligation remain with the current proposals.
+- Duty `governing-specification-comparison-d1` (1 row; prior text sha256 `206ed05bafd9`)
+  - Fresh needed evidence: Run 4 reads the amended S7 contract: the frozen replay report is never re-rendered and live evidence goes to a separate report (po-a4d81c76e170), and live-replay disagreements are reported with a diagnostic attribution and never modelled (po-983855896b09). The lane-plan specification hypothesis dh:lpl-lane-plan-application:001 stays unresolved. No run-4 record shows a gate or decision that consumes the replay or golden comparison. Still needed: such a consuming decision, or a ruling that the comparison is diagnostic only, which would turn this row into a retirement.
+  - Consulted: `po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792`, `po:sha256:983855896b09b9d9aa905075137e4ace72075aa786f829d6a0cdee065978db50`, `po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c`, `dh:lpl-lane-plan-application:001`
+  - Rows: `po:sha256:2cc77ae5391bd35d736242a9fff5ee6d2e64ee35cc18a420060b5a541f947ca6`
 
-Row trace: [otp:ov-proposal-step-membership:001](../proposals/otp-ov-proposal-step-membership-001.yaml).
+## C(ii) deferred-tail (1 row)
 
-sitting-3 stepIndex (2 rows).
+*Deferred tail of the prescribed sequence.*
 
-- `po:sha256:14e01baa9a4fa23873722680039d098e43c3e0f315d5f6805159154577794e06`
-- `po:sha256:959a603a7bc88415101c1c6e9073034271081d03a55dd625f763898feb579ea2`
+**Run 4 shows.** The emission golden that carries the deferred-tail assertion is unchanged at the pin, and the only run-4 account of requests being passed over is the contract's same-checkout skip prose, which no admission chain instantiates.
 
-Retirement reason: Retire the two historical stepIndex rows by supersession through otp:ov-step-position:001. Current fixture observations assert integer ordinals 0 and 1, the current contract fixes the zero-based admitted-step convention, and amended CQ-020 orders SeatRequests through those steps. The proposal carries the prior category/representation choice; fixture integers do not adjudicate it. No endpoint or ordering member ratifies independently of the complete cluster.
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-Row trace: [otp:ov-step-position:001](../proposals/otp-ov-step-position-001.yaml).
+**Rejected alternative.** Rebucket under the CQ-009 same-checkout arm. Rejected: CQ-009 asks about grants sharing a checkout, not about requests omitted from a prescribed sequence.
 
-pa-projection-contract (1 row).
+**Sitting decision.** Keep it decision-gated; name the same-checkout skip as the candidate consumer for the next capture.
 
-- `po:sha256:0121af7b661484de9197ede12df6eaa5c69240214339b7ea6844a4f09901fea8`
+- Duty `deferred-tail-d1` (1 row; prior text sha256 `b548018ad7d5`)
+  - Fresh needed evidence: Run 4 confirms the emission golden carrying this deferred-tail assertion is unchanged at the pin (po-5e3730ea652a). The one run-4 account of requests being passed over is the contract's same-checkout skip (po-983855896b09), which dh:lpl-same-checkout-skip:001 holds as a description, not an observed occurrence. CQ-009's re-scope needs grants sharing a checkout, not omitted requests. Still needed: a decision that must identify requests left out of the prescribed sequence, for example an observed skipped request on a held checkout that a consumer treats as deferred.
+  - Consulted: `po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c`, `po:sha256:983855896b09b9d9aa905075137e4ace72075aa786f829d6a0cdee065978db50`, `dh:lpl-same-checkout-skip:001`, `dh:lpl-same-checkout-exclusion-rule:001`
+  - Rows: `po:sha256:f60ddfb04ede510a8ffe6a04a36eac20caeb92175e59245f6b436897c83907b8`
 
-Retirement reason: Retire the prior pa-projection-contract observation by supersession through otp:ov-projection-specification:001. CQ-020 now requires the governing specification and emitted SeatRequest ordering; the current typed-specification, proposal-binding and ordering observations replace the run-2 wording obstacle. The rule-specification versus application-context identity choice stays explicit in fa:ov-projection-specification:001 and the current proposal. The full ordering dependency cluster still ratifies or parks together.
+## C(iii) journal-entry-duplicate-payload (25 rows)
 
-Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+*Admission journal entry: duplicate-payload identity.*
 
-pb-schedule-projection-specification (2 rows).
+**Run 4 shows.** Run 4's only identical-payload pair is one source span read twice by the adapter, not two emissions, and the store-record hypothesis keeps its null; no copy, replay or correction trace and no consumer appear.
 
-- `po:sha256:6fa9ae087c8d411c0218a0491a20989f722773cb08d8b57d733514a58cc86742`
-- `po:sha256:88f09e0224cf8cc48710903fe1e017b9369bc5dada8def6024d42f2841f9a654`
+**Recommendation.** `unresolved` for all 25 rows, with fresh needed evidence per duty below.
 
-Retirement reason: Retire the two pb-schedule-projection-specification rows by supersession through otp:ov-projection-specification:001. The amended CQ-020 and current emission-v2 specification type, governing edge and SeatRequest-order facts discharge the former wording obstacle. The current foundational record explicitly defers repeatable-rule versus application-context identity, and the proposal carries that choice for the same ordering sitting. Retirement does not accept either model or split the cluster.
+**Rejected alternative.** Treat the record-10 pair (so-df1f4d8ba41f, so-3013eedf6f82) as the duplicate-payload trace. Rejected: both cite one journal stanza (record 10); the run-4 hypotheses read it as one span seen twice, never two individuals.
 
-Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+**Sitting decision.** Record the CQ barrier beside the still-missing trace as the AdmissionJournalEntry receipt's named missing decision.
 
-pc-projection-contract (2 rows).
+- Duty `journal-entry-duplicate-payload-d1` (25 rows; prior text sha256 `2d3d790bdbc6`; CQ barrier)
+  - Fresh needed evidence: Run 4 checked its journal surface for a duplicate-payload pair. The only identical-payload pair (so-df1f4d8ba41f, so-3013eedf6f82) is one journal stanza read twice by the adapter, not two emissions; so-363f9b7f07dc shows one chain written in two journal formats; and dh:vfy-admission-store-record:001 keeps its null. No copy, replay or correction trace and no consumer treatment appear. Still needed: two distinct emissions with equal semantic payload, their record and event times, any revision link and an observed consumer treatment. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009.
+  - Consulted: `so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71`, `so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c`, `so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467`, `dh:vfy-admission-store-record:001`
+  - Rows: `so:sha256:01fe79ebf1f0cc28550c21c941e0c4ff963cbbbcff28cffe712d9b026288d99a`, `so:sha256:0385cf6e12920c8a96c520a7238b522f923a7c0116cd603fbeff793a7d0e6058`, `so:sha256:05fa73f187683c8b5cfb25a3958ed5b6f3d344d1b984cb1ce1cdffe5a9b2674a`, `so:sha256:0775b5fd356eaea7604537054326c7e97598c5f81504c0d815558297ebf0f50e`, `so:sha256:08149709f365cd0031ec1a4a17e6f76e957b70a4507b8c15e077e41ec998abce`, `so:sha256:10f2cebc7b17c5f7b15bd051ed0f0363d355c3e4cb2f927dd2b2852461ad2610`, `so:sha256:146d2b385ef6e3fb892821dbd2df82091184f2dca48f8cd9b9eaa5d01019d942`, `so:sha256:3b7f2e1876cc9602c8f4b911bdfec4bf8eb8b9a8355cec317b4e81bc900d2059`, `so:sha256:4a98ae2d71bc800fd8718d37ccc93288cf66cc48dbffa2eddc2a0c7c3297a7d6`, `so:sha256:522ce0efbf2933dac38a6f574c2ff640dadb305b695e06028dad7a5c0f25d91c`, `so:sha256:65609cedeaf3e99b51031c38b99ab7bc16ea0ef59fa66bea1d446ef3f7bd3333`, `so:sha256:6cf1d332ce7ea225c24cf5aea2e2192ab91ec06838463289be284bae7677e60c`, `so:sha256:7627bd8803b5da11524904bb2c7b2fdcd7c320ba034444204852ded9c164cfff`, `so:sha256:7e4e7d3c3f97a3907222c12d770c3f618aa1502dc1fd391f0738fd93f874dbbb`, `so:sha256:91d2cd56cb62e64ab02890e9792e172bcd9350420a034a74fda5d8c35367bb4a`, `so:sha256:a3d906985080a7bb34c6364829dd3add8d8d0a7235a3b00d027d9e9685e7eb19`, `so:sha256:b16055eff4bab382b33f0a5629c273a35a659e407651035b9532fb833f1a722c`, `so:sha256:b303cb0ce5ff71bf3353ee50bced00e443bbba7d77e4f3e5cf7e6e8476d054aa`, `so:sha256:b4093c2df6b7863d8c90b35246c348aecbbc5201cc8a3968132345e8e29c038e`, `so:sha256:c19aff86102184c4aafeecb71520216ed5ccf721d1d16cce9a382bdd170d1967`, `so:sha256:c1e15b1c4eaa7eb7c6aa06fd4e88909368ddeac9931936b7d68c2bf857b1bcfa`, `so:sha256:cf8f163c919cdad854f3e9aabddf18a7c7589844a69389646492c47ac1f7d8e8`, `so:sha256:dae7bbf3b41b449e027e7be2793340e99e86ffbfbc9e3781a15b2c412919fba3`, `so:sha256:e7ddc88d39dcd0ebbfa2a08af2a670b1921da6c0a721d6b64a2a41b179fd1964`, `so:sha256:f1e3e6b059c258e89fc802148a2976a93bd0ade9c8e5568b6052d81945140f7a`
 
-- `po:sha256:d9e1c6941fe61eb8e8a4f7e40853d6090190ec18523931c3af4551bb2b880c76`
-- `po:sha256:ed86c2d18b12ff797604eac97a917b36527e390ce417fce35ac583fd829b2709`
+## C(iii) allocation-double-count (28 rows)
 
-Retirement reason: Retire the two pc-projection-contract rows by supersession through otp:ov-projection-specification:001. Amended CQ-020 now requires the governing specification and the emitted SeatRequest ordering represented in the current contract and fixture observations. The repeatable-specification versus application-context issue survives in the run-3 foundational chain and proposal; the ordering cluster remains one ratify-or-park unit.
+*Allocation double-count across admission decisions.*
 
-Row trace: [otp:ov-projection-specification:001](../proposals/otp-ov-projection-specification-001.yaml).
+**Run 4 shows.** Run 4 shows a termination followed by a new admission on the same checkout under a new nonce and attempt, which reads as two grants, not continuity; it shows no accounting trace that counts one allocation twice and no rewrite history of heartbeats.
 
-ov-schedules-seat-request (1 row).
+**Recommendation.** `unresolved` for all 28 rows, with fresh needed evidence per duty below.
 
-- `po:sha256:d1f555913267743bc009bfd030c3bafd841e6f7baa081d7a1ecc0704fc2b2d2d`
+**Rejected alternative.** Fold into CQ-009's re-scoped same-checkout arm. Rejected: CQ-009 tests whether two active grants share a checkout at one time; the double-count duty tests whether one allocation is counted twice, which concurrent-exclusion evidence does not show.
 
-Retirement reason: Retire the historical target-relation row by supersession through otp:ov-step-request-assignment:001 and re-identification of its unchanged implementation-report quotation as po:sha256:add8e23aa967029a87b088fab73de1335b0aa8348c184b34bcd7a821e783a8e4. Current fixture/emitter observations bind steps to SeatRequests, and amended CQ-020 explicitly consumes that relation. The current chain preserves the absence of WorkUnitSpecification identity; the full ordering cluster still ratifies or parks together.
+**Sitting decision.** Keep the 28 rows on the double-count trace and accept the sequential eviction/re-admission pair as partial evidence for the new-grant reading only.
 
-Row trace: [otp:ov-step-request-assignment:001](../proposals/otp-ov-step-request-assignment-001.yaml).
+- Duty `allocation-double-count-d1` (28 rows; prior text sha256 `5cc30955f9f4`)
+  - Fresh needed evidence: Run 4 checked the lease store and journal for a double count. The quarantined lease state record (so-a8d270b5e19d) carries one heartbeat stamp, not a rewrite history. Two organic chains on one checkout (so-860cff0d673e, then so-a9ed1352e2bc about nine hours later under a new nonce and attempt) show termination followed by a new admission, which reads as two grants. No accounting trace counts one allocation in two decisions, and no conferral or termination rule is captured. Still needed: an accounting trace time-aligned with the lease store over one held allocation, with a heartbeat rewrite and a reacquisition, showing whether the allocation is counted once or twice for one beneficiary and pool.
+  - Consulted: `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020`, `fa:vfy-seat-grant:001`, `fa:vfy-admission-charge:001`, `dh:vfy-coordination-protocol:001`
+  - Rows: `so:sha256:0415a4f1590540c534d5ccc9027d36acddbfa4ffdd84445bda5155dac85ac5c6`, `so:sha256:05a0dfbb8f434d75b8be6d1bd7d396925b594cb0e9ceb6b72bda31e76e9685d3`, `so:sha256:0ac1b790ab6965774fb94a2741caa3d2254ad662e54f761a5ae8744e19e6b7af`, `so:sha256:0dcfbaeaa65aeeec90c1e9590be8a33c1ffe9438f29ebbe7d8617d09a5e45b08`, `so:sha256:0e50d84bdb1fbc2d463bced37bfe314caf8e1b5a8cc58dd5359978650ab1f53c`, `so:sha256:0e797a3deeedd27cfa75082643ce788d6c73e073bf87a640fe50ce3896a43e2b`, `so:sha256:126709ea74fec8cb4b03c021d7cf121aac566b19bea91c4ac8a452f33d01a94e`, `so:sha256:155a7c875acf08bae8c3073be1e54bebd65f2b8d5192697d7687da967e781ae6`, `so:sha256:232151f9f2afc0f8662cbd2c75d368bae594686ce7f0bdbac3e9f7238d6fd062`, `so:sha256:27ba4f5468b662c17e401817a599ad4e45c2091d51423b279d8de9fbe97880b7`, `so:sha256:2e58e1311fcc9f696bc06624bab0b4e23b6597ee1919f68e1516882ab067b53a`, `so:sha256:4bb535144f06b1e9abc6a8c75f0dcc3fc7d030f9b64214adfd1bed92ca384b08`, `so:sha256:5130545f45659ac9d904152da47d3e52ab06961250b57d626f3d8afc4993fe42`, `so:sha256:563cd0ce4e6678eca1af8e3cf2ff8cc59e08e587eb8853bb6f4b76e3a634dc67`, `so:sha256:6108f04e939048617511e050bbb2421593e88c3658829deaead9b406fcb811d9`, `so:sha256:636db00ceac88a2c4857664e7f2fb863833b68fe94f1e28a111e3451d3dfcbb1`, `so:sha256:675134527a157d157274937b2f8ad90b036d30b77340d61f1e202483d9ac828e`, `so:sha256:6abcdc65b395bfc82d08b2c5e49d3c9553e97a46bd942343457e68e8da0a85e7`, `so:sha256:7b8493be70e8285a866f898e5691df4cb02c5d51fd808635f508854d1ec5622c`, `so:sha256:7f98fb05e2fa6d6b3b08618e7f5af09ecdefc3ff88752bbf437aff900e73036a`, `so:sha256:94cda97bb49a7661b4b7bd7ed0cd0f5b8594223ad33ddbf9d9637e464ee5c902`, `so:sha256:997fca9994bcb3a70f034acd490a212d79ae083f17c0a18972bdbc8a924a5346`, `so:sha256:a4ff1bbe07b6d10ed237650df3bfbe94c9a94240167ba58443ebf37227476301`, `so:sha256:ad5ef0f6bca50e85da674990519818fb3d4a14a1650ccb135b89f2f10d875248`, `so:sha256:b0aa81e61691ffc2b4ef587508eae988e450f03407eefbfc524fb38a82c20cdc`, `so:sha256:cfb413d38b8e8e1903d6e83b8d2977c5fd102003636ca8403eaa958dc1791b6f`, `so:sha256:d90be1aaa963b3e017130d2add821e59f623ac0540f9563cd9dd1d607cae8ce9`, `so:sha256:e1936767a2458fe5eb08ac5e2ba0887e7ac51f70d06111cead6e54b854e39c17`
 
-Evidence:
+## C(iii) result-artifact-content-snapshot (14 rows)
 
-- [CQ-020](../../../../../docs/competency-questions.yaml): The Must CQ now joins an episode's current proposal to its governing typed specification, member steps, zero-based order values, SeatRequest targets and literal scope tags, with ORDER BY ?idx. Its amendment removes the run-2 WorkUnit-target wording obstacle; reading this query is not an execution or ratification claim.
-- [po:4b06f5efe076](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-4b06f5efe076.yaml): Emission-v2 fixture asserts proposal hasStep step-0.
-- [po:a1e5e0d0916d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a1e5e0d0916d.yaml): The same fixture proposal asserts hasStep step-1.
-- [po:25344c6969c1](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-25344c6969c1.yaml): Fixture step-0 has stepIndex 0 typed as xsd:integer.
-- [po:56dab857ecc5](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-56dab857ecc5.yaml): Fixture step-1 has stepIndex 1 typed as xsd:integer.
-- [po:0a705ee8990d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-0a705ee8990d.yaml): Current S7 determinism rule fixes canonical order, zero-based stepIndex and steps only for admitted actions; the deferred tail neither extends nor renumbers the sequence. Its Graph.topo statement concerns the projection seam, not a package-report contract.
-- [po:d7595abca114](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-d7595abca114.yaml): The emission-v2 fixture types its governing target as ciops-prov:AdmissionProjectionSpecification.
-- [po:95a467e6ebaa](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-95a467e6ebaa.yaml): The emission-v2 fixture connects the proposal to that target with hasProjectionSpecification.
-- [po:7f9eb7c183ed](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-7f9eb7c183ed.yaml): Fixture step-0 schedulesSeatRequest request-0; the emitter and matching second-step observation preserve request targeting.
-- [po:add8e23aa967](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-add8e23aa967.yaml): The unchanged S7 implementation-report quotation is re-emitted at the run-3 pin. It records the SeatRequest/WorkUnitSpecification split and the absence of work-unit-specification identity in journal evidence.
-- [fa:ov-projection-specification:001](../foundational/fa-ov-projection-specification-001.yaml): explicitly_deferred: compare emissions with fixed rules/different journal prefixes and revised rules/fixed input to distinguish repeatable specification identity from application-context identity. otp:ov-projection-specification:001 carries that choice.
-- [otp:ov-step-position:001](../proposals/otp-ov-step-position-001.yaml): The current proposal treats stepIndex as a contextual ordinal-value property, preserving its alternative representation models and ScheduleStep/ScheduleProposal dependencies. Zero-based fixture values do not settle the prior category issue.
+*VerificationResultArtifact content-snapshot rival.*
 
-### 7. Freshness, review score, attribution and proof-tier governance (9)
+**Run 4 shows.** Run 4 is the first run with writer-issued proof-ledger records on its surface, so issuance is now observed; but no pair of independent equal-content assessments of one attempt appears, correction (C4.2) is unchecked, and merged preview is dormant.
 
-Recommendation: unresolved. Recorded assessment values do not supply the four governing contracts and decision uses.
+**Recommendation.** `unresolved` for all 14 rows, with fresh needed evidence per duty below.
 
-jv-base-freshness (3 rows).
+**Rejected alternative.** Retire the rival because fa:vfy-verification-evidence-record:001 individuates issued facts by their issuing write. Rejected: that analysis concerns proof-ledger facts, not the verdict artifact, and it cites no equal-content pair either.
 
-- `so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7`
-- `so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764`
-- `so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06`
+**Sitting decision.** Whether issuance evidence from the proof ledger is admitted as the issuance half of this receipt, leaving only the equal-content pair and C4.2 correction lineage open.
 
-New needed_evidence: Run 3 adds verdict comparison values and timestamped checkout branch/head bindings; dh:ver-git-comparison-context:001 still has no observed validity decision consuming those comparisons. Under Ruling 6, obtain a versioned branch-freshness contract binding each assessment to its branch and base operands, defining merge-base, behind-count and overlap meanings, and showing assessment provenance, recomputation and the decision that changes with the result. A recorded zero or a matching path is insufficient to establish equal trees or evidence validity.
+- Duty `result-artifact-content-snapshot-d1` (14 rows; prior text sha256 `9fcd24a82925`)
+  - Fresh needed evidence: Run 4 is the first run with writer-issued proof-ledger records on its surface (for example so-12d5a26fbfac and so-d6adeec15c79), so issuance writes with recordedAt and expiresAt are now observed, and fa:vfy-verification-evidence-record:001 individuates an issued fact by its write. The twin records it cites are one span read twice, not two assessments. No two independent equal-content assessments of one attempt appear, C4.2 correction is still unchecked (po-d1774b7edfc2), and merged preview is dormant in the window (po-82648cf8d37a). Still needed: two independent equal-content assessments of one attempt with an observed consumer treating them as one or two results, plus correction lineage from the C4.2 writer.
+  - Consulted: `so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3`, `so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002`, `so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186`, `so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0`, `dh:vfy-verification-evidence-record:001`, `fa:vfy-verification-evidence-record:001`, `po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c`, `po:sha256:d1774b7edfc21c7fd04105756bbd4441a0c12df37f7fa8a6c29346cc2f7415e2`
+  - Rows: `so:sha256:05bdfd88fe028976d02147ad0bfa51ad66828d2ceae653806a6a947e8374aeda`, `so:sha256:1008941903be9f39b5f8ee44d50647d0b02ea0a1988e1712481a22f35e6a0465`, `so:sha256:18fe73166f5b7932c1ef8a529b9e26f0975324ad5451673374ff5b24bbfeb91c`, `so:sha256:34ba8416b74877505a8a69b9947fcebfab0c62e4f3bbd30218232b857e4539bf`, `so:sha256:74b8c4733f1c2049ac998444c4905ba5e016d2f0cd6cf310dc5e6fa7cd414af2`, `so:sha256:7947484312042fc0ac6c5bd485427b9cc3a28829e3745b39031f6400a9c1a9c8`, `so:sha256:7a639ef29784753fbf47a4860c76a214d945a67c34fe1675915e57253dd3d628`, `so:sha256:9078a6ab88adf6e8ae99c1baafab237dd8c100a21fa8425143ca76a0f5bb6fcc`, `so:sha256:929aa987fb5e550c58968f28fd06947d1bfd2b788815a77376329f06d9ca765a`, `so:sha256:a9a0813fdb533325632faeda662b8fa72b08b1e4868c9cfdf66c29939927dac9`, `so:sha256:b24d12302a876d81148174d1247fd84e7d304fababe40bf31e84e37093734224`, `so:sha256:e4e14fa1e17afc043cbd2edc24b341d044e7d0aed068e15549d6cd38a7f560d1`, `so:sha256:f19da17d5b8f8ff5107a9b96cf4ff9256ebf03da52491e0370413f941f085e5d`, `so:sha256:faeff009ed066ab59b310901f7f127fa174f0b0e2859613529a9ac69673c3230`
 
-Since: 2026-09-10.
+## C(iii) assessment-model-selection (1 row)
 
-jv-greptile-score (2 rows).
+*Assessment-model selection over closeout readiness.*
 
-- `so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1`
-- `so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6`
+**Run 4 shows.** Run 4 has two closeout-readiness records, one with requiredChecksGreen and one with checksGreen, but they belong to different attempts, pull requests and heads, so no single component changes between two assessments of one PR/head.
 
-New needed_evidence: Run 3 now records greptileScore=5/5 in a verdict with proofTier=full, but a score spelling does not supply its governed meaning. Under Ruling 6, obtain the scale authority and version, the exact reviewed subject, score-production and revision provenance, and an observed assurance or closeout decision governed by that score. Retain the distinction between a stored readiness assertion and a current eligibility decision.
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-Since: 2026-09-10.
+**Rejected alternative.** Use the two run-4 readiness records as the paired experiment. Rejected: they assess different pull requests, so every component differs at once.
 
-pb-failure-attribution-category (1 row).
+**Sitting decision.** Keep the experiment as specified; note that dh:vfy-closeout-readiness:001 falls back on the CQ barrier if no tier link appears.
 
-- `po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9`
+- Duty `assessment-model-selection-d1` (1 row; prior text sha256 `c9a910f8025a`)
+  - Fresh needed evidence: Run 4 has two closeout-readiness records: so-93883668edee with requiredChecksGreen and greptileScore, and so-968fbd04dbf5 with checksGreen and ready. They belong to different attempts, pull requests and heads, so no single component changes between them, and dh:vfy-closeout-readiness:001 keeps its null. Still needed: two assessments of one explicitly identified PR and head that differ in one component, with assessment instants, the consumer's criteria (checksGreen versus requiredChecksGreen) and its treatment of the second assessment as an update or a new snapshot.
+  - Consulted: `so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa`, `so:sha256:968fbd04dbf5aae6a2984398964aafb8cf6bca2d9c60ae793b6aa1602556bde6`, `dh:vfy-closeout-readiness:001`
+  - Rows: `so:sha256:34866c142b067589cef10ea45947b1e31d1f7ae8e7518b45d705f5df5a3d31ee`
 
-New needed_evidence: Run 3 adds classified failure tuples and component results, which supply concrete reports but not introduced/inherited/unrelated/environment attribution rules. Under Ruling 6, obtain necessary conditions for every attribution member, overlap or precedence rules, and an assessment record binding the change, baseline, environment, assessment provenance and revision history. failureKind and failedStepId classify a report; they cannot by themselves assign responsibility or baseline causation.
+## C(iv) checkout-binding (0 rows)
 
-Since: 2026-09-10.
+*Checkout and cache binding.*
 
-pb-yeet-proof-tier (3 rows).
+No rows: run 3 retired the fleet-checkout-identity row at its sitting 2. None; the cluster is kept only to preserve the fifteen-cluster frame.
 
-- `po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1`
-- `po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195`
-- `po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50`
+## C(iv) grant-resource-contention (2 rows)
 
-New needed_evidence: Run 3 adds proofTier=full in verdict and lease/request contexts, while result status and attained assurance remain separate. Under Ruling 6, obtain planner authority and version/revision lineage deciding a shared selector scheme versus copied domains or plan-borne classifications, together with a Must/Should CQ whose decision consumes that selector. Repeated strings and the captured priority domain cannot establish the proof-tier governance or its mapping to assurance tiers.
+*Grant/resource contention and proof-lock paths.*
 
-Since: 2026-09-10.
+**Run 4 shows.** Run 4 names MachineProofLock only as a packet-side domain member and dates proof-lock relocation only in curated change rows; none of its 109 source observations is a lock file or proof-lock record, and overlappingPaths is read as workspace bookkeeping.
 
-Evidence:
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
-- [so:ebe4cdcf6e9e](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-ebe4cdcf6e9e.yaml): The verdict projection includes greptileScore=5/5, proofTier=full and durationMs=435.282685. These are stored report values; they do not provide scale-governance or selector-lineage contracts.
-- [dh:ver-git-comparison-context:001](../hypotheses/dh-ver-git-comparison-context-001.yaml): The current null analysis still lacks explicit comparison-operand binding and an observed validity decision dependent on the recorded behind-count, merge-base or overlap result.
-- [dh:ver-head-diff-tier-context:001](../hypotheses/dh-ver-head-diff-tier-context-001.yaml): resolvedHeadSha, diffFingerprint and proofTier remain descriptive context without an observed accept/reject consumer or task-hash/epoch applicability rule.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+**Rejected alternative.** Retire because the change ledger shows proof locks moved under the admission runtime root. Rejected: ledger rows are seed data with observational status and say nothing about ownership, acquisition or outcome.
 
-### 8. Passed-step execution boundaries and elapsed scope (2)
+**Sitting decision.** Whether the next capture adds proof-lock ownership records; until then the rows re-park.
 
-Recommendation: unresolved. Attempt bounds and component statuses are present; per-execution boundaries and measured-extent authority remain missing.
+- Duty `grant-resource-contention-d1` (2 rows; prior text sha256 `44092f347195`)
+  - Fresh needed evidence: Run 4 checked for proof-lock ownership. MachineProofLock appears only as a packet-side member of the contended-resource domain (po-d067a0787ac4), the change ledger dates proof locks moving under the admission runtime root (po-fd2608fb2e65, po-3c219ae9a673) as observational seed rows, and none of the 109 run-4 source observations is a lock file or proof-lock record. overlappingPaths (so-ba38c5b8d80c) is read as workspace bookkeeping. Still needed: lock-ownership records joined to grants, with acquisition and release instants, a waiting, winning or losing outcome, and the rule tying FleetContestedPath to that contention.
+  - Consulted: `po:sha256:d067a0787ac432b22b76b62e369842928da6ca13e281c16fd56ef77e8e743908`, `po:sha256:3c219ae9a67306b44262ce221588e8a5ba129806c5bca6cc2e857a0d32ade524`, `po:sha256:fd2608fb2e655c02344a1d2b0f9e78e96b045caa6d56d2600979e46fc11e7ff4`, `so:sha256:ba38c5b8d80ccd24f9ea2714629fe1a0e82d998621fc35d72a1826ab837e2ed4`, `dh:vfy-workspace-bookkeeping:001`
+  - Rows: `so:sha256:b42503da37767cc741db6196fbf13e019bdc59f71166ad4d95318966ca7ae123`, `po:sha256:5fa0d40013f2f1bace37c166a14058909069e91de0f63b823bd0921c40f68278`
 
-jv-verification-step-execution (1 row).
+## C(iv) admission-lifecycles (5 rows)
 
-- `so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090`
+*Request and lease lifecycles, including the memory rider.*
 
-New needed_evidence: Run 3 now has verdicts with a parent attemptId, passed component statuses and component durations, and a separate failed attempt whose planned components are explicitly not-run. Under Ruling 6, obtain a passed-step execution record preserving the authoritative parent-attempt join, each repeated execution's identity and its own actual start/end boundaries. Whole-attempt bounds and a repeated lane label do not supply the missing component occurrence boundaries; the passed-step instrumentation was excluded from the v3 scope.
+**Run 4 shows.** Run 4 adds organic enqueue-admit-release and enqueue-admit-evict chains, a lease state record with one heartbeat stamp and the admission-engagement rival, but no heartbeat rewrite history, no ledger decrement and no pinned query that needs a lifecycle apart from request and grant.
 
-Since: 2026-09-10.
+**Recommendation.** `unresolved` for all 5 rows, with fresh needed evidence per duty below.
 
-pa-elapsed-ms-field (1 row).
+**Rejected alternative.** Accept dh:vfy-admission-engagement:001 as the lifecycle referent. Rejected: it is unresolved with no warrant, and its own discriminator (a chain whose admitted row changes a member the enqueued row fixed) is unobserved.
 
-- `po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7`
+**Sitting decision.** Record the CQ barrier as the named missing decision for all three duties; keep the memory rider separately parked under memory-measurement's evidence.
 
-New needed_evidence: Run 3 now supplies an identified attempt with startedAt, endedAt and elapsedMs, so the missing-record part of the run-2 request has changed. Under Ruling 6, retain the measured-extent question: establish authoritatively whether each value covers the entire attempt/command or a particular WorkUnit occurrence, preserving target, interval and provenance. fa:ver-wall-time-evidence:001 still asks for nested occurrence bindings, clock/precision conventions and the explanation of a one-millisecond discrepancy. Parent-attempt timestamps cannot be copied to each nested execution, and an assertion-content proposal does not settle what was measured.
+- Duty `admission-lifecycles-d1` (1 row; prior text sha256 `549b0d957785`; CQ barrier)
+  - Fresh needed evidence: Run 4 adds organic enqueue-admit-release chains and states the lifecycle rival as dh:vfy-admission-engagement:001, unresolved with no warrant; memoryPeakBytes appears on release rows (so-95b7d78a061f) and peakRssKb on verdict lane entries (so-bbe03a405b80), never joined. Still needed for the lifecycle: authoritative continuity from one submission through grant to release or cancellation. Named missing decision for the lifecycle: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009. The memory rider stays separately parked: process boundary, sampling method and interval, and the relation to peakRssKb (fa:vfy-peak-memory-use:001 asks for a mid-hold reading).
+  - Consulted: `dh:vfy-admission-engagement:001`, `dh:vfy-peak-memory-use:001`, `fa:vfy-peak-memory-use:001`, `so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1`, `so:sha256:bbe03a405b806751dca5ddeee93679d37cc8efada8cd69ecdbf478f09f0a70f6`
+  - Rows: `so:sha256:c627961a8fcde9dca01027cbf052494763b5e6895805c1c0c50d8bf51ba3a7bb`
+- Duty `admission-lifecycles-d2` (1 row; prior text sha256 `ecd7d6b80658`; CQ barrier)
+  - Fresh needed evidence: Run 4 adds organic chains with both kinds of end: enqueue-admit-release (so-95b7d78a061f) and enqueue-admit-evict (so-860cff0d673e), plus a ticket eviction (so-29a5ac8607a2); unlike run 3's synthetic chains these keep their own enqueue rows. Causal continuity rests on the shared nonce, which dh:vfy-admission-engagement:001 says decides nothing, and dh:vfy-admission-termination:001 finds no pinned query that needs the end itself. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 that needs the composite lifecycle apart from SeatRequest, SeatGrant and their end reports.
+  - Consulted: `so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1`, `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677`, `dh:vfy-admission-engagement:001`, `dh:vfy-admission-termination:001`
+  - Rows: `so:sha256:d94bf0420d3457158959e6188c50d5949dc4fae4a48d07e7077f8c81df36fcb6`
+- Duty `admission-lifecycles-d3` (3 rows; prior text sha256 `e1e2e2b810df`; CQ barrier)
+  - Fresh needed evidence: Run 4 checked the lease side: the quarantined lease state record (so-a8d270b5e19d) carries one heartbeat stamp, the two lease evictions carry only a terminal lastHeartbeatAtMillis, and the domain table says the live store holds active leases only while released history is ETL-derived with no deployed state carrier (po-3d0afbe028ab, po-39213e5f7d01). No chain binds grant creation, a heartbeat rewrite history, the end, a ledger decrement and carrier lineage. Still needed: that provenance chain. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 that requires the grant lifecycle apart from SeatGrant.
+  - Consulted: `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020`, `po:sha256:3d0afbe028ab88fe8cdca929c0d3fe27002f7d9c8fd04c9cf7430a5cfd3d1eb8`, `po:sha256:39213e5f7d01487ba0df48376cf630d5c8f722af131ec4296f6268f08c1e7cc1`, `fa:vfy-seat-grant:001`
+  - Rows: `po:sha256:3aadb9c8ae061d71b2e8386d9b8af518d49df5a66abaa0bb0391783833a6eef4`, `po:sha256:51fa8a9b8fcef0856134c3599ef68eabe588532203230c5b0ac8c892da47c95a`, `po:sha256:56d67898f9daaa0ff3c1fb34ff05745d9a1f94cf2703726f7721d1f586f89e5f`
 
-Since: 2026-09-10.
+## C(iv) failure-signature-occurrences (0 rows)
 
-Evidence:
+*Failure-signature occurrence evidence.*
 
-- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
-- [so:18fe73166f5b](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-18fe73166f5b.yaml): A separate identified yeet-verdict/v2 attempt records failureKind=handler-error and failedStepId=publish:00-head-install-preflight while planned components are status=not-run. The parent attempt has 11ms elapsed time. A tuple or planned component therefore cannot be assumed to identify a completed component execution.
-- [fa:ver-wall-time-evidence:001](../foundational/fa-ver-wall-time-evidence-001.yaml): The analysis still requires nested attempt/lane/interval associations, clock and precision rules, and repeated measurement/correction evidence. Its proposal otp:ver-wall-time-evidence:001 preserves assertion-content, quality, measurement-token and scoped-literal alternatives, plus estimate and episode-join gaps.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+No rows: run 3 retired the three rows by re-identification at its sitting 2. None; kept for the frame.
 
-### 9. Memory measurement semantics (1)
+## C(iv) cache-plan-resolution (1 row)
 
-Recommendation: unresolved. A release-attached peak still lacks process, sampling and measurement-family provenance.
+*Resolved cache plan applied to an execution.*
 
-jv-memory-peak-measurement (1 row).
+**Run 4 shows.** Run 4's only cache-plan text is the packet-side CachePosture domain row describing the deployed plan union; no run-4 observation carries a resolved plan joined to a Turbo execution.
 
-- `so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245`
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-New needed_evidence: Run 3 now joins memoryPeakBytes=9904820224 to a particular admission release report through its root and nonce. Under Ruling 6, obtain the measurement's resource-using occurrence and process boundary, sampling method and interval, metric, unit and measurement provenance. Supply an authoritative comparison with peakRssKb that decides whether the two fields measure one family. A release-attached quantity, token charge or owner surrogate does not establish the measured process or sampling semantics.
+**Rejected alternative.** Answer from the literal-domain mapping. Rejected: a packet-side description of the union is not an observed resolver result for a particular execution.
 
-Since: 2026-09-10.
+**Sitting decision.** Keep the rider open under CQ-024 (should_have, so no CQ barrier).
 
-Evidence:
+- Duty `cache-plan-resolution-d1` (1 row; prior text sha256 `28473e39011f`)
+  - Fresh needed evidence: Run 4's only cache-plan text is the packet-side CachePosture row describing the deployed plan union and its fail-closed path (po-bc1f5608d615). Proof-ledger facts carry inputSource and epochDigest (so-12d5a26fbfac) but no resolved plan, and no run-4 observation joins a resolver result to a Turbo execution. Still needed: an observed resolver result with its domain and version, joined to one execution and the posture actually applied, under CQ-024.
+  - Consulted: `po:sha256:bc1f5608d615e7d78e834be1f177a297532c9cc240321ec70cb554620873aa36`, `so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3`, `dh:vfy-task-input-state:001`
+  - Rows: `po:sha256:30be9d42308395a759ea42b1706c47b14bf2d995ff5d90eb85161cef24e27b61`
 
-- [so:0415a4f15905](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-0415a4f15905.yaml): Organic Stage A canonical-root history for nonce 411b3ba7-f32a-4d07-8a0c-c764dc5b8088: enqueue 1788926595182, admit 1788926595216, release 1788927008574, weightTokens=5, shared attemptId e7a8f546-8ae1-4754-b67b-76184b411fcc. The release carries memoryPeakBytes=9904820224. Only records for that nonce are joined; unrelated intervening records in source_excerpt are excluded.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+## C(iv) ordering-cluster (0 rows)
 
-### 10. Duration individuals, carrier issuance and diagnostic comparison (2)
+*CQ-020 ordering and governing specification.*
 
-Recommendation: unresolved. Duration assertions and recovery timings leave separate-individual CQs and issuance/custody unresolved.
+No rows: discharged at run-3 sittings 2 and 3. None; kept for the frame. Note that the S7 contract forbids reusing ordering-cluster terms for lane plans (po-79f91eaae90c).
 
-jv-actual-wall-duration (1 row).
+## C(iv) assessment-and-selector-governance (9 rows)
 
-- `so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998`
+*Freshness, review score, attribution and proof-tier governance.*
 
-New needed_evidence: Run 3 adds attempt-scoped elapsedMs, nested durationMs and otp:ver-wall-time-evidence:001, whose assertion-content, quality, token and scoped-literal models remain alternatives. Under Ruling 6, the separate RecordedWallDurationMeasurement still needs a Must/Should executable CQ that must traverse that individual instead of qualified values on an episode or execution. The carrier alternative also needs authoritative issuance, custody, copy and correction lineage and a decision CQ that distinguishes equal-content carrier tokens. Ruling 17 keeps the issuance duty open to run 4: the fleet manifests observe zero proof ledgers, so captured verdicts cannot replace the missing writer-issued provenance.
+**Run 4 shows.** Run 4 re-observes greptileScore, behindCount/mergeBase, classified failures and proofTier, and adds the literal-domain statement that YeetProofTier is not AssuranceTierId; no governing contract for any of the four duties appears, and every cited proofTier is `full`.
 
-Since: 2026-09-10.
+**Recommendation.** `unresolved` for all 9 rows, with fresh needed evidence per duty below.
 
-jv-actual-wall-duration and jv-lane-diagnostic-comparison (1 row).
+**Rejected alternative.** Retire the freshness rows on the run-4 workspace-bookkeeping reading. Rejected for now, as for comparison-operand-binding.
 
-- `so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3`
+**Sitting decision.** Rule jointly with comparison-operand-binding on the bookkeeping reading; record the CQ barrier for the proof-tier selector duty.
 
-New needed_evidence: Run 3 adds bounded attempt durations and a recovery diagnostic with distinct standaloneDurationMs and laneRerunDurationMs inside a successful attempt. Under Ruling 6, retain both duration concessions: a Must/Should CQ requiring a RecordedWallDurationMeasurement individual rather than qualified episode/execution values, and an authoritative issuance/custody/copy/correction chain plus a CQ distinguishing carrier tokens from equal content. The comparison concession additionally needs identities for both compared executions, their measurement assertions, the comparison's issuance, and a Must/Should decision CQ consuming a distinct comparison record. Ruling 17 keeps issuance open to run 4 because zero proof ledgers were captured. Diagnostic timing alone supplies neither the paired execution identities nor a separately warranted comparison.
+- Duty `assessment-and-selector-governance-d1` (3 rows; prior text sha256 `8c1d17bd4489`)
+  - Fresh needed evidence: Run 4 re-observes behindCount and mergeBase (so-759ba7836a3c) and overlappingPaths (so-ba38c5b8d80c), and dh:vfy-workspace-bookkeeping:001 reads them as tool bookkeeping with its null standing. No branch-freshness contract appears: nothing defines merge-base, behind-count or overlap meanings, binds an assessment to its branch and base, or shows a decision that changes with the result. Still needed: that versioned contract and its consuming decision, unless the sitting adopts the bookkeeping reading as a retirement ground.
+  - Consulted: `so:sha256:759ba7836a3c2ec434bebcece5db53d4985f8d001bf84b7baef48eeb9a2d4ecc`, `so:sha256:ba38c5b8d80ccd24f9ea2714629fe1a0e82d998621fc35d72a1826ab837e2ed4`, `dh:vfy-workspace-bookkeeping:001`
+  - Rows: `so:sha256:0a7f99ebe45f22164f484b539becf4d1d57384861db25b0c065fc67cca2574a7`, `so:sha256:a4fa5b4f6b8142d813d5867e01c92a245a9a7ee7d64b8841a3e27a068c88e764`, `so:sha256:c1e2fd7731b1efe855f70c75df8e7dd0bd99853668c551eca8fb80593a621d06`
+- Duty `assessment-and-selector-governance-d2` (2 rows; prior text sha256 `57e9ad2e6204`)
+  - Fresh needed evidence: Run 4 re-observes greptileScore on a closeout-readiness record beside requiredChecksGreen and reviewDecisionAcceptable (so-93883668edee); dh:vfy-closeout-readiness:001 finds no record tying a readiness check to a tier, and dh:vfy-assurance-tier:001 cites the record without settling the link. No scale authority, version, reviewed subject or score-production provenance appears. Still needed: those, plus an observed closeout or assurance decision governed by the score.
+  - Consulted: `so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa`, `so:sha256:968fbd04dbf5aae6a2984398964aafb8cf6bca2d9c60ae793b6aa1602556bde6`, `dh:vfy-closeout-readiness:001`, `dh:vfy-assurance-tier:001`
+  - Rows: `so:sha256:12f0a017acb17063246f77ebb5c128271f9df67ea7bc1666268052f2d58873d1`, `so:sha256:258d88bf5d120ca46af4e7964a5c3a5674c5c4984b67c0f84fe8f706e979c3f6`
+- Duty `assessment-and-selector-governance-d3` (1 row; prior text sha256 `e55d742a52aa`)
+  - Fresh needed evidence: Run 4 adds otp:vfy-committed-failure:001, which locates a failure at one step under a fail-fast policy (so-ca8b3f90e57c), and verdicts that carry a free-text repairCommand (so-bbe03a405b80). Neither states whether a failure was introduced, inherited, unrelated or environmental. Still needed: necessary conditions for each attribution class, their overlap or precedence rules, and an assessment record binding change, baseline, environment and assessment provenance.
+  - Consulted: `so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610`, `so:sha256:bbe03a405b806751dca5ddeee93679d37cc8efada8cd69ecdbf478f09f0a70f6`, `otp:vfy-committed-failure:001`, `dh:vfy-committed-failure:001`
+  - Rows: `po:sha256:a0460c0e2b60f310cb30b9c03ea0aa2e487e02aadaa0450c56bb04cff6b5c8c9`
+- Duty `assessment-and-selector-governance-d4` (3 rows; prior text sha256 `7377e1b7c260`; CQ barrier)
+  - Fresh needed evidence: Run 4 checked proofTier across attempt-started rows, the lease state record, verdict lanes and ledger facts (so-10c2570fe2f6, so-a8d270b5e19d, so-5ecc4af84671): every value is `full` under every stage, and the domain table separates YeetProofTier from AssuranceTierId with the mapping left open (po-2b7cdf8babec). dh:vfy-deployed-proof-tier:001 keeps its null. Still needed: records with the other proof-tier members and their lane sets, the planner authority and version that owns the selector, and the recorded mapping into assurance tiers. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 whose decision consumes the selector.
+  - Consulted: `dh:vfy-deployed-proof-tier:001`, `po:sha256:2b7cdf8babec65435dcb9a12a4477d6d6423207028baa810f4ec103f9817a1de`, `so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c`, `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `so:sha256:5ecc4af84671a1589c51ebd81bce2278400b5605cc536e23e41eab87ceb2db1f`
+  - Rows: `po:sha256:8b0e7ebacbadd3d0a21df787d0070763c9151c438e5ad68ef69454c6bea0aca1`, `po:sha256:8d123d2b803018949aa079849fafabb4d38fbde7e7f77a5515d448cdc0a9f195`, `po:sha256:922212cafdb03daef5fb111352d661cfda30e1e9f3d3e8c3e6f45a19c6a82a50`
 
-Since: 2026-09-10.
+## C(iv) execution-boundaries-and-elapsed-scope (2 rows)
 
-Evidence:
+*Passed-step boundaries and elapsed-measure scope.*
 
-- [so:05bdfd88fe02](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-05bdfd88fe02.yaml): One yeet-verdict/v2 record has attemptId=12f8afbd-2a3e-493a-becc-8f1cdb58cd47, failedStepId=publish:01-git-push, failureKind=step-exit and the matching component id with status=failed, exitCode=1, durationMs=935.026968. Parent attempt startedAt=2026-08-06T09:13:49.279Z, endedAt=2026-08-06T09:27:58.609Z and elapsedMs=849330. Passed components have durations but no per-component start/end instants.
-- [so:37968f126c46](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-37968f126c46.yaml): The recovery diagnostic records detectedAt=2026-08-08T11:43:52.465Z, standaloneDurationMs=1902.713545 and laneRerunDurationMs=29802.864398. dh:att-recovery-diagnostic:001 identifies a successful enclosing publish verdict and leaves attribution and compound-account necessity open.
-- [fa:ver-wall-time-evidence:001](../foundational/fa-ver-wall-time-evidence-001.yaml): The analysis still requires nested attempt/lane/interval associations, clock and precision rules, and repeated measurement/correction evidence. Its proposal otp:ver-wall-time-evidence:001 preserves assertion-content, quality, measurement-token and scoped-literal alternatives, plus estimate and episode-join gaps.
-- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (proof_ledger): status=re-parked to run 4; ruling=17; checkouts_with_ledger=0. The cited time-to-certainty PLAN C2 says the service is not wired into a lane. This is a file-existence census; no proof-ledger contents were read or emitted. Stage A also records zero ledgers.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-08 Stage B capture grill, Ruling 17): Proof-ledger issuance duties re-park to run 4 until the time-to-certainty writer materializes provenance. Synthetic ledger seeding was rejected; narrower attempt/embedded-verdict joins may proceed.
+**Run 4 shows.** Run 4 adds the lane-execution proposal and nested lanes via parentLaneId, but lane entries still carry durations without start and end instants, and no writer states what elapsedMs covers.
 
-### 11. QA workflow and projection conformance evidence (4)
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-Recommendation: unresolved. S7 replay evidence supplies neither a QA stage chain nor independently issued conformance artifacts.
+**Rejected alternative.** Close on otp:vfy-lane-execution:001. Rejected: its own analysis names a lane record with start and finish instants as missing evidence.
 
-pa-qa-evidence-workflow (1 row).
+**Sitting decision.** Keep both duties; they are instrumentation requirements, not CQ edits.
 
-- `po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a`
+- Duty `execution-boundaries-and-elapsed-scope-d1` (1 row; prior text sha256 `6f0582259d28`)
+  - Fresh needed evidence: Run 4 adds otp:vfy-lane-execution:001 and nested lanes through parentLaneId (so-5d4b45aa3226); passed lane entries carry status, exitCode and durationMs (so-ca8b3f90e57c) but no start or end instant, and fa:vfy-lane-execution:001 names a lane record with start and finish instants as missing. Still needed: a passed-step execution record with its parent-attempt join, a per-run identity that separates reruns, and its own start and end.
+  - Consulted: `so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610`, `so:sha256:5d4b45aa3226c4c535dbfc1d052a7d78900d8244f6417a238f327d8f6f8b8c27`, `otp:vfy-lane-execution:001`, `fa:vfy-lane-execution:001`
+  - Rows: `so:sha256:3a8b51a1acc8602b1a583147d6d5e7e253481237fbf5806c9b13833698bc9090`
+- Duty `execution-boundaries-and-elapsed-scope-d2` (1 row; prior text sha256 `16d83d58111e`)
+  - Fresh needed evidence: Run 4 shows attempt elapsedMs on an attempt-finished verdict (so-ca8b3f90e57c), per-lane durationMs repeated identically on ledger fact/shadow pairs (so-0d463294884b, so-e26c033721f6), and the KPI law's retention and termination rules (po-fd56d2b008d1). None states what span a value measures: whole attempt, command, lane run or nested occurrence, with what clock and precision. Still needed: the writer's authoritative statement of each measured extent, keeping target, interval and provenance together.
+  - Consulted: `so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610`, `so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4`, `so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385`, `po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e`, `dh:vfy-run-grouping:001`
+  - Rows: `po:sha256:2092736911a0c68e96ae8d9638b00ec4b6992b4da0677f325e4fd420fb41b2a7`
 
-New needed_evidence: Run 3 adds an admission projection fixture, property-suite contract and S7 replay result. Those are not a record/extract/judge QA run. Under Ruling 6, obtain one provenance-bearing chain joining all three QA stages to the in-scope Yeet or CI lane, its frozen tree and cache epoch, and the assurance obligation that consumes the evidence. The captured replay's input digest and pass assertion do not supply those QA-stage or assurance joins.
+## C(iv) memory-measurement (1 row)
 
-Since: 2026-09-10.
+*Memory measurement semantics.*
 
-pa-projection-conformance-evidence (3 rows).
+**Run 4 shows.** Run 4 carries both readings (peakRssKb on verdict lane entries, memoryPeakBytes on release rows) and a peak-memory hypothesis, but never on one joined record, and the foundational analysis leaves the bearer and sampling unresolved.
 
-- `po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181`
-- `po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57`
-- `po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c`
+**Recommendation.** `unresolved` for the row, with fresh needed evidence per duty below.
 
-New needed_evidence: Run 3 adds emission-v2 contract and property-suite quotations and the bounded S7 differential replay report of 41 matched admissions, but no independently issued conformance package. Under Ruling 6, obtain all three remaining chains: a package manifest with independent authority/version joining suite, implementation build, frozen inputs, replay execution, complete results, limitations, issuance and custody; a separately governed/versioned suite specification, distinct from its test-file carrier, and its Must/Should CQ; and identified replay execution/environment plus result issuance, custody, retention/correction lineage and a Must/Should CQ for a separate replay-result artifact. Ruling 17's zero-ledger census leaves issuance open to run 4; the passing replay assertion is not that missing lineage.
+**Rejected alternative.** Close on dh:vfy-peak-memory-use:001. Rejected: fa:vfy-peak-memory-use:001 is explicitly deferred and needs a mid-hold reading and the measured process boundary.
 
-Since: 2026-09-10.
+**Sitting decision.** Keep the row; the run-4 deferral and this duty ask for the same sampling and bearer evidence.
 
-Evidence:
+- Duty `memory-measurement-d1` (1 row; prior text sha256 `5ac91d5942d9`)
+  - Fresh needed evidence: Run 4 carries peakRssKb on verdict lane entries (so-bbe03a405b80, so-93883668edee) and memoryPeakBytes on release rows (so-95b7d78a061f, so-363f9b7f07dc); dh:vfy-peak-memory-use:001 reads the latter as measured use, but fa:vfy-peak-memory-use:001 defers it with the bearer and sampling unresolved. No record carries both fields for one run. Still needed: the measured process boundary, sampling method and interval, unit and provenance for each field, and an authoritative comparison deciding whether they measure one family.
+  - Consulted: `so:sha256:bbe03a405b806751dca5ddeee93679d37cc8efada8cd69ecdbf478f09f0a70f6`, `so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa`, `so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1`, `so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467`, `dh:vfy-peak-memory-use:001`, `fa:vfy-peak-memory-use:001`
+  - Rows: `so:sha256:78cf821b0771a1c60ef1f80746484a8da1df72bcf2b1eaa9ebed337144e5a245`
 
-- [po:a8408e04e6bb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a8408e04e6bb.yaml): The S7 property-suite quotation states determinism, admissibility, totality, priority/aging and differential replay obligations; it does not assert independent package/suite/result issuance or custody.
-- [po:a3b740b147b8](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a3b740b147b8.yaml): The S7 report asserts that all 41 admitted events matched the projection's first prescribed admission. This is a bounded replay assertion, not proof of production correctness or an independently issued conformance package.
-- [po:f41f8934b51e](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-f41f8934b51e.yaml): The S7 replay report pins a journal digest and 79 events, comprising 41 admitted and 38 released. It does not establish all lifecycle boundaries or a QA record/extract/judge chain.
-- [dh:ov-replay-comparison-result:001](../hypotheses/dh-ov-replay-comparison-result-001.yaml): The null remains unrejected pending a concrete decision consuming the comparison record or a demonstrated necessary dependency under an existing CQ.
-- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (proof_ledger): status=re-parked to run 4; ruling=17; checkouts_with_ledger=0. The cited time-to-certainty PLAN C2 says the service is not wired into a lane. This is a file-existence census; no proof-ledger contents were read or emitted. Stage A also records zero ledgers.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-08 Stage B capture grill, Ruling 17): Proof-ledger issuance duties re-park to run 4 until the time-to-certainty writer materializes provenance. Synthetic ledger seeding was rejected; narrower attempt/embedded-verdict joins may proceed.
+## C(iv) duration-and-comparison-issuance (2 rows)
 
-### 12. Workspace package continuity (7)
+*Duration individual and comparison issuance.*
 
-Recommendation: unresolved. Checkout bindings do not establish identity across package rename, move, version, fork or recreation.
+**Run 4 shows.** Ruling 17's zero-ledger premise no longer holds: run 4 captures writer-issued proof facts with recordedAt and expiresAt. Copy, correction and custody lineage are still absent, and both concessions still need a Must/Should CQ.
 
-pa-workspace-package (7 rows).
+**Recommendation.** `unresolved` for all 2 rows, with fresh needed evidence per duty below.
 
-- `po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69`
-- `po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842`
-- `po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a`
-- `po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84`
-- `po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8`
-- `po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1`
-- `po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781`
+**Rejected alternative.** Close the issuance leg on the run-4 ledger. Partly accepted as an evidence update only: issuance is observed, but the rows carry CQ duties that the ledger cannot discharge.
 
-New needed_evidence: Run 3 now has 107 checkout bindings with origin, branch/head, Git-directory and cache facts, plus fleet attempt context. These identify checkout observations, not package continuity. Under Ruling 6, obtain an authoritative package-identity policy and observed lineage deciding rename, move, version change, fork and delete/recreate cases, including whether the candidate is a role or immutable-content object. No new package identity policy was admitted with the binding corpus, and a checkout token or package spelling cannot settle those cases.
+**Sitting decision.** Note that the issuance premise has changed; record the CQ barrier as the named missing decision for both rows.
 
-Since: 2026-09-10.
+- Duty `duration-and-comparison-issuance-d1` (1 row; prior text sha256 `109479f341b3`; CQ barrier)
+  - Fresh needed evidence: Run 4 changes the premise of Ruling 17: writer-issued proof facts with recordedAt and expiresAt are now captured (so-12d5a26fbfac), and durations sit on ledger records (so-0d463294884b). fa:vfy-verification-evidence-record:001 finds no copy, correction or realized reuse, and C4.2 is unchecked (po-d1774b7edfc2). Still needed: copy and correction lineage for duration carriers. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 that must traverse a RecordedWallDurationMeasurement rather than qualified execution values, and one that tells equal-content carriers apart.
+  - Consulted: `so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3`, `so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4`, `fa:vfy-verification-evidence-record:001`, `otp:vfy-lane-execution:001`, `po:sha256:d1774b7edfc21c7fd04105756bbd4441a0c12df37f7fa8a6c29346cc2f7415e2`
+  - Rows: `so:sha256:2a207d4986630e8590f790457dabe07ffeecdb9b2bfa79cf254c6bce508a2998`
+- Duty `duration-and-comparison-issuance-d2` (1 row; prior text sha256 `80e865285086`; CQ barrier)
+  - Fresh needed evidence: Run 4 re-observes the same detection entry with standaloneDurationMs and laneRerunDurationMs (so-8f99dd008608) and, for the first time, writer-issued proof facts (so-12d5a26fbfac). Neither identifies the two compared executions, their measurement assertions or the comparison's issuance. Still needed: those identities and their issuance. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 for the duration individual and for a decision that consumes a distinct comparison record.
+  - Consulted: `so:sha256:8f99dd0086080f972c55de23dc0457bea7fb782bf92c2ef41686163dbc03ebbc`, `dh:vfy-flake-detection:001`, `so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3`
+  - Rows: `so:sha256:91988c625516a3fa1516b592a7dc4c6b197b56249390fde1fc1e116867ae1af3`
 
-Evidence:
+## C(iv) qa-and-conformance-evidence (4 rows)
 
-- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
-- [so:a90c39610e4a](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-a90c39610e4a.yaml): Clone binding at scannedAt 2026-09-09T03:13:49.440Z, with later binding_probe_at 03:13:52.201Z: origin, branch/head and Git-directory context; local cache present at <fleet>/beep-effect/.turbo/cache with 36399 immediate entries.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+*QA stages and conformance packages.*
 
-### 13. Package topology and affected/docgen selection (9)
+**Run 4 shows.** Run 4 adds the W6 planner contract and a lane-plan golden, and the contract points to a live-replay report, but no QA record/extract/judge chain and no independently issued conformance package is on the surface.
 
-Recommendation: unresolved. Admission ordering and stored applicability fields do not supply package-report or selection contracts.
+**Recommendation.** `unresolved` for all 4 rows, with fresh needed evidence per duty below.
 
-pb-topological-package-report (6 rows).
+**Rejected alternative.** Treat the lane-plan golden as a conformance artifact. Rejected: it is a planner test fixture, not a package with suite, build, inputs and issuance.
 
-- `po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d`
-- `po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb`
-- `po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf`
-- `po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9`
-- `po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98`
-- `po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff`
+**Sitting decision.** Keep the QA-stage duty as an evidence requirement; record the CQ barrier for the suite-specification and replay-result duties.
 
-New needed_evidence: Run 3 adds checkout bindings and an admission-order fixture whose step positions are 0 and 1; those positions do not describe a package graph. Under Ruling 6, obtain the package-report contract defining its numeric positions, ordering algorithm and dependency-edge semantics, identify the producing graph/version, and show the operational verification decision consuming that report. No new TS or package-graph observation was admitted with the journal/inventory capture.
+- Duty `qa-and-conformance-evidence-d1` (1 row; prior text sha256 `8ffa6ba09258`)
+  - Fresh needed evidence: Run 4's prose surface has the W6 planner amendment and a lane-plan golden (po-5e3730ea652a, po-0030b2144c3e) and a pointer to a live-replay report (po-a4d81c76e170); none is a record, extract or judge stage of a QA run. Still needed: one provenance chain joining the three QA stages to an in-scope Yeet or CI lane, its frozen tree and cache epoch, and the assurance obligation that consumes the result.
+  - Consulted: `po:sha256:0030b2144c3e01002444ec77890baaad11b77ebfe67a2d4b6994e59fd5baae43`, `po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c`, `po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792`
+  - Rows: `po:sha256:3bf3cf7f37f4e3e046efb12751c4b9650dd3a2a16a0c99a1ec17563fa551048a`
+- Duty `qa-and-conformance-evidence-d2` (3 rows; prior text sha256 `4a9f83441747`; CQ barrier)
+  - Fresh needed evidence: Run 4 adds the W6 planner contract (determinism and errors, po-e97f691ea561, po-ef1a43d8c859), states that admission v1 and emission v2 are unchanged with a byte-equal golden (po-5e3730ea652a), and points to a live-replay report not transcribed here (po-a4d81c76e170). No independently issued conformance package, suite specification or replay-result artifact with issuance and custody appears. Still needed: the package manifest chain and the identified replay execution with result lineage. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 for the separate suite specification and the separate replay-result artifact.
+  - Consulted: `po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792`, `po:sha256:e97f691ea561b37b93db3bee1bdb0de54a0c40a1b9809a47a459e3ec3025e248`, `po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca`, `po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c`
+  - Rows: `po:sha256:059c20e6b0972ff269acf52884fea9e75f4fc5144fac7728dbac333221866181`, `po:sha256:06dd8aab73f74fd680b9cf55a760da82d4a3420f91fc8ea9d8bdb27c4c000d57`, `po:sha256:2338c92205c5fc08e5e18d149e7aabca98b83589cf5984e6b83fa81b2401a98c`
 
-Since: 2026-09-10.
+## C(iv) workspace-package-identity (7 rows)
 
-pb-docgen-affected-scope (1 row).
+*Workspace package identity.*
 
-- `po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995`
+**Run 4 shows.** Run 4 reads no package graph or workspace manifest (the TS adapter stays a non-trigger), so package identity appears only as names in curated change titles and a detection entry.
 
-New needed_evidence: Run 3 adds checkout branch/head snapshots and verdict applicability fields; it supplies no docgen selection result with a dirty-tree pin. Under Ruling 6, retain both concessions: an observed selection artifact binding base, head, dirty snapshot and selected members, a contract choosing selected extension versus selection rule and a Must/Should specialization CQ; and an independently versioned selection-rule authority, an observed pinned extension showing its application, a rule-versus-result contract and a CQ requiring the specification. Checkout paths and stored diff fingerprints do not supply those selected members or governance.
+**Recommendation.** `unresolved` for all 7 rows, with fresh needed evidence per duty below.
 
-Since: 2026-09-10.
+**Rejected alternative.** Retire because run 4 has no package observations. Rejected: absence from this capture is a scope choice, not evidence that package identity is irrelevant, and CQ-004 needs PackageRef.
 
-pb-affected-task-input-mode (2 rows).
+**Sitting decision.** Keep the seven rows on the package-continuity contract under CQ-004.
 
-- `po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062`
-- `po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43`
+- Duty `workspace-package-identity-d1` (7 rows; prior text sha256 `1f530ead4f01`)
+  - Fresh needed evidence: Run 4 reads no package graph, topological order or workspace manifest (the TS adapter stays a non-trigger); packages appear only as names in a curated change title (po-c1e5823a1716) and a detection entry (so-8f99dd008608). Nothing decides rename, move, version change, fork or delete-recreate. Still needed: an authoritative package-identity policy with observed lineage across those cases, under CQ-004's PackageRef.
+  - Consulted: `po:sha256:c1e5823a17169f61139ee8782f7f97e45533ca31792c47cb840fc9e7e315b7ea`, `so:sha256:8f99dd0086080f972c55de23dc0457bea7fb782bf92c2ef41686163dbc03ebbc`
+  - Rows: `po:sha256:08a398bab03363136254e3e9c3ed49ebb16ffd18fb94b434111d4446cdf50d69`, `po:sha256:1189ec1eca4fb79695201186157334124e71372bbe906bb6119996f42b9fe842`, `po:sha256:13b29fc0bebcac4b0914db214f136add0fa739ac50af65649c800b7013ccb67a`, `po:sha256:1c941c2e1e41a932dfd00e48631a9dd6217c6e51fe9c681369139a8c0402ea84`, `po:sha256:28e700021c9b4ba707087650a4e39ceed6540863e4d99b02af241b2b0fdbcaf8`, `po:sha256:2f816bb5f468d1cc4a06de84c4a9bb8e4c9393a070c41e364f53d951cbf172e1`, `po:sha256:51a827390306ccb0cf37e23d646c653fd4291f3ed346ae04e097e678a5097781`
 
-New needed_evidence: Run 3 adds stored diff/head/tier context and a deterministic admission-order contract, but neither is a governed affected-task selection run. Under Ruling 6, obtain the normative selection contract explaining how task inputs alter membership and whether failures open or close the selection, an observed selected set under that contract, and the operational verification decision that trusts it. The current applicability hypotheses still lack an observed accept/reject consumer.
+## C(iv) dependency-and-selection-contracts (9 rows)
 
-Since: 2026-09-10.
+*Package ordering, docgen selection and affected-task selection.*
 
-Evidence:
+**Run 4 shows.** Run 4's ordered positions are lane steps derived from a lexicographic gate-order rule, not package positions; docgen and affected-selection changes appear only as dated curated ledger rows.
 
-- [po:0a705ee8990d](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-0a705ee8990d.yaml): Current S7 determinism rule fixes canonical order, zero-based stepIndex and steps only for admitted actions; the deferred tail neither extends nor renumbers the sequence. Its Graph.topo statement concerns the projection seam, not a package-report contract.
-- [MANIFEST.yaml](../../corpus/run3-checkout-identity/MANIFEST.yaml) (bindings, checkout_counts, cache_mounts, temporal_limit, n_instant_change_evidence): 107 bindings: 22 clones and 85 linked worktrees. Ruling 5 fixes capture-local binding identity; the capture is not an atomic machine freeze. Cache topology is necessary but insufficient for CQ-015 transfer; task hash, epoch and actual access remain separate requirements.
-- [dh:ver-head-diff-tier-context:001](../hypotheses/dh-ver-head-diff-tier-context-001.yaml): resolvedHeadSha, diffFingerprint and proofTier remain descriptive context without an observed accept/reject consumer or task-hash/epoch applicability rule.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+**Recommendation.** `unresolved` for all 9 rows, with fresh needed evidence per duty below.
 
-### 14. Admission capacity computation and pre-grant snapshot (7)
+**Rejected alternative.** Read lane-plan laneStepIndex as the package-report ordering. Rejected: the contract derives lane order from a gate-order handoff and forbids reusing ordering-cluster terms; lanes are not packages.
 
-Recommendation: unresolved. Token charges and later state do not supply the omitted capacity computation/stamp joins or snapshot CQ.
+**Sitting decision.** Keep all three duties; record the CQ barrier for the docgen-selection specialization duty.
 
-pa-admission-capacity-expression (2 rows).
+- Duty `dependency-and-selection-contracts-d1` (6 rows; prior text sha256 `2c2753935504`)
+  - Fresh needed evidence: Run 4's only ordered positions are lane steps (laneStepIndex, po-50062eb61a9b) derived by a lexicographic gate-order rule, with precedence derived from the index (po-9a020d6aeb34) and ordering-cluster terms barred from reuse (po-79f91eaae90c); lanes are not packages. No package-report contract is on the surface. Still needed: the contract that defines the report's numeric positions, ordering algorithm and dependency-edge meaning, the producing graph and version, and the verification decision that consumes it.
+  - Consulted: `po:sha256:50062eb61a9b9c374285d41ac93a36b9fc0597810b4579860a8ba5ce63d4787f`, `po:sha256:9a020d6aeb341cdb7dbfa22d366e70a67a9785f8e5a576883302a996b95cbaf5`, `po:sha256:79f91eaae90c87e6a30b77aead2a836deadc1fe4d307a39f3c1532a9078a45cd`, `dh:lpl-lane-step:001`, `dh:lpl-lane-order-rule:001`
+  - Rows: `po:sha256:5a59d414027abf00522737e1d86c7976c6837e7dcf88eb47112cc39709b2be1d`, `po:sha256:62ae30cfc28b391c7bf4a87534abeba849a8ca2ebd5f8ebe72cb5af81dcc50eb`, `po:sha256:64463ef1e1f2b77cb50713f8194bb055d35d02288f465e6902e337f9fc5f5edf`, `po:sha256:6e598d379ffd2f0565176b337833e4eedf0293941fa87936078ee572e63748a9`, `po:sha256:89165acdfec28c3a8692c411aead416ca1fd5f13333c0ea5c748e92aeab0cb98`, `po:sha256:90fa083c4887641658c0239762b509fd6c9bacc6f14cf29ee392ce08714572ff`
+- Duty `dependency-and-selection-contracts-d2` (1 row; prior text sha256 `ee4cb2f6d34e`; CQ barrier)
+  - Fresh needed evidence: Run 4 has only curated change rows about docgen selection: the local check gating directly selected packages (po-c5e4a3fa5cb9), the full proof running the metadata check (po-29ec308ddb8b) and a stray config removal (po-702c9ad1e7b9). These date changes; none is a selection artifact binding base, head, dirty snapshot and selected members. Still needed: that artifact and an independently versioned selection-rule authority. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 for the specialization and the rule-versus-result specification.
+  - Consulted: `po:sha256:c5e4a3fa5cb9cca578d93207a4aadc2c418e7d3186187c27493b1a5467c54826`, `po:sha256:29ec308ddb8ba42273b33b41212d92fc8dcb32afcc10bf4c04bccce61750e450`, `po:sha256:702c9ad1e7b9982dde9e8d3f63c4f83d4b1bbfafd5527ce6ddc302c9f21e639f`
+  - Rows: `po:sha256:795d76d79fdc3ad235d204aee98c96f70dcdb10704c927558f31012749553995`
+- Duty `dependency-and-selection-contracts-d3` (2 rows; prior text sha256 `3ba462d018dc`)
+  - Fresh needed evidence: Run 4 has a curated change row on the coverage --affected planner's owner mapping (po-c1e5823a1716) and the ScopeKind domain with its affected member (po-be43f502f1ad); neither is a governed selection run. Still needed: the normative contract for how task inputs change membership and whether failure opens or closes the selection, an observed selected set under it, and the verification decision that trusts it (CQ-004 and CQ-019 are the existing warrants).
+  - Consulted: `po:sha256:c1e5823a17169f61139ee8782f7f97e45533ca31792c47cb840fc9e7e315b7ea`, `po:sha256:be43f502f1ad33703d83d596ab8d0a2b65e4fa6282a305a88878758f3b126668`
+  - Rows: `po:sha256:9cbd50f3655b7ae7102a1be9bfcfe939528b3eaebd0dc33257408365f9402062`, `po:sha256:a1f8202d5ff295e75dd7ad3f50f9454dad4bc2d53677e5936a6a0812250c5e43`
 
-- `po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6`
-- `po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7`
+## C(iv) capacity-computation-and-snapshot (7 rows)
 
-New needed_evidence: Run 3 now records requested/granted weightTokens and quotes the projection inequality activeTokenTotal + weightTokens <= capacityMaxTokens. Ruling 9 deliberately omitted capacity stamps. Under Ruling 6, obtain the authoritative capacity computation defining unit conversion, reserve subtraction and hard-floor treatment, and a provenance-preserving join from its computed value to capacityAtAdmissionTokens on an observed admission decision. A policy token charge and reconstructed ledger total cannot stand for measured remaining capacity.
+*Capacity computation and admission snapshot.*
 
-Since: 2026-09-10.
+**Run 4 shows.** Run 4 adds the admission charge per work kind and a hard-floor exception derived from a snapshot-global flag, but no run-4 observation carries a pre-grant capacity value or capacityAtAdmissionTokens.
 
-pb-admission-capacity-state (5 rows).
+**Recommendation.** `unresolved` for all 7 rows, with fresh needed evidence per duty below.
 
-- `po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61`
-- `po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2`
-- `po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92`
-- `po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a`
-- `po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6`
+**Rejected alternative.** Answer CQ-010 from weightTokens plus reconstructed totals. Rejected: the charge is a claim, not remaining capacity, and fa:vfy-admission-charge:001 keeps the snapshot-dependent reading open.
 
-New needed_evidence: Run 3 now includes timestamped inventory and queue/lease reports, but Ruling 9 supplied no pre-grant capacity stamps. Under Ruling 6, obtain a Must/Should executable CQ that traverses an AdmissionSnapshot, its capture act and instant, machine and policy scope, and an authoritative correlation to the immediately pre-grant decision that materializes capacityAtAdmissionTokens. A later lease snapshot, a checkout inventory instant and the projection's capacity inequality do not establish that missing pre-grant state.
+**Sitting decision.** Keep the computation duty under CQ-010; record the CQ barrier for the AdmissionSnapshot duty.
 
-Since: 2026-09-10.
+- Duty `capacity-computation-and-snapshot-d1` (2 rows; prior text sha256 `8774ef40fe36`)
+  - Fresh needed evidence: Run 4 adds the admission charge per work kind (otp:vfy-admission-charge:001; 5, 3 and 1 tokens for merged-preview, full-proof and review-fix) and the hard-floor exception derived from a snapshot-global flag (po-ed915fad850a). No run-4 observation carries a computed remaining capacity or capacityAtAdmissionTokens, and fa:vfy-admission-charge:001 keeps a snapshot-dependent reading open. Still needed: the authoritative computation (unit conversion, reserve, hard floor) and a provenance-preserving join from its value to one observed admission, under CQ-010.
+  - Consulted: `dh:vfy-admission-charge:001`, `fa:vfy-admission-charge:001`, `otp:vfy-admission-charge:001`, `po:sha256:ed915fad850ac373459d8a97baa970bde072b7cc7cda3aeb0db0a4a2c3e89b75`
+  - Rows: `po:sha256:3c757a7975b27b8597ccf8c6d886eb72ad2b8b51aaba8eb59cf21cc9a1a7a3c6`, `po:sha256:518aee86882c8b9092469203add3bc23c72acfed1d7139f136a96e8763f0c8c7`
+- Duty `capacity-computation-and-snapshot-d2` (5 rows; prior text sha256 `976f10710d5d`; CQ barrier)
+  - Fresh needed evidence: Run 4 checked for a pre-grant capacity stamp: the lease state record (so-a8d270b5e19d) carries admission members and a heartbeat but no capacity value, and AdmissionSnapshot is named only as the source of the hard-floor flag (po-ed915fad850a). No pinned query traverses an AdmissionSnapshot. Still needed: a captured snapshot with its capture instant, machine and policy scope, correlated to the pre-grant decision. Named missing decision: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009 that traverses the snapshot.
+  - Consulted: `po:sha256:ed915fad850ac373459d8a97baa970bde072b7cc7cda3aeb0db0a4a2c3e89b75`, `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `fa:vfy-admission-charge:001`
+  - Rows: `po:sha256:6b31f817391e66aab8fc9796fed0c0bbdbd8285c9e86438e9172d1ce6bbaef61`, `po:sha256:8a555d65d66a8d7f44336fdb4ce8816f5a033a6ce448e311dc29615bfd8f41f2`, `po:sha256:8af3333c97798f24aeecfa40f40faefcf152f96fffb6717f647eabf0f5250a92`, `po:sha256:95037a7104c1dbd21fc02aeeeb45733f744c10ba07ea4c5db2a94db62d88e95a`, `po:sha256:95b57e4f4029739dacb78d5caa9b43939b1820fc17d3785a9ff32181d7d0e0b6`
 
-Evidence:
+## C(iv) origin-and-heartbeat-policy (5 rows)
 
-- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
-- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
-- [po:a8c7221f4f29](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/prose-observations/po-a8c7221f4f29.yaml): The S7 contract quotes activeTokenTotal + weightTokens <= capacityMaxTokens and priority/aging constraints. This governs the projection; it does not supply a machine capacity computation, pre-grant stamp or operational starvation observation.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Ruling 9): The additive v3 event set omits capacity stamps because that family remains parked under Ruling 6.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
+*Origin-block and heartbeat-suspicion policy.*
 
-### 15. Origin blocking and heartbeat suspicion (5)
+**Run 4 shows.** No run-4 observation carries blockedOnOriginAtMillis, the change ledger dates the per-origin lock's retirement, and CQ-009 now holds an origin arm only as a legacy drain; the two organic lease evictions end about 4 s and about 30 min after their last heartbeats under the same reason, so no single staleness threshold is visible.
 
-Recommendation: unresolved. Zero origin markers and eviction reports leave deployed threshold, authority and policy-use joins open.
+**Recommendation.** `unresolved` for all 5 rows, with fresh needed evidence per duty below.
 
-pb-origin-block-grace-window (1 row).
+**Rejected alternative.** Retire the three origin-block rows because #929 retired the per-origin lock. Rejected: the ledger row is observational seed data, the rows were observed after #929 landed, and CQ-009's legacy-drain arm still needs the origin regime.
 
-- `po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3`
+**Sitting decision.** Whether origin-block semantics are now asked only through CQ-009's legacy-drain arm (re-word next run) or kept under CQ-023's starvation policy; heartbeat duties re-park unchanged in substance.
 
-New needed_evidence: Run 3 now captures a ticket's blockedOnOriginAtMillis=0 and separately records queue, withdrawal and eviction boundaries. dh:att-origin-block-marker:001 leaves the zero's meaning unresolved. Under Ruling 6, obtain the deployed threshold rule, its unit and both true/false consequences, decide grace versus staleness versus retry semantics, and observe a specifically origin-blocked case governed by that rule. A terminal eviction or zero marker does not establish a grace-window application.
-
-Since: 2026-09-10.
-
-pc-heartbeat-suspicion-policy (2 rows).
-
-- `po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598`
-- `po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734`
-
-New needed_evidence: Run 3 adds live heartbeat observations and explicit lease eviction reports with lastHeartbeatAtMillis, plus a synthetic termination join. The Stage B heartbeat census checks four organic rows, reports one legacy row without heartbeat and finds no ordering violations; this bounds observations, not owner death. Under Ruling 6, obtain the deployed suspicion threshold and unit, the identified suspected holder, an observed stale-heartbeat case, its operational consequence, and the authority rule separating suspicion from permission to terminate. An eviction reason or last-seen heartbeat is not proof that suspicion alone authorized termination.
-
-Since: 2026-09-10.
-
-pc-origin-blocked-timestamp (2 rows).
-
-- `po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd`
-- `po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb`
-
-New needed_evidence: Run 3 now supplies a persisted ticket observation containing blockedOnOriginAtMillis=0 with enqueue and heartbeat context, and the current null analysis refuses to read zero as either an epoch instant or evidence of no contention. Under Ruling 6, obtain a semantically interpreted origin-block onset/time and unit, the same ticket's observed originBusy wait, the starvation-policy decision using it, and issuance/revision provenance across the relevant ticket transitions. The observed zero and unrelated terminal chains do not establish those joins.
-
-Since: 2026-09-10.
-
-Evidence:
-
-- [so:3579a1da6705](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-3579a1da6705.yaml): The selected observed fact is blockedOnOriginAtMillis=0; source_excerpt preserves its ticket, enqueue and heartbeat context. The zero does not decide onset, duration or absence of origin contention.
-- [dh:att-origin-block-marker:001](../hypotheses/dh-att-origin-block-marker-001.yaml): The implementation-only null remains because the observed zero lacks an interpreting rule or a nonzero boundary transition.
-- [so:27fc89410ea6](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-27fc89410ea6.yaml): Explicit provenance=synthetic. One nonce has enqueue/admit/release at 1788931586665, 1788931586674 and 1788931586743; another has enqueue/withdrawal at 1788931586705 and 1788931586715. synthetic-dead-lease is evicted at 1788931586728 with lastHeartbeatAtMillis=1788931586718; synthetic-dead-ticket is evicted at 1788931586729. The latter two have no retained starts in this journal. Event-specific timestamps stay with their own nonce.
-- [MANIFEST.yaml](../../corpus/run3b-fleet/MANIFEST.yaml) (loss_population.chain_counts, loss_population.roots, loss_population.heartbeat_check, loss_population.classification_basis): Organic retained chains: 21 wins, 23 withdrawals, 5 lease evictions, 2 ticket evictions, 3 in-flight and 112 pre-v3; 0 unclassified. Canonical root has 347 rows; session-tmp has 2; system-tmp has 0. Heartbeat check covers 4 rows, records 1 legacy row without heartbeat and 0 violations. These are root/nonce histories within retained windows, not a complete fleet or liveness census.
-- [so:afd98d3ec307](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-afd98d3ec307.yaml): Stage A live canonical lease: nonce 012163b8-ef66-4fb4-aba5-0d4af4072512, admittedAtMillis=1788941816511, weightTokens=5, heartbeatAtMillis=1788941946764. This is one capture of a lease carrier, not its complete rewrite or decrement history.
-- [so:430e175a6bdb](../../../archives/beep-ci-ops/orun-2026-09-10T02:10:52Z.observations/observations/so-430e175a6bdb.yaml): Stage B live canonical lease preserves the same nonce, grant instant and charge but reports heartbeatAtMillis=1788942001857. The capture-scoped ownerRef differs; comparing the snapshots does not establish uninterrupted owner/carrier continuity.
-- [DECISIONS.md](../../../../../../DECISIONS.md) (2026-09-03 run-3 corpora design grill, Rulings 6-7): Thirteen scope-surprise families were parked, with failure-signature and cache-plan riders promoted. Other new-CQ/contract duties remain parked; passed-step instrumentation and new TS observations are outside run-3 scope.
-
-## Totals by recommended outcome
-
-| Recommended outcome | Rows |
-| --- | ---: |
-| irrelevant | 14 |
-| mapped | 0 |
-| proposed | 0 |
-| unresolved | 54 |
-| Total | 68 |
-
-Queue cross-check: C(i) contributes 4 retirements and 8 parks; C(ii) contributes 10 retirements;
-C(iii) contributes 46 parks; C(iv) is empty. All 68 IDs agree exactly with Queue C and the
-committed prior index. Every one of the 33 prior needed_evidence variants has a run-3 fact,
-a specific remaining evidence requirement, or both. Unmatched prior rows: none.
-
-The two remaining run-2 sitting-2 contention rows stay open, with explicit lock/resource joins.
-C1 retires through the timestamped binding proposal. The three failure retirements preserve
-current signature-analysis gaps, and all 10 ordering retirements preserve the joint sitting.
-
-This is a docket consistency result. The orchestration lane must project the steward-approved
-recommendations into work/dispositions.index.yaml; this lane has not changed that index.
-A full run gate and its unresolved-fraction calculation belong to the completed run artifacts.
+- Duty `origin-and-heartbeat-policy-d1` (1 row; prior text sha256 `35b46123102e`)
+  - Fresh needed evidence: Run 4 carries no blockedOnOriginAtMillis member on any observation. The change ledger dates the per-origin lock's retirement after drain (po-2654950d9b96, observational), the lease state record runs under scheduler-origin-concurrency/v1 (so-a8d270b5e19d), the protocol stanza is v2 with eviction=on (so-a815a77c32ca), and CQ-009 keeps origin sharing only as a legacy-drain arm. Still needed: whether the grace rule still applies after the drain, and if so its threshold, unit, both consequences and one observed origin-blocked case governed by it.
+  - Consulted: `po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6`, `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `so:sha256:a815a77c32ca00312a65d7b9c83e4bd0fc2a08938f4a1203e6072e1ab1fccefa`, `dh:vfy-coordination-protocol:001`
+  - Rows: `po:sha256:79df3741e52f870a9c5d7ac0f3c76fc333a1341bf8f15c7a7720f2b6982e88b3`
+- Duty `origin-and-heartbeat-policy-d2` (2 rows; prior text sha256 `b095017fb7fe`)
+  - Fresh needed evidence: Run 4 has two organic lease evictions under reason owner-dead-or-reused whose last heartbeats precede eviction by about 4 s (so-860cff0d673e) and about 30 min (so-a9ed1352e2bc), with eviction=on in the protocol stanza (so-a815a77c32ca). The two gaps show eviction is not read off one staleness interval, and no run-4 observation carries a suspicion threshold or its unit. Still needed: the deployed suspicion threshold and unit, an identified suspected holder in an observed stale-heartbeat case, and the rule separating suspicion from the owner-death check that authorizes eviction.
+  - Consulted: `so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1`, `so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020`, `so:sha256:6f5b7aebafecd74f1991f241f2ab447da364d854ef9a8f3d6a8352a532a8dcf8`, `so:sha256:a815a77c32ca00312a65d7b9c83e4bd0fc2a08938f4a1203e6072e1ab1fccefa`, `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`
+  - Rows: `po:sha256:cb78d031658bfe80535beb490352c2086b2b8f629e3819df4fba336fbeb37598`, `po:sha256:cb9064130b643be08d25e627bcfc5264739ac1397a236d353835b473c2df5734`
+- Duty `origin-and-heartbeat-policy-d3` (2 rows; prior text sha256 `5394c0e56b55`)
+  - Fresh needed evidence: Run 4 carries no blockedOnOriginAtMillis value and no originBusy wait on any observation; the per-origin lock's retirement is dated in the change ledger (po-2654950d9b96), and the starvation exception table names only the hard-floor exception (po-ed915fad850a). Still needed: an interpreted origin-block onset with its unit, the same ticket's observed origin wait, the starvation-policy decision under CQ-023 that uses it, and revision provenance across the ticket's transitions, or a ruling that post-drain origin questions belong to CQ-009's legacy-drain arm only.
+  - Consulted: `po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6`, `so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192`, `po:sha256:ed915fad850ac373459d8a97baa970bde072b7cc7cda3aeb0db0a4a2c3e89b75`, `dh:vfy-coordination-protocol:001`
+  - Rows: `po:sha256:e362227f9f3d78e8fcb933ddf9f5523b1ef97776a2546ad12c7f702c33fc1cdd`, `po:sha256:edf38d10efe0552b7de770a0cc24a9596cc4b5141b693889e987465f4174b4bb`

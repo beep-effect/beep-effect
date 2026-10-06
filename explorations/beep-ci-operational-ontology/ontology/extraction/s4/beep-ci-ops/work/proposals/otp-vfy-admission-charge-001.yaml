@@ -1,0 +1,73 @@
+id: otp:vfy-admission-charge:001
+hypothesis_ref: dh:vfy-admission-charge:001
+identity_card_ref: ic:vfy-admission-charge:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: admission charge tokens
+  local_name: admissionChargeTokens
+  proposed_iri: https://oip.law/ontology/ci-ops#admissionChargeTokens
+  owl_entity_kind: data_property
+definition:
+  text: 'The admission charge a seat request or seat grant carries, recorded as weightTokens: the share
+    of shared verification capacity it claims, present from the enqueue row (a request withdrawn without
+    a grant carries it) and equal on two full-proof grants whose release-time memory peaks differ about
+    tenfold, so a claim on capacity and not a reading of use.'
+  source:
+  - so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+  - so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+  - so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+  - CQ-010
+  - CQ-021
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: 'none asserted: UFO category deferred on the card'
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#admissionChargeTokens
+    compatibility: Same recorded-value grain as the ratified admissionChargeTokens (domain SeatRequest
+      or SeatGrant, range xsd:integer), whose deployed carrier CQ-021's notes name as weightTokens verbatim.
+operational_warrant:
+  competency_questions:
+  - CQ-010
+  - CQ-021
+  semantic_support_for: []
+alternatives_rejected:
+- 'Measured resource use of the granted work: rejected by the analysis; equal charges co-occur with memory
+  peaks about ten times apart (so-95b7d78a061f, so-363f9b7f07dc).'
+open_issues:
+- flag admissionChargeTokens persists; no lift claimed
+- No cited chain shows a repricing (enqueue and admit rows carrying different weightTokens), an assertion
+  replacement, a request-to-grant continuity join or pre-admission capacity evidence; each absence is
+  a sample limit, so the flag's deferrals stand.
+- 'Warrant: CQ-010 (must_have) reads ciops:admissionChargeTokens on the admitting grant and loses the
+  charge side of its charge-against-capacity comparison without it; CQ-021 (must_have) reads it on each
+  queued request and loses its charge column.'
+- 'Steward choice (rivals still viable on fa:vfy-admission-charge:001): the charge as a quality individual
+  inhering in its bearer, as a relational claim mode on a capacity pool, or as an attribute of the work
+  kind, against the value-only reading this data property fits. A class-level charge on any of the first
+  three readings would need its own proposal; none is made, and the entity kind is a data property on
+  the ratified row, not on the card.'
+- 'Needed evidence (fa:vfy-admission-charge:001, verbatim): The category stays unresolved among four viable
+  readings. To retire one of the quality and value-only rivals: an admission chain whose weightTokens
+  differs between its admission-enqueued and admission-admitted rows (repricing), or a deployed statement
+  that the charge is recomputed at admission. To decide the relational claim mode: a record showing whether
+  the charge can exist apart from a capacity pool or snapshot (a charge stated with no pool, or one restated
+  against a second pool). To decide the work-kind attribute: one work kind carrying two weights, or a
+  charge recomputed per request.'
+- Depends on otp:vfy-seat-request:001 and otp:vfy-seat-grant:001 (its domain) and on otp:vfy-admission-work-kind:001
+  (the member that fixes the value in every cited chain). capacityAtAdmissionTokens, CQ-010's other side,
+  is not grounded by this chain.
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-admission-charge:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

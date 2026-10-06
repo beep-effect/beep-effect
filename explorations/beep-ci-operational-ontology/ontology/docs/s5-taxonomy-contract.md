@@ -127,3 +127,37 @@ Codex and Grok seats run only as an operator opt-in named in the launch entry,
 with the pins `AGENTS.md` "Volume pools" states. The launch entry records each
 seat's actual launch command as a deviation from SKILL.md's `codex exec` recipe,
 and seat telemetry records the runner and model actually launched.
+
+## 2026-10-06 amendment — run-4 projection
+
+Authority: `goals/ciops-ontology-pipeline/research/decisions.md`, "2026-10-06 — P3
+opened; run-4 launch sitting" Ruling 14 and "2026-10-06 — run-4 sitting 3" Rulings
+28–32. The run PR projects rat-071..rat-078 through the 2026-09-10 footprint;
+`apply_s5_dispositions.py` is not run over `s4/LEDGER.yaml`.
+
+New classes: OperationalChangeEvent (rat-071), WorkUnitExecution (rat-073) and
+CommittedFailure (rat-074) enter TAXONOMY with the proposal's rigidity and identity
+card and the decision's retained-flag clause as `flags` (55 terms). The parked
+CommittedFailure and WorkUnitExecution candidate rows become `accepted-via` with
+their ratification as `join_ref`; OperationalChangeEvent is a taxonomy-only term
+and gets no candidate row.
+
+Reuse accepts (Ruling 28): VerificationAttempt (rat-072), SeatRequest (rat-075),
+SeatGrant (rat-076), admissionChargeTokens (rat-077) and VerificationLane (rat-078)
+affirm the ratified term. The row's category, rigidity, identity card and
+`ratification` stay unchanged. Each run-4 accept is appended to the row's `flags`
+string as a segment opened by its ratification id, and is listed in an additive
+TAXONOMY `later_ratifications` list. That list has the DISPOSITIONS meaning:
+every member names an on-disk ratification that accepts the row's term. No flag
+is removed and none is lifted. VerificationAttempt's row also records rat-069's
+deferral, which rat-072 says persists. VerificationLane's run-4 flags are the
+row's first. The candidate rows for the four reuses that have one append the
+ratification to `later_ratifications` and the decision to the justification.
+
+Scope of the answers (Ruling 31). CQ-016 is answered for its subject only:
+`landedAt` stays seed-only and unproposed. CQ-022 returns no row on run-4
+vocabulary, because `inAttempt`, `hasExecutionState` and RunningExecution are
+parked and `hasCancelClass` is seed-only. VerificationLane's CQ-006 citation is
+void, so its warrant rests on CQ-001 alone. Ruling 32 ratifies no AssuranceTier
+member. The `--s5` gate does not yet read TAXONOMY `later_ratifications`; this
+projection checked them against the ratifications on disk.

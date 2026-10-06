@@ -1,0 +1,65 @@
+id: dh:vfy-deployed-proof-tier:001
+observation_refs:
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+- so:sha256:5ecc4af84671a1589c51ebd81bce2278400b5605cc536e23e41eab87ceb2db1f
+- po:sha256:2b7cdf8babec65435dcb9a12a4477d6d6423207028baa810f4ec103f9817a1de
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants: []
+proposed_referent:
+  label: deployed proof tier value (`proofTier` on attempts and leases, `tier` on verdict lanes and ledger facts)
+  description: 'One instance would be one member of the deployed YeetProofTier domain (`full | cheap-gates | review-fix`,
+    po-2b7cdf8babec) as the proof depth an attempt requests and its evidence records: `proofTier=full` on attempt-started
+    rows (so-10c2570fe2f6, so-3bf9cacb55b4, so-eefbf95beb8d with its twin so-ff071fc9a2a9) and on the quarantined lease so-a8d270b5e19d;
+    `tier=full` on the verdict lane entry so-5ecc4af84671 (a lexical variant of the same key) and on every cited proof-ledger
+    fact. The value is `full` under `stage=repair-loop`, `stage=pre-push` and `stage=merged-preview` alike. Individuated,
+    if at all, by the lane set it selects. po-2b7cdf8babec separates the domain from AssuranceTierId (dh:vfy-assurance-tier:001)
+    and leaves the mapping between the two open; it bears on that CQ-warranted kind, but no pinned query reads a tier off
+    an attempt or a fact. No member name or spelling is proposed. Record pairs so-d6adeec15c79/so-fcbe894799ea, so-eefbf95beb8d/so-ff071fc9a2a9
+    are each one record span seen twice (the vocabulary record a strict subset of its twin): one individual, both cited.'
+representation_status: unresolved
+alternatives:
+- label: a member of the assurance tier class
+  representation_status: domain_referent
+  plausibility: viable
+- label: a spelling of an assurance tier member held elsewhere (dh:vfy-assurance-tier:001)
+  representation_status: lexical_alias
+  plausibility: viable
+- label: a plan-selection code of the yeet planner
+  representation_status: information_artifact
+  plausibility: viable
+- label: a target proof scope an attempt is run toward
+  representation_status: domain_referent
+  plausibility: viable
+- label: a ledger code with no tier semantics
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: every cited record carries the single value `full`, under every stage shown, so nothing here
+    shows what the other members select or how the value maps onto assurance tiers; the shared word ''tier'' is lexical. Needed
+    evidence: attempt-started rows or facts with `proofTier=cheap-gates` or `proofTier=review-fix` and their lane sets, or
+    the recorded mapping from YeetProofTier into assurance tiers. Without that mapping the value supports no CQ-warranted
+    kind, and the named missing decision is: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.3
+  use_for_acceptance: false

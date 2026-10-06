@@ -1,0 +1,34 @@
+id: dh:vfy-coordination-protocol:001
+observation_refs:
+- so:sha256:a815a77c32ca00312a65d7b9c83e4bd0fc2a08938f4a1203e6072e1ab1fccefa
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants:
+- CQ-009
+proposed_referent:
+  label: admission coordination protocol (the rule regime a grant is admitted and kept under)
+  description: 'One instance would be one versioned rule regime for admission (its exclusion and eviction rules), as against
+    one application of it: the lease state record carries `coordinationProtocol=scheduler-origin-concurrency/v1`, and the
+    protocol stanza carries the switch `eviction=on`, a setting of the rule whose applications appear as the eviction ends
+    of dh:vfy-admission-termination:001. CQ-009''s legacy-origin-drain arm needs the protocol a grant holds under. `ciops:hasCoordinationProtocol`
+    is seed-only and carries the DECODED value (a record without the field decodes as `legacy-origin-lock/v1`), so a record
+    lacking the member never shows that the legacy arm is absent.'
+representation_status: unresolved
+alternatives:
+- label: a specification (an information artifact describing the rules), not a regime
+  representation_status: information_artifact
+  plausibility: viable
+- label: a configuration flag and version string only
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'Two records carry the construct, one protocol value and one switch; nothing here shows two grants under different
+    protocols treated differently, or the switch changing which admissions end. Needed evidence: grants under two protocol
+    values (one decoded as the legacy value) whose exclusion outcome differs, or a record of the switch off beside an owner
+    death that ends no admission.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

@@ -1,0 +1,52 @@
+id: "ic:vfy-cache-epoch-alt:001"
+hypothesis_ref: "dh:vfy-cache-epoch:001"
+referent_grain: >-
+  A configuration situation of one clone's toolchain surface (lockfile, root tsconfig, root turbo config,
+  runtime and policy-pack versions) holding while lane runs are executed and their facts issued.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two epochs are the same iff the configuration surface they are situations of has the same content
+    (every member of the surface equal); the epochDigest value is evidence of that content, never the
+    criterion, and whether two disjoint intervals of equal content are one epoch or two is unresolved.
+  reidentification_key:
+    - "epochDigest (equals digest on every cited fact; evidence only)"
+    - "lockfileDigest, rootTsconfigDigest, rootTurboConfigDigest, bunVersion, nodeVersion, policyPackVersion"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Unified by the configuration surface: the members listed in the reidentification key co-vary with the
+    digest. rootTsconfigDigest alone is shared by epochs in different clones (so-1872cd0bda84, so-6c4e9189d15e,
+    so-a953d730c7ec carry one value under three different epochDigest values), so no single member is the epoch.
+  dependence: relational
+ufo_analysis:
+  candidate_category: situation
+  alternatives:
+    - "a per-attempt environment snapshot (every cited attempt carries its own epochDigest)"
+    - "an environment fingerprint digest (information object about the situation)"
+    - "task-input state at turbo task-hash grain (rival grain named in CQ-015 notes)"
+  existential_dependencies:
+    - "the clone whose toolchain surface it is a situation of"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Every cited attempt carries a distinct epochDigest, and no cited record shows one epochDigest under two
+      attempts or two headSha values. A per-attempt snapshot reading predicts exactly these records, so my
+      claim that an epoch is a situation lasting across several attempts is not yet shown by any record.
+  - description: >-
+      A lockfile reverted to an earlier content would, on my content criterion, return the earlier epoch,
+      so an epoch could begin twice; CQ-014 asks when the current epoch began, which has no single answer
+      under that criterion.
+status: proposed
+evidence_refs:
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b"
+  - "so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918"
