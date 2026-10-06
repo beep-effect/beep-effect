@@ -82,7 +82,13 @@ import {
   reviewGatePassed,
   terminalStatus,
 } from "./DocketReview.policy.ts";
-import { DocketReviewConfig, ReviewSourceText, ReviewVerdict } from "./DocketReview.schemas.ts";
+import {
+  DocketReviewConfig,
+  ReviewFindingTrace,
+  ReviewRoundTrace,
+  ReviewSourceText,
+  ReviewVerdict,
+} from "./DocketReview.schemas.ts";
 import type { DocketReminderRung, DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type {
@@ -105,7 +111,14 @@ import type {
   SecretaryReview,
   TrackedDate,
 } from "./DocketIntake.schemas.ts";
-import type { ReviewFinding, ReviewTerminalStatus } from "./DocketReview.schemas.ts";
+import type {
+  ExtractorFieldAction,
+  ExtractorFieldResponse,
+  FieldAgreement,
+  ReviewField,
+  ReviewFinding,
+  ReviewTerminalStatus,
+} from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.service");
 
@@ -1040,18 +1053,53 @@ const settleAccepted = (
       })
     : escalateDisagreement(context.ports, context.message, context.today, round, verdict);
 
+const fieldsWhere = (agreement: ReadonlyArray<FieldAgreement>, agreed: boolean): ReadonlyArray<ReviewField> =>
+  A.map(
+    A.filter(agreement, (field) => field.agreed === agreed),
+    (field) => field.field
+  );
+
+const fieldsWithAction = (
+  responses: ReadonlyArray<ExtractorFieldResponse>,
+  action: ExtractorFieldAction
+): ReadonlyArray<ReviewField> =>
+  A.map(
+    A.filter(responses, (response) => response.action === action),
+    (response) => response.field
+  );
+
+// What each side decided in a round, without any of the text it read (D-46).
+const traceOf = (round: ReviewRound): ReviewRoundTrace =>
+  ReviewRoundTrace.make({
+    agreedFields: fieldsWhere(round.agreement, true),
+    criticDocketItem: round.reading.isDocketItem,
+    defendedFields: fieldsWithAction(round.extractorResponse, "defended"),
+    disagreedFields: fieldsWhere(round.agreement, false),
+    extractorDocketItem: isDocketEntry(round.entry),
+    failedChecks: A.filter(round.checks, (check) => !check.passed),
+    findings: A.map(round.findings, (finding) =>
+      ReviewFindingTrace.make({ field: finding.field, severity: finding.severity })
+    ),
+    gatePassed: reviewGatePassed(round.checks),
+    index: round.index,
+    revisedFields: fieldsWithAction(round.extractorResponse, "revised"),
+    score: round.score,
+  });
+
 const settleReviewed = (
   context: ReviewContext,
-  round: ReviewRound,
+  rounds: A.NonEmptyReadonlyArray<ReviewRound>,
   status: ReviewTerminalStatus
 ): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> => {
   const config = context.ports.config.review;
+  const round = A.lastNonEmpty(rounds);
   const verdict = ReviewVerdict.make({
     finalScore: round.score,
     maxRounds: config.maxRounds,
     rounds: round.index,
     status,
     threshold: config.acceptThreshold,
+    trace: A.map(rounds, traceOf),
   });
   return Effect.annotateCurrentSpan({
     docket_review_rounds: round.index,
@@ -1071,7 +1119,7 @@ const settleReview = (
 ): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
   O.match(end, {
     onNone: () => Effect.succeed<DocketIntakeOutcome>(NotDocketItem.make({ messageId: context.message.messageId })),
-    onSome: (status) => settleReviewed(context, A.lastNonEmpty(rounds), status),
+    onSome: (status) => settleReviewed(context, rounds, status),
   });
 
 // The bounded loop: decide after each round, and run another only while the review has not ended.

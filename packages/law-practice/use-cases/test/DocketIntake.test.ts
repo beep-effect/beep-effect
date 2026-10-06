@@ -10,6 +10,7 @@ import {
   DocketIntake,
   DocketIntakeConfig,
   DocketIntakeError,
+  DocketIntakeOutcome,
   DocketIntakeState,
   DocketIntakeStore,
   DocketLedgerRecord,
@@ -54,12 +55,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
   DocketCalendarEntry,
-  DocketIntakeOutcome,
   DocketParalegalShape,
   DocketSecretaryShape,
   DocketSourceFolder,
   MatterLookupResult,
   ParalegalEntry,
+  ReviewRoundTrace,
 } from "@beep/law-practice-use-cases/DocketIntake";
 
 const TODAY = LocalDate.make({ year: 2030, month: 1, day: 10 });
@@ -509,6 +510,28 @@ const kinds = (entries: ReadonlyArray<DocketCalendarEntry>, kind: DocketCalendar
   A.filter(entries, (entry) => entry.kind === kind);
 
 const tagOf = (outcome: DocketIntakeOutcome): string => outcome._tag;
+
+const traceOf = (outcome: DocketIntakeOutcome) =>
+  O.getOrElse(
+    O.map(reviewOf(outcome), (review) => review.trace),
+    A.empty
+  );
+
+const traceRow = (round: ReviewRoundTrace) => ({
+  agreed: round.agreedFields,
+  checks: A.map(round.failedChecks, (check) => `${check.side}:${check.check}`),
+  critic: round.criticDocketItem,
+  defended: round.defendedFields,
+  disagreed: round.disagreedFields,
+  extractor: round.extractorDocketItem,
+  findings: A.map(round.findings, (finding) => `${finding.severity}:${finding.field}`),
+  gate: round.gatePassed,
+  index: round.index,
+  revised: round.revisedFields,
+  score: round.score,
+});
+
+const encodeOutcomeJson = S.encodeUnknownEffect(S.fromJsonString(DocketIntakeOutcome));
 
 const DayOffset = S.Int.check(S.isBetween({ maximum: 900, minimum: 40 }));
 
@@ -1183,6 +1206,37 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         // What the critic is shown of the entry did not change, so it was not asked for findings again.
         expect(yield* Ref.get(harness.critiques)).toBe(1);
         expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
+        // Both rounds are kept on the outcome in ids and enums only (D-46).
+        expect(A.map(traceOf(outcome), traceRow)).toStrictEqual([
+          {
+            agreed: ["classification", "mail-date", "matter-references"],
+            checks: ["extractor:values-appear-in-cited-text"],
+            critic: true,
+            defended: [],
+            disagreed: ["response-period", "due-date"],
+            extractor: true,
+            findings: [],
+            gate: false,
+            index: 1,
+            revised: [],
+            score: 0.8,
+          },
+          {
+            agreed: ["classification", "mail-date", "response-period", "due-date", "matter-references"],
+            checks: [],
+            critic: true,
+            defended: [],
+            disagreed: [],
+            extractor: true,
+            findings: [],
+            gate: true,
+            index: 2,
+            revised: ["response-period"],
+            score: 1,
+          },
+        ]);
+        const encoded = yield* encodeOutcomeJson(outcome);
+        assertTrue(!Str.includes(DISTINCT_CITED)(encoded) && !Str.includes("Fixture response due")(encoded));
       })
     );
   });
@@ -1221,6 +1275,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
         expect(tagOf(outcome)).toBe("DocketNeedsReview");
         expect(reasonOf(outcome)).toBe("flagged-low-confidence");
+        expect(A.map(traceOf(outcome), (round) => traceRow(round).findings)).toStrictEqual([["P1:title"], []]);
         // The two candidate dates differ, and the entry says so.
         expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual(["dates-differ"]);
         // Exactly one entry: no due-date entry and no reminder ladder.
@@ -1316,6 +1371,9 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const flagged = A.head(entries);
 
         expect(reasonOf(outcome)).toBe("deterministic-failure");
+        expect(A.map(traceOf(outcome), (round) => [round.gatePassed, traceRow(round).checks])).toStrictEqual([
+          [false, ["extractor:cited-span-exists"]],
+        ]);
         assertSome(
           O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore, review.maxRounds]),
           ["deterministic-failure", 1, 1, 1]
