@@ -282,6 +282,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/professional-desktop",
       "@beep/freshbooks",
       "@beep/xstate",
+      "@beep/tesseract",
     ],
   }),
   CiLanePartition.make({
@@ -357,6 +358,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/rdf-canonize",
       "@beep/ontology-ui",
       "@beep/data",
+      "@beep/poppler",
     ],
   }),
   CiLanePartition.make({
@@ -447,6 +449,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/storybook",
       "@beep/freshbooks",
       "@beep/xstate",
+      "@beep/tesseract",
     ],
   }),
   CiLanePartition.make({
@@ -521,6 +524,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/ontology-domain",
       "@beep/fc-runs",
       "@beep/types",
+      "@beep/poppler",
     ],
   }),
 ];

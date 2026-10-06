@@ -34,6 +34,13 @@ export * from "./internal/Enrich.schemas.ts";
  */
 export * from "./internal/Extract.schemas.ts";
 /**
+ * Page-level OCR artifact schema exports for corpus curation commands.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/Ocr.schemas.ts";
+/**
  * Organization schema exports for corpus curation commands.
  *
  * @category schemas

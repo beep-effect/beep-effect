@@ -114,6 +114,33 @@ const tikaTimeoutMillisFlag = Flag.Int("tika-timeout-millis").pipe(
   Flag.optional
 );
 /** @since 0.0.0 */
+const extractOcrFlag = Flag.Boolean("ocr").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription(
+    "Read PDFs and images whose text is missing, failed or too thin page by page with Tesseract, recording per-page confidence under ocr/"
+  )
+);
+/** @since 0.0.0 */
+const ocrPageTimeoutMillisFlag = Flag.Int("ocr-page-timeout-millis").pipe(
+  Flag.withDescription("Per-page Tesseract timeout in milliseconds (driver default when omitted)"),
+  Flag.optional
+);
+/** @since 0.0.0 */
+const tesseractFlag = Flag.String("tesseract").pipe(
+  Flag.withDescription("tesseract executable used by --ocr (defaults to tesseract on PATH)"),
+  Flag.optional
+);
+/** @since 0.0.0 */
+const pdftoppmFlag = Flag.String("pdftoppm").pipe(
+  Flag.withDescription("pdftoppm executable used by --ocr to render PDF pages (defaults to pdftoppm on PATH)"),
+  Flag.optional
+);
+/** @since 0.0.0 */
+const pdfinfoFlag = Flag.String("pdfinfo").pipe(
+  Flag.withDescription("pdfinfo executable used by --ocr to count PDF pages (defaults to pdfinfo on PATH)"),
+  Flag.optional
+);
+/** @since 0.0.0 */
 const extractOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
@@ -324,10 +351,15 @@ const corpusExtractCommand = Command.make(
     includeDuplicates: includeDuplicatesFlag,
     java: javaFlag,
     maxFiles: maxFilesFlag,
+    ocr: extractOcrFlag,
+    ocrPageTimeoutMillis: ocrPageTimeoutMillisFlag,
     outLabel: extractOutLabelFlag,
     overwrite: extractOverwriteFlag,
+    pdfinfo: pdfinfoFlag,
+    pdftoppm: pdftoppmFlag,
     pffexport: pffexportFlag,
     source: sourceLabelFlag,
+    tesseract: tesseractFlag,
     tikaJar: tikaJarFlag,
     tikaTimeoutMillis: tikaTimeoutMillisFlag,
   },
@@ -339,10 +371,15 @@ const corpusExtractCommand = Command.make(
     includeDuplicates,
     java,
     maxFiles,
+    ocr,
+    ocrPageTimeoutMillis,
     outLabel,
     overwrite,
+    pdfinfo,
+    pdftoppm,
     pffexport,
     source,
+    tesseract,
     tikaJar,
     tikaTimeoutMillis,
   }) {
@@ -352,6 +389,7 @@ const corpusExtractCommand = Command.make(
         corpusRoot,
         exportChildren,
         includeDuplicates,
+        ocr,
         overwrite,
         tikaJarPath: tikaJar,
         ...(O.isNone(java) ? {} : { javaPath: java.value }),
@@ -360,6 +398,10 @@ const corpusExtractCommand = Command.make(
         ...(O.isNone(pffexport) ? {} : { pffexportPath: pffexport.value }),
         ...(O.isNone(source) ? {} : { sourceLabel: source.value }),
         ...(O.isNone(tikaTimeoutMillis) ? {} : { tikaTimeoutMillis: tikaTimeoutMillis.value }),
+        ...(O.isNone(ocrPageTimeoutMillis) ? {} : { ocrPageTimeoutMillis: ocrPageTimeoutMillis.value }),
+        ...(O.isNone(pdfinfo) ? {} : { pdfinfoPath: pdfinfo.value }),
+        ...(O.isNone(pdftoppm) ? {} : { pdftoppmPath: pdftoppm.value }),
+        ...(O.isNone(tesseract) ? {} : { tesseractPath: tesseract.value }),
       })
     ).pipe(Effect.asVoid);
   })

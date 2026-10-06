@@ -600,6 +600,12 @@
         ]
       },
       {
+        "name": "@beep/poppler",
+        "patterns": [
+          "packages/drivers/poppler/src/**"
+        ]
+      },
+      {
         "name": "@beep/postgres",
         "patterns": [
           "packages/drivers/postgres/src/**"
@@ -753,6 +759,12 @@
         "name": "@beep/tailscale",
         "patterns": [
           "packages/drivers/tailscale/src/**"
+        ]
+      },
+      {
+        "name": "@beep/tesseract",
+        "patterns": [
+          "packages/drivers/tesseract/src/**"
         ]
       },
       {
@@ -3039,6 +3051,27 @@
         ]
       },
       {
+        "from": "@beep/poppler",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/postgres",
         "allow": [
           "@beep/colors",
@@ -3328,6 +3361,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3337,6 +3371,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/tesseract",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3357,6 +3392,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3366,6 +3402,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/tesseract",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3742,6 +3779,27 @@
           "@beep/schema",
           "@beep/tailscale",
           "@beep/test-runner"
+        ]
+      },
+      {
+        "from": "@beep/tesseract",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {

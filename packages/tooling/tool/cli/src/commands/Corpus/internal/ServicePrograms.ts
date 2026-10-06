@@ -24,6 +24,7 @@ import {
   SucceededSourceProcessingRecord,
 } from "@beep/file-processing/Extraction";
 import { ProcessFileOperation } from "@beep/file-processing/Operation";
+import { PageImage, PageOcrRequest } from "@beep/file-processing/PageOcr";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import {
   collectSourceOutcomeRecords,
@@ -38,8 +39,10 @@ import {
 } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
+import { makePopplerRasterizer, PopplerConfig } from "@beep/poppler";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { makeTesseractPageOcrEngine, planTesseractLanguages, TesseractConfig } from "@beep/tesseract";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
 import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto } from "@beep/uspto";
 import * as O from "@beep/utils/Option";
@@ -85,11 +88,16 @@ import {
   CorpusDuplicateSetRecord,
   CorpusEnrichmentRecord,
   CorpusEnrichSummary,
+  CorpusExtractOcrCounts,
   CorpusExtractOutcomeRecord,
   CorpusExtractOutcomeRecordJson,
   CorpusExtractSummary,
+  CorpusOcrLanguageReport,
   CorpusOrganizeRecord,
   CorpusOrganizeSummary,
+  CorpusPageFailedRecord,
+  CorpusPageReadingRecordJson,
+  CorpusPageReadRecord,
   CorpusProvenanceRecord,
   CorpusRestorationRecord,
   CorpusSalvageOriginFile,
@@ -101,6 +109,7 @@ import {
   encodeCorpusEnrichmentRecordJson,
   encodeCorpusEnrichSummaryJson,
   encodeCorpusExtractSummaryJson,
+  encodeCorpusOcrLanguageReportJson,
   encodeCorpusOrganizeRecordJson,
   encodeCorpusOrganizeSummaryJson,
   encodeCorpusProvenanceRecordJson,
@@ -119,8 +128,11 @@ import type {
   FileProcessingFailureRecord,
 } from "@beep/file-processing/Extraction";
 import type { FileProcessingOperationError } from "@beep/file-processing/Operation";
+import type { PageImageMediaType } from "@beep/file-processing/PageOcr";
 import type { FileProcessingEngineShape, FileProcessingService } from "@beep/file-processing/Service";
 import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } from "@beep/file-processing/Strategy";
+import type { PopplerError } from "@beep/poppler";
+import type { TesseractScript } from "@beep/tesseract";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process";
@@ -132,6 +144,7 @@ import type {
   CorpusExtractOptions,
   CorpusOrganizeCategory,
   CorpusOrganizeOptions,
+  CorpusPageReadingRecord,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
 } from "../Corpus.schemas.ts";
@@ -900,6 +913,8 @@ const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function
 interface CorpusExtractOutcome {
   readonly childArtifactCount: number;
   readonly failure: O.Option<FileProcessingFailureRecord>;
+  // Present when the OCR pass looked at the source's pages.
+  readonly ocr: O.Option<CorpusExtractOcrCounts>;
   // Present only on a failure that the engine routing decides, so it settles.
   readonly routingKey: O.Option<Sha256Hex>;
   readonly sourceRecord: SourceProcessingRecord;
@@ -919,6 +934,7 @@ const failedOutcome = (
   routingKey: O.Option<Sha256Hex> = O.none()
 ): CorpusExtractOutcome => ({
   childArtifactCount: 0,
+  ocr: O.none(),
   routingKey,
   failure: O.some(
     FailedFileProcessingFailureRecord.make({
@@ -1101,6 +1117,308 @@ const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunL
     );
 });
 
+// Formats whose bytes Tesseract can read directly as a one-page source.
+const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMediaType> = Match.type<
+  string | undefined
+>().pipe(
+  Match.when("png", () => O.some("image/png" as const)),
+  Match.whenOr("jpg", "jpeg", () => O.some("image/jpeg" as const)),
+  Match.whenOr("tif", "tiff", () => O.some("image/tiff" as const)),
+  Match.orElse(() => O.none<PageImageMediaType>())
+);
+
+// A first reading with fewer bytes of text per page than this is not usable:
+// the page is a scan, or its text layer is a stub.
+const usableTextBytesPerPage = 50;
+const ocrPageSeparator = "\n\f\n";
+
+interface ExtractOcrSourceInput {
+  readonly first: CorpusExtractOutcome;
+  readonly ids: {
+    readonly artifactId: ArtifactId;
+    readonly digest: ContentDigest;
+    readonly operationId: OperationId;
+    readonly relativePath: PosixPath;
+  };
+  readonly record: CorpusProvenanceRecord;
+  readonly sourceBytes: Uint8Array;
+  readonly sourcePath: string;
+}
+
+interface ExtractOcr {
+  readonly readSource: (input: ExtractOcrSourceInput) => Effect.Effect<CorpusExtractOutcome, CorpusCommandError>;
+  readonly writeLanguageReport: Effect.Effect<void, CorpusCommandError>;
+}
+
+// CPU page OCR for corpus extract: PDFs and images whose first reading is
+// missing, failed, or too thin are rendered page by page and read by Tesseract
+// with a per-page timeout. Every page gets a row in `ocr/pages/<operationId>.jsonl`
+// keyed by engine, with its text in its own file, so a later second reader can
+// add its rows and texts beside these instead of over them.
+const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function* (
+  options: CorpusExtractOptions,
+  outDir: string,
+  writeExtractArtifact: (outputPath: string, content: string) => Effect.Effect<void, CorpusCommandError>
+): Effect.fn.Return<
+  O.Option<ExtractOcr>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
+  if (!options.ocr) {
+    return O.none();
+  }
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const probed = yield* Effect.result(
+    makeTesseractPageOcrEngine(
+      TesseractConfig.make({
+        ...O.getSomesStruct({
+          pageTimeoutMillis: O.fromUndefinedOr(options.ocrPageTimeoutMillis),
+          tesseractPath: O.fromUndefinedOr(options.tesseractPath),
+        }),
+      })
+    )
+  );
+  if (Result.isFailure(probed)) {
+    yield* Console.log(`corpus extract: OCR disabled: ${probed.failure.message}`);
+    return O.none();
+  }
+  const engine = probed.success;
+  const rasterizer = yield* makePopplerRasterizer(
+    PopplerConfig.make({
+      ...O.getSomesStruct({
+        pdfinfoPath: O.fromUndefinedOr(options.pdfinfoPath),
+        pdftoppmPath: O.fromUndefinedOr(options.pdftoppmPath),
+      }),
+    })
+  );
+  const scriptDetection = A.contains(engine.installedLanguages, "osd");
+  const missingLanguagesRef = yield* Ref.make(HashSet.empty<string>());
+  yield* Console.log(
+    `corpus extract: OCR engine ${engine.identity.version}; language models installed: ${A.join(engine.installedLanguages, ", ")}`
+  );
+
+  const readSource = Effect.fn("CorpusCommandService.ocrSource")(function* ({
+    first,
+    ids,
+    record,
+    sourceBytes,
+    sourcePath,
+  }: ExtractOcrSourceInput): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
+    const extension = extensionOf(basenameOf(record.relativePath));
+    const format = classifySourceFormat(extension, undefined);
+    if (
+      (format !== "pdf-text-layer" && format !== "image-metadata") ||
+      first.sourceRecord.status === "skipped" ||
+      O.isSome(first.routingKey)
+    ) {
+      return first;
+    }
+    const pages =
+      format === "pdf-text-layer"
+        ? yield* rasterizer.pageCount(sourcePath).pipe(
+            Effect.map((pageCount) => ({
+              pageCount,
+              render: (pageNumber: number) => rasterizer.renderPage(sourcePath, pageNumber),
+            })),
+            Effect.option
+          )
+        : O.map(ocrImageMediaType(extension), (mediaType) => ({
+            pageCount: 1,
+            render: (_pageNumber: number): Effect.Effect<PageImage, PopplerError> =>
+              Effect.succeed(PageImage.make({ bytes: sourceBytes, digest: ids.digest, mediaType })),
+          }));
+    if (O.isNone(pages)) {
+      return first;
+    }
+    const { pageCount, render } = pages.value;
+    const firstTextPath =
+      first.sourceRecord.status === "succeeded" ? O.fromUndefinedOr(first.sourceRecord.textPath) : O.none();
+    const firstTextBytes = O.isSome(firstTextPath)
+      ? yield* fs.stat(path.join(outDir, firstTextPath.value)).pipe(
+          Effect.map((info) => Number(info.size)),
+          Effect.orElseSucceed(() => 0)
+        )
+      : 0;
+    if (firstTextBytes >= usableTextBytesPerPage * pageCount) {
+      return first;
+    }
+
+    const firstImage = yield* Effect.result(render(1));
+    const script =
+      scriptDetection && Result.isSuccess(firstImage)
+        ? yield* engine.detectScript(firstImage.success)
+        : O.none<TesseractScript>();
+    const plan = planTesseractLanguages(script, engine.installedLanguages);
+    yield* Ref.update(missingLanguagesRef, HashSet.union(HashSet.fromIterable(plan.missing)));
+    if (A.isReadonlyArrayEmpty(plan.selected)) {
+      return first;
+    }
+
+    const pageIdentity = (pageNumber: number) => ({
+      artifactId: ids.artifactId,
+      engine: engine.identity,
+      languages: plan.selected,
+      operationId: ids.operationId,
+      pageCount,
+      pageNumber,
+      sourceDigest: ids.digest,
+    });
+    const readPage = Effect.fn("CorpusCommandService.ocrPage")(function* (
+      pageNumber: number
+    ): Effect.fn.Return<readonly [CorpusPageReadingRecord, string], CorpusCommandError> {
+      const image = pageNumber === 1 ? firstImage : yield* Effect.result(render(pageNumber));
+      if (Result.isFailure(image)) {
+        return [
+          CorpusPageFailedRecord.make({
+            ...pageIdentity(pageNumber),
+            message: image.failure.message,
+            reason: "render-failed",
+            status: "failed",
+          }),
+          "",
+        ];
+      }
+      const recognized = yield* Effect.result(
+        engine.recognizePage(
+          PageOcrRequest.make({
+            image: image.success,
+            languages: plan.selected,
+            operationId: ids.operationId,
+            pageCount,
+            pageNumber,
+            sourceArtifactId: ids.artifactId,
+            sourceDigest: ids.digest,
+            textFormat: "plain-text",
+          })
+        )
+      );
+      if (Result.isFailure(recognized)) {
+        return [
+          CorpusPageFailedRecord.make({
+            ...pageIdentity(pageNumber),
+            message: recognized.failure.message,
+            reason: recognized.failure.reason,
+            status: "failed",
+          }),
+          "",
+        ];
+      }
+      const { confidence, imageDigest, text, timing, warnings } = recognized.success;
+      const textRelative = `ocr/text/${ids.operationId}/${pageNumber}.${engine.identity.engineId}.txt`;
+      yield* writeExtractArtifact(path.join(outDir, textRelative), text);
+      return [
+        CorpusPageReadRecord.make({
+          ...pageIdentity(pageNumber),
+          charCount: S.Natural.make(Str.length(text)),
+          imageDigest,
+          status: "read",
+          textDigest: ContentDigest.make(`sha256:${bytesToHex(sha256(utf8ToBytes(text)))}`),
+          textPath: yield* decodePosixPath(textRelative).pipe(
+            CorpusCommandError.mapError("Page text path failed decoding.")
+          ),
+          timing,
+          warnings,
+          ...O.getSomesStruct({ confidence: O.fromUndefinedOr(confidence) }),
+        }),
+        text,
+      ];
+    });
+
+    const pageResults = yield* Effect.forEach(A.range(1, pageCount), readPage);
+    const rowLines = yield* Effect.forEach(pageResults, ([row]) =>
+      CorpusPageReadingRecordJson.encode(row).pipe(
+        CorpusCommandError.mapError("Page reading row failed JSONL encoding.")
+      )
+    );
+    yield* writeExtractArtifact(path.join(outDir, "ocr", "pages", `${ids.operationId}.jsonl`), jsonlContent(rowLines));
+    const readPageCount = A.length(A.filter(pageResults, ([row]) => row.status === "read"));
+    const ocr = O.some(
+      CorpusExtractOcrCounts.make({
+        failedPageCount: S.Natural.make(pageCount - readPageCount),
+        readPageCount: S.Natural.make(readPageCount),
+      })
+    );
+    if (readPageCount === 0) {
+      return { ...first, ocr };
+    }
+
+    // The first reading is evidence too: it is kept beside the OCR text, and a
+    // source that had no first reading gets a metadata file so resume finds
+    // every artifact its marker implies.
+    const textRelative = `text/${ids.operationId}.txt`;
+    const textPath = path.join(outDir, textRelative);
+    const firstReadingDir = path.join(outDir, "ocr", "first-reading");
+    const ocrMetadataJson = yield* encodeMetadataRecordJson({
+      "beep.ocr.engine": engine.identity.engineId,
+      "beep.processing": "ocr",
+    }).pipe(CorpusCommandError.mapError("OCR metadata failed JSON encoding."));
+    yield* O.match(firstTextPath, {
+      onNone: () =>
+        first.sourceRecord.status === "succeeded"
+          ? Effect.void
+          : writeExtractArtifact(path.join(outDir, "metadata", `${ids.operationId}.json`), `${ocrMetadataJson}\n`),
+      onSome: () =>
+        fs
+          .makeDirectory(firstReadingDir, { recursive: true })
+          .pipe(
+            Effect.andThen(fs.copyFile(textPath, path.join(firstReadingDir, `${ids.operationId}.txt`))),
+            CorpusCommandError.mapError(`Failed keeping the first reading of "${ids.relativePath}".`)
+          ),
+    });
+    yield* writeExtractArtifact(
+      textPath,
+      A.join(
+        A.map(pageResults, ([, text]) => text),
+        ocrPageSeparator
+      )
+    );
+    return {
+      childArtifactCount: first.childArtifactCount,
+      failure: O.none<FileProcessingFailureRecord>(),
+      ocr,
+      routingKey: O.none<Sha256Hex>(),
+      sourceRecord: SucceededSourceProcessingRecord.make({
+        artifactId: ids.artifactId,
+        digest: ids.digest,
+        engine: engine.identity.engineId,
+        format,
+        operationId: ids.operationId,
+        relativePath: ids.relativePath,
+        sizeBytes: record.sizeBytes,
+        status: "succeeded",
+        textPath: yield* decodePosixPath(textRelative).pipe(
+          CorpusCommandError.mapError("Text artifact path failed decoding.")
+        ),
+      }),
+      strategy: SupportedSelectedStrategy.make({
+        disposition: "supported",
+        engine: "auto",
+        format,
+        operationKind: "extract",
+      }),
+    };
+  });
+
+  const writeLanguageReport = Effect.gen(function* () {
+    const missing = A.sort(A.fromIterable(yield* Ref.get(missingLanguagesRef)), Order.String);
+    const reportJson = yield* encodeCorpusOcrLanguageReportJson(
+      CorpusOcrLanguageReport.make({
+        engine: engine.identity,
+        installed: engine.installedLanguages,
+        missing,
+        scriptDetection,
+      })
+    ).pipe(CorpusCommandError.mapError("OCR language report failed JSON encoding."));
+    yield* writeExtractArtifact(path.join(outDir, "ocr", "languages.json"), `${reportJson}\n`);
+    yield* Console.log(
+      `corpus extract: OCR language models missing: ${A.isReadonlyArrayEmpty(missing) ? "none" : A.join(missing, ", ")}${scriptDetection ? "" : " (osd missing: script detection off, reading as eng)"}`
+    );
+  });
+
+  return O.some({ readSource, writeLanguageReport });
+});
+
 const dedupeBySha256 = <A extends { readonly sha256: string }>(
   records: ReadonlyArray<A>
 ): { readonly duplicatesSkipped: number; readonly kept: ReadonlyArray<A> } => {
@@ -1186,6 +1504,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
 
   yield* prepareExtractOutputDir(outDir, childrenRoot, stagingDir, options.overwrite);
   const writeExtractArtifact = yield* makeExtractArtifactWriter(stagingDir);
+  const extractOcr = yield* makeExtractOcr(options, outDir, writeExtractArtifact);
 
   const manifests = yield* discoverCatalogManifests(rawRoot);
   const recordBatches = yield* Effect.forEach(manifests, (manifest) =>
@@ -1378,7 +1697,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
       );
     }
 
-    const outcome = yield* processFile(
+    const firstOutcome = yield* processFile(
       ProcessFileOperation.make({
         exportChildren: options.exportChildren,
         operationId,
@@ -1430,6 +1749,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
                     sizeBytes: record.sizeBytes,
                     status: "succeeded",
                   }),
+                  ocr: O.none<CorpusExtractOcrCounts>(),
                   routingKey: O.none<Sha256Hex>(),
                   strategy: SupportedSelectedStrategy.make({
                     disposition: "supported",
@@ -1476,6 +1796,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
                     status: "succeeded",
                     ...(O.isNone(textPath) ? {} : { textPath: textPath.value }),
                   }),
+                  ocr: O.none<CorpusExtractOcrCounts>(),
                   routingKey: O.none<Sha256Hex>(),
                   strategy: SupportedSelectedStrategy.make({
                     disposition: "supported",
@@ -1512,6 +1833,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
                   skipReason: skipped.skipReason,
                   status: "skipped",
                 }),
+                ocr: O.none<CorpusExtractOcrCounts>(),
                 routingKey: O.none<Sha256Hex>(),
                 strategy: DeferredSelectedStrategy.make({
                   disposition: "deferred",
@@ -1527,6 +1849,11 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
       })
     );
 
+    const outcome = yield* O.match(extractOcr, {
+      onNone: () => Effect.succeed(firstOutcome),
+      onSome: (ocr) => ocr.readSource({ first: firstOutcome, ids, record, sourceBytes, sourcePath: safeSourcePath }),
+    });
+
     // The marker is the last write for a source and the only thing a resumed
     // run trusts. Failed sources get none, so they are retried.
     if (isSettledExtractOutcome(outcome)) {
@@ -1538,6 +1865,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
           childArtifactCount: S.Natural.make(outcome.childArtifactCount),
           exportChildren: options.exportChildren,
           failure: outcome.failure,
+          ocr: outcome.ocr,
           routingKey: outcome.routingKey,
           sha256,
           sourceRecord: outcome.sourceRecord,
@@ -1614,6 +1942,8 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   yield* writeExtractArtifact(path.join(outDir, "failures.jsonl"), jsonlContent(failureLines));
 
   const failedOutcomes = A.filter(outcomes, (outcome) => outcome.sourceRecord.status === "failed");
+  const ocrCounts = A.getSomes(A.map(outcomes, (outcome) => outcome.ocr));
+  yield* O.match(extractOcr, { onNone: () => Effect.void, onSome: (ocr) => ocr.writeLanguageReport });
   const reusedFailedCount = A.length(
     A.filter(
       resumeStates,
@@ -1627,6 +1957,9 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
     extractedCount: S.Natural.make(A.length(pendingRecords) - (A.length(failedOutcomes) - reusedFailedCount)),
     failedCount: coverage.failedCount,
     noEngineFailedCount: S.Natural.make(A.length(A.filter(failedOutcomes, (outcome) => O.isSome(outcome.routingKey)))),
+    ocrFailedPageCount: S.Natural.make(A.reduce(ocrCounts, 0, (total, counts) => total + counts.failedPageCount)),
+    ocrPageCount: S.Natural.make(A.reduce(ocrCounts, 0, (total, counts) => total + counts.readPageCount)),
+    ocrSourceCount: S.Natural.make(A.length(A.filter(ocrCounts, (counts) => counts.readPageCount > 0))),
     skippedCount: coverage.skippedCount,
     sourceCount: coverage.sourceCount,
     succeededCount: coverage.succeededCount,
@@ -1638,7 +1971,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   yield* writeExtractArtifact(path.join(outDir, "extract-summary.json"), `${summaryJson}\n`);
 
   yield* Console.log(
-    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} noEngine=${summary.noEngineFailedCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
+    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} noEngine=${summary.noEngineFailedCount} ocrSources=${summary.ocrSourceCount} ocrPages=${summary.ocrPageCount} ocrFailedPages=${summary.ocrFailedPageCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
   );
   yield* Console.log(`corpus extract: output "${outDir}"`);
 

@@ -196,7 +196,9 @@ const generatedComposers = $I.compose(
   "box-provisioning",
   "freshbooks",
   "test-runner",
-  "xstate"
+  "xstate",
+  "tesseract",
+  "poppler"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2680,3 +2682,37 @@ export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = com
  * @since 0.0.0
  */
 export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$XstateId;
+
+/**
+ * Identity composer for `@beep/tesseract`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TesseractId } from "@beep/identity/packages"
+ *
+ * const id = $TesseractId.make("Tesseract")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TesseractId: Identity.IdentityComposer<"@beep/tesseract"> = composers.$TesseractId;
+
+/**
+ * Identity composer for `@beep/poppler`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PopplerId } from "@beep/identity/packages"
+ *
+ * const id = $PopplerId.make("Poppler")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.$PopplerId;

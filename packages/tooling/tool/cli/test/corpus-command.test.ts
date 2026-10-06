@@ -7,6 +7,7 @@ import {
   CorpusCatalogOptions,
   CorpusCommandServiceLive,
   CorpusExtractOptions,
+  CorpusPageReadingRecordJson,
   CorpusProvenanceRecord,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
@@ -49,7 +50,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Context, Effect, FileSystem, Layer, Match, Order, Path, pipe, Result, Stream } from "effect";
+import { Clock, Context, Effect, FileSystem, Layer, Match, Order, Path, pipe, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -1195,8 +1196,63 @@ printf 'java\\n' >> "${callLog}"
 for arg in "$@"; do
   if [ -f "$arg" ] && grep -q "extract-must-fail" "$arg"; then exit 3; fi
   if [ -f "$arg" ] && grep -q "extract-must-hang" "$arg"; then exec sleep 20; fi
+  if [ -f "$arg" ] && grep -q "extract-long-text" "$arg"; then
+    printf '%s' '[{"Content-Type":"application/pdf","X-TIKA:content":"A born-digital page whose text layer is long enough to be a usable first reading."}]'
+    exit 0
+  fi
 done
 printf '%s' '[{"Content-Type":"text/plain","X-TIKA:content":"\\n  stub text body\\n"}]'
+exit 0
+`;
+
+// Stubs for the page OCR tools. A synthetic "PDF" is a text file of
+// directives: \`pages=N\` sets the page count and \`pK=<behavior>\` makes page K
+// crash, hang, fail to render (\`norender\`), read as Chinese (\`han\`) or read
+// faintly. The rendered "PNG" is just the behavior word, which the tesseract
+// stub reads back, so each page fails or succeeds on its own.
+const pdfinfoStub = `#!/usr/bin/env bash
+pages="$(grep -o 'pages=[0-9]*' "$1" | cut -d= -f2)"
+[ -n "$pages" ] || exit 1
+printf 'Pages:          %s\\n' "$pages"
+exit 0
+`;
+
+const pdftoppmStub = `#!/usr/bin/env bash
+page=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-f" ]; then page="$arg"; fi
+  prev="$arg"
+done
+root="\${@: -1}"
+pdf="\${@: -2:1}"
+behavior="$(grep -o "p$page=[a-z]*" "$pdf" | cut -d= -f2)"
+if [ "$behavior" = "norender" ]; then exit 1; fi
+printf '%s' "\${behavior:-clean}" > "$root.png"
+exit 0
+`;
+
+const ocrTesseractStub = (callLog: string, languages: ReadonlyArray<string>): string => `#!/usr/bin/env bash
+case "$1" in
+  --version) printf 'tesseract 5.5.3\\n'; exit 0 ;;
+  --list-langs) printf 'List of available languages in "/synthetic/tessdata/" (${languages.length}):\\n${A.join(
+    A.map(languages, (language) => `${language}\\n`),
+    ""
+  )}'; exit 0 ;;
+esac
+printf 'tesseract %s\\n' "$*" >> "${callLog}"
+page="$(cat "$1")"
+if [ "$page" = "crash" ]; then exit 134; fi
+if [ "$page" = "hang" ]; then exec sleep 20; fi
+if [ "$3" = "--psm" ]; then
+  if [ "$page" = "han" ]; then printf 'Script: Han\\n'; else printf 'Script: Latin\\n'; fi
+  exit 0
+fi
+confidence=90
+if [ "$page" = "faint" ]; then confidence=30; fi
+printf 'level\\tpage_num\\tblock_num\\tpar_num\\tline_num\\tword_num\\tleft\\ttop\\twidth\\theight\\tconf\\ttext\\n'
+printf '5\\t1\\t1\\t1\\t1\\t1\\t0\\t0\\t9\\t9\\t%s\\tSynthetic\\n' "$confidence"
+printf '5\\t1\\t1\\t1\\t1\\t2\\t9\\t0\\t9\\t9\\t%s\\tpage\\n' "$confidence"
 exit 0
 `;
 
@@ -1257,12 +1313,18 @@ const summaryCountKeys = [
   "succeededCount",
 ] as const;
 
+const ocrSummaryCountKeys = [...summaryCountKeys, "ocrFailedPageCount", "ocrPageCount", "ocrSourceCount"] as const;
+
 // Synthetic corpus for the extract resume tests: every source is a small file
 // under raw/source-a whose manifest digest is the real digest of its content.
 // A source with `present: false` is listed in the manifest but missing on
 // disk, which aborts a run at that source the way a killed process would.
+const operationIdFor = (content: string): string =>
+  `operation:${contentDigest(`corpus-extract:${contentDigest(content)}`)}`;
+
 const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture")(function* (
-  sources: ReadonlyArray<{ readonly content: string; readonly name: string; readonly present?: boolean }>
+  sources: ReadonlyArray<{ readonly content: string; readonly name: string; readonly present?: boolean }>,
+  ocrLanguages: ReadonlyArray<string> = ["eng", "osd"]
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1276,6 +1338,12 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
   yield* fs.makeDirectory(rawDir, { recursive: true });
   yield* writeStub(countingPffexportStub(callLog), pffexportPath);
   yield* writeStub(countingJavaStub(callLog), javaPath);
+  const pdfinfoPath = path.join(corpusRoot, "pdfinfo-stub");
+  const pdftoppmPath = path.join(corpusRoot, "pdftoppm-stub");
+  const tesseractPath = path.join(corpusRoot, "tesseract-stub");
+  yield* writeStub(pdfinfoStub, pdfinfoPath);
+  yield* writeStub(pdftoppmStub, pdftoppmPath);
+  yield* writeStub(ocrTesseractStub(callLog, ocrLanguages), tesseractPath);
 
   yield* Effect.forEach(
     A.filter(sources, (source) => source.present !== false),
@@ -1301,16 +1369,36 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
     return A.length(A.filter(Str.split(text, "\n"), (line) => line === engine));
   });
 
+  const readText = (relativePath: string) => fs.readFileString(path.join(outDir, relativePath));
+  const pageRows = Effect.fn("CorpusTest.pageRows")(function* (content: string) {
+    const lines = yield* readProvenanceLines(path.join(outDir, "ocr", "pages", `${operationIdFor(content)}.jsonl`));
+    return yield* Effect.forEach(lines, CorpusPageReadingRecordJson.decode);
+  });
+  const recognitionCalls = Effect.fn("CorpusTest.recognitionCalls")(function* () {
+    const text = yield* fs.readFileString(callLog).pipe(Effect.orElseSucceed(() => ""));
+    return A.filter(
+      Str.split(text, "\n"),
+      (line) => pipe(line, Str.startsWith("tesseract ")) && pipe(line, Str.endsWith(" tsv"))
+    );
+  });
+
   return {
     engineCalls,
+    exists: (relativePath: string) => fs.exists(path.join(outDir, relativePath)),
     lockPath: path.join(corpusRoot, "staging", ".extract.extract.lock"),
     markerPath: (content: string) => path.join(outDir, "outcomes", `${contentDigest(content)}.json`),
     outDir,
+    pageRows,
     rawDir,
+    readText,
+    recognitionCalls,
     run: (
       overrides: {
         readonly exportChildren?: boolean;
+        readonly ocr?: boolean;
+        readonly ocrPageTimeoutMillis?: number;
         readonly overwrite?: boolean;
+        readonly tesseractPath?: string;
         readonly tikaTimeoutMillis?: number;
       } = {}
     ) =>
@@ -1321,9 +1409,16 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
           exportChildren: overrides.exportChildren ?? true,
           includeDuplicates: false,
           javaPath,
+          ocr: overrides.ocr ?? false,
           overwrite: overrides.overwrite ?? false,
+          pdfinfoPath,
+          pdftoppmPath,
           pffexportPath,
+          tesseractPath: overrides.tesseractPath ?? tesseractPath,
           tikaJarPath: manifestPath,
+          ...(overrides.ocrPageTimeoutMillis === undefined
+            ? {}
+            : { ocrPageTimeoutMillis: overrides.ocrPageTimeoutMillis }),
           ...(overrides.tikaTimeoutMillis === undefined ? {} : { tikaTimeoutMillis: overrides.tikaTimeoutMillis }),
         })
       ),
@@ -1810,31 +1905,6 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
   );
 
   it.effect(
-    "applies the configured Tika timeout and retries the timed-out source",
-    Effect.fnUntraced(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const fixture = yield* makeExtractResumeFixture([
-        { content: "alpha body", name: "alpha.txt" },
-        { content: "extract-must-hang", name: "slow.txt" },
-      ]);
-
-      const summary = yield* fixture.run({ tikaTimeoutMillis: 300 });
-      const slowMarker = yield* fs.exists(fixture.markerPath("extract-must-hang"));
-
-      expect(Struct.pick(summary, summaryCountKeys)).toEqual({
-        alreadyCompleteCount: 0,
-        extractedCount: 1,
-        failedCount: 1,
-        noEngineFailedCount: 0,
-        skippedCount: 0,
-        sourceCount: 2,
-        succeededCount: 1,
-      });
-      expect(slowMarker).toBe(false);
-    })
-  );
-
-  it.effect(
     "refuses a second extract on a locked output and takes over a dead holder",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1858,6 +1928,228 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
       expect(outputCreated).toBe(false);
       expect(takenOver.succeededCount).toBe(1);
       expect(lockReleased).toBe(false);
+    })
+  );
+});
+
+// These tests race real subprocesses against timeouts, so the block runs on the
+// live clock: a test clock never advances past a subprocess that is hanging.
+it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpus extract page OCR", (it) => {
+  it.effect(
+    "applies the configured Tika timeout and retries the timed-out source",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "extract-must-hang", name: "slow.txt" },
+      ]);
+
+      const started = yield* Clock.currentTimeMillis;
+      const summary = yield* fixture.run({ tikaTimeoutMillis: 300 });
+      const elapsedMillis = (yield* Clock.currentTimeMillis) - started;
+      const slowMarker = yield* fs.exists(fixture.markerPath("extract-must-hang"));
+
+      expect(Struct.pick(summary, summaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 1,
+        failedCount: 1,
+        noEngineFailedCount: 0,
+        skippedCount: 0,
+        sourceCount: 2,
+        succeededCount: 1,
+      });
+      expect(slowMarker).toBe(false);
+      // The stub would sleep 20 s; finishing well inside that proves the timeout fired.
+      expect(elapsedMillis).toBeLessThan(15_000);
+    })
+  );
+
+  it.effect(
+    "reads scans and images page by page and leaves usable text alone",
+    Effect.fnUntraced(function* () {
+      const scan = "pages=3 synthetic scan";
+      const digital = "pages=1 extract-long-text";
+      const fixture = yield* makeExtractResumeFixture([
+        { content: scan, name: "scan.pdf" },
+        { content: "clean", name: "photo.png" },
+        { content: digital, name: "digital.pdf" },
+        { content: "note body", name: "note.txt" },
+        { content: "bitmap bytes", name: "drawing.bmp" },
+        { content: "no page count here", name: "unreadable.pdf" },
+      ]);
+
+      const withoutOcr = yield* fixture.run();
+      const summary = yield* fixture.run({ ocr: true, overwrite: true });
+      const rows = yield* fixture.pageRows(scan);
+      const composed = yield* fixture.readText(`text/${operationIdFor(scan)}.txt`);
+      const firstReading = yield* fixture.readText(`ocr/first-reading/${operationIdFor(scan)}.txt`);
+      const pageText = yield* fixture.readText(`ocr/text/${operationIdFor(scan)}/2.tesseract.txt`);
+      const digitalText = yield* fixture.readText(`text/${operationIdFor(digital)}.txt`);
+      const digitalRows = yield* fixture.exists(`ocr/pages/${operationIdFor(digital)}.jsonl`);
+      const sources = yield* fixture.readText("sources.jsonl");
+      const languages = yield* fixture.readText("ocr/languages.json");
+      const recognitionCalls = yield* fixture.recognitionCalls();
+      const resumed = yield* fixture.run({ ocr: true });
+
+      expect(withoutOcr.ocrSourceCount).toBe(0);
+      expect(withoutOcr.textArtifactCount).toBe(4);
+
+      expect(Struct.pick(summary, ocrSummaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 6,
+        failedCount: 0,
+        noEngineFailedCount: 0,
+        ocrFailedPageCount: 0,
+        ocrPageCount: 4,
+        ocrSourceCount: 2,
+        skippedCount: 0,
+        sourceCount: 6,
+        succeededCount: 6,
+      });
+      expect(summary.textArtifactCount).toBe(5);
+      expect(A.map(rows, (row) => [row.pageNumber, row.pageCount, row.status])).toEqual([
+        [1, 3, "read"],
+        [2, 3, "read"],
+        [3, 3, "read"],
+      ]);
+      expect(
+        A.map(rows, (row) =>
+          row.status === "read" ? [row.engine.engineId, row.languages, row.confidence, row.charCount, row.warnings] : []
+        )
+      ).toEqual(A.replicate(["tesseract", ["eng"], 0.9, 14, []], 3));
+      expect(composed).toBe("Synthetic page\n\f\nSynthetic page\n\f\nSynthetic page");
+      expect(firstReading).toBe("stub text body");
+      expect(pageText).toBe("Synthetic page");
+      expect(digitalText).toContain("born-digital page");
+      expect(digitalRows).toBe(false);
+      expect(
+        A.length(A.filter(Str.split(sources, "\n"), (line) => pipe(line, Str.includes('"engine":"tesseract"'))))
+      ).toBe(2);
+      expect(languages).toContain('"installed":["eng","osd"]');
+      expect(languages).toContain('"missing":[]');
+      expect(languages).toContain('"scriptDetection":true');
+      expect(A.length(recognitionCalls)).toBe(4);
+      expect(A.every(recognitionCalls, (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(true);
+
+      expect(resumed.alreadyCompleteCount).toBe(6);
+      expect(resumed.ocrPageCount).toBe(4);
+      expect(A.length(yield* fixture.recognitionCalls())).toBe(4);
+    })
+  );
+
+  it.effect(
+    "bounds a crash, a failed render and a timeout to their page and reads sources Tika failed",
+    Effect.fnUntraced(function* () {
+      const crashed = "pages=3 p2=crash extract-must-fail";
+      const unrendered = "pages=2 p2=norender";
+      const dead = "pages=1 p1=crash extract-must-fail";
+      const slow = "pages=2 p1=hang";
+      const fixture = yield* makeExtractResumeFixture([
+        { content: crashed, name: "crashed.pdf" },
+        { content: unrendered, name: "unrendered.pdf" },
+        { content: dead, name: "dead.pdf" },
+        { content: slow, name: "slow.pdf" },
+      ]);
+
+      const summary = yield* fixture.run({ ocr: true, ocrPageTimeoutMillis: 300 });
+      const crashedRows = yield* fixture.pageRows(crashed);
+      const unrenderedRows = yield* fixture.pageRows(unrendered);
+      const deadRows = yield* fixture.pageRows(dead);
+      const slowRows = yield* fixture.pageRows(slow);
+      const crashedText = yield* fixture.readText(`text/${operationIdFor(crashed)}.txt`);
+      const crashedMetadata = yield* fixture.readText(`metadata/${operationIdFor(crashed)}.json`);
+      const deadMarker = yield* fixture.exists(`outcomes/${contentDigest(dead)}.json`);
+      const resumed = yield* fixture.run({ ocr: true });
+
+      const statuses = (rows: ReadonlyArray<{ readonly status: string }>) => A.map(rows, (row) => row.status);
+      const reasons = (rows: typeof crashedRows) =>
+        A.map(rows, (row) => (row.status === "failed" ? row.reason : "read"));
+
+      expect(Struct.pick(summary, ocrSummaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 3,
+        failedCount: 1,
+        noEngineFailedCount: 0,
+        ocrFailedPageCount: 4,
+        ocrPageCount: 4,
+        ocrSourceCount: 3,
+        skippedCount: 0,
+        sourceCount: 4,
+        succeededCount: 3,
+      });
+      expect(reasons(crashedRows)).toEqual(["read", "recognition-failed", "read"]);
+      expect(reasons(unrenderedRows)).toEqual(["read", "render-failed"]);
+      expect(reasons(deadRows)).toEqual(["recognition-failed"]);
+      expect(reasons(slowRows)).toEqual(["recognition-timed-out", "read"]);
+      expect(statuses(slowRows)).toEqual(["failed", "read"]);
+      expect(crashedText).toBe("Synthetic page\n\f\n\n\f\nSynthetic page");
+      expect(crashedMetadata).toContain('"beep.processing":"ocr"');
+      expect(deadMarker).toBe(false);
+
+      // Sources the OCR pass settled are reused; the one with no readable page is retried.
+      expect(resumed.alreadyCompleteCount).toBe(3);
+      expect(resumed.failedCount).toBe(1);
+      expect(resumed.ocrPageCount).toBe(4);
+    })
+  );
+
+  it.effect(
+    "picks language models from the detected script and reports the missing ones",
+    Effect.fnUntraced(function* () {
+      const chinese = "pages=1 p1=han";
+      const sources = [{ content: chinese, name: "notice.pdf" }];
+      const english = yield* makeExtractResumeFixture(sources);
+      const multilingual = yield* makeExtractResumeFixture(sources, ["chi_sim", "chi_tra", "eng", "osd"]);
+      const undetected = yield* makeExtractResumeFixture(sources, ["chi_sim", "eng"]);
+      const modelless = yield* makeExtractResumeFixture(sources, ["osd"]);
+
+      yield* english.run({ ocr: true });
+      yield* multilingual.run({ ocr: true });
+      yield* undetected.run({ ocr: true });
+      const modellessSummary = yield* modelless.run({ ocr: true });
+
+      const englishReport = yield* english.readText("ocr/languages.json");
+      const multilingualReport = yield* multilingual.readText("ocr/languages.json");
+      const undetectedReport = yield* undetected.readText("ocr/languages.json");
+      const modellessReport = yield* modelless.readText("ocr/languages.json");
+
+      expect(yield* english.recognitionCalls()).toHaveLength(1);
+      expect(A.every(yield* english.recognitionCalls(), (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(true);
+      expect(englishReport).toContain('"missing":["chi_sim","chi_tra"]');
+      expect(A.map(yield* english.pageRows(chinese), (row) => row.languages)).toEqual([["eng"]]);
+
+      expect(
+        A.every(yield* multilingual.recognitionCalls(), (call) =>
+          pipe(call, Str.includes(" -l chi_sim+chi_tra+eng tsv"))
+        )
+      ).toBe(true);
+      expect(multilingualReport).toContain('"missing":[]');
+
+      // Without the osd model there is no script detection: the page is read as English.
+      expect(A.every(yield* undetected.recognitionCalls(), (call) => pipe(call, Str.includes(" -l eng tsv")))).toBe(
+        true
+      );
+      expect(undetectedReport).toContain('"scriptDetection":false');
+
+      // Not even English is installed: nothing is read and the gap is reported.
+      expect(yield* modelless.recognitionCalls()).toHaveLength(0);
+      expect(modellessSummary.ocrSourceCount).toBe(0);
+      expect(modellessSummary.succeededCount).toBe(1);
+      expect(modellessReport).toContain('"missing":["chi_sim","chi_tra","eng"]');
+    })
+  );
+
+  it.effect(
+    "runs without OCR when Tesseract is not installed",
+    Effect.fnUntraced(function* () {
+      const fixture = yield* makeExtractResumeFixture([{ content: "pages=2", name: "scan.pdf" }]);
+
+      const summary = yield* fixture.run({ ocr: true, tesseractPath: "/nonexistent/beep-test-tesseract" });
+      const report = yield* fixture.exists("ocr/languages.json");
+
+      expect(summary.succeededCount).toBe(1);
+      expect(summary.ocrSourceCount).toBe(0);
+      expect(report).toBe(false);
     })
   );
 });

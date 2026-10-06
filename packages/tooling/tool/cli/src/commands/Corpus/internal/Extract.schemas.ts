@@ -9,9 +9,11 @@ import { FileProcessingFailureRecord, SourceProcessingRecord } from "@beep/file-
 import { SelectedStrategy } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
+import { CorpusExtractOcrCounts } from "./Ocr.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");
 
@@ -50,10 +52,15 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
     includeDuplicates: S.Boolean,
     javaPath: S.optionalKey(S.String),
     maxFiles: S.optionalKey(S.Finite),
+    ocr: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    ocrPageTimeoutMillis: S.optionalKey(PosInt),
     outLabel: S.optionalKey(S.String),
     overwrite: S.Boolean,
+    pdfinfoPath: S.optionalKey(S.NonEmptyString),
+    pdftoppmPath: S.optionalKey(S.NonEmptyString),
     pffexportPath: S.optionalKey(S.String),
     sourceLabel: S.optionalKey(S.String),
+    tesseractPath: S.optionalKey(S.NonEmptyString),
     tikaJarPath: S.String,
     tikaTimeoutMillis: S.optionalKey(PosInt),
   },
@@ -90,6 +97,9 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  *   extractedCount: S.Natural.make(1),
  *   failedCount: S.Natural.make(0),
  *   noEngineFailedCount: S.Natural.make(0),
+ *   ocrFailedPageCount: S.Natural.make(0),
+ *   ocrPageCount: S.Natural.make(0),
+ *   ocrSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(2),
  *   succeededCount: S.Natural.make(2),
@@ -109,6 +119,9 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
     extractedCount: S.Natural,
     failedCount: S.Natural,
     noEngineFailedCount: S.Natural,
+    ocrFailedPageCount: S.Natural,
+    ocrPageCount: S.Natural,
+    ocrSourceCount: S.Natural,
     skippedCount: S.Natural,
     sourceCount: S.Natural,
     succeededCount: S.Natural,
@@ -137,6 +150,9 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  *   extractedCount: S.Natural.make(1),
  *   failedCount: S.Natural.make(0),
  *   noEngineFailedCount: S.Natural.make(0),
+ *   ocrFailedPageCount: S.Natural.make(0),
+ *   ocrPageCount: S.Natural.make(0),
+ *   ocrSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(1),
  *   succeededCount: S.Natural.make(1),
@@ -192,6 +208,7 @@ export class CorpusExtractOutcomeRecord extends S.Class<CorpusExtractOutcomeReco
     childArtifactCount: S.Natural,
     exportChildren: S.Boolean,
     failure: S.OptionFromOptionalKey(FileProcessingFailureRecord),
+    ocr: S.OptionFromOptionalKey(CorpusExtractOcrCounts),
     routingKey: S.OptionFromOptionalKey(Sha256Hex),
     sha256: Sha256Hex,
     sourceRecord: SourceProcessingRecord,
