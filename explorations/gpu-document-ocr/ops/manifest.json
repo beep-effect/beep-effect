@@ -6,7 +6,9 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Which vision OCR engine beats Tesseract on the scan sample once the GPU half of the benchmark has run?",
+      "What fan curve or power cap keeps the free card under 90 C during a sustained OCR run?",
+      "Do dots.ocr or PaddleOCR-VL beat GLM-OCR on degraded pages once the card can run them?",
+      "Which Tesseract signal (mean word confidence, page class) routes a page to the vision engine?",
       "Page-separated first-reading text: split Tika XHTML output, or re-read every page of a selected source?",
       "Should image sources keep their OCR text in the first extraction instead of only in a re-read pass?",
       "What acceptance rule lets a vision-model page reading replace the first reading?"

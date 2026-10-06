@@ -102,9 +102,26 @@ by watching which PCI device's `mem_info_vram_used` moves, never by index.
 ## Proven on the cards
 
 <!-- GPU-RESULTS -->
-Nothing yet. No GPU process was started for this packet as of this writing:
-the extraction run was still active. The commands to run are in a private
-runbook beside the benchmark data (`ops/gpu-ocr/RESUME-GPU.md` under the
-corpus home): a PyTorch enumeration and one small matmul on the free card,
-then each engine on one page, then on the sample.
+Run on 2026-10-06 after the extraction finished, on the non-display card
+only, guard script green before each step.
+
+| Step | Result |
+| --- | --- |
+| PyTorch enumeration (no device pin) | `torch.cuda.is_available()` true, 2 devices, each 31.9 GiB |
+| 2048x2048 half-precision matmul, `HIP_VISIBLE_DEVICES=1` | ok in 0.2 s, 116 MiB allocated; the free card's VRAM counter moved, the display card's did not |
+| `llama-server` (HIP build) with a vision GGUF and its projector | loads in 1.0 s, serves `/v1/chat/completions` with an image; 58 pages read, no errors |
+| PyTorch + `transformers` vision model | not run |
+
+So both paths work on one card: ROCm PyTorch sees and can use the cards, and
+the HIP llama.cpp build serves a vision model.
+
+**Heat is the open problem.** A 0.9B OCR model reading one page every four
+seconds drove the junction temperature from 50 C to a peak of 94 C; 17 of 58
+samples were at or above 90 C. The fan peaked at 2,339 rpm against a reported
+maximum of 5,100 rpm. Limits on this card: thermal watchdog 100 C, driver
+critical 110 C, driver emergency 115 C. Nothing tripped and the kernel logged
+no new GPU errors, but the run crossed the 90 C stop line set for this work,
+and GPU work was stopped there. A fan curve or a power cap (the cap reads
+300 W) has to be in place before any run longer than a few pages. Both need
+root and are the operator's to set.
 <!-- /GPU-RESULTS -->

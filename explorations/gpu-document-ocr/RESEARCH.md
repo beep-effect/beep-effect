@@ -73,8 +73,12 @@ control for "is the gain from the GPU, or from any OCR newer than Tesseract?"
 - **Hardware safety.** Single card only, short runs, temperatures watched.
   The kernel runs translated, strict DMA on purpose; two-card peer-to-peer
   work is out. See `research/GPU-STACK.md`.
-- **No GPU numbers yet.** Every statement about a vision model in this packet
-  is from publishers or round-ups until the GPU half of the benchmark runs.
+- **Heat.** One measured run took the card to 94 C junction with the fan
+  below half speed. No sustained GPU pass until the card has a fan curve or
+  a power cap.
+- **One engine measured.** GLM-OCR has numbers in `research/BENCHMARK.md`.
+  Statements about dots.ocr and PaddleOCR-VL are still from publishers and
+  round-ups.
 - **Ground truth is scarce.** Only born-digital pages have it, and they are
   the easy case.
 - **Vision models can invent text.** For legal documents an invented word is

@@ -223,6 +223,24 @@ Measured on the July extract (counts only, see `BENCHMARK.md`): class A is
 1,052 of 2,845 PDF pages, class B is 252 sources, class D is 517 pages. Class
 D is invisible to any chars-per-page rule and is one page in six.
 
+Three refinements from the measurements and from the October run:
+
+- **Route by confidence, not by class alone.** The one vision engine measured
+  loses to Tesseract on clean pages and wins on degraded ones. Class A should
+  therefore run `@beep/tesseract` first (0.8 s per page, gives a mean word
+  confidence) and send on only pages below a confidence line. On the sample,
+  a line at 70 selects 22% of scan pages and a line at 80 selects 34%. That
+  cut is also what makes a GPU pass affordable in heat and time.
+- **Timeouts are a page problem.** The October run reported 94 PDFs that hit
+  the per-source Tika timeout (figure from the orchestrator session, not
+  measured here). They belong to class C. A page-level pass bounds the cost
+  of one bad page to that page: each `recognizePage` call has its own
+  timeout, and a source is finished page by page instead of all or nothing.
+- **A crashed OCR must be visible.** Tesseract was seen crashing in the JPEG
+  2000 decoder during the same run; Tika returns an empty page and the
+  output does not mark it. In the page-level contract this is
+  `recognition-failed` for that page, recorded in `pages.jsonl`.
+
 Acceptance of a re-read is a separate rule, not part of the selector: a new
 page text replaces the first reading only when it carries no
 `output-truncated` or `repetition-suspected` warning and is not shorter than

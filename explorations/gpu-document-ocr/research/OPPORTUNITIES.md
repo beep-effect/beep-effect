@@ -33,3 +33,13 @@
    benchmark controls. Evidence: three of four spot-checked high-text pages
    were scans with an OCR text layer. Prevention: the page probe proposed in
    `SEAM-DESIGN.md` section 6 (full-page raster present).
+
+6. **A temperature stop rule checked only between pages let the run cross
+   it.** Doing: the first full GPU engine run. Evidence: stop line 90 C; 17 of
+   58 post-page samples at or above it, peak 94 C. Prevention: sample in a
+   separate thread during inference and kill the server at the line; treat
+   the first sample over the line as terminal, not as a reason to pause.
+
+7. **The port picked for a throwaway local server was already bound.** Doing:
+   starting `llama-server`. Evidence: `couldn't bind HTTP server socket`.
+   Prevention: bind port 0 or probe before launch.

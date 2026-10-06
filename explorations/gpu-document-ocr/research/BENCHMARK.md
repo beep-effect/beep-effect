@@ -150,18 +150,65 @@ What the numbers say:
 ## GPU results
 
 <!-- GPU-RESULTS -->
-Not run. No GPU engine has been measured. Planned runs, one model at a time
-on the non-display card, each under ten minutes:
+One engine was measured, then GPU work stopped on a temperature limit. The
+other two candidates were **not run**.
 
-| Engine | Path | Weights |
-| --- | --- | --- |
-| GLM-OCR Q8_0 | llama.cpp (HIP build) `llama-server` + mmproj | on disk, sha256 verified |
-| dots.ocr Q8_0 | llama.cpp (HIP build) `llama-server` + mmproj | on disk, sha256 verified |
-| PaddleOCR-VL-1.6 | PyTorch ROCm, `transformers` | on disk, sha256 verified |
+Run: GLM-OCR Q8_0 through `llama-server` (ROCm/HIP build), one card (the
+non-display card), one server slot, temperature 0, prompt `Text Recognition:`,
+the 300 dpi page PNG sent as is (4,043 image tokens per page), 58 pages.
 
-For each: seconds per page, characters, CER/WER on the 10 controls, pairwise
-agreement on scans, the hand check on the same four bands, VRAM used and peak
-junction temperature.
+| Engine | Class | n | Median s/page | Mean chars | Empty pages | Quality |
+| --- | --- | --- | --- | --- | --- | --- |
+| GLM-OCR Q8_0 | control | 10 | 5.27 | 3,086 | 0 | CER median 0.93%, WER median 1.2%, word F1 mean 0.984 |
+| GLM-OCR Q8_0 | scan | 30 | 4.06 | 1,190 | 2 | char similarity to Tesseract: median 0.78; word F1 0.87 |
+| GLM-OCR Q8_0 | scan-low | 6 | 3.35 | 160 | 2 | char similarity to Tesseract: median 0.84 |
+| GLM-OCR Q8_0 | sparse | 6 | 3.44 | 164 | 1 | char similarity to Tesseract: median 0.73 |
+
+| Resource | Value |
+| --- | --- |
+| Model load | 1.0 s |
+| VRAM, after load / peak | 2,987 MiB / 3,717 MiB of 32 GB |
+| Wall time, 58 pages | 430 s, of which 165 s were cool-down pauses |
+| Junction temperature, start / median / peak | 50 C / 87 C / **94 C** |
+| Post-page samples at or above 90 C | 17 of 58 |
+| Fan, peak | 2,339 rpm of a 5,100 rpm maximum |
+| Outputs cut at the token limit | 0 of 58 |
+| New kernel `amdgpu` / `AMD-Vi` errors | 0 |
+
+Readings:
+
+1. **On clean pages GLM-OCR is worse than Tesseract, and slower.** CER median
+   0.93% against 0.09%, at 5.3 s per page against 1.5 s. There is no case for
+   sending born-digital or clean scanned prose to it.
+2. **On the two degraded bands of the hand check it is clearly better** (a
+   judgment, four bands, one reader). Faxed table band: all visible words
+   right, including the three column headers Tesseract lost; Tesseract had
+   about 12 of 38 wrong or missing. Thermal receipt band: items and prices
+   right, including the price Tesseract dropped; Tesseract had about 8 of 22
+   wrong or missing. On the two clean bands both engines were right.
+3. **Two cautions from the same hand check.** The receipt's time of day is
+   smudged in the image; GLM-OCR printed a definite time that the reader could
+   not confirm. That is the invented-detail risk in one token. And the faxed
+   table came back column by column (all descriptions, then all
+   manufacturers, then all uses), so the words are right and the row
+   association is gone.
+4. **Agreement with Tesseract on scans is 0.78 by characters.** On most pages
+   the two engines mostly agree; the disagreement is where one of them is
+   wrong, and this benchmark cannot say which without reading the page.
+5. **Throughput was not tuned.** One slot, full-resolution images. Smaller
+   images and several slots would raise pages per second. It was not explored
+   because heat, not compute, is the limit (next point).
+6. **The run breached its own temperature rule.** The rule was to stop at 90 C
+   junction. The runner checked before each page, not during one, and paused
+   whenever a page would have started at 80 C or more. Even so the junction
+   was at or above 90 C after 17 pages. The run should have stopped at the
+   first such sample (page 17) and did not; that is a fault in the runner.
+   GPU work was stopped after this run. A 0.9B model at one page every four
+   seconds is enough to take this card from 50 C to over 80 C in 40 seconds,
+   with the fan at less than half its maximum speed.
+
+Not run: dots.ocr Q8_0 and PaddleOCR-VL-1.6. Their weights are on disk and
+hashed. They wait on a fan curve or power cap for the card.
 <!-- /GPU-RESULTS -->
 
 ## Limits of this benchmark
