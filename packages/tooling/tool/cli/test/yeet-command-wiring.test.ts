@@ -87,6 +87,63 @@ describe("yeet merge-loop command wiring", () => {
       })
     );
   });
+  it.layer(commandTestLayer, { timeout: "30 seconds" })("fixture and status subcommands", (it) => {
+    const commandFailure = (args: ReadonlyArray<string>) =>
+      runYeetCommand(args).pipe(
+        Effect.flip,
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+      );
+
+    it.effect(
+      "routes plan-contract-check and fallow-fixture-check to their handlers, which refuse unusable input",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-fixture-commands-" });
+        expect(
+          yield* commandFailure(["plan-contract-check", "--expect-step-id", "publish:02-pr-create"])
+        ).toMatchObject({ _tag: "YeetCommandError", message: "yeet plan-contract-check requires --from-stdin." });
+        expect(
+          yield* commandFailure([
+            "fallow-fixture-check",
+            path.join(root, "missing-fixture.jsonc"),
+            "--emit",
+            path.join(root, "fixture-issues.json"),
+          ])
+        ).toMatchObject({ _tag: "YeetCommandError" });
+        expect(yield* fs.exists(path.join(root, "fixture-issues.json"))).toBe(false);
+      })
+    );
+
+    it.effect(
+      "routes fallow-feedback to its handler, which refuses an envelope directory outside the repository",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-fallow-feedback-command-" });
+        const from = path.join(root, "fallow");
+        const emit = path.join(root, "fallow-quality-issues.json");
+        expect(yield* commandFailure(["fallow-feedback", "--advisory", "--from", from, "--emit", emit])).toMatchObject({
+          _tag: "YeetCommandError",
+          message: `Path "${from}" is not contained within the allowed Fallow feedback root.`,
+        });
+        expect(yield* fs.exists(emit)).toBe(false);
+      })
+    );
+
+    it.effect(
+      "reports a command error for status outside a repository",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const originalCwd = process.cwd();
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-status-command-" });
+        yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(originalCwd)));
+        yield* Effect.sync(() => process.chdir(root));
+        expect(yield* commandFailure(["status"])).toMatchObject({ _tag: "YeetCommandError" });
+      })
+    );
+  });
+
   it.effect("dispatches the top-level publish and repair planners", () =>
     Effect.forEach(
       [

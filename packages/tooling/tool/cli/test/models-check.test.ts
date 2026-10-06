@@ -348,7 +348,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       expect(A.map(restored.findings, (entry): DriftKind => entry.kind)).toEqual(
         A.map(report.findings, (entry): DriftKind => entry.kind)
       );
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("flags a proxy-workflow binding the answered proxy overlay omits", () =>
@@ -359,7 +359,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       // binding names a model this box cannot route on that surface — even
       // though the file already holds the id the manifest asks for.
       expect(kindsOf(report)).toEqual(["proxy.env:unknown-model"]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("seeds a manifest once and refuses to overwrite it", () =>
@@ -382,7 +382,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
 
       const second = yield* Effect.result(store.init(target, seedModelsManifest));
       strictEqual(second._tag, "Failure");
-    }).pipe(Effect.scoped)
+    })
   );
 });
 
@@ -398,13 +398,13 @@ const modelsWithoutProxy = Layer.mergeAll(
   FixtureCatalogSourcesWithoutProxy
 ).pipe(Layer.provide(platform));
 
-layer(Layer.mergeAll(platform, modelsWithoutProxy))((it) => {
+layer(Layer.mergeAll(platform, modelsWithoutProxy), { timeout: "30 seconds" })((it) => {
   it.effect("stays silent on a proxy-workflow binding when the proxy overlay is absent", () =>
     Effect.gen(function* () {
       const report = yield* runCheck("manifest-proxy.yaml");
 
       strictEqual(report.hasDrift, false);
       expect(A.map(report.findings, (entry) => entry.targetId)).not.toContain("proxy.env");
-    }).pipe(Effect.scoped)
+    })
   );
 });

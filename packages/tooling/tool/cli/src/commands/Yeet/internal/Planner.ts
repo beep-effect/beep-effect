@@ -559,7 +559,8 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
     verification: "detached-clean-temp-worktree-of-HEAD",
   });
 
-// Every publish path opens the pull request as a draft (push-first-publish D4).
+// Every publish path opens the pull request as a draft (push-first-publish
+// D4), so the planned create always carries `--draft`.
 const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
