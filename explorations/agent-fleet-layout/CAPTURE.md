@@ -24,7 +24,7 @@ changes):
   worktrees).
 - Agents are performing work as we speak in those clones, so to not interrupt
   them or remove in-progress work, start from a new folder
-  in a new `beep-effect` folder under my YeeBois directory.
+  in a new, clean folder outside the active clone set.
 - Unsure of the ideal structure for myself and my agents. I like to open
   WebStorm and tinker in a given beep-effect clone (not a worktree). Sometimes
   agents work directly in the non-worktree clone to help my tinkering, but

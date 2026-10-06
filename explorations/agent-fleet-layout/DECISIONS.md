@@ -31,7 +31,7 @@ recommendation on every question except where noted.
 
 **Question:** New flat root outside `projects/` as proposed, or under `projects/`?
 
-**Answer:** Under `~/YeeBois/projects/` with a new namespace (working name `projects/beep/{seats,lanes}`) and a single fleet-root setting the CLI and timers read.
+**Answer:** Under the configured projects directory with a new namespace (working name `projects/beep/{seats,lanes}`) and a single fleet-root setting the CLI and timers read.
 
 **Rationale:** `yeet sweep --fleet`, five user units and portfolio-watch all discover via the projects root; a root outside it is invisible until discovery is parameterized anyway. Rejected: a flat root outside `projects/` as a hard requirement (operator confirmed it was "somewhere clean", not the path), flat rename only (keeps the glob-by-prefix sprawl).
 
