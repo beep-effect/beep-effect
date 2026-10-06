@@ -258,6 +258,8 @@ export const MailReaderUnavailable: Layer.Layer<MailReader> = Layer.succeed(
  * console.log(sheetSetApprovalLive(MailReaderUnavailable))
  * ```
  *
+ * @param mail - Mail-reader layer: `MailReaderM365Live` for the email route, `MailReaderUnavailable` otherwise.
+ * @returns The approval service layer, needing only the process, file-system, and path services.
  * @category layers
  * @since 0.0.0
  */
