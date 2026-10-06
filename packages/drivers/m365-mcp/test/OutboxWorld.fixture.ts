@@ -77,6 +77,7 @@ type StoredFile = {
   readonly isInline: boolean;
   readonly name: string;
   readonly odataType: string;
+  readonly reportsSize: boolean;
 };
 
 export const storedFile = (file: {
@@ -89,6 +90,7 @@ export const storedFile = (file: {
   isInline: false,
   name: file.name,
   odataType: FILE_ATTACHMENT,
+  reportsSize: true,
 });
 
 export const FIXTURE_CONTENT = new Uint8Array(16).fill(7);
@@ -242,7 +244,7 @@ const StubM365Layer = Layer.effect(
               id: file.id,
               isInline: O.some(file.isInline),
               name: O.some(file.name),
-              size: O.some(file.content.byteLength + GRAPH_SIZE_OVERHEAD),
+              size: file.reportsSize ? O.some(file.content.byteLength + GRAPH_SIZE_OVERHEAD) : O.none(),
             })
           ),
         });

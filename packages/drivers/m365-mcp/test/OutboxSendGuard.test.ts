@@ -1,4 +1,4 @@
-import { GraphMessage } from "@beep/m365";
+import { GraphEmailAddress, GraphMessage, GraphRecipient } from "@beep/m365";
 import {
   checkSendExpectation,
   OutboxAttachmentDigest,
@@ -202,6 +202,40 @@ describe("@beep/m365-mcp outbox send guard", () => {
     });
 
     assert.deepStrictEqual(fieldsOf(check(world, { draft: nameless })), ["to"]);
+  });
+
+  it("reads a draft with no recipient lists and no subject as empty, not as a match for anything", () => {
+    const world = worldOf({ bcc: [], cc: [], files: [], subject: "", to: [] });
+    const bare = GraphMessage.make({ id: "draft-1", isDraft: O.some(true) });
+
+    assertNone(check(world, { draft: bare }));
+    assert.deepStrictEqual(
+      fieldsOf(
+        check(world, {
+          draft: bare,
+          ...withExpect(world, {
+            bcc: ["dee@example.test"],
+            cc: ["ben@example.test"],
+            subject: "Fixture subject",
+            to: ["ada@example.test"],
+          }),
+        })
+      ),
+      ["to", "cc", "bcc", "subject"]
+    );
+  });
+
+  it("treats a recipient whose address field is absent as a mismatch", () => {
+    const world = worldOf({ bcc: [], cc: [], files: [], subject: "Fixture subject", to: ["ada"] });
+    const addressless = GraphMessage.make({
+      ...world.draft,
+      toRecipients: O.map(world.draft.toRecipients, (stored) => [
+        ...stored,
+        GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({})) }),
+      ]),
+    });
+
+    assert.deepStrictEqual(fieldsOf(check(world, { draft: addressless })), ["to"]);
   });
 
   it("reports several differing fields in a fixed order", () => {

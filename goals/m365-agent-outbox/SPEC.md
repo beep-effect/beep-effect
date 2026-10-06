@@ -129,7 +129,7 @@ attachment and hashes its bytes, and refuses with a typed mismatch unless:
 
 A stored attachment that cannot be verified refuses the send with
 `attachments`: an item or reference attachment, an inline one, one without a
-name, or one that cannot be downloaded. So does a draft with more attachments
+name, one for which Graph reports no size, or one that cannot be downloaded. So does a draft with more attachments
 than the configured count limit, or whose attachments Graph reports as more
 than twice the per-message byte limit; neither is downloaded.
 

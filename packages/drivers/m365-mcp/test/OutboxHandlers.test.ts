@@ -302,6 +302,8 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const tooLarge = yield* refusedWith;
         yield* world.script({ files: [{ ...fixtureFile, id: "not/a-path-segment" }] });
         const unsafeId = yield* refusedWith;
+        yield* world.script({ files: [{ ...fixtureFile, reportsSize: false }] });
+        const unsized = yield* refusedWith;
         yield* world.script({ failDownloads: true, files: [fixtureFile] });
         const undownloadable = yield* refusedWith;
         const records = yield* world.records;
@@ -316,8 +318,9 @@ describe("@beep/m365-mcp outbox handlers", () => {
         assert.deepStrictEqual(tooMany, ["refused", ["attachments"]]);
         assert.deepStrictEqual(tooLarge, ["refused", ["attachments"]]);
         assert.deepStrictEqual(unsafeId, ["refused", ["attachments"]]);
+        assert.deepStrictEqual(unsized, ["refused", ["attachments"]]);
         assert.deepStrictEqual(undownloadable, ["refused", ["attachments"]]);
-        assert.deepStrictEqual(tags(records), A.replicate("send-outcome", 10));
+        assert.deepStrictEqual(tags(records), A.replicate("send-outcome", 11));
         assert.deepStrictEqual(sends(calls), []);
         // Subject, swap, extra (2 files) and the failing download: 5 attempts. Nothing is downloaded once a
         // limit or an unverifiable attachment is seen.

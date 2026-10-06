@@ -164,6 +164,7 @@ const isVerifiable = (attachment: GraphAttachment): boolean =>
   O.contains(attachment["@odata.type"], FILE_ATTACHMENT_ODATA_TYPE) &&
   !O.contains(attachment.isInline, true) &&
   O.exists(attachment.name, (name) => name.length > 0) &&
+  O.isSome(attachment.size) &&
   isGraphId(attachment.id);
 
 const failure = (reason: OutboxStoredAttachmentErrorReason, count: number, message: string) =>
