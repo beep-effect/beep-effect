@@ -573,3 +573,15 @@ reviewed as a native-platform exception. The detector ledger now contains
 3,623 rows: 3,081 fixed, 229 exceptions, and 313 open. See
 `research/cli-effect-fn-runner-proof.md`. Full package and hosted proof remain
 separate.
+
+## 2026-10-06: Current-main Yeet test integration
+
+Merging `origin/main` at `7cc77b528a` adds
+`yeet-scripted-process.test.ts` from #1463. Its one EV010 NodeServices
+candidate is preserved as an open platform judgment because the test combines
+scoped scratch files with scripted process replies. The merged detector scan
+covers 1,240 files and 1,920 current findings, one more than the pre-merge
+branch; no other current candidate was added. The detector ledger contains
+3,624 rows: 3,081 fixed, 229 exceptions, and 314 open. Existing historical
+`yeet-command-wiring.test.ts` IDs remain in the ledger despite a source line
+shift. See `research/cli-post-main-merge-delta.md`.
