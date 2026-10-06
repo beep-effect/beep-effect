@@ -33,6 +33,7 @@ import {
   AttachmentFilerShape,
   DocumentStore,
   FilingLedger,
+  KnownDocuments,
   Mailbox,
   MatterFolderDirectory,
 } from "./MailTagging.ports.ts";
@@ -40,6 +41,7 @@ import { senderRuleCategories } from "./MailTagging.tagger.ts";
 import {
   DocumentUploadResult,
   DownloadAttachmentRequest,
+  KnownDocumentRequest,
   MatterFolderRequest,
   UploadDocumentRequest,
 } from "./MailTagging.values.ts";
@@ -123,13 +125,10 @@ const candidateNames = (first: string, content: FiledContent): ReadonlyArray<str
 const isUsptoSender = (request: FileAttachmentsRequest): boolean =>
   A.contains(senderRuleCategories(request.taxonomy, request.envelope), PracticeCategory.Enum["P: USPTO"]);
 
-const isMatterContact = (request: FileAttachmentsRequest): boolean =>
-  A.some(O.toArray(request.envelope.senderAddress), (address) => A.contains(request.matter.contactAddresses, address));
-
 const destinationOf = (request: FileAttachmentsRequest): O.Option<FilingDestination> =>
   isUsptoSender(request)
     ? O.some(FilingDestination.Enum["uspto-incoming"])
-    : O.liftPredicate(FilingDestination.Enum["from-client"], () => isMatterContact(request));
+    : O.liftPredicate(FilingDestination.Enum["from-client"], () => request.senderIsExclusiveContact);
 
 const skipChecks: ReadonlyArray<
   readonly [AttachmentSkipReason, (meta: MailAttachmentMeta, policy: TaggingPolicy) => boolean]
@@ -186,14 +185,16 @@ const hashFailed = (operation: "sha256" | "sha1") => () =>
 
 /**
  * Builds the attachment filer over the mailbox, the matter-folder directory,
- * the document store, and the filing ledger.
+ * the document store, the known-documents index, and the filing ledger.
  *
  * **Details**
  *
  * The sender picks the destination. A sender the taxonomy's USPTO rule
- * matches files to `uspto-incoming`; a sender that is a contact address of the
- * matched matter files to `from-client`; any other sender skips every
- * attachment as `sender-not-routable` and downloads nothing. A destination
+ * matches files to `uspto-incoming`; a sender the request marks as an
+ * exclusive contact (a contact address of the matched matter and of no other
+ * matter) files to `from-client`; any other sender, including an address
+ * shared by two matters, skips every attachment as `sender-not-routable` and
+ * downloads nothing. A destination
  * without a folder skips every attachment as `no-folder`.
  *
  * Inline parts, non-file attachments, zero-byte parts, and parts larger than
@@ -202,6 +203,11 @@ const hashFailed = (operation: "sha256" | "sha1") => () =>
  *
  * Content with a completion line in the filing ledger for the same matter is
  * counted as deduplicated and not uploaded, whichever destination it went to.
+ * Content with neither a completion nor a pending intent is then looked up in
+ * the known-documents index: a hit is counted as deduplicated too, with no
+ * intent line, no upload, and no completion, in either mode. A pending intent
+ * is resumed without asking the index, because the index may already list the
+ * file that intent's own interrupted upload created.
  * A new file is named `<UTC received date> <sanitized original name>`. When a
  * completion or a pending intent already has that name in the matter with
  * different content, the first eight hex characters of the hash go before the
@@ -274,11 +280,12 @@ const hashFailed = (operation: "sha256" | "sha1") => () =>
 export const makeAttachmentFiler: Effect.Effect<
   AttachmentFilerShape,
   never,
-  Mailbox | MatterFolderDirectory | DocumentStore | FilingLedger | Crypto.Crypto
+  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Crypto.Crypto
 > = Effect.gen(function* () {
   const mailbox = yield* Mailbox;
   const folders = yield* MatterFolderDirectory;
   const documents = yield* DocumentStore;
+  const knownDocuments = yield* KnownDocuments;
   const ledger = yield* FilingLedger;
   const crypto = yield* Crypto.Crypto;
   const planned = yield* Ref.make(HashMap.empty<TaggingRunId, ReadonlyArray<FiledContent>>());
@@ -452,6 +459,21 @@ export const makeAttachmentFiler: Effect.Effect<
       ? reconcile(target, state, payload, intent)
       : Effect.succeed(settled(state, payload.content, "attachmentsReconciled", false));
 
+  // Content the document system already holds is settled before any intent is written.
+  const beginUnlessKnown = Effect.fn("AttachmentFiler.beginUnlessKnown")(function* (
+    target: FilingTarget,
+    state: FilingState,
+    payload: Payload
+  ): Effect.fn.Return<FilingState, FilingError> {
+    const known = yield* knownDocuments.has(
+      KnownDocumentRequest.make({
+        contentSha256: payload.content.contentSha256,
+        matterKey: payload.content.matterKey,
+      })
+    );
+    return known ? deduped(state) : yield* begin(target, state, payload);
+  });
+
   const begin = (target: FilingTarget, state: FilingState, payload: Payload) => {
     const first = freeName(A.appendAll(state.completed, state.pending), payload.content);
     return TaggingMode.is.apply(target.request.mode)
@@ -475,7 +497,7 @@ export const makeAttachmentFiler: Effect.Effect<
       return deduped(state);
     }
     return yield* O.match(A.findFirst(state.pending, isSameContent(content)), {
-      onNone: () => begin(target, state, payload),
+      onNone: () => beginUnlessKnown(target, state, payload),
       onSome: (intent) => resume(target, state, payload, intent),
     });
   });

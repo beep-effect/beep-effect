@@ -152,9 +152,11 @@ available; the guidance is identical.
 ## Repo notes (beep-effect)
 
 - Route Effect API questions to `graft ask "<q>" .repos/effect-workspace` to
-  federate across `effect` and `effect-tsgo`, or `graft ask "<q>" .repos/effect`
-  to narrow to Effect. `.repos/effect` and `.repos/effect-tsgo` point to the
-  child clones; `.repos/effect-workspace` points to their parent at
+  federate across every member in `scripts/references.json`, or
+  `graft ask "<q>" .repos/effect` to narrow to Effect. The workspace includes
+  `effect`, `effect-tsgo`, and the Spencer Beggs Effect ecosystem repositories.
+  Each `.repos/<member>` points to its child clone; `.repos/effect-workspace`
+  points to their parent at
   `$HOME/YeeBois/references/effect`. `scripts/setup-effect-ref.sh` provisions these
   links from `scripts/references.json`; `BEEP_REFERENCES_ROOT` overrides the root.
   The `beep-refs-refresh` timer runs nightly at 03:30 with `claude-opus-5`

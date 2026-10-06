@@ -9,7 +9,7 @@ Status: `in-progress`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Ground in `@beep/m365`, `@beep/box`, the Box tree, and the practice KG; settle the design. | `SPEC.md` design and Decision Log D-1..D-8 recorded. |
-| P1 Implement | in-progress | PR 1: domain schemas, ports, tagger, job, filer, undo, file ledgers, synthetic tests. PR 2: Box, practice-KG, and `@beep/m365` adapters plus the service entrypoint (after workstream A's write verbs merge). | Acceptance criteria 1-7 are met. |
+| P1 Implement | in-progress | PR 1 (#1464): domain schemas, ports, tagger, job, filer, undo, file ledgers. PR 2: `@beep/m365`, practice-KG, and Box adapters behind one service layer. PR 3: `bin` subcommand, sample user unit, runbook. | Acceptance criteria 1-8 are met. |
 | P2 Verify | pending | Live dry-run over mail since 2026-07-01 (counts only), attorney spot-check of a sample, operator-attended apply, undo drill on one message. | Reports recorded in `history/`. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
