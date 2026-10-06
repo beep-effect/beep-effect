@@ -22,7 +22,8 @@ Bootstrapping the repo inside Claude cloud sessions, Codex cloud, and Cursor Clo
 per-account paste text and allowlists: [cloud environments](runbooks/cloud-environments.md).
 The strict `@shadcn/lint` policy for Tailwind classes and style props, its fix recipes, and how a
 new UI workspace joins it: [design-system lint](runbooks/design-system-lint.md). Statecharts with
-XState v6 and `@xstate/effect`, their tests, inspector, CLI, and MCP: [statecharts](runbooks/xstate-effect-statecharts.md).
+XState v6 and `@xstate/effect`, their tests, inspector, CLI, and MCP: [statecharts](runbooks/xstate-effect-statecharts.md). The operator-attended Entra
+registration for the docket intake service, scoped to one mailbox: [docket intake registration](runbooks/docket-intake-entra-registration.md).
 
 ## Rules
 
