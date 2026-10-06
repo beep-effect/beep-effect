@@ -32,14 +32,16 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement. Slices 1 and 2 (driver mail verbs, the `beep-m365-outbox`
-server) are written and package-verified. The live smoke waits on the
-operator-attended registration; slice 3 (reply and forward drafts) follows it.
+server) are in PR #1471, and the live smoke passed on the firm tenant.
+Slice 3 (reply and forward drafts) follows the merge.
 
 ## Latest Evidence
 
 - 2026-10-06: packet and registration runbook (slice 0).
 - 2026-10-06: slices 1 and 2. `bun run beep quality package-verify` passes for
-  `@beep/m365` and `@beep/m365-mcp`. The live smoke has not run.
+  `@beep/m365` and `@beep/m365-mcp`.
+- 2026-10-06: live smoke passed on the firm tenant, read, write and one
+  self-send (`history/2026-10-06-live-smoke.md`).
 
 ## Notes
 
