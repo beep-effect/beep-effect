@@ -44,7 +44,9 @@ import {
   CI_LANE_PARTITIONS,
   CiLanePartitionId,
   CiLanePartitionShard,
+  ciLaneDefaultPlacements,
   PartitionedCiLane as PartitionedCiLaneSchema,
+  withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
 import type { FsUtils } from "@beep/repo-utils";
 import type { Crypto } from "effect";
@@ -1068,9 +1070,11 @@ const proveCiLanePartitionCoverage = Effect.fn("CiLane.proveCiLanePartitionCover
  * **Details**
  *
  * The proof checks the entire current non-labs workspace task inventory before
- * considering the requested Turbo shape. It fails closed for duplicate,
- * missing, stale, or unassigned packages, then intersects the dry-run selected
- * task set with the requested partition.
+ * considering the requested Turbo shape. An executable package the table does
+ * not name takes its `ciLaneDefaultPlacements` bin first, so a new workspace
+ * needs no table edit. The proof then fails closed for duplicate, stale, or
+ * still-unplaced packages and intersects the dry-run selected task set with
+ * the requested partition.
  *
  * **Example** (Prove a small lint partition)
  *
@@ -1108,8 +1112,19 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
   affected: boolean,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ): Effect.fn.Return<CiLanePartitionProof, CiLanePartitionError> {
-  const lanePartitions = A.filter(table, (candidate) => candidate.lane === laneId);
-  const definition = yield* proveCiLanePartitionDefinition(laneId, partitionId, lanePartitions, table);
+  const lanePartitions = withCiLaneDefaultPlacements(
+    A.filter(table, (candidate) => candidate.lane === laneId),
+    taskPackageNames
+  );
+  const definition = yield* proveCiLanePartitionDefinition(
+    laneId,
+    partitionId,
+    lanePartitions,
+    A.appendAll(
+      lanePartitions,
+      A.filter(table, (candidate) => candidate.lane !== laneId)
+    )
+  );
   const assignedPackageSet = yield* proveCiLanePartitionCoverage(
     laneId,
     partitionId,
@@ -1210,6 +1225,54 @@ export class CiLanePartitionArgs extends S.Class<CiLanePartitionArgs>($I`CiLaneP
     description: "Exact Turbo argv for partition selection and execution.",
   })
 ) {}
+
+/**
+ * Render the log lines naming every executable package the curated table placed by default.
+ *
+ * **Details**
+ *
+ * One line per lane, listing `package -> partition` pairs, or no line when
+ * every executable package is already in the committed table. The lane
+ * prints these after the union proof so a hosted shard log says where a
+ * freshly created package ran.
+ *
+ * **Example** (Render the default-placement line)
+ *
+ * ```ts
+ * import { ciLaneDefaultPlacementLinesForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciLaneDefaultPlacementLinesForTesting("lint", ["@beep/repo-cli", "@beep/new-package"]))
+ * ```
+ *
+ * @param laneId - Partitioned lane being proved.
+ * @param taskPackageNames - Every current non-labs workspace package with the lane task.
+ * @returns Zero or one log lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const ciLaneDefaultPlacementLinesForTesting: {
+  (laneId: PartitionedCiLane, taskPackageNames: ReadonlyArray<string>): ReadonlyArray<string>;
+  (taskPackageNames: ReadonlyArray<string>): (laneId: PartitionedCiLane) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (laneId: PartitionedCiLane, taskPackageNames: ReadonlyArray<string>): ReadonlyArray<string> =>
+    pipe(
+      ciLaneDefaultPlacements(
+        A.filter(CI_LANE_PARTITIONS, (candidate) => candidate.lane === laneId),
+        taskPackageNames
+      ),
+      A.match({
+        onEmpty: A.empty<string>,
+        onNonEmpty: (placements) =>
+          A.of(
+            `[ci] ${laneId} default placements (absent from ${CI_LANE_PARTITION_TABLE_PATH}): ${A.join(
+              A.map(placements, (placement) => `${placement.packageName} -> ${placement.partition}`),
+              ", "
+            )}.`
+          ),
+      })
+    )
+);
 
 /**
  * Build the selection and execution argv used by a partitioned CI lane.
@@ -2075,6 +2138,9 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   yield* Console.log(
     `[ci] ${laneId} partition union proved: ${taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
   );
+  yield* Effect.forEach(ciLaneDefaultPlacementLinesForTesting(laneId, taskPackageNames), Console.log, {
+    discard: true,
+  });
 
   if (options.dryRun) {
     if (A.isReadonlyArrayNonEmpty(proof.packages)) {

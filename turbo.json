@@ -1164,6 +1164,8 @@
         "**/docgen.json",
         "syncpack.config.ts",
         "tsconfig.base.json",
+        "vitest.aliases.generated.json",
+        "standards/fallow.boundaries.generated.jsonc",
         "!**/node_modules/**",
         "!**/.beep/**",
         "!**/.turbo/**",
