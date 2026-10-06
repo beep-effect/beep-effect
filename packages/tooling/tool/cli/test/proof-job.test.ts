@@ -30,6 +30,7 @@ import {
 } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -681,13 +682,16 @@ describe("proof job recovery boundaries", () => {
       Effect.fnUntraced(function* (root) {
         const launcher = yield* ProofJobLauncher.make(root);
         const record = yield* launcher.submit(submission(root));
-        yield* launcher
+        const finalizer = yield* launcher
           .finalize(record.jobId, Job.ProofJobSystemdResult.make({ serviceResult: "timeout", finalizedAt: stamp }))
           .pipe(Effect.delay("10 millis"), Effect.forkChild);
         const done = yield* launcher.wait(
           record.jobId,
           Job.ProofJobWaitOptions.make({ timeoutMs: O.some(2000), pollIntervalMs: 1 })
         );
+        // The terminal record becomes visible before finalize finishes its other
+        // writes. Join it before the fixture removes the job directory.
+        yield* Fiber.join(finalizer);
         expect(done.kind).toBe("settled");
         expect(done.record.phase).toBe("terminated");
       })

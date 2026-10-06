@@ -23,7 +23,6 @@ import { MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -275,7 +274,7 @@ const tagLiteral = (ast: SchemaAST.AST, tagKey: PropertyKey): O.Option<string> =
       : O.none();
 
 const identifierAt = (annotations: S.Annotations.Annotations | undefined): O.Option<string> =>
-  pipe(O.fromUndefinedOr(annotations?.identifier), O.filter(P.isString));
+  pipe(O.fromUndefinedOr(annotations?.identifier), O.filter(S.is(S.String)));
 
 const collectTagged = (schema: S.Top, tagKey: PropertyKey): ReadonlyArray<PoTaggedConstructor> => {
   const visited = MutableHashSet.empty<SchemaAST.AST>();
