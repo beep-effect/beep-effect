@@ -31,8 +31,14 @@ const FakeM365 = Layer.effect(
   Effect.gen(function* () {
     const message = yield* S.decodeUnknownEffect(GraphMessageAuthoredText)(recordedReply);
     return M365.of({
+      createEvent: unused,
+      createMasterCategory: unused,
+      deleteEvent: unused,
       deltaDriveItems: unused,
       downloadDriveItemContent: unused,
+      downloadMessageAttachment: unused,
+      ensureMasterCategories: unused,
+      findEventsByIdempotencyKey: unused,
       getEvent: unused,
       getListItem: unused,
       getMessage: unused,
@@ -43,8 +49,12 @@ const FakeM365 = Layer.effect(
       listDriveItemVersions: unused,
       listDrives: unused,
       listEvents: unused,
+      listMasterCategories: unused,
+      listMessageAttachments: unused,
       listMessages: unused,
       listSites: unused,
+      updateEvent: unused,
+      updateMessageCategories: unused,
     });
   })
 );
