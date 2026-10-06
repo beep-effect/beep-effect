@@ -104,7 +104,8 @@ const fakeBackend = (pageCount: { current: number }) =>
         inspect: Effect.fnUntraced(function* () {
           return PdfFacts.make({
             headerVersion: "1.6",
-            pages: A.makeBy(pageCount.current, () => letter),
+            // `A.makeBy(0, f)` still yields one element, so the empty case is explicit
+            pages: pageCount.current === 0 ? [] : A.makeBy(pageCount.current, () => letter),
             fonts: [],
             annotationCount: 0,
             hasOptionalContent: false,
@@ -121,8 +122,13 @@ const fakeBackend = (pageCount: { current: number }) =>
     })
   );
 
-const spec = (figures: ReadonlyArray<{ view: string; description: string }>, omissions: ReadonlyArray<unknown> = []) =>
+const spec = (
+  figures: ReadonlyArray<{ view: string; description: string }>,
+  omissions: ReadonlyArray<unknown> = [],
+  extra: Readonly<Record<string, string>> = {}
+) =>
   JSON.stringify({
+    ...extra,
     title: "Synthetic block",
     model: { parts: [{ name: "body", add: [{ kind: "box", min: [0, 0, 0], max: [10, 5, 5] }] }] },
     figures,
@@ -430,3 +436,51 @@ describe("@beep/technical-drawing", () => {
 void Box;
 void ModelSpec;
 void Part;
+
+describe("@beep/technical-drawing approver binding and empty documents", () => {
+  it.layer(makeLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "reports an empty document instead of rasterising a page that is not there",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        const pdfPath = path.join(dir, "empty.pdf");
+        yield* fs.writeFileString(pdfPath, "%PDF-1.6 no pages");
+        // the fake backend reports zero pages until a render sets the count
+        const service = yield* FigureSet;
+        const report = yield* service.validate(pdfPath, ValidationOptions.make({ expectedPages: O.none() }));
+        expect(report.pageCount).toBe(0);
+        expect(report.ok).toBe(false);
+        expect(A.map(report.findings, (f) => [f.code, f.message])).toEqual([["page-count", "The PDF has no pages."]]);
+      })
+    );
+  });
+
+  it.layer(makeLayer(), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "carries the spec's approver into the manifest, and omits the key when the spec names none",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const dir = yield* fs.makeTempDirectoryScoped();
+        const service = yield* FigureSet;
+        const figures = [{ view: "front", description: "is a front elevation view thereof" }];
+        const render = Effect.fnUntraced(function* (name: string, text: string) {
+          const specPath = path.join(dir, `${name}.json`);
+          yield* fs.writeFileString(specPath, text);
+          const out = path.join(dir, name);
+          const manifest = yield* service.render(RenderRequest.make({ specPath, outputDir: out }));
+          return { manifest, written: yield* fs.readFileString(path.join(out, "manifest.json")) };
+        });
+        const bound = yield* render("bound", spec(figures, [], { approver: "Attorney@Example.com" }));
+        expect(O.getOrUndefined(bound.manifest.approver)).toBe("attorney@example.com");
+        const decoded = yield* S.decodeEffect(RenderManifestJson)(bound.written);
+        expect(O.getOrUndefined(decoded.approver)).toBe("attorney@example.com");
+        const unbound = yield* render("unbound", spec(figures));
+        expect(O.isNone(unbound.manifest.approver)).toBe(true);
+        expect(unbound.written).not.toContain("approver");
+      })
+    );
+  });
+});

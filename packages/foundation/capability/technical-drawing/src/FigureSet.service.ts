@@ -148,9 +148,10 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     const bytes = yield* fs.readFile(resolved).pipe(Effect.mapError(io(`Could not read "${resolved}".`)));
     const pdfSha256 = yield* sha256(bytes);
     const facts = yield* pdf.inspect(resolved);
-    const pages = A.range(1, facts.pages.length);
+    // `A.range(1, 0)` is `[1]`, so an empty document needs its own branch.
+    const pages = A.length(facts.pages) === 0 ? A.empty<number>() : A.range(1, A.length(facts.pages));
     const rasterFindings = yield* Effect.forEach(
-      A.length(pages) === 0 ? [] : pages,
+      pages,
       Effect.fnUntraced(function* (page: number) {
         const margins = yield* pdf.measurePage({ pdfPath, page, dpi: MARGIN_DPI, antiAlias: true });
         const purity = yield* Effect.forEach(PURITY_DPIS, (dpi) =>
@@ -286,6 +287,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       pdfFile,
       pdfSha256,
       validation,
+      approver: spec.approver,
     });
     const json = yield* encodeManifest(manifest).pipe(
       Effect.mapError((cause) => DrawingError.fromUnknown("io", "Could not encode the manifest.", cause))

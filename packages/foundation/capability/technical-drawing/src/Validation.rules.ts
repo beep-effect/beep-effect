@@ -84,6 +84,11 @@ export const structuralFindings = (input: {
     O.map((expected) => fileFinding("page-count", `Expected ${expected} page(s), found ${facts.pages.length}.`)),
     O.toArray
   );
+  // A document without pages is never a sheet set, whatever count was expected.
+  const noPages =
+    A.length(facts.pages) === 0 && A.length(pageCount) === 0
+      ? [fileFinding("page-count", "The PDF has no pages.")]
+      : [];
   const formats = pipe(
     facts.pages,
     A.map((size) => formatOf(size, options.pageSizeTolerancePt))
@@ -106,7 +111,7 @@ export const structuralFindings = (input: {
   const distinct = pipe(formats, A.getSomes, A.dedupe);
   const mixed =
     A.length(distinct) > 1 ? [fileFinding("page-size-mixed", `Sheets mix formats: ${A.join(distinct, ", ")}.`)] : [];
-  return [...version, ...encrypted, ...layers, ...annotations, ...fonts, ...pageCount, ...sizes, ...mixed];
+  return [...version, ...encrypted, ...layers, ...annotations, ...fonts, ...pageCount, ...noPages, ...sizes, ...mixed];
 };
 
 const cm = (pixels: number, dpi: number): number => (pixels / dpi) * 2.54;

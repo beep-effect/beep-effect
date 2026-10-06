@@ -37,7 +37,8 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "test:integration": "bun run beep:test:integration"
+    "test:integration": "bun run beep:test:integration",
+    "test:integration:parallel": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",

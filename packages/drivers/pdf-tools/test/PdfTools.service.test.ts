@@ -1,12 +1,21 @@
-import { PdfTools, PdfToolsError, PngRequest, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
+import {
+  PageTextRequest,
+  PdfTools,
+  PdfToolsConfig,
+  PdfToolsError,
+  PngRequest,
+  RasterRequest,
+  SvgToPdfRequest,
+} from "@beep/pdf-tools";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { Effect, Fiber, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import { TestClock } from "effect/testing";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import type * as PlatformError from "effect/PlatformError";
 
@@ -109,6 +118,30 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
       );
     })
   );
+
+// A tool that starts and never exits.
+const HangingSpawner = Layer.succeed(
+  ChildProcessSpawner.ChildProcessSpawner,
+  ChildProcessSpawner.ChildProcessSpawner.of(
+    ChildProcessSpawner.make(() =>
+      Effect.succeed(
+        ChildProcessSpawner.makeHandle({
+          all: Stream.empty,
+          exitCode: Effect.never,
+          getInputFd: () => Sink.drain,
+          getOutputFd: () => Stream.empty,
+          isRunning: Effect.succeed(true),
+          kill: () => Effect.void,
+          pid: ChildProcessSpawner.ProcessId(1),
+          stderr: Stream.empty,
+          stdin: Sink.drain,
+          stdout: Stream.empty,
+          unref: Effect.succeed(Effect.void),
+        })
+      )
+    )
+  )
+);
 
 const makeLayer = (commands: Array<ChildProcess.StandardCommand>, exitCode = 0) =>
   PdfTools.makeLayer().pipe(
@@ -260,6 +293,30 @@ describe("@beep/pdf-tools service", () => {
           expect(error.reason).toBe("tool-failed");
           assertSome(error.cause, "tool stderr");
           assertNone(O.filter(error.cause, (text) => text.length === 0));
+        })
+      );
+    });
+  });
+  describe("when the tool never exits", () => {
+    const HangingLayer = PdfTools.makeLayer(PdfToolsConfig.make({ timeoutMillis: 5_000 })).pipe(
+      Layer.provide(HangingSpawner),
+      Layer.provideMerge(NodeServices.layer)
+    );
+    it.layer(HangingLayer, { timeout: "30 seconds" })((it) => {
+      it.effect(
+        "stops the run at the configured timeout and reports tool-failed",
+        Effect.fnUntraced(function* () {
+          const tools = yield* PdfTools;
+          const fiber = yield* Effect.forkChild(
+            Effect.flip(tools.pageText(PageTextRequest.make({ pdfPath: "sheets.pdf", page: 1 })))
+          );
+          yield* TestClock.adjust("4 seconds");
+          expect(fiber.pollUnsafe()).toBeUndefined();
+          yield* TestClock.adjust("2 seconds");
+          const error = yield* Fiber.join(fiber);
+          assertInstanceOf(error, PdfToolsError);
+          expect(error.reason).toBe("tool-failed");
+          expect(error.message).toBe("pdftotext timed out after 5000 ms while extracting the text of page 1.");
         })
       );
     });

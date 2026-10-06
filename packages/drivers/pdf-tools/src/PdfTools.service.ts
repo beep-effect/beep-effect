@@ -75,11 +75,20 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
     ),
     forceKillAfterMillis: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(120_000)),
-      S.annotateKey({ description: "Grace period before a stuck tool is killed. Defaults to two minutes." })
+      S.annotateKey({
+        description:
+          "Grace between SIGTERM and SIGKILL when a run is interrupted, including by the timeout. Defaults to two minutes.",
+      })
+    ),
+    timeoutMillis: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(120_000)),
+      S.annotateKey({
+        description: "Longest a single tool run may take before it is stopped. Defaults to two minutes.",
+      })
     ),
   },
   $I.annote("PdfToolsConfig", {
-    description: "Executable paths and kill grace period for the PDF tools driver.",
+    description: "Executable paths, per-run timeout, and kill grace period for the PDF tools driver.",
   })
 ) {}
 
@@ -151,7 +160,20 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
         const [stdout, stderr, exitCode] = yield* Effect.all(
           [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
           { concurrency: "unbounded" }
-        ).pipe(Effect.mapError(unavailable));
+        ).pipe(
+          Effect.mapError(unavailable),
+          // Leaving the scope on timeout interrupts the handle, which stops the tool.
+          Effect.timeoutOrElse({
+            duration: `${config.timeoutMillis} millis`,
+            orElse: () =>
+              Effect.fail(
+                PdfToolsError.make({
+                  reason: "tool-failed",
+                  message: `${executable} timed out after ${config.timeoutMillis} ms while ${what}.`,
+                })
+              ),
+          })
+        );
         if (exitCode !== 0) {
           return yield* PdfToolsError.make({
             reason: "tool-failed",

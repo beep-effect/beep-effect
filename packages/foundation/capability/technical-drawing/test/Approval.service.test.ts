@@ -115,7 +115,7 @@ const TestLayer = SheetSetApproval.layer.pipe(
   Layer.provideMerge(NodeServices.layer)
 );
 
-const writeSheetSet = Effect.fnUntraced(function* () {
+const writeSheetSet = Effect.fnUntraced(function* (recorded: O.Option<EmailAddress> = O.some(approver)) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const dir = yield* fs.makeTempDirectoryScoped();
@@ -137,6 +137,7 @@ const writeSheetSet = Effect.fnUntraced(function* () {
     pdfFile: "sheets.pdf",
     pdfSha256,
     validation: O.none(),
+    approver: recorded,
   });
   const json = yield* S.encodeUnknownEffect(RenderManifestJson)(manifest);
   const manifestPath = path.join(dir, "manifest.json");
@@ -146,9 +147,7 @@ const writeSheetSet = Effect.fnUntraced(function* () {
 });
 
 const sign = (manifestPath: string, source: ConfirmationSource) =>
-  SheetSetApproval.use((service) =>
-    service.sign(SignRequest.make({ manifestPath, approver, by: "developer", source }))
-  );
+  SheetSetApproval.use((service) => service.sign(SignRequest.make({ manifestPath, by: "developer", source })));
 
 describe("@beep/technical-drawing sheet-set approval", () => {
   it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
@@ -193,11 +192,12 @@ describe("@beep/technical-drawing sheet-set approval", () => {
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
         const { dir, manifestPath } = yield* writeSheetSet();
-        const pdf = (initialedPage: number, root = dir) =>
+        const pdf = (initialedPage: number, root = dir, deliveredBy = approver) =>
           ConfirmationSource.cases.pdf.make({
             path: path.join(dir, "approval.pdf"),
             initialedPage,
             attestedBy: "operator",
+            deliveredBy,
             allowedRoot: root,
           });
         const record = yield* sign(manifestPath, pdf(2));
@@ -207,6 +207,33 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         expect(wrongPage.message).toContain("no line that is exactly");
         const outside = yield* Effect.flip(sign(manifestPath, pdf(2, path.join(dir, "elsewhere"))));
         expect(outside.message).toContain("not under the corpus root");
+        // the deliverer is the operator's attestation, checked against the recorded approver
+        const stranger = yield* Effect.flip(sign(manifestPath, pdf(2, dir, EmailAddress.make("someone@example.com"))));
+        expect(stranger.reason).toBe("approval");
+        expect(stranger.message).toContain("not attested as delivered by the recorded approver");
+      })
+    );
+
+    it.effect(
+      "takes the approver from the manifest, so a reply from any other address is refused",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        // the spec recorded someone else; the reply that would otherwise pass is from attorney@example.com
+        const other = yield* writeSheetSet(O.some(EmailAddress.make("partner@example.com")));
+        const wrongApprover = yield* Effect.flip(
+          sign(other.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
+        );
+        expect(wrongApprover.reason).toBe("approval");
+        expect(wrongApprover.message).toContain("from/sender is not the recorded approver");
+        expect(yield* fs.exists(path.join(other.dir, "approval.json"))).toBe(false);
+        // a set rendered from a spec without an approver cannot be signed at all
+        const unbound = yield* writeSheetSet(O.none());
+        const noApprover = yield* Effect.flip(
+          sign(unbound.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
+        );
+        expect(noApprover.message).toContain("records no approver");
+        expect(yield* fs.exists(path.join(unbound.dir, "approval.json"))).toBe(false);
       })
     );
 

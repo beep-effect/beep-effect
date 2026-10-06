@@ -5,8 +5,34 @@ import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
-// Live lane: exercises the real rsvg-convert and pdftoppm binaries on PATH.
+// Live lane: exercises the real rsvg-convert, pdftoppm, and pdftotext binaries
+// on PATH. A machine without librsvg or poppler skips explicitly; any other
+// spawn failure stays a failure.
+const toolPresent = (command: string, versionFlag: string) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const handle = yield* spawner.spawn(
+        ChildProcess.make(command, [versionFlag], { stdin: "ignore", stderr: "ignore", stdout: "ignore" })
+      );
+      return (yield* handle.exitCode) === 0;
+    })
+  ).pipe(
+    Effect.catchTag("PlatformError", (error) =>
+      error.reason._tag === "NotFound" ? Effect.succeed(false) : Effect.fail(error)
+    )
+  );
+
+const TOOLS = [
+  ["rsvg-convert", "--version"],
+  ["pdftoppm", "-v"],
+  ["pdftotext", "-v"],
+] as const;
+
+const missingTool = Effect.findFirst(TOOLS, ([command, flag]) => Effect.map(toolPresent(command, flag), (ok) => !ok));
+
 const LiveLayer = PdfTools.makeLayer().pipe(Layer.provideMerge(NodeServices.layer));
 
 // A Letter sheet: a 100 pt black square 1 in from the top-left corner and a
@@ -21,7 +47,12 @@ describe("@beep/pdf-tools live tools", () => {
   it.layer(LiveLayer, { timeout: "120 seconds" })((it) => {
     it.effect(
       "writes a byte-stable PDF 1.6 and measures its pages",
-      Effect.fnUntraced(function* () {
+      Effect.fnUntraced(function* (context) {
+        const missing = yield* missingTool;
+        if (O.isSome(missing)) {
+          context.skip(`Missing native prerequisite: ${missing.value[0]} on PATH`);
+          return;
+        }
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tools = yield* PdfTools;

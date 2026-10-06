@@ -63,7 +63,10 @@ const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
 const DEPRECATED_API_LINT_CACHE_DIRECTORY = "node_modules/.cache/eslint-deprecated-apis";
 const DEPRECATED_API_LINT_CONCURRENCY = 4;
 const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
-const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
+// The `packages/tooling/tool/cli` shard's type-aware program needs about 10 GB
+// resident (measured 2026-10-06: 9.5 GB on main, 10.2 GB with the drawings
+// commands); an 8 GB heap cap ends it with a V8 out-of-memory abort.
+const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=12288";
 const DEPRECATED_API_LINT_SHARDS = [
   "apps/architecture-lab-proof",
   LABS_WORKSPACE_ROOT,

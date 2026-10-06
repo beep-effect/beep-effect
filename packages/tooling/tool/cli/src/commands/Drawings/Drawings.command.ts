@@ -157,9 +157,6 @@ const drawingsValidateCommand = Command.make("validate", { pdf: pdfArgument, pag
 const manifestFlag = Flag.File("manifest", { mustExist: true }).pipe(
   Flag.withDescription("Render manifest (manifest.json) of the sheet set")
 );
-const approverFlag = Flag.String("approver").pipe(
-  Flag.withDescription("Approver email address recorded for the matter")
-);
 const byFlag = Flag.String("by").pipe(Flag.withDescription("Who is running the command; descriptive, never proof"));
 const messageIdFlag = Flag.String("message-id").pipe(Flag.withDescription("Graph message id of the approver's reply"));
 const confirmationPdfFlag = Flag.File("pdf", { mustExist: true }).pipe(
@@ -167,14 +164,17 @@ const confirmationPdfFlag = Flag.File("pdf", { mustExist: true }).pipe(
 );
 const initialedPageFlag = Flag.Int("page").pipe(Flag.withDescription("One-based page the approver initialed"));
 const attestedByFlag = Flag.String("attested-by").pipe(
-  Flag.withDescription("Operator attesting the approver delivered the PDF")
+  Flag.withDescription("Operator attesting who delivered the PDF")
+);
+const deliveredByFlag = Flag.String("delivered-by").pipe(
+  Flag.withDescription("Email address the PDF was delivered from; must equal the approver recorded in the spec")
 );
 const corpusRootFlag = Flag.Directory("corpus-root", { mustExist: true }).pipe(
   Flag.withFallbackConfig(Config.String("BEEP_OPPOLD_CORPUS_ROOT")),
   Flag.withDescription("Corpus root the confirmation PDF must live under")
 );
 
-const decodeApprover = (value: string) =>
+const decodeDeliverer = (value: string) =>
   S.decodeEffect(EmailAddress)(value).pipe(
     Effect.mapError((cause) => DrawingsCommandError.new(cause, `"${value}" is not an email address.`))
   );
@@ -193,17 +193,19 @@ const runStatement = Effect.fn("DrawingsCommand.statement")(function* (options: 
   ]);
 });
 
-const runSign = (source: (options: Record<string, unknown>) => ConfirmationSource) =>
+// The approver is never a flag: `sign` reads it from the manifest, which carries
+// the address the spec recorded when the set was rendered.
+const runSign = (
+  source: (options: Record<string, unknown>) => Effect.Effect<ConfirmationSource, DrawingsCommandError>
+) =>
   Effect.fn("DrawingsCommand.sign")(function* (options: {
     readonly manifest: string;
-    readonly approver: string;
     readonly by: string;
     readonly [key: string]: unknown;
   }) {
     const approval = yield* SheetSetApproval;
-    const approver = yield* decodeApprover(options.approver);
     const record = yield* approval
-      .sign(SignRequest.make({ manifestPath: options.manifest, approver, by: options.by, source: source(options) }))
+      .sign(SignRequest.make({ manifestPath: options.manifest, by: options.by, source: yield* source(options) }))
       .pipe(Effect.mapError((cause) => DrawingsCommandError.new(cause, describe(cause))));
     yield* printLines([
       `approved sheet set ${record.sheetSetSha256}`,
@@ -219,10 +221,12 @@ const drawingsStatementCommand = Command.make("statement", { manifest: manifestF
 
 const drawingsSignEmailCommand = Command.make(
   "email",
-  { manifest: manifestFlag, approver: approverFlag, by: byFlag, messageId: messageIdFlag },
-  runSign((options) => ConfirmationSource.cases.email.make({ messageId: String(options.messageId) }))
+  { manifest: manifestFlag, by: byFlag, messageId: messageIdFlag },
+  runSign((options) => Effect.succeed(ConfirmationSource.cases.email.make({ messageId: String(options.messageId) })))
 ).pipe(
-  Command.withDescription("Record an approval from the approver's email reply (M365_TENANT_ID, M365_CLIENT_ID)"),
+  Command.withDescription(
+    "Record an approval from the email reply of the approver recorded in the spec (M365_TENANT_ID, M365_CLIENT_ID)"
+  ),
   Command.provide(sheetSetApprovalLive(MailReaderM365Live))
 );
 
@@ -230,20 +234,23 @@ const drawingsSignPdfCommand = Command.make(
   "pdf",
   {
     manifest: manifestFlag,
-    approver: approverFlag,
     by: byFlag,
     pdf: confirmationPdfFlag,
     page: initialedPageFlag,
     attestedBy: attestedByFlag,
+    deliveredBy: deliveredByFlag,
     corpusRoot: corpusRootFlag,
   },
   runSign((options) =>
-    ConfirmationSource.cases.pdf.make({
-      path: String(options.pdf),
-      initialedPage: Number(options.page),
-      attestedBy: String(options.attestedBy),
-      allowedRoot: String(options.corpusRoot),
-    })
+    Effect.map(decodeDeliverer(String(options.deliveredBy)), (deliveredBy) =>
+      ConfirmationSource.cases.pdf.make({
+        path: String(options.pdf),
+        initialedPage: Number(options.page),
+        attestedBy: String(options.attestedBy),
+        deliveredBy,
+        allowedRoot: String(options.corpusRoot),
+      })
+    )
   )
 ).pipe(
   Command.withDescription("Record an approval from a PDF page the approver initialed"),

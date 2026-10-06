@@ -43,7 +43,10 @@ export const ConfirmationSource = S.Union([
   S.TaggedStruct("pdf", {
     path: S.NonEmptyString.annotateKey({ description: "PDF the approver initialed; must be under `allowedRoot`." }),
     initialedPage: S.Int.annotateKey({ description: "One-based page the approver initialed, named by the operator." }),
-    attestedBy: S.NonEmptyString.annotateKey({ description: "Operator attesting the approver delivered the PDF." }),
+    attestedBy: S.NonEmptyString.annotateKey({ description: "Operator attesting who delivered the PDF." }),
+    deliveredBy: EmailAddress.annotateKey({
+      description: "Address the operator attests the PDF came from; must equal the recorded approver.",
+    }),
     allowedRoot: S.NonEmptyString.annotateKey({ description: "Directory the PDF must live under." }),
   }),
 ]).pipe(
@@ -77,11 +80,10 @@ export type ConfirmationSource = typeof ConfirmationSource.Type;
  * **Example** (Sign from an email reply)
  *
  * ```ts
- * import { ConfirmationSource, EmailAddress, SignRequest } from "@beep/technical-drawing"
+ * import { ConfirmationSource, SignRequest } from "@beep/technical-drawing"
  *
  * const request = SignRequest.make({
  *   manifestPath: "out/manifest.json",
- *   approver: EmailAddress.make("attorney@example.com"),
  *   by: "developer",
  *   source: ConfirmationSource.cases.email.make({ messageId: "AAMk" })
  * })
@@ -94,12 +96,11 @@ export type ConfirmationSource = typeof ConfirmationSource.Type;
 export class SignRequest extends S.Class<SignRequest>($I`SignRequest`)(
   {
     manifestPath: S.NonEmptyString.annotateKey({ description: "Render manifest of the sheet set." }),
-    approver: EmailAddress.annotateKey({ description: "Approver address recorded for the matter." }),
     by: S.String.annotateKey({ description: "Who is running the command; descriptive only." }),
     source: ConfirmationSource.annotateKey({ description: "Where the approver's confirmation lives." }),
   },
   $I.annote("SignRequest", {
-    description: "Manifest, approver, operator, and confirmation source of a sign request.",
+    description: "Manifest, operator, and confirmation source of a sign request; the approver comes from the manifest.",
   })
 ) {}
 
@@ -178,13 +179,17 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
     if (onDisk !== manifest.pdfSha256) {
       return yield* refused(`"${pdfPath}" no longer matches its manifest (sha256 ${onDisk} ≠ ${manifest.pdfSha256}).`);
     }
-    return { manifestDir: path.dirname(resolved), sheetSetSha256: Sha256Hex.make(manifest.pdfSha256) };
+    return {
+      manifestDir: path.dirname(resolved),
+      sheetSetSha256: Sha256Hex.make(manifest.pdfSha256),
+      approver: manifest.approver,
+    };
   });
 
-  const confirmationFor = (source: ConfirmationSource, approver: EmailAddress) =>
+  const confirmationFor = (source: ConfirmationSource) =>
     ConfirmationSource.match(source, {
       email: ({ messageId }) => mail.authoredText(messageId),
-      pdf: Effect.fnUntraced(function* ({ path: pdfPath, initialedPage, attestedBy, allowedRoot }) {
+      pdf: Effect.fnUntraced(function* ({ path: pdfPath, initialedPage, attestedBy, deliveredBy, allowedRoot }) {
         if (!isWithin(path, allowedRoot, pdfPath)) {
           return yield* refused(`"${pdfPath}" is not under the corpus root "${allowedRoot}".`);
         }
@@ -193,7 +198,7 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
           path: path.resolve(pdfPath),
           initialedPage,
           pageText,
-          deliveredBy: approver,
+          deliveredBy,
           attestedBy,
         });
       }),
@@ -210,16 +215,22 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
   });
 
   const sign = Effect.fn("SheetSetApproval.sign")(function* (request: SignRequest) {
-    const { manifestDir, sheetSetSha256 } = yield* loadSheetSet(request.manifestPath);
-    const confirmation: Confirmation = yield* confirmationFor(request.source, request.approver);
-    const checked = verifyConfirmation({ sheetSetSha256, approver: request.approver, confirmation });
+    const { manifestDir, sheetSetSha256, approver: recorded } = yield* loadSheetSet(request.manifestPath);
+    // The approver is the one the spec recorded at render time, never one named at sign time.
+    const approver = yield* Effect.fromOption(recorded).pipe(
+      Effect.mapError(() =>
+        refused("Approval refused: the sheet set records no approver. Add `approver` to the spec and render again.")
+      )
+    );
+    const confirmation: Confirmation = yield* confirmationFor(request.source);
+    const checked = verifyConfirmation({ sheetSetSha256, approver, confirmation });
     const evidence = yield* Result.match(checked, {
       onFailure: (reason) => Effect.fail(refused(`Approval refused: ${REFUSAL_MESSAGES[reason]}.`)),
       onSuccess: Effect.succeed,
     });
     const record = ApprovalRecord.make({
       sheetSetSha256,
-      approver: request.approver,
+      approver,
       statement: approvalStatement(sheetSetSha256),
       by: request.by,
       recordedAt: DateTime.formatIso(yield* DateTime.now),

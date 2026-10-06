@@ -6,6 +6,7 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
+import { EmailString } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ModelSummary } from "./Geometry.schemas.ts";
@@ -192,9 +193,16 @@ export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(
     validation: S.OptionFromNullOr(ValidationReport).annotateKey({
       description: "Validator report, when it ran; `null` in JSON otherwise.",
     }),
+    approver: S.OptionFromOptionalKey(EmailString).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Approver recorded in the spec this set was rendered from; the only address `drawings sign` accepts. Absent when the spec names none.",
+      })
+    ),
   },
   $I.annote("RenderManifest", {
     description:
-      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, and validation of a render.",
+      "Spec hash, engine, model facts, scale, figures, omission proofs, PDF hash, validation, and recorded approver of a render.",
   })
 ) {}

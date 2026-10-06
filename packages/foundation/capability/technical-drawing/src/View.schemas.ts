@@ -7,7 +7,7 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { EmailString, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -317,8 +317,15 @@ export class FigureSetSpec extends S.Class<FigureSetSpec>($I`FigureSetSpec`)(
       S.withDecodingDefaultTypeKey(Effect.succeed([])),
       S.annotateKey({ description: "Views left out with a typed, render-proven reason." })
     ),
+    approver: S.OptionFromOptionalKey(EmailString).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description:
+          "Email address of the attorney who must approve the sheet set. A set rendered without one cannot be signed.",
+      })
+    ),
   },
   $I.annote("FigureSetSpec", {
-    description: "Model, claimed figures in order, and omission claims of one figure set.",
+    description: "Model, claimed figures in order, omission claims, and recorded approver of one figure set.",
   })
 ) {}
