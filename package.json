@@ -183,7 +183,7 @@
     "gl-bench": "^1.0.42",
     "graphology": "0.26.0",
     "gray-matter": "^4.0.3",
-    "handlebars": "^4.7.9",
+    "handlebars": "^4.7.10",
     "htmlparser2": "^12.0.0",
     "image-size": "^2.0.4",
     "input-otp": "^1.5.0",
