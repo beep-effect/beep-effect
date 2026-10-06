@@ -41,6 +41,7 @@ const FakeM365 = Layer.effect(
       findEventsByIdempotencyKey: unused,
       getEvent: unused,
       getListItem: unused,
+      getMailFolder: unused,
       getMessage: unused,
       getMessageAuthoredText: Effect.fnUntraced(function* () {
         return message;
