@@ -1286,7 +1286,13 @@ const buildBunSqliteLayer = Effect.gen(function* () {
   return Layer.mergeAll(
     BunFileSystem.layer,
     BunPath.layer,
-    BunSqliteClient.SqliteClient.layer({ filename: databasePath }),
+    Layer.effectContext(
+      Layer.build(BunSqliteClient.SqliteClient.layer({ filename: databasePath })).pipe(
+        Effect.mapError((cause) =>
+          toHarnessError("bun-sqlite", "provision", "Failed to open the Bun SQLite test database.", cause)
+        )
+      )
+    ),
     Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("bun-sqlite", databasePath, tempDir))
   );
 }).pipe(

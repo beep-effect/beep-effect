@@ -1,0 +1,42 @@
+--- a/graph/fingerprint.js
++++ b/graph/fingerprint.js
+@@ -25,6 +25,7 @@
+ import { readJson, writeJsonAtomic } from "../util/state.js";
+ import { extractorStamp, pruneSidecars } from "./extract-cache.js";
+ import { listSourceStats } from "./source-files.js";
++import { deepIgnoreHash } from "../util/deep-ignore.js";
+ export const FINGERPRINT_PREFIX = "fingerprint";
+ const FINGERPRINT_VERSION = 1;
+ /** The identity this graft's prints are filed under. Unlike the extract memo, a
+@@ -52,7 +53,7 @@
+ /** Project the extraction cache's entries into the probe sidecar. Best-effort:
+  * the graph is already on disk when this runs, so a failed write costs the next
+  * probe its fast path and nothing more. */
+-export function writeFingerprint(outDir, entries, onlyDirs) {
++export function writeFingerprint(outDir, entries, onlyDirs, deepIgnore) {
+     const files = {};
+     for (const [rel, e] of Object.entries(entries))
+         files[rel] = [e.size, e.mtimeMs, e.hash];
+@@ -60,6 +61,10 @@
+         const record = { version: FINGERPRINT_VERSION, extractor: stamp(), files };
+         if (onlyDirs && onlyDirs.length > 0)
+             record.onlyDirs = onlyDirs;
++        // Local patch (2026-09-25): the `.graftignore` rules the graph was built
++        // under, so editing the rule file alone reads as drift below.
++        if (deepIgnore)
++            record.deepIgnore = deepIgnore;
+         writeJsonAtomic(fingerprintPath(outDir), record, true);
+         pruneSidecars(join(outDir, CACHE_DIR), FINGERPRINT_PREFIX);
+         return true;
+@@ -115,6 +120,11 @@
+     const drift = { changed: [], added: [], removed: [] };
+     const seen = new Set();
+     const onlyDirs = fp.onlyDirs && fp.onlyDirs.length > 0 ? new Set(fp.onlyDirs) : undefined;
++    // Local patch (2026-09-25): a changed, added, or removed `.graftignore` moves
++    // symbols between `excluded` and the LLM tiers, so the graph must rebuild
++    // even when no source file moved.
++    if ((deepIgnoreHash(root) ?? null) !== (fp.deepIgnore ?? null))
++        drift.changed.push(".graftignore");
+     for (const f of listSourceStats(root, outDir, undefined, onlyDirs)) {
+         seen.add(f.rel);
+         const print = fp.files[f.rel];

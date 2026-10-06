@@ -8,7 +8,11 @@ import { $RepoConfigsId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Rec from "effect/Record";
+import * as R from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   CacheEvidenceReference,
   CacheQualificationKey,
@@ -223,7 +227,111 @@ export class CachePolicyProjection extends S.Class<CachePolicyProjection>($I`Cac
 ) {}
 
 /**
+ * Workspace package that owns a computation, or the `//` root for root tasks and global settings.
+ *
+ * **Details**
+ *
+ * A subject is the review unit of the baseline: every reviewed record names the
+ * package whose computations it covers, and the root subject additionally covers
+ * the global Turbo configuration, configuration-source digests, scope, profile and
+ * epoch. Two reviews of different subjects never share a line in the encoded
+ * baseline, so independent re-records merge without conflict.
+ *
+ * **Example** (Accept a package name and the root subject)
+ *
+ * ```ts
+ * import { CacheBaselineSubject } from "@beep/repo-configs/cache"
+ * import * as S from "effect/Schema"
+ * console.assert(S.is(CacheBaselineSubject)("@beep/identity") && S.is(CacheBaselineSubject)("//"))
+ * console.assert(!S.is(CacheBaselineSubject)("@beep/identity#lint"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheBaselineSubject = S.NonEmptyString.check(S.isPattern(/^[^#\s]+$/)).pipe(
+  $I.annoteSchema("CacheBaselineSubject", {
+    description: "Workspace package that owns a computation, or the // root for root tasks and global settings.",
+  })
+);
+
+/**
+ * Decoded baseline review subject.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheBaselineSubject = typeof CacheBaselineSubject.Type;
+
+/**
+ * The subject that owns root tasks, global configuration, sources, scope, profile and epoch.
+ *
+ * **Example** (Root tasks resolve to the root subject)
+ *
+ * ```ts
+ * import { cacheBaselineRootSubject, cacheBaselineSubject } from "@beep/repo-configs/cache"
+ * console.assert(cacheBaselineSubject("//#changeset:status") === cacheBaselineRootSubject)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const cacheBaselineRootSubject: CacheBaselineSubject = "//";
+
+/**
+ * Resolve the review subject of a computation identifier.
+ *
+ * **Example** (A package task resolves to its package)
+ *
+ * ```ts
+ * import { cacheBaselineSubject } from "@beep/repo-configs/cache"
+ * console.assert(cacheBaselineSubject("@beep/identity#lint") === "@beep/identity")
+ * ```
+ *
+ * @param computation - A `package#task` computation identifier.
+ * @returns The package name before the `#` separator.
+ * @category policies
+ * @since 0.0.0
+ */
+export const cacheBaselineSubject = (computation: string): CacheBaselineSubject =>
+  A.headNonEmpty(Str.split(computation, "#"));
+
+/**
+ * Every review subject a projection requires, sorted, always including the root subject.
+ *
+ * **Example** (An empty projection still requires the root review)
+ *
+ * ```ts
+ * import { CachePolicyProjection, cacheBaselineSubjects } from "@beep/repo-configs/cache"
+ * const projection = CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] })
+ * console.assert(cacheBaselineSubjects(projection).join() === "//")
+ * ```
+ *
+ * @param projection - Effective settings whose executable computations need review.
+ * @returns Sorted unique subjects covering every node plus the root subject.
+ * @category policies
+ * @since 0.0.0
+ */
+export const cacheBaselineSubjects = (projection: CachePolicyProjection): ReadonlyArray<CacheBaselineSubject> =>
+  A.sort(
+    A.dedupe(
+      A.prepend(
+        A.map(projection.nodes, (node) => cacheBaselineSubject(node.computation)),
+        cacheBaselineRootSubject
+      )
+    ),
+    Order.String
+  );
+
+/**
  * Explicitly reviewed legacy posture and the currently authorized implementation scope.
+ *
+ * **Details**
+ *
+ * `reviews` holds one deliberate review record per subject (see
+ * {@link CacheBaselineSubject}); {@link cachePolicyBaselineFailures} rejects a
+ * baseline whose reviews and projection subjects disagree. Nodes are kept sorted by
+ * computation so the pretty-printed file merges per package.
  *
  * **Example** (Inspect the policy contract)
  *
@@ -238,15 +346,120 @@ export class CachePolicyProjection extends S.Class<CachePolicyProjection>($I`Cac
  */
 export class CachePolicyBaseline extends S.Class<CachePolicyBaseline>($I`CachePolicyBaseline`)(
   {
-    schemaVersion: S.tag("cache-qualification-baseline/v1"),
-    review: CacheReviewDecision,
+    schemaVersion: S.tag("cache-qualification-baseline/v2"),
     profile: S.NonEmptyString,
     epoch: S.NonEmptyString,
     scope: S.NonEmptyArray(CacheQualificationKey.fields.computation),
+    reviews: S.Record(CacheBaselineSubject, CacheReviewDecision),
     projection: CachePolicyProjection,
   },
   $I.annote("CachePolicyBaseline", {
     description: "Explicitly reviewed legacy posture and the currently authorized implementation scope.",
+  })
+) {}
+
+/**
+ * One reviewed re-record of the baseline: the review decision and the posture it authorizes.
+ *
+ * **Details**
+ *
+ * `subjects`, when present, names the subjects the reviewer deliberately
+ * re-reviewed. Every subject whose nodes changed must be listed or the record is
+ * rejected, and listed subjects are stamped even when unchanged.
+ *
+ * **Example** (Inspect the policy contract)
+ *
+ * ```ts
+ * import { CachePolicyBaselineReview } from "@beep/repo-configs/cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CachePolicyBaselineReview)({}))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePolicyBaselineReview extends S.Class<CachePolicyBaselineReview>($I`CachePolicyBaselineReview`)(
+  {
+    review: CacheReviewDecision,
+    scope: CachePolicyBaseline.fields.scope,
+    profile: CachePolicyBaseline.fields.profile,
+    epoch: CachePolicyBaseline.fields.epoch,
+    subjects: CacheBaselineSubject.pipe(S.Array, S.OptionFromOptionalKey),
+  },
+  $I.annote("CachePolicyBaselineReview", {
+    description: "One reviewed re-record of the baseline: the review decision and the posture it authorizes.",
+  })
+) {}
+
+/**
+ * Inputs to one baseline re-record: the committed baseline, the observed projection and the review.
+ *
+ * **Example** (Inspect the policy contract)
+ *
+ * ```ts
+ * import { CachePolicyBaselineRecordRequest } from "@beep/repo-configs/cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CachePolicyBaselineRecordRequest)({}))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePolicyBaselineRecordRequest extends S.Class<CachePolicyBaselineRecordRequest>(
+  $I`CachePolicyBaselineRecordRequest`
+)(
+  { prior: S.Option(CachePolicyBaseline), projection: CachePolicyProjection, review: CachePolicyBaselineReview },
+  $I.annote("CachePolicyBaselineRecordRequest", {
+    description: "Inputs to one baseline re-record: the committed baseline, the observed projection and the review.",
+  })
+) {}
+
+/**
+ * A recorded baseline with the subjects the new review stamped, carried forward or dropped.
+ *
+ * **Example** (Inspect the policy contract)
+ *
+ * ```ts
+ * import { CachePolicyBaselineRecord } from "@beep/repo-configs/cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CachePolicyBaselineRecord)({}))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePolicyBaselineRecord extends S.Class<CachePolicyBaselineRecord>($I`CachePolicyBaselineRecord`)(
+  {
+    baseline: CachePolicyBaseline,
+    stamped: S.Array(CacheBaselineSubject),
+    carried: S.Array(CacheBaselineSubject),
+    dropped: S.Array(CacheBaselineSubject),
+  },
+  $I.annote("CachePolicyBaselineRecord", {
+    description: "A recorded baseline with the subjects the new review stamped, carried forward or dropped.",
+  })
+) {}
+
+/**
+ * Why a baseline re-record was refused: changed subjects the review did not name, or named subjects that do not exist.
+ *
+ * **Example** (Inspect the policy contract)
+ *
+ * ```ts
+ * import { CachePolicyBaselineRejection } from "@beep/repo-configs/cache"
+ * import * as S from "effect/Schema"
+ * console.assert(!S.is(CachePolicyBaselineRejection)({}))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CachePolicyBaselineRejection extends S.Class<CachePolicyBaselineRejection>(
+  $I`CachePolicyBaselineRejection`
+)(
+  { unreviewed: S.Array(CacheBaselineSubject), unknown: S.Array(CacheBaselineSubject) },
+  $I.annote("CachePolicyBaselineRejection", {
+    description: "Changed subjects the review did not name, or named subjects that do not exist.",
   })
 ) {}
 
@@ -398,6 +611,141 @@ export const cacheLedgerFailures = (store: CacheQualificationStore): ReadonlyArr
   return A.dedupe(failures);
 };
 
+const sameNodes = S.toEquivalence(S.Array(CachePolicyNode));
+const sameSources = S.toEquivalence(S.Array(CachePolicySource));
+const sameSubjects = S.toEquivalence(S.Array(S.String));
+const sortedComputations = (projection: CachePolicyProjection) => A.map(projection.nodes, (node) => node.computation);
+const subjectNodes = (projection: CachePolicyProjection, subject: CacheBaselineSubject) =>
+  A.filter(projection.nodes, (node) => cacheBaselineSubject(node.computation) === subject);
+
+/**
+ * Verify that every projection subject carries exactly one review and nodes stay merge-sorted.
+ *
+ * **Example** (Accept a root-only baseline)
+ *
+ * ```ts
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * console.assert(Cache.cachePolicyBaselineFailures(baseline).length === 0)
+ * ```
+ *
+ * @param baseline - Reviewed baseline whose reviews must cover its subjects.
+ * @returns Violations: unreviewed subjects, orphan reviews and unsorted nodes.
+ * @category policies
+ * @since 0.0.0
+ */
+export const cachePolicyBaselineFailures = (baseline: CachePolicyBaseline): ReadonlyArray<string> => {
+  const subjects = cacheBaselineSubjects(baseline.projection);
+  const reviewed = Rec.keys(baseline.reviews);
+  const computations = sortedComputations(baseline.projection);
+  return A.flatten([
+    A.map(
+      A.filter(subjects, (subject) => !A.contains(reviewed, subject)),
+      (subject) => `unreviewed-subject:${subject}`
+    ),
+    A.map(
+      A.filter(reviewed, (subject) => !A.contains(subjects, subject)),
+      (subject) => `orphan-review:${subject}`
+    ),
+    sameSubjects(computations, A.sort(computations, Order.String)) ? A.empty<string>() : ["unsorted-nodes"],
+  ]);
+};
+
+/**
+ * Record a reviewed baseline, stamping the new review only on subjects whose posture changed.
+ *
+ * **Details**
+ *
+ * A subject is stamped when it is new, when its nodes differ from the prior
+ * baseline, when the request names it, or (for the root subject) when the global
+ * configuration, sources, scope, profile or epoch changed. Every other subject
+ * carries its prior review forward byte-for-byte, so two re-records touching
+ * different packages change disjoint regions of the encoded file. Subjects that
+ * left the projection are dropped. When the request names subjects, any stamped
+ * subject outside that list rejects the record, as does a named subject that does
+ * not exist.
+ *
+ * **Example** (Record a first baseline)
+ *
+ * ```ts
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as O from "effect/Option"
+ * import * as R from "effect/Result"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const decision = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const projection = Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] })
+ * const review = Cache.CachePolicyBaselineReview.make({ review: decision, scope: ["fixture#lint"], profile: "fixture", epoch: "v1", subjects: O.none() })
+ * const record = R.getOrThrow(Cache.recordCachePolicyBaseline(Cache.CachePolicyBaselineRecordRequest.make({ prior: O.none(), projection, review })))
+ * console.assert(record.stamped.join() === "//" && record.carried.length === 0)
+ * ```
+ *
+ * @param input - The committed baseline (if any), the observed projection and the review decision.
+ * @returns The recorded baseline with its stamped, carried and dropped subjects, or a rejection.
+ * @category policies
+ * @since 0.0.0
+ */
+export const recordCachePolicyBaseline = (
+  input: CachePolicyBaselineRecordRequest
+): R.Result<CachePolicyBaselineRecord, CachePolicyBaselineRejection> => {
+  const { prior, projection, review: request } = input;
+  const sorted = CachePolicyProjection.make({
+    ...projection,
+    nodes: A.sortWith(projection.nodes, (node) => node.computation, Order.String),
+  });
+  const subjects = cacheBaselineSubjects(sorted);
+  const rootChanged = O.match(prior, {
+    onNone: () => true,
+    onSome: (previous) =>
+      !sameGlobalConfiguration(previous.projection.globalConfiguration, sorted.globalConfiguration) ||
+      !sameSources(previous.projection.sources, sorted.sources) ||
+      !sameSubjects(previous.scope, request.scope) ||
+      previous.profile !== request.profile ||
+      previous.epoch !== request.epoch,
+  });
+  const changed = (subject: CacheBaselineSubject) =>
+    O.match(prior, {
+      onNone: () => true,
+      onSome: (previous) =>
+        !Rec.has(previous.reviews, subject) ||
+        !sameNodes(subjectNodes(previous.projection, subject), subjectNodes(sorted, subject)) ||
+        (subject === cacheBaselineRootSubject && rootChanged),
+    });
+  const named = O.getOrElse(request.subjects, () => A.empty<CacheBaselineSubject>());
+  const stamped = A.filter(subjects, (subject) => changed(subject) || A.contains(named, subject));
+  const unreviewed = O.isSome(request.subjects) ? A.filter(stamped, (subject) => !A.contains(named, subject)) : [];
+  const unknown = A.filter(named, (subject) => !A.contains(subjects, subject));
+  if (A.isReadonlyArrayNonEmpty(unreviewed) || A.isReadonlyArrayNonEmpty(unknown)) {
+    return R.fail(CachePolicyBaselineRejection.make({ unreviewed, unknown }));
+  }
+  const carried = A.filter(subjects, (subject) => !A.contains(stamped, subject));
+  const dropped = O.match(prior, {
+    onNone: () => A.empty<CacheBaselineSubject>(),
+    onSome: (previous) => A.filter(Rec.keys(previous.reviews), (subject) => !A.contains(subjects, subject)),
+  });
+  const reviewOf = (subject: CacheBaselineSubject) =>
+    A.contains(stamped, subject)
+      ? request.review
+      : O.getOrElse(
+          O.flatMap(prior, (previous) => Rec.get(previous.reviews, subject)),
+          () => request.review
+        );
+  const baseline = CachePolicyBaseline.make({
+    profile: request.profile,
+    epoch: request.epoch,
+    scope: request.scope,
+    reviews: Rec.fromEntries(A.map(subjects, (subject) => [subject, reviewOf(subject)] as const)),
+    projection: sorted,
+  });
+  return R.succeed(CachePolicyBaselineRecord.make({ baseline, stamped, carried, dropped }));
+};
+
 type ReportFinding = (kind: CachePolicyFindingKind, subject: string, blocking?: boolean) => void;
 
 const auditContractConfiguration = (node: CachePolicyNode, contract: CacheTaskContract, find: ReportFinding) => {
@@ -494,7 +842,7 @@ const auditSourceDrift = (baseline: CachePolicyProjection, current: CachePolicyP
  * const projection = Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] })
  * const baseline = Cache.CachePolicyBaseline.make({
  *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], projection,
- *   review: Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty population", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ *   reviews: { "//": Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty population", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) }) }
  * })
  * const report = Cache.auditCachePolicy(Cache.CachePolicyAuditRequest.make({
  *   baseline, current: projection, profile: "fixture", epoch: "v1",

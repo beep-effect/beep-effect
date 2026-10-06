@@ -218,7 +218,7 @@ export const renderEffectSchemaInventoryIndex = (input: {
   return A.join(
     [
       "# Schema inventory index\n\n",
-      `Pin: \`${input.pin}\` (inventoryPin: root package.json catalog \`effect\`; sources read with \`git -C .repos/effect show <pin>:<file>\`). TypeScript parser: \`${input.parser}\`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: \`${MODULE_LIST_PATH}\`.\n\n`,
+      `Pin: \`${input.pin}\` (inventoryPin: root package.json catalog \`effect\` or \`config.effectSource\`; sources read with \`git -C .repos/effect show <pin>:<file>\`). TypeScript parser: \`${input.parser}\`. Counts include direct public members at one level; barrel namespace re-exports are one row each and are not expanded. Module list: \`${MODULE_LIST_PATH}\`.\n\n`,
       `Row digest: \`${input.digest}\` (SHA-256 over the module JSONL files concatenated byte for byte in Module totals order).\n\n`,
       "Regenerate from repo root (offline):\n\n```sh\nbun run beep lint effect-schema-inventory --write\n```\n\n",
       "## Module totals\n\n",
