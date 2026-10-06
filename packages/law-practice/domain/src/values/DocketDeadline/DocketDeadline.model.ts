@@ -2,6 +2,8 @@
  * Docket deadline values and the pure date policy of the docket intake
  * overlay.
  *
+ * **Details**
+ *
  * Nothing here derives a response period from a rule table: a period is only
  * ever one that a source document states. Dates are nominal (no weekend,
  * holiday or closure roll), which is never later than the operative date.

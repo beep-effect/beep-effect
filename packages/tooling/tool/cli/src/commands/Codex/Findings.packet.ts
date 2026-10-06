@@ -71,13 +71,36 @@ const captureSourceCopy: Record<
   "cloud-csv": {
     provider: "Codex Cloud Security UI",
     captureMethodPolicy: "signed-in-csv-export",
-    closeoutFixed: "Already fixed",
+    closeoutFixed: "Fixed",
     stopCondition: "The signed-in CSV export cannot be produced from the findings page.",
     indexIntro: "Captured from the authenticated Codex Cloud Security view for",
     indexVia: "the signed-in CSV export",
     closeoutLines: [
-      "- `remediate` or `already-fixed` -> close as `Already fixed` after merge.",
+      "- `remediate` or `already-fixed` -> close as `Fixed` after merge and merged-revision verification.",
       "- Strictly proven invalid -> close as `False positive` with evidence recorded.",
+    ],
+    guidanceDocuments: (plan) => [
+      readmeDocument(plan),
+      goalDocument(plan),
+      specDocument(plan),
+      planDocument(plan),
+      sourcesDocument(plan),
+    ],
+  },
+  "security-cloud-csv": {
+    provider: "Codex Security Cloud MCP app",
+    captureMethodPolicy: "signed-in-csv-export",
+    closeoutFixed: "Fixed",
+    stopCondition:
+      "The signed-in export is unavailable or the detail evidence needed for a verdict cannot be obtained.",
+    indexIntro: "Captured from the authenticated Security Cloud findings view for",
+    indexVia: "the summary-only signed-in CSV export",
+    closeoutLines: [
+      "- `remediate` or `already-fixed` -> close as `Fixed` after merge and merged-revision verification.",
+      "- Strictly proven invalid -> close as `False positive` with evidence recorded.",
+      "- Preserve the complete `commit:` identity in every receipt; never strip its namespace.",
+      "- Before P2 verdicts, obtain Validation, Evidence, and Attack-path analysis from each finding detail.",
+      "- Record missing detail evidence explicitly and hold unsupported verdicts; the CSV contains Summary only.",
     ],
     guidanceDocuments: (plan) => [
       readmeDocument(plan),
@@ -359,7 +382,9 @@ const findingsIndexDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       copy.indexIntro,
       `\`${plan.repository}\` on ${plan.capturedAt} through ${copy.indexVia}.`,
-      "Full reports remain ignored under `raw/`; tracked records omit signed URLs,",
+      plan.source === "security-cloud-csv"
+        ? "Captured summaries remain ignored under `raw/`; tracked records omit signed URLs,"
+        : "Full reports remain ignored under `raw/`; tracked records omit signed URLs,",
       "auth values, email addresses, and raw local paths.",
       "",
       "## Severity Summary",
@@ -381,7 +406,7 @@ const findingsIndexDocument = (plan: CodexPacketPlan): PacketDocument => {
       "## Closeout Mapping",
       "",
       ...copy.closeoutLines,
-      "- Accepted risk / `Won't fix` is unavailable.",
+      "- Accepted risk / `Won't fix` does not satisfy this packet's completion gate.",
     ]),
   });
 };
@@ -477,7 +502,7 @@ const goalDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       "- In: sanitized packet evidence, current-HEAD validation, minimal root-cause",
       "  remediation, focused regression checks, Yeet proof/publication/monitoring,",
-      "  merge, and post-merge Chrome closure.",
+      "  merge, and post-merge authenticated findings closure.",
       "- Out: accepted risk, raw evidence in git, Codex Create PR/patch buttons,",
       "  unrelated cleanup, weakened quality/security gates.",
       "",
@@ -485,6 +510,9 @@ const goalDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       "1. Default every item to `remediate`; use `already-fixed` or `false-positive`",
       "   only with strict current-HEAD proof in the finding and triage ledger.",
+      plan.source === "security-cloud-csv"
+        ? "   Before verdicts, enrich each CSV Summary with Validation, Evidence, and Attack-path analysis; record gaps and hold unsupported decisions."
+        : "   Validate against the ignored raw reports.",
       "2. Apply Effect-first and schema-first repo law. Search live source and barrels",
       "   before adding helpers; reuse canonical path-safety and bounds primitives.",
       "3. Fix shared causes once. Add one focused regression check per executable-code",
@@ -493,7 +521,7 @@ const goalDocument = (plan: CodexPacketPlan): PacketDocument => {
       "   sanitized metadata, summaries, decisions, changed files, and proof.",
       "5. Run focused tests, affected package checks, packet validation, then Yeet",
       "   repair/verify. Publish one intentional PR and monitor through mergeable.",
-      `6. After merge, close only the exact ${capturedCount}-ID allowlist in Codex as Already fixed`,
+      `6. After merge, close only the exact ${capturedCount}-ID allowlist in Codex as ${captureSourceCopy[plan.source].closeoutFixed}`,
       "   (or the evidence-backed invalid reason) and verify zero packet-open findings.",
       "",
       "Stop if the signed-in CSV export is unavailable, tracked evidence contains secret",
@@ -603,7 +631,9 @@ const specDocument = (plan: CodexPacketPlan): PacketDocument => {
       "  source/barrel discovery.",
       "- Schema-first and Effect-first laws govern all production changes.",
       "- Security controls may not be simplified away for diff size.",
-      "- Full reports stay in ignored `raw/`; tracked records contain only sanitized",
+      plan.source === "security-cloud-csv"
+        ? "- Captured summaries stay in ignored `raw/`; tracked records contain only sanitized"
+        : "- Full reports stay in ignored `raw/`; tracked records contain only sanitized",
       "  metadata, summaries, validation, decisions, changed files, and proof.",
       `- Browser closure happens after merge, against the exact ${capturedCount}-ID allowlist.`,
       "- Preserve unrelated work and stage only reviewed packet intent.",
@@ -637,7 +667,7 @@ const specDocument = (plan: CodexPacketPlan): PacketDocument => {
       "| Per-finding proof | command recorded in finding and triage ledger | Pass |",
       "| Repo proof | `bun run beep yeet verify` | Green |",
       "| Hosted proof | Yeet monitor and review closeout | Green and mergeable |",
-      "| Final closure | signed-in Chrome findings view | Zero packet-open |",
+      "| Final closure | supported connector or signed-in in-app findings view | Zero packet-open |",
       "",
       "## Stop Conditions",
       "",
@@ -659,6 +689,9 @@ const specDocument = (plan: CodexPacketPlan): PacketDocument => {
 
 const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
   const capturedCount = A.length(plan.records);
+  const copy = captureSourceCopy[plan.source];
+  const exportControl =
+    plan.source === "security-cloud-csv" ? "More finding actions → Export CSV" : "Export findings as CSV";
   return PacketDocument.make({
     path: "research/SOURCES.md",
     tracked: true,
@@ -677,16 +710,21 @@ const sourcesDocument = (plan: CodexPacketPlan): PacketDocument => {
       "",
       "## External Source",
       "",
-      "- Codex Cloud Security UI:",
+      `- ${copy.provider}:`,
       `  \`${plan.sourceUrl}\`, captured on ${plan.capturedAt}`,
-      "  through the operator's signed-in Chrome session.",
-      `- The UI's signed-in \`Export findings as CSV\` control supplied the ${capturedCount}-record`,
+      "  through a supported connector or the operator's signed-in in-app browser.",
+      `- The UI's signed-in \`${exportControl}\` control supplied the ${capturedCount}-record`,
       "  batch. `beep codex findings ingest` normalized it; the export itself was never",
       "  copied into the repository.",
       "",
       "## Notes",
       "",
-      "- Full report bodies are local ignored evidence under `raw/`.",
+      ...(plan.source === "security-cloud-csv"
+        ? [
+            "- `raw/` holds captured summaries only; Validation, Evidence, and Attack-path",
+            "  analysis require separate finding-detail enrichment before triage.",
+          ]
+        : ["- Full report bodies are local ignored evidence under `raw/`."]),
       "- Tracked CSF files intentionally omit signed artifact URLs, raw developer-local",
       "  paths, author email addresses, auth values, and unsanitized report text.",
     ]),
@@ -737,7 +775,9 @@ const rawReportDocuments = (
           `- Detected at: ${report.detectedAt}`,
           `- Relevant paths: ${report.relevantPaths}`,
           "",
-          "## Report",
+          plan.source === "security-cloud-csv"
+            ? "## Captured summary (Validation, Evidence, and Attack-path analysis require detail enrichment)"
+            : "## Report",
           "",
           report.description,
         ]),

@@ -38,6 +38,11 @@ const $I = $LawPracticeServerId.create("PracticeKg.rows");
  * `organizedRelativePath`, and a document filed outside a matter has no
  * `docket`.
  *
+ * `runFolded` marks a row that comes from an included source run rather than
+ * from the organizer; only such rows are read for folder-path evidence.
+ * `folderClient` is the client number that evidence gave, and is null for every
+ * row the catalog query returns. Both default at construction and decode.
+ *
  * **Example** (Decode catalog row)
  *
  * ```ts
@@ -75,10 +80,18 @@ export class PracticeKgCatalogRow extends S.Class<PracticeKgCatalogRow>($I`Pract
     docket: S.NullOr(S.String),
     docketFamily: S.NullOr(S.String),
     effectiveName: S.String,
+    folderClient: S.NullOr(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(null))
+    ),
     mtimeIso: S.String,
     organizedRelativePath: S.NullOr(S.String),
     restored: S.Boolean,
     sourceOriginChain: S.String,
+    runFolded: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     runLabel: S.String,
     sizeBytes: S.Finite,
     sourceLabel: S.String,

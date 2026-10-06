@@ -28,9 +28,10 @@ describe("@beep/schema PatternOntology", () => {
   });
 
   it("reads a stamped pattern from a class declaration", () => {
+    const invalidAnnotations: Readonly<Record<string, unknown>> = { po: "not-a-pattern" };
     expect(O.getOrNull(getPoPattern(Leaf))).toBe("atom");
     assertNone(getPoPattern(Bare));
-    assertNone(getPoPattern(S.String.annotate({ po: "not-a-pattern" as never })));
+    assertNone(getPoPattern(S.String.annotate(invalidAnnotations)));
   });
 
   it("collects every reachable tagged constructor once and surfaces missing patterns", () => {
@@ -39,6 +40,17 @@ describe("@beep/schema PatternOntology", () => {
     expect(A.map(rows, (row) => row.tag)).toEqual(["leaf", "bare", "row"]);
     expect(A.map(rows, (row) => O.getOrNull(row.pattern))).toEqual(["atom", null, "table"]);
     expect(A.map(rows, (row) => O.getOrNull(row.identifier))).toEqual(["Leaf", "Bare", null]);
+  });
+
+  it("deduplicates type projections while retaining conflicting pattern annotations", () => {
+    const projected = S.toType(Leaf);
+    const conflicting = Leaf.annotate({ po: "block" });
+    const rows = collectPoTaggedConstructors(S.Union([Leaf, projected, conflicting]), "_tag");
+
+    expect(A.map(rows, (row) => [row.tag, O.getOrNull(row.pattern)])).toEqual([
+      ["leaf", "atom"],
+      ["leaf", "block"],
+    ]);
   });
 
   it("collapses cloned constructors without hiding a changed pattern", () => {

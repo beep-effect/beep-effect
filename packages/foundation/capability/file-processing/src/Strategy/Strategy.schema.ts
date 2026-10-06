@@ -9,6 +9,7 @@ import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Match } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $FileProcessingId.create("Strategy");
@@ -110,6 +111,8 @@ export const FileFormatFamily = LiteralKit([
   "xhtml",
   "pdf-text-layer",
   "pst",
+  "eml",
+  "msg",
   "plain-text",
   "markdown",
   "image-metadata",
@@ -130,11 +133,18 @@ export const FileFormatFamily = LiteralKit([
       Match.when("xhtml", () => "xhtml" as const),
       Match.when("pdf", () => "pdf-text-layer" as const),
       Match.when("pst", () => "pst" as const),
+      Match.when("eml", () => "eml" as const),
+      Match.when("msg", () => "msg" as const),
       Match.whenOr("txt", "text", () => "plain-text" as const),
       Match.whenOr("md", "markdown", () => "markdown" as const),
       Match.whenOr("bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "webp", () => "image-metadata" as const),
       Match.when("xls", () => "xls" as const),
       Match.when("xlsx", () => "xlsx" as const),
+      Match.orElse(() => "unknown" as const)
+    ),
+    fromMediaType: Match.type<string | undefined>().pipe(
+      Match.when("message/rfc822", () => "eml" as const),
+      Match.when("application/vnd.ms-outlook", () => "msg" as const),
       Match.orElse(() => "unknown" as const)
     ),
     processCapability: (format: FileFormatFamily): FileProcessingCapability =>
@@ -547,3 +557,56 @@ export class FileProcessingEngineDescriptor extends S.Class<FileProcessingEngine
  */
 export const classifyFormatFromExtension: (extension: string | undefined) => FileFormatFamily =
   FileFormatFamily.fromExtension;
+
+/**
+ * Classify a detected media type into its deterministic format family.
+ *
+ * **Details**
+ *
+ * Covers the formats whose files commonly arrive without a telling extension:
+ * saved mail as RFC 822 messages and Outlook MSG items. Every other media
+ * type classifies as `"unknown"`, so callers try the extension first.
+ *
+ * **Example** (Classify saved mail media types)
+ *
+ * ```ts import.meta.vitest name="Classify saved mail media types"
+ * import { classifyFormatFromMediaType } from "@beep/file-processing/Strategy"
+ *
+ * classifyFormatFromMediaType("message/rfc822") // => "eml"
+ * classifyFormatFromMediaType("application/vnd.ms-outlook") // => "msg"
+ * classifyFormatFromMediaType("application/zip") // => "unknown"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const classifyFormatFromMediaType: (mediaType: string | undefined) => FileFormatFamily =
+  FileFormatFamily.fromMediaType;
+
+/**
+ * Classify a source by extension first, then by its detected media type.
+ *
+ * **Example** (Fall back to the media type)
+ *
+ * ```ts import.meta.vitest name="Fall back to the media type"
+ * import { classifySourceFormat } from "@beep/file-processing/Strategy"
+ *
+ * classifySourceFormat("eml", undefined) // => "eml"
+ * classifySourceFormat("bin", "application/vnd.ms-outlook") // => "msg"
+ * classifySourceFormat(undefined, undefined) // => "unknown"
+ * classifySourceFormat("message/rfc822")("bin") // => "eml"
+ * ```
+ *
+ * @param extension - The bare file extension, if the source has one.
+ * @param mediaType - The detected media type, if one is known.
+ * @returns The format family, or `"unknown"` when neither hint is recognized.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const classifySourceFormat: {
+  (extension: string | undefined, mediaType: string | undefined): FileFormatFamily;
+  (mediaType: string | undefined): (extension: string | undefined) => FileFormatFamily;
+} = dual(2, (extension: string | undefined, mediaType: string | undefined): FileFormatFamily => {
+  const byExtension = classifyFormatFromExtension(extension);
+  return byExtension === "unknown" ? classifyFormatFromMediaType(mediaType) : byExtension;
+});

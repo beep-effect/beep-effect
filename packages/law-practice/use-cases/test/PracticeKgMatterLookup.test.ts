@@ -4,10 +4,12 @@ import {
   PracticeKgMatterLookupRequest,
   PracticeKgMatterLookupResult,
   PracticeKgMatterResolution,
+  practiceKgDocketCountryCodes,
 } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const decodeResult = S.decodeUnknownEffect(PracticeKgMatterLookupResult);
@@ -19,6 +21,18 @@ describe("practice KG matter-lookup contract", () => {
         "RE: Office Action for 11111.20001us01 (App. No. 87/654,321, now US 12,345,678) - see also 20001EP02 and 20001EP02"
       )
     ).toStrictEqual(["11111.20001US01", "20001EP02", "87/654,321", "US 12,345,678"]);
+  });
+
+  it("extracts a docket for every exported country stage", () => {
+    expect(practiceKgDocketCountryCodes).toContain("BR");
+    expect(
+      extractPracticeKgReferences(
+        A.join(
+          A.map(practiceKgDocketCountryCodes, (code) => `20001${code}01`),
+          " "
+        )
+      )
+    ).toHaveLength(A.length(practiceKgDocketCountryCodes));
   });
 
   it("ignores bare digit runs, decimals, and longer numbers", () => {
