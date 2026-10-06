@@ -1,16 +1,16 @@
 {
   "generatedAt": "2026-08-27T06:18:22.553Z",
-  "fileCount": 476,
-  "moduleCount": 468,
-  "exportCount": 4113,
-  "owningExportCount": 3739,
-  "reExportCount": 374,
+  "fileCount": 466,
+  "moduleCount": 458,
+  "exportCount": 4074,
+  "owningExportCount": 3705,
+  "reExportCount": 369,
   "openModuleCount": 2,
   "openOwningExportCount": 6,
   "byKind": {
-    "value": 2572,
-    "type": 1167,
-    "re-export": 374
+    "value": 2545,
+    "type": 1160,
+    "re-export": 369
   },
   "packs": [
     {
@@ -115,13 +115,6 @@
       "id": "schemastore",
       "moduleCount": 14,
       "owningExportCount": 47,
-      "openModuleCount": 0,
-      "openOwningExportCount": 0
-    },
-    {
-      "id": "semver",
-      "moduleCount": 10,
-      "owningExportCount": 34,
       "openModuleCount": 0,
       "openOwningExportCount": 0
     },
