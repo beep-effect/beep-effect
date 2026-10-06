@@ -1,0 +1,1263 @@
+{
+  "schemaVersion": "effect-vitest-resource-landed-witness/v1",
+  "head": "ba4fe3389462a57445a22610dfc31d45566f2898",
+  "main": "56689307a4f5e40b272826820487ddc90e8d15df",
+  "merge": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+  "prHead": "959a770707549f4f9991590339f4eaf66307aa25",
+  "githubPull": {
+    "command": ["gh", "api", "repos/{owner}/{repo}/pulls/1365"],
+    "readAt": "2026-10-06T17:05:42.048838+00:00",
+    "exitCode": 0,
+    "responseSha256": "0e2f409f321c1396161388b7f4b71781bb9c314a6b3a59d74765e9911d3873e0",
+    "url": "https://github.com/beep-effect/beep-effect/pull/1365",
+    "state": "closed",
+    "merged": true,
+    "mergedAt": "2026-10-01T14:06:11Z",
+    "mergeCommit": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+    "head": "959a770707549f4f9991590339f4eaf66307aa25",
+    "base": "f04c75c7a6e6e47878e19cf5cf92774e3f33192f"
+  },
+  "astMethod": "TypeScript createSourceFile; recursive syntax-kind/terminal-text tree over getChildren, excluding source coordinates and trivia. Exact string/token/operator text retained; SHA-256 of JSON canonical tree. Variable declaration subtrees include initializer, type and name. This is identity evidence, not a runtime/typecheck.",
+  "counts": {
+    "selectedFixedAllRows": 11,
+    "directAncestor": 3,
+    "verifiedSquashCorrespondence": 8,
+    "unresolvedSourceCorrespondence": 0
+  },
+  "rows": [
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/allowlist-check.test.ts:27",
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "actualFixSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "landedSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "correspondence": "direct-ancestor",
+      "reason": "Whole file byte-identical from source4203 through landed/PR head/main/current; six scoped roots persist. It predates #1365.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": false,
+      "sourceDiffSha256": "e163f7ac15c8cafcefb9c8e431b94c998d0daeb3356cbfd3e1370ca6d44f7cb3",
+      "landedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "4203a309f11930eb60e971931718b73b54efc653",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "sourceParent": {
+          "revision": "4203a309f11930eb60e971931718b73b54efc653^",
+          "sha256": "7e2dc2cc5729c770c414f47b5accd8061a8a363c500c5595a67d05c1469a7569"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6"
+        }
+      },
+      "subtreeHashes": []
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/create-package-lab.test.ts:96",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "actualFixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact temporaryRepository subtree and all resource/cwd/helper call/reference signatures match. Source/landed whole-file differences only retire UnknownFromJsonString codecs; setup still follows shared directory/cwd ownership.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "163b0a490d7f5e8cdc49fea1e7dc77495049a394b18e89dddea0e91a24fec4dc",
+      "landedDiffSha256": "33058eafffa0f36adfbca8c58fcc931d389276d444d5e019e959077c97173a63",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+          "sha256": "bbcebd17c51c904d0345689ab0e070e7d750d2cb6b2243ec82df3967ec7d37d0"
+        },
+        "sourceParent": {
+          "revision": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae^",
+          "sha256": "1340ad64f4a8d0e2bd92bc8a823a2341b93b625604aaa427ddf760a3a792a3a7"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "8d5b6a6ce75eb991d527d15f0ee804a2671f972d1f6851bf9cc5e38d495752a5"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRepository",
+          "versions": {
+            "source": {
+              "line": 97,
+              "endLine": 103,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 98,
+              "endLine": 104,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 98,
+              "endLine": 104,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "currentHead": {
+              "line": 98,
+              "endLine": 104,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "main": {
+              "line": 98,
+              "endLine": 104,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "working": {
+              "line": 98,
+              "endLine": 104,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/create-package.test.ts:343",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "actualFixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact temporaryRepository subtree and resource/helper call coverage match. Whole-file differences only retire UnknownFromJsonString codecs; .git remains after shared acquisition.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "259a3ce0c07aafc6ca6dc592e8b722b29901047609ec478738d16e4ad68a4427",
+      "landedDiffSha256": "0e506ead248a3eb884328570be5e04a632d74192339d4d2a29ee4f00286cce6f",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+          "sha256": "6724e5f9c70bea696da6f041edf11ffe3c464f07b84f08dd827bd08958773606"
+        },
+        "sourceParent": {
+          "revision": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae^",
+          "sha256": "ce91dc5c94990ec62e83a8a4d947cc37ea9f3d90809a75fcace232a235e7aca0"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "4dde4d0c1927aaaa64f316c54b5eefeeefdccf31050cfebe918df10f98bc2b0c"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRepository",
+          "versions": {
+            "source": {
+              "line": 339,
+              "endLine": 345,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 340,
+              "endLine": 346,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 340,
+              "endLine": 346,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "currentHead": {
+              "line": 340,
+              "endLine": 346,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "main": {
+              "line": 340,
+              "endLine": 346,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "working": {
+              "line": 340,
+              "endLine": 346,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/docgen.test.ts:206",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "actualFixSha": "f309935aded4bdba9dbbe0a624aae69145710a90",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact temporaryRepository subtree and resource/helper call coverage match. Both old constructors removed by source and landed patches; current single constructor has scoped directory then cwd bracket then .git. Source/landed differences only retire UnknownFromJsonString codecs. Later28b28fa adds barrel/re-export fixture assertions and writes in an already-owned case; constructor and ownership signatures unchanged.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "1a6a259b572bb3159611bd9bcc5f7a24a86eb1d128123c5c7eec4ed9cf5242dc",
+      "landedDiffSha256": "dbd0a351822a28033aec3f4ee1ed4cfecf81783abe1a867d18a32271eef54a54",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "f309935aded4bdba9dbbe0a624aae69145710a90",
+          "sha256": "febc686dc1c54fa328754f9762116781ebd35061d87a747365e627e6d5d389d9"
+        },
+        "sourceParent": {
+          "revision": "f309935aded4bdba9dbbe0a624aae69145710a90^",
+          "sha256": "d5c413c2a2ba02415d68f34d3deda268cabb47ee6db6983f690640bc7b9267bd"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "9265a4d8f155c4cdad45678aa19b7be7aa6e7e8fb6eef804002f79d4da43d9d7"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "c6793be7d26acd239eb66488203404c758bc9b5758aacf2efcf7e21877439c2f"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "9265a4d8f155c4cdad45678aa19b7be7aa6e7e8fb6eef804002f79d4da43d9d7"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "f2adf813dfc419c3f1e0260c0904d46f6195f643366d13d0434a612d15ed1f19"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "f2adf813dfc419c3f1e0260c0904d46f6195f643366d13d0434a612d15ed1f19"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "f2adf813dfc419c3f1e0260c0904d46f6195f643366d13d0434a612d15ed1f19"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRepository",
+          "versions": {
+            "source": {
+              "line": 165,
+              "endLine": 179,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 166,
+              "endLine": 180,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 166,
+              "endLine": 180,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            },
+            "currentHead": {
+              "line": 166,
+              "endLine": 180,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            },
+            "main": {
+              "line": 166,
+              "endLine": 180,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            },
+            "working": {
+              "line": 166,
+              "endLine": 180,
+              "astHash": "f89950217d4d96b8fa87bed341f3694faaf2b5a5e6055974ef1345dd6bb32267"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/doctest-lane.test.ts:13",
+      "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
+      "actualFixSha": "e08b24b0042c0c1bbd274de49407e8bade354575",
+      "landedSha": "e08b24b0042c0c1bbd274de49407e8bade354575",
+      "correspondence": "direct-ancestor",
+      "reason": "Source is a genuine ancestor; source/landed diffs only add vitest/config augmentation and update resolveConfig result access from vitestConfig to test, including child eval text. Ownership-call/reference sequence and titles unchanged. Dedicated cancellation-control proof remains absent as previously qualified.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": false,
+      "sourceDiffSha256": "88aef3768a6973c3bb7089e9012ae0b63bc2f58994283ecc99ee1f3ace83ac7a",
+      "landedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1. Current before package ordinary Node receipt includes doctest-lane; no dedicated cancellation or report-directory failure-control receipt found. Source ownership is fixed-all; proof gap remains explicit.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "e08b24b0042c0c1bbd274de49407e8bade354575",
+          "sha256": "4cbb1dd40917d943c4f3ddb08b7479934ea6d9f988f09cbd714a0ec8cba59cb4"
+        },
+        "sourceParent": {
+          "revision": "e08b24b0042c0c1bbd274de49407e8bade354575^",
+          "sha256": "645ef68c00ed2a8ef73aa17e5fb8bb17a3804fe74cc1ff34f2d8c40f9c729d20"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "resolvedConfig",
+          "versions": {
+            "source": {
+              "line": 52,
+              "endLine": 78,
+              "astHash": "cd722ef191b6e25048b0e40b319617c21bb8e1cd437e47834f04b94fc05d7dc6"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            },
+            "landedParent": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            },
+            "prHead": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            },
+            "currentHead": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            },
+            "main": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            },
+            "working": {
+              "line": 54,
+              "endLine": 80,
+              "astHash": "72707766c6a35f5160c2f8e02a533ebb0d0ece15502725eb05ee8e30fc0e10fd"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/goals-packet-core.test.ts:828",
+      "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+      "actualFixSha": "bbf8459571d5151f6e05e8564a04205f3039c70b",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Whole file byte-identical from source through PR head/squash/main/current; all six roots scoped. Source and landed diffs both replace six unscoped roots and remove four success-only root removals.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "a3038217b0b7acb5120b4ef72b257453bce6c2dc4d7e4f3ed3d723f455782903",
+      "landedDiffSha256": "7d18283d93846c0487a59b6678af45303e9e9068e7386a0df4fbae3b43086e4f",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "bbf8459571d5151f6e05e8564a04205f3039c70b",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        },
+        "sourceParent": {
+          "revision": "bbf8459571d5151f6e05e8564a04205f3039c70b^",
+          "sha256": "b39b9a7a9ef861c35ccea3b3fb3295f4bcf8abe29b2ede6e973af7d1c9011d70"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "deb2f5cf919003c38b0c7332467c3f75a681176ec81666f41a920fc2de0bdfc0"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c"
+        }
+      },
+      "subtreeHashes": []
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:107",
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "actualFixSha": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact acquireFixtureRepo subtree and resource call sequence match: bracket removal with orDie before manifest/tsdoc/package writes. Remaining whole-file differences replace the retired Unknown JSON codec with Schema/flow/Result.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "ef5ab2990ac6d04d1e10c003afb1c57f0263830a752b09e81b2774f622722a87",
+      "landedDiffSha256": "33495200973efacb0131d2c56fb89b874082221fcf4945d023901e4c01859e95",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "37e76036e5486d84ede6931c2c371b0e68968e04",
+          "sha256": "03519242943de29f1042a22a6da628e3c53c672f662e9306df2014761bb6874e"
+        },
+        "sourceParent": {
+          "revision": "37e76036e5486d84ede6931c2c371b0e68968e04^",
+          "sha256": "829db19ff21c224fefc5c80701669e3fbfb545b36e1f1178c855d2e5ef10e947"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "4b9cc0cfb7f7d34385028312eb6fe59e5a473f3be8004f037ee9b33806121534"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "acquireFixtureRepo",
+          "versions": {
+            "source": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            },
+            "sourceParent": {
+              "line": 110,
+              "endLine": 145,
+              "astHash": "012d264c27f819597dd3318e40e6ec5a95677abe87da408b5f950297813fea05"
+            },
+            "landed": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            },
+            "landedParent": {
+              "line": 110,
+              "endLine": 145,
+              "astHash": "012d264c27f819597dd3318e40e6ec5a95677abe87da408b5f950297813fea05"
+            },
+            "prHead": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            },
+            "currentHead": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            },
+            "main": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            },
+            "working": {
+              "line": 111,
+              "endLine": 148,
+              "astHash": "abae89a99b2763b0eeca3422a356655ce97607ad4aa52a880106a16ef86fe2e2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/person-match-model-store.test.ts:24",
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "actualFixSha": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Whole file byte-identical source/PR head/squash/main/current; exact temporaryRoot subtree retains immediate acquisition and removal.orDie rather than ignore.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "e750d55e2bf93ca623367cd29249d186f81c9696de2f7a215ccb198862ab473e",
+      "landedDiffSha256": "b3a0c749cb8eac05fdabd266167d0fafdb4f50a92d16a7ab875eb2ff48657561",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "37e76036e5486d84ede6931c2c371b0e68968e04",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        },
+        "sourceParent": {
+          "revision": "37e76036e5486d84ede6931c2c371b0e68968e04^",
+          "sha256": "0edc50f8f500d6a047bf785788e3572aec8816bc7c60bbe384583ae9448484ca"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "0edc50f8f500d6a047bf785788e3572aec8816bc7c60bbe384583ae9448484ca"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRoot",
+          "versions": {
+            "source": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            },
+            "currentHead": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            },
+            "main": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            },
+            "working": {
+              "line": 25,
+              "endLine": 30,
+              "astHash": "5daa22ab2d64134d41affcf1cd0656e788103d00d6ef6e0638b5a5bad45168a9"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/support/CommandTest.ts:32",
+      "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+      "actualFixSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "landedSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "correspondence": "direct-ancestor",
+      "reason": "Whole file byte-identical from source4203 through PR head/squash/main/current. Shared temporaryWorkingDirectory installs directory removal before cwd mutation; LIFO restores cwd before root removal. Shared dependency of four selected callers is present without requiring a new helper.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": false,
+      "sourceDiffSha256": "6924173efd90fcd30d1b80d5eac1d80369d024a0d49791625dc411a57497d52e",
+      "landedDiffSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "4203a309f11930eb60e971931718b73b54efc653",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "sourceParent": {
+          "revision": "4203a309f11930eb60e971931718b73b54efc653^",
+          "sha256": "38ff059362c7c40590001e488a027f429933741bac34ac80b10f6baf96955ab2"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryWorkingDirectory",
+          "versions": {
+            "source": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "landedParent": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "prHead": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "currentHead": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "main": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            },
+            "working": {
+              "line": 61,
+              "endLine": 72,
+              "astHash": "56d1f065c023fff99d85dd2840100c287154959e6bf3858f4f31f6bae5c9a7b5"
+            }
+          }
+        },
+        {
+          "name": "withTempWorkingDirectory",
+          "versions": {
+            "source": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "sourceParent": {
+              "line": 33,
+              "endLine": 54,
+              "astHash": "983a8a123e51814938850a71b613a17bb6019e7a5ceb8f2642e40854e95b2cf1"
+            },
+            "landed": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "landedParent": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "prHead": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "currentHead": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "main": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            },
+            "working": {
+              "line": 74,
+              "endLine": 75,
+              "astHash": "59e07ab888221088d02f1229fcb5c9d83a411a210e8c4068ec810d3de3d981a6"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:239",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "actualFixSha": "81f4119e9c09f6514f49505f23cd33328c9bba42",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact temporaryRepository and registeredTarget subtrees plus resource/helper call coverage match. Source/landed whole-file diff only updates two generated codec expectation strings; native archive scoped root also persists.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "aa3fe6f563dd1c027f3674bee4f3a83aeb1494c80bbeb04bb92a4f8873af7e71",
+      "landedDiffSha256": "e247a7fcc9cc0f0660d6782210976be4e68b558e2014eba815aba856a2066300",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "81f4119e9c09f6514f49505f23cd33328c9bba42",
+          "sha256": "61211643d81ad915b125f2a2d6682057587f0f279ab7601cbf185e22c6f2d997"
+        },
+        "sourceParent": {
+          "revision": "81f4119e9c09f6514f49505f23cd33328c9bba42^",
+          "sha256": "02c6f0555f666fd63c81e2e19e67c7a98b52c5e87474a99378b425402f5b1b67"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "f1194e123ff2e42a60367775c09b80213d12a96a9dde78d0db5d96f2150d4199"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRepository",
+          "versions": {
+            "source": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            },
+            "currentHead": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            },
+            "main": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            },
+            "working": {
+              "line": 215,
+              "endLine": 221,
+              "astHash": "8974b426e9b002bf4de825378102ccef09c04e0a5682d13039630f8a7a041b7d"
+            }
+          }
+        },
+        {
+          "name": "registeredTarget",
+          "versions": {
+            "source": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            },
+            "currentHead": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            },
+            "main": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            },
+            "working": {
+              "line": 223,
+              "endLine": 239,
+              "astHash": "66007c4217760b1eb5461373577c9c2f2473a216ae8e0fb16dd855e3dce0c65b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "actualFixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "correspondence": "verified-squash-correspondence",
+      "reason": "Exact temporaryRepository subtree and resource/helper coverage match. Whole-file differences retire Unknown codec and remove two retired Yaml test-kit alias expectations; directory/cwd/.git ordering unchanged.",
+      "callComparison": {
+        "sourceEqualsLanded": true,
+        "landedEqualsPrHead": true,
+        "landedEqualsCurrentHead": true,
+        "landedEqualsMain": true,
+        "sourceTitlesEqualLanded": true
+      },
+      "ancestry": {
+        "head": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        },
+        "prHead": {
+          "exitCode": 0,
+          "isAncestor": true,
+          "stderr": ""
+        },
+        "main": {
+          "exitCode": 1,
+          "isAncestor": false,
+          "stderr": ""
+        }
+      },
+      "sourceListedInPr1365": true,
+      "sourceDiffSha256": "9dc12f0d82d21b94a2a2437fcc2fa90967645d912096ecdcfd1f9a87a33190b0",
+      "landedDiffSha256": "e3706c58ba4ed4d511ce9d882a89e4b5a6c13dcf9d30310aa2dc0690b8c8e2ef",
+      "proofLimits": "Existing receipt read, no new tests run. Historical receipt environment remains its recorded cohort; no relabeling to 4.0.1.",
+      "matchesPriorAudit": true,
+      "versionHashes": {
+        "source": {
+          "revision": "058e59a4745980a99975e3a9124bef29cb5a1c5f",
+          "sha256": "9a70c2a54837d4f097c8a923e82783336e84bfa30035b080ecf72b7ad0646eed"
+        },
+        "sourceParent": {
+          "revision": "058e59a4745980a99975e3a9124bef29cb5a1c5f^",
+          "sha256": "c48fa4a09b26e096c7b0b2b034d54e8ba88414d61c9284a48e4ab1bb524e03c4"
+        },
+        "landed": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+          "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f"
+        },
+        "landedParent": {
+          "revision": "7efb5d520196518dc67d18dbbad3472ec42e2b74^",
+          "sha256": "0728f80da29c08f1ba6a9405fbc7a1a9b6213b308e1ab4a377178ed8952d11ce"
+        },
+        "prHead": {
+          "revision": "959a770707549f4f9991590339f4eaf66307aa25",
+          "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f"
+        },
+        "currentHead": {
+          "revision": "ba4fe3389462a57445a22610dfc31d45566f2898",
+          "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f"
+        },
+        "main": {
+          "revision": "56689307a4f5e40b272826820487ddc90e8d15df",
+          "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f"
+        },
+        "working": {
+          "revision": "working source",
+          "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f"
+        }
+      },
+      "subtreeHashes": [
+        {
+          "name": "temporaryRepository",
+          "versions": {
+            "source": {
+              "line": 47,
+              "endLine": 53,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "sourceParent": null,
+            "landed": {
+              "line": 48,
+              "endLine": 54,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "landedParent": null,
+            "prHead": {
+              "line": 48,
+              "endLine": 54,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "currentHead": {
+              "line": 48,
+              "endLine": 54,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "main": {
+              "line": 48,
+              "endLine": 54,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            },
+            "working": {
+              "line": 48,
+              "endLine": 54,
+              "astHash": "db13296d28b4592c2be98a84839945294e127ca60947d55e5ba23b0f75bc0394"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "unresolvedCounterexamples": [],
+  "runtimeProof": "Existing receipt qualifications unchanged; no new tests, typecheck or package proof run. Static byte/AST correspondence does not upgrade receipts to exact current-runtime proof."
+}

@@ -11,10 +11,11 @@ reasoned native-resource/short PATH-scope exceptions; two newly exposed
 cleanup-subject/controlled-clock judgments are appended as exceptions.
 
 The live selected baseline changes 67 candidates to 11 reviewed judgments;
-whole-repository live findings remain 1,881. The historical inventory has
-253 open detector-directory rows and 50 actionable human rows (resource 20,
+whole-repository live findings are 1,883 after integrating #1483 (the frozen
+nine-file comparison was 1,937 to 1,881). The historical inventory has
+253 open detector-directory rows and 39 actionable human rows (resource 9,
 property 21, flake 5, observability 4), after the separately attributed P1
-verdict-observability correction. All 3,861 no-findings coverage rows
+verdict-observability correction and eleven inspected upstream resource fixes. All 3,861 no-findings coverage rows
 remain unchanged. These historical and current populations are distinct.
 
 Exact source/ID/commit correspondence is in

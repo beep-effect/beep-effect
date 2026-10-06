@@ -6915,3 +6915,15 @@ that unchanged four-case matrix and retaining every control; no suppression
 or threshold change is justified. Unrelated autofixes will be removed from
 this lane after the fixer stops. A path-bounded repair mode and an early
 Fallow check would avoid unreviewed edits and late structural feedback.
+
+
+### 2026-10-06 — Squashed source receipts need landed-commit witnesses
+
+During stale resource-row reconciliation, an ancestry check on recorded source
+commit `e5eda0f280` returned 1 even though the corresponding migration was
+subsequently included in squash PR #1365. Reconciliation stopped before writing
+any ledger changes. The bounded follow-up compares source, PR head, squash
+merge and current ownership subtrees while retaining original source attribution.
+A source receipt should record both its tested source SHA and the landed merge
+SHA with exact correspondence; ancestry alone cannot recognize squash history.
+This does not waive source inspection or justify replacing historical fix SHAs.
