@@ -587,6 +587,7 @@
     "packages/drivers/box-provisioning",
     "packages/drivers/freshbooks",
     "packages/drivers/xstate",
-    "apps/practice-mail-tagging"
+    "apps/practice-mail-tagging",
+    "apps/docket-intake"
   ]
 }

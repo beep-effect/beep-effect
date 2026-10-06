@@ -1,7 +1,7 @@
 {
   "name": "@beep/m365-mcp",
   "version": "0.0.0",
-  "description": "Model Context Protocol server exposing Microsoft 365 read-only driver tools over stdio",
+  "description": "Model Context Protocol servers for Microsoft 365 over stdio: read-only driver tools, and an outbox for one mailbox",
   "license": "MIT",
   "private": true,
   "type": "module",
@@ -65,9 +65,12 @@
     }
   },
   "dependencies": {
+    "@beep/data": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
     "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },

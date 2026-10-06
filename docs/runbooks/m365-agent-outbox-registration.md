@@ -118,25 +118,42 @@ Create the Exchange pointer to the service principal:
 New-ServicePrincipal -AppId "<outbox-client-id>" -ObjectId "<outbox-enterprise-app-object-id>" -DisplayName "beep-agent-outbox"
 ```
 
-Create a scope of its own, so that either registration can be removed without
-touching the other:
+Use the management scope the docket registration created for the same mailbox,
+`beep-docket-intake-mailbox`. Exchange refuses a second scope with the same
+recipient filter, so the two registrations share one scope and differ only in
+their role assignments. If the docket registration has not been run, create
+the scope first:
 
 ```powershell
-New-ManagementScope -Name "beep-agent-outbox-mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq '<attorney-mailbox>'"
+New-ManagementScope -Name "beep-docket-intake-mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq '<attorney-mailbox>'"
 ```
+
+State on 2026-10-06: this step is done for the firm tenant. The outbox service
+principal holds the three roles below, each limited to that shared scope.
+
+**The scope is shared, so changes to it reach both registrations:**
+
+- A `Set-ManagementScope` filter change made for the docket service also
+  changes which mailboxes the outbox can send as. After any change to the
+  scope, re-run both `Test-ServicePrincipalAuthorization` checks in step 5 for
+  this registration as well as for the docket one.
+- `Remove-ManagementScope` is refused while any role assignment still uses the
+  scope. Removing the docket registration must not clear the outbox's three
+  assignments to get the scope removed; leave the scope while either
+  registration uses it.
 
 Assign the three roles, each limited to that scope:
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.ReadWrite" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.ReadWrite" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.Send" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.Send" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Calendars.ReadWrite" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Calendars.ReadWrite" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ## 5. Verify the scope (same PowerShell session)
@@ -173,10 +190,25 @@ Role changes can take from 30 minutes to two hours to reach Microsoft Graph.
 
 Tell the orchestrator session that the outbox registration is done and how
 many rows step 5 showed in scope. Send no ids. The outbox live smoke then
-reads the values through `op run`, creates a draft from the mailbox to itself
-with one synthetic attachment, sends it, and records the audit ids.
+reads the values through `op run`. With the credentials alone it acquires a
+token and reads one page of drafts, writing nothing. With
+`M365_OUTBOX_LIVE_WRITE=1` it also creates a draft from the mailbox to itself
+with one synthetic attachment, reads it back and deletes it. With
+`M365_OUTBOX_LIVE_SEND=1` it creates such a draft, sends it, and records the
+audit ids.
 
 ## 7. Optional: the claude.ai connector's write tools
+
+State on 2026-10-06: the consent in item 1 below is already done for the firm
+tenant. The write permission set was added to the enterprise application's
+existing all-principals grant with the Azure CLI, signed in as the tenant
+administrator, in place of the portal. One enterprise application serves every
+Claude account in the tenant, so the grant covers all of them. The scope
+string and grant id from before the change are saved on the workstation at
+`~/.cache/beep/orchestrator/m365-connector-consent-before-2026-10-06.txt`;
+patching the grant back to that string undoes it. **Item 2 is still open, and
+until it is done the connector's own send tools work in every claude.ai
+session.**
 
 This step is independent of steps 1 to 6 and can be skipped. It gives
 claude.ai chat, desktop and mobile sessions text-only drafts and calendar
@@ -214,12 +246,26 @@ admin consent, or set every write tool to **Blocked**.
 
 The repository's `.mcp.json` registers `beep-m365-outbox` for sessions that
 run inside a checkout. For sessions started elsewhere, register it once at
-user level, after the outbox server has merged (its pull request confirms the
-exact command). `<clone>` is the primary checkout of this repository:
+user level. `<clone>` is the primary checkout of this repository:
 
 ```bash
-claude mcp add --scope user beep-m365-outbox -- op run --env-file=<clone>/packages/drivers/m365-mcp/outbox.env -- bun run <clone>/packages/drivers/m365-mcp/src/bin-outbox.ts
+claude mcp add --scope user beep-m365-outbox -- op run --no-masking --env-file=<clone>/packages/drivers/m365-mcp/outbox.env -- bun run <clone>/packages/drivers/m365-mcp/src/bin-outbox.ts
 ```
+
+Keep `--no-masking`: the server's stdout is the MCP JSON-RPC channel, and
+masking would rewrite tool results that contain the mailbox address.
+
+Files to attach go in the staging directory
+`${XDG_DATA_HOME:-$HOME/.local/share}/beep/m365-outbox/attachments`, which the
+server creates on first start. Copy a file there before asking a session to
+attach it. To allow other directories instead, set
+`M365_OUTBOX_ATTACHMENT_ROOTS` to absolute directories separated by `:` (for a
+user-level registration, add `-e M365_OUTBOX_ATTACHMENT_ROOTS=<dirs>` before
+the `--`). Never list the home directory or a working tree.
+
+The audit log is under
+`${XDG_STATE_HOME:-$HOME/.local/state}/beep/m365-outbox/audit`, one
+`YYYY-MM.jsonl` file per month.
 
 ## Rotation and removal
 
@@ -230,9 +276,10 @@ claude mcp add --scope user beep-m365-outbox -- op run --env-file=<clone>/packag
   `Remove-ManagementRoleAssignment` for the `Application Mail.Send`
   assignment. Either stops sending immediately for new tokens; a token already
   issued stays valid for up to an hour.
-- **Remove entirely**: remove the three role assignments, the management scope
-  (`Remove-ManagementScope "beep-agent-outbox-mailbox"`), the Exchange service
-  principal (`Remove-ServicePrincipal`), and the app registration.
+- **Remove entirely**: remove the three role assignments, the Exchange service
+  principal (`Remove-ServicePrincipal`), and the app registration. Leave the
+  management scope `beep-docket-intake-mailbox` in place while the docket
+  registration still uses it.
 
 `ApplicationAccessPolicy` is the legacy way to scope application access and is
 not used here.

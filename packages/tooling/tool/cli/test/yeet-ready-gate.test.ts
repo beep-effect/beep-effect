@@ -12,6 +12,7 @@ import {
   YeetReadyPullRequestRead,
   YeetStatusArtifact,
   YeetStatusRemote,
+  YeetWatchCheck,
 } from "@beep/repo-cli/test/Yeet";
 import { DomainError } from "@beep/repo-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
@@ -24,6 +25,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Struct from "effect/Struct";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const headSha = "abc1234def";
 
@@ -43,10 +45,14 @@ const context = RepoRunContext.make({
 const prView = (
   overrides: Partial<{
     readonly available: boolean;
+    readonly checks: ReadonlyArray<YeetWatchCheck>;
+    readonly failingOptionalCheckCount: number;
     readonly failingRequiredCheckCount: number;
     readonly headSha: O.Option<string>;
     readonly isDraft: boolean;
     readonly mergeable: string;
+    readonly pendingCheckCount: number;
+    readonly pendingOptionalCheckCount: number;
     readonly pendingRequiredCheckCount: number;
     readonly state: string;
     readonly unresolvedReviewThreadCount: number;
@@ -83,12 +89,28 @@ const noPullRequest = YeetReadyPullRequestRead.make({
   mergeReady: O.none(),
 });
 
-describe("yeet ready gate decision (push-first-publish D10)", () => {
+describe("yeet ready gate decision (push-first-publish D11: ready at content-final)", () => {
   it("flips a draft whose threads are answered and required checks are green", () => {
     expect(decideYeetReadyGate(prView())).toMatchObject({ _tag: "flip", prNumber: 42 });
   });
 
-  it("flips even while the base conflicts: D10 gates threads and checks only", () => {
+  it.each([
+    ["required checks still pending", prView({ pendingRequiredCheckCount: 2, pendingCheckCount: 2 })],
+    ["the heavy matrix still pending", prView({ pendingOptionalCheckCount: 9, pendingCheckCount: 9 })],
+    [
+      "a red optional lane such as Heavy / Coverage Regression",
+      prView({
+        failingOptionalCheckCount: 1,
+        checks: [YeetWatchCheck.make({ name: "Heavy / Coverage Regression", outcome: "fail", required: false })],
+      }),
+    ],
+  ] as const)("flips at content-final with %s", (_name, read) => {
+    // The merge gate still refuses this pull request; only the flip is early.
+    expect(O.exists(read.mergeReady, (ready) => ready.criteria.requiredChecksGreen)).toBe(false);
+    expect(decideYeetReadyGate(read)).toMatchObject({ _tag: "flip", prNumber: 42 });
+  });
+
+  it("flips even while the base conflicts: the flip gates threads and known reds only", () => {
     expect(decideYeetReadyGate(prView({ mergeable: "CONFLICTING" }))).toMatchObject({ _tag: "flip" });
   });
 
@@ -99,8 +121,12 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
   it.each([
     ["no pull request", noPullRequest, "pr-open"],
     ["a closed pull request", prView({ state: "CLOSED" }), "pr-open"],
-    ["a failing required check", prView({ failingRequiredCheckCount: 1 }), "required-checks-green"],
-    ["a pending required check", prView({ pendingRequiredCheckCount: 2 }), "required-checks-green"],
+    ["a failing required check", prView({ failingRequiredCheckCount: 1 }), "no-required-red"],
+    [
+      "a required check row that is red",
+      prView({ checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })] }),
+      "no-required-red",
+    ],
     ["an unanswered review thread", prView({ unresolvedReviewThreadCount: 1 }), "threads-resolved"],
   ] as const)("refuses %s and names the blocker", (_name, read, blocker) => {
     expect(decideYeetReadyGate(read)).toMatchObject({ _tag: "blocked", blocker });
@@ -108,7 +134,7 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
 
   it("names the first blocker in gate order when several fail", () => {
     expect(decideYeetReadyGate(prView({ failingRequiredCheckCount: 1, unresolvedReviewThreadCount: 3 }))).toMatchObject(
-      { _tag: "blocked", blocker: "required-checks-green" }
+      { _tag: "blocked", blocker: "no-required-red" }
     );
   });
 });
@@ -183,14 +209,36 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     })
   );
 
-  it.effect("names the current head when required checks are not green", () =>
+  it.effect("names the current head and the red check when a required check is failing", () =>
     Effect.gen(function* () {
       const error = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView({ pendingRequiredCheckCount: 1 })),
+        read: () =>
+          Effect.succeed(
+            prView({
+              failingRequiredCheckCount: 1,
+              checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })],
+            })
+          ),
         capture: () => Effect.die("gh must not run"),
       }).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "required-checks-green" });
-      expect(error.message).toContain(`on head ${headSha}`);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "no-required-red" });
+      expect(error.message).toContain(`1 required check(s) are failing on head ${headSha} (Lint)`);
+    })
+  );
+
+  it.effect("flips with hosted heavy checks still pending and says the review window starts", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const decision = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView({ pendingOptionalCheckCount: 9, pendingRequiredCheckCount: 1 })),
+        capture: recordingCapture(calls),
+        findMonitor: () => Effect.succeedNone,
+      });
+      expect(decision._tag).toBe("flip");
+      expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
+      const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+      expect(printed).toContain("the review window starts now");
+      expect(printed).toContain("do not merge in this step");
     })
   );
 

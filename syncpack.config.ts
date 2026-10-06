@@ -112,6 +112,7 @@ const config = {
     "packages/drivers/freshbooks/package.json",
     "packages/drivers/xstate/package.json",
     "apps/practice-mail-tagging/package.json",
+    "apps/docket-intake/package.json",
   ],
   customTypes: {
     catalog: {

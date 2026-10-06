@@ -38,13 +38,30 @@ const docketRegister = Flag.File("docket-register", { mustExist: true }).pipe(
   Flag.withDescription("Docket register as JSONL, one {client, docket, clientName} object per line."),
   Flag.optional
 );
+const bundleVersion = Flag.String("bundle-version").pipe(
+  Flag.withDescription(
+    "Version stamped on the bundle, for example 2026-10-06-03; defaults to the build's own version."
+  ),
+  Flag.withSchema(S.NonEmptyString),
+  Flag.optional
+);
 const skipEmails = Flag.Boolean("skip-emails").pipe(Flag.withDefault(false));
 const maxTextBytes = Flag.Int("max-text-bytes").pipe(Flag.optional);
 const overwrite = Flag.Boolean("overwrite").pipe(Flag.withDefault(false));
 
 const buildCommand = Command.make(
   "build",
-  { bundleOut, corpusRoot, docketRegister, includeRefresh, includeRun, maxTextBytes, overwrite, skipEmails },
+  {
+    bundleOut,
+    bundleVersion,
+    corpusRoot,
+    docketRegister,
+    includeRefresh,
+    includeRun,
+    maxTextBytes,
+    overwrite,
+    skipEmails,
+  },
   Effect.fnUntraced(function* (flags) {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
@@ -52,25 +69,27 @@ const buildCommand = Command.make(
       { corpusRoot: flags.corpusRoot, ...OptionUtils.getSomesStruct({ bundleOut: flags.bundleOut }) },
       path
     );
+    // Options are built before anything is removed, so a value the options
+    // schema refuses can never cost an existing bundle.
+    const options = PracticeKgOptions.make({
+      bundleOut: resolvedBundleOut,
+      corpusRoot: flags.corpusRoot,
+      includeRefresh: flags.includeRefresh,
+      includeRuns: flags.includeRun,
+      overwrite: flags.overwrite,
+      skipEmails: flags.skipEmails,
+      ...OptionUtils.getSomesStruct({
+        bundleVersion: flags.bundleVersion,
+        docketRegisterPath: flags.docketRegister,
+        maxTextBytes: O.map(flags.maxTextBytes, PosInt.make),
+      }),
+    });
     const bundleExists = yield* fs.exists(resolvedBundleOut).pipe(Effect.orElseSucceed(() => false));
     if (bundleExists && flags.overwrite) {
       yield* fs.remove(resolvedBundleOut, { recursive: true });
     }
     yield* fs.makeDirectory(resolvedBundleOut, { recursive: true });
-    const build = buildPracticeKgBundle(
-      PracticeKgOptions.make({
-        bundleOut: resolvedBundleOut,
-        corpusRoot: flags.corpusRoot,
-        includeRefresh: flags.includeRefresh,
-        includeRuns: flags.includeRun,
-        overwrite: flags.overwrite,
-        skipEmails: flags.skipEmails,
-        ...OptionUtils.getSomesStruct({
-          docketRegisterPath: flags.docketRegister,
-          maxTextBytes: O.map(flags.maxTextBytes, PosInt.make),
-        }),
-      })
-    );
+    const build = buildPracticeKgBundle(options);
     yield* Effect.scoped(
       Layer.build(makePracticeKgBuildLayer(path.join(resolvedBundleOut, "kg.pglite"))).pipe(
         Effect.flatMap((context) => build.pipe(Effect.provide(context)))

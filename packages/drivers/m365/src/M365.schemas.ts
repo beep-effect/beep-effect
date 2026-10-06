@@ -16,11 +16,15 @@ import * as S from "effect/Schema";
 const $I = $M365Id.create("M365.schemas");
 
 /**
- * Build an optional Graph wire field that decodes a missing/`undefined` key to
- * `Option.none`, defaults to `none` on construction, and carries a description.
+ * Build an optional Graph wire field. Graph sends an absent value either as a
+ * missing key or as `null` (for example `seriesMasterId` on a single event),
+ * so both decode to `Option.none`; `none` encodes as a missing key. The field
+ * defaults to `none` on construction and carries a description.
  */
 const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
-  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
+  S.OptionFromOptionalNullOr(schema, { onNoneEncoding: "omit" })
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({ description });
 
 const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("GraphNonNegativeInt", {
@@ -797,6 +801,7 @@ export class GraphMailFolder extends S.Class<GraphMailFolder>($I`GraphMailFolder
 export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
   {
     id: S.String.annotateKey({ description: "Message id." }),
+    bccRecipients: opt(S.Array(GraphRecipient), "Blind-carbon-copy recipients (present on drafts and sent items)."),
     body: opt(GraphItemBody, "Message body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
     categories: opt(S.Array(S.String), "Outlook category display names applied to the message."),
@@ -821,6 +826,38 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
 ) {}
 
 /**
+ * One attendee of a calendar event (read subset).
+ *
+ * **Details**
+ *
+ * A host reads this to tell a meeting from an appointment: Graph mails every
+ * attendee when a meeting changes. The driver never writes attendees.
+ *
+ * **Example** (Make an attendee)
+ *
+ * ```ts
+ * import { GraphEmailAddress, GraphEventAttendee } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const attendee = GraphEventAttendee.make({
+ *   emailAddress: O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") })),
+ *   type: O.some("required")
+ * })
+ * console.log(O.isSome(attendee.type)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphEventAttendee extends S.Class<GraphEventAttendee>($I`GraphEventAttendee`)(
+  {
+    emailAddress: opt(GraphEmailAddress, "The attendee's email address (never logged)."),
+    type: opt(S.String, "Attendee type (required/optional/resource)."),
+  },
+  $I.annote("GraphEventAttendee", { description: "One attendee of an Outlook calendar event (read subset)." })
+) {}
+
+/**
  * An Outlook calendar event (read subset).
  *
  * **Example** (Make event with id)
@@ -838,6 +875,7 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
 export class GraphEvent extends S.Class<GraphEvent>($I`GraphEvent`)(
   {
     id: S.String.annotateKey({ description: "Event id." }),
+    attendees: opt(S.Array(GraphEventAttendee), "Attendees; Graph mails each of them when a meeting changes."),
     body: opt(GraphItemBody, "Event body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
     categories: opt(S.Array(S.String), "Outlook category display names applied to the event."),
