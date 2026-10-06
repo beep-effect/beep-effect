@@ -39,8 +39,9 @@ const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 const decodeGhPullRequestList = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhPrView)));
+const isGraphQlRateLimitOutput = (output: string) => /GraphQL: API rate limit (already )?exceeded/.test(output);
 const graphQlRateLimited = (failure: GhCommandFailure) =>
-  failure._tag === "nonzero-exit" && Str.includes("GraphQL: API rate limit already exceeded")(failure.output);
+  failure._tag === "nonzero-exit" && isGraphQlRateLimitOutput(failure.output);
 const ghPullRequestViewOutput = (context: RepoRunContext) =>
   ghOutput({
     args: ghPullRequestViewArgs,
@@ -540,7 +541,7 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
   if (result.exitCode !== 0) {
-    if (Str.includes("GraphQL: API rate limit already exceeded")(result.output)) {
+    if (isGraphQlRateLimitOutput(result.output)) {
       return yield* createPullRequestViaRest(context, recorder, prStep, capture, view, { title, bodyPath, draft });
     }
     return yield* YeetCommandError.make({

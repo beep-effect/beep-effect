@@ -366,7 +366,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
         const commands = yield* makeCommands;
         const context = contextAt("/repo");
         const replies: ReadonlyArray<Reply> = [
-          ["gh pr view", 1, "GraphQL: API rate limit already exceeded"],
+          ["gh pr view", 1, "GraphQL: API rate limit exceeded"],
           ["gh api repos/{owner}/{repo}/pulls?head={owner}:feat%2Fcoverage-restore&state=open", 0, `[${prView()}]`],
         ];
         const view = yield* runGhPullRequestView(context).pipe(withProcesses(replies, commands));
@@ -540,7 +540,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
             [
               ["log -1", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
-              ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
+              ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
               ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
               ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
               ["gh pr view", 0, prView()],
