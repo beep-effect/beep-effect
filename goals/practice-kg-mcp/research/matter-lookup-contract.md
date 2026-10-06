@@ -198,9 +198,13 @@ matter_dockets(
 ## Where the bundle is
 
 This contract describes store format pglite 3 / duckdb 3, which the build
-writes from bundle version `2026-10-06-02` on. The bundle at
+writes from bundle version `2026-10-06-02` on. The current bundle is
+`<corpus>/staging/practice-kg-bundle-2026-10-06-03`; `practice-kg-bundle-p9`
+is `2026-10-06-02` (same matters, fewer documents with text, and a wrong
+`run_label` on documents that exist in two runs). The bundle at
 `<corpus>/staging/practice-kg-bundle-p6` is the older `2026-10-06-01` (format
-2); the current host refuses it by name. Rebuild with
+2); the current host refuses it by name. Name a rebuilt bundle with
+`--bundle-version <version>`. Rebuild with
 `bun run apps/practice-kg-mcp/src/build.ts --corpus-root <corpus> --bundle-out <dir> --overwrite`,
 adding `--include-run <label>` for each later source run and
 `--docket-register <file>` for the register (see `bundle-contract.md` §5).

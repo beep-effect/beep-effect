@@ -1320,8 +1320,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "standards/fallow.boundaries.generated.jsonc",
             "syncpack.config.ts",
-            "tsconfig.base.json"
+            "tsconfig.base.json",
+            "vitest.aliases.generated.json"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -101568,7 +101570,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "a06caa47397736c4574c65f943c9f214021810d4e973142d5608b052e53da194"
+        "sha256": "e112b38abf2e44200a3ffa1200f9f0ef122280b4a9789c23cb5998cc38ac4405"
       }
     ]
   }
