@@ -11,6 +11,7 @@ import { KnownDocuments, KnownDocumentsShape } from "@beep/law-practice-use-case
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { decodeLines, makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
@@ -27,18 +28,22 @@ const $I = $LawPracticeServerId.create("MailTagging/MailTagging.known");
  *
  * The index also records the file's id and path; the adapter reads only the
  * hash and the family key and ignores every other key. The hash is accepted
- * in either letter case and compared in lowercase.
+ * in either letter case and compared in lowercase. A file held outside any
+ * matter folder (a holding area, a docket still to be confirmed) has a null or
+ * absent family key: it is decoded as `Option.none()` and never counts as
+ * known for a matter.
  *
  * **Example** (Describe one known document)
  *
  * ```ts
  * import { KnownDocument } from "@beep/law-practice-server/MailTagging"
+ * import * as O from "effect/Option"
  *
  * const known = KnownDocument.make({
  *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
- *   familyKey: "1234.10001"
+ *   familyKey: O.some("1234.10001")
  * })
- * console.log(known.familyKey) // "1234.10001"
+ * console.log(known.familyKey) // Option.some("1234.10001")
  * ```
  *
  * @category models
@@ -56,8 +61,8 @@ export class KnownDocument extends S.Class<KnownDocument>($I`KnownDocument`)(
     ).annotateKey({
       description: "SHA-256 of the file's content.",
     }),
-    familyKey: S.NonEmptyString.annotateKey({
-      description: "Practice-KG family key of the matter the file is filed under.",
+    familyKey: S.OptionFromOptionalNullOr(S.NonEmptyString).annotateKey({
+      description: "Practice-KG family key of the matter the file is filed under; null or absent outside any matter.",
     }),
   },
   $I.annote("KnownDocument", {
@@ -153,7 +158,11 @@ const makeKnownDocuments = Effect.gen(function* () {
   const file = yield* makeStateFileAt("known-documents", location.path);
   const text = yield* file.readRequired;
   const documents = yield* decodeLines({ decode: decodeKnownDocument, corrupt: file.corrupt })(text);
-  const known = HashSet.fromIterable(A.map(documents, (document) => knownKey(document.sha256, document.familyKey)));
+  const known = HashSet.fromIterable(
+    A.getSomes(
+      A.map(documents, (document) => O.map(document.familyKey, (familyKey) => knownKey(document.sha256, familyKey)))
+    )
+  );
 
   return KnownDocumentsShape.make({
     has: (request: KnownDocumentRequest) =>
