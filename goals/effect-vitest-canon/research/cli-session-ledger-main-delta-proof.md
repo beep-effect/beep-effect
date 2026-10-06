@@ -9,13 +9,12 @@ service and command cases under a fresh `it.layer`, and asserts harness
 fields directly. The nine-case suite passes on Node and Bun.
 
 Seven original findings are fixed (four EV002 layer-provision calls and
-three EV006 object assertions). The current detector retains four reviewed
+three EV006 object assertions). The current detector retains three reviewed
 exceptions: a short acquired/released process-cwd override (EV003), a scoped
-native Git clone and linked worktree (EV004), a direct Option.None assertion
-for an absent environment value (EV006), and NodeServices for real Git and
+native Git clone and linked worktree (EV004), and NodeServices for real Git and
 filesystem semantics (EV010). The original ten rows and two additional
 current identities remain in the CLI detector ledger. The current baseline
-adds the four reviewed exceptions, moving from 1,929 to 1,933. This is a
+adds the three reviewed exceptions, moving from 1,929 to 1,932. This is a
 bounded integration of the new main delta, not the complete P1 human-lens
 review. Full combined `@beep/repo-cli` package verification passed on the
 current source (audit 704.0 seconds; docgen 25.6 seconds). Hosted checks
@@ -36,4 +35,8 @@ their test scopes. Both now use `makeTempDirectoryScoped()`; the focused
 nine-case suite passes on Node and Bun. The inventory location review was
 answered without changing source-bound identities: the recorded host
 `provideScopedLayer` remains at line 1239 and the session `assertTrue`
-remains at line 199. The other read-back call is a separate occurrence.
+was at line 199 when the review was answered. The other read-back call is a
+separate occurrence. Subsequent test-project typechecking found an Effect
+pipeable-form diagnostic on that assertion; replacing it with canonical
+`assertNone(unknown.sessionId)` preserved the expectation and fixed the
+historical EV006 row. The current test-project typecheck now passes.

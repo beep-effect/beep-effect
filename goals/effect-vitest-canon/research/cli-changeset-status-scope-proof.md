@@ -26,6 +26,16 @@ in the ledger with `status: fixed`, the rebased source `fixSha`, and a shared re
 The four human-lens `NONE` rows retain their historical no-finding judgments;
 they are not new exceptions or independent proof of a complete package audit.
 
+PR #1460 P1 review exposed a type-level service gap in that layer:
+`runChangesetStatus` requires `Crypto.Crypto` even when a focused runtime
+case does not exercise its admission-workload path. Source commit
+`b22c2e648a99562db01191c35263da7364225400` adds `NodeCrypto.layer`.
+The direct package test-project typecheck now exits 0 with zero diagnostics;
+the changeset-status and session-ledger suites pass 28/28 on Node and Bun,
+and quick repo-cli lint/check pass. The standalone test `tsconfig.json`
+inherits a source-only `rootDir`, so the direct typecheck explicitly sets
+the package root directory on the command line.
+
 The starting `main` baseline had two unrelated EV006 findings in
 `PatternOntology.test.ts`; #1445 fixed them. Rebased main carried 1,941
 baseline rows, and this wave subtracted exactly eight (1,933). A second
