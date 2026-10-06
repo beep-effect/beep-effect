@@ -428,7 +428,7 @@ describe("@beep/box", () => {
       context: B.BoxApiFailureContext.make({
         values: {
           conflictCount: S.Natural.make(1),
-          conflicts: [{ id: "123", type: "file" }],
+          conflicts: [B.BoxApiFailureConflict.make({ id: "123", type: "file" })],
         },
       }),
     });
@@ -458,7 +458,7 @@ describe("@beep/box", () => {
       B.BoxApiFailureContext.make({
         values: {
           conflictCount: S.Natural.make(1),
-          conflicts: [{ id: "456", type: "file" }],
+          conflicts: [B.BoxApiFailureConflict.make({ id: "456", type: "file" })],
         },
       })
     );
@@ -516,7 +516,7 @@ describe("@beep/box", () => {
       B.BoxApiFailureContext.make({
         values: {
           conflictCount: S.Natural.make(1),
-          conflicts: [{ id: "987654321", type: "folder" }],
+          conflicts: [B.BoxApiFailureConflict.make({ id: "987654321", type: "folder" })],
         },
       })
     );
