@@ -41,6 +41,14 @@ md-core: `paragraph`, `heading`, `code`, `list`/`listitem`, `quote`, `link`,
 block. Mention and slash-command are composer affordances, not persisted
 blocks. Attachments and proposal blocks are named follow-ons.
 
+## Pattern Ontology classification
+
+Every `LexicalNode` member carries a `po` Pattern Ontology annotation
+(`@beep/schema/PatternOntology`). The codec has no issue channel, so the
+lossiness profile below is the explicit record of every pattern demotion:
+`test/Lexical.pattern-ontology.test.ts` states that profile as pattern
+transitions and fails on any pattern change outside it.
+
 ## Lossiness profile (locked)
 
 The codec profile was locked after running the Md ↔ Lexical lossiness check
@@ -89,7 +97,30 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 - Inline styles (`style`, `textStyle`), `textFormat`, `detail`, `mode`,
   NodeState (`$`).
 
+### Detached nodes on Lexical → Md (`nodeToBlocks` outside a parent)
+
+- `listitem` and `tablecell` project onto a paragraph of their inline content
+  (container → block); their list or table structure belongs to the parent
+  that is no longer present. Nested elements inside them (a nested `list` in
+  a detached `listitem`, a non-paragraph child in a detached `tablecell`)
+  degrade to their plain text, losing that nested structure.
+- `tablerow` re-wraps into a single-row `Table` (pattern preserved).
+- `text`, `tab`, `linebreak`, and `link` wrap into a paragraph.
+- A shadow-root `quote` is a container (`QuoteNode.poPatternOf`), so its
+  projection onto `BlockQuote` conserves the pattern; a legacy inline quote is
+  a block that re-realizes as a container.
+- `quote` → `BlockQuote` keeps shadow-root block children and wraps legacy
+  inline children in one paragraph; the flattening happens on the return trip
+  (see Normalizations). `code` → `Pre` keeps text and `language` but drops
+  the optional `theme`. `artifact-ref` → the artifact-link paragraph
+  convention.
+
 ### Degraded on Md → Lexical (documented, deterministic)
+
+- Empty text produces no Lexical leaf: a `Text` with an empty value, or a
+  `Strong` / `Em` / `Del` whose content is empty, vanishes from the run.
+- `TableCell` holds inline content directly (block); the Lexical `tablecell`
+  wraps that content in a paragraph (container). The content round-trips.
 
 - `Document.frontmatter` is outside the editor wire and must be retained by the
   owning persistence adapter when editor content is rebuilt.

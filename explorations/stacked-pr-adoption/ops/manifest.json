@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "stacked-pr-adoption",
+    "title": "Stacked PR Adoption",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Adopt GitHub native stacks (public preview) for dependent lanes now, by hand with gh stack link, before Yeet learns stacks — or keep the E7 deferral until GA?",
+      "Heavy policy for stack layers: every layer runs the full matrix (today's behaviour), or only the top layer runs Heavy and Yeet merges stacks only from the top?",
+      "Main-red admission hold: while main's required checks are red, should Heavy admission return hold for every PR except a declared unblocker (separate from stacking, larger lever on 2026-10-05)?",
+      "Yeet stack-aware publish: is a publish --stack-on <pr> flag plus a trunk/parent split of --base the right first slice, and which goal owns it?",
+      "Does Yeet's no-rebase law survive GitHub's server-side rebase of child layers after a partial stack merge?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-05",
+    "updated": "2026-10-05"
+  }
+}

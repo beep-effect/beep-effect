@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -27,9 +27,13 @@ Lexical, with derived correspondence and lossiness conservation proof.
 
 ## Current Phase
 
-P0 Research: enumerate every live tagged constructor and its current
-cross-model diagnostic path.
+Closed: the `po` annotation kit, 91 constructor annotations, exhaustiveness and
+conservation tests, and the derived correspondence report shipped through
+PR #1429. The closeout reflection is
+[`history/reflections/2026-10-05-claude.md`](./history/reflections/2026-10-05-claude.md).
 
 ## Latest Evidence
 
-The D5/D7 decomposition and verified source paths in the source MAP.
+[`research/INVENTORY.md`](./research/INVENTORY.md) (P0 inventory and seam) and
+[`research/CORRESPONDENCE.md`](./research/CORRESPONDENCE.md) (derived
+correspondence and conservation report).

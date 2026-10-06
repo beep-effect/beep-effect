@@ -176,8 +176,12 @@ Runbook: `docs/runbooks/agent-pools.md`.
   the tier is `GithubCheckLaneSpec.tier`, never an id prefix, and the step label
   is the log prefix (TTC ruling 28).
 - Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
-  `... verify`, `... publish --message "..."`, `... monitor`. Keep those
-  commands green.
+  `... publish --message "..."`, `... job wait <id>`, `... ready`. `publish`
+  gates the push on cheap-gates and the head-install preflight only, opens a
+  draft PR labelled `ready-for-heavy`, and submits the detached readiness
+  monitor; hosted CI is the authoritative proof and `yeet verify` is
+  on-demand. Never wait on a queued local full proof to publish. One push per
+  fully addressed wave, never per file or comment (push-first-publish D1–D10).
 - Heavy admitted work runs in `agent-run-<ticket>.scope` under
   `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
   stops scopes backed by dead leases. A loaded scope without a dead lease is
@@ -222,9 +226,10 @@ Runbook: `docs/runbooks/agent-pools.md`.
   `job wait` on the same job; the attached fallback also exits 2, so re-run it
   after the push. Any other non-zero exit ended the job: read its summary,
   fix, and re-submit. A code PR must carry the `ready-for-heavy` label before
-  the `Heavy / *` matrix runs (docs-only PRs skip it); apply the label once
-  tier 1 is green — `--until-ready` prints the `gh pr edit` command while it
-  holds.
+  the `Heavy / *` matrix runs (docs-only PRs skip it); `yeet publish` applies
+  it when it creates the draft PR, so add it by hand only for a PR that
+  already existed or whose label edit failed — `--until-ready` prints the
+  `gh pr edit` command while it holds.
   Unanswered review threads are a hard merge gate — answer every one and resolve
   every actionable one via `bun run beep yeet reply`
   (drafts in `.beep/yeet/reply-drafts.json`); never ask the operator to relay
@@ -287,6 +292,7 @@ If you touch this, load or run this first. Do not hand-author around it.
 | Gesture-bearing UI | browser-qa-loop skill |
 | Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
 | PR publish / checks | yeet skill |
+| Any stopping point (done, blocked, merge-ready, retired) | closeout skill |
 
 ## Dev Servers
 
@@ -372,6 +378,20 @@ If you touch this, load or run this first. Do not hand-author around it.
   of spawning fresh ones.
 - Durable on-disk handoffs: agent/session transitions exchange deliverables as
   files on disk (packet `research/`, scratchpad), never chat-only summaries.
+
+## Guided Closeout
+
+- Every stopping point ends with a structured prompt, never a prose list of
+  options: task done, blocked on the operator, PR merge-ready, post-merge
+  closeout, and before yielding on any question. Claude Code calls
+  `AskUserQuestion`; Codex calls `request_user_input`. Give 2-4 concrete next
+  steps, the recommended one first and labelled "(Recommended)", always
+  including a "stop here" option, with a one-line state summary (clone,
+  lane, PR, what landed) in the question itself. Keep the prose recap above
+  it short; the operator reads the prompt, not the essay. Workflow and
+  option shapes: the `closeout` skill.
+- Direction-setting decisions go through `/grill-with-docs` first; the
+  closeout prompt then carries the frontier's remaining questions.
 
 <!-- graft:start -->
 ## Graft — repo context graph

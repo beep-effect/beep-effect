@@ -270,10 +270,22 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
     );
 });
 
-// Only the lifecycle matters here; the packet's full manifest is the goals
-// doctor's business, and a manifest that fails to decode is simply not active.
-const PacketLifecycleProbe = S.Struct({ lifecycle: S.optionalKey(S.String) });
+// Only the lifecycle and the packet's own account of why it stays open
+// matter here; the full manifest is the goals doctor's business, and a
+// manifest that fails to decode is simply not active.
+const PacketLifecycleProbe = S.Struct({
+  lifecycle: S.optionalKey(S.String),
+  statusNote: S.optionalKey(S.String),
+  blockedBy: S.String.pipe(S.Array, S.optionalKey),
+});
 const decodePacketLifecycle = S.decodeUnknownEffect(S.fromJsonString(PacketLifecycleProbe));
+
+// The same deferral the goals doctor applies: a statusNote or a non-empty
+// blockedBy says the packet is open on purpose, so it is not an advisory.
+const isOpenWithoutContext = (manifest: typeof PacketLifecycleProbe.Type): boolean =>
+  Eq.equals(manifest.lifecycle, "active") &&
+  manifest.statusNote === undefined &&
+  (manifest.blockedBy === undefined || A.length(manifest.blockedBy) === 0);
 
 // The paths a pull request changed, as GitHub records them.
 const PullRequestFiles = S.Struct({ files: S.Array(S.Struct({ path: S.String })) });
@@ -315,7 +327,9 @@ const branchPaths = Effect.fn("Yeet.branchPaths")(function* (plan: YeetRetirePla
  * packet's lifecycle (same-PR packet-state flips). The touched paths are the
  * union of the pull request's file list on GitHub and the branch's diff
  * against the main branch, so a clone whose main already contains the merge
- * still names the packets. Each packet's lifecycle is read from the manifest
+ * still names the packets. A packet whose manifest carries a `statusNote` or
+ * a non-empty `blockedBy` stays open on purpose and is not named, the same
+ * deferral the goals doctor applies. Each packet's lifecycle is read from the manifest
  * committed at the lane's `HEAD`, never from its working tree, so an
  * uncommitted edit cannot hide what the merged PR left open. It is an
  * advisory: any probe failure yields no slugs rather than failing the
@@ -353,7 +367,7 @@ export const activePacketsOnBranch = Effect.fn("Yeet.activePacketsOnBranch")(fun
   return yield* Effect.filter(slugs, (slug) =>
     gitOutput(plan.worktreePath, ["show", `HEAD:goals/${slug}/ops/manifest.json`]).pipe(
       Effect.flatMap(decodePacketLifecycle),
-      Effect.map((manifest) => Eq.equals(manifest.lifecycle, "active")),
+      Effect.map(isOpenWithoutContext),
       Effect.orElseSucceed(constant(false))
     )
   );

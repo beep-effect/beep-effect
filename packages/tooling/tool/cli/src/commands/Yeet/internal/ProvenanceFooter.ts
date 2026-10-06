@@ -69,9 +69,9 @@ const repositoryPattern = /github\.com[/:]([^/]+)\/([^/]+?)(?:\.git)?$/u;
  * @category schemas
  * @since 0.0.0
  */
-export const ProvenanceStampFailureStatus = LiteralKit(["skipped", "drifted", "yielded"]).pipe(
+export const ProvenanceStampFailureStatus = LiteralKit(["skipped", "drifted", "yielded", "failed"]).pipe(
   $I.annoteSchema("ProvenanceStampFailureStatus", {
-    description: "Provenance stamp statuses that could not confirm the footer: skipped, drifted, or yielded.",
+    description: "Provenance stamp statuses that could not confirm the footer: skipped, drifted, yielded, or failed.",
   })
 );
 
@@ -96,7 +96,14 @@ export const ProvenanceStampFailureStatus = LiteralKit(["skipped", "drifted", "y
  * @category schemas
  * @since 0.0.0
  */
-export const ProvenanceStampStatus = LiteralKit(["current", "preserved", "skipped", "drifted", "yielded"]).pipe(
+export const ProvenanceStampStatus = LiteralKit([
+  "current",
+  "preserved",
+  "skipped",
+  "drifted",
+  "yielded",
+  "failed",
+]).pipe(
   $I.annoteSchema("ProvenanceStampStatus", {
     description: "Outcome of one provenance footer stamp attempt on a pull request.",
   })

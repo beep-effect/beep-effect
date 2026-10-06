@@ -102,6 +102,16 @@ console.log(output.includes('"future":true')) // true
   competing copies of the same information.
 - Compatibility issue pointers and report profiles are derived from their
   canonical path and issue collections.
+- Every tagged constructor carries a `po` Pattern Ontology annotation
+  (`@beep/schema/PatternOntology`). The mapping conservation law is "pattern
+  preserved or explicitly demoted": a pattern change across `pandocToDocument`
+  or `documentToPandoc` coincides with a `PandocMappingIssue` at the
+  construct's path, except for the lossless re-realizations the pattern tests
+  declare (whitespace tokens, display-math paragraphs, image alt text).
+- Pandoc list items and table cells are untagged payloads, so the Md
+  field-only constructors (`Li`, `TaskItem`, `TableRow`, `TableCell`) have no
+  Pandoc constructor to correspond to; they are covered through their parent
+  list or table transition.
 - `PandocAttr`, `PandocTarget`, and `PandocDocument` provide safe constructor
   defaults. `DEFAULT_PANDOC_API_VERSION` is available when an explicit Pandoc
   API-version tuple is needed.
