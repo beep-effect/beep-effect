@@ -6818,3 +6818,14 @@ not start because the systemd user manager was unavailable. A REST fallback
 for PR creation and discovery, followed by an automatic attached monitor
 fallback, would keep an already-pushed Yeet run observable under these
 conditions.
+
+### Quick package check needs built dependency declarations in a fresh worktree (2026-10-06)
+
+While migrating `artifacts-io.test.ts` in a newly installed sibling worktree,
+`bun run beep quality package-verify @beep/repo-cli --quick` passed lint but
+failed check with `TS6305` for an unbuilt `@beep/utils` declaration and many
+cascading type diagnostics. Focused Node/Bun tests and the direct test-project
+typecheck had passed. The full package verifier was started to build its
+dependency graph before audit/check. A quick verifier preflight that either
+builds required declarations or reports the missing dependency build plainly
+would prevent this misleading wall of diagnostics.
