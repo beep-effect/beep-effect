@@ -41,8 +41,16 @@ runs its own chain. The meter and recipe below describe that route.
 
 ### Opus
 
-There is no scraper and no dashboard API for the Anthropic pool; the signal is the request
-itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
+`bun run beep accounts status [--json]` polls every Claude, Codex, Muse Code, and Grok Build account
+the local proxy holds a login for and ranks them by how urgently the weekly quota needs use
+(weekly percent left per hour until reset). A row also shows credit balances (Claude cloud session
+credits with their expiry, ChatGPT credits) and unused ChatGPT limit resets. Muse reports no
+windows while its five-hour window is idle. Cursor is not polled (D17): the command only shows
+`accounts-snapshot/v1` files that a local collector leaves in `~/.local/state/beep/accounts/`
+(`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each as a row with its age. It only reads the proxy's stored logins under `~/.cli-proxy-api`; an account
+appears once it is signed in to the proxy, and one whose login the provider rejects shows as
+`needs login`. The usage endpoints are undocumented and can change without notice, so inside a
+running lane the signal is still the request itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
 account's rate limit") marks the Opus pool below floor for the session: finish what is already
 running, then step the Claude chain down (2026-10-01 policy): launch the next bounded lane on
 `cursor-agent --model claude-opus-5-5`, and when Cursor is below floor too, on grok-build

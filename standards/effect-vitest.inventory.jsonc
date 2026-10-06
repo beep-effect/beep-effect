@@ -18501,7 +18501,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "withScratchCheckout owns a real temporary Git clone and linked worktree, then closes its scope after the supplied callback. The public it.layer fixture provides NodeServices and TestConsole per test; this shorter scope is deliberate native cleanup."
+      "reason": "The it.layer block shares one NodeServices/TestConsole build (only the test Scope is fresh per test); neither case asserts TestConsole lines because captureOutput swaps Console; withScratchCheckout keeps its own shorter scope for native Git clone/worktree cleanup."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:177:scoped@28#1",
@@ -26596,6 +26596,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Retained native worker fixture boundary: spawned Vitest consumes actual files and output/abort/report evidence is retained before scoped directory deletion. Emulator would erase worker/process subject."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:20:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/accounts-usage.test.ts",
+      "line": 20,
+      "endLine": 20,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The live poller suite reads a real temporary auth directory: directory listing, per-file reads, and a missing-directory NotFound are the subject. NodeServices supplies that filesystem and Path; HttpClient is stubbed per test."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/agent-effectiveness-command.test.ts:14:@effect/platform-node@0#1",

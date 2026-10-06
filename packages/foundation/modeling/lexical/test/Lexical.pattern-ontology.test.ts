@@ -1,5 +1,11 @@
 import { blockToLexical, nodeToBlocks } from "@beep/lexical-schema/Lexical.codec";
-import { LexicalNode, QuoteNode, SerializedEditorState } from "@beep/lexical-schema/Lexical.model";
+import {
+  LexicalNode,
+  ListNode,
+  ListNodeValue,
+  QuoteNode,
+  SerializedEditorState,
+} from "@beep/lexical-schema/Lexical.model";
 import * as Md from "@beep/md/Md.model";
 import * as PatternOntology from "@beep/schema/PatternOntology";
 import { it } from "@beep/test-runner";
@@ -148,6 +154,15 @@ const inPlaceLexicalType: Readonly<Record<MdFieldOnlyNode["_tag"], LexicalStruct
 /** Inline-level leaves have no block position in Md and wrap into a paragraph. */
 const looseLeafTypes: ReadonlyArray<string> = ["text", "tab", "linebreak", "link"];
 
+/**
+ * The derived `ListNode` arbitrary draws `listType` and `tag` independently and
+ * leaves their agreement to the schema check, which rejects half of the pairs
+ * on top of the discards every element node already pays. `ListNodeValue`
+ * fixes the canonical tag per list type, so list nodes are built from its
+ * payloads and no candidate is discarded for a mismatched tag.
+ */
+const ListNodeArbitrary = Arbitrary.schema(ListNodeValue).pipe(Arbitrary.map((payload) => ListNode.make(payload)));
+
 const isDeclared = (table: ReadonlyArray<readonly [string, string]>, source: string, target: string): boolean =>
   A.some(table, ([from, to]) => from === source && to === target);
 
@@ -258,7 +273,7 @@ describe("@beep/lexical-schema Pattern Ontology classification", () => {
     for (const [type, member] of R.toEntries(LexicalNode.cases)) {
       it.prop(
         `projects the ${type} node with a conserved or declared pattern`,
-        { node: Arbitrary.schema(member) },
+        { node: type === "list" ? ListNodeArbitrary : Arbitrary.schema(member) },
         ({ node }) => {
           const blocks = nodeToBlocks(node);
 
