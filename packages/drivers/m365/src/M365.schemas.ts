@@ -770,6 +770,7 @@ export class GraphAttachment extends S.Class<GraphAttachment>($I`GraphAttachment
 export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
   {
     id: S.String.annotateKey({ description: "Message id." }),
+    bccRecipients: opt(S.Array(GraphRecipient), "Blind-carbon-copy recipients (present on drafts and sent items)."),
     body: opt(GraphItemBody, "Message body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
     categories: opt(S.Array(S.String), "Outlook category display names applied to the message."),

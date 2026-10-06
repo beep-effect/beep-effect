@@ -7,9 +7,10 @@
  * document content.
  *
  * Two lanes share the verbs. The delegated lane is read-only by scope. The
- * app-only lane adds mailbox writes (calendar events, categories); it never
- * uses `/me` routes, and a create that may or may not have reached Graph fails
- * as `"ambiguous write"` instead of being replayed.
+ * app-only lane adds mailbox writes (calendar events, categories, mail drafts
+ * with attachments, and sending a draft); it never uses `/me` routes, and a
+ * create or send that may or may not have reached Graph fails as
+ * `"ambiguous write"` instead of being replayed.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -21,6 +22,7 @@ import { addDays } from "@beep/schema/LocalDate";
 import { getSomesStruct } from "@beep/utils/Option";
 import { Config, Context, Duration, Effect, flow, HashSet, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import * as Base64 from "effect/encoding/Base64";
 import { dual } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
@@ -1436,6 +1438,306 @@ export class M365AttachmentContent extends S.Class<M365AttachmentContent>($I`M36
 ) {}
 
 /**
+ * Largest attachment, in bytes, that `addMessageAttachment` sends in one
+ * request (3 MiB). Larger content goes through an upload session.
+ *
+ * **Example** (Read the single-request limit)
+ *
+ * ```ts
+ * import { M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES } from "@beep/m365"
+ *
+ * console.log(M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES) // 3145728
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES: number = 3 * 1024 * 1024;
+
+/**
+ * Size, in bytes, of each upload-session chunk except the last (ten 320 KiB
+ * blocks, the multiple Graph asks for).
+ *
+ * **Example** (Read the chunk size)
+ *
+ * ```ts
+ * import { M365_ATTACHMENT_UPLOAD_CHUNK_BYTES } from "@beep/m365"
+ *
+ * console.log(M365_ATTACHMENT_UPLOAD_CHUNK_BYTES) // 3276800
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const M365_ATTACHMENT_UPLOAD_CHUNK_BYTES: number = 10 * 320 * 1024;
+
+/**
+ * Largest attachment, in bytes, that Graph accepts through an upload session
+ * (150 MiB). `addMessageAttachment` rejects larger content before any HTTP
+ * call.
+ *
+ * **Example** (Read the attachment limit)
+ *
+ * ```ts
+ * import { M365_ATTACHMENT_MAX_BYTES } from "@beep/m365"
+ *
+ * console.log(M365_ATTACHMENT_MAX_BYTES) // 157286400
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const M365_ATTACHMENT_MAX_BYTES: number = 150 * 1024 * 1024;
+
+/**
+ * Recipient address of an outbound mail draft.
+ *
+ * **Details**
+ *
+ * The check is deliberately shallow: no whitespace and exactly one `@` with
+ * text on both sides. Exchange decides whether the address is deliverable.
+ *
+ * **Example** (Guard a recipient address)
+ *
+ * ```ts
+ * import { M365MailAddress } from "@beep/m365"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(M365MailAddress)("counsel@example.test")) // true
+ * console.log(S.is(M365MailAddress)("counsel at example.test")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365MailAddress = S.String.check(
+  S.isPattern(/^[^\s@]+@[^\s@]+$/, {
+    message: "Mail addresses have no whitespace and exactly one '@' with text on both sides.",
+  })
+).pipe(
+  $I.annoteSchema("M365MailAddress", {
+    description: "Recipient address of an outbound mail draft (never logged in spans).",
+  })
+);
+
+/**
+ * Type for {@link M365MailAddress}.
+ *
+ * **Example** (Type a recipient address)
+ *
+ * ```ts
+ * import type { M365MailAddress } from "@beep/m365"
+ *
+ * const length = (address: M365MailAddress) => address.length
+ * console.log(length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365MailAddress = typeof M365MailAddress.Type;
+
+/**
+ * Body written to an outbound mail draft.
+ *
+ * **Example** (Make a text mail body)
+ *
+ * ```ts
+ * import { M365MailBody } from "@beep/m365"
+ *
+ * const body = M365MailBody.make({ content: "Please find the filing attached.", contentType: "text" })
+ * console.log(body.contentType) // "text"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365MailBody extends S.Class<M365MailBody>($I`M365MailBody`)(
+  {
+    content: S.String.annotateKey({ description: "Body content (never logged in spans)." }),
+    contentType: GraphBodyContentType.annotateKey({ description: "Body content type." }),
+  },
+  $I.annote("M365MailBody", { description: "Body written to an outbound mail draft." })
+) {}
+
+const mailRecipients = (description: string) =>
+  S.Array(M365MailAddress)
+    .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
+    .annotateKey({ description });
+
+/**
+ * Fields of a new mail draft.
+ *
+ * **Example** (Draft a message to one recipient)
+ *
+ * ```ts
+ * import { M365MailBody, M365MailDraft } from "@beep/m365"
+ *
+ * const draft = M365MailDraft.make({
+ *   body: M365MailBody.make({ content: "Please find the filing attached.", contentType: "text" }),
+ *   subject: "Filing receipt",
+ *   toRecipients: ["counsel@example.test"]
+ * })
+ * console.log(draft.ccRecipients.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365MailDraft extends S.Class<M365MailDraft>($I`M365MailDraft`)(
+  {
+    subject: S.NonEmptyString.annotateKey({ description: "Message subject (never logged in spans)." }),
+    body: M365MailBody.annotateKey({ description: "Message body." }),
+    toRecipients: mailRecipients("Primary recipient addresses."),
+    ccRecipients: mailRecipients("Carbon-copy recipient addresses."),
+    bccRecipients: mailRecipients("Blind-carbon-copy recipient addresses."),
+  },
+  $I.annote("M365MailDraft", { description: "Fields of a new mail draft." })
+) {}
+
+/**
+ * Request for creating a mail draft in the mailbox's Drafts folder. Nothing
+ * is sent.
+ *
+ * **Details**
+ *
+ * The create is not replayed after an ambiguous failure. On an
+ * `"ambiguous write"` error, list the Drafts folder before creating again.
+ *
+ * **Example** (Create draft request)
+ *
+ * ```ts
+ * import { M365CreateDraftMessageRequest, M365MailBody, M365MailDraft } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365CreateDraftMessageRequest.make({
+ *   draft: M365MailDraft.make({
+ *     body: M365MailBody.make({ content: "Please find the filing attached.", contentType: "text" }),
+ *     subject: "Filing receipt",
+ *     toRecipients: ["counsel@example.test"]
+ *   }),
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.draft.toRecipients.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365CreateDraftMessageRequest extends S.Class<M365CreateDraftMessageRequest>(
+  $I`M365CreateDraftMessageRequest`
+)(
+  {
+    draft: M365MailDraft.annotateKey({ description: "Fields of the draft to create." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365CreateDraftMessageRequest", { description: "Request for creating a mail draft." })
+) {}
+
+/**
+ * Request for attaching one file to a draft message.
+ *
+ * **Details**
+ *
+ * Content of at most {@link M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES} goes in
+ * one request. Larger content uses an upload session whose chunks are
+ * {@link M365_ATTACHMENT_UPLOAD_CHUNK_BYTES} long and are sent to the session
+ * URL without the bearer token. Empty content and content above
+ * {@link M365_ATTACHMENT_MAX_BYTES} fail with `"request encoding"` before any
+ * HTTP call.
+ *
+ * **Example** (Attach a small file)
+ *
+ * ```ts
+ * import { M365AddMessageAttachmentRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365AddMessageAttachmentRequest.make({
+ *   content: new Uint8Array([37, 80, 68, 70]),
+ *   contentType: "application/pdf",
+ *   messageId: "message-id",
+ *   name: "receipt.pdf",
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.content.byteLength) // 4
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365AddMessageAttachmentRequest extends S.Class<M365AddMessageAttachmentRequest>(
+  $I`M365AddMessageAttachmentRequest`
+)(
+  {
+    content: S.Uint8Array.annotateKey({ description: "Attachment bytes (never logged)." }),
+    contentType: S.NonEmptyString.annotateKey({ description: "Attachment MIME type." }),
+    messageId: GraphPathSegment.annotateKey({ description: "Graph id of the draft message." }),
+    name: S.NonEmptyString.annotateKey({ description: "Attachment file name (never logged in spans)." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365AddMessageAttachmentRequest", {
+    description: "Request for attaching one file to a draft message.",
+  })
+) {}
+
+/**
+ * Request for sending an existing draft message.
+ *
+ * **Gotchas**
+ *
+ * A send is not idempotent and is replayed only after an explicit 429. After
+ * a transport failure or a 503 it fails as `"ambiguous write"`: read the
+ * draft back before deciding anything, because a draft that has left the
+ * Drafts folder was sent.
+ *
+ * **Example** (Send draft request)
+ *
+ * ```ts
+ * import { M365SendDraftMessageRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365SendDraftMessageRequest.make({ messageId: "message-id", userId: O.some("mailbox-id") })
+ * console.log(request.messageId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365SendDraftMessageRequest extends S.Class<M365SendDraftMessageRequest>($I`M365SendDraftMessageRequest`)(
+  {
+    messageId: GraphPathSegment.annotateKey({ description: "Graph id of the draft message." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365SendDraftMessageRequest", { description: "Request for sending an existing draft message." })
+) {}
+
+/**
+ * Request for deleting a draft message (Outlook moves it to Deleted Items).
+ *
+ * **Example** (Delete draft request)
+ *
+ * ```ts
+ * import { M365DeleteDraftMessageRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365DeleteDraftMessageRequest.make({ messageId: "message-id", userId: O.some("mailbox-id") })
+ * console.log(request.messageId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365DeleteDraftMessageRequest extends S.Class<M365DeleteDraftMessageRequest>(
+  $I`M365DeleteDraftMessageRequest`
+)(
+  {
+    messageId: GraphPathSegment.annotateKey({ description: "Graph id of the draft message." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365DeleteDraftMessageRequest", { description: "Request for deleting a draft message." })
+) {}
+
+/**
  * Successfully downloaded drive item content.
  *
  * **Example** (Construct downloaded content)
@@ -1556,10 +1858,15 @@ export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
  * @since 0.0.0
  */
 export type M365Shape = {
+  readonly addMessageAttachment: (
+    request: M365AddMessageAttachmentRequest
+  ) => Effect.Effect<GraphAttachment, M365Error>;
+  readonly createDraftMessage: (request: M365CreateDraftMessageRequest) => Effect.Effect<GraphMessage, M365Error>;
   readonly createEvent: (request: M365CreateEventRequest) => Effect.Effect<GraphEvent, M365Error>;
   readonly createMasterCategory: (
     request: M365CreateMasterCategoryRequest
   ) => Effect.Effect<GraphOutlookCategory, M365Error>;
+  readonly deleteDraftMessage: (request: M365DeleteDraftMessageRequest) => Effect.Effect<void, M365Error>;
   readonly deleteEvent: (request: M365DeleteEventRequest) => Effect.Effect<void, M365Error>;
   readonly deltaDriveItems: (request: M365DeltaDriveItemsRequest) => Effect.Effect<M365DriveItemCollection, M365Error>;
   readonly downloadDriveItemContent: (
@@ -1591,6 +1898,7 @@ export type M365Shape = {
   ) => Effect.Effect<M365AttachmentCollection, M365Error>;
   readonly listMessages: (request: M365ListMessagesRequest) => Effect.Effect<M365MessageCollection, M365Error>;
   readonly listSites: (request: M365ListSitesRequest) => Effect.Effect<M365SiteCollection, M365Error>;
+  readonly sendDraftMessage: (request: M365SendDraftMessageRequest) => Effect.Effect<void, M365Error>;
   readonly updateEvent: (request: M365UpdateEventRequest) => Effect.Effect<GraphEvent, M365Error>;
   readonly updateMessageCategories: (
     request: M365UpdateMessageCategoriesRequest
@@ -2020,6 +2328,150 @@ const changeKeyHeaders: (changeKey: O.Option<string>) => RequestHeaders = O.matc
   onSome: (key) => ({ "if-match": `W/"${key}"` }),
 });
 
+const graphRecipients = A.map((address: M365MailAddress) => ({ emailAddress: { address } }));
+
+const draftMessageBody = (draft: M365MailDraft) => ({
+  bccRecipients: graphRecipients(draft.bccRecipients),
+  body: { content: draft.body.content, contentType: draft.body.contentType },
+  ccRecipients: graphRecipients(draft.ccRecipients),
+  subject: draft.subject,
+  toRecipients: graphRecipients(draft.toRecipients),
+});
+
+const FILE_ATTACHMENT_ODATA_TYPE = "#microsoft.graph.fileAttachment";
+const UPLOAD_CHUNK_CONTENT_TYPE = "application/octet-stream";
+const UPLOAD_CHUNK_RESOURCE = "attachmentUploadChunks";
+
+// The session URL carries its own short-lived token in the query string and the bytes
+// go to it unsigned, so anything other than https is refused.
+const GraphUploadUrl = S.String.check(
+  S.makeFilter(Str.startsWith("https://"), {
+    identifier: $I`GraphUploadUrl`,
+    title: "Graph upload URL",
+    description: "An https upload-session URL returned by Microsoft Graph.",
+    message: "Upload session URLs must use https.",
+  })
+).pipe(
+  $I.annoteSchema("GraphUploadUrl", {
+    description: "Pre-authenticated https upload-session URL returned by Microsoft Graph (never logged).",
+  })
+);
+
+class GraphUploadSession extends S.Class<GraphUploadSession>($I`GraphUploadSession`)(
+  {
+    uploadUrl: GraphUploadUrl,
+  },
+  $I.annote("GraphUploadSession", {
+    description: "Microsoft Graph attachment upload session (the pre-authenticated chunk URL only).",
+  })
+) {}
+
+class M365UploadChunk extends S.Class<M365UploadChunk>($I`M365UploadChunk`)(
+  {
+    bytes: S.Uint8Array,
+    start: S.Natural,
+    total: S.Natural,
+  },
+  $I.annote("M365UploadChunk", {
+    description: "One byte range of an attachment upload session: its bytes, start offset and the total size.",
+  })
+) {}
+
+const uploadChunks = (content: Uint8Array): ReadonlyArray<M365UploadChunk> =>
+  A.makeBy(Math.ceil(content.byteLength / M365_ATTACHMENT_UPLOAD_CHUNK_BYTES), (index) => {
+    const start = index * M365_ATTACHMENT_UPLOAD_CHUNK_BYTES;
+    return M365UploadChunk.make({
+      bytes: content.subarray(start, start + M365_ATTACHMENT_UPLOAD_CHUNK_BYTES),
+      start,
+      total: content.byteLength,
+    });
+  });
+
+// Chunks go to the session's own pre-authenticated URL: no bearer token and no Graph
+// `Accept`. The body sets `Content-Type` and `Content-Length`.
+const unsignedChunkPut = (
+  uploadUrl: string,
+  chunk: M365UploadChunk
+): Effect.Effect<HttpClientRequest.HttpClientRequest, M365Error> =>
+  Effect.succeed(
+    pipe(
+      HttpClientRequest.put(uploadUrl),
+      HttpClientRequest.bodyUint8Array(chunk.bytes, UPLOAD_CHUNK_CONTENT_TYPE),
+      HttpClientRequest.setHeader(
+        "content-range",
+        `bytes ${chunk.start}-${chunk.start + chunk.bytes.byteLength - 1}/${chunk.total}`
+      )
+    )
+  );
+
+// The final chunk answers 201 with `Location: .../attachments('<id>')` (or `.../attachments/<id>`).
+const attachmentIdFromLocation = (location: string, uploadUrl: string): O.Option<string> =>
+  pipe(
+    O.liftThrowable(() => new URL(location, uploadUrl).pathname)(),
+    O.flatMap(flow(Str.split("/"), A.last)),
+    O.map((segment) =>
+      pipe(
+        Str.match(/\('([^']+)'\)$/)(segment),
+        O.flatMap(A.get(1)),
+        O.getOrElse(() => segment)
+      )
+    ),
+    O.flatMap(O.liftThrowable(decodeURIComponent)),
+    O.filter(Str.isNonEmpty)
+  );
+
+// `sessionUrl` is the Graph route that opened the session. It stands in for the
+// pre-authenticated upload URL in errors, which must not carry that URL's token.
+const uploadAttachmentInChunks = Effect.fnUntraced(function* (
+  runtime: M365Runtime,
+  sessionUrl: string,
+  request: M365AddMessageAttachmentRequest
+): Effect.fn.Return<GraphAttachment, M365Error> {
+  const size = request.content.byteLength;
+  const session = yield* executeJsonWrite(
+    runtime,
+    M365WriteCall.make({
+      body: O.some({
+        AttachmentItem: { attachmentType: "file", contentType: request.contentType, name: request.name, size },
+      }),
+      headers: NO_HEADERS,
+      method: "POST",
+      resource: "attachments",
+      url: sessionUrl,
+    }),
+    GraphUploadSession
+  );
+  const chunks = uploadChunks(request.content);
+  yield* Effect.annotateCurrentSpan({ m365_upload_chunk_count: A.length(chunks) });
+  // A chunk PUT names its byte range, so replaying one after a throttle is safe.
+  const responses = yield* Effect.forEach(chunks, (chunk) =>
+    executeWithRetry(
+      runtime.client,
+      unsignedChunkPut(session.uploadUrl, chunk),
+      UPLOAD_CHUNK_RESOURCE,
+      sessionUrl,
+      runtime.config.maxRetries
+    )
+  );
+  const id = yield* pipe(
+    A.last(responses),
+    O.flatMapNullishOr((response) => response.headers.location),
+    O.flatMap((location) => attachmentIdFromLocation(location, session.uploadUrl)),
+    O.match({
+      onNone: () =>
+        M365Error.failEffectFromReason("response decoding", { resource: UPLOAD_CHUNK_RESOURCE, url: sessionUrl }),
+      onSome: Effect.succeed,
+    })
+  );
+  return GraphAttachment.make({
+    "@odata.type": O.some(FILE_ATTACHMENT_ODATA_TYPE),
+    contentType: O.some(request.contentType),
+    id,
+    name: O.some(request.name),
+    size: O.some(size),
+  });
+});
+
 const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
   const tenantId = yield* Config.String("M365_TENANT_ID");
   const clientId = yield* Config.String("M365_CLIENT_ID");
@@ -2099,6 +2551,62 @@ const createMasterCategoryUnlessPresent = (
   );
 
 const makeService = (runtime: M365Runtime): M365Shape => ({
+  addMessageAttachment: Effect.fn("M365.addMessageAttachment")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365AddMessageAttachmentRequest, "attachments")(rawRequest);
+    const size = request.content.byteLength;
+    const attachmentsSuffix = `messages/${request.messageId}/attachments`;
+    yield* Effect.annotateCurrentSpan({ m365_attachment_size_bytes: size });
+    if (size === 0 || size > M365_ATTACHMENT_MAX_BYTES) {
+      return yield* M365Error.failEffectFromReason("request encoding", { resource: "attachments" });
+    }
+    if (size > M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES) {
+      const sessionUrl = yield* mailboxUrl(
+        runtime.config,
+        request.userId,
+        `${attachmentsSuffix}/createUploadSession`,
+        "attachments"
+      );
+      return yield* uploadAttachmentInChunks(runtime, sessionUrl, request);
+    }
+    const url = yield* mailboxUrl(runtime.config, request.userId, attachmentsSuffix, "attachments");
+    return yield* executeJsonWrite(
+      runtime,
+      M365WriteCall.make({
+        body: O.some({
+          "@odata.type": FILE_ATTACHMENT_ODATA_TYPE,
+          contentBytes: Base64.encode(request.content),
+          contentType: request.contentType,
+          name: request.name,
+        }),
+        headers: NO_HEADERS,
+        method: "POST",
+        resource: "attachments",
+        url,
+      }),
+      GraphAttachment
+    );
+  }),
+  createDraftMessage: Effect.fn("M365.createDraftMessage")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365CreateDraftMessageRequest, "messages")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, "messages", "messages");
+    yield* Effect.annotateCurrentSpan({
+      m365_recipient_count:
+        A.length(request.draft.toRecipients) +
+        A.length(request.draft.ccRecipients) +
+        A.length(request.draft.bccRecipients),
+    });
+    return yield* executeJsonWrite(
+      runtime,
+      M365WriteCall.make({
+        body: O.some(draftMessageBody(request.draft)),
+        headers: NO_HEADERS,
+        method: "POST",
+        resource: "messages",
+        url,
+      }),
+      GraphMessage
+    );
+  }),
   createEvent: Effect.fn("M365.createEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365CreateEventRequest, "events")(rawRequest);
     const url = yield* mailboxUrl(runtime.config, request.userId, "events", "events");
@@ -2119,6 +2627,14 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   createMasterCategory: Effect.fn("M365.createMasterCategory")(function* (rawRequest) {
     const request = yield* decodeRequest(M365CreateMasterCategoryRequest, "masterCategories")(rawRequest);
     return yield* createMasterCategory(runtime, request.userId, request.category);
+  }),
+  deleteDraftMessage: Effect.fn("M365.deleteDraftMessage")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365DeleteDraftMessageRequest, "messages")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages");
+    yield* executeWrite(
+      runtime,
+      M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method: "DELETE", resource: "messages", url })
+    );
   }),
   deleteEvent: Effect.fn("M365.deleteEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365DeleteEventRequest, "events")(rawRequest);
@@ -2291,6 +2807,14 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
       "sites"
     );
     return yield* annotateCollectionCount(collection);
+  }),
+  sendDraftMessage: Effect.fn("M365.sendDraftMessage")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365SendDraftMessageRequest, "messages")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}/send`, "messages");
+    yield* executeWrite(
+      runtime,
+      M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method: "POST", resource: "messages", url })
+    );
   }),
   updateEvent: Effect.fn("M365.updateEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365UpdateEventRequest, "events")(rawRequest);

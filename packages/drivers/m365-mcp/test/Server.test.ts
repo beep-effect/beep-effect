@@ -95,14 +95,18 @@ const notExposedByMcp = Effect.fn("M365Test.notExposedByMcp")(() =>
 
 const createMockM365 = () =>
   M365.of({
+    addMessageAttachment: notExposedByMcp,
+    createDraftMessage: notExposedByMcp,
     createEvent: notExposedByMcp,
     createMasterCategory: notExposedByMcp,
+    deleteDraftMessage: notExposedByMcp,
     deleteEvent: notExposedByMcp,
     downloadMessageAttachment: notExposedByMcp,
     ensureMasterCategories: notExposedByMcp,
     findEventsByIdempotencyKey: notExposedByMcp,
     listMasterCategories: notExposedByMcp,
     listMessageAttachments: notExposedByMcp,
+    sendDraftMessage: notExposedByMcp,
     updateEvent: notExposedByMcp,
     updateMessageCategories: notExposedByMcp,
     deltaDriveItems: Effect.fn("M365Test.deltaDriveItems")(function* () {

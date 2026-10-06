@@ -26,8 +26,11 @@ const notUsedInThisTest = Effect.fn("MockM365.notUsedInThisTest")(() => Effect.d
 const MockM365Layer = Layer.succeed(
   M365,
   M365.of({
+    addMessageAttachment: notUsedInThisTest,
+    createDraftMessage: notUsedInThisTest,
     createEvent: notUsedInThisTest,
     createMasterCategory: notUsedInThisTest,
+    deleteDraftMessage: notUsedInThisTest,
     deleteEvent: notUsedInThisTest,
     deltaDriveItems: notUsedInThisTest,
     downloadDriveItemContent: notUsedInThisTest,
@@ -47,6 +50,7 @@ const MockM365Layer = Layer.succeed(
     listMessageAttachments: notUsedInThisTest,
     listMessages: notUsedInThisTest,
     listSites: notUsedInThisTest,
+    sendDraftMessage: notUsedInThisTest,
     updateEvent: notUsedInThisTest,
     updateMessageCategories: notUsedInThisTest,
   })

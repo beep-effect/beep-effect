@@ -61,7 +61,34 @@ const program = Effect.gen(function* () {
 })
 ```
 
-The write verbs are not exposed through `@beep/m365-mcp`.
+### Mail outbound
+
+Four verbs prepare and send mail from a mailbox on the app-only lane; reading a
+draft back is the existing `getMessage`, which returns `bccRecipients` too.
+
+| Verb | Graph call |
+| --- | --- |
+| `createDraftMessage` | `POST /users/{id}/messages` (lands in Drafts; nothing is sent) |
+| `addMessageAttachment` | `POST .../messages/{id}/attachments`, or an upload session |
+| `sendDraftMessage` | `POST .../messages/{id}/send` |
+| `deleteDraftMessage` | `DELETE .../messages/{id}` (Outlook moves it to Deleted Items) |
+
+- An attachment of at most 3 MiB (`M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES`)
+  goes in one request. Larger content opens an upload session and is sent in
+  3,276,800-byte chunks (`M365_ATTACHMENT_UPLOAD_CHUNK_BYTES`) to the session
+  URL, which must be https and receives no bearer token. Empty content and
+  content above 150 MiB (`M365_ATTACHMENT_MAX_BYTES`) fail with
+  `"request encoding"` before any HTTP call.
+- A send is never replayed blindly. It is retried only after an explicit 429;
+  after a transport failure or a 503 it fails as `"ambiguous write"`. Read the
+  draft back with `getMessage` before deciding anything: a draft that has left
+  the Drafts folder was sent.
+- A throttled chunk is retried with the same byte range. A failed attachment
+  leaves the draft in place; delete it with `deleteDraftMessage` if it should
+  not stay.
+
+The write verbs are not exposed through the read-only `@beep/m365-mcp` server.
+The mail verbs are exposed by the outbox server in a later change.
 
 ## Token Cache Persistence
 
