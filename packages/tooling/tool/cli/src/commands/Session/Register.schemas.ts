@@ -222,24 +222,8 @@ export class RegisterReport extends S.Class<RegisterReport>($I`RegisterReport`)(
  */
 export const RegisterReportJson = JsonStringCodec(RegisterReport);
 
-/**
- * The register key: a unit is identified by what it is and where it is reached.
- *
- * **Example** (Key a row)
- *
- * ```ts
- * import { registerUnitKey } from "@beep/repo-cli/test/Session"
- *
- * console.log(registerUnitKey({ kind: "codex-lane", address: "PR #1468" })) // "codex-lane\u0000PR #1468"
- * ```
- *
- * @param unit - The kind and address of a unit.
- * @returns Kind and address joined by a NUL byte so neither can collide with the other.
- * @category models
- * @since 0.0.0
- */
-export const registerUnitKey = (unit: { readonly kind: RegisterUnitKind; readonly address: string }): string =>
-  `${unit.kind}\u0000${unit.address}`;
+// A unit is identified by what it is and where it is reached; the NUL byte keeps the two apart.
+const registerUnitKey = (unit: RegisterRow): string => `${unit.kind}\u0000${unit.address}`;
 
 const newestFirst = Order.mapInput(Order.Number, (row: RegisterRow) => -DateTime.toEpochMillis(row.recordedAt));
 
