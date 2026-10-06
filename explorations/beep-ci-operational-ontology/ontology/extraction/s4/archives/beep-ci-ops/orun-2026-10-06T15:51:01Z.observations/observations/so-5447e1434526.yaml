@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:5447e14345260d1316f5f04b00835e541e88f9646b161d2b690fec4338c17042",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1506,
+    "end_line": 1519,
+    "content_sha256": "ff62688c98c19b7f5474fa31a687c0b09b5e038594080b7ea589920fae2378bf"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect/proof-ledger.properties:record=70",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=6eb51e93-cb45-40fe-9a96-7e2c09c83193"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@slop/09-22-26"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=641902.024534"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=0661d9c80e1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=quality:lint-policy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=undeclared-inputs"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-24T22:06:28.678Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=repair-loop"
+    }
+  ],
+  "source_excerpt": "# record 70\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=6eb51e93-cb45-40fe-9a96-7e2c09c83193\nlaneId=quality:lint-policy\nbranch=@slop/09-22-26\nstage=repair-loop\nenvProfile=local\nkind=miss\nkey=0661d9c80e1\nreason=undeclared-inputs\nobserved=failed\ndurationMs=641902.024534\nrecordedAt=2026-09-24T22:06:28.678Z\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5397ff7a760ea1513b6970820c3b93465e633b05efe6f0fa32dea382425a467e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 824,
+    "end_line": 831
+  },
+  "quote": "- id: iv-1182-identity-lint-inputs\n  title: \"PR #1182 — @beep/identity lint inputs widen repo-wide under a governed Biome profile\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-22T08:54:47Z\"\n  mergeCommit: f25286554f3d0335aeaaeb316a4fce481537cbb4\n  pr: 1182\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

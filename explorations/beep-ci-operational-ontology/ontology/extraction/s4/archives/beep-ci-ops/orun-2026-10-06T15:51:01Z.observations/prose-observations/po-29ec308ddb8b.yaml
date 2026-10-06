@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:29ec308ddb8ba42273b33b41212d92fc8dcb32afcc10bf4c04bccce61750e450",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 492,
+    "end_line": 499
+  },
+  "quote": "- id: iv-1061-docgen-full-proof-metadata-check\n  title: \"PR #1061 — the full docgen proof runs the JSDoc metadata check before it generates\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T17:45:48Z\"\n  mergeCommit: 5bd8c7f4b6c6d9393d0dcff62b1eacb9ae06a0dd\n  pr: 1061\n  mechanismChanged: gate-selection",
+  "epistemic_status": "quoted_prose"
+}

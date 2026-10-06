@@ -1,0 +1,42 @@
+id: "dh:lpl-lane-plan-application:001"
+observation_refs: ["po:sha256:7193f17d8ababc728625845d15b07aa8327f671570f646dc414e0650b1e6c47f", "po:sha256:0030b2144c3e01002444ec77890baaad11b77ebfe67a2d4b6994e59fd5baae43", "po:sha256:5d984d7d5554ac29feeb046f12f86766e6718df0a290e26bdc02023a86f55f21", "po:sha256:4139861eb1243cf8fa9bd2ba3c7ff553e6399f32f19d52332bc6b0840f19ce03", "po:sha256:db8366e7780e92846d2c2454b651a5e31d975b34772c83ef2cdf49b2dcc8c22f", "po:sha256:d44acefff1205021315c71c96e269829b1507d7c83a4d6399ae53be73d19f9b0", "po:sha256:fb56d336f45445d9d55b113ad26e30e87c04adfa1ac69204cc0edf969d2863d1", "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd"]
+cq_warrants: []
+proposed_referent:
+  label: "governing lane-plan specification (what the node typed LanePlanSpecification denotes)"
+  description: >-
+    The candidate is what the specification node of a lane plan denotes. The records identify that
+    node by the contract's ordered tuple (lane-plan emission version, handoff digest, order rule,
+    scope), where any tuple member change changes specification identity and the handoff path,
+    repoRoot, episodeId and planId do not. Answers the provisional terms LanePlanSpecification (the
+    class), hasLanePlanSpecification (the plan-to-specification edge) and handoffDigest (the
+    specification's supplied handoff SHA-256). The reading this hypothesis carries is the contract
+    author's claim, to be tested and not adopted: because the specification binds a handoff digest,
+    it is an input-bound application context of the gate-order-lexicographic/v1 rule rather than the
+    rule itself. The one viable rival is the rule reading (dh:lpl-lane-order-rule:001), under which
+    the specification denotes the order rule and the digest records the input it was applied to; the
+    contract carries a rule-versus-application flag and equates neither with the other. The scope
+    member (lane scope pre-push:non-main) is a tuple member, not an emitted scope term.
+representation_status: unresolved
+alternatives:
+  - label: "the specification denotes the order rule itself (dh:lpl-lane-order-rule:001); discriminated by an observation of two specification nodes that differ only in handoff digest, and of whether anything said of the governing specification (a ratification, a revision, a count) treats them as one rule or as two applications"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "an identity key for an emitted node (a composite IRI tuple only); weak because it restates the null hypothesis, which is evaluated below and stands"
+    representation_status: implementation_artifact_only
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The records show a specification node only as the emitter's typed node with a
+    tuple-minted IRI, a handoff digest and an order-rule literal; the typing triple and the IRI
+    tuple are representation, and no record shows two applications of one rule or one application
+    governing two plans. No pinned Must/Should CQ needs a lane-plan specification, so under the
+    no-CQ default this stays null-standing and unresolved. The decision a CQ would serve is the
+    missing lane-order CQ (a Must/Should CQ that needs a lane plan or its order); named missing
+    decision: "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009". Needed
+    evidence: a pinned Must/Should CQ needing the governing specification of a lane plan, and an
+    observation of one rule applied to two different handoffs, to decide rule versus application.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.35, use_for_acceptance: false}

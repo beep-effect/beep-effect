@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:3d0afbe028ab88fe8cdca929c0d3fe27002f7d9c8fd04c9cf7430a5cfd3d1eb8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 15,
+    "end_line": 15
+  },
+  "quote": "| `GrantState` | `ActiveGrant`, `ReleasedGrant` *(supports: GrantState — lifecycle terminal; live store holds active leases only, released = ETL history)* | CQ-008 (`WaitingGrant` REMOVED round-3 H-10: a waiting contender is a `SeatRequest` under the ticket/lease split — the deployed store has no waiting lease record) |",
+  "epistemic_status": "quoted_prose"
+}

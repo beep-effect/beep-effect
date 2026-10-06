@@ -1,0 +1,53 @@
+id: "ic:vfy-verification-evidence-record-alt:001"
+hypothesis_ref: "dh:vfy-verification-evidence-record:001"
+referent_grain: >-
+  One issued ledger fact: an information object written once by one attempt's ledger write for one lane run,
+  held in one clone's ledger, as against its content, any copy of it, and the lane run it records.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two facts are the same iff they were issued by the same issuing write for the same lane in the same ledger;
+    equal content issued by two writes is two facts, and a copy into another ledger is a copy, not the fact. The
+    recordedAt plus laneId pair is evidence of the issuing write, never the criterion.
+  reidentification_key:
+    - "recordedAt plus laneId within one ledger (evidence only)"
+    - "truncated key shared with the shadow of the same run (lookup evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One record stanza; all facts of one attempt share the issuing write's instant (so-40abdcaf1156 and
+    so-c997b4851faa carry one recordedAt), so the write is shared and laneId distinguishes the items it issues.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "the lane-run verdict occurrence it records (event)"
+    - "a build-cache entry kept only to skip work"
+  existential_dependencies:
+    - "the lane run whose verdict it records"
+    - "the ledger that holds it (custody locator)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "expired (expiresAt reached)"
+counterexamples:
+  - description: >-
+      Failed facts are issued like passed ones (so-2601c6b77d87 and so-c997b4851faa carry outcome=failed and an
+      expiresAt). If "verification evidence" in CQ-005's sense is only what can prove a tree, my card's issued item
+      includes records that prove nothing and would answer "which proofs remain valid" with failures unless outcome is
+      filtered.
+  - description: >-
+      The kind=hit shadow so-dc1dce23ac11 (twin so-e66e1190087c) names the prior item only by factRecordedAt, an
+      instant shared by every fact of that write; on my criterion that instant alone does not pick out one fact, so
+      the "consulted as that item" claim needs laneId as well, which the hit does not state for the prior fact.
+status: proposed
+evidence_refs:
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - "so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0"
+  - "so:sha256:e66e1190087c8409cfabc00e8361ad9c3643e76ea166589a0140234282c0f04c"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"

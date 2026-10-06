@@ -1,0 +1,64 @@
+id: "fa:vfy-peak-memory-use:001"
+hypothesis_ref: "dh:vfy-peak-memory-use:001"
+identity_card_ref: "ic:vfy-peak-memory-use:001"
+referent_grain: >-
+  A measured magnitude at the grain of one bearer's work, the bearer being unresolved between the
+  work held under one grant and the attempt or proof unit that work ran: the highest memory that
+  work used, individuated by that bearer and read at release (the only cited readings sit on
+  release rows); or, on the value-only reading, a byte count attached to that work with no
+  individual of its own.
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: quality of the granted work over the held span (kept as the card's alternative)
+    still_viable: true
+  - label: quality of the attempt or proof unit rather than of the grant
+    still_viable: true
+  - label: quality value only, a byte count attached to the bearer with no individual of its own
+    still_viable: true
+  - label: the recorded reading as the referent
+    still_viable: false
+  - label: the admission charge under another name
+    still_viable: false
+strongest_counterexample: >-
+  Every cited grant carries one memoryPeakBytes value on its release row, which a quality
+  individual read once at release and a bare byte count written there predict alike; only a
+  mid-hold reading of one grant would show a magnitude taking a new value while held. And if the
+  grant's work is several processes, the release reading may be the peak of one process rather
+  than of the whole held work, so which bearer a quality would inhere in depends on how the reading
+  is taken, and the records do not say.
+verdict: explicitly_deferred
+needed_evidence: >-
+  To decide the category between a quality individual and value-only: a mid-hold reading of one
+  grant, a memoryPeakBytes value taken before that grant's releasedAtMillis and joined to its
+  release row by nonce or attemptId, showing whether one magnitude takes a new value while the
+  grant is held. To fix the bearer on the quality reading: a release row and an attempt or lane
+  record of the same work, joined by attemptId, carrying both readings (a lane-peak record), which
+  would show whether the grant peak is the maximum or the sum over the executions it hosted.
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71"
+rationale:
+  spec_vs_execution: >-
+    Not applicable to the peak itself: it is a magnitude of work already done, read from a release
+    row, and no cited record carries a planned, budgeted or limit memory figure that it could be
+    confused with. Nothing repeatable stands behind it; two release rows of grants of one kind carry
+    peaks about ten times apart (so-95b7d78a061f, so-363f9b7f07dc). Its separation from the
+    admission charge is argued under the rivals, not here.
+  world_vs_information: >-
+    memoryPeakBytes is the reading; the magnitude or value is what it reads.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    The bearer (the grant's work or the attempt, unresolved) is what a quality would inhere in, or
+    what a bare value is attached to, not a context.
+  rivals: >-
+    The charge rival fails on equal charges with unequal peaks, and the reading rival confuses
+    record with referent. The value-only rival stays viable: no cited record argues a quality
+    individual over a bare byte count, since each grant shows one value on one release row, and
+    only a mid-hold reading of one grant would split them. The attempt-or-unit bearer remains viable
+    within the quality reading until a joined record exists.

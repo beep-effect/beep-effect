@@ -1,0 +1,83 @@
+id: dh:vfy-lane-execution:001
+observation_refs:
+- so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610
+- so:sha256:5d4b45aa3226c4c535dbfc1d052a7d78900d8244f6417a238f327d8f6f8b8c27
+- so:sha256:bbe03a405b806751dca5ddeee93679d37cc8efada8cd69ecdbf478f09f0a70f6
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4
+- so:sha256:1a2d6fd275d6a810eef1cdb03ab5e1085b17b844f91a70009548bde6dab21710
+- so:sha256:1dc3d062f26a6e613885a56fd596bd45efd94e166c269a2b4ca2c9a090efd7fc
+- so:sha256:1de864e5f2e5020e5a85639e2caf651d4dc1f49ac7f0399a9438fd1bc84de90a
+- so:sha256:306f2bbb87ce8ffa9e686a3a471988b4a98b9a5bc27a49037cc23764a1322f7e
+- so:sha256:3df0321fa2303fa9f583571346a2e2ae0d1a3d9ca7d4f02191891b0e85cbc597
+- so:sha256:4cab473a4ae30a83a496368b6cd6ebcdabeb17571a4dc8fc10e232b1479b09f1
+- so:sha256:5447e14345260d1316f5f04b00835e541e88f9646b161d2b690fec4338c17042
+- so:sha256:7c5446b68304183946ec6a774cb60b328403e84d1feac71ce6f6ba7748e4b525
+- so:sha256:7dfd18c974612418dbbd3729d76d1c49346d7b1cfc8ce2e4347baf190d4b032d
+- so:sha256:b1c417f143294008bf47a9b1d6e8030b874e0644de3d12599b1f585937e4462d
+- so:sha256:d07a64721ca62bee951bfb9ee76a2d26ea05767d82e99a1ef274ab165a780fdd
+- so:sha256:d649f17f1b974b62bb254501a557b1256551454c201d5fa08cf4bead41477ec9
+- so:sha256:da248e006495f81c7b5a0301e935c3bd847f8f1e4fb42bb5d697b3bc653c63e8
+- so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0
+- so:sha256:dd058663d3079e0532fa11e5c25d345fa1ac6be5a8399e0cbd7afd0c2b4b44f6
+- so:sha256:de6b9f85651a7fd50a492b7fe0cf6fe2116e3442604e3afa33984b4745a1ede7
+cq_warrants:
+- CQ-022
+- CQ-024
+- CQ-025
+proposed_referent:
+  label: lane execution (one run of one verification lane within one attempt)
+  description: 'One instance is one run of one verification lane inside one attempt, individuated by (attempt, lane id); the
+    lane id names the reusable lane (dh:vfy-verification-lane:001), the execution is its run. Two record classes carry it:
+    verdict lane entries in the attempt journal (`id`, `label`, `phase`, `status`, `durationMs`, `exitCode` on so-ca8b3f90e57c;
+    `peakRssKb` on so-bbe03a405b80; `inputDigest` and `parentLaneId` on so-5d4b45aa3226, a lane nested under `full:01-pre-push`),
+    and proof-ledger fact/shadow pairs sharing attempt, laneId, key, durationMs and recordedAt (for example so-0d463294884b/so-e26c033721f6,
+    so-1de864e5f2e5/so-12d5a26fbfac, so-5447e1434526/so-c997b4851faa, so-b1c417f14329/so-2601c6b77d87; so-7c5446b68304 and
+    so-d649f17f1b97 show runs whose fact is not cited, and no absence is inferred). Each run is ended by a verdict (`status`
+    on the lane entry, `outcome` on the fact, `observed` on the shadow). `durationMs` is a per-lane wall measure, not a bounded
+    interval with known start and end. `parentLaneId` shows lane executions nested inside lane executions; no cited pair shows
+    a verdict lane entry and a ledger lane record of the same attempt, so whether the two classes ever record one run is not
+    shown. Answers the WorkUnitExecution term of CQ-022, CQ-024 and CQ-025 (CQ-025 names the verdict lane `durationMs` as
+    the actualWallMs carrier). Record pairs so-1a2d6fd275d6/so-1dc3d062f26a, so-d6adeec15c79/so-fcbe894799ea are each one
+    record span seen twice (the vocabulary record a strict subset of its twin): one individual, both cited.'
+representation_status: domain_referent
+alternatives:
+- label: the verdict lane entry or ledger record as a record
+  representation_status: information_artifact
+  plausibility: viable
+- label: the attempt as a whole, with lanes as parts rather than individuals
+  representation_status: unresolved
+  plausibility: viable
+- label: the reusable lane or work-unit specification
+  representation_status: domain_referent
+  plausibility: weak
+- label: a ledger row pair only (bookkeeping of a cache write)
+  representation_status: implementation_artifact_only
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The null falls on measured run properties recorded independently by two record kinds. Spec versus execution
+    is kept: the lane id recurs across attempts and trees, the execution does not. Needed evidence for a bounded interval:
+    a lane record with start and finish instants.'
+  discriminator: 'so-ca8b3f90e57c records lane `prepare:01-effect-imports` with `exitCode=0` and `durationMs=7094.398349`,
+    and the fact so-2601c6b77d87 (`laneId=quality:coverage`, `outcome=failed`) and its shadow so-b1c417f14329 (`observed=failed`)
+    carry the same `durationMs=618708.236225`: an exit status, and a duration and verdict agreed by two records of different
+    kind, would be false if no lane run occupied that time.'
+epistemic_status: proposed
+confidence:
+  value: 0.55
+  use_for_acceptance: false

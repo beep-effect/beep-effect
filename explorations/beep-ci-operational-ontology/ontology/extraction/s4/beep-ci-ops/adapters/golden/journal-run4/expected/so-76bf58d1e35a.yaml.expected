@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:76bf58d1e35a13150c0b1b4c49b7c0fe297c71a8732421a4e0c981f0cda037e4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/beta/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 10,
+    "end_line": 19,
+    "content_sha256": "3b066026a980c6083983cea99659fd1e1a1a80cee6bf8e1c59632f4042ac857b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beta/proof-ledger.properties:record=1",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=turbo-task-hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 1\nkind=fact\nschemaVersion=proof-fact/v1\nlaneId=lint:alpha\nlaneClass=cli-runnable\ninputSource=turbo-task-hash\nkey=first\noutcome=passed\ntier=full\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

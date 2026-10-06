@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:b74a72ab063a9397c7f157e4683423bfd2f22abd1055ce360789e9e3e0574763",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 896,
+    "end_line": 903
+  },
+  "quote": "- id: iv-1232-shared-turbo-cache-dir\n  title: \"PR #1232 — workstation Turbo runs default to the shared cache directory\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-25T11:57:07Z\"\n  mergeCommit: 41d6c9eb97e266d0ecf9607ef1998a009e8aed01\n  pr: 1232\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

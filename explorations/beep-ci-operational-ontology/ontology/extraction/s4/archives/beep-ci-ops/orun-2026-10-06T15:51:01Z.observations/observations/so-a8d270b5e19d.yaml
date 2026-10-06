@@ -1,0 +1,124 @@
+{
+  "id": "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/live/canonical/quarantine/state.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 28,
+    "content_sha256": "a2f768b6c0e5237d86479de7faa4fd665f9054d24336ab76858ea97345127c90"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/canonical/quarantine/state.properties:record=0",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1790039644702"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attachedAt=2026-09-22T01:14:04.707Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=dde98c10-24f8-43af-a558-7453c10ce4fe"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/security-coverage-closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "coordinationProtocol=scheduler-origin-concurrency/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=e127dd12fc124b0288a7a9dcce85d866c10df9040a8c478eed780d3e48705e8a"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790039644677"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "heartbeatAtMillis=1790039715397"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=15b7a9f6-f2e9-4622-91a3-cef1adc23772"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=29790d50da5e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=e22f4fb0fce8a49c2cd0d4ea01567b2e117db423"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-lease/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-22T01:14:04.702Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "support=active"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "unitName=beep-proof-614b55d1-45d9-4724-872b-69b753525b2f.service"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 0\nownerRef=29790d50da5e\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-lease/v1\nattemptId=dde98c10-24f8-43af-a558-7453c10ce4fe\nresolvedHeadSha=e22f4fb0fce8a49c2cd0d4ea01567b2e117db423\ndiffFingerprint=e127dd12fc124b0288a7a9dcce85d866c10df9040a8c478eed780d3e48705e8a\nproofTier=full\nenvProfile=local\nstage=pre-push\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5\nbranch=codex/security-coverage-closeout\ncoordinationProtocol=scheduler-origin-concurrency/v1\ncommand=bun run beep quality github-checks cheap-gates --collect-all && bun run beep quality github-checks pre-push && bun run beep ci local --affected --base origin/main\nstartedAt=2026-09-22T01:14:04.702Z\nadmittedAtMillis=1790039644702\nheartbeatAtMillis=1790039715397\nenqueuedAtMillis=1790039644677\nnonce=15b7a9f6-f2e9-4622-91a3-cef1adc23772\nownerRef=b0d5aa826f75\nownerRefVariant=attachedpid\nunitName=beep-proof-614b55d1-45d9-4724-872b-69b753525b2f.service\nsupport=active\nattachedAt=2026-09-22T01:14:04.707Z\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:06e9d6389aa86ed7f731d6eb12a6aa2eef7ba5d0e7c72f1964f87f154a757993",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/live/leading.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 1,
+    "content_sha256": "34569a10fd7158ac71f51c31265f86b19b5a19c63d1d15042cfb097c7e86700d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/leading.properties",
+    "lexical_name": "headkey",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "headkey=ahead"
+    }
+  ],
+  "source_excerpt": "headkey=ahead\n",
+  "epistemic_status": "parser_derived"
+}

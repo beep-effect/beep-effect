@@ -1,0 +1,91 @@
+target: "otp:vfy-verification-attempt:001"
+target_sha256: "e269f12b346de662e553e1002ce5e5d9eb884b860138f9c4381acdde1e59fdc6"
+chain_sha256: "ab1cdfc80e3020e8b4c2da29965199ec72f3ba252539f9815f14b9183defe7af"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking, repeated from round 1: the hypothesis still says an attempt is "individuated by
+    its attempt identifier (attemptId)", which is identifier-as-identity; the card and the
+    definition individuate by the start event with attemptId as evidence. Align the hypothesis
+    wording with the card in a later denotation pass.
+  - >-
+    Non-blocking, repeated from round 1: open_issues says "flag VerificationAttempt persists", but
+    the TAXONOMY.yaml row for VerificationAttempt carries no flags field. Name where the flag is
+    recorded or drop the flag phrasing.
+attacks:
+  - surface: warrant
+    rule: support-not-necessary
+    counterexample: >-
+      Tried whether either supported decision term defines itself without the class. CommittedFailure
+      is individuated "by its attempt and that step", and WorkUnitExecution is "one invocation of one
+      lane's procedure inside one verification attempt"; both criteria quantify over an attempt
+      individual, and CQ-022's sparql joins failure and execution through one shared ?attempt node,
+      so an attempt referent is needed for both identities. so-ca8b3f90e57c shows the dependency in
+      the closure: the failing step prepare:05-docgen and the passed step prepare:01-effect-imports
+      sit on one verdict whose attemptId equals the start row so-6390d5f857ae's. Both supported terms
+      carry CQ-022 (must_have) themselves, so this is no support chain. Survived.
+    outcome: survived
+  - surface: taxonomy
+    rule: reuse-semantic-match
+    counterexample: >-
+      Tried a grain other than the ratified VerificationAttempt (rigid, no parents): so-6390d5f857ae
+      (attempt-started, startedAt 16:59:45.919Z) and so-ca8b3f90e57c (attempt-finished, same
+      attemptId, endedAt 17:01:07.524Z, elapsedMs 81605) bound one started pipeline run, the grain
+      CQ-022's notes give the ratified term. gufo:Event fits; the process rival is named as a steward
+      choice; unresolved rigidity is a deferral, not an anti-rigid claim. No parent asserted.
+      Survived.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Tried record-level splits and merges. so-eefbf95beb8d and so-ff071fc9a2a9 are one record span
+      seen twice (same lines 1-17, the second a subset); the start-event criterion counts one attempt,
+      where a per-record criterion would count two. Two attempts of one runId start at different
+      stages (so-eefbf95beb8d repair-loop, so-10c2570fe2f6 pre-push) and stay distinct, so the run
+      file does not individuate. so-f8f678d23c44 terminates attemptId 72af6e70 in the same run file
+      as attempt d1e2faf7 and is not merged with it. The criterion holds on each. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: >-
+      Tried retention as a split: the KPI law (po-fd56d2b008d1) evicts whole terminal attempts per
+      run-id file, so a journal-presence criterion would end an attempt at eviction. The card's
+      criterion is the start event, not presence, and the proposal records that an evicted attempt
+      still occurred. The seat-request alias rival stays open with its discriminator (an
+      attempt-started row and an admission chain under one attemptId) and is named for the steward.
+      Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: a verdict DTO carrying its own startedAt, endedAt and computed elapsedMs makes the
+      arithmetic equality true by construction, so the equality alone discriminates nothing. The
+      discriminator does not stand on it alone: the start row so-6390d5f857ae is a separate record,
+      written before the verdict in the same journal, whose startedAt the verdict so-ca8b3f90e57c
+      repeats 81.6 s later with step results between them (four prepare steps passed, prepare:05-docgen
+      failed). A grouping label over lane runs has no start record of its own. Survived.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    alias of the seat request (one individual under two names); discriminating fact: an
+    attempt-started row and an admission chain sharing one attemptId, or two admission chains under
+    one attemptId
+  - >-
+    process counted while running (CQ-022's in-flight queries); discriminating fact: a record of an
+    attempt while running, before its verdict
+evidence:
+  - "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - CQ-022

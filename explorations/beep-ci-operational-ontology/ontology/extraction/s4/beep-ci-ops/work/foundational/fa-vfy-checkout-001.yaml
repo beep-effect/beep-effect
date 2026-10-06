@@ -1,0 +1,57 @@
+id: "fa:vfy-checkout:001"
+hypothesis_ref: "dh:vfy-checkout:001"
+identity_card_ref: "ic:vfy-checkout:001"
+referent_grain: >-
+  A working tree on one workstation, located by its tree root; the cited records fit both one tree
+  that persists at a root while its branch changes and successive trees occupying one root location,
+  and they do not say which.
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: unresolved
+rival_models:
+  - label: working tree as an enduring object (the card's reading)
+    still_viable: true
+  - label: >-
+      location slot on the workstation filesystem, individuated by root alone, which successive
+      trees may occupy
+    still_viable: true
+  - label: branch checked out in the tree
+    still_viable: false
+  - label: path string with no enduring tree behind it
+    still_viable: false
+strongest_counterexample: >-
+  A worktree removed and recreated at the same root: the tree reading counts two checkouts, the
+  location reading one, and the same-checkout exclusion of CQ-009 compares roots, so the two readings
+  give the same exclusion verdict only while no root is reused.
+verdict: explicitly_deferred
+needed_evidence: >-
+  To split tree from location and argue rigidity: a record of a checkout removed and another created
+  at the same root (a worktree retire followed by a re-add), or a grant whose root was reused by a new
+  tree while an older grant on that root was still recorded. To settle whether a workstation context
+  must be reified: a record carrying a workstation identity beside checkoutRoot, or two records with
+  one root on different workstations.
+evidence_refs:
+  - "so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff"
+  - "so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa"
+  - "so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c"
+  - CQ-009
+rationale:
+  spec_vs_execution: >-
+    A checkout is neither a plan nor a run.
+  world_vs_information: >-
+    checkoutRoot is a record of where the tree is; the tree is the thing two grants must not both
+    hold (CQ-009 same-checkout arm).
+  role_vs_bearer: >-
+    The checkout is the bearer; being the checkout a grant holds is a relational role of it and
+    belongs to the grant, not to the checkout's identity.
+  context_reification_needed: >-
+    Unresolved. The criterion places the tree on one workstation, but no cited record carries a
+    workstation identity, so nothing shows whether the records come from one workstation or several.
+    CQ-009's same-checkout arm compares roots alone, which presupposes one scope in which a root names
+    one tree; whether that scope must be reified as a workstation context is what a record carrying a
+    workstation identity would decide.
+  rivals: >-
+    The branch rival fails on the one-root, two-branch chains. The location rival survives because
+    no record shows a root reused by a second tree.

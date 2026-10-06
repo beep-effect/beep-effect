@@ -27,6 +27,7 @@ import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
+import { PracticeKgCorrespondentRowResolution } from "./PracticeKg.correspondent-lookup.ts";
 import { PracticeKgMatterMatchedOn, PracticeKgMatterResolution } from "./PracticeKg.matter-lookup.ts";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
@@ -49,7 +50,9 @@ const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Litera
  * `store-query-failed` means the bundle store rejected the query, which points
  * at a damaged or mismatched bundle. `row-decode-failed` means rows came back in
  * a shape this server does not understand, which points at a bundle built by a
- * different server version. Neither is the same as "no such record": a lookup
+ * different server version. `invalid-input` means the request itself cannot be
+ * answered as given, such as a correspondent lookup holding several addresses.
+ * None is the same as "no such record": a lookup
  * that finds nothing succeeds with zero rows and a note.
  *
  * **Example** (Decode a failure reason)
@@ -64,7 +67,11 @@ const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Litera
  * @category schemas
  * @since 0.0.0
  */
-export const PracticeKgToolFailureReason = LiteralKit(["store-query-failed", "row-decode-failed"]).pipe(
+export const PracticeKgToolFailureReason = LiteralKit([
+  "store-query-failed",
+  "row-decode-failed",
+  "invalid-input",
+]).pipe(
   $I.annoteSchema("PracticeKgToolFailureReason", {
     description: "Sanitized cause class for a failed practice knowledge-graph tool call.",
   })
@@ -797,6 +804,108 @@ export const practiceKgMatterFieldTiers = defineFieldTiers({
   }),
 });
 
+class CorrespondentLookupParams extends S.Class<CorrespondentLookupParams>($I`CorrespondentLookupParams`)(
+  {
+    address: S.NonEmptyString.annotateKey({
+      description:
+        "One email address, bare (pat@example.com) or as one From, To, or Cc entry (Pat Example <pat@example.com>). A whole header with several addresses is refused; look each address up on its own.",
+    }),
+    budgetBytes: BudgetBytes,
+  },
+  $I.annote("CorrespondentLookupParams", { description: "Single email address to resolve to practice matters." })
+) {}
+
+/**
+ * Correspondent-lookup tool row: one row per matter or client the address is tied to.
+ *
+ * **Details**
+ *
+ * A row carries the message counts from filed email (zero when the tie is a
+ * contact link only) and the sources of the contact's links to that matter.
+ * `decided` marks the one row a `unique` resolution chose; that row comes
+ * first and is the only one whose `resolution` is `unique`. Every other row
+ * of a unique lookup is a `candidate`.
+ *
+ * **Example** (Inspect correspondent row fields)
+ *
+ * ```ts
+ * import { PracticeKgCorrespondentToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgCorrespondentToolRow.fields.linkSources)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgCorrespondentToolRow extends S.Class<PracticeKgCorrespondentToolRow>(
+  $I`PracticeKgCorrespondentToolRow`
+)(
+  {
+    address: S.String,
+    ccCount: S.Finite,
+    clientName: S.NullOr(S.String),
+    clientNumber: S.NullOr(S.String),
+    contactId: S.NullOr(S.String),
+    decided: S.Boolean,
+    displayName: S.NullOr(S.String),
+    familyKey: S.NullOr(S.String),
+    firstAt: S.NullOr(S.String),
+    fromCount: S.Finite,
+    lastAt: S.NullOr(S.String),
+    linkEvidence: S.String,
+    linkSources: S.String,
+    messageCount: S.Finite,
+    practiceAddress: S.Boolean,
+    resolution: PracticeKgCorrespondentRowResolution,
+    roleAddress: S.Boolean,
+    toCount: S.Finite,
+  },
+  $I.annote("PracticeKgCorrespondentToolRow", {
+    description: "One matter or client an email address is tied to, by filed email or by contact link.",
+  })
+) {}
+
+/**
+ * Progressive fields for correspondent-lookup rows.
+ *
+ * **Example** (List minimal correspondent fields)
+ *
+ * ```ts
+ * import { practiceKgCorrespondentFieldTiers } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(Object.keys(practiceKgCorrespondentFieldTiers.minimal.fields))
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export const practiceKgCorrespondentFieldTiers = defineFieldTiers({
+  minimal: S.Struct({
+    clientNumber: PracticeKgCorrespondentToolRow.fields.clientNumber,
+    decided: PracticeKgCorrespondentToolRow.fields.decided,
+    familyKey: PracticeKgCorrespondentToolRow.fields.familyKey,
+    linkSources: PracticeKgCorrespondentToolRow.fields.linkSources,
+    messageCount: PracticeKgCorrespondentToolRow.fields.messageCount,
+    resolution: PracticeKgCorrespondentToolRow.fields.resolution,
+  }),
+  balanced: S.Struct({
+    clientName: PracticeKgCorrespondentToolRow.fields.clientName,
+    clientNumber: PracticeKgCorrespondentToolRow.fields.clientNumber,
+    decided: PracticeKgCorrespondentToolRow.fields.decided,
+    displayName: PracticeKgCorrespondentToolRow.fields.displayName,
+    familyKey: PracticeKgCorrespondentToolRow.fields.familyKey,
+    lastAt: PracticeKgCorrespondentToolRow.fields.lastAt,
+    linkSources: PracticeKgCorrespondentToolRow.fields.linkSources,
+    messageCount: PracticeKgCorrespondentToolRow.fields.messageCount,
+    practiceAddress: PracticeKgCorrespondentToolRow.fields.practiceAddress,
+    resolution: PracticeKgCorrespondentToolRow.fields.resolution,
+    roleAddress: PracticeKgCorrespondentToolRow.fields.roleAddress,
+  }),
+  complete: S.Struct({
+    ...PracticeKgCorrespondentToolRow.fields,
+  }),
+});
+
 const closedWorldReadOnlyHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: true,
@@ -998,6 +1107,26 @@ export const KgMatterLookupTool = readTool(
   "kg_matter_lookup",
   "Resolve one reference from mail or a document to the practice matter it belongs to: client number, client name where the docket register gives one, client-keyed family, dockets, and the applications and patents filed from them. resolution is unique, ambiguous, or none; only unique is safe to act on, and a matter with no client or with recycled-unverified status needs a person to confirm it.",
   MatterLookupParams,
+  PracticeKgToolResult
+);
+
+/**
+ * Resolves one email address to the practice matters it corresponds about.
+ *
+ * **Example** (Log correspondent-lookup tool name)
+ *
+ * ```ts
+ * import { KgCorrespondentLookupTool } from "@beep/law-practice-use-cases/server"
+ * console.log(KgCorrespondentLookupTool.name)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const KgCorrespondentLookupTool = readTool(
+  "kg_correspondent_lookup",
+  "Resolve one email address to the practice matters it corresponds about: the contact it belongs to, the attorney's own links for that contact, and the matters it appears on in filed email with message counts. Accepts a bare address or one header entry such as Pat Example <pat@example.com>. resolution is unique only when the attorney's own links name exactly one matter the bundle holds, and then only the decided row (decided true, listed first) says unique; the other rows say candidate; message counts and inferred links give ambiguous with candidates, never unique. Role mailboxes and the practice's own addresses never resolve uniquely. Only unique is safe to act on.",
+  CorrespondentLookupParams,
   PracticeKgToolResult
 );
 

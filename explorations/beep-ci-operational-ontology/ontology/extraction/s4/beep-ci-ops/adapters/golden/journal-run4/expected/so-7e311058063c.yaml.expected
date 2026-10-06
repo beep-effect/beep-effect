@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:7e311058063ca4460068816769399a7cec8062d19851b7371fb4411ba3c29e5b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/gamma/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 5,
+    "content_sha256": "c0d131c6ea36b75171f9adbe4e0002f36b8be47b44795371a23c538636862c63"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/gamma/attempts.properties:record=0",
+    "lexical_name": "_tag",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-started"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=attempt-misfiled\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

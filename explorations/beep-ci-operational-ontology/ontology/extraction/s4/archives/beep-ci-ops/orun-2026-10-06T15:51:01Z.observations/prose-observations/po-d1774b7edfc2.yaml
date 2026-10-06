@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d1774b7edfc21c7fd04105756bbd4441a0c12df37f7fa8a6c29346cc2f7415e2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/MANIFEST.yaml"
+  },
+  "source_span": {
+    "start_line": 45,
+    "end_line": 59
+  },
+  "quote": "gate:\n  c4_1:\n    file: goals/time-to-certainty/PLAN.md\n    line: 171\n    needle: C4.1 shadow mode — done 2026-09-21\n    sha256: e5bfe622d64919edabb647a424344fbe024a4c3a90214f9f96d3c77bf2c13f5c\n  c4_1_checked: true\n  post_cut_pre_push_facts: 3628\n  holds: true\n  rule: time-to-certainty C4.1 checked plus at least one pre-push ProofFact recorded at or after the cut\n    in an owning-clone ledger\n  rulings:\n  - graduation Ruling 1\n  - P1 Ruling 1\n  - P1 Ruling 2",
+  "epistemic_status": "quoted_prose"
+}

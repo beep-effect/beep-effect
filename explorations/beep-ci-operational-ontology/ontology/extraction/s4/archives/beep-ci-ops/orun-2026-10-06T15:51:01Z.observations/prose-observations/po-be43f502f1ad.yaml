@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:be43f502f1ad33703d83d596ab8d0a2b65e4fa6282a305a88878758f3b126668",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 12,
+    "end_line": 12
+  },
+  "quote": "| `ScopeKind` | `FullRepoScope`, `AffectedScope`, `FilterScope` *(supports: ScopeKind — explicit package filters are a deployed scope carrier)*, `ShardScope` *(supports: ScopeKind — matrix shards partition one admitted scope)* | CQ-002 (glossary spelling canonical; \"affected-from-base\" is AffectedScope's description, not a member name) |",
+  "epistemic_status": "quoted_prose"
+}

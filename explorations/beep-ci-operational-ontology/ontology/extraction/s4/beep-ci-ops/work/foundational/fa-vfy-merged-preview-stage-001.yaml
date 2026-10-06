@@ -1,0 +1,62 @@
+id: "fa:vfy-merged-preview-stage:001"
+hypothesis_ref: "dh:vfy-merged-preview-stage:001"
+identity_card_ref: "ic:vfy-merged-preview-stage:001"
+referent_grain: >-
+  One member of the proof-stage classifier: the position in the verification workflow at which an
+  attempt produces evidence against the merge-preview tree, individuated by that position once a
+  stage order is established (unresolved), not by the literal merged-preview.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: unresolved
+  context_reification_needed: unresolved
+rival_models:
+  - label: >-
+      stage producing evidence toward an existing assurance tier (member of the proof-stage class)
+    still_viable: true
+  - label: >-
+      a fourth assurance tier with lane obligations of its own
+    still_viable: true
+  - label: >-
+      the same individual as the admission work kind merged-preview
+    still_viable: false
+  - label: a scheduler literal with no workflow counterpart
+    still_viable: false
+strongest_counterexample: >-
+  so-3bf9cacb55b4 is a merged-preview-stage attempt whose start row carries proofTier=full, the
+  value the lease so-a8d270b5e19d also carries at pre-push. The record carries proofTier full and
+  nothing more: no cited record maps proofTier values onto AssuranceTierId levels, so it neither
+  places the attempt inside an existing tier nor excludes a fourth tier.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Three things. First, the proof-stage class's category (see the proof-stage pair's needed evidence:
+  an attempt changing stage under one attemptId, or an analyzed run or episode). Second, a record
+  fixing the stage order, without which the stage's position cannot individuate it. Third, for the
+  Queue H tier question, a record that ties a merged-preview-stage attempt or episode to one of the
+  three AssuranceTierId levels as its target (favours a stage inside that tier), or a lane obligation
+  required at a merged-preview level and not for TierLocalFullProof (favours a fourth tier). The
+  stage is dormant in the capture window, so the first merged-preview start or fact recorded after
+  the cut is the observation to wait for.
+evidence_refs:
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - "po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c"
+rationale:
+  spec_vs_execution: >-
+    The stage separates from the attempts started at it (so-3bf9cacb55b4 is one such attempt).
+  world_vs_information: >-
+    Inherited from the class: unresolved under the plan-step reading.
+  role_vs_bearer: >-
+    Inherited from the class.
+  context_reification_needed: >-
+    Unresolved pending the bearer evidence, as for the proof-stage class: no context beyond an
+    attempt under the subkind reading, a run or episode indexed over an interval under the phase
+    reading, a workflow specification to name under the plan-step reading.
+  rivals: >-
+    The work-kind identity is retired on the fixed reading that an admission work kind is not stage
+    activity; so-a8d270b5e19d (kind merged-preview, stage pre-push) is consistent with that reading.
+    The no-counterpart rival fails because an attempt began at this stage. Stage-in-tier and
+    fourth-tier both remain. The tier class and the tier member have no surviving analysis in this
+    batch, so the tier rival cannot be analyzed further here.

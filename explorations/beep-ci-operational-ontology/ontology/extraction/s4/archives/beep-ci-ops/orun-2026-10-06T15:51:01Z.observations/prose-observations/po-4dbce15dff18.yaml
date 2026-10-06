@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 411,
+    "end_line": 437
+  },
+  "quote": "### 8.3 Consequential notes\n\n**§3.1 schemas.** New: `GateOrderHandoffRef` `{path, sha256}`, where `sha256`\nis `Sha256Hex` from `@beep/schema/Sha256`. The widened `PlanEpisodeInput`\n`{episodeId, repoRoot, handoff}`. `HandoffLane` `{rank, laneId,\ndeclarationIndex}`, with `laneId` pattern-checked\n(`^[a-z0-9-]+(:[a-z0-9-]+)+$`). `GateOrderHandoffView` `{schemaVersion,\nscope, orderRule, lanes}`, decoded from JSON text as a subset view.\n`LaneScope` = `LiteralKit([\"pre-push:non-main\"])`, separate from the\nadmission-only `ScheduleScope`, which stays `[\"admission\"]`. `LaneOrderRule`\n= `LiteralKit([\"gate-order-lexicographic/v1\"])`. `LaneStep` `{laneStepIndex,\nlaneId}`. `LanePlanProposal` `{episodeId, planId, handoffPath, handoffSha256,\norderRule, scope, laneSteps}`, with `planId` = `lane-plan-${handoffSha256}`:\ncontent derived, no clock. `handoffPath` is the repo-relative path the\nhandoff was read from (Ruling 3 lists it); it is recorded but stays outside\n`planId` and specification identity. Class-level checks fail decode and\n`make` unless `planId` is exactly `lane-plan-${handoffSha256}` and every\nstep's `laneStepIndex` equals its array position. New tagged errors:\n`HandoffReadError {path, message}`, `HandoffDigestMismatchError {path,\nexpectedSha256, actualSha256}`, `HandoffDecodeError {path, message}`.\n`CyclicPlanError` is no longer \"reserved\": it is the planner's cycle failure.\nTwo field shapes differ from Ruling 5's text: `HandoffReadError` adds\n`message` to `{path}` (the platform error's description), and\n`HandoffDigestMismatchError` spells Ruling 5's `expected`/`actual` as\n`expectedSha256`/`actualSha256` (both typed `Sha256Hex`). The authority for\nboth is the P2 W6 seam brief that commissioned this lane; neither changes\nmeaning, and a GD note may ratify or reverse them.",
+  "epistemic_status": "quoted_prose"
+}

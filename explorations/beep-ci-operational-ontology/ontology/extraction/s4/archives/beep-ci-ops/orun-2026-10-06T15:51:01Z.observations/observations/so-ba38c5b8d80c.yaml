@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:ba38c5b8d80ccd24f9ea2714629fe1a0e82d998621fc35d72a1826ab837e2ed4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect10/explore_lejeune-bolt-agentic-demo-18a53c56060e/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 598,
+    "end_line": 670,
+    "content_sha256": "45702403ef8a4c824371e8cdb7b4bc7d463c6609c015fdce6715f69135b7c8a5"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect10/explore_lejeune-bolt-agentic-demo-18a53c56060e/attempts.properties:record=11",
+    "lexical_name": "overlappingPaths",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "overlappingPaths=explorations/ATLAS.md"
+    }
+  ],
+  "source_excerpt": "# record 11\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=c9e8d7e9-ae29-41e2-9c3b-4a36cc4df35e\nrecordedAt=2026-08-26T04:37:33.153Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=explore/lejeune-bolt-agentic-demo\ncommitted=true\ncreatedAt=2026-08-26T04:37:33.153Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1653.686314\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2220.22304\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=4262.863193\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=1984.10374\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=317.792841\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=failed\ndurationMs=521747.066219\nexitCode=1\nrepairCommand=Rerun `bun run beep quality github-checks nix` and inspect the Nix error.\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=not-run\nmessage=yeet publish monitor phase failed.\nmode=publish\noutcome=failure\npushed=true\nrunId=explore_lejeune-bolt-agentic-demo-18a53c56060e\nattemptId=c9e8d7e9-ae29-41e2-9c3b-4a36cc4df35e\nstartedAt=2026-08-26T04:28:36.015Z\nendedAt=2026-08-26T04:37:33.153Z\nelapsedMs=537138\nindexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json\nbehindCount=1\nmergeBase=7e4b7d8c326268e0e26b5447daff2f077538d3a2\noverlappingPaths=explorations/ATLAS.md\nfailedStepId=monitor:02-pr-checks-watch\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

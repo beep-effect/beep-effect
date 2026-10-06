@@ -25,7 +25,7 @@
   preconditions:
     - "Active grants, seat requests, and admission policy facts are represented"
   main_flow:
-    - "Scheduler validates admission invariants per the ACTIVE AdmissionPolicy (admission charge vs remaining token capacity — CQ-010; origin exclusion on originKey — CQ-009; class caps for concurrent-safe kinds; declared starvation bound — CQ-023)"
+    - "Scheduler validates admission invariants per the ACTIVE AdmissionPolicy (admission charge vs remaining token capacity — CQ-010; same-checkout exclusion plus the legacy-origin drain since #929 — CQ-009; class caps for concurrent-safe kinds; declared starvation bound — CQ-023)"
     - "DEPLOYED policy (#870 weighted admission): order by effective priority + enqueue time with capacity fitting, aging, and class caps"
     - "PROSPECTIVE policy (R3-derived DRR, unimplemented): drain per-agent queues by cost-denominated deficit round-robin"
   postconditions:

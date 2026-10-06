@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:453048e5b2d590d90e728fb7fa15d06b76e3cab6e7c5997551e7e64fbbf5102b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 106,
+    "end_line": 117,
+    "content_sha256": "083ee4ba42b26f8b32322701b149b73689d40b5af8d985210fd0a7836e069a40"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=low-priority",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=730"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=720"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=low-priority"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=low"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 18\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=low-priority\nenqueuedAtMillis=720\nkind=full\npriority=low\n# record 19\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=low-priority\nadmittedAtMillis=730\n",
+  "epistemic_status": "parser_derived"
+}

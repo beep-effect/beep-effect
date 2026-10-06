@@ -1,0 +1,48 @@
+{
+  "id": "so:sha256:b186671deeb48ad5ba985b17686a212a6acee16c229a23e6254249d70701a379",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/attempts/a/b/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 6,
+    "content_sha256": "91da33d902df47a596d45501020d4cbaa249b0009286501908bb3751b4aa0f67"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/a/b/attempts.properties:record=0",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-started"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-four"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "note=representable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=repair-loop"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=attempt-four\nstage=repair-loop\nnote=representable\n",
+  "epistemic_status": "parser_derived"
+}

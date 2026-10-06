@@ -1,0 +1,53 @@
+id: "ic:vfy-merged-preview-work-kind-alt:001"
+hypothesis_ref: "dh:vfy-merged-preview-work-kind:001"
+referent_grain: >-
+  The merged-preview member of the admission work kind: the category of work a seat request asks capacity for
+  when it requests a merged-tree preview, as against the stage an attempt runs at.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two requests fall under the merged-preview work kind iff both ask capacity for merged-tree preview work; the
+    kind literal is evidence, never the criterion, and the member is the same member wherever requests fall
+    under it.
+  reidentification_key:
+    - "kind=merged-preview on a request chain or lease state record (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: false
+  unity: >-
+    No unity of its own; one member of the work-kind classification. Requests under it carry weightTokens=5 in
+    every cited chain and carry attemptId, branch and originKey members, as full-proof requests do and review-fix
+    requests do not.
+  dependence: none
+ufo_analysis:
+  candidate_category: subkind
+  alternatives:
+    - "one classifier individual of the work-kind set (powertype member)"
+    - "the merged-preview proof stage (a distinct referent of the same word)"
+    - "a fourth assurance-tier member"
+  existential_dependencies:
+    - "the seat-request kind it specializes"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The quarantined lease so-a8d270b5e19d holds a merged-preview request whose attempt is at stage=pre-push. If
+      merged-preview requests always produced merged-preview stage work, that would be false; it is consistent only
+      with kind and stage being two classifications. A reader who counts merged-preview requests as merged-preview
+      stage occurrences counts stage activity where the stage reads dormant.
+  - description: >-
+      The charge of 5 is the only kind-specific property shown; if the scheduler weight were reassigned per request
+      (a merged-preview request at 3), the member would not fix the capacity claim and the discriminator would fail.
+      No chain shows it, which is a sample limit, not invariance.
+status: proposed
+evidence_refs:
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"

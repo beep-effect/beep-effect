@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5e3730ea652ac4482c32856ad9810d7239e5841b3236e48748e7644dd842f94c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 323,
+    "end_line": 331
+  },
+  "quote": "## 8. 2026-10-06 amendment — the S7-v2 planner seam (W6)\n\nAuthority: `goals/ciops-ontology-pipeline/research/decisions.md`,\n\"2026-10-06 — P2 design sitting\" (Rulings 1–6), and DECISIONS.md,\n\"2026-10-01 — graduation sitting\" (Ruling 11). This section supersedes the\n§3.2 `planEpisode` bullet and the first §6 bullet. It lands in the first\ncommit of the projection PR, while `planEpisode` is still the stub; the body\nlands in a later commit of the same PR (Ruling 1). Admission v1 and emission\n`s7-emission/v2` are unchanged, and their golden stays byte-equal.",
+  "epistemic_status": "quoted_prose"
+}

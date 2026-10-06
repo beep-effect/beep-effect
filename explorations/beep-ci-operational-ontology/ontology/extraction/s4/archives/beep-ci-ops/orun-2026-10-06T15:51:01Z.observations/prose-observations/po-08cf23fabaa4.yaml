@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:08cf23fabaa45189e9e6710eb5ed66fddf66416358b540ed6fe85bce6014e209",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 357,
+    "end_line": 364
+  },
+  "quote": "- id: iv-1029-package-scripts-policy-checks\n  title: \"PR #1029 — lint:package-scripts and lint:policy-fingerprint checks join lint:policy (C3.1)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T08:00:35Z\"\n  mergeCommit: f36be8586798aa1e9107a8cb6fc5a6cea133b2eb\n  pr: 1029\n  mechanismChanged: gate-selection   # P0 Ruling 3: a check step inside a lane is gate selection",
+  "epistemic_status": "quoted_prose"
+}

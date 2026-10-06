@@ -1,0 +1,60 @@
+id: "fa:vfy-merged-preview-work-kind:001"
+hypothesis_ref: "dh:vfy-merged-preview-work-kind:001"
+identity_card_ref: "ic:vfy-merged-preview-work-kind:001"
+referent_grain: >-
+  One member of the admission work-kind classifier over seat requests and grants: the kind
+  merged-preview, carried on a ticket's kind member, individuated by its place in the closed
+  work-kind domain, not by the word it shares with a proof stage.
+tests:
+  spec_vs_execution: unresolved
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: subkind of requested work (merged-tree preview work)
+    still_viable: true
+  - label: charge-and-scheduling code with no kind of work behind it
+    still_viable: true
+  - label: the same individual as the merged-preview proof stage
+    still_viable: false
+  - label: an assurance tier (not this pair's to rule; the tier and stage pairs carry it)
+    still_viable: true
+strongest_counterexample: >-
+  so-a8d270b5e19d is a merged-preview-kind grant whose own lease carries stage pre-push and proof
+  tier full, and whose span carries a command line (in its source excerpt, not among its parsed
+  facts) naming the gate commands launched under the grant: the cheap-gates and pre-push
+  github-checks runs and an affected local CI run against origin/main, a pre-push gate set rather
+  than anything named as a merged-tree preview. That is consistent with the code reading. It does
+  not settle the question: it is one quarantined record, possibly anomalous; the command line is
+  launched work, not shown realized, and no attempt-journal or proof-ledger record joined by its
+  attemptId shows the stage, tree or outcome of that work; it cannot tell whether the kind or the
+  stage member chose the commands; and a single merged-preview grant cannot show whether the work
+  under this member differs from the work under the other kinds.
+verdict: explicitly_deferred
+needed_evidence: >-
+  The work-kind class's ruling (see the admission-work-kind pair). Concretely: admission chains of
+  kind merged-preview joined, through a shared attemptId, to attempt-journal starts or proof-ledger
+  facts showing the stage and tree the granted work ran at, with at least one non-quarantined grant.
+  For the tier rival: an episode verified to a merged-preview tier, joined to its admission chain.
+evidence_refs:
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"
+rationale:
+  spec_vs_execution: >-
+    Whether the member specifies work to run is the open question.
+  world_vs_information: >-
+    Code reading (information) against subkind reading (worldly kind of work); the records do not
+    discriminate.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    No context parameter.
+  rivals: >-
+    The stage identity is retired on the fixed reading that the admission work kind is not stage
+    activity; so-a8d270b5e19d, which carries kind merged-preview beside stage pre-push, is
+    consistent with that reading but is one quarantined record and is not the ground. The tier rival
+    is kept viable and is not this pair's to rule: no cited admission record carries an
+    AssuranceTierId value, which is an absence over a selected sample, and the discriminating record
+    is an episode verified to a merged-preview tier. Kind-of-work and charge code both remain.

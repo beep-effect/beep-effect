@@ -1,0 +1,68 @@
+id: otp:vfy-committed-failure:001
+hypothesis_ref: dh:vfy-committed-failure:001
+identity_card_ref: ic:vfy-committed-failure:001
+foundational_status: analyzed
+term:
+  preferred_label: committed failure
+  local_name: CommittedFailure
+  proposed_iri: https://oip.law/ontology/ci-ops#CommittedFailure
+  owl_entity_kind: class
+definition:
+  text: 'An event inside one verification attempt: the exit of one step that commits the attempt to a
+    failing verdict, as the attempt verdict records it (failedStepId naming the step, failureKind step-exit,
+    under failurePolicy fail-fast with outcome failure, beside earlier steps at status passed); individuated
+    by its attempt and that step. The verdict members record the failure and are not it.'
+  source:
+  - so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610
+  - CQ-022
+foundational:
+  ufo_category: event
+  gufo_alignment: gufo:Event
+ontoclean:
+  rigidity: unresolved
+  identity: supplies
+  dependence: relational
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - CQ-022
+  semantic_support_for: []
+alternatives_rejected:
+- 'The verdict members (failedStepId, failureKind) as the referent: rejected by the analysis as the record
+  of the failure, not the failure (fa:vfy-committed-failure:001).'
+- 'A failed phase of the attempt as the referent: rejected by the analysis; the phase is the attempt''s
+  condition after the event and does not sit at one step.'
+- 'Reuse of the ratified FailureSignature: rejected as a different referent; FailureSignature groups attempts
+  by failed step and failure kind (an equivalence class), while this term is one dated occurrence in one
+  attempt.'
+open_issues:
+- 'Warrant CQ-022 (must_have): the pinned query types the harness-bound failure with rdf:type ciops:CommittedFailure
+  and joins it to its attempt by inAttempt. Without this term the query binds nothing and CQ-022 loses
+  its whole answer, the cancel-candidate set of still-running executions of the failing attempt.'
+- 'Steward choice (rival still viable in fa:vfy-committed-failure:001): the commitment or obsoletion point
+  CQ-022 names, after which no running execution of the attempt can improve its verdict, as a referent
+  distinct from the step exit. Not stated as a second proposal because it differs in identity and would
+  share this hypothesis''s one identity card. Needed evidence: a record carrying the failing step''s exit
+  instant together with executions of the same attempt still running at that instant.'
+- 'When the failure committed is not recorded: none of the verdict''s instants (createdAt, endedAt, recordedAt)
+  is the failing step''s exit instant, and per-step durationMs gives none. The term claims no instant.'
+- 'Termination counterexample: an attempt ended by an attempt-terminated reason and counted red carries
+  no failedStepId, so this criterion gives it no committed failure. Needed evidence: a terminated-attempt
+  verdict record.'
+- 'Rigidity is unresolved on the card. Needed evidence: one attempt whose failed step is retried within
+  the attempt, or whose verdict''s failedStepId is revised.'
+- One cited observation (so-ca8b3f90e57c) carries the shape; a selected sample shows a shape, never a
+  count or an absence.
+- 'Cluster dependency: CQ-022 also needs otp:vfy-verification-attempt:001 (the inAttempt target) and otp:vfy-lane-execution:001
+  (WorkUnitExecution). The inAttempt property itself is not proposed here and needs its own chain.'
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-committed-failure:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:983855896b09b9d9aa905075137e4ace72075aa786f829d6a0cdee065978db50",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 455,
+    "end_line": 459
+  },
+  "quote": "**§3.4 delta.** Since #929 the deployed scheduler skips a request whose\ncheckout already holds a lease. Admission v1 does not model that\nsame-checkout skip, and it is the attribution class for first-choice\ndisagreements in the live replay. The engine is unchanged: disagreements are\nreported with that diagnostic attribution, never modelled (Ruling 9).",
+  "epistemic_status": "quoted_prose"
+}

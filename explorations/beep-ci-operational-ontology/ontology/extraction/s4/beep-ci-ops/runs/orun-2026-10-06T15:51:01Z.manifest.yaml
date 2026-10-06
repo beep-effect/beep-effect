@@ -1,0 +1,57 @@
+run_id: "orun-2026-10-06T15:51:01Z"
+ontology: {name: beep-ci-ops}
+engine:
+  validator_sha256_12: "fdbcefc9fd70"
+  contracts_sha256_12: "dcc8da4cc7f9"
+repository:
+  commit: "71c7357adc57e5a3258fc884edf9a613afec3a7c"
+  dirty: false
+  pin_waived: false
+  waiver_reason: ""
+scope_doc: {path: "explorations/beep-ci-operational-ontology/ontology/docs/scope.md", sha256_12: "750657e0c5b7"}
+cq_suite: {path: "explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml", sha256_12: "e1ed9c0f65f5", cq_count: 26}
+adapters:
+- id: adapter-journal
+  version: 1.3.0
+  script: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py
+  script_sha256_12: "0e6d17963817"
+  golden_fixture: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4
+agents:
+  denotation: {model: claude-opus-5-5, effort: medium, prompt: "prompts/denotation.md", prompt_sha256_12: "ddec132ee905"}
+  foundational: {model: claude-opus-5-5, effort: medium, prompt: "prompts/ufo-analysis.md", prompt_sha256_12: "3d94feb0629c"}
+  synthesis: {model: claude-opus-5-5, effort: medium, prompt: "prompts/synthesis.md", prompt_sha256_12: "117d82b29904"}
+  adversary: {model: claude-opus-5-5, effort: medium, prompt: "prompts/ontoclean-adversary.md", prompt_sha256_12: "9dbfb7fc9d4c", independent_context: true}
+  alternative: {model: claude-opus-5-5, effort: medium, prompt: "prompts/alternative-model.md", prompt_sha256_12: "4563e5726438", blinded: true}
+first_run: false
+prior_index: "runs/orun-2026-09-10T02:10:52Z.index.yaml"
+prior_index_sha256_12: "b9c140ccd31b"
+empty_corpus_reason: ""
+unresolved_fraction_waiver: ""
+notes: 'Auditor run 4 (goal ciops-ontology-pipeline phase P3, W7) under the launch sitting
+  "2026-10-06 — P3 opened; run-4 launch sitting" (Rulings 1–17, recorded calls a–s) and the
+  entry "2026-10-06 — P3 pin-stage and seat-stage calls" (calls t–z), both in
+  goals/ciops-ontology-pipeline/research/decisions.md (graduation Ruling 7: the goal log is the
+  live ruling log; the packet DECISIONS.md is provenance). Docket: research/auditor-run4-intake.md
+  with its 2026-10-06 at-pin addendum. Corpora at this pin: corpus/run4-fleet and
+  corpus/run4-ledger (goal P1 Rulings 1–8; tree-pinned citations against corpus_tree edc79dd7b6);
+  adapter-journal v1.3.0 reads only their .properties projections (call u: stanza-scoped
+  vocabulary records; every admission chain with a withdrawal or an eviction plus the first plain
+  chain per kind and priority) and reads the pin commit from this manifest. Prose evidence:
+  corpus/po_transcriber_run4.py (script sha256_12 ca8644973c3a) over the change-event ledger
+  (44 rows, f520b302424f), KPI law sections 2 and 6, S7 contract section 8, the lane-plan golden,
+  literal-domains.md, the deployed ProofStage line and both pin manifests; no DECISIONS, docket,
+  CQ text or ratification is transcribed. Observation set at the pin: 109 source and
+  95 prose observations. CQ-009 re-scoped at this pin (graduation Ruling 9; P3 Ruling 5,
+  commit 4af5ca6981). Engine freeze: validator v15 fdbcefc9fd70, contracts dcc8da4cc7f9 (21
+  files), SKILL.md a12de4055976, sandbox runner ecb6dcab421b (adapter runtime: the system
+  CPython 3.14.7 inside the runner), chain_digest.py 617bc6828995; every validator run uses uv
+  --offline --python 3.12 with pyyaml. Seats (graduation Ruling 4; launch deviation recorded in
+  the launch sitting): every seat is claude-opus-5-5 at effort medium in a fresh context per
+  batch and per adversary round, launched as Claude Code Workflow children; the blinded
+  alternative seat runs as a headless claude -p process from an isolated root outside the
+  repository with --restricted --tools Read,Write (call s), its outputs copied into work/alternative;
+  no Codex or Grok seat (no operator opt-in). Ratifications are ruled by the orchestrator under the
+  operator autonomy charter (P3 Ruling 2; steward.id orchestrator-under-autonomy-charter). Run-3
+  seat trees and rat-053..070 were relocated byte-identically to the
+  orun-2026-09-10T02:10:52Z work and governance shelters at commit 515ebe2070. Prior-run carry:
+  all 138 prior unresolved rows are carried with fresh needed_evidence; none re-parks verbatim.'

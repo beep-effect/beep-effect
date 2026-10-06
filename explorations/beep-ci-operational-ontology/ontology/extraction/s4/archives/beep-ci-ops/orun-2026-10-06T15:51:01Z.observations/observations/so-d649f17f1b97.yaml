@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:d649f17f1b974b62bb254501a557b1256551454c201d5fa08cf4bead41477ec9",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 3097,
+    "end_line": 3110,
+    "content_sha256": "541ca3338cd038778d475fe56e7f6431413eaa5050d19fdba0f6bdee39e46269"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect/proof-ledger.properties:record=144",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=4d0478a0-2452-4f53-9c80-244592ebb5a0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@slop/09-22-26"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=50094.137247"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=6112a1740f3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=quality:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=changed-package-tripwire"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-26T02:18:04.818Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 144\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=4d0478a0-2452-4f53-9c80-244592ebb5a0\nlaneId=quality:build\nbranch=@slop/09-22-26\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=6112a1740f3\nreason=changed-package-tripwire\nobserved=passed\ndurationMs=50094.137247\nrecordedAt=2026-09-26T02:18:04.818Z\n",
+  "epistemic_status": "parser_derived"
+}

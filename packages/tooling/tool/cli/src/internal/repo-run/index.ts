@@ -7,7 +7,9 @@
 
 export * from "./AdmissionJournal.ts";
 export * from "./AttemptTerminationJournal.ts";
+export * from "./BeepCacheRoot.ts";
 export * from "./DirectoryHandle.ts";
+export * from "./FallowAuditCache.ts";
 export * from "./GitExec.ts";
 export * from "./GitWorktree.ts";
 export * from "./JournalFile.ts";

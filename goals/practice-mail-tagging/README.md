@@ -31,12 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — PR 1 (domain schemas, ports, tagger, tagging job, attachment
-filer, undo, file ledgers, synthetic tests). PR 2 adds the Box, practice-KG,
-and `@beep/m365` adapters once workstream A's message-category verbs merge.
+P2 Verify. Tagging is live on the attorney's mailbox: 325 messages since
+2026-07-01 carry their matter category. Filing is on (no attachment has been
+routable yet). Open: the attorney's spot-check of the tags, contact evidence
+from the KG correspondent lookup (off until that spot-check), and enabling the
+unit.
 
 ## Latest Evidence
 
+- 2026-10-06: backfill since 2026-07-01 on the attorney's mailbox: 300 more
+  matter tags, 24 review, 20 USPTO; filing on, nothing routable
+  ([record](history/2026-10-06-backfill-attorney-mailbox.md)).
+- 2026-10-06: first live apply on the attorney's mailbox (mail since
+  2026-10-01, categories only): 25 messages tagged to 7 matters, 2 flagged
+  for review ([record](history/2026-10-06-first-apply-attorney-mailbox.md)).
+- 2026-10-06: first live apply and undo drill on the operator's IT mailbox:
+  `P: USPTO` written on 5 messages and undone, verified server-side
+  ([record](history/2026-10-06-first-apply-it-mailbox.md)).
 - 2026-10-06: live dry-run over mail since 2026-07-01 — 1,802 scanned, 323
   matched across 27 matters, nothing written
   ([record](history/2026-10-06-live-dry-run.md)). PRs #1464, #1480, #1495,

@@ -706,19 +706,132 @@ export const reconcileAnchors = (
 };
 
 /**
+ * Thresholds at which one family's share of an anchor's mentions makes it the
+ * anchor's owner although other families cite the number too.
+ *
+ * **Details**
+ *
+ * Counts are documents, not mentions: a document naming the number in its file
+ * name and its text counts once, and recycle-bin stubs never count. The top
+ * family must hold at least `minimumDocuments` mentioning documents and at
+ * least `minimumShare` of all mentioning documents (SPEC D-23).
+ *
+ * **Example** (Read the dominance thresholds)
+ *
+ * ```ts
+ * import { PRACTICE_KG_ANCHOR_DOMINANCE } from "../../src/PracticeKg.families.ts"
+ *
+ * console.log(PRACTICE_KG_ANCHOR_DOMINANCE.minimumDocuments, PRACTICE_KG_ANCHOR_DOMINANCE.minimumShare) // 3 0.8
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PRACTICE_KG_ANCHOR_DOMINANCE = {
+  minimumDocuments: 3,
+  minimumShare: 0.8,
+} as const;
+
+type AnchorMention = {
+  readonly attribution: PracticeKgDocumentAttribution;
+  readonly source: PracticeKgNumberMentionRow["source"];
+};
+
+type AnchorMember = { readonly familyKey: string; readonly source: KgAttributionSource };
+
+const familyKeyOf = (mention: AnchorMention): O.Option<string> => O.fromNullishOr(mention.attribution.familyKey);
+
+const familyKeysWhere = (
+  mentions: ReadonlyArray<AnchorMention>,
+  keep: (mention: AnchorMention) => boolean
+): HashSet.HashSet<string> => HashSet.fromIterable(A.getSomes(A.map(A.filter(mentions, keep), familyKeyOf)));
+
+const filenameFamiliesOf = (mentions: ReadonlyArray<AnchorMention>): HashSet.HashSet<string> =>
+  familyKeysWhere(mentions, (mention) => mention.source === "filename");
+
+const clientKeyedFamiliesOf = (mentions: ReadonlyArray<AnchorMention>): HashSet.HashSet<string> =>
+  familyKeysWhere(mentions, (mention) => mention.attribution.client !== null);
+
+// Membership by unanimity: every mention, file names and text alike, sits in one
+// client-keyed family. An unattributed remainder cannot own an anchor.
+const uniqueAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<AnchorMember> => {
+  const filenameFamilies = filenameFamiliesOf(mentions);
+  return pipe(
+    uniqueMember(familyKeysWhere(mentions, () => true)),
+    O.filter((familyKey) => HashSet.has(clientKeyedFamiliesOf(mentions), familyKey)),
+    O.map((familyKey) => ({
+      familyKey,
+      source: HashSet.has(filenameFamilies, familyKey) ? ("filename" as const) : ("text-reference" as const),
+    }))
+  );
+};
+
+type FamilyDocuments = { readonly documents: number; readonly familyKey: string };
+
+const byDocumentsDescending = Order.mapInput(Order.flip(Order.Number), (entry: FamilyDocuments) => entry.documents);
+const byFamilyKey = Order.mapInput(Order.String, (entry: FamilyDocuments) => entry.familyKey);
+
+const documentsByFamily = (mentions: ReadonlyArray<AnchorMention>): ReadonlyArray<FamilyDocuments> => {
+  const digests = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+  A.forEach(mentions, (mention) =>
+    O.map(familyKeyOf(mention), (familyKey) =>
+      MutableHashMap.set(
+        digests,
+        familyKey,
+        HashSet.add(
+          pipe(
+            MutableHashMap.get(digests, familyKey),
+            O.getOrElse(() => HashSet.empty<string>())
+          ),
+          mention.attribution.digest
+        )
+      )
+    )
+  );
+  return A.sort(
+    A.map(A.fromIterable(digests), ([familyKey, documents]) => ({ documents: HashSet.size(documents), familyKey })),
+    Order.combine(byDocumentsDescending, byFamilyKey)
+  );
+};
+
+// Membership by dominance (D-23): one client-keyed family holds enough of the
+// mentioning documents, and no file name elsewhere carries the number.
+const dominantAnchorMember = (mentions: ReadonlyArray<AnchorMention>): O.Option<AnchorMember> => {
+  const total = HashSet.size(HashSet.fromIterable(A.map(mentions, (mention) => mention.attribution.digest)));
+  const filenameFamilies = filenameFamiliesOf(mentions);
+  return pipe(
+    A.head(documentsByFamily(mentions)),
+    O.filter(({ documents }) => documents >= PRACTICE_KG_ANCHOR_DOMINANCE.minimumDocuments),
+    O.filter(({ documents }) => documents >= PRACTICE_KG_ANCHOR_DOMINANCE.minimumShare * total),
+    O.filter(({ familyKey }) => HashSet.has(clientKeyedFamiliesOf(mentions), familyKey)),
+    O.filter(({ familyKey }) => HashSet.every(filenameFamilies, (other) => other === familyKey)),
+    O.map(({ familyKey }) => ({ familyKey, source: "mention-dominance" as const }))
+  );
+};
+
+/**
  * Decide membership or mention-only placement for every reconciled anchor.
  *
  * **Details**
  *
  * For each anchor the number mentions of non-recycled docket documents are
  * grouped by the document's keyed family, file-name and text mentions together.
- * The anchor is a member only when exactly one family mentions it and that
- * family is client-keyed; the source is `filename` when a file name carries the
- * number and `text-reference` otherwise. Any other shape — no mention, mentions
- * spread over several families (what prior-art citations produce), or a sole
- * mention by an unattributed bare family — yields no membership and `mention`
- * as the source. Member dockets are the dockets of the member family's
- * mentioning documents.
+ * The first rule that answers decides:
+ *
+ * 1. every mention sits in one client-keyed family: the anchor is a member,
+ *    with source `filename` when a file name carries the number and
+ *    `text-reference` otherwise;
+ * 2. the family with the most mentioning documents is client-keyed, holds at
+ *    least {@link PRACTICE_KG_ANCHOR_DOMINANCE} documents and share, and no
+ *    file name outside it carries the number: the anchor is a member with
+ *    source `mention-dominance`;
+ * 3. otherwise no membership and `mention` as the source — no mention, mentions
+ *    spread evenly over several families (what prior-art citations produce),
+ *    or a top family that is an unattributed bare remainder.
+ *
+ * Member dockets are the dockets of the member family's mentioning documents.
+ * Every mentioning family, the member included, is listed in
+ * `mentionedFamilyKeys`.
  *
  * **Example** (Resolve nothing)
  *
@@ -751,9 +864,8 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
       )
     );
   });
-
-  return A.map(anchors, (anchor) => {
-    const mentions = A.getSomes(
+  const anchorMentions = (anchor: PracticeKgAnchorRecord): ReadonlyArray<AnchorMention> =>
+    A.getSomes(
       A.map(
         A.flatMap(anchor.numbers, (number) =>
           pipe(MutableHashMap.get(mentionsByNumber, number), O.getOrElse(A.empty<PracticeKgNumberMentionRow>))
@@ -766,39 +878,20 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
           )
       )
     );
-    const familyKeysBySource = (source: PracticeKgNumberMentionRow["source"]): HashSet.HashSet<string> =>
-      HashSet.fromIterable(
-        A.getSomes(
-          A.map(mentions, (mention) =>
-            mention.source === source ? O.fromNullishOr(mention.attribution.familyKey) : O.none()
-          )
-        )
-      );
-    const filenameFamilies = familyKeysBySource("filename");
-    // Membership needs one mentioning family across file names and text alike,
-    // and that family must be client-keyed: an unattributed remainder cannot own
-    // an anchor.
-    const clientKeyedFamilies = HashSet.fromIterable(
-      A.getSomes(
-        A.map(mentions, (mention) =>
-          mention.attribution.client === null ? O.none() : O.fromNullishOr(mention.attribution.familyKey)
-        )
-      )
+
+  return A.map(anchors, (anchor) => {
+    const mentions = anchorMentions(anchor);
+    const member = pipe(
+      uniqueAnchorMember(mentions),
+      O.orElse(() => dominantAnchorMember(mentions))
     );
-    const allFamilies = HashSet.union(filenameFamilies, familyKeysBySource("text"));
-    const member: O.Option<{ readonly familyKey: string; readonly source: KgAttributionSource }> = pipe(
-      uniqueMember(allFamilies),
-      O.filter((familyKey) => HashSet.has(clientKeyedFamilies, familyKey)),
-      O.map((familyKey) => ({
-        familyKey,
-        source: HashSet.has(filenameFamilies, familyKey) ? ("filename" as const) : ("text-reference" as const),
-      }))
-    );
-    // A member exists only when every mention sits in that one family, so the
-    // member's documents are exactly the mentioning documents.
     const memberAttributions = O.match(member, {
       onNone: A.empty<PracticeKgDocumentAttribution>,
-      onSome: () => A.map(mentions, (mention) => mention.attribution),
+      onSome: ({ familyKey }) =>
+        A.map(
+          A.filter(mentions, (mention) => mention.attribution.familyKey === familyKey),
+          (mention) => mention.attribution
+        ),
     });
     const memberHead = A.head(memberAttributions);
     return PracticeKgAnchorResolution.make({
@@ -810,9 +903,7 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
       ),
       memberFamily: O.match(memberHead, { onNone: () => null, onSome: (attribution) => attribution.family }),
       memberFamilyKey: O.match(member, { onNone: () => null, onSome: ({ familyKey }) => familyKey }),
-      mentionedFamilyKeys: sortedUnique(
-        A.getSomes(A.map(mentions, (mention) => O.fromNullishOr(mention.attribution.familyKey)))
-      ),
+      mentionedFamilyKeys: sortedUnique(A.getSomes(A.map(mentions, familyKeyOf))),
     });
   });
 };

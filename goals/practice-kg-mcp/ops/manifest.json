@@ -97,6 +97,16 @@
     {
       "id": "P9",
       "name": "Working-files bundle",
+      "status": "complete"
+    },
+    {
+      "id": "P10",
+      "name": "Anchor dominance + correspondents",
+      "status": "complete"
+    },
+    {
+      "id": "P11",
+      "name": "Correspondents from the mail archives",
       "status": "pending"
     }
   ],

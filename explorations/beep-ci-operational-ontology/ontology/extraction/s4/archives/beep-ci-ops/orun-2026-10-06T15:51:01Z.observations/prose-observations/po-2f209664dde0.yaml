@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 17,
+    "end_line": 17
+  },
+  "quote": "| `AdmissionWorkKind` | `FullProofWork`, `MergedPreviewWork` *(supports: AdmissionWorkKind — merged-tree preview has a distinct scheduler weight)*, `ReviewFixWork`, `PublishWork` *(supports: AdmissionWorkKind — publish proofs receive distinct scheduler priority)* | CQ-021/CQ-009; DEPLOYED `AdmissionWorkKind` LiteralKit (`internal/repo-run/QualityScheduler.schemas.ts`): `full-proof`, `merged-preview`, `review-fix`, `publish` — the qualified ontology names dissolve seat F's cross-domain ambiguity (`review-fix` also in `YeetProofTier`; `publish` also in `AdmissionPriority`) |",
+  "epistemic_status": "quoted_prose"
+}

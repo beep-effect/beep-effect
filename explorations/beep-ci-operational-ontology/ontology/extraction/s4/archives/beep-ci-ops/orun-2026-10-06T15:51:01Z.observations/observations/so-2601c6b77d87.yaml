@@ -1,0 +1,136 @@
+{
+  "id": "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 11668,
+    "end_line": 11696,
+    "content_sha256": "cf337ad5171abd1b6642002bf7ea8a5709ae786efe2cfcdef869c592fbc2c00b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect/proof-ledger.properties:record=543",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=097f46f5-5bc5-43fe-b4b5-cf7126e21d9d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "bunVersion=1.4.2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "commandDigest=2f09449d7f24a32066ff1167a61af944dd61b12e877fb193bdf0f680f42f7b00"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "digest=e3dcbe0236d2385ee1e009c83bc0a209436b1d422b0bfa11258179721b4fe3e7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=618708.236225"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "epochDigest=e3dcbe0236d2385ee1e009c83bc0a209436b1d422b0bfa11258179721b4fe3e7"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "expiresAt=2026-10-31T15:40:20.276Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "headSha=5214ecbed958d30d8447487cf29677fcdc02de8e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "inputDigest=910cb539f21b8cd87c8b36c272872d6a2ed07c91dfe558ed443e66cd6a4583fe"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=turbo-task-hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=8649921da07"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=quality:coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lockfileDigest=6d86bbdaa2fd1d9db2b36cfda750aa6a3a93dd4436e66b5962dc512a33f350c5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nodeVersion=24"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=<fleet>/beep-effect"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "policyPackVersion=0.1.0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-10-01T15:40:20.276Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "rootTsconfigDigest=0b47d76facca9e990652172170d66dee8ca66c021fe97dd6b665e27c2d8044bf"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "rootTurboConfigDigest=3ba88093290d6dca7f574542fd95b693c321ea3a32038f9de7866e67611f09fa"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=chore_deps-update-10-1-26-92e90dcebb57"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 543\nkind=fact\nschemaVersion=proof-fact/v1\nschemaVersion=proof-fact/v1\nlaneId=quality:coverage\nlaneClass=cli-runnable\ncommandDigest=2f09449d7f24a32066ff1167a61af944dd61b12e877fb193bdf0f680f42f7b00\nenvProfile=local\ninputDigest=910cb539f21b8cd87c8b36c272872d6a2ed07c91dfe558ed443e66cd6a4583fe\ninputSource=turbo-task-hash\nepochDigest=e3dcbe0236d2385ee1e009c83bc0a209436b1d422b0bfa11258179721b4fe3e7\nkey=8649921da07\nlockfileDigest=6d86bbdaa2fd1d9db2b36cfda750aa6a3a93dd4436e66b5962dc512a33f350c5\nbunVersion=1.4.2\nnodeVersion=24\nrootTurboConfigDigest=3ba88093290d6dca7f574542fd95b693c321ea3a32038f9de7866e67611f09fa\nrootTsconfigDigest=0b47d76facca9e990652172170d66dee8ca66c021fe97dd6b665e27c2d8044bf\npolicyPackVersion=0.1.0\ndigest=e3dcbe0236d2385ee1e009c83bc0a209436b1d422b0bfa11258179721b4fe3e7\noutcome=failed\ndurationMs=618708.236225\nrunId=chore_deps-update-10-1-26-92e90dcebb57\nattemptId=097f46f5-5bc5-43fe-b4b5-cf7126e21d9d\noriginKey=<fleet>/beep-effect\ntier=full\nstage=pre-push\nheadSha=5214ecbed958d30d8447487cf29677fcdc02de8e\nrecordedAt=2026-10-01T15:40:20.276Z\nexpiresAt=2026-10-31T15:40:20.276Z\n",
+  "epistemic_status": "parser_derived"
+}

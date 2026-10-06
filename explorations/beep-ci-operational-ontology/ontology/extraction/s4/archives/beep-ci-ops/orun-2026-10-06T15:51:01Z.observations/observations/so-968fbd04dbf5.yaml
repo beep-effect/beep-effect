@@ -1,0 +1,48 @@
+{
+  "id": "so:sha256:968fbd04dbf5aae6a2984398964aafb8cf6bca2d9c60ae793b6aa1602556bde6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 471,
+    "end_line": 544,
+    "content_sha256": "13992635699a9d5615e11fad4755df088c35a0ee87c88e54eb03b09b60f549a7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties:record=13",
+    "lexical_name": "ready",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "checksGreen=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "closeoutRun=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failing=closeout-run"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ready=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "threadsResolved=true"
+    }
+  ],
+  "source_excerpt": "# record 13\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=caa51457-eb90-4f25-9a05-d7ea4cdadd7d\nrecordedAt=2026-08-23T18:40:20.413Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=@chore/deps-update-08-23-26\ncommitted=true\ncreatedAt=2026-08-23T18:40:20.413Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1623.991479\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit:amend\nphase=commit\nstatus=passed\ndurationMs=2675.41716\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=3992.250363\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=7163.675084\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=passed\ndurationMs=322.911098\nexitCode=0\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=passed\ndurationMs=606.529571\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=not-run\nmessage=yeet publish succeeded.\nmode=publish\noutcome=success\npushed=true\nrunId=chore_deps-update-08-23-26-cadf4f69e957\nattemptId=caa51457-eb90-4f25-9a05-d7ea4cdadd7d\nstartedAt=2026-08-23T18:39:58.898Z\nendedAt=2026-08-23T18:40:20.413Z\nelapsedMs=21515\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=287ff0afb9c1ab0b353b4795c1ac1b066d136da7\nready=false\nfailing=closeout-run\ncloseoutRun=false\nchecksGreen=false\nthreadsResolved=true\n",
+  "epistemic_status": "parser_derived"
+}

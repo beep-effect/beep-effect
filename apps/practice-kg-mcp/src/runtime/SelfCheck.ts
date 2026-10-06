@@ -36,9 +36,9 @@ const $I = $PracticeKgMcpId.create("runtime/SelfCheck");
  * import * as S from "effect/Schema"
  *
  * const report = PracticeKgSelfCheckReport.make({
- *   extensionVersion: "0.3.0",
+ *   extensionVersion: "0.4.0",
  *   bundleVersion: "2026.08.1",
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
  *   nodes: S.Natural.make(4),
  *   matters: S.Natural.make(1),
  *   tools: S.Natural.make(9)
@@ -180,6 +180,17 @@ SELECT m.family_key, m.family, m.client, m.client_name, m.attribution_source, m.
 FROM matters m LEFT JOIN matter_dockets d USING (family_key)
 LIMIT 1`;
 
+// The three tables `kg_correspondent_lookup` reads, every column it selects.
+const correspondentColumnsProbe = `
+SELECT c.family_key, c.address, c.contact_id, c.display_name, c.role_address, c.is_practice_address,
+  c.message_count, c.from_count, c.to_count, c.cc_count, c.first_at, c.last_at, c.epistemic_status,
+  a.contact_id, a.display_name, a.organization, a.role_address, a.is_practice_address,
+  l.client_number, l.family_key, l.source, l.evidence
+FROM matter_correspondents c
+FULL JOIN contact_addresses a USING (address)
+FULL JOIN contact_client_links l ON l.contact_id = a.contact_id
+LIMIT 1`;
+
 const GRAPH_STORE = "graph store (kg.pglite)";
 const MATTER_STORE = "matter store (practice.duckdb)";
 
@@ -202,10 +213,12 @@ const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(functio
   // DuckDB opens the file on its first statement, so this is where a lock or a damaged file shows.
   yield* duckdb.query("SELECT 1").pipe(Effect.mapError(openFailure(MATTER_STORE, bundleDir)));
   // Every column `kg_matter_lookup` reads from both matter tables, `client_name`
-  // included: an older store that lacks one fails here, not in a tool call.
+  // included, and every column `kg_correspondent_lookup` reads: an older store
+  // that lacks one fails here, not in a tool call.
   return yield* duckdb
     .query(matterColumnsProbe)
     .pipe(
+      Effect.andThen(duckdb.query(correspondentColumnsProbe)),
       Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
       Effect.flatMap(decodeCountRows),
       Effect.map(firstCount),

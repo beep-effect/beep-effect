@@ -1,0 +1,55 @@
+id: dh:vfy-merged-preview-tier:001
+observation_refs:
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- po:sha256:3b2e9bc3edf2a3be3253d9d0cc4751719f9e86b598106f79a370c32a66b4cf36
+- po:sha256:6087c33b5bbd69d66ddedb67da1e0fcad5f35d1cf15f776db2d97820ed9a87ee
+- po:sha256:29afca5918a47b9efdbbcc6c0ee4cc9b0f6040a88ffa9ed457d7b7bff6c627d6
+- po:sha256:6fa7edcaaf52ffbd41207ca29fcd39f018ab4a4530ea3d7807eefa5a1f7732fb
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900
+- po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c
+- po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants: []
+proposed_referent:
+  label: merged preview as an assurance tier (reading a)
+  description: 'Candidate: merged preview as a fourth level of assurance, a target state an episode is verified to, beside
+    the three members of the AssuranceTierId row (po-6087c33b5bbd); it would be a member of the tier class kind dh:vfy-assurance-tier:001.
+    The KPI law (po-fd56d2b008d1) says merged preview reports as a sub-partition of TierLocalFullProof and that the three-tier
+    list stands until an auditor run ratifies a fourth tier, proposed to run 4; that is a reporting rule and a proposal, quoted,
+    never a category or a licensing state. No pinned query needs a merged-preview tier member (CQ-017 names only TierCiMergeGreen
+    and TierLocalFullProof; CQ-002 and CQ-006 bind a caller-given tier), so it could only reach analysis as support for the
+    tier class. No member name or spelling is proposed. Rivals: dh:vfy-merged-preview-stage:001 and dh:vfy-merged-preview-work-kind:001.'
+representation_status: unresolved
+alternatives:
+- label: a proof stage at which evidence is produced (dh:vfy-merged-preview-stage:001); discriminated by a record tying a
+    merged-preview attempt or episode to one of the three AssuranceTierId levels as the level it is verified toward (a stage
+    inside that tier) rather than to a level of its own
+  representation_status: domain_referent
+  plausibility: viable
+- label: an admission work kind on a ticket (dh:vfy-merged-preview-work-kind:001); discriminated by whether the value occurs
+    only as a ticket's `kind`
+  representation_status: domain_referent
+  plausibility: viable
+- label: a KPI sub-partition label only
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: no cited record shows merged preview as a level an episode is verified to. The one source record
+    at this stage, so-3bf9cacb55b4, carries `stage=merged-preview` together with `proofTier=full`, and the quarantined lease
+    so-a8d270b5e19d carries `kind=merged-preview` with `proofTier=full` and `stage=pre-push`; `proofTier` is the deployed
+    proof-tier value, whose mapping into assurance tiers is open (dh:vfy-deployed-proof-tier:001), so neither record places
+    anything in an assurance tier or favours one reading over another. The KPI law''s sub-partition of TierLocalFullProof
+    is a reporting rule, quoted, not a category. The censuses (po-563da43a9f12, po-82648cf8d37a, po-58c65850834f) show merged
+    preview dormant in the capture window, never observed-and-empty; dormancy is not disuse and is no evidence for or against
+    this reading. Needed evidence, in assurance-tier terms: a record verifying an attempt or episode to a merged-preview level
+    distinct from the three AssuranceTierId levels, or a lane obligation required for a merged-preview level but not for
+    TierLocalFullProof (the CQ-017 asymmetry shape); against it, a record tying merged-preview attempts to one of the three
+    levels as their target.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.2
+  use_for_acceptance: false

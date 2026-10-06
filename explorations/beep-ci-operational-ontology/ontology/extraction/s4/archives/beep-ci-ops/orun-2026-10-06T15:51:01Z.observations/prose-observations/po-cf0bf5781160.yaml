@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:cf0bf57811601e931d102b172ac29694d5db726d8dde8823ab568efa086a54b4",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 11,
+    "end_line": 11
+  },
+  "quote": "| `LaneKind` | `TurboTaskLane`, `ScriptLane` *(supports: LaneKind — non-Turbo quality scripts are executable lanes)*, `CollectedGateLane` | CQ-001; lane assembly in `commands/Quality/Tasks.ts` |",
+  "epistemic_status": "quoted_prose"
+}

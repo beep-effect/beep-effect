@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:99af3e66ee3c31b939f46bf2bf738f23dab5d528e3d33f2b689c334745b70d40",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 872,
+    "end_line": 879
+  },
+  "quote": "- id: iv-1221-fallow-hash-exclusion-shared-cache\n  title: \"PR #1221 — untracked .fallow output leaves task hashes; human shells share one Turbo cache directory\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-25T06:08:47Z\"\n  mergeCommit: 5c768538e434336885d324cbf56d04fc2684959b\n  pr: 1221\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

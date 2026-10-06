@@ -1,0 +1,92 @@
+{
+  "id": "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 29,
+    "end_line": 45,
+    "content_sha256": "830a6aabf7966384a50390d08f28a6be15a079bad5cd137570fd2fd49818619c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties:record=2",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-started"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=c6cc426b-bafa-497e-b1e8-211ad8e2f22d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@chore/deps-update-09-05-26"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=221e14f1e995c85b18cf4fc4b16f1773c74f73fedbf57dac2fa1eaceb402215f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=6cb733fe1013d65693b7f594689f341df69f76a8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=closeout"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=4ae0f42aab01"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=ownerpid"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=chore_deps-update-09-05-26-64c41f08b79f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-09-08T19:57:41.381Z"
+    }
+  ],
+  "source_excerpt": "# record 2\nownerRef=4ae0f42aab01\nownerRefVariant=ownerpid\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=c6cc426b-bafa-497e-b1e8-211ad8e2f22d\nrunId=chore_deps-update-09-05-26-64c41f08b79f\nbranch=@chore/deps-update-09-05-26\nbase=origin/main\nhead=6cb733fe1013d65693b7f594689f341df69f76a8\nmode=closeout\nstartedAt=2026-09-08T19:57:41.381Z\nresolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8\ndiffFingerprint=221e14f1e995c85b18cf4fc4b16f1773c74f73fedbf57dac2fa1eaceb402215f\nproofTier=full\nenvProfile=local\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,36 @@
+id: "fa:vfy-admission-charge-alt:001"
+hypothesis_ref: "dh:vfy-admission-charge:001"
+identity_card_ref: "ic:vfy-admission-charge-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: false
+rival_models:
+  - label: "quality of the seat request, carried unchanged into its grant (this card)"
+    still_viable: true
+  - label: "mode of the AdmissionWorkKind member (a per-kind policy value; the request only references it)"
+    still_viable: true
+  - label: "property of the grant relator only, absent before admission"
+    still_viable: false
+  - label: "measured resource use of the granted work"
+    still_viable: false
+strongest_counterexample: >-
+  The kind-to-weight mapping never varies across the cited chains, so a per-request charge and a per-kind
+  policy value predict identical records: on current evidence the first two rivals are observationally
+  equivalent. The grant-only rival fails because withdrawn, never-admitted requests already carry the value
+  (so-0d75ae7174ed, so-29a5ac8607a2), and the consumption rival fails because two full-proof grants with the
+  same charge show memoryPeakBytes a factor of ten apart (so-95b7d78a061f, so-363f9b7f07dc).
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (request quality versus per-kind policy value). Decisive
+  observation: a chain whose weightTokens differs from the usual value of its kind, or an enqueue and an
+  admitted row of one chain with different weightTokens (repricing after enqueue). No repricing chain is
+  among the observations, so whether a charge changes after enqueue stays unresolved (Queue A). The
+  role_vs_bearer test waits on the request/grant/engagement question: a record showing whether the grant is
+  a new bearer or the same admission continuing.
+rationale: >-
+  The charge is claimed before work runs (spec side) and is kept apart from consumption (execution side),
+  so spec_vs_execution is separated; the claim is kept apart from the weightTokens field, so
+  world_vs_information is separated. CQ-010 and CQ-021 read it as a value of a grant and of a queued
+  request respectively; both work under either surviving rival.

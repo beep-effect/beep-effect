@@ -1,0 +1,54 @@
+id: "ic:vfy-merged-preview-stage-alt:001"
+hypothesis_ref: "dh:vfy-merged-preview-stage:001"
+referent_grain: >-
+  The merged-preview member of the proof-stage domain: the workflow position at which an attempt runs in a
+  preview posture, as against the merged-preview admission work kind and any assurance level.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    Two attempts are at the merged-preview stage iff they occupy the merged-preview position of the verification
+    workflow; the stage literal is evidence, never the criterion, and the same spelling as an admission work kind
+    does not make the two one referent.
+  reidentification_key:
+    - "stage=merged-preview on an attempt-started row (evidence only)"
+ontoclean:
+  rigidity: anti_rigid
+  carries_identity: false
+  supplies_identity: false
+  unity: >-
+    No unity of its own; one member of the proof-stage classification. Its one cited start, so-3bf9cacb55b4,
+    carries envProfile=pr-posture, while the cited pre-push lease state record so-a8d270b5e19d carries
+    envProfile=local: a single difference, not a pattern.
+  dependence: intrinsic
+ufo_analysis:
+  candidate_category: phase
+  alternatives:
+    - "member of a rigid subkind classification of attempts (as for the proof stage)"
+    - "a fourth assurance-tier member (no record ties the value to an assurance level)"
+    - "the merged-preview admission work kind (a distinct referent of the same word)"
+  existential_dependencies:
+    - "the verification run or episode whose phase it is"
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The lease so-a8d270b5e19d carries kind=merged-preview at stage=pre-push: work requested under the
+      merged-preview kind ran at the pre-push stage. If merged-preview the stage and merged-preview the work kind
+      were one referent, that record would be contradictory; on my card it shows one literal with two referents.
+  - description: >-
+      The only start at this stage carries proofTier=full, the same deployed proof-tier value the pre-push lease
+      carries, so nothing in the records places a merged-preview attempt in a level of its own or inside
+      TierLocalFullProof; the KPI law's sub-partition of TierLocalFullProof (po-fd56d2b008d1) is a reporting rule
+      quoted, not a category ruling, and a card that reads it as "stage inside that tier" would adopt the quoted
+      author's claim.
+status: proposed
+evidence_refs:
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - "po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900"
+  - "po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c"
+  - "po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1"

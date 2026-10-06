@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:d07a64721ca62bee951bfb9ee76a2d26ea05767d82e99a1ef274ab165a780fdd",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect5/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "c3a8fa759a8fe6aa06b4b69203554756264a3c02449dfc2a7fb537c55b072a3c"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect5/proof-ledger.properties:record=0",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=503f9548-f883-43c8-8e3b-245d7291a84d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=fix/notification-click-routes"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=9464.564712"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=90d69c79a4c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-10-01T11:24:55.408Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=503f9548-f883-43c8-8e3b-245d7291a84d\nlaneId=fallow:audit\nbranch=fix/notification-click-routes\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=90d69c79a4c\nreason=no-fact\nobserved=passed\ndurationMs=9464.564712\nrecordedAt=2026-10-01T11:24:55.408Z\n",
+  "epistemic_status": "parser_derived"
+}

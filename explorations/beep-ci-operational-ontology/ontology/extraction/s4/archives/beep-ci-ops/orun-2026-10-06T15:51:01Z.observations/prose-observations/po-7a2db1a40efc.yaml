@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:7a2db1a40efc039f328ff3f118d30d11f8a3177e137759662d092b680a0f94d8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 400,
+    "end_line": 409
+  },
+  "quote": "### 8.2 §6 first bullet (replaces \"No lane-DAG planner implementation\")\n\n- The lane-order planner orders the handoff's existing lanes only. There is\n  no reseed from live economics, no lane admission and no lane execution. The\n  deployed `orderWaveLanes` stays the only writer of real pre-push order.\n- Lane plans, lane steps and their relations are provisional `ciops-prov:`\n  instrumentation until an auditor run ratifies a lane-scheduling relation.\n  `schedulesWorkUnit` is never emitted, in either namespace. It stays the\n  unratified CQ-019 arm-3 carrier until run 4 (graduation Ruling 11;\n  `research/auditor-run4-intake.md` Queue E item 2).",
+  "epistemic_status": "quoted_prose"
+}

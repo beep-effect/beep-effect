@@ -1,0 +1,112 @@
+run: "orun-2026-10-06T15:51:01Z"
+seat: synthesis
+pass: revision
+batch: vfy
+date: "2026-10-06"
+authority:
+  - id: "otp:vfy-cache-epoch:001"
+    ruling: 18
+    sentence: "Withdrawn because its chain dh:vfy-cache-epoch:001 no longer survives after the round-1 null-discriminator attack."
+  - id: "otp:vfy-checkout:001"
+    ruling: 18
+    sentence: "Withdrawn because its chain dh:vfy-checkout:001 no longer survives after the round-1 null-discriminator attack."
+  - id: "otp:vfy-verification-evidence-record:001"
+    ruling: 18
+    sentence: "Withdrawn because its chain dh:vfy-verification-evidence-record:001 no longer survives after the round-1 null-discriminator attack."
+scope: >-
+  Receipt for the three vfy proposals named by withdraw rows of the round-1 revision pass. The
+  synthesis seat deleted nothing: the proposal and review files listed below stay in place for the
+  orchestrator to verify against these digests and delete. Every other vfy proposal carries a PASS
+  round-1 review and is left byte-unchanged.
+withdrawals:
+  - id: "otp:vfy-cache-epoch:001"
+    hypothesis: "dh:vfy-cache-epoch:001"
+    term: CacheEpoch
+    proposal_sha256: "6b7f78ee0ec32cc42b5a1416f2f4e7316fdddd69e0f74e00497a08e0f7207a52"
+    reviews:
+      - file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-cache-epoch-001.review.yaml
+        sha256: "778a86cb307a8563eb3fba4cbe219ffa94163594f4ebe7234d50c375fd8da2b7"
+    landed_rules_unanswered:
+      - discriminator-true-of-dto
+    dependents: []
+    reason: >-
+      The repaired hypothesis records null_hypothesis.rejected false with an empty discriminator, so
+      the chain no longer survives: every cited shared epochDigest lies within one attempt, which a
+      writer-stamped per-attempt digest would equally produce.
+    retained_evidence:
+      - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+      - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+      - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+      - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+    needed_evidence: >-
+      One epochDigest value on facts of two different attempts (two heads, or two clone ledgers), or
+      two attempts with an equal configuration surface and different epochDigest values; a record of
+      an epoch change with its instant (CQ-014 beganAt); to split the content and period readings,
+      one clone ledger in which an epoch digest recurs after an intervening different one.
+    rivals_preserved:
+      - configuration-state situation individuated by content (the card's reading)
+      - temporal period of one checkout's environment, individuated by its beginning
+      - an epoch taken per verification attempt or per head commit, not a state shared across attempts
+  - id: "otp:vfy-checkout:001"
+    hypothesis: "dh:vfy-checkout:001"
+    term: Checkout
+    proposal_sha256: "7b78ec98ff23d0ddb181889791ef2f62269317c795f403d4f8b8bfe77a732ffb"
+    reviews:
+      - file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-checkout-001.review.yaml
+        sha256: "69f7c53b51d38d45cfe7c0171efa30bbb93a8f1bb0c0924e15c371326cd0b5e5"
+    landed_rules_unanswered:
+      - identity-criterion-beyond-evidence
+      - listing-cq-warrant
+      - discriminator-true-of-dto
+    dependents: []
+    reason: >-
+      The repaired hypothesis records null_hypothesis.rejected false with an empty discriminator, so
+      the chain no longer survives: one checkoutRoot with two branch values on separate chains is
+      equally true of a path label stored per request, and no cited record shows a tree persisting
+      between rows.
+    retained_evidence:
+      - "so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff"
+      - "so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa"
+      - "so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c"
+      - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+      - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+    needed_evidence: >-
+      A record of tree state (resolved head, working diff) carried by one checkoutRoot across two
+      requests or attempts, or a record of a checkout mounting a cache or sitting in an epoch (the
+      CQ-015 terms); to split tree from location, a worktree retired and re-added at one root while
+      an older grant on that root is still recorded.
+    rivals_preserved:
+      - working tree as an enduring object (the card's reading)
+      - location slot on the workstation filesystem, individuated by root alone, which successive trees may occupy
+  - id: "otp:vfy-verification-evidence-record:001"
+    hypothesis: "dh:vfy-verification-evidence-record:001"
+    term: VerificationEvidence
+    proposal_sha256: "00446ec304b167336bd1efde27ae74e49c0f23f3b1d5db8f58c0bf5f57e7f113"
+    reviews:
+      - file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-verification-evidence-record-001.review.yaml
+        sha256: "958534ac5030a550817daa2ceb8c47632d13e58f39106e52a6df21524987a94f"
+    landed_rules_unanswered:
+      - reuse-grain-mismatch
+      - identity-criterion-beyond-evidence
+      - discriminator-true-of-dto
+    dependents: []
+    reason: >-
+      The repaired hypothesis records null_hypothesis.rejected false with an empty discriminator, so
+      the chain no longer survives: the hit shadow's later lookup and the thirty-day expiresAt are
+      equally true of a build-cache entry kept only to skip work.
+    retained_evidence:
+      - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+      - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+      - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+      - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+      - "so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0"
+    needed_evidence: >-
+      A record of a fact consulted for something other than skipping work (a readiness or closeout
+      verdict citing it, or a review naming it), or a fact copied to another ledger or corrected as
+      the same item; for the rigid-valid-proof rival, a fact past its expiresAt still held in the
+      ledger or one invalidated before expiry; for the content-snapshot rival, two equal-content
+      facts from separate writes.
+    rivals_preserved:
+      - issued proof-fact record as an information object (the card's reading)
+      - valid proof as a rigid kind (validity merged into the record's identity)
+      - content-snapshot identity (equal content, one record), named by the round-1 review

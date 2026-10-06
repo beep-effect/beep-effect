@@ -78,7 +78,7 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
   sourceRuns: PracticeKgSourceRuns.make({
     base: "included",
     includedRuns: ["2026-10-working-files"],
@@ -137,7 +137,7 @@ for (const [adapter, services] of [
           const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
           expect(error.message).toContain("store format pglite 1 / duckdb 1");
-          expect(error.message).toContain("reads pglite 3 / duckdb 3");
+          expect(error.message).toContain("reads pglite 4 / duckdb 4");
         })
       );
 
@@ -155,7 +155,25 @@ for (const [adapter, services] of [
           const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
           expect(error.message).toContain("store format pglite 2 / duckdb 2");
-          expect(error.message).toContain("reads pglite 3 / duckdb 3");
+          expect(error.message).toContain("reads pglite 4 / duckdb 4");
+        })
+      );
+
+      it.effect(
+        "refuses store format 3, which has no correspondent tables, by naming both formats",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const bundleDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-host-" });
+          yield* fs.writeFileString(
+            path.join(bundleDir, "bundle.manifest.json"),
+            '{"builtAt":"2026-10-06T00:00:00.000Z","bundleVersion":"2026-10-06-03","corpusRootExpected":true,"corpusSnapshotAt":"2026-10-05T00:00:00.000Z","counts":{"documents":1,"edges":1,"emails":1,"nodes":1},"schemaVersion":{"duckdb":"3","pglite":"3"},"sourceRuns":{"base":"included","includedRuns":[],"refresh202607":"excluded"}}'
+          );
+
+          const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
+
+          expect(error.message).toContain("store format pglite 3 / duckdb 3");
+          expect(error.message).toContain("reads pglite 4 / duckdb 4");
         })
       );
 
@@ -214,7 +232,7 @@ describe("@beep/practice-kg-mcp self-check", () => {
         expect(lines).toHaveLength(1);
         const line = lines[0] ?? "";
         expect(line).toMatch(
-          /^\{"ok":true,"extensionVersion":"[^"]+","bundleVersion":"[^"]+","schemaVersion":\{"duckdb":"3","pglite":"3"\},"nodes":\d+,"matters":\d+,"tools":\d+\}$/
+          /^\{"ok":true,"extensionVersion":"[^"]+","bundleVersion":"[^"]+","schemaVersion":\{"duckdb":"4","pglite":"4"\},"nodes":\d+,"matters":\d+,"tools":\d+\}$/
         );
         const report = yield* decodeReportLine(line);
         expect(report.extensionVersion).toBe(PRACTICE_KG_EXTENSION_VERSION);

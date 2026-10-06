@@ -9,6 +9,9 @@ import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCorrespondentAddressError,
+  PracticeKgCorrespondentLookupRequest,
+  PracticeKgCorrespondentToolRow,
   PracticeKgGraphToolRow,
   PracticeKgMatterLookupRequest,
   PracticeKgMatterToolRow,
@@ -16,6 +19,7 @@ import {
   PracticeKgToolkit,
   PracticeKgToolResult,
   practiceKgCandidateClaimFieldTiers,
+  practiceKgCorrespondentFieldTiers,
   practiceKgDocumentFieldTiers,
   practiceKgEmailFieldTiers,
   practiceKgFamilyFieldTiers,
@@ -24,11 +28,12 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
 import * as O from "@beep/utils/Option";
-import { Effect, Path } from "effect";
+import { Effect, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
+import { lookupPracticeKgCorrespondents } from "./PracticeKg.correspondents.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { lookupPracticeKgMatters } from "./PracticeKg.matters.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
@@ -41,7 +46,12 @@ import {
   decodePracticeKgGraphRows,
   toToolRecord,
 } from "./PracticeKg.rows.ts";
-import type { PracticeKgToolFailureReason } from "@beep/law-practice-use-cases/server";
+import type {
+  PracticeKgCorrespondentLink,
+  PracticeKgCorrespondentLookupResult,
+  PracticeKgCorrespondentRowResolution,
+  PracticeKgToolFailureReason,
+} from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
 import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
@@ -57,7 +67,87 @@ const provenanceNotFoundNote =
   "No graph node or document in this bundle has that identity. Check the key with kg_find or kg_matter_lookup; application and patent numbers are stored as digits only.";
 const matterLookupNote =
   "Only resolution unique is safe to act on. ambiguous means several matters share the reference; none means the bundle does not know it. A matter with no client, or with recycled-unverified status, needs a person to confirm it.";
+const correspondentLookupNote =
+  "Only resolution unique is safe to act on, and it comes only from the attorney's own links for the contact. Message counts and inferred links (org-name-match, email-subject-ref) rank candidates for a person; role mailboxes and the practice's own addresses never resolve uniquely.";
 const tierOrder = A.reverse(FieldTierName.literals);
+
+type CorrespondentCounts = Pick<
+  PracticeKgCorrespondentToolRow,
+  "ccCount" | "clientName" | "firstAt" | "fromCount" | "lastAt" | "messageCount" | "toCount"
+>;
+
+const noCounts: CorrespondentCounts = {
+  ccCount: 0,
+  clientName: null,
+  firstAt: null,
+  fromCount: 0,
+  lastAt: null,
+  messageCount: 0,
+  toCount: 0,
+};
+
+// A link names a matter, or only a client when its family key is null.
+const linksFor =
+  (links: ReadonlyArray<PracticeKgCorrespondentLink>) => (familyKey: string | null, clientNumber: string | null) =>
+    A.filter(links, (link) =>
+      familyKey === null ? link.familyKey === null && link.clientNumber === clientNumber : link.familyKey === familyKey
+    );
+
+// Only the decided row of a unique lookup may say unique; its siblings are
+// candidates, so no row read alone looks actionable.
+const rowResolution = (
+  result: PracticeKgCorrespondentLookupResult,
+  decided: boolean
+): PracticeKgCorrespondentRowResolution =>
+  decided ? "unique" : result.resolution === "unique" ? "candidate" : result.resolution;
+
+// One row per matter the address is tied to: the filed-mail candidates first,
+// in their rank order, then matters and clients named only by contact links.
+const correspondentRows = (
+  result: PracticeKgCorrespondentLookupResult
+): ReadonlyArray<PracticeKgCorrespondentToolRow> => {
+  const contact = A.length(result.contacts) === 1 ? A.head(result.contacts) : O.none();
+  const linked = linksFor(result.links);
+  const shared = {
+    address: result.address,
+    contactId: O.getOrNull(O.map(contact, (owner) => owner.contactId)),
+    displayName: O.getOrNull(O.map(contact, (owner) => owner.displayName)),
+    practiceAddress: result.practiceAddress,
+    roleAddress: A.some(result.contacts, (owner) => owner.roleAddress),
+  };
+  const row = (familyKey: string | null, clientNumber: string | null, counts: CorrespondentCounts) => {
+    const links = linked(familyKey, clientNumber);
+    const decided = familyKey !== null && familyKey === result.familyKey;
+    return PracticeKgCorrespondentToolRow.make({
+      ...shared,
+      ...counts,
+      clientNumber,
+      decided,
+      resolution: rowResolution(result, decided),
+      familyKey,
+      linkEvidence: A.join(
+        A.map(links, (link) => link.evidence),
+        " | "
+      ),
+      linkSources: A.join(A.dedupe(A.map(links, (link) => link.source)), " | "),
+    });
+  };
+  const candidateKeys = A.map(result.candidates, (candidate) => candidate.familyKey);
+  const linkOnly = A.dedupeWith(
+    A.filter(result.links, (link) => link.familyKey === null || !A.contains(candidateKeys, link.familyKey)),
+    (left: PracticeKgCorrespondentLink, right: PracticeKgCorrespondentLink) =>
+      left.familyKey === right.familyKey && left.clientNumber === right.clientNumber
+  );
+  // The decided row leads so a budget that keeps one row keeps that one.
+  const [decided, undecided] = A.partition(
+    A.appendAll(
+      A.map(result.candidates, (candidate) => row(candidate.familyKey, candidate.client, candidate)),
+      A.map(linkOnly, (link) => row(link.familyKey, link.clientNumber, noCounts))
+    ),
+    (entry) => (entry.decided ? Result.succeed(entry) : Result.fail(entry))
+  );
+  return A.appendAll(decided, undecided);
+};
 
 const withheldColumnsFor = (
   tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
@@ -118,10 +208,12 @@ const projectRows = (
 };
 
 const isToolError = S.is(PracticeKgToolError);
+const isAddressError = S.is(PracticeKgCorrespondentAddressError);
 
 const failureMessages: Readonly<Record<PracticeKgToolFailureReason, string>> = {
   "row-decode-failed":
     "The bundle returned rows this server version does not understand; the bundle and server were probably built from different versions.",
+  "invalid-input": "The request cannot be answered as given; check the tool's parameter description.",
   "store-query-failed": "The bundle store rejected the query; the bundle is damaged or does not match this server.",
 };
 
@@ -357,6 +449,32 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           );
         },
         Effect.mapError(toolFailure("kg_matter_lookup"))
+      ),
+      kg_correspondent_lookup: Effect.fn("PracticeKgTools.kg_correspondent_lookup")(
+        function* (request) {
+          const result = yield* lookupPracticeKgCorrespondents(
+            PracticeKgCorrespondentLookupRequest.make({ address: request.address })
+          ).pipe(Effect.provideService(DuckDb, duckdb), Effect.provideService(PracticeKgBundle, bundle));
+          return projectRows(
+            A.map(correspondentRows(result), toToolRecord),
+            practiceKgCorrespondentFieldTiers,
+            request.budgetBytes,
+            version,
+            `${correspondentLookupNote} resolution: ${result.resolution}.${
+              result.familyKey === null ? "" : ` decided matter: ${result.familyKey}.`
+            }`
+          );
+        },
+        Effect.mapError(
+          (cause): PracticeKgToolError =>
+            isAddressError(cause)
+              ? PracticeKgToolError.make({
+                  message: cause.message,
+                  reason: "invalid-input",
+                  tool: "kg_correspondent_lookup",
+                })
+              : toolFailure("kg_correspondent_lookup")(cause)
+        )
       ),
       kg_provenance: Effect.fn("PracticeKgTools.kg_provenance")(
         function* (request) {

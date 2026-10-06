@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:ac0e9748dda063cf0252cc6c413fc56e2bca830b84a46b151ee1b6b589d87d76",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 461,
+    "end_line": 465
+  },
+  "quote": "**§3.5 lane-plan vocabulary and identity.** A lane plan is emitted only in\n`ciops-prov:`, with a vocabulary fully disjoint from the ratified ordering\ncluster. The names below are proposed by W6 and recorded as **provisional**.\nAn `ontology-foundational-auditor` review checks them before the body lands,\nand the run-4 Queue E/G intake decides ratification.",
+  "epistemic_status": "quoted_prose"
+}

@@ -1,0 +1,61 @@
+target: "otp:vfy-committed-failure:001"
+target_sha256: "929755435984178b52a49b35365ec02d7c6e05316ce1c0d91cda3ed23eeaff27"
+chain_sha256: "4e75103dfa43b0e30238c7c86c0a6353c2693634cf9adee9c5fe3316fc1d487e"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking: the definition's parenthetical names "earlier steps at status passed" as part of
+    how the verdict records the failure. A failure at an attempt's first step has no earlier passed
+    step; keep the parenthetical as one recorded example, not as part of the definition.
+  - >-
+    Non-blocking: the record carries committed=false, a member of the verdict about the repair commit.
+    It shares a word with the term and is not evidence for or against it; say so, so no later reader
+    takes it as a discriminator.
+attacks:
+  - surface: taxonomy
+    rule: gufo-alignment-check
+    counterexample: >-
+      Tried the failed condition of the attempt as what gufo:Event names: in so-ca8b3f90e57c the steps
+      after prepare:05-docgen (feedback:01-build through feedback:04-test) are at status not-run, a
+      state of the attempt after the failure, which is a phase and a different referent. The term
+      names the step exit, which is an occurrence, and rejects reuse of FailureSignature, a class of
+      attempts, not one occurrence. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identifier-is-identity
+    counterexample: >-
+      Tried failedStepId as the criterion: the card makes it evidence and individuates by (attempt,
+      committing step). Tried two lanes failing together under fail-fast: the verdict names one
+      failedStepId and the criterion picks the committing one, so it does not count two committed
+      failures. The termination case (red, no failedStepId) is named as needed evidence. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether CQ-022 answers without the term: its query types the harness-bound failure with
+      rdf:type ciops:CommittedFailure and joins it to ?attempt by inAttempt; without the class it binds
+      nothing. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: a verdict record type with failure fields that record nothing that happened. In
+      so-ca8b3f90e57c the step prepare:05-docgen is status=failed with exitCode=1, the earlier steps
+      passed with exitCode=0, and the later steps are not-run under failurePolicy=fail-fast: a process
+      that stopped at that step. A record that recorded nothing would not show the stop. Survived.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    the commitment or obsoletion point CQ-022 names, distinct from the step exit; discriminating fact:
+    a record of the failing step's exit instant together with executions of the same attempt still
+    running at that instant
+evidence:
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - CQ-022

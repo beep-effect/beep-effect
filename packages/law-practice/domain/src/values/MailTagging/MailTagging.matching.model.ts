@@ -13,6 +13,7 @@ import { EmailString } from "@beep/schema/Email";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { UsptoNormalizedApplicationNumber } from "../CitingApplicationIdentity/index.ts";
 import { PatentNumber } from "../PatentNumber/index.ts";
@@ -695,10 +696,29 @@ const nearMissCategories = (categories: ReadonlyArray<PracticeCategory>): Readon
 const matchedCategories = (decision: MatterMatched): ReadonlyArray<MailCategoryName> =>
   A.prepend(signalCategories(decision.practiceCategories), matterCategoryName(decision.matterKey));
 
+// Evidence that names the matter itself; contact evidence only says who is writing.
+// Exhaustive, so a new evidence kind must be classified before it compiles.
+const namesMatter: (kind: MatterEvidenceKind) => boolean = MatterEvidenceKind.$match({
+  "application-number": () => true,
+  "patent-number": () => true,
+  "docket-number": () => true,
+  "conversation-carryover": () => true,
+  "contact-address": () => false,
+  "contact-domain": () => false,
+});
+
+const isIdentifierEvidence = (evidence: MatterEvidence): boolean => namesMatter(evidence.kind);
+
+// A below-threshold outcome is a near miss only when its best candidate carries identifier evidence.
+const belowThresholdCategories = (decision: MatterUnmatched): ReadonlyArray<MailCategoryName> =>
+  O.exists(A.head(decision.candidates), (best) => A.some(best.evidence, isIdentifierEvidence))
+    ? nearMissCategories(decision.practiceCategories)
+    : signalCategories(decision.practiceCategories);
+
 const unmatchedCategories = (decision: MatterUnmatched): ReadonlyArray<MailCategoryName> =>
   UnmatchedReason.$match(decision.reason, {
     "no-signal": () => signalCategories(decision.practiceCategories),
-    "below-threshold": () => nearMissCategories(decision.practiceCategories),
+    "below-threshold": () => belowThresholdCategories(decision),
     ambiguous: () => nearMissCategories(decision.practiceCategories),
     "needs-attorney": () => nearMissCategories(decision.practiceCategories),
   });
@@ -709,8 +729,14 @@ const unmatchedCategories = (decision: MatterUnmatched): ReadonlyArray<MailCateg
  * **Details**
  *
  * - Matched: the matter category, then the practice categories.
- * - Unmatched with `below-threshold` or `ambiguous`: the practice categories,
+ * - Unmatched with `ambiguous` or `needs-attorney`: the practice categories,
  *   then `P: Unmatched - review`.
+ * - Unmatched with `below-threshold`: the practice categories, then
+ *   `P: Unmatched - review` only when the best candidate's evidence includes
+ *   an identifier (application, patent, or docket number, or conversation
+ *   carryover). A message whose only evidence is a contact address or domain
+ *   is a client writing in, not a near miss: it gets its practice categories,
+ *   such as `P: Client`, and no review category.
  * - Unmatched with `no-signal`: the practice categories only, which may be
  *   none at all.
  *

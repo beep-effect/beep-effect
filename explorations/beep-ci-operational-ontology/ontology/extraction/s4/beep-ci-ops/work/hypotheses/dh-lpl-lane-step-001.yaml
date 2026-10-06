@@ -1,0 +1,58 @@
+id: "dh:lpl-lane-step:001"
+observation_refs: ["po:sha256:c74042df8b61eb53efdc43ac15b0eea9624f486b1d8858679aa4502860e6489f", "po:sha256:50062eb61a9b9c374285d41ac93a36b9fc0597810b4579860a8ba5ce63d4787f", "po:sha256:dde7bf22ace08b78ded1cc81c449d2fad695a3bda9a3d03574c1a488d0e08897", "po:sha256:e9916b6542b1889200dae5b3483228aac16b9c542aa405a207e7adbed50d65a1", "po:sha256:02117ab941b9e1fca8b94f37ca751e33d0b912ee8b9ab453245fa945ddd26180", "po:sha256:9a020d6aeb341cdb7dbfa22d366e70a67a9785f8e5a576883302a996b95cbaf5", "po:sha256:db8366e7780e92846d2c2454b651a5e31d975b34772c83ef2cdf49b2dcc8c22f", "po:sha256:d44acefff1205021315c71c96e269829b1507d7c83a4d6399ae53be73d19f9b0", "po:sha256:fb56d336f45445d9d55b113ad26e30e87c04adfa1ac69204cc0edf969d2863d1", "po:sha256:e97f691ea561b37b93db3bee1bdb0de54a0c40a1b9809a47a459e3ec3025e248", "po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca", "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd"]
+cq_warrants: []
+proposed_referent:
+  label: "lane step (one ordered lane position within a lane-order plan)"
+  description: >-
+    One instance is one position in one lane-order plan, pairing a 0-based index with the lane it
+    places. Answers the provisional terms LaneStep (the class), laneStepIndex (the 0-based ordinal,
+    which the contract requires to equal the step's array position), laneIdRef (the step's lane
+    reference, carried as a lane id string with no lane IRI; the lane it names is denoted by
+    dh:lpl-verification-lane:001) and precedesLaneStep (the edge from the step at index i to the
+    step at i+1). Individuation is undecided by the records: the step IRI is the plan node plus a
+    -lane- suffix and the index, which the contract calls a minting convention and explicitly not a
+    decision between tuple identity (plan, index, lane) and component identity (a part of one plan).
+    That precedesLaneStep is derived from laneStepIndex, a second encoding of one order and never an
+    independent witness, is the contract author's claim, not a finding. The golden is consistent
+    with it and does not decide it: it shows step 0 indexed 0 with one precedence edge to step 1,
+    which an edge derived from the index and an edge recorded independently would both produce.
+    Independent precedence stays viable only on that ground: the golden is consistent with both
+    readings, and the derivation is the contract author's untested claim. The contract
+    also says the edge is provisional precedence and never a dependency. Lane step is not asserted
+    equal to the admission schedule step: the contract says lane steps are not admitted seat
+    requests.
+representation_status: unresolved
+alternatives:
+  - label: "tuple identity: a step is the (plan, index, lane) combination; discriminated by an observation of one step persisting across plans or differing only in one tuple member"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "component identity: a step is a part of one plan, identified within it; discriminated by the same observation"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "precedesLaneStep as an independent precedence relation between steps, not a second encoding of the index; discriminated by an observation of a precedence edge between steps whose indexes are not consecutive, of a plan whose edges disagree with its index order, or of edges emitted without indexes"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "precedesLaneStep as a dependency between lanes; weak because the planner prose says the only edges are the rank chain, the edge is never a dependency claim and no edge is derived from firstRedSourceLane, and no record names any other edge source"
+    representation_status: domain_referent
+    plausibility: weak
+  - label: "a kind of admission schedule step; weak because the contract says lane steps are not admitted seat requests and a lane plan is never a widened schedule proposal"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The step exists in the records only as an element of the planner's output
+    (the LaneStep schema with laneStepIndex and laneId, and its Turtle emission); the emitter's
+    typing and predicate use are not a discriminator, and the index-equals-position check is a
+    decode rule of the representation. No pinned Must/Should CQ needs a lane step, its index or its
+    precedence, so under the no-CQ default this is null-standing and unresolved. The decision a CQ
+    would serve is the missing lane-order CQ (a Must/Should CQ that needs a lane plan or its order);
+    named missing decision: "a Must/Should CQ is required and run 4 admits no CQ edit beyond
+    CQ-009". Needed evidence: a pinned Must/Should CQ needing a lane step or its order; an
+    observation of one step persisting across plans or differing only in one tuple member, to decide
+    tuple versus component identity; and an observation of precedence edges that do or do not track
+    the index, to decide derived versus independent precedence.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.35, use_for_acceptance: false}

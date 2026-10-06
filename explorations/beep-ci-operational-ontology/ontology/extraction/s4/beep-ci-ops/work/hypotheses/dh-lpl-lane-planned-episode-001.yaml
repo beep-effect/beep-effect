@@ -1,0 +1,49 @@
+id: "dh:lpl-lane-planned-episode:001"
+observation_refs: ["po:sha256:d5aed299bcd9e802aec99b8cd0353adff7c161bd7d63764656f34e0d0cd909f0", "po:sha256:5dd7df449283d986c3a4fe537331d59b7c1a4f65d8795e9fc89521e9adf05e36", "po:sha256:79f91eaae90c87e6a30b77aead2a836deadc1fe4d307a39f3c1532a9078a45cd", "po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca", "po:sha256:fb56d336f45445d9d55b113ad26e30e87c04adfa1ac69204cc0edf969d2863d1"]
+cq_warrants: []
+proposed_referent:
+  label: "lane-planned verification run (the occurrence a lane plan is made for)"
+  description: >-
+    One instance is one occurrence for which the planner is asked to order lanes, keyed by a
+    caller-owned episode id (the contract calls episodeId the caller-owned occurrence key) and
+    emitted as an episode node (the golden fixture's episode). That node's typing is the emitter's
+    own, in its provisional ciops-prov namespace (the golden types it ciops-prov:VerificationEpisode),
+    not the ratified namespace; an emitter's typing triple is no verdict on what the node denotes.
+    The contract requires a lane-plan caller to use an episode id distinct from every admission
+    episode id, because reuse would assert that one occurrence is both an admission verification and
+    a lane-planned run and would decide a deferred episode-unity flag. This referent therefore bears
+    on, and may disambiguate, the CQ-warranted verification episode kind (CQ-007 and CQ-020 require
+    VerificationEpisode); under the no-CQ default it is judged on evidence with cq_warrants empty and
+    that supported kind named here. The hasLanePlan edge from this node is answered by
+    dh:lpl-lane-plan:001. The rival readings below are weighed by discriminator, not given
+    hypotheses of their own: the unity and distinct-kind readings are two answers to one deferred
+    question about this same candidate, and a hypothesis for either would restate this one with a
+    verdict this batch cannot supply.
+representation_status: unresolved
+alternatives:
+  - label: "the same verification episode kind that admission documents type (unity reading); discriminated by an observation of one real occurrence carrying both an admission document and a lane-plan document, or of lane-planned runs with the occurrence facts the ratified episode kind is queried for (time to certainty and its decomposition)"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "a distinct kind of run, disjoint from admission verification episodes; discriminated by an observation of a lane-planned run whose occurrence facts (instant, agent, tree state) differ in kind from an admission episode's, or that never carries the facts the ratified episode kind is queried for"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "the provisional ciops-prov:VerificationEpisode spelling is a lexical alias of the ratified verification episode kind (the CQ-007 and CQ-020 VerificationEpisode), the shared name and nothing more; discriminated by whether the provisional class is ever given members or conditions the ratified kind lacks (the distinct-id rule is one candidate such condition)"
+    representation_status: lexical_alias
+    plausibility: viable
+  - label: "a fixture node with a caller-chosen key and no occurrence behind it; discriminated by any observation of a lane-planned run outside the golden fixture"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The only instance in the batch is the golden fixture's episode node, typed by
+    the emitter itself in its provisional namespace; the typing triple is not a discriminator, and
+    the distinct-id requirement is a rule of the contract, not an observed occurrence. No record
+    shows a lane-planned run happening as an occurrence (with an instant, an agent or a tree state).
+    Needed evidence: an observation of a real lane-planned run (not a fixture) carrying occurrence
+    facts, and of whether it coincides with an admission episode, to decide the unity flag; the
+    synthesis seat decides whether support for the verification episode kind licenses it.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.3, use_for_acceptance: false}

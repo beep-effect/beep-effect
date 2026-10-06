@@ -1,0 +1,32 @@
+id: "fa:vfy-checkout-alt:001"
+hypothesis_ref: "dh:vfy-checkout:001"
+identity_card_ref: "ic:vfy-checkout-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "enduring working tree as a kind (this card)"
+    still_viable: true
+  - label: "branch-scoped worktree that exists only for one branch"
+    still_viable: true
+  - label: "branch (the git ref) as the referent"
+    still_viable: false
+  - label: "path string only"
+    still_viable: false
+strongest_counterexample: >-
+  Path reuse: the records carry only checkoutRoot, so a tree removed and re-created at one path and a tree that
+  persisted are indistinguishable. CQ-009's same-checkout arm would join two grants on the path either way, so
+  a false join (recreated tree) and a true join look identical in the query.
+verdict: analyzed
+needed_evidence: >-
+  For worktree paths the enduring-tree and branch-scoped readings are observationally equivalent on current
+  evidence. Decisive observation: one worktree path carrying two branches on separate chains (as the primary
+  checkout does), or a record of a tree's creation and removal (a worktree add or remove event) at a path that
+  is later reused. ciops:hasCheckout is seed-only and is not evidence either way.
+rationale: >-
+  The branch rival fails: one checkoutRoot carries two branches on separate chains (so-cac0a9e757f0 against
+  so-2d8a12f68b8f / so-fba5f4273ae5), so the referent is not the ref. A checkout is not a plan or a run, so
+  spec_vs_execution does not apply. The tree is kept apart from its path (world_vs_information) and from the
+  anti-rigid role "checkout held by an active grant" that CQ-009 joins on (role_vs_bearer separated).

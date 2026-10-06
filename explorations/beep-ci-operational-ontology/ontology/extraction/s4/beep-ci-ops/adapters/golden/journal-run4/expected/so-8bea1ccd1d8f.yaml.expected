@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:8bea1ccd1d8f6c7fcc25a8519a92eba06bc088152bc79168fb16afb8e8330687",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/alpha/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 137,
+    "end_line": 145,
+    "content_sha256": "2d0fa58097bcf9f1b6a52d5856211d9f305bddc584cc2bb83cc40a2b090c7ac7"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/alpha/proof-ledger.properties:record=13",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=turbo-task-hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=seventh"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:zeta"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 13\nkind=fact\nschemaVersion=proof-fact/v1\nlaneId=lint:zeta\nlaneClass=cli-runnable\ninputSource=turbo-task-hash\nkey=seventh\noutcome=passed\ntier=full\n",
+  "epistemic_status": "parser_derived"
+}

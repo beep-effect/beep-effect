@@ -1,0 +1,108 @@
+{
+  "id": "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2072,
+    "end_line": 2109,
+    "content_sha256": "74a30575040f751c617ecb21a9fd4a9cec3bd16abf6b0ecae153055c88291b06"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=3f60009f-84e7-4971-82de-a53aefeaf54c",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1790880443191"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=7a2c035a-af1d-487b-916f-4d4f52ec4946"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=claude/ciops-evidence-s7-check-default"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect5/.claude/worktrees/mystifying-aryabhata-48cbd2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790880443173"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=full-proof"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "memoryPeakBytes=2393948160"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=3f60009f-84e7-4971-82de-a53aefeaf54c"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=314aaab2476b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=d0f570d89cbe"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1790880456223"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=3"
+    }
+  ],
+  "source_excerpt": "# record 173\nownerRef=d0f570d89cbe\nownerRefVariant=pid_pair\nattemptId=7a2c035a-af1d-487b-916f-4d4f52ec4946\nkind=full-proof\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/mystifying-aryabhata-48cbd2\nbranch=claude/ciops-evidence-s7-check-default\nenqueuedAtMillis=1790880443173\nnonce=3f60009f-84e7-4971-82de-a53aefeaf54c\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=3\n# record 174\nownerRef=d0f570d89cbe\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=3f60009f-84e7-4971-82de-a53aefeaf54c\nkind=full-proof\nweightTokens=3\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790880443173\nadmittedAtMillis=1790880443191\nattemptId=7a2c035a-af1d-487b-916f-4d4f52ec4946\n# record 175\nownerRef=314aaab2476b\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect5/.claude/worktrees/mystifying-aryabhata-48cbd2\nbranch=claude/ciops-evidence-s7-check-default\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=3f60009f-84e7-4971-82de-a53aefeaf54c\nreleasedAtMillis=1790880456223\nmemoryPeakBytes=2393948160\nattemptId=7a2c035a-af1d-487b-916f-4d4f52ec4946\n",
+  "epistemic_status": "parser_derived"
+}

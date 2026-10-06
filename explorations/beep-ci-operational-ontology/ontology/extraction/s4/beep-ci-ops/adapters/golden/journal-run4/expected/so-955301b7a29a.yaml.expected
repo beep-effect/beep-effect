@@ -1,0 +1,44 @@
+{
+  "id": "so:sha256:955301b7a29a3d71a04d23f6d6448b6e5854fa770e727549837534c90e8fb1df",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/attempts/a/a/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 5,
+    "content_sha256": "61d73e589d9b930c04675ae1ebb60c1237c85f85c1a3626dc4854e318c7d0a92"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/attempts/a/a/attempts.properties:record=0",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-finished"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-pin-prior"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=attempt-pin-prior\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

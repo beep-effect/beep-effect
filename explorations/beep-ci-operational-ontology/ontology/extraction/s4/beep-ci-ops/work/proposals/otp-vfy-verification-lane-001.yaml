@@ -1,0 +1,69 @@
+id: otp:vfy-verification-lane:001
+hypothesis_ref: dh:vfy-verification-lane:001
+identity_card_ref: ic:vfy-verification-lane:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: verification lane
+  local_name: VerificationLane
+  proposed_iri: https://oip.law/ontology/ci-ops#VerificationLane
+  owl_entity_kind: class
+definition:
+  text: A repeatable verification procedure named by laneId and bound to one command (commandDigest),
+    which executions run against many trees in many clone ledgers; individuated by the procedure, not
+    by any run of it.
+  source:
+  - so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+  - so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+  - so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+  - so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+  - so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+  - CQ-001
+  - CQ-006
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: 'none asserted: UFO category deferred on the card'
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#VerificationLane
+    compatibility: 'Same specification grain as the ratified VerificationLane: the repeatable lane its
+      executions run. This chain leaves identity (name lineage against command content) and category (information
+      object against process type) open, so its rigidity is unresolved where the ratified row records
+      rigid.'
+operational_warrant:
+  competency_questions:
+  - CQ-001
+  - CQ-006
+  semantic_support_for: []
+alternatives_rejected:
+- 'A label grouping ledger rows: rejected by the analysis; one command digest recurs under one lane id
+  across seven clone ledgers.'
+open_issues:
+- 'Warrant: CQ-001 (must_have) types ?lane rdf:type ciops:VerificationLane and loses every lane row without
+  it; CQ-006 (must_have) binds ?lane through requiresLane and dischargesObligation, and without the term
+  no obligation has a lane to name.'
+- 'Steward choice (rival still viable on fa:vfy-verification-lane:001): the lane as a process type its
+  executions instantiate, against a procedure specification as an information object. A category rival,
+  so not a second proposal.'
+- 'Needed evidence (fa:vfy-verification-lane:001, verbatim): To settle the identity criterion: one laneId
+  carrying two commandDigest values across ledgers or over time, or two laneIds sharing one commandDigest.
+  To rule the category between information object and process type: a record that gives the lane properties
+  of its own apart from its executions (a deployed lane definition with its command and obligations, revisable
+  as a document) or a record that classifies executions under a lane type with no specification of its
+  own. For lane kind (CQ-001): a second laneClass value, or the deployed lane-class domain.'
+- 'Lane kind: laneClass cli-runnable is the only value cited, so no lane-kind term is proposed and CQ-001''s
+  hasLaneKind stays ungrounded by this chain.'
+- Lane-plan terms (Queue E) are not touched; no parents edge to a ratified ordering-cluster term is asserted.
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-verification-lane:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

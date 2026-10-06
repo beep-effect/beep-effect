@@ -16,6 +16,14 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
+import { readPracticeKgContacts } from "./PracticeKg.contacts.ts";
+import {
+  buildPracticeKgCorrespondentTables,
+  PracticeKgCorrespondentTablesInput,
+  PracticeKgEmailMessagesInput,
+  readPracticeKgEmailMessages,
+  writePracticeKgCorrespondentTables,
+} from "./PracticeKg.correspondents.ts";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import {
@@ -47,6 +55,7 @@ import {
   PracticeKgSummary,
 } from "./PracticeKg.schemas.ts";
 import type { KgAttributionSource, KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
+import type { PracticeKgContact } from "./PracticeKg.contacts.ts";
 import type { PracticeKgAnchorResolution, PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
 import type { PracticeKgReferenceScans } from "./PracticeKg.references.ts";
 import type { PracticeKgDocketRegisterRow } from "./PracticeKg.register.ts";
@@ -58,7 +67,7 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-06-02";
+const graphBundleVersion = "2026-10-07-01";
 const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
 
@@ -720,7 +729,7 @@ const projectGraph = (
   enrichmentRows: ReadonlyArray<PracticeKgEnrichmentRow>,
   scans: PracticeKgReferenceScans,
   registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>
-): ReturnType<typeof buildGraphRows> => {
+): ReturnType<typeof buildGraphRows> & { readonly attributions: ReadonlyArray<PracticeKgDocumentAttribution> } => {
   const attributions = attributeDocuments(
     PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences, registerRows })
   );
@@ -731,7 +740,7 @@ const projectGraph = (
       numberMentions: scans.numberMentions,
     })
   );
-  return buildGraphRows(catalogRows, attributions, resolutions, registerRows);
+  return { ...buildGraphRows(catalogRows, attributions, resolutions, registerRows), attributions };
 };
 
 const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(function* (
@@ -835,6 +844,20 @@ const readRegisterRows = (
     })
   );
 
+const readContactRows = (
+  options: PracticeKgOptions
+): Effect.Effect<ReadonlyArray<PracticeKgContact>, PracticeKgProjectionError, FileSystem.FileSystem> =>
+  pipe(
+    O.fromUndefinedOr(options.contactsPath),
+    O.match({
+      onNone: () => Effect.succeed(A.empty<PracticeKgContact>()),
+      onSome: (contactsPath) =>
+        readPracticeKgContacts(contactsPath).pipe(
+          Effect.mapError((cause) => PracticeKgProjectionError.make({ cause, message: cause.message }))
+        ),
+    })
+  );
+
 /**
  * Build a deterministic PGlite + DuckDB practice knowledge-graph bundle.
  *
@@ -902,6 +925,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
 
   const includedRuns = PracticeKgOptions.includedRuns(options);
   const registerRows = yield* readRegisterRows(options);
+  const contacts = yield* readContactRows(options);
   const catalog = yield* readCatalog(catalogPath, includedRuns);
   const { enrichmentRows, reconciliation } = catalog;
   // Folder-path evidence goes in before the DuckDB store is written, so the
@@ -924,6 +948,19 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   const graph = projectGraph(catalogRows, enrichmentRows, scans, registerRows);
   yield* writeMatterTables(duckDbPath)(
     buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows }))
+  );
+  const messages = yield* readPracticeKgEmailMessages(
+    PracticeKgEmailMessagesInput.make({ databasePath: duckDbPath, sourceSpecs })
+  );
+  yield* writePracticeKgCorrespondentTables(duckDbPath)(
+    buildPracticeKgCorrespondentTables(
+      PracticeKgCorrespondentTablesInput.make({
+        attributions: graph.attributions,
+        contacts,
+        messages,
+        practiceDomains: options.practiceDomains,
+      })
+    )
   );
   const builtAt = DateTime.formatIso(yield* DateTime.now);
   const counts = PracticeKgCounts.make({
@@ -956,7 +993,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(

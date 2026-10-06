@@ -1,0 +1,91 @@
+id: "ic:vfy-tree-state:001"
+hypothesis_ref: "dh:vfy-tree-state:001"
+referent_grain: >-
+  The source tree state a verification fact is about: the committed file content as a commit fixes
+  it (one tree named by several commits), the commit itself, or the head-plus-diff working state;
+  which grain individuates it is unresolved.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: under the content reading two tree states are the same iff their file content is
+    the same, so two commits with identical content are one tree state; under the commit reading
+    they are two; under the working-state reading a working diff on top of a head is a different
+    state. No cited record carries tree content, only commit shas and diff fingerprints, so the
+    records do not choose. Deciding records: two headSha values with one tree content (an amend or
+    rebase with no content change) for content against commit, and a fact or decision that holds
+    for one diff fingerprint and not another over one resolved head for the working-state grain.
+    The head commit sha is re-identification evidence, never the criterion.
+  reidentification_key:
+    - headSha on proof-ledger facts (commit-level evidence)
+    - resolvedHeadSha on attempt-started rows and the lease (commit-level evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: >-
+    Per reading. Content reading: the whole file content under the repository root as one commit
+    fixes it; partial trees are not tree states. Commit reading: one commit object naming that
+    tree. Working-state reading: one resolved head together with one working diff over it, as a
+    diff fingerprint marks it. The records do not choose among them.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - the committed tree content as an information object (a structure of file contents)
+    - the commit object (a record naming a tree, with parents and metadata)
+    - >-
+      the working state at resolved-head-plus-diff grain (a finer referent carried with a diff
+      fingerprint)
+    - a branch head pointer (rejected)
+  existential_dependencies: []
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Re-commit without change: an amend or rebase that keeps the same content gives a new headSha.
+      The content criterion counts one tree state while the commit sha counts two, so facts keyed on
+      headSha would fail to apply across the two commits.
+  - description: >-
+      Head versus working state: so-eefbf95beb8d and so-10c2570fe2f6 share one resolved head and
+      carry different diff fingerprints. If a lane ran against the dirty working tree, a fact naming
+      only the head would describe a tree that was not the one verified.
+status: proposed
+evidence_refs:
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - CQ-005
+  - CQ-006
+  - CQ-014
+rationale:
+  identity: >-
+    One headSha receives opposite verdicts from two lanes (so-40abdcaf1156 passed, so-c997b4851faa
+    failed), so the tree is the common subject of several facts and not a value private to one record.
+  rigidity: >-
+    Unresolved. Under the content and commit readings nothing that is a tree state could stop being
+    one while persisting, since any change of content or commit is a new individual; under the
+    working-state reading the state may be a stage of a checkout, whose persistence through it would
+    have to be ruled first. No cited record shows a tree or state before or after the facts about
+    it, so the records do not decide; the records named in the criterion would.
+  dependence: >-
+    Unresolved: under the content and commit readings it depends on no external bearer; under the
+    working-state reading it would depend on the checkout whose state it is.
+  category: >-
+    Unresolved. Under the content reading it is an information object (a structure of file
+    contents), and the verification fact is a different information object about it; under the
+    commit reading it is the commit record; under the working-state reading it is a finer state of a
+    checkout. No cited record carries tree content, so none argues the content reading over the
+    others.
+  temporality: >-
+    Both fields are unresolved because they differ by reading. Under the content reading the tree
+    state is a structure of file contents that does not change (any change is a new tree state) and
+    is not bounded by an interval of its own. Under the commit reading it is a record that comes to
+    exist when the commit is made and whose content does not change. Under the working-state reading
+    it obtains in a checkout over the interval between edits, and whether a change of diff over one
+    head is a new state or the same state changed is what the criterion's working-state record would
+    show. Successive states of a checkout are snapshots, not the checkout.

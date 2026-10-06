@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:0030b2144c3e01002444ec77890baaad11b77ebfe67a2d4b6994e59fd5baae43",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "apps/labs/ciops/test/fixtures/lane-plan-v1.ttl"
+  },
+  "source_span": {
+    "start_line": 9,
+    "end_line": 9
+  },
+  "quote": "ciops-prov:lane%2Dplan%2D705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198 ciops-prov:hasLanePlanSpecification ciops-prov:specification-s7%2Dlane%2Dplan%2Fv1-705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198-gate%2Dorder%2Dlexicographic%2Fv1-pre%2Dpush%3Anon%2Dmain .",
+  "epistemic_status": "quoted_prose"
+}

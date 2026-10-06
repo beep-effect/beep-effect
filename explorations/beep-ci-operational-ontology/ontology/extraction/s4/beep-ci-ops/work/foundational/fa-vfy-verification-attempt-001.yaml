@@ -1,0 +1,67 @@
+id: "fa:vfy-verification-attempt:001"
+hypothesis_ref: "dh:vfy-verification-attempt:001"
+identity_card_ref: "ic:vfy-verification-attempt:001"
+referent_grain: >-
+  A dated occurrence: one started run of the verification pipeline, from its attempt-started event to
+  its verdict or termination, as the attempt journal records it; individuated by its start, not by
+  the run file it is grouped in or the request it may submit.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: verification attempt as an event (the card's reading; lane parthood unshown)
+    still_viable: true
+  - label: the records about an attempt as the referent
+    still_viable: false
+  - label: >-
+      alias of the seat request (one individual under two names)
+    still_viable: true
+  - label: grouping label over lane runs with no occurrence of its own
+    still_viable: false
+  - label: the verification episode or run the attempt belongs to
+    still_viable: false
+  - label: >-
+      verification attempt as a process counted while running (CQ-022's in-flight queries)
+    still_viable: true
+strongest_counterexample: >-
+  Each cited admission chain that carries an attemptId carries a different one, which tempts merging
+  attempt and request, and no cited record joins an attemptId across the attempt and admission
+  journals. The lease so-a8d270b5e19d carries a startedAt equal to its admission instant and after its
+  enqueue instant, but reading that as the attempt's start rests on the field name, so the two
+  readings are not separated by any cited record.
+verdict: analyzed
+needed_evidence: >-
+  For the seat-request alias rival: an attempt-started row and an admission chain sharing one
+  attemptId (both instants on record), or two admission chains under one attemptId (which would also
+  make the relation one-to-many). For the process rival: a record of an attempt while running, before
+  its verdict, as CQ-022's in-flight queries need. For the attempt's reach beyond the journal: a
+  proof-ledger fact or admission chain whose attemptId equals a cited attempt-journal start row's
+  (no cited id joins those record classes).
+evidence_refs:
+  - "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - CQ-022
+rationale:
+  spec_vs_execution: >-
+    The pipeline and its mode (repair, verify, closeout) are the specification; each attempt is one
+    dated run of it.
+  world_vs_information: >-
+    The start row and the verdict record the attempt; the attempt is the run they bound.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    Its stage, mode and environment profile are members of the occurrence, not contexts to reify.
+  rivals: >-
+    The grouping-label rival fails on the attempt's own start and verdict (elapsedMs equals the
+    start-to-end span). The episode rival fails because one runId holds several attempts. The alias
+    rival stays viable: no cited record joins an attemptId across the attempt and admission journals,
+    and the one lease whose startedAt follows its enqueue instant shows that only through a field
+    name; its discriminator is the hypothesis's own (an attempt-started row and an admission chain
+    under one attemptId, or two chains under one attemptId). The process rival stays viable: CQ-022
+    counts attempts and executions in flight, and no cited record shows an attempt while running.
+    The records rival confuses record with occurrence.

@@ -493,90 +493,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:82:runSync@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 82,
-      "endLine": 94,
-      "symbol": "runSync",
-      "occurrence": "v2:a0405e77fe0d92c49bc7ca0f1be3c1921928ec7b2a019d1b6bf4d9911e68fb3b",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync( Arbitrary.checkEffect( summaryArbitrary, (summary) => { const encoded = Effect.runSync(encodeSummary(summary)); const decoded = Effect.runSync(decodeSummary(encoded)); expect(summaryEq",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:86:runSync@28#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 86,
-      "endLine": 86,
-      "symbol": "runSync",
-      "occurrence": "v2:d51ef924a694a3e20891143b72a87fda951d05adf53220c61f48b45ee1d0397d",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeSummary(summary))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:87:runSync@28#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 87,
-      "endLine": 87,
-      "symbol": "runSync",
-      "occurrence": "v2:439b2bf205b243411e82f4961e4b408e54205ab412db89f2063be94dfb758be5",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(decodeSummary(encoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:89:runSync@19#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 89,
-      "endLine": 89,
-      "symbol": "runSync",
-      "occurrence": "v2:9dc9d60c5e247b86ab5dfe8d2def7dc9cf90978cc122f2a49186d80520dbe12f",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runSync(encodeSummary(decoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/process-identity.test.ts:94:runSync@13#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -630,111 +546,6 @@
       "occurrence": "v2:95989d93af02548dc1da65402bda9a6a172af853dcd664611c32f303e19c736e",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runPromise( withTempDirectories((tmpDir, externalDir) => Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const repoAlias = path.join(externalDi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:214:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 214,
-      "endLine": 245,
-      "symbol": "runPromise",
-      "occurrence": "v2:b99c2c7c8a96513a7a33dce23a5695ec23e69b451bbe6c3846d25636cdcb4ba9",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withFixtureRepo( Effect.fnUntraced(function* (repoRoot) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const outputJsonPath = path.join(repoRoot, \"out\", \"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:248:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 248,
-      "endLine": 273,
-      "symbol": "runPromise",
-      "occurrence": "v2:0bde2b34aeb61679cc2f0bcc93416297bfff1fe3fb7d9e5b4cccd36d4ef27ae3",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withFixtureRepo( Effect.fnUntraced(function* (repoRoot) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const outputJsonPath = path.join(repoRoot, \"standar",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:276:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 276,
-      "endLine": 302,
-      "symbol": "runPromise",
-      "occurrence": "v2:4712a22bf983a03697e70ccef911e9274766a8a898e589c9df18ac8ab2905354",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withLabsFixtureRepo( Effect.fnUntraced(function* (repoRoot) { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const outputJsonPath = path.join(repoRoot, \"out",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:305:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 305,
-      "endLine": 337,
-      "symbol": "runPromise",
-      "occurrence": "v2:ed1567f8b25ed21ba656ee45796954325341a9c6278b886d157e96ee883f2702",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboQueryAffectedOutput(`• turbo 2.9.16 { \"data\": { \"affectedTasks\": { \"items\": [ { \"name\": \"lint\", \"package\": { \"name\": \"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:340:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 340,
-      "endLine": 370,
-      "symbol": "runPromise",
-      "occurrence": "v2:a2c6ab9830ec73683938f7a2e386352a6e449feb8bed7bc085debfdf49b5a427",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( Effect.gen(function* () { const summary = yield* summarizeTurboDryRunOutput(`• turbo 2.9.16 { \"packages\": [\"@beep/demo\", \"@beep/other\"], \"tasks\": [ { \"task\": \"lint\", \"package\": \"@be",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -1134,27 +945,6 @@
       "occurrence": "v2:1aca4898c3af44f0a8973cf5bc3f15389c4df48df0525958353c5ba221466236",
       "class": "runtime-boundary-in-test",
       "evidence": "Effect.runSync(encodeSummary(decoded))",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:46:runPromise@17#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
-      "line": 46,
-      "endLine": 46,
-      "symbol": "runPromise",
-      "occurrence": "v2:a124ac7745cb49ed4a9fe828bf1eacc5746aa481880a80ffec3dee4aca333919",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise(program())",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -2000,13 +1790,13 @@
       "reason": "Model-identity layer acquisition is the assertion subject. Parameter rows supply their exact model/environment, and invalid revisions must fail inside the test so the typed acquisition error can be asserted; suite-hook acquisition would bypass that oracle."
     },
     {
-      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:370:provideScopedLayer@10#1",
+      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:388:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 370,
-      "endLine": 374,
+      "line": 388,
+      "endLine": 392,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:0277a9bb09cbe6b88509b68a58b8e3101c5eedc2ece2853d443231c6cd0db46f",
       "class": "unresolved-layer-provide",
@@ -3077,15 +2867,36 @@
       "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1085:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1070:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1085,
-      "endLine": 1085,
+      "line": 1070,
+      "endLine": 1070,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:b7c4e8b36283991e9fe0377e319af9a672e5be748c74949b14742820d1ffaff2",
+      "occurrence": "v2:404620b7052d800403ac5e8da465962ed396450711291dd44080e97db2c80e5e",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, \"kg.pglite\") }))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1271:provideScopedLayer@16#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1271,
+      "endLine": 1271,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:bd914ae3508b5c917d4ae8b267184193cd6f8f68d28b12373247ca1c729e2ef6",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(host)",
       "replacement": {
@@ -3098,13 +2909,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1121:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1307:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1121,
-      "endLine": 1121,
+      "line": 1307,
+      "endLine": 1307,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5aba59e05df06312eaecaa6b7ba61aca7df38500b455c7770d5653646118abed",
       "class": "unresolved-layer-provide",
@@ -3120,13 +2931,34 @@
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1321:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1506:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1321,
-      "endLine": 1321,
+      "line": 1506,
+      "endLine": 1506,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:c4cc14236461649a5033135181630bb4a6dc2e734bbfbb79ff88418574948f67",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(host)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1688:provideScopedLayer@16#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1688,
+      "endLine": 1688,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:e246edbc3d044db8f8107010a23467e0fa1f9f09a387be7d954e692a678909b6",
       "class": "unresolved-layer-provide",
@@ -3141,13 +2973,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1421:provideScopedLayer@15#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1788:provideScopedLayer@15#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1421,
-      "endLine": 1421,
+      "line": 1788,
+      "endLine": 1788,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4b71edfeb3ebe5e47c6b5521c9760c85ef5f8ba5ff6fdb72cfb3ff8c5c9a46be",
       "class": "unresolved-layer-provide",
@@ -3163,13 +2995,13 @@
       "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before validation or independent SQL read-back; the public outer fixture owns temporary directories. This occurrence includes the explicitly supplied source digest and preserves exact claims/evidence assertions."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1437:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1804:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1437,
-      "endLine": 1442,
+      "line": 1804,
+      "endLine": 1809,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:e3e29feecfbd74f5140babc382c6bda1c0a329bf553700c7b00753f02c397729",
       "class": "unresolved-layer-provide",
@@ -3184,13 +3016,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1459:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1826:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1459,
-      "endLine": 1459,
+      "line": 1826,
+      "endLine": 1826,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:395cf4ab74b2d00590bc8629fd95429f7bb25da66d04db13c01f103a190432ec",
       "class": "unresolved-layer-provide",
@@ -3206,13 +3038,13 @@
       "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1469:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1836:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1469,
-      "endLine": 1469,
+      "line": 1836,
+      "endLine": 1836,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:829f7c18810bd65b63f541e63097648d8c8832d0b22913d510f30d775cf29007",
       "class": "unresolved-layer-provide",
@@ -3228,13 +3060,13 @@
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1513:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1880:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1513,
-      "endLine": 1513,
+      "line": 1880,
+      "endLine": 1880,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:32af788ea28dfafc38161d3d2574f7735d808bedf70521956b841e72c5edacbe",
       "class": "unresolved-layer-provide",
@@ -3250,13 +3082,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1531:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1898:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1531,
-      "endLine": 1531,
+      "line": 1898,
+      "endLine": 1898,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:dc5a7d552d778ea8cac05e5ff7d38e5ec437c6a64542ed3750e0ab3997852eef",
       "class": "unresolved-layer-provide",
@@ -3272,13 +3104,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1552:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1919:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1552,
-      "endLine": 1552,
+      "line": 1919,
+      "endLine": 1919,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:59b8900e2af430f10d0b575b4495a4ad8ca474498cbb425caca313e3684123ba",
       "class": "unresolved-layer-provide",
@@ -3294,13 +3126,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1572:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1939:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1572,
-      "endLine": 1572,
+      "line": 1939,
+      "endLine": 1939,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:dd254055fbeb5ccf59f9d4ac11fd6655e6aa8dac8d8a5dcd01bc3a14a3ccef54",
       "class": "unresolved-layer-provide",
@@ -3316,13 +3148,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1616:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1983:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1616,
-      "endLine": 1616,
+      "line": 1983,
+      "endLine": 1983,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5fb9945070453ec7d778836579394318f3d81dc2dfba2443b3c41a32be3ec159",
       "class": "per-test-layer-provide",
@@ -3338,13 +3170,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1627:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1994:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1627,
-      "endLine": 1627,
+      "line": 1994,
+      "endLine": 1994,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:100c57110a4fe32e2a0926bde747abf6a54ef476460a0813126862b64d4e8781",
       "class": "unresolved-layer-provide",
@@ -3359,13 +3191,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1631:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1998:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1631,
-      "endLine": 1631,
+      "line": 1998,
+      "endLine": 1998,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:17cc31aa503c2c4dbe6fffec46bf65224a7fba62d07f927936095abaae704177",
       "class": "unresolved-layer-provide",
@@ -3380,13 +3212,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1638:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2005:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1638,
-      "endLine": 1638,
+      "line": 2005,
+      "endLine": 2005,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:1f77673a78b211c2f081917c204bf604d962b4d9c38e69f2debd169b11ea96dd",
       "class": "unresolved-layer-provide",
@@ -3401,13 +3233,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1651:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2018:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1651,
-      "endLine": 1651,
+      "line": 2018,
+      "endLine": 2018,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:693c7a8be98b152403daadc1287bfc20741a5d5860148b6ffa148313ebfb14f8",
       "class": "per-test-layer-provide",
@@ -3423,13 +3255,13 @@
       "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1674:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2041:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1674,
-      "endLine": 1674,
+      "line": 2041,
+      "endLine": 2041,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:2fb5e145accd48d2fe450625e3743c58953b168116bfd0a1c5bc15c8c631216c",
       "class": "per-test-layer-provide",
@@ -3445,13 +3277,13 @@
       "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1682:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2049:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1682,
-      "endLine": 1682,
+      "line": 2049,
+      "endLine": 2049,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:541b4c0d2bbd863da0cb11d933844a9bbe4ed593ef7b452806faf348fd8668ea",
       "class": "per-test-layer-provide",
@@ -3467,13 +3299,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1690:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2057:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1690,
-      "endLine": 1690,
+      "line": 2057,
+      "endLine": 2057,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4d0b8bb696495388fb87881b798a46ac34469f91f04f50ac9a2160b421b77a22",
       "class": "per-test-layer-provide",
@@ -3489,13 +3321,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1698:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2065:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1698,
-      "endLine": 1698,
+      "line": 2065,
+      "endLine": 2065,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:6133ab523e9233a9cb064683d4b0e754103cca207862be3df8e9628e421e714f",
       "class": "per-test-layer-provide",
@@ -3511,13 +3343,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1706:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2073:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1706,
-      "endLine": 1706,
+      "line": 2073,
+      "endLine": 2073,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:47c6aee1e17894d64985de1195c72bb09cbed483f479deb3edc3a7a64e3e5e5d",
       "class": "per-test-layer-provide",
@@ -3533,13 +3365,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1721:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2088:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1721,
-      "endLine": 1721,
+      "line": 2088,
+      "endLine": 2088,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:cff37e46bc2fc6208c2e612f5cf620a3e36c2f7561ce4416f26d08d50e6d995f",
       "class": "per-test-layer-provide",
@@ -3555,13 +3387,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1732:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2099:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1732,
-      "endLine": 1732,
+      "line": 2099,
+      "endLine": 2099,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:7c1ace0f3b05666cccd7b09147d987fb51074a9b32afb2cdf6b74b064d80671a",
       "class": "per-test-layer-provide",
@@ -3577,13 +3409,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1743:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2110:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1743,
-      "endLine": 1743,
+      "line": 2110,
+      "endLine": 2110,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5dce18c25b0b2c7bcdd0be69e3578e3e2b4a15f83b4cff1d9fc15c6223a2e316",
       "class": "per-test-layer-provide",
@@ -3599,13 +3431,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1748:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2115:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1748,
-      "endLine": 1748,
+      "line": 2115,
+      "endLine": 2115,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:99335c5b79a8a6f0bad7ce59171c8f4307fd80cfc5f4c4247623bd8e554ae6de",
       "class": "per-test-layer-provide",
@@ -3621,13 +3453,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1769:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2136:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1769,
-      "endLine": 1769,
+      "line": 2136,
+      "endLine": 2136,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -3643,13 +3475,13 @@
       "reason": "A separate empty-input bundle is constructed within the case. Its body-derived PGlite directory and fixture model must be opened for the zero-claims failure and closed independently of the earlier populated bundle. Retain this scoped invocation inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1791:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2158:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1791,
-      "endLine": 1791,
+      "line": 2158,
+      "endLine": 2158,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5ff83823f70e330d42bed4c97e89515ed5d9565d2fca4b8e0778bff03712bdbb",
       "class": "unresolved-layer-provide",
@@ -3665,13 +3497,13 @@
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1808:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2175:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1808,
-      "endLine": 1808,
+      "line": 2175,
+      "endLine": 2175,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:906b637d9bde8fa44d431740efe98ca4d91fb70dfe7ac1dde46fb910aac4e6f6",
       "class": "unresolved-layer-provide",
@@ -3687,13 +3519,13 @@
       "reason": "The MCP host is constructed from the native bundle and manifest produced inside this case. Its shorter scoped database/tool lifetime preserves all calls and the subsequent reopen or destructive-error boundary. The outer platform fixture uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1821:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2188:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1821,
-      "endLine": 1821,
+      "line": 2188,
+      "endLine": 2188,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:69b2e453abd7fa6670ca7fc1472b8551f4ae95c99eb2e57ebf001746bb80b532",
       "class": "unresolved-layer-provide",
@@ -3708,13 +3540,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1855:provideScopedLayer@75#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2222:provideScopedLayer@75#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1855,
-      "endLine": 1855,
+      "line": 2222,
+      "endLine": 2222,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d0f3c86fad17603117887b1fcf1e1048510fa0fa0fb783fe8df44caeb8fc37ff",
       "class": "unresolved-layer-provide",
@@ -3729,13 +3561,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1865:provideScopedLayer@15#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2232:provideScopedLayer@15#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1865,
-      "endLine": 1865,
+      "line": 2232,
+      "endLine": 2232,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:8877e33155ae8678cbbda185a7d0ba88f0f3ec9597a6d38d66ed93d9f232d1ee",
       "class": "unresolved-layer-provide",
@@ -3750,13 +3582,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1875:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2242:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1875,
-      "endLine": 1875,
+      "line": 2242,
+      "endLine": 2242,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:711fb4f5e77e4b6cbf816c7d101dc542f2b51997b1b6e2f814911719b5d93dd9",
       "class": "unresolved-layer-provide",
@@ -3771,38 +3603,17 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1890:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2257:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1890,
-      "endLine": 1890,
+      "line": 2257,
+      "endLine": 2257,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:841798a4fc3b5088d955a7afd686ca3de17bb80ce4cb20aeff486bad9233a6b2",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, \"kg.pglite\") }))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:884:provideScopedLayer@16#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/law-practice-server",
-      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 884,
-      "endLine": 884,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:d4cf64e316ec1776799c13ffa40309602a19446d9f3b266e8017309af6c0f55d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, \"kg.pglite\") }))",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -7154,132 +6965,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:122:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 122,
-      "endLine": 122,
-      "symbol": "providePlatform",
-      "occurrence": "v2:e9e793358992c3bd896583fc95e43dfa895f5371effd5dfd401e70c681822ac1",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:135:providePlatform@9#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 135,
-      "endLine": 135,
-      "symbol": "providePlatform",
-      "occurrence": "v2:8e428704ae20e0c4903552832da782edfc8fc7f92e053417191b5b98a4d410f2",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:150:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 150,
-      "endLine": 150,
-      "symbol": "providePlatform",
-      "occurrence": "v2:e2c59641c686706b3bc81309ec13919826fa66964b64a851171e28daedbd3d75",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:165:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 165,
-      "endLine": 165,
-      "symbol": "providePlatform",
-      "occurrence": "v2:21dbaab1cd16f6a1c2d2fcf79c201736347395de05d402b313faa777b42927dd",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:189:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 189,
-      "endLine": 189,
-      "symbol": "providePlatform",
-      "occurrence": "v2:d38fef8d8527eb5f33f3aa7db63e8d10168beb7d515c277ad1480e6bce31290f",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/laws-package.test.ts:202:providePlatform@7#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 202,
-      "endLine": 202,
-      "symbol": "providePlatform",
-      "occurrence": "v2:03e1a589e8991c3cf872e11c52d30c9be59877ef9cd9520bf9adbf3db78b7aae",
-      "class": "unresolved-layer-provide",
-      "evidence": "providePlatform",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:131:provideScopedLayer@6#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -8206,111 +7891,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:109:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 109,
-      "endLine": 109,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:cb0c8e7d0ad0f7341b8af12253e3d0fcfd507779365a8f29eef84c2aae14b099",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:138:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 138,
-      "endLine": 138,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:966e896bd2024a4bfd2bf9b41f8a9e2094aa1a7d3120ddb2fd65abe41fbde7bf",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, FixedMemoryStatsLayer, RunScopesOffLayer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:58:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 58,
-      "endLine": 58,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:8a32933c0eaf52ec48da53d4319df5e852f4266ffe89dda213ad096caa4436ef",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(memoryStatsFrom(() => Effect.succeed(meminfoFixture)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:66:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 66,
-      "endLine": 66,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:47ba025e5c42358dd548d9c63fe57184a29eda564d806161b2fcb4c0637c944d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(memoryStatsFrom(() => Effect.fail(meminfoReadError)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:76:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 76,
-      "endLine": 76,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:8a81a8a6e894faa331fe589a2abfaf9b61a97e286f2fda04a6307f2829a7c0a6",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(memoryStatsFrom(() => Effect.succeed(degradedMeminfoFixture)))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/research-command.test.ts:117:provideTestLayer@4#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -9194,279 +8774,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:150:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 150,
-      "endLine": 150,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:004c4a2707b665a5fc7dd89183b4ed2b5e88cd0b8e41508e1ccde3782b264f6e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(TestConsole.layer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:284:provideScopedLayer@6#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 284,
-      "endLine": 286,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:4b8932147ce23e9effbdc6fb1e357fd4a93137e2197918979c204cfb25dd7ecc",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( Layer.mergeAll(PlatformLayer, monitorSpawnerLayer({ exitCode: 0, output: \"All checks were successful\" })) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:306:provideScopedLayer@6#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 306,
-      "endLine": 311,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:87caa0eb227ec1e9c5c1c4960f8d6bb63ae72e090ab86d5ed1ae7ff011e64a63",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( Layer.mergeAll( PlatformLayer, monitorSpawnerLayer({ exitCode: 1, output: \"Some checks were not successful\\n1 failing, 15 successful\" }) ) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:360:provideScopedLayer@16#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 360,
-      "endLine": 360,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:6997dc98e72567a232211f228125182451d443fced3edc65163eb2d0be3fe7e2",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(registrationThenSuccessSpawnerLayer(callsRef))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:371:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 371,
-      "endLine": 371,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:36782b769c1cdca6799e7a15a0e7d68c6b12d6544bec8eb9e5357c627ac3f3ea",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:414:provideScopedLayer@17#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 414,
-      "endLine": 414,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:25d50af81870e19a0293236891cac45c0bfc3ebd6d198e19c6d0651ff16853c9",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(censusSpawnerLayer(calls, [required]))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:424:provideScopedLayer@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 424,
-      "endLine": 424,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:bdd41f025653699a547eb90105aa20bdafc588bf01e6812b56789d412fbe0560",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(Layer.mergeAll(PlatformLayer, TestConsole.layer))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:441:provideScopedLayer@19#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 441,
-      "endLine": 441,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2548dbd1fea8d6bf2e3359e6860a62cd84e0ec684e863b88cdca7b3e2f57de9d",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(censusSpawnerLayer(calls, [required]))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:447:provideScopedLayer@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 447,
-      "endLine": 447,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:494fcf706e09c30de7badeed1db5adfa8425a390c533c0a7e1416bf9579949a1",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:464:provideScopedLayer@17#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 464,
-      "endLine": 464,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:f043b9c4b46ac56e6a12a6a37e25d1b9dcd525c5a5cfbc40a069d9dcc632d04b",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(censusSpawnerLayer(calls, [requiredPending, requiredGreen]))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:468:provideScopedLayer@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 468,
-      "endLine": 468,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:6e6c3479d55aac345007e17667d029350af5037ceb51819d069916839c8f1ca5",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:485:provideScopedLayer@19#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 485,
-      "endLine": 485,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:71c625607b2ce0f04393322b642777860d822cd35fb01c633773e672c3e7b326",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(censusSpawnerLayer(calls, [requiredGreen], all))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:490:provideScopedLayer@13#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 490,
-      "endLine": 490,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3791a65b634af3880fe3b2473519c092ae03bc4af0f143949a30eb0669124626",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts:652:provideScopedLayer@6#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -9814,195 +9121,6 @@
       "occurrence": "v2:b560e06835462d3a264b76e26a21de5c2d1ae7655c1d3948f85943451a1d7ff0",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts:115:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
-      "line": 115,
-      "endLine": 115,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:6677b96af154360b7a4f1b7dda3b2f5442c0b9a27f167e3f80e2fc8afc66fedc",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts:34:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
-      "line": 34,
-      "endLine": 34,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:35bedc0579b5c4c68743c4e75d36afda219717786d61bf6ce20ea582315c66ce",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts:49:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
-      "line": 49,
-      "endLine": 49,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:d27d02477088bd3ced385d9e8a406b99a8d70a0ffbd97365ca67f4c964365f85",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts:68:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
-      "line": 68,
-      "endLine": 68,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:091e14d01568436d0cbbfbab885215d598ad5cc7eb70914f5ac6a8a8cfc0f535",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts:96:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-pr-session-registry.test.ts",
-      "line": 96,
-      "endLine": 96,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:9e3b510795764aed85a9cf25142be2c8989cb00db0e478b2946069fc9ba07c07",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(PlatformLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:583:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 583,
-      "endLine": 583,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:dbfbaa23da4635278913463806888dbe66dc40d792eaf622e4d8612f78c738ca",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(replyTestLayer(deniedRepoViewStubs))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:600:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 600,
-      "endLine": 600,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:b8e28782ed9a5faa5d0693f65d77b2c99defa89c684482dc9ff5cf6e8b823170",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(replyTestLayer(liveThreadStubs))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:627:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 627,
-      "endLine": 627,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:707cd6613ce4bf4afaaf6cdb762a0e9e60f738fba816a81b1bd13c1ec8b65aab",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(replyTestLayer(resolvedThreadStubs, spawned))",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:779:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 779,
-      "endLine": 779,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7287f29b2ff75725a23b8e48dba66c61e0d2c673c3f0b2eb07e6b143d47be6e4",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(replyTestLayer(deniedReplyMutationStubs))",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -13916,55 +13034,13 @@
       "reason": "QaLayer owns shared services. withTempCwd brackets each fresh Memory fixture using acquireUseRelease with fatal removal errors; fixture data cannot cross scenarios. See goals/effect-vitest-canon/research/qa-round-scope-proof.md."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:125:withFixtureRepo@42#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 125,
-      "endLine": 134,
-      "symbol": "withFixtureRepo",
-      "occurrence": "v2:a2740607d8c5d57673d2a9b1f0d3ed2506e3679ce7395e761149a1e7ab6595e9",
-      "class": "resource-wrapper",
-      "evidence": "function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) { return yield* Effect.acquireUseRelease( acquireFixtureRepo(), use, Effect.fnUntraced(function* (repoRoot) { const fs = yield* F",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:166:withLabsFixtureRepo@46#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 166,
-      "endLine": 175,
-      "symbol": "withLabsFixtureRepo",
-      "occurrence": "v2:74e46db259541bd32910f073e38a518015ca07a415ec42c1c700cc8c9f01b46c",
-      "class": "resource-wrapper",
-      "evidence": "function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) { return yield* Effect.acquireUseRelease( acquireLabsFixtureRepo(), use, Effect.fnUntraced(function* (repoRoot) { const fs = yiel",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:148:withPrependedPath@26#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:147:withPrependedPath@26#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts",
-      "line": 148,
-      "endLine": 167,
+      "line": 147,
+      "endLine": 166,
       "symbol": "withPrependedPath",
       "occurrence": "v2:aac05a9c1b995ae10e60366f9fc1b5638172b1896f1a5db7e54241c239990945",
       "class": "resource-wrapper",
@@ -13976,7 +13052,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Retain the deliberately SHORT PATH acquireUseRelease bracket: prepend only the disposable systemctl shim during fixture-owner reaping, restore the exact previous/unset PATH before later journal/export assertions. Root ownership is already per-test and outer native services runner-owned. Broadening PATH to the entire layer/test or deleting restoration changes global state/isolation. Sequential fixture scope and synchronous final restoration are required. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:358:withEnvVarEffect@25#1",
@@ -14893,27 +13970,6 @@
       "reason": "inTempRepo retains a per-invocation acquireUseRelease lifetime; removal errors now remain visible. Public outer layers supply Memory or native filesystem dependencies. Sharing the root through a suite layer would widen its lifetime. See goals/effect-vitest-canon/research/yeet-ack-scope-proof.md."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:50:withTempDirectory@26#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
-      "line": 50,
-      "endLine": 57,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:789efdf682e7906cf50b090d1ed382d9bccd1fb976fb68014cb5c72cad2708ef",
-      "class": "resource-wrapper",
-      "evidence": "<Result, Error, Requirements>( use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements> ) => Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:349:inTempRepo@6#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -15486,27 +14542,6 @@
       "reason": "This per-invocation inbox root brackets its callback with acquireUseRelease and makes cleanup failures visible. Physical append and symlink subjects remain native; three read-only fixtures use Memory. See goals/effect-vitest-canon/research/yeet-inbox-view-scope-proof.md."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:257:withTempDirectory@57#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 257,
-      "endLine": 264,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:616f2a353aa4a0ad6084d3b93120ad1c6d13524b416eb73de5da5e8c95a418f7",
-      "class": "resource-wrapper",
-      "evidence": "function* <Value, Failure, Requirements>( use: (root: string) => Effect.Effect<Value, Failure, Requirements> ) { const fs = yield* FileSystem.FileSystem; return yield* Effect.acquireUseRelease(fs.make",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-packet-issue-lane-record.test.ts:307:withTempRepo@21#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -15810,27 +14845,6 @@
       "mechanization": "detector",
       "status": "exception",
       "reason": "Public layers own services. inTempRepo brackets a fresh root per invocation with acquireUseRelease and orDie removal; native append/flock and symlink fixtures retain their subjects. See goals/effect-vitest-canon/research/yeet-remediation-scope-proof.md."
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:526:withTempDirectory@57#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 526,
-      "endLine": 533,
-      "symbol": "withTempDirectory",
-      "occurrence": "v2:616f2a353aa4a0ad6084d3b93120ad1c6d13524b416eb73de5da5e8c95a418f7",
-      "class": "resource-wrapper",
-      "evidence": "function* <Value, Failure, Requirements>( use: (root: string) => Effect.Effect<Value, Failure, Requirements> ) { const fs = yield* FileSystem.FileSystem; return yield* Effect.acquireUseRelease(fs.make",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-review-body-signal.test.ts:17:fixture@16#1",
@@ -18198,46 +17212,26 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:109:scoped@105#1",
-      "lens": "detector",
+      "id": "EV004:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:206:scoped@10#1",
+      "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 109,
-      "endLine": 109,
+      "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
+      "line": 206,
+      "endLine": 206,
       "symbol": "scoped",
-      "occurrence": "v2:cb0c8e7d0ad0f7341b8af12253e3d0fcfd507779365a8f29eef84c2aae14b099",
-      "class": "redundant-whole-body-scope",
+      "occurrence": "v2:9dd0559cc943954dd7bfbf7dd63393051c88c0e1c87da2d66ac5f1138c9f8eaa",
+      "class": "inner-helper-scope-lifetime-review",
       "evidence": "Effect.scoped",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
       },
       "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts:138:scoped@105#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/quality-scheduler-degraded-inputs.test.ts",
-      "line": 138,
-      "endLine": 138,
-      "symbol": "scoped",
-      "occurrence": "v2:966e896bd2024a4bfd2bf9b41f8a9e2094aa1a7d3120ddb2fd65abe41fbde7bf",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The inner scope deliberately closes fixture acquisition before observing its Exit and verifying root deletion. It is the cleanup subject, not a redundant whole-test scope. Four controls assert the exact package/labs injection stage, typed failure or interrupt-only Cause, and absence of the allocated root after scope closure. Delaying finalization to test end would invalidate these observations. See research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/research-history-sift.test.ts:64:scoped@9#1",
@@ -19322,13 +18316,13 @@
       "reason": "The explicit scoped Layer.build is the initialization-failure subject. Its Exit must retain typed ThreadStoreUnavailable failure and no defect. Moving it into a native suite hook would bypass those body assertions. Native fixture migration retains this deliberate build unchanged."
     },
     {
-      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:168:result@33#1",
+      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:186:result@33#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 168,
-      "endLine": 168,
+      "line": 186,
+      "endLine": 186,
       "symbol": "result",
       "occurrence": "v2:ed4c0bf997a0dc5a75217bc682bce3efe51d64d792dc13367df2676a3a3560e9",
       "class": "result-outcome-assertion",
@@ -19344,13 +18338,13 @@
       "reason": "The real loader Result is immediately asserted as failure, followed by typed PracticeKgHostError and diagnostic checks. The original missing/malformed cases and added structural-invalid case must reject success; retaining Result preserves the tested error channel without inventing a Cause payload."
     },
     {
-      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:171:result@33#1",
+      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:189:result@33#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 171,
-      "endLine": 171,
+      "line": 189,
+      "endLine": 189,
       "symbol": "result",
       "occurrence": "v2:c5f6935037ce81e7497c550964b46838bfc4f5baf9df3174849ad86b3a14820d",
       "class": "result-outcome-assertion",
@@ -19366,13 +18360,13 @@
       "reason": "The real loader Result is immediately asserted as failure, followed by typed PracticeKgHostError and diagnostic checks. The original missing/malformed cases and added structural-invalid case must reject success; retaining Result preserves the tested error channel without inventing a Cause payload."
     },
     {
-      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:190:result@33#1",
+      "id": "EV005:apps/practice-kg-mcp/test/Host.test.ts:208:result@33#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 190,
-      "endLine": 190,
+      "line": 208,
+      "endLine": 208,
       "symbol": "result",
       "occurrence": "v2:7c23756bbbf6797516cb46595da6fad46ab7dfad0c32d56911630930e140938c",
       "class": "result-outcome-assertion",
@@ -22567,48 +21561,6 @@
       "status": "open"
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/laws-package.test.ts:77:checkEffect@28#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 77,
-      "endLine": 88,
-      "symbol": "checkEffect",
-      "occurrence": "v2:3a251da11297dcdc50e5ee68edd0b60392d5d838fe4121d2978bd7364d29eceb",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( Arbitrary.all([ScopeArbitrary, ReportArbitrary, FindingArbitrary, LawArbitrary]), ([scope, report, finding, law]) => Effect.gen(function* () { expect(yield* encodeScope(scope).p",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV007:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:83:checkEffect@8#1",
-      "lens": "detector",
-      "ruleId": "EV007",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 83,
-      "endLine": 93,
-      "symbol": "checkEffect",
-      "occurrence": "v2:a0405e77fe0d92c49bc7ca0f1be3c1921928ec7b2a019d1b6bf4d9911e68fb3b",
-      "class": "direct-arbitrary-check",
-      "evidence": "Arbitrary.checkEffect( summaryArbitrary, (summary) => { const encoded = Effect.runSync(encodeSummary(summary)); const decoded = Effect.runSync(decodeSummary(encoded)); expect(summaryEquivalent(decoded",
-      "replacement": {
-        "primitive": "it.effect.prop",
-        "sketch": "it.effect.prop: Use for EV007 direct-fast-check-assert candidates after translating legacy generators, runs, seeds, replay and failure semantics explicitly. For native direct-arbitrary-check candidates, move the existing native inputs and options into a property registration while preserving floors, failure handling and domain coverage; no FastCheck generator conversion is needed."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV007:packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts:154:checkEffect@28#1",
       "lens": "detector",
       "ruleId": "EV007",
@@ -24416,132 +23368,6 @@
       "occurrence": "v2:fdf97db3010bf843b4b78e3c182982397510d98ba70dda68818445330bfebd7b",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"refuses malformed, expired, and partially attributed waivers\", () => Effect.gen(function* () { const invalidTimestamp = yield* Effect.flip( parseYeetAckResolution({ ...noResolutionFlags, acto",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:269:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 269,
-      "endLine": 288,
-      "symbol": "it.live",
-      "occurrence": "v2:4d944e0a364187ee60b12db19baaf4ed1de3e181a990f2faa2f4797fb3080c7a",
-      "class": "unjustified-live-test",
-      "evidence": "it.live(\"completes when the watch finds registered checks and they pass\", () => withTempDirectory((root) => Effect.gen(function* () { const context = monitorPhaseContext(root); const recorder = yield*",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:290:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 290,
-      "endLine": 313,
-      "symbol": "it.live",
-      "occurrence": "v2:9413a88a38c576513f5fd3a256ff9c338a7922e68affe9c36ad7791f63ed184c",
-      "class": "unjustified-live-test",
-      "evidence": "it.live(\"fails a red watch immediately, without spending the registration backoff\", () => withTempDirectory((root) => Effect.gen(function* () { const context = monitorPhaseContext(root); const recorde",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:403:it.live@4#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 403,
-      "endLine": 425,
-      "symbol": "it.live",
-      "occurrence": "v2:bdd41f025653699a547eb90105aa20bdafc588bf01e6812b56789d412fbe0560",
-      "class": "unjustified-live-test",
-      "evidence": "it.live(`passes optional reds and replaces the recorded failure (${required})`, () => withTempDirectory((root) => Effect.gen(function* () { const calls = yield* Ref.make(0); const recorder = yield* Re",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:429:it.live@4#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 429,
-      "endLine": 448,
-      "symbol": "it.live",
-      "occurrence": "v2:494fcf706e09c30de7badeed1db5adfa8425a390c533c0a7e1416bf9579949a1",
-      "class": "unjustified-live-test",
-      "evidence": "it.live(`preserves a failure for a red or unreadable required census (${required})`, () => withTempDirectory((root) => Effect.gen(function* () { const calls = yield* Ref.make(0); const recorder = yiel",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:451:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 451,
-      "endLine": 470,
-      "symbol": "it.live",
-      "occurrence": "v2:c9fc5cf91031566cf573e182a4bf652b22a1c024dc027f9d6e938b7b8e70861a",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"retries pending required checks, retaining only the successful census attempt\", () => withTempDirectory((root) => Effect.gen(function* () { const calls = yield* Ref.make(0); const recorder =",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV009:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:473:it.live@4#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
-      "line": 473,
-      "endLine": 491,
-      "symbol": "it.live",
-      "occurrence": "v2:3791a65b634af3880fe3b2473519c092ae03bc4af0f143949a30eb0669124626",
-      "class": "unjustified-live-test",
-      "evidence": "it.live(`does not relabel an unproven optional failure as green (${all})`, () => withTempDirectory((root) => Effect.gen(function* () { const calls = yield* Ref.make(0); const recorder = yield* Ref.mak",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -26407,6 +25233,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native filesystem behavior is the test subject: the live mail-tagging use-case layers are proven end to end over the file-backed ledgers and checkpoint (real appends, fsync, temp-file rename) inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/PracticeKg.correspondents.test.ts:16:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.correspondents.test.ts",
+      "line": 16,
+      "endLine": 16,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/law-practice/server/test/PracticeKg.projections.test.ts:55:@effect/platform-node@0#1",
@@ -28740,6 +27587,27 @@
       "reason": "NodeServices remains intentional because the command scans real temporary goal and exploration directories and writes packet event files through the host filesystem. The eight captured-output tests pass on Node and Bun."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/fallow-audit-cache.test.ts:13:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/fallow-audit-cache.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/files-command.test.ts:43:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -29246,13 +28114,13 @@
       "reason": "NodeServices is intentional for the temporary workspace and live labs manifest directory scan. Four tests pass on Node and Bun."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/laws-package.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/laws-package.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/laws-package.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -29264,16 +28132,17 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Physical source/config reads and TSMorph project loading/preload/cache behavior are integration subjects. FsUtils/NodeServices are the shared outer layer; each compiler case owns a separate mutable TSMorphServiceLive pool. Preserve exact source counts, preload isolation, exclusions, and scoped roots; MemoryFS would bypass the physical compiler boundary. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:5:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts:6:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/laws-turbo-inputs.test.ts",
-      "line": 5,
-      "endLine": 5,
+      "line": 6,
+      "endLine": 6,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -29285,7 +28154,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real Turbo dry-run subprocesses hash physical consumer/config/root inputs. StepExec.runCaptured retains exit, truncated-output and 20-second command bounds; mutations/restoration and unrelated/artifact negative controls remain. NodeServices supplies real FS/path/spawner; replacing Turbo or its physical files with memory would remove the hash subject. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-command.test.ts:7:@effect/platform-node@0#1",
@@ -29923,13 +28793,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:12:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/quality-artifact-generators.test.ts:10:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-artifact-generators.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 10,
+      "endLine": 10,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -29941,7 +28811,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The generator reads physical package/config/TypeScript inputs and the authored topo-sort shell script, then writes/reads explicit JSDoc and CI artifact paths. Native FS and NodeChildProcessSpawner support actual compiler/toposort integration; fixture roots and labs exclusion remain case-local. Do not substitute MemoryFS for these compiler/process inputs. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-command-dispatch.test.ts:6:@effect/platform-node@0#1",
@@ -29983,7 +28854,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Host fallback readings and rejection of actual native directory mode 0755 are subjects. Preserve /proc/meminfo read stubs, finite-positive host fallback, 0700 safety refusal, unchanged retained mode, and empty lease/ticket file behavior. Private scoped roots + runtime-root override avoid actual scheduler state. MemoryFS or root execution would not prove native permission/fallback behavior. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler-drift.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -30026,7 +28898,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real scheduler journal/claim/fallback-lock/atomic-staging behavior, /proc process identity, and a temporary executable systemctl shim are retained integration subjects. Private runtime roots, dead-owner fixture data, Deferred coordination, live heartbeat clock, idempotent reaping, export refusal/READY ordering and absence of lock residue remain. No real process termination or host admission-root access is authorized. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/quality-scheduler.test.ts:76:@effect/platform-node@0#1",
@@ -30915,13 +29788,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:34:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:33:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts",
-      "line": 34,
-      "endLine": 34,
+      "line": 33,
+      "endLine": 33,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -30933,7 +29806,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Physical verdict/status/closeout artifacts and exactly-once terminal journal persistence are read back through production codecs; writer failures and interruption terminal records remain. Native scoped directories, independently read persisted bytes and cleanup defects preserve this disk integration cohort. This is a boundary adjudication, not evidence of a live external command or an assertion that MemoryFS cannot implement the writer interface. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:58:@effect/platform-node/NodeFileSystem@0#1",
@@ -31208,7 +30082,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real filesystem persistence/output capture and scoped artifact directories are retained; GitHub/child command results are SCRIPTED through ChildProcessSpawner.make, not network calls or real GitHub subprocess proof. Recorder replacement, preserved earlier records, spawn failure/red polarity and bounded retries remain. Keep native disk integration distinct from the pure per-case spawner values and controlled test clock. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-phase-empty.test.ts:10:@effect/platform-node/NodeFileSystem@0#1",
@@ -31400,13 +30275,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:32:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-reply-engine.test.ts:34:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-reply-engine.test.ts",
-      "line": 32,
-      "endLine": 32,
+      "line": 34,
+      "endLine": 34,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -31418,7 +30293,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Physical drafts and reply-report.json bytes are written/read/decoded, with denial/report/exit polarity preserved. ChildProcessSpawner.make answers a fail-closed scripted gh protocol: no hosted GitHub action is tested or authorized. Native draft/report root ownership is retained as the resource lens requires; pure scripted spawner values are supplied per case. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-resume.test.ts:19:@effect/platform-node@0#1",
@@ -42739,6 +41615,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:476:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts",
+      "line": 476,
+      "endLine": 476,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:9d5c061d9d7b5f2e8d725a50d17476acef0e1e5c58bd7941ed57fb1f323da1ca",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"10 seconds\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The single-test runner layer owns this controlled retry clock. A per-case delegating Clock registers and joins the real production retry sleep and signals a Deferred only for its 10-second duration. TestClock advances after that handshake; the watch fiber is joined and exact attempt/recorder assertions remain. Serial runner configuration prevents competing clock users; the separate zero/20ms live deadline cases remain unchanged. See research/cli-continuation-nine-proof.md."
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/yeet-monitor-ready.test.ts:1133:TestClock.adjust@32#1",

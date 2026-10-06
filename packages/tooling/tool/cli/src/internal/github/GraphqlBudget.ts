@@ -288,30 +288,28 @@ const makeGraphqlBudget = Effect.gen(function* () {
     )
   );
 
-  const guard =
-    (operation: string, policy: GraphqlBudgetPolicy) =>
-    <A, E, R>(self: Effect.Effect<A, E, R>): Effect.Effect<A, E | GraphqlBudgetExhausted | GitHubError, R> =>
-      Effect.gen(function* () {
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const snapshot = yield* probe;
-          const decision = decideGraphqlBudget(
-            GraphqlBudgetDecisionInput.make({ snapshot, policy, now: yield* DateTime.now })
-          );
-          if (decision.action === "proceed") return yield* self;
-          if (decision.action === "refuse" || attempt > 0) {
-            return yield* GraphqlBudgetExhausted.make({
-              operation,
-              remaining: snapshot.remaining,
-              resetAt: snapshot.resetAt,
-            });
-          }
-          yield* Console.error(
-            `[gh] GraphQL budget low for ${operation} (${snapshot.remaining} left, ${snapshot.source}); waiting ${Duration.format(decision.waitFor)} until ${DateTime.formatIso(snapshot.resetAt)}`
-          );
-          yield* Effect.sleep(decision.waitFor);
+  const guard = (operation: string, policy: GraphqlBudgetPolicy) =>
+    Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const snapshot = yield* probe;
+        const decision = decideGraphqlBudget(
+          GraphqlBudgetDecisionInput.make({ snapshot, policy, now: yield* DateTime.now })
+        );
+        if (decision.action === "proceed") return yield* self;
+        if (decision.action === "refuse" || attempt > 0) {
+          return yield* GraphqlBudgetExhausted.make({
+            operation,
+            remaining: snapshot.remaining,
+            resetAt: snapshot.resetAt,
+          });
         }
-        return yield* Effect.die("unreachable: the GraphQL budget guard loop ended without a decision");
-      });
+        yield* Console.error(
+          `[gh] GraphQL budget low for ${operation} (${snapshot.remaining} left, ${snapshot.source}); waiting ${Duration.format(decision.waitFor)} until ${DateTime.formatIso(snapshot.resetAt)}`
+        );
+        yield* Effect.sleep(decision.waitFor);
+      }
+      return yield* Effect.die("unreachable: the GraphQL budget guard loop ended without a decision");
+    });
 
   return GraphqlBudget.of({ guard, probe });
 });

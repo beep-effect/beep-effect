@@ -1,0 +1,82 @@
+id: otp:vfy-seat-request:001
+hypothesis_ref: dh:vfy-seat-request:001
+identity_card_ref: ic:vfy-seat-request:001
+foundational_status: explicitly_deferred
+term:
+  preferred_label: seat request
+  local_name: SeatRequest
+  proposed_iri: https://oip.law/ontology/ci-ops#SeatRequest
+  owl_entity_kind: class
+definition:
+  text: 'A queued claim on shared verification capacity: the waiting span of one admission chain, opened
+    by an admission-enqueued row that carries the requested work kind (kind), priority class (priority),
+    admission charge (weightTokens) and enqueue instant (enqueuedAtMillis), and ended by admission (admission-admitted),
+    withdrawal (admission-withdrawn) or eviction while still queued (admission-ticket-evicted, reason
+    queued-submitter-death); individuated by the enqueue that opened it, the chain nonce being evidence
+    only.'
+  source:
+  - so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+  - so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677
+  - so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+  - CQ-021
+  - CQ-023
+foundational:
+  ufo_category: unresolved
+  gufo_alignment: 'none asserted: UFO category deferred on the card'
+ontoclean:
+  rigidity: unresolved
+  identity: unresolved
+  dependence: unresolved
+parents: []
+revision_log: []
+reuse:
+  searched: true
+  exact_reuse_found: true
+  mappings:
+  - iri: https://oip.law/ontology/ci-ops#SeatRequest
+    compatibility: 'Same grain as the ratified SeatRequest, the queued ticket of the ruled ticket/lease
+      split (CQ-021''s notes: an ingested SeatRequest is a queued ticket): one admission chain''s waiting
+      span. The ratified row''s demand-versus-description grain and handling and resubmission continuity
+      stay deferred.'
+operational_warrant:
+  competency_questions:
+  - CQ-021
+  - CQ-023
+  semantic_support_for: []
+alternatives_rejected:
+- 'The ticket file or journal rows as the referent: rejected by the analysis; the rows record the claim
+  that waits and that CQ-023 bounds.'
+open_issues:
+- flag SeatRequest persists; no lift claimed
+- 'No cited chain shows a repricing (enqueue and admit charges that differ) or a withdrawal and resubmission
+  joined by a demand referent: the successive withdrawn chains from one checkout and branch (so-8528aeede357,
+  so-40e26d2f0672) carry separate nonces and attemptIds and no linking member. The recorded-value deferrals
+  (account-copy identity, effective queue participation, withdrawal and resubmission continuity) stand,
+  and the synthetic SeatRequest reading of the run-3 withdrawal is not re-presented.'
+- 'Warrant: CQ-021 (must_have) types ?req rdf:type ciops:SeatRequest and loses every queued-request row
+  without it; CQ-023 (must_have) types ?req the same way, and without it the starvation invariant is vacuously
+  zero.'
+- 'Steward choice (category rivals still viable on fa:vfy-seat-request:001): a rigid relator ending at
+  admission (two-relator split) or the waiting phase of one admission engagement that continues as the
+  grant. Not two proposals: the readings differ in category and rigidity on this hypothesis''s one card.'
+- 'Steward choice (identity rivals still viable): the verification attempt under another name, and one
+  demand persisting across a withdrawal and a later resubmission.'
+- 'Needed evidence (fa:vfy-seat-request:001, verbatim): An admission chain that separates the readings:
+  a grant evicted or released and then re-queued or re-admitted under the same nonce (favours one engagement
+  with phases), one request admitted into two grants or a lease whose nonce differs from its ticket''s
+  (favours two relators), or an admitted row whose charge, owner or checkout differs from the same chain''s
+  enqueue row. For the attempt rival: an attempt-journal end row joined to an admission chain by attemptId,
+  showing whether the attempt ends where the request ends. For demand continuity: a record linking two
+  chains, such as a shared demand id or a resubmission marker on a chain that follows a withdrawal. For
+  relational dependence (the card leaves it unresolved): a record stating the capacity a request waits
+  on (a pool, queue or capacity snapshot named on or joined to the enqueue row), which no cited record
+  carries.'
+- 'Cluster dependency: one discriminating chain decides this term and otp:vfy-seat-grant:001 together.
+  The ratified schedulesSeatRequest ranges over SeatRequest within the joint ordering cluster, so whether
+  this flag can lift singly is undecided.'
+revision_requests: []
+review:
+  foundational_agent: fa:vfy-seat-request:001
+  adversarial_agent: pending
+  steward: pending
+status: proposed

@@ -1,0 +1,30 @@
+id: dh:vfy-committed-failure:001
+observation_refs:
+- so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610
+cq_warrants:
+- CQ-022
+proposed_referent:
+  label: committed failure of an attempt (the step at which an attempt's verdict fails)
+  description: 'One instance is the failure an attempt commits at one step: the verdict''s `failedStepId` with `failureKind=step-exit`
+    under `failurePolicy=fail-fast` and `outcome=failure` (so-ca8b3f90e57c). Individuated by (attempt, failed step). CQ-022
+    needs CommittedFailure and its inAttempt edge.'
+representation_status: domain_referent
+alternatives:
+- label: the verdict fields recording the failure
+  representation_status: information_artifact
+  plausibility: viable
+- label: a phase of the attempt (failed)
+  representation_status: domain_referent
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The null falls: the failure sits at one named step of a run whose earlier step passed, under a fail-fast policy,
+    so it is located in the process rather than in the record format.'
+  discriminator: 'so-ca8b3f90e57c pairs `failedStepId=prepare:05-docgen` and `failureKind=step-exit` with a lane `prepare:01-effect-imports`
+    at `status=passed`: the attempt failed at a later step after an earlier one passed, which would be false if the failure
+    fields recorded nothing that happened.'
+epistemic_status: proposed
+confidence:
+  value: 0.45
+  use_for_acceptance: false

@@ -1,0 +1,13 @@
+id: rat:75
+proposal_ref: otp:vfy-seat-request:001
+proposal_sha256: e0d884c7f13365044be197ff9ecff94b27906dc3b6c195655bc393d4bff6ed22
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: Accept otp:vfy-seat-request:001 as an exact reuse of SeatRequest at the ticket grain,
+  warranted by CQ-021 and CQ-023, affirming the ratified rigid value. The SeatRequest flag persists with
+  no lift claimed; run 4 adds as flags the relator-against-waiting-phase category question, the attempt-alias
+  and demand-continuity rivals, the unshown capacity dependence, and the journal tickets with no enqueue
+  row.

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:dde7bf22ace08b78ded1cc81c449d2fad695a3bda9a3d03574c1a488d0e08897",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "apps/labs/ciops/test/fixtures/lane-plan-v1.ttl"
+  },
+  "source_span": {
+    "start_line": 44,
+    "end_line": 44
+  },
+  "quote": "ciops-prov:lane%2Dplan%2D705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198-lane-0 ciops-prov:laneIdRef \"fallow:audit\"^^xsd:string .",
+  "epistemic_status": "quoted_prose"
+}

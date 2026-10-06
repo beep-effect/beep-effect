@@ -1,0 +1,64 @@
+id: "fa:vfy-seat-grant:001"
+hypothesis_ref: "dh:vfy-seat-grant:001"
+identity_card_ref: "ic:vfy-seat-grant:001"
+referent_grain: >-
+  A held admission at the grain of one admission chain's held span: a run's hold on shared
+  verification capacity from its admission to its release or eviction, holding one checkout at one
+  charge; individuated by the admission that began it.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: seat grant as a rigid relator founded at admission
+    still_viable: true
+  - label: held phase of one admission engagement that began at enqueue
+    still_viable: true
+  - label: lease file or journal rows as the referent
+    still_viable: false
+  - label: a scheduler variable with no domain counterpart
+    still_viable: false
+strongest_counterexample: >-
+  so-860cff0d673e: one nonce carries enqueue, admit and lease eviction with reason
+  owner-dead-or-reused. One
+  engagement with a waiting and a held phase, and two successive relators, both account for every
+  row, so the grant's rigidity turns on a record that no chain here supplies.
+verdict: explicitly_deferred
+needed_evidence: >-
+  The same discriminating chain as the seat-request pair: a grant released or evicted and then
+  re-admitted under the same nonce, one request admitted into two grants, a lease whose nonce
+  differs from its ticket's, or a grant renewed or transferred to another holder while keeping its
+  admission instant. For CQ-009's legacy-origin arm, a grant record carrying the
+  legacy-origin-lock/v1 protocol, or a grant persisted without the protocol field (which decodes as
+  legacy-origin-lock/v1). For a dependence on a capacity pool: a record stating the capacity a grant
+  is charged against (a pool or capacity snapshot member on a grant row).
+evidence_refs:
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - CQ-008
+  - CQ-009
+rationale:
+  spec_vs_execution: >-
+    Separated on what the records show: each grant is a dated occurrence carrying its own instants
+    (admittedAtMillis, and releasedAtMillis or evictedAtMillis, on so-95b7d78a061f and
+    so-860cff0d673e) and its own chain nonce, so two grants of one kind and priority are two
+    occurrences, not one repeatable description. Any admission policy they fall under is a
+    presupposition; no cited record carries one.
+  world_vs_information: >-
+    The lease state record (schemaVersion yeet-admission-lease/v1, so-a8d270b5e19d) and the journal
+    rows record the grant; the grant is what holds the checkout (CQ-008, CQ-009).
+  role_vs_bearer: >-
+    The holder (a run) bears the holder role and the checkout bears the held-resource role; the
+    grant is the relator-like individual, not either bearer.
+  context_reification_needed: >-
+    No context beyond its participants.
+  rivals: >-
+    The scheduler-variable rival fails on the lease-evicted chains, which carry a last heartbeat
+    instant and an eviction reason of their own (so-860cff0d673e, so-a9ed1352e2bc). The record rival
+    confuses the lease file with the hold. The two category readings remain. Among the records
+    cited here, so-a8d270b5e19d carries a protocol member, scheduler-origin-concurrency/v1; the
+    cited records show the legacy arm neither present nor absent, and a missing field is never read
+    as no protocol.

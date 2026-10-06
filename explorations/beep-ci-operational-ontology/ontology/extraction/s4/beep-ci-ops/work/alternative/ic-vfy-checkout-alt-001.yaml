@@ -1,0 +1,49 @@
+id: "ic:vfy-checkout-alt:001"
+hypothesis_ref: "dh:vfy-checkout:001"
+referent_grain: >-
+  One enduring working tree on a workstation, from which requests are placed and which a grant holds, as
+  against the branch checked out in it and the path string that locates it.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two requests or grants hold the same checkout iff they are made from one working tree that persisted
+    between them on one workstation; the checkoutRoot path is evidence of that persistence, never the
+    criterion, and a tree removed and re-created at the same path is a different checkout.
+  reidentification_key:
+    - "checkoutRoot (capture-placeholdered path; evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    A working tree is unified as the files under one root on one workstation; it keeps its unity while the
+    branch checked out in it and its file contents change.
+  dependence: none
+ufo_analysis:
+  candidate_category: kind
+  alternatives:
+    - "branch-scoped worktree (a tree that exists only for one branch; every cited worktree path carries a single branch value)"
+    - "location string only (null reading)"
+  existential_dependencies:
+    - "a workstation filesystem that hosts it (generic dependence on some host, not a specific part)"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Persistence across a branch change is shown only for the primary checkout (one checkoutRoot with branch
+      @chore/deps-update-10-1-26 on so-cac0a9e757f0 and @chore/organizing-goals-and-explorations on so-2d8a12f68b8f
+      and so-fba5f4273ae5). For worktree paths, every cited chain at one path carries a single branch value; a
+      worktree deleted and re-added at the same path for a new branch would be counted by the path as one checkout
+      but by my criterion as two, and no record here can tell which happened.
+  - description: >-
+      Review-fix chains from one checkout carry no branch at all (for example so-1c04b858cf47); if a review-fix
+      ran in a temporary copy under the same root, my criterion would merge two trees into one checkout.
+status: proposed
+evidence_refs:
+  - "so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff"
+  - "so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa"
+  - "so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c"
+  - "so:sha256:1c04b858cf47c27e42fb1943f6e276c9bd9eca169b934a9bd2cb1904ff530563"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"

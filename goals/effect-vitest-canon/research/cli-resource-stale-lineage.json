@@ -1,0 +1,2563 @@
+{
+  "schemaVersion": "effect-vitest-resource-stale-lineage/v1",
+  "status": "eleven upstream source fixes reconciled; nine resource rows retain actual residue",
+  "auditSha256": "221c1ef2fe5c6ddbcfd6918e5fbe98293e967f278e593843122540f02d4fe3c2",
+  "rows": [
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/allowlist-check.test.ts:27",
+      "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+      "fixSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "reason": "Already source-fixed by 4203a309f11930eb60e971931718b73b54efc653; no new implementation is claimed in this continuation. Six old withTempRepo uses now own roots at 63,104,146,197,237,277 using makeTempDirectoryScoped before bun.lock writes. Scope cleanup is installed before each setup/body. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.009Z",
+        "sha256": "708ae6dc56d9cd761d852c2788a74b70a2ea93bab54ea483fbb096402b45d9f6",
+        "lines": 317
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/allowlist-check.test.ts:27",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/allowlist-check.test.ts",
+        "line": 27,
+        "endLine": 38,
+        "class": "failure-during-acquisition-leak",
+        "evidence": "withTempRepo allocates a directory then writes bun.lock inside acquisition. If that write fails, acquireUseRelease never receives the directory to remove.",
+        "replacement": {
+          "primitive": "it.layer",
+          "sketch": "Register removal immediately after directory allocation, then write bun.lock inside the owned test scope/use phase. Migrate outer platform ownership under D14 without losing recursive cleanup failures. Add a bounded setup-failure proof in P2; preserve every existing diagnostic assertion."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "Six old withTempRepo uses now own roots at 63,104,146,197,237,277 using makeTempDirectoryScoped before bun.lock writes. Scope cleanup is installed before each setup/body.",
+      "landedSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "landedCorrespondence": "direct-ancestor",
+      "registrationCorrespondence": [
+        {
+          "title": "allowlist-check",
+          "line": 36,
+          "endLine": 317,
+          "mode": "it.layer(NodeServices.layer, { timeout: \"5 seconds\" })"
+        },
+        {
+          "title": "formats schema diagnostics with path labels and optional redaction",
+          "line": 37,
+          "endLine": 58,
+          "mode": "it"
+        },
+        {
+          "title": "passes when all referenced files exist",
+          "line": 60,
+          "endLine": 99,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails when an allowlist entry points at a missing file",
+          "line": 101,
+          "endLine": 141,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails when allowlist entries repeat the same rule, file, and kind",
+          "line": 143,
+          "endLine": 192,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails when an allowlist entry uses an unsupported rule id",
+          "line": 194,
+          "endLine": 232,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails when a native-runtime allowlist entry uses an unsupported kind",
+          "line": 234,
+          "endLine": 272,
+          "mode": "it.effect"
+        },
+        {
+          "title": "resolves allowlist paths from the repository root when started in a subdirectory",
+          "line": 274,
+          "endLine": 316,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native lockfile reads and writes; preserve diagnostic assertions."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/create-package-lab.test.ts:96",
+      "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "reason": "Already source-fixed by e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae; no new implementation is claimed in this continuation. temporaryRepository 98-104 acquires temporaryWorkingDirectory at 101, then creates .git at 102. Shared root finalizer precedes cwd finalizer; LIFO restores cwd before deletion. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.020Z",
+        "sha256": "4796142ad176212795465ec8d7bbce3382d6a0801dfca73715916829d09e990c",
+        "lines": 924
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/create-package-lab.test.ts:96",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/create-package-lab.test.ts",
+        "line": 96,
+        "endLine": 114,
+        "class": "acquisition-failure-state-leak",
+        "evidence": "Temp cwd changes before fallible .git creation inside acquireUseRelease acquisition. Failure before the returned state leaves cwd and the unscoped directory unrestored.",
+        "replacement": {
+          "primitive": "it.layer",
+          "sketch": "Own the temporary directory immediately upon allocation and bracket cwd restoration before fallible .git creation. Keep Node filesystem, formatter and test-local mutable console boundaries; a failed acquire does not invoke the outer release. Add a setup-failure restoration proof in P2, preserving every scaffold assertion."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryRepository 98-104 acquires temporaryWorkingDirectory at 101, then creates .git at 102. Shared root finalizer precedes cwd finalizer; LIFO restores cwd before deletion.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "property: lab tsconfig schemas round-trip derived values",
+          "line": 354,
+          "endLine": 367,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates",
+          "line": 387,
+          "endLine": 406,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "scaffolds a nextjs lab with manifest, labs portless label, @beep/ui wiring, and the labs identity segment",
+          "line": 409,
+          "endLine": 496,
+          "mode": "it.effect"
+        },
+        {
+          "title": "scaffolds a vite lab with the @beep/ui style chain and lab-only postcss config",
+          "line": 498,
+          "endLine": 550,
+          "mode": "it.effect"
+        },
+        {
+          "title": "scaffolds a service lab with the HttpApi stack and no frontend dependencies",
+          "line": 552,
+          "endLine": 624,
+          "mode": "it.effect"
+        },
+        {
+          "title": "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
+          "line": 626,
+          "endLine": 680,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rebuilds the labs identity segment sorted when a second lab is created",
+          "line": 682,
+          "endLine": 718,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refuses --lab flag misuse before touching the filesystem",
+          "line": 720,
+          "endLine": 773,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refuses lab scaffolding when the root workspaces lack the apps/labs/* glob (D5)",
+          "line": 775,
+          "endLine": 801,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refuses a non-lab package targeted into the labs root via --parent-dir",
+          "line": 803,
+          "endLine": 835,
+          "mode": "it.effect"
+        },
+        {
+          "title": "gates every create on the retired-packages registry, dry-run included",
+          "line": 837,
+          "endLine": 897,
+          "mode": "it.effect"
+        },
+        {
+          "title": "leaves the retired registry untouched when the name is absent",
+          "line": 899,
+          "endLine": 922,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native package-generation files, actual cwd and executable shim; retain native command coverage."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/create-package.test.ts:343",
+      "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+      "fixSha": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "reason": "Already source-fixed by e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae; no new implementation is claimed in this continuation. temporaryRepository 340-346 acquires temporaryWorkingDirectory at 343, then .git at 344. All callers use owned scope; cwd restoration precedes directory removal. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.030Z",
+        "sha256": "7f65ba4721253369a4326688bd7e474ef45b15b997d08e8b013d2c50590c688a",
+        "lines": 1517
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/create-package.test.ts:343",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/create-package.test.ts",
+        "line": 343,
+        "endLine": 363,
+        "class": "acquisition-failure-state-leak",
+        "evidence": "withTempRepo changes cwd and creates .git before acquisition returns. An early makeDirectory failure bypasses both prior-cwd restoration and temp removal.",
+        "replacement": {
+          "primitive": "it.layer",
+          "sketch": "Register temp removal immediately and own cwd restoration before makeDirectory. Preserve actual scaffold formatter/Node I/O and the synthetic install recorder. Add a setup-failure cleanup proof without changing commands, assertions or timeout policy; do not share mutable per-case fixtures across registrations."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryRepository 340-346 acquires temporaryWorkingDirectory at 343, then .git at 344. All callers use owned scope; cwd restoration precedes directory removal.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "renders the literal canonical block for library, tool and ecosystem packages",
+          "line": 284,
+          "endLine": 292,
+          "mode": "it"
+        },
+        {
+          "title": "renders application and lab blocks without codegen placeholders or unneeded derived tasks",
+          "line": 293,
+          "endLine": 337,
+          "mode": "it"
+        },
+        {
+          "title": "property: Storybook tsconfig schemas round-trip derived values",
+          "line": 590,
+          "endLine": 605,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
+          "line": 607,
+          "endLine": 629,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refreshes bun.lock with bun install --lockfile-only by default",
+          "line": 631,
+          "endLine": 653,
+          "mode": "it.effect"
+        },
+        {
+          "title": "scaffolds tool packages with the tool script block and the platform-node dependency",
+          "line": 655,
+          "endLine": 680,
+          "mode": "it.effect"
+        },
+        {
+          "title": "adds top-level package workspaces, identity exports, and shared config sync outputs",
+          "line": 682,
+          "endLine": 745,
+          "mode": "it.effect"
+        },
+        {
+          "title": "requires an explicit app kind for app scaffolds",
+          "line": 747,
+          "endLine": 768,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refuses to scaffold into a directory that already exists",
+          "line": 770,
+          "endLine": 817,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates Next.js apps without package API boilerplate",
+          "line": 819,
+          "endLine": 878,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates Tauri apps without package API boilerplate",
+          "line": 880,
+          "endLine": 955,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
+          "line": 957,
+          "endLine": 1021,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates service apps with canonical composite checks and JSON dependencies",
+          "line": 1023,
+          "endLine": 1067,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps runtime-proof apps package-like",
+          "line": 1069,
+          "endLine": 1116,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates canonical foundation packages with family metadata and workspace-resolved identity registration",
+          "line": 1118,
+          "endLine": 1175,
+          "mode": "it.effect"
+        },
+        {
+          "title": "generates opt-in Storybook story typecheck config for foundation ui-system packages",
+          "line": 1177,
+          "endLine": 1248,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects stories tsconfig generation outside foundation ui-system package scaffolds",
+          "line": 1250,
+          "endLine": 1280,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates canonical tooling packages with family metadata",
+          "line": 1282,
+          "endLine": 1366,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates canonical driver packages with flat family metadata",
+          "line": 1368,
+          "endLine": 1425,
+          "mode": "it.effect"
+        },
+        {
+          "title": "creates polarity-correct ecosystem packages with flat family metadata",
+          "line": 1427,
+          "endLine": 1515,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native scaffolding, cwd, Git/Bun shim and generated projections; narrower env restoration remains intentional."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/docgen.test.ts:206",
+      "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+      "fixSha": "f309935aded4bdba9dbbe0a624aae69145710a90",
+      "reason": "Already source-fixed by f309935aded4bdba9dbbe0a624aae69145710a90; no new implementation is claimed in this continuation. Both historical repo constructors converge on temporaryRepository 166-180: scoped directory 169, cwd bracket 170-177, .git 178, then callers. Cleanup ordering restores cwd before root removal; no original helper acquisition gap remains. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.037Z",
+        "sha256": "f2adf813dfc419c3f1e0260c0904d46f6195f643366d13d0434a612d15ed1f19",
+        "lines": 4802
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/docgen.test.ts:206",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/docgen.test.ts",
+        "line": 206,
+        "endLine": 247,
+        "class": "acquisition-failure-state-leak",
+        "evidence": "Both temp-repo helpers change cwd then create .git before acquisition returns. Setup failure leaves the prior cwd and unscoped temporary directory without release ownership.",
+        "replacement": {
+          "primitive": "it.layer",
+          "sketch": "Protect both temporary directories and cwd changes before fallible .git creation. Keep native Git, compiler/formatter subject boundaries and fresh TestConsole/provider stubs. P2 cleanup-failure controls must preserve every existing outcome assertion and cannot replace native compilation or process tests with MemoryFS."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "Both historical repo constructors converge on temporaryRepository 166-180: scoped directory 169, cwd bracket 170-177, .git 178, then callers. Cleanup ordering restores cwd before root removal; no original helper acquisition gap remains.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "Docgen operations",
+          "line": 540,
+          "endLine": 4782,
+          "mode": "it.layer(CommandTestLayer, { concurrent: false, timeout: \"5 seconds\" })"
+        },
+        {
+          "title": "defaults docgen config source fields in the schema without changing explicit wire shape",
+          "line": 541,
+          "endLine": 556,
+          "mode": "it.effect"
+        },
+        {
+          "title": "round-trips schema-derived docgen configuration",
+          "line": 561,
+          "endLine": 570,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "aggregates only canonical Docgen output configurations during scoped runs",
+          "line": 573,
+          "endLine": 583,
+          "mode": "it"
+        },
+        {
+          "title": "skips non-canonical outputs while aggregating canonical scoped packages",
+          "line": 585,
+          "endLine": 635,
+          "mode": "it.effect"
+        },
+        {
+          "title": "selects package-local inputs for the bounded local docgen lane",
+          "line": 637,
+          "endLine": 689,
+          "mode": "it.effect"
+        },
+        {
+          "title": "identifies global docgen inputs that require the full proof",
+          "line": 691,
+          "endLine": 702,
+          "mode": "it"
+        },
+        {
+          "title": "builds changed-plus-dependent Turbo filters for local docgen without run summaries outside CI",
+          "line": 712,
+          "endLine": 726,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps Turbo run summaries for local docgen under CI",
+          "line": 728,
+          "endLine": 738,
+          "mode": "it.effect"
+        },
+        {
+          "title": "pins direct docgen Turbo invocations to a requested local-only cache",
+          "line": 742,
+          "endLine": 768,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes and verifies package-level docgen proof manifests",
+          "line": 770,
+          "endLine": 848,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds a package-selected local docgen plan without git discovery",
+          "line": 850,
+          "endLine": 888,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds a full plan without querying the configured git range",
+          "line": 890,
+          "endLine": 908,
+          "mode": "it.effect"
+        },
+        {
+          "title": "queries the configured git range when building an affected plan",
+          "line": 910,
+          "endLine": 930,
+          "mode": "it.effect"
+        },
+        {
+          "title": "prints a local docgen package plan from the command surface",
+          "line": 932,
+          "endLine": 968,
+          "mode": "it.effect"
+        },
+        {
+          "title": "plans full docgen with configured concurrency and both execution steps",
+          "line": 970,
+          "endLine": 995,
+          "mode": "it.effect"
+        },
+        {
+          "title": "prefers the local --parallel flag over configured concurrency",
+          "line": 997,
+          "endLine": 1011,
+          "mode": "it.effect"
+        },
+        {
+          "title": "defaults local docgen concurrency to three",
+          "line": 1013,
+          "endLine": 1026,
+          "mode": "it.effect"
+        },
+        {
+          "title": "executes full docgen through direct Turbo and aggregate steps",
+          "line": 1028,
+          "endLine": 1058,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails full docgen on invalid JSDoc metadata before spawning Turbo",
+          "line": 1060,
+          "endLine": 1096,
+          "mode": "it.effect"
+        },
+        {
+          "title": "skips the full JSDoc metadata check for packages with a non-canonical docgen outDir",
+          "line": 1098,
+          "endLine": 1136,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects local docgen JSON output without plan mode",
+          "line": 1138,
+          "endLine": 1154,
+          "mode": "it.effect"
+        },
+        {
+          "title": "parses current schema flags and classifies a configured package that has not generated docs",
+          "line": 1156,
+          "endLine": 1201,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports aggregate docs paths under the ignored docs/generated layout",
+          "line": 1203,
+          "endLine": 1240,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds repo-standard init config without example path mappings",
+          "line": 1242,
+          "endLine": 1329,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds paths-free init config regardless of source export shape",
+          "line": 1331,
+          "endLine": 1390,
+          "mode": "it.effect"
+        },
+        {
+          "title": "ignores vendored docgen trees that are outside workspace patterns",
+          "line": 1392,
+          "endLine": 1434,
+          "mode": "it.effect"
+        },
+        {
+          "title": "preserves the nested docs layout and rewrites module parents",
+          "line": 1436,
+          "endLine": 1486,
+          "mode": "it.effect"
+        },
+        {
+          "title": "aggregates private JSDoc loop output when a package emits it",
+          "line": 1488,
+          "endLine": 1526,
+          "mode": "it.effect"
+        },
+        {
+          "title": "skips symlinked docs entries during aggregation",
+          "line": 1528,
+          "endLine": 1573,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects symlinked docs roots during aggregation",
+          "line": 1575,
+          "endLine": 1617,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects stale docgen configs outside current workspaces during aggregation",
+          "line": 1619,
+          "endLine": 1660,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps ceremony-exempt labs workspaces out of docgen discovery and aggregation",
+          "line": 1662,
+          "endLine": 1715,
+          "mode": "it.effect"
+        },
+        {
+          "title": "supports clean aggregation when stale docs paths conflict with nested package docs",
+          "line": 1717,
+          "endLine": 1759,
+          "mode": "it.effect"
+        },
+        {
+          "title": "renders human-first report content without agent instructions",
+          "line": 1761,
+          "endLine": 1804,
+          "mode": "it"
+        },
+        {
+          "title": "builds rich JSDoc quality subjects and advisory findings",
+          "line": 1806,
+          "endLine": 1825,
+          "mode": "it.effect"
+        },
+        {
+          "title": "flags empty and over-padded code examples during quality analysis",
+          "line": 1827,
+          "endLine": 1900,
+          "mode": "it.effect"
+        },
+        {
+          "title": "collects local export-list symbols and treats lowercase console output as observable",
+          "line": 1902,
+          "endLine": 1974,
+          "mode": "it.effect"
+        },
+        {
+          "title": "warns when examples log exported symbol handles instead of behavior",
+          "line": 1976,
+          "endLine": 2048,
+          "mode": "it.effect"
+        },
+        {
+          "title": "aligns observable example and Effect signature heuristics",
+          "line": 2050,
+          "endLine": 2128,
+          "mode": "it.effect"
+        },
+        {
+          "title": "accepts type-level evidence as a useful type-only example",
+          "line": 2130,
+          "endLine": 2192,
+          "mode": "it.effect"
+        },
+        {
+          "title": "treats inheritDoc companion aliases as inheriting required examples",
+          "line": 2194,
+          "endLine": 2221,
+          "mode": "it.effect"
+        },
+        {
+          "title": "skips exported declarations marked internal",
+          "line": 2223,
+          "endLine": 2285,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not score undocumented overload signatures separately from the documented overload",
+          "line": 2287,
+          "endLine": 2347,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not require documentation for static component member assignments",
+          "line": 2349,
+          "endLine": 2423,
+          "mode": "it.effect"
+        },
+        {
+          "title": "uses owning declaration JSDoc for same-file export specifier subjects",
+          "line": 2425,
+          "endLine": 2495,
+          "mode": "it.effect"
+        },
+        {
+          "title": "uses schema annotation descriptions when JSDoc only carries tags",
+          "line": 2497,
+          "endLine": 2559,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not score aliased local export specifiers as separate quality subjects",
+          "line": 2561,
+          "endLine": 2623,
+          "mode": "it.effect"
+        },
+        {
+          "title": "preserves default-export subjects in quality analysis",
+          "line": 2625,
+          "endLine": 2790,
+          "mode": "it.effect"
+        },
+        {
+          "title": "treats module re-exports as graph edges instead of quality subjects",
+          "line": 2792,
+          "endLine": 2879,
+          "mode": "it.effect"
+        },
+        {
+          "title": "emits schema v2 partial package reports when the package budget is exhausted",
+          "line": 2881,
+          "endLine": 2936,
+          "mode": "it.effect"
+        },
+        {
+          "title": "honors docgen exclude globs during quality subject collection",
+          "line": 2938,
+          "endLine": 3019,
+          "mode": "it.effect"
+        },
+        {
+          "title": "selects packages from changed-files git output",
+          "line": 3021,
+          "endLine": 3083,
+          "mode": "it.effect"
+        },
+        {
+          "title": "renders consolidated quality reports and Codex remediation packets",
+          "line": 3085,
+          "endLine": 3176,
+          "mode": "it.effect"
+        },
+        {
+          "title": "caps and ranks Codex remediation packets for broad quality reports",
+          "line": 3178,
+          "endLine": 3252,
+          "mode": "it.effect"
+        },
+        {
+          "title": "evaluates worker packets with a fake Codex runner",
+          "line": 3254,
+          "endLine": 3428,
+          "mode": "it.effect"
+        },
+        {
+          "title": "wires --packet-limit through the quality CLI",
+          "line": 3430,
+          "endLine": 3502,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes worker eval JSON from a saved quality report without requiring a live provider",
+          "line": 3504,
+          "endLine": 3589,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds Runpod Ollama pod inputs without secrets",
+          "line": 3591,
+          "endLine": 3634,
+          "mode": "it.effect"
+        },
+        {
+          "title": "cleans up Runpod pods after recovering a missing createPod id",
+          "line": 3636,
+          "endLine": 3711,
+          "mode": "it.effect"
+        },
+        {
+          "title": "guards Runpod worker eval behind explicit confirmation",
+          "line": 3713,
+          "endLine": 3737,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects nonpositive Runpod readiness timeout values",
+          "line": 3739,
+          "endLine": 3762,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects negative --packet-limit values",
+          "line": 3764,
+          "endLine": 3819,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails analysis when a package-local docgen.json is malformed",
+          "line": 3821,
+          "endLine": 3856,
+          "mode": "it.effect"
+        },
+        {
+          "title": "checks docgen metadata without writing analysis files",
+          "line": 3858,
+          "endLine": 3901,
+          "mode": "it.effect"
+        },
+        {
+          "title": "skips current proof manifests during docgen check",
+          "line": 3903,
+          "endLine": 4004,
+          "mode": "it.effect"
+        },
+        {
+          "title": "checks rejected category values without writing analysis files",
+          "line": 4006,
+          "endLine": 4068,
+          "mode": "it.effect"
+        },
+        {
+          "title": "checks required tags on the owning JSDoc block instead of adjacent blocks",
+          "line": 4070,
+          "endLine": 4126,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes report-only quality JSON without failing the command",
+          "line": 4128,
+          "endLine": 4209,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails quality check mode when findings are present",
+          "line": 4211,
+          "endLine": 4279,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails quality check mode when only warnings are present",
+          "line": 4281,
+          "endLine": 4357,
+          "mode": "it.effect"
+        },
+        {
+          "title": "flags rejected category values during analysis",
+          "line": 4359,
+          "endLine": 4417,
+          "mode": "it.effect"
+        },
+        {
+          "title": "flags rejected category values on module fileoverview during analysis",
+          "line": 4419,
+          "endLine": 4482,
+          "mode": "it.effect"
+        },
+        {
+          "title": "returns a non-zero exit code when generate targets an unconfigured package",
+          "line": 4484,
+          "endLine": 4523,
+          "mode": "it.effect"
+        },
+        {
+          "title": "accepts --filter for generate and resolves it like --package",
+          "line": 4525,
+          "endLine": 4566,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects conflicting selector flags for generate",
+          "line": 4568,
+          "endLine": 4597,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes lint-clean docgen.json during init",
+          "line": 4599,
+          "endLine": 4645,
+          "mode": "it.effect"
+        },
+        {
+          "title": "previews selected doctest rewrites as a schema-valid JSON report without writing",
+          "line": 4647,
+          "endLine": 4679,
+          "mode": "it.effect"
+        },
+        {
+          "title": "resolves a filtered Doctest include relative to the selected package src directory",
+          "line": 4681,
+          "endLine": 4702,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes canonical doctest markers and renders the human summary",
+          "line": 4704,
+          "endLine": 4728,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps pure-unmarked doctest findings warning-only",
+          "line": 4730,
+          "endLine": 4740,
+          "mode": "it.effect"
+        },
+        {
+          "title": "returns a reported error exit for blocking doctest findings after rendering JSON",
+          "line": 4742,
+          "endLine": 4766,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports an invalid doctest mark preview through the rewrite error boundary",
+          "line": 4768,
+          "endLine": 4781,
+          "mode": "it.effect"
+        },
+        {
+          "title": "every schema-derived report round-trips through its JSON codec",
+          "line": 4788,
+          "endLine": 4800,
+          "mode": "it.effect.prop"
+        }
+      ],
+      "nativeSubject": "Native TypeScript compiler/docgen files and short native spawner.exitCode calls at 154-164."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/doctest-lane.test.ts:13",
+      "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
+      "fixSha": "e08b24b0042c0c1bbd274de49407e8bade354575",
+      "reason": "Already source-fixed by e08b24b0042c0c1bbd274de49407e8bade354575; no new implementation is claimed in this continuation. Historical Bun.spawn/Promise.all captures and PID report path were replaced at #1102. resolvedConfig 54-80 and Turbo probe 108-129 call StepExec.runCaptured; fixture run 247-258 owns report under scoped directory and waits for captured child before reading. StepExec closes its inner child scope before outer report-directory teardown. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Ordinary whole-package Node proof includes this file; no dedicated doctest cancellation/setup-failure runtime control was established by this bounded audit. This limitation remains distinct from the inspected StepExec/scoped-root ownership repair.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.057Z",
+        "sha256": "a0cfc5b457465fc97d27dad8d97336a8de6d99dd73c5eee561352e16a12d4d30",
+        "lines": 264
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/doctest-lane.test.ts:13",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/doctest-lane.test.ts",
+        "line": 13,
+        "endLine": 108,
+        "class": "unowned-child-and-report-files",
+        "evidence": "Bare Bun.spawn is bridged with Effect.promise and Promise.all without a cancellation finalizer; two PID-based /tmp JSON outputs are never removed by this test.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Own the real Bun child with scoped acquisition/release, interrupt/kill and join/drain it on cancellation, and allocate report output in a scoped temp path. Preserve actual doctest selection, environment handling, explicit Bun threads, maxWorkers1 and exact suite/test/exit assertions. Existing global cleanup does not remove these report files or own this child; do not add retries or timeouts."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "Historical Bun.spawn/Promise.all captures and PID report path were replaced at #1102. resolvedConfig 54-80 and Turbo probe 108-129 call StepExec.runCaptured; fixture run 247-258 owns report under scoped directory and waits for captured child before reading. StepExec closes its inner child scope before outer report-directory teardown.",
+      "landedSha": "e08b24b0042c0c1bbd274de49407e8bade354575",
+      "landedCorrespondence": "direct-ancestor",
+      "registrationCorrespondence": [
+        {
+          "title": "admits only workspace source files under src, in either TypeScript flavour",
+          "line": 129,
+          "endLine": 139,
+          "mode": "it"
+        },
+        {
+          "title": "resolves every owner to non-empty in-source discovery and hashes its setup files",
+          "line": 141,
+          "endLine": 178,
+          "mode": "it.effect"
+        },
+        {
+          "title": "selects a marked fence but not a runtime-composed template in-process",
+          "line": 180,
+          "endLine": 221,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps ordinary includes and suppresses every inheriting override in doctest mode",
+          "line": 223,
+          "endLine": 241,
+          "mode": "it.effect"
+        },
+        {
+          "title": "runs the package script through the shared doctest mode",
+          "line": 243,
+          "endLine": 263,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native Bun/Vite/Turbo subprocesses are the configuration/discovery subject; do not replace them with mocks."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/goals-packet-core.test.ts:828",
+      "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+      "fixSha": "bbf8459571d5151f6e05e8564a04205f3039c70b",
+      "reason": "Already source-fixed by bbf8459571d5151f6e05e8564a04205f3039c70b; no new implementation is claimed in this continuation. All six historical robustness roots at 795,817,860,889,897,907 are makeTempDirectoryScoped. Ordinary event-file removal is a corruption stimulus, not root teardown. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.059Z",
+        "sha256": "330b3a8145391d967faf7fb37ba087beb69fc1da4030fc9602ed2399fb60023c",
+        "lines": 953
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/goals-packet-core.test.ts:828",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/goals-packet-core.test.ts",
+        "line": 828,
+        "endLine": 973,
+        "class": "unowned-temporary-roots",
+        "evidence": "Six unscoped temporary roots in robustness tests have absent or success-only removal. Outer scoped layer provision does not register cleanup for these allocations.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Acquire all six robustness-test roots with the existing scoped FileSystem operation inside their per-test scope before fallible setup. Retain real event-store filename/hash/parent semantics, deep nesting, every issue and cause assertion. First two roots have no removal; the other four only remove on success. Outer provideScopedLayer cannot own an unscoped allocation. No catch-all cleanup masking is proposed."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "All six historical robustness roots at 795,817,860,889,897,907 are makeTempDirectoryScoped. Ordinary event-file removal is a corruption stimulus, not root teardown.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "renders key order deterministically, compact and pretty",
+          "line": 100,
+          "endLine": 105,
+          "mode": "it"
+        },
+        {
+          "title": "round-trips event file names and rejects non-CAS names",
+          "line": 107,
+          "endLine": 118,
+          "mode": "it"
+        },
+        {
+          "title": "changes the digest whenever any event content changes",
+          "line": 120,
+          "endLine": 142,
+          "mode": "it.effect"
+        },
+        {
+          "title": "upcasts v1 as identity and passes unknown shapes through",
+          "line": 144,
+          "endLine": 151,
+          "mode": "it"
+        },
+        {
+          "title": "round-trips arbitrary timeline entries through encode/decode byte-stably",
+          "line": 156,
+          "endLine": 167,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "folds an empty stream to revision 0 with no derivations",
+          "line": 171,
+          "endLine": 178,
+          "mode": "it"
+        },
+        {
+          "title": "derives furthest and resume stages across a loop-back (D3)",
+          "line": 180,
+          "endLine": 200,
+          "mode": "it.effect"
+        },
+        {
+          "title": "derives the last risk-tier override on the linear prefix, with its challenge surface",
+          "line": 202,
+          "endLine": 224,
+          "mode": "it.effect"
+        },
+        {
+          "title": "keeps only the pre-fork risk-tier override when the stream forks",
+          "line": 226,
+          "endLine": 272,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports two children of one parent as a first-class fork verdict",
+          "line": 274,
+          "endLine": 313,
+          "mode": "it.effect"
+        },
+        {
+          "title": "orders a genesis fork by digest when two roots claim sequence one",
+          "line": 315,
+          "endLine": 367,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports a missing parent digest as a chain issue",
+          "line": 369,
+          "endLine": 397,
+          "mode": "it.effect"
+        },
+        {
+          "title": "orders same-sequence fork verdicts by parent digest",
+          "line": 399,
+          "endLine": 428,
+          "mode": "it.effect"
+        },
+        {
+          "title": "folds the committed golden stream to the committed derived state and trace, byte-for-byte",
+          "line": 432,
+          "endLine": 462,
+          "mode": "it.effect"
+        },
+        {
+          "title": "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
+          "line": 464,
+          "endLine": 492,
+          "mode": "it.effect"
+        },
+        {
+          "title": "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
+          "line": 494,
+          "endLine": 512,
+          "mode": "it.effect"
+        },
+        {
+          "title": "folds the committed fork fixture to a fork verdict and refuses appends",
+          "line": 514,
+          "endLine": 555,
+          "mode": "it.effect"
+        },
+        {
+          "title": "plans no repair for an unforked stream",
+          "line": 559,
+          "endLine": 570,
+          "mode": "it.effect"
+        },
+        {
+          "title": "plans the committed fork fixture: survivor, rebased draft, file removal — and the applied plan folds linear",
+          "line": 572,
+          "endLine": 623,
+          "mode": "it.effect"
+        },
+        {
+          "title": "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
+          "line": 627,
+          "endLine": 665,
+          "mode": "it.effect"
+        },
+        {
+          "title": "descends to the innermost fork on the surviving path instead of enlarging it",
+          "line": 690,
+          "endLine": 750,
+          "mode": "it.effect"
+        },
+        {
+          "title": "discards unknown keys before computing event identity",
+          "line": 775,
+          "endLine": 787,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects a decoded event whose sequence disagrees with its file name",
+          "line": 789,
+          "endLine": 809,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not recursively canonicalize deeply nested unknown input",
+          "line": 811,
+          "endLine": 832,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects copied history whose packet and root disagree with the locator",
+          "line": 834,
+          "endLine": 852,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
+          "line": 854,
+          "endLine": 880,
+          "mode": "it.effect"
+        },
+        {
+          "title": "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
+          "line": 882,
+          "endLine": 928,
+          "mode": "it.effect"
+        },
+        {
+          "title": "flags a moved sourceTip and an outdated projector version",
+          "line": 932,
+          "endLine": 951,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native missing/invalid packet paths and event-file corruption recovery."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:107",
+      "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+      "fixSha": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "reason": "Already source-fixed by 37e76036e5486d84ede6931c2c371b0e68968e04; no new implementation is claimed in this continuation. acquireFixtureRepo 111-148 registers acquireRelease root removal at 117-119 before manifest/tsdoc/package writes at 121-143; release uses orDie. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.064Z",
+        "sha256": "540eb3562be0a8892e97416f0638dd72d2e8407695ec79c70405b2c622807e72",
+        "lines": 1179
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:107",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts",
+        "line": 107,
+        "endLine": 156,
+        "class": "fixture-acquisition-failure-leak",
+        "evidence": "acquireFixtureRepo allocates a temp root then performs fallible writes before acquireUseRelease receives it. Setup failure bypasses the registered remove callback.",
+        "replacement": {
+          "primitive": "it.layer",
+          "sketch": "Establish cleanup immediately after allocating the root, before manifest/source writes. Keep the existing native compiler and topo-sort child subjects and all example/diagnostic assertions. In P2 share the appropriate outer platform layer under D14, while the root and generated inventory remain per-test scoped. Merely wrapping the whole fallible acquisition in acquireUseRelease leaves acquisition failure unowned."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "acquireFixtureRepo 111-148 registers acquireRelease root removal at 117-119 before manifest/tsdoc/package writes at 121-143; release uses orDie.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "ignores JSDoc-looking tags inside fenced example source",
+          "line": 167,
+          "endLine": 181,
+          "mode": "it"
+        },
+        {
+          "title": "preserves outer legacy tags after a complete nested JSDoc example",
+          "line": 183,
+          "endLine": 202,
+          "mode": "it"
+        },
+        {
+          "title": "keeps delimiter-prefixed source inside the active fence",
+          "line": 204,
+          "endLine": 222,
+          "mode": "it"
+        },
+        {
+          "title": "checks sectionless prose, loose fences, and empty titled examples",
+          "line": 224,
+          "endLine": 288,
+          "mode": "it.effect"
+        },
+        {
+          "title": "exempts re-export declarations from requiredExportTags and missingSummary while direct exports still fire (R2, R5)",
+          "line": 290,
+          "endLine": 366,
+          "mode": "it.effect"
+        },
+        {
+          "title": "filters phantom package names parsed from topo-sort dependency section headers (R3-J2)",
+          "line": 368,
+          "endLine": 413,
+          "mode": "it.effect"
+        },
+        {
+          "title": "parses real workspace package names from topo-sort output in topological order (R3-J2)",
+          "line": 415,
+          "endLine": 488,
+          "mode": "it.effect"
+        },
+        {
+          "title": "strips multi-line import statements before flagging type assertions while real assertions outside imports still fire (R3-J3)",
+          "line": 490,
+          "endLine": 573,
+          "mode": "it.effect"
+        },
+        {
+          "title": "consolidates a documented-first-signature function-overload group into a single resolved entry (R19)",
+          "line": 575,
+          "endLine": 631,
+          "mode": "it.effect"
+        },
+        {
+          "title": "consolidates a fully undocumented function-overload group into a single open entry (R19)",
+          "line": 633,
+          "endLine": 693,
+          "mode": "it.effect"
+        },
+        {
+          "title": "still flags a malformed doc block on a non-anchor overload signature (R19)",
+          "line": 695,
+          "endLine": 753,
+          "mode": "it.effect"
+        },
+        {
+          "title": "attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)",
+          "line": 755,
+          "endLine": 828,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reads leading-comment JSDoc on destructured BindingElement exports (R24)",
+          "line": 830,
+          "endLine": 893,
+          "mode": "it.effect"
+        },
+        {
+          "title": "strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)",
+          "line": 895,
+          "endLine": 973,
+          "mode": "it.effect"
+        },
+        {
+          "title": "scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)",
+          "line": 975,
+          "endLine": 1052,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not treat string-literal /** as a JSDoc comment opener",
+          "line": 1054,
+          "endLine": 1067,
+          "mode": "it"
+        },
+        {
+          "title": "flags Effect and discovered foundation roots in examples without banning other workspace roots",
+          "line": 1069,
+          "endLine": 1177,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native TypeScript AST/compiler, tsdoc and filesystem fixtures; retain real compiler behavior."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/person-match-model-store.test.ts:24",
+      "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+      "fixSha": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "reason": "Already source-fixed by 37e76036e5486d84ede6931c2c371b0e68968e04; no new implementation is claimed in this continuation. temporaryRoot 25-30 immediately brackets acquisition 27 and recursive/force removal 28 with orDie. Historical ignored release failure is now observable. All store roots use this constructor. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.068Z",
+        "sha256": "78a32aa09d24c9dedfbf791d44308747d0d8911edad69d6f1662e1267f04650a",
+        "lines": 379
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/person-match-model-store.test.ts:24",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/person-match-model-store.test.ts",
+        "line": 24,
+        "endLine": 29,
+        "class": "ignored-native-root-cleanup",
+        "evidence": "Native model roots are bracketed, but release ignores every remove failure. Lock and corruption assertions can pass even when outer cleanup fails.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Keep the native lock, symlink, provenance and corruption subject and all assertions. Replace blanket ignored root-removal failure with existing failure-visible scoped ownership, coordinating the equivalent ranged-download fixture. Preserve lock cleanup observations before outer root release."
+        },
+        "severity": "minor",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryRoot 25-30 immediately brackets acquisition 27 and recursive/force removal 28 with orDie. Historical ignored release failure is now observable. All store roots use this constructor.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "rejects an existing corrupt pin and releases its acquisition lock",
+          "line": 115,
+          "endLine": 131,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects a dangling pin without attempting a download and releases its lock",
+          "line": 133,
+          "endLine": 150,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects an aliased existing pin and releases its lock",
+          "line": 152,
+          "endLine": 172,
+          "mode": "it.effect"
+        },
+        {
+          "title": "maps an occupied model-store lock to the typed acquisition channel and preserves its owner token",
+          "line": 174,
+          "endLine": 189,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects a model root that is a regular file through the typed integrity channel",
+          "line": 191,
+          "endLine": 202,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects incomplete Buffalo and AdaFace component sets before reading artifacts",
+          "line": 204,
+          "endLine": 220,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects a same-size component set that omits the detector role",
+          "line": 222,
+          "endLine": 233,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects altered component provenance before reading its artifacts",
+          "line": 235,
+          "endLine": 255,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects missing and duplicate artifact provenance for a pinned component",
+          "line": 257,
+          "endLine": 277,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects altered artifact metadata before trusting its installation path",
+          "line": 279,
+          "endLine": 300,
+          "mode": "it.effect"
+        },
+        {
+          "title": "re-hashes exact reported metadata and rejects corrupt physical bytes",
+          "line": 302,
+          "endLine": 322,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects an exact reported artifact when its installation path is an alias",
+          "line": 324,
+          "endLine": 346,
+          "mode": "it.effect"
+        },
+        {
+          "title": "builds the AdaFace allowlist and rejects its missing detector artifact",
+          "line": 348,
+          "endLine": 377,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native lock/corruption/install filesystem, with no-download HTTP service retained."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/support/CommandTest.ts:32",
+      "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+      "fixSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "reason": "Already source-fixed by 4203a309f11930eb60e971931718b73b54efc653; no new implementation is claimed in this continuation. temporaryWorkingDirectory 61-72: capture cwd 63; immediate directory acquireRelease 64-66; cwd acquireRelease 67-70. LIFO restores cwd before removing root; .git creation is caller use. withTempWorkingDirectory 74-75 deliberately supplies bounded scope. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.136Z",
+        "sha256": "64fc6b05f721ef249ddc20d66afb800cc32d2cd7941fa4d7b12b4ee84370fbb1",
+        "lines": 123
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/support/CommandTest.ts:32",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/support/CommandTest.ts",
+        "line": 32,
+        "endLine": 53,
+        "class": "unowned-or-silent-fixture-cleanup",
+        "evidence": "Temp creation and cwd mutation precede finalizer registration. Interruption or chdir failure before registration can leak the root or leave cwd changed.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Own each native root immediately at acquisition, before fallible setup, using existing scoped fixtures; bracket cwd changes independently where present. Make release failure visible. Preserve every assertion, actual Git/process/compiler subject, scope ordering and timeout. No blanket MemoryFS substitution."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryWorkingDirectory 61-72: capture cwd 63; immediate directory acquireRelease 64-66; cwd acquireRelease 67-70. LIFO restores cwd before removing root; .git creation is caller use. withTempWorkingDirectory 74-75 deliberately supplies bounded scope.",
+      "landedSha": "4203a309f11930eb60e971931718b73b54efc653",
+      "landedCorrespondence": "direct-ancestor",
+      "registrationCorrespondence": [],
+      "nativeSubject": "Native cwd lifetime; globally mutable cwd requires serial test registration."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:239",
+      "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+      "fixSha": "81f4119e9c09f6514f49505f23cd33328c9bba42",
+      "reason": "Already source-fixed by 81f4119e9c09f6514f49505f23cd33328c9bba42; no new implementation is claimed in this continuation. temporaryRepository 215-221 gets shared cwd at 216 before .git 219. Native archive root 65 is scoped. registeredTarget 223-239 brackets registry append/removal. All setup now runs after resource ownership. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.138Z",
+        "sha256": "100ee4fe5943584511117c6e60226cc749ae2fbc968035215acef1835da85064",
+        "lines": 1002
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:239",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
+        "line": 239,
+        "endLine": 259,
+        "class": "unowned-or-silent-fixture-cleanup",
+        "evidence": "Temp creation, cwd change and fallible .git mkdir occur inside acquisition before release is installed. Setup failure can leak cwd and the native root.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Own each native root immediately at acquisition, before fallible setup, using existing scoped fixtures; bracket cwd changes independently where present. Make release failure visible. Preserve every assertion, actual Git/process/compiler subject, scope ordering and timeout. No blanket MemoryFS substitution."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryRepository 215-221 gets shared cwd at 216 before .git 219. Native archive root 65 is scoped. registeredTarget 223-239 brackets registry append/removal. All setup now runs after resource ownership.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "models flat target metadata and command results with schemas",
+          "line": 295,
+          "endLine": 318,
+          "mode": "it"
+        },
+        {
+          "title": "round-trips a non-empty result from the real target producer",
+          "line": 320,
+          "endLine": 335,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports JSON normalization failures through the typed error channel",
+          "line": 337,
+          "endLine": 351,
+          "mode": "it.effect"
+        },
+        {
+          "title": "escapes generated JSDoc comment metadata",
+          "line": 353,
+          "endLine": 359,
+          "mode": "it"
+        },
+        {
+          "title": "pretty-prints generated data past the terminal pretty-print cap",
+          "line": 361,
+          "endLine": 369,
+          "mode": "it"
+        },
+        {
+          "title": "rejects Free Law Project archives that do not match the pinned digest",
+          "line": 371,
+          "endLine": 398,
+          "mode": "it.effect"
+        },
+        {
+          "title": "accepts Free Law Project archives that match the pinned digest",
+          "line": 400,
+          "endLine": 422,
+          "mode": "it.effect"
+        },
+        {
+          "title": "extracts an empty selection from a tar archive",
+          "line": 424,
+          "endLine": 439,
+          "mode": "it.effect"
+        },
+        {
+          "title": "extracts an archive entry by its root-relative suffix",
+          "line": 441,
+          "endLine": 456,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports required entries missing from a tar archive",
+          "line": 458,
+          "endLine": 473,
+          "mode": "it.effect"
+        },
+        {
+          "title": "decodes all six reporters-db datasets through target-local schemas",
+          "line": 475,
+          "endLine": 497,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports a reporters-db dataset missing from the extracted entries as a typed error",
+          "line": 499,
+          "endLine": 520,
+          "mode": "it.effect"
+        },
+        {
+          "title": "separates unique aliases from context-required abbreviation reuse",
+          "line": 522,
+          "endLine": 532,
+          "mode": "it"
+        },
+        {
+          "title": "preserves removed issued identities and never resurrects historical tombstones",
+          "line": 534,
+          "endLine": 575,
+          "mode": "it"
+        },
+        {
+          "title": "assembles courts-db templates and inherits only missing parent fields",
+          "line": 577,
+          "endLine": 623,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects unresolved courts-db template variables",
+          "line": 625,
+          "endLine": 657,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects courts-db utilities without the pinned ordinals declaration",
+          "line": 659,
+          "endLine": 668,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects duplicate assembled court identifiers",
+          "line": 670,
+          "endLine": 689,
+          "mode": "it.effect"
+        },
+        {
+          "title": "projects assembled courts into stable vocabulary records and retains issued tombstones",
+          "line": 691,
+          "endLine": 721,
+          "mode": "it.effect"
+        },
+        {
+          "title": "projects reused court and reporter aliases with disambiguating context",
+          "line": 723,
+          "endLine": 754,
+          "mode": "it.effect"
+        },
+        {
+          "title": "projects reporters into deterministic vocabulary identities and retains issued tombstones",
+          "line": 756,
+          "endLine": 786,
+          "mode": "it.effect"
+        },
+        {
+          "title": "rejects colliding stable reporter identifiers",
+          "line": 788,
+          "endLine": 808,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reads missing and checked-in vocabulary artifacts for identity reconciliation",
+          "line": 810,
+          "endLine": 848,
+          "mode": "it.effect"
+        },
+        {
+          "title": "renders internal generated data through Effect Schema",
+          "line": 850,
+          "endLine": 862,
+          "mode": "it"
+        },
+        {
+          "title": "writes the generated ISO 4217 module in write mode",
+          "line": 864,
+          "endLine": 886,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not write files in dry-run mode",
+          "line": 888,
+          "endLine": 904,
+          "mode": "it.effect"
+        },
+        {
+          "title": "fails check mode on drift without modifying the file",
+          "line": 906,
+          "endLine": 924,
+          "mode": "it.effect"
+        },
+        {
+          "title": "becomes a no-op when the generated file is already current",
+          "line": 926,
+          "endLine": 939,
+          "mode": "it.effect"
+        },
+        {
+          "title": "parses CSV targets with the canonical @beep/schema CSV implementation",
+          "line": 941,
+          "endLine": 961,
+          "mode": "it.effect"
+        },
+        {
+          "title": "writes the authenticated ISO 3166 module without leaking private source URLs",
+          "line": 963,
+          "endLine": 1000,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native tar/archive, symlink/filesystem synchronization and registry mutation; preserve fixtures."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45",
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "fixSha": "058e59a4745980a99975e3a9124bef29cb5a1c5f",
+      "reason": "Already source-fixed by 058e59a4745980a99975e3a9124bef29cb5a1c5f; no new implementation is claimed in this continuation. temporaryRepository 48-54 acquires shared cwd at 51 before .git 52. Directory removal and cwd restoration are installed before setup/use. Inspected diff/source hashes and dated proof receipts are recorded in research/cli-resource-stale-lineage.json and research/2026-10-06-remaining-resource-audit.md. Source is a pre-squash commit, not an ancestor of current HEAD; exact ownership correspondence is verified through PR #1365 head 959a770707549f4f9991590339f4eaf66307aa25 and landed squash 7efb5d520196518dc67d18dbbad3472ec42e2b74.",
+      "sourceSnapshot": {
+        "readAt": "2026-10-06T16:44:30.145Z",
+        "sha256": "6fa582dfe69ea546e87851a59656e036a2e1be4f79ce76332b711b0d5067a28f",
+        "lines": 1276
+      },
+      "originalRow": {
+        "id": "L-RES-02:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:45",
+        "lens": "resource",
+        "ruleId": "L-RES-02",
+        "package": "@beep/repo-cli",
+        "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+        "line": 45,
+        "endLine": 64,
+        "class": "unowned-or-silent-fixture-cleanup",
+        "evidence": "Temp creation and fallible .git mkdir precede acquireUseRelease completion; failure there leaves the directory unowned. Cwd restoration starts only after acquisition.",
+        "replacement": {
+          "primitive": "it.effect",
+          "sketch": "Own each native root immediately at acquisition, before fallible setup, using existing scoped fixtures; bracket cwd changes independently where present. Make release failure visible. Preserve every assertion, actual Git/process/compiler subject, scope ordering and timeout. No blanket MemoryFS substitution."
+        },
+        "severity": "major",
+        "confidence": 1,
+        "mechanization": "judgment",
+        "status": "open"
+      },
+      "classification": "upstream-source-fixed",
+      "currentLifetime": "temporaryRepository 48-54 acquires shared cwd at 51 before .git 52. Directory removal and cwd restoration are installed before setup/use.",
+      "landedSha": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+      "landedCorrespondence": "verified-squash-correspondence",
+      "registrationCorrespondence": [
+        {
+          "title": "round-trips arbitrary tsconfig reference documents",
+          "line": 196,
+          "endLine": 206,
+          "mode": "it.effect.prop"
+        },
+        {
+          "title": "accepts --write as explicit sync mode",
+          "line": 208,
+          "endLine": 237,
+          "mode": "it.effect"
+        },
+        {
+          "title": "synchronizes root references, aliases, and syncpack from workspace discovery",
+          "line": 239,
+          "endLine": 297,
+          "mode": "it.effect"
+        },
+        {
+          "title": "generates the source-only Knowledge test seam from the repo-cli registry",
+          "line": 299,
+          "endLine": 341,
+          "mode": "it.effect"
+        },
+        {
+          "title": "generates the source-only Conformance test seam from the mcp-kit registry",
+          "line": 342,
+          "endLine": 381,
+          "mode": "it.effect"
+        },
+        {
+          "title": "does not synthesize wildcard aliases for packages without wildcard exports",
+          "line": 383,
+          "endLine": 449,
+          "mode": "it.effect"
+        },
+        {
+          "title": "emits scoped aliases only for file-stem scoped wildcard exports",
+          "line": 451,
+          "endLine": 498,
+          "mode": "it.effect"
+        },
+        {
+          "title": "syncs managed docgen fields, preserves extras, and respects filter",
+          "line": 500,
+          "endLine": 612,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports docgen drift in check mode and backfills missing managed fields in sync mode",
+          "line": 614,
+          "endLine": 753,
+          "mode": "it.effect"
+        },
+        {
+          "title": "prunes package references with no declared dependency and reports them as drift",
+          "line": 755,
+          "endLine": 822,
+          "mode": "it.effect"
+        },
+        {
+          "title": "mirrors package tsconfig references into tsconfig.check.json overlays in the same run",
+          "line": 824,
+          "endLine": 925,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports an overlay whose references drift from its canonical tsconfig.json",
+          "line": 927,
+          "endLine": 1004,
+          "mode": "it.effect"
+        },
+        {
+          "title": "treats lint-only docgen formatting drift as sync drift",
+          "line": 1006,
+          "endLine": 1123,
+          "mode": "it.effect"
+        },
+        {
+          "title": "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
+          "line": 1125,
+          "endLine": 1210,
+          "mode": "it.effect"
+        },
+        {
+          "title": "reports a hand-added lab root reference as drift in check mode",
+          "line": 1212,
+          "endLine": 1274,
+          "mode": "it.effect"
+        }
+      ],
+      "nativeSubject": "Native tsconfig filesystem and formatter/Node command dispatch."
+    }
+  ],
+  "landedProof": {
+    "sha256": "b8904ece4737ed1d03943e925710fc91a2806703f79dcfb408fcdb16e44e2ca5",
+    "receipt": "research/2026-10-06-resource-landed-provenance.md",
+    "merge": "7efb5d520196518dc67d18dbbad3472ec42e2b74",
+    "prHead": "959a770707549f4f9991590339f4eaf66307aa25",
+    "method": "TypeScript createSourceFile; recursive syntax-kind/terminal-text tree over getChildren, excluding source coordinates and trivia. Exact string/token/operator text retained; SHA-256 of JSON canonical tree. Variable declaration subtrees include initializer, type and name. This is identity evidence, not a runtime/typecheck."
+  },
+  "historyEvidence": [
+    {
+      "file": "allowlist-check.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.351841+00:00",
+      "diffSha256": "e163f7ac15c8cafcefb9c8e431b94c998d0daeb3356cbfd3e1370ca6d44f7cb3",
+      "resourceChangeLines": [
+        "-const withTempRepo = <A, E>(use: (tmpDir: string) => Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-    ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true })",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo((tmpDir) =>",
+        "+      const tmpDir = yield* fs.makeTempDirectoryScoped();"
+      ]
+    },
+    {
+      "file": "support/CommandTest.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352109+00:00",
+      "diffSha256": "6924173efd90fcd30d1b80d5eac1d80369d024a0d49791625dc411a57497d52e",
+      "resourceChangeLines": [
+        "-      const originalCwd = process.cwd();",
+        "-      const workingDirectory = yield* fs.makeTempDirectory();",
+        "-        process.chdir(workingDirectory);",
+        "-            process.chdir(originalCwd);",
+        "-          yield* fs.remove(workingDirectory, { force: true, recursive: true }).pipe(Effect.orDie);",
+        "+ * import { temporaryWorkingDirectory } from \"./CommandTest.ts\"",
+        "+ *   yield* temporaryWorkingDirectory",
+        "+export const temporaryWorkingDirectory = Effect.gen(function* () {",
+        "+  const originalCwd = yield* Effect.sync(() => process.cwd());",
+        "+  const workingDirectory = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>",
+        "+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)",
+        "+  yield* Effect.acquireRelease(",
+        "+    Effect.sync(() => process.chdir(workingDirectory)),",
+        "+    () => Effect.sync(() => process.chdir(originalCwd))",
+        "+}).pipe(Effect.withSpan(\"CommandTest.temporaryWorkingDirectory\"));",
+        "+  Effect.scoped(Effect.andThen(temporaryWorkingDirectory, use));"
+      ]
+    },
+    {
+      "file": "create-package.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352151+00:00",
+      "diffSha256": "4508977eeea0c160e8acdba91e5611b3aa0a1bd8d89dc98ceb16cc157ebba8c5",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "create-package-lab.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352166+00:00",
+      "diffSha256": "2db54fa7a4a7896af8d12340fbfe14f50b9c6d0348988e8034b0bc9357fd4528",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "docgen.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352180+00:00",
+      "diffSha256": "cb171f172158c4a6c47b9df6d83d652c14487860d12e4d8f9f088d2e44eb5e9b",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "goals-packet-core.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352202+00:00",
+      "diffSha256": "ba6fcdfccca4e6bc44af746d4656d84c0cb60cf505749b01ef24881650a1da63",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "jsdoc-inventory-detector-fixes.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352226+00:00",
+      "diffSha256": "27c1681ba3b376ba3812640717e09f58f8bb21855d2e1120c9c6d39373de5be5",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "person-match-model-store.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352240+00:00",
+      "diffSha256": "f16eeda14cd719ccd7a420922109e92a31418bc81ad26efa48a9b7cb669d0589",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "tsconfig-sync.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352254+00:00",
+      "diffSha256": "be687adc78edabac52dab74c483767863bbd572696dd4c29b5015a2e45691b63",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "quality-tasks.test.ts",
+      "commit": "4203a309f11930eb60e971931718b73b54efc653",
+      "readAt": "2026-10-06T16:50:46.352269+00:00",
+      "diffSha256": "f6f1859720cfcb0bbe4c2d39a583ccfbaff9e93ee692e25f79353b79fe5267f0",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "doctest-lane.test.ts",
+      "commit": "ed016ba972b115cb8e5345c1e3a6b1cdd3a86cde",
+      "readAt": "2026-10-06T16:50:46.352298+00:00",
+      "diffSha256": "72b26ba8403d63dda86605c82a0b3d47bfd5793ce6a19c137dad522fde0a4573",
+      "resourceChangeLines": []
+    },
+    {
+      "file": "create-package.test.ts",
+      "commit": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "readAt": "2026-10-06T16:50:46.352340+00:00",
+      "diffSha256": "607c742bbb5dfb21436b314661d1f95b38eb758387afd01950b36d3dfb0fbbca",
+      "resourceChangeLines": [
+        "+import { temporaryWorkingDirectory } from \"./support/CommandTest.ts\";",
+        "-const TestFileCwd = process.cwd();",
+        "-      R.remove(ExpectedGeneratedQualityScripts, \"test:integration\")",
+        "+        R.remove(ExpectedGeneratedQualityScripts, \"test:integration\")",
+        "-const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-      process.chdir(tmpDir);",
+        "-        process.chdir(TestFileCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true, force: true });",
+        "+    const directory = yield* temporaryWorkingDirectory;",
+        "-    withTempRepoCommand(",
+        "-        const rootDir = process.cwd();",
+        "+          const rootDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-        withTempRepoCommand(",
+        "-        withTempRepoCommand(",
+        "-        withTempRepoCommand("
+      ]
+    },
+    {
+      "file": "create-package-lab.test.ts",
+      "commit": "e5eda0f280337cf3bf077e22b7a9bbfa9c87dbae",
+      "readAt": "2026-10-06T16:50:46.352785+00:00",
+      "diffSha256": "759f09b3905a6a1bb1233062dc929a4e61f1c49c4ef9e2462730dd527c4fdffe",
+      "resourceChangeLines": [
+        "+import { temporaryWorkingDirectory } from \"./support/CommandTest.ts\";",
+        "-const TestFileCwd = process.cwd();",
+        "-const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-      process.chdir(tmpDir);",
+        "-        process.chdir(TestFileCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true, force: true });",
+        "+  const directory = yield* temporaryWorkingDirectory;",
+        "-  withTempRepoCommand(",
+        "-        withTempRepoCommand("
+      ]
+    },
+    {
+      "file": "docgen.test.ts",
+      "commit": "f309935aded4bdba9dbbe0a624aae69145710a90",
+      "readAt": "2026-10-06T16:50:46.352945+00:00",
+      "diffSha256": "91e35739a6d8f490e97aecf42c8476e377cca6024289f5dbb857015fcc956c56",
+      "resourceChangeLines": [
+        "-const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-      const previousCwd = process.cwd();",
+        "-      process.chdir(tmpDir);",
+        "-        process.chdir(previousCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true });",
+        "-const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "+  const tmpDir = yield* fs.makeTempDirectoryScoped();",
+        "+  yield* Effect.acquireRelease(",
+        "-        process.chdir(previousCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true });",
+        "+    (previousCwd) => Effect.sync(() => process.chdir(previousCwd))",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-    return withTempRepo(",
+        "-    return withTempRepo(",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "-    withTempRepoCommand(",
+        "-    withTempRepoCommand(",
+        "-    withTempRepoCommand(",
+        "-    return withTempRepo(",
+        "-        const repoRoot = process.cwd();",
+        "-    return withTempRepo(",
+        "+      const repoRoot = process.cwd();",
+        "-    return withTempRepo(",
+        "-        const probeDir = path.join(process.cwd(), \"packages\", \"foundation\", \"modeling\", \"probe\");",
+        "+      const probeDir = path.join(process.cwd(), \"packages\", \"foundation\", \"modeling\", \"probe\");",
+        "-        withTempRepoCommand(",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-      withTempRepoCommand(",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "+      const tmpDir = process.cwd();",
+        "-      withTempRepo(",
+        "-          const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "+        const tmpDir = process.cwd();",
+        "-        withTempRepoCommand(",
+        "-            const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "-      withTempRepoCommand(",
+        "-          const tmpDir = process.cwd();",
+        "-    withTempRepoCommand(",
+        "+        const tmpDir = process.cwd();",
+        "-    withTempRepoCommand(",
+        "+        const tmpDir = process.cwd();",
+        "-    withTempRepoCommand(",
+        "+        const tmpDir = process.cwd();",
+        "-    withTempRepoCommand(",
+        "-    withTempRepoCommand(",
+        "-    withTempRepoCommand("
+      ]
+    },
+    {
+      "file": "goals-packet-core.test.ts",
+      "commit": "bbf8459571d5151f6e05e8564a04205f3039c70b",
+      "readAt": "2026-10-06T16:50:46.356377+00:00",
+      "diffSha256": "8e65ab20b4c0e5bb4553b18b132088f5195ffc814e99976318d1eee3066d3663",
+      "resourceChangeLines": [
+        "-          const packetPath = yield* fs.makeTempDirectory();",
+        "+          const packetPath = yield* fs.makeTempDirectoryScoped();",
+        "-          const packetPath = yield* fs.makeTempDirectory();",
+        "+          const packetPath = yield* fs.makeTempDirectoryScoped();",
+        "-          const packetPath = yield* fs.makeTempDirectory();",
+        "+          const packetPath = yield* fs.makeTempDirectoryScoped();",
+        "-          yield* fs.remove(packetPath, { recursive: true, force: true });",
+        "-          const missingPath = yield* fs.makeTempDirectory();",
+        "+          const missingPath = yield* fs.makeTempDirectoryScoped();",
+        "-          const brokenPath = yield* fs.makeTempDirectory();",
+        "+          const brokenPath = yield* fs.makeTempDirectoryScoped();",
+        "-          const parentPath = yield* fs.makeTempDirectory();",
+        "+          const parentPath = yield* fs.makeTempDirectoryScoped();",
+        "-          yield* fs.remove(missingPath, { recursive: true, force: true });",
+        "-          yield* fs.remove(brokenPath, { recursive: true, force: true });",
+        "-          yield* fs.remove(parentPath, { recursive: true, force: true });"
+      ]
+    },
+    {
+      "file": "jsdoc-inventory-detector-fixes.test.ts",
+      "commit": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "readAt": "2026-10-06T16:50:46.356679+00:00",
+      "diffSha256": "786f7d30ae3c8c5055cd895c356f28d2070c4cf9474defc192ebd24247cf5f89",
+      "resourceChangeLines": [
+        "-  const repoRoot = yield* fs.makeTempDirectory();",
+        "+  const repoRoot = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>",
+        "+    fs.remove(directory, { recursive: true }).pipe(Effect.orDie)",
+        "-      yield* fs.remove(repoRoot, { recursive: true });"
+      ]
+    },
+    {
+      "file": "person-match-model-store.test.ts",
+      "commit": "37e76036e5486d84ede6931c2c371b0e68968e04",
+      "readAt": "2026-10-06T16:50:46.357024+00:00",
+      "diffSha256": "e131df1c1d68868d8f382081dd53e91c06226adc18efecffca8e774e75dae888",
+      "resourceChangeLines": [
+        "-    FileSystem.FileSystem.use((fs) => fs.makeTempDirectory()),",
+        "-    (root) => FileSystem.FileSystem.use((fs) => fs.remove(root, { force: true, recursive: true }).pipe(Effect.ignore))",
+        "+  return yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>",
+        "+    fs.remove(directory, { force: true, recursive: true }).pipe(Effect.orDie)"
+      ]
+    },
+    {
+      "file": "tsconfig-sync.test.ts",
+      "commit": "058e59a4745980a99975e3a9124bef29cb5a1c5f",
+      "readAt": "2026-10-06T16:50:46.357100+00:00",
+      "diffSha256": "aa1b26cc16b783a4aa7dffccc972dd4bbf63df6230e29c9cc8c3d761099dfe8a",
+      "resourceChangeLines": [
+        "+import { temporaryWorkingDirectory } from \"./support/CommandTest.ts\";",
+        "-const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-      const previousCwd = process.cwd();",
+        "-      process.chdir(tmpDir);",
+        "-        process.chdir(previousCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true, force: true });",
+        "+  const directory = yield* temporaryWorkingDirectory;",
+        "-        withTempRepo(",
+        "-      withTempRepo(",
+        "-      yield* withTempRepo(",
+        "-          const rootDir = process.cwd();",
+        "-      yield* withTempRepo(",
+        "-          const rootDir = process.cwd();",
+        "+              const rootDir = process.cwd();",
+        "+              const rootDir = process.cwd();",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo("
+      ]
+    },
+    {
+      "file": "sync-data-to-ts.test.ts",
+      "commit": "81f4119e9c09f6514f49505f23cd33328c9bba42",
+      "readAt": "2026-10-06T16:50:46.357299+00:00",
+      "diffSha256": "402de25fd4799864031a6cd14b96de93d0af93a1ec26c368e2a1b969b1c4be5e",
+      "resourceChangeLines": [
+        "+import { temporaryWorkingDirectory } from \"./support/CommandTest.ts\";",
+        "-const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "-      const tmpDir = yield* fs.makeTempDirectory();",
+        "-      const previousCwd = process.cwd();",
+        "-      process.chdir(tmpDir);",
+        "-        process.chdir(previousCwd);",
+        "-        yield* fs.remove(tmpDir, { recursive: true });",
+        "+  const tmpDir = yield* temporaryWorkingDirectory;",
+        "+  return yield* Effect.acquireRelease(",
+        "+          const result = yield* syncTargetForTesting(process.cwd(), \"dry-run\", csvTarget);",
+        "-        const result = yield* syncTargetForTesting(process.cwd(), \"dry-run\", csvTarget);",
+        "-      }).pipe(provideCsvFixtureClient, withTempRepoCommand)",
+        "-      }).pipe(withTempRepoCommand)",
+        "-      }).pipe(provideIso4217Client, withTempRepoCommand)",
+        "-      }).pipe(provideIso4217Client, withTempRepoCommand)",
+        "-      }).pipe(provideIso4217Client, withTempRepoCommand)",
+        "-      }).pipe(provideIso4217Client, withTempRepoCommand)",
+        "-      }).pipe(provideCsvFixtureClient, withTempRepoCommand, (effect) => withRegisteredTarget(csvTarget, effect))",
+        "-      }).pipe(provideIso3166Client, withTempRepoCommand, (effect) =>"
+      ]
+    },
+    {
+      "file": "quality-scheduler.test.ts",
+      "commit": "a1de26d035d155de6820ed6103a397f4841556a3",
+      "readAt": "2026-10-06T16:50:46.358058+00:00",
+      "diffSha256": "4e5654d2bb479eb903fbf25dcfc026302b5161de3ac5e1dd39523d300be7e5e6",
+      "resourceChangeLines": [
+        "-    const runtimeDir = yield* fs.makeTempDirectory();",
+        "+    const runtimeDir = yield* fs.makeTempDirectoryScoped();",
+        "-      Effect.onExit(() => fs.remove(runtimeDir, { recursive: true, force: true }).pipe(Effect.ignore))",
+        "-  yield* options.keepLease ? Effect.void : fs.remove(leasePath, { force: true });",
+        "-  yield* options.keepTicket ? Effect.void : fs.remove(ticketPath, { force: true });",
+        "-  yield* fs.remove(sourcePath, { force: true });",
+        "+    yield* options.keepLease ? Effect.void : fs.remove(leasePath, { force: true });",
+        "+    yield* options.keepTicket ? Effect.void : fs.remove(ticketPath, { force: true });",
+        "+    yield* fs.remove(sourcePath, { force: true });",
+        "-          yield* fs.remove(target, { force: true });",
+        "+            yield* fs.remove(target, { force: true });",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-exclusive-publication-\" });",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-atomic-write-interrupt-\" });",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-atomic-publish-interrupt-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-exclusive-publication-\" });",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-exclusive-interrupt-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-atomic-write-interrupt-\" });",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-staging-cleanup-refused-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({",
+        "-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-private-directory-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-exclusive-interrupt-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-staging-cleanup-refused-\" });",
+        "+          const directory = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-scheduler-private-directory-\" });",
+        "+            yield* fs.remove(blocking, { force: true });",
+        "-          yield* fs.remove(blocking, { force: true });",
+        "-          yield* fs.remove(promotion.promotionPath, { force: true });",
+        "+              yield* fs.remove(promotion.promotionPath, { force: true });"
+      ]
+    },
+    {
+      "file": "quality-tasks.test.ts",
+      "commit": "01ff5bc02cfe7c7e0c285a4cad685c48ad3114b1",
+      "readAt": "2026-10-06T16:50:46.360601+00:00",
+      "diffSha256": "620ba4b4035577d7807871a094026e7ab708824e08062d418562be89ba313ae9",
+      "resourceChangeLines": [
+        "-const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>",
+        "+  const repositoryPath = yield* fs.makeTempDirectoryScoped();",
+        "+  yield* Effect.acquireRelease(",
+        "-      const repositoryPath = yield* fs.makeTempDirectory();",
+        "-        process.cwd = () => repositoryPath;",
+        "-            process.cwd = originalCwd;",
+        "-          yield* fs.remove(repositoryPath, { force: true, recursive: true }).pipe(Effect.orDie);",
+        "+      process.cwd = () => repositoryPath;",
+        "+        process.cwd = originalCwd;",
+        "-      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-bun-audit-\" });",
+        "+            const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"quality-bun-audit-\" });",
+        "-        const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: \"turbo-lane-red-counter-\" });",
+        "+            const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: \"turbo-lane-red-counter-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-reuse-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-reuse-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-defaults-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-defaults-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-tree-failure-\" });",
+        "-      const originalSpawnSync = Bun.spawnSync;",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-crypto-failure-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-tree-failure-\" });",
+        "+            const originalSpawnSync = Bun.spawnSync;",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-crypto-failure-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-fc-runs-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-fc-runs-\" });",
+        "-          const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-ambient-\" });",
+        "+                const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-ambient-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-ambient-env-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-ambient-env-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-local-env-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-local-env-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-isolated-env-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-isolated-env-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-missing-base-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-waves-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-missing-base-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-history-rewrite-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-waves-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-history-rewrite-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-cross-wave-mutation-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-cross-wave-mutation-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-security-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-security-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-mutation-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-mutation-\" });",
+        "-      const parent = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-worktree-\" });",
+        "+            const parent = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-worktree-\" });",
+        "-      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-failure-\" });",
+        "+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: \"lane-proof-failure-\" });",
+        "-        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "-        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());",
+        "+            const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "+            const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());",
+        "+            const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "+            const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());",
+        "+            const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "-        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "-        const changesetStatusLane = githubCheckChangesetStatusLane(process.cwd());",
+        "+        const repoRoot = yield* Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>",
+        "+          fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore)",
+        "-        const cheapGateLanes = githubCheckCheapGateLanes(process.cwd());",
+        "-            const repoRoot = yield* fs.makeTempDirectory();",
+        "-          ({ fs, repoRoot }) => fs.remove(repoRoot, { recursive: true, force: true }).pipe(Effect.ignore)",
+        "-      const root = yield* fs.makeTempDirectoryScoped();",
+        "+            const root = yield* fs.makeTempDirectoryScoped();",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      yield* withTempRepo(",
+        "-          const repoRoot = process.cwd();",
+        "-          const repoRoot = yield* fs.makeTempDirectory();",
+        "-          yield* Effect.addFinalizer(() => fs.remove(repoRoot, { force: true, recursive: true }).pipe(Effect.orDie));",
+        "+              const repoRoot = process.cwd();",
+        "+              const repoRoot = yield* fs.makeTempDirectory();",
+        "+                fs.remove(repoRoot, { force: true, recursive: true }).pipe(Effect.orDie)",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-        withTempRepo(",
+        "-          withTempRepo(",
+        "-        withTempRepo(",
+        "-      withTempRepo(",
+        "-    withTempRepo(",
+        "-        const repoRoot = process.cwd();",
+        "+          const repoRoot = process.cwd();",
+        "-    withTempRepo(",
+        "-        const repoRoot = process.cwd();",
+        "+          const repoRoot = process.cwd();",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      withTempRepo(",
+        "-      const child = Bun.spawnSync([\"bun\", \"--eval\", script], {",
+        "+        const child = Bun.spawnSync([\"bun\", \"--eval\", script], {"
+      ]
+    },
+    {
+      "file": "doctest-lane.test.ts",
+      "commit": "e08b24b0042c0c1bbd274de49407e8bade354575",
+      "readAt": "2026-10-06T16:50:46.366669+00:00",
+      "diffSha256": "88aef3768a6973c3bb7089e9012ae0b63bc2f58994283ecc99ee1f3ace83ac7a",
+      "resourceChangeLines": [
+        "-const resultPath = `/tmp/beep-doctest-lane-${process.pid}.json`;",
+        "-        const child = Bun.spawn(",
+        "-          Promise.all([child.exited, new Response(child.stderr).text()])",
+        "+  const child = yield* StepExec.runCaptured({",
+        "+  const probe = yield* StepExec.runCaptured({",
+        "-      const child = Bun.spawn(",
+        "-        Promise.all([child.exited, new Response(child.stderr).text()])",
+        "-      const child = Bun.spawn(",
+        "+      const root = yield* fs.makeTempDirectoryScoped({ prefix: \"doctest-marker-parity-\" });",
+        "-          `--outputFile=${resultPath}`,",
+        "-        Promise.all([child.exited, new Response(child.stderr).text()])",
+        "-      const result = yield* Effect.promise(() => Bun.file(resultPath).text());",
+        "+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: \"doctest-lane-\" });",
+        "+      const resultPath = `${temp}/result.json`;",
+        "+      const child = yield* StepExec.runCaptured({",
+        "+        args: [\"run\", \"doctest\", \"--maxWorkers=1\", \"--reporter=json\", `--outputFile=${resultPath}`],",
+        "+      const result = yield* fs.readFileString(resultPath);"
+      ]
+    }
+  ],
+  "proofReceipts": [
+    {
+      "path": "goals/effect-vitest-canon/research/cli-allowlist-cache-resource-proof.md",
+      "sha256": "873fd6eeb5ebed9239849824159176c1639e1836635d41a008981b14e6516a2f"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-package-lifecycle-runtime-resource-proof.md",
+      "sha256": "de2b65890ff8c449097d6f31605aae8f65af909e67537295e39397ff37d0d902"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-docgen-runtime-resource-proof.md",
+      "sha256": "fcf6d17e8a57b4ef2fa72ab505a699e4e947564f8a0c164ca102b4375887eb75"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-continuation-nine-proof.md",
+      "sha256": "2ec6c89c7e106fa9c6e8ebfc355ab240551e2bc7f444f12e48b031d8b4048102"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-goals-packet-core-runtime-resource-proof.md",
+      "sha256": "b7087ba8f6fb73dbb12748121ee07730a6d666bb936602a039f8aa57b6f48910"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-jsdoc-model-store-runtime-resource-proof.md",
+      "sha256": "9f62555935c17cc7f6e42e4160f52b3c07bd6d30e28f0d071c514e04d031edbf"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-scheduler-runtime-resource-proof.md",
+      "sha256": "53d90bd9e27efa305a21150d5ddf049741d471bb36411c987c8713eb9ccc13ec"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-quality-tasks-runtime-resource-proof.md",
+      "sha256": "340b884cb81e76257017e446ca43b0fdc9f7bef752927e2b8782e04b2a89aead"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-sync-data-runtime-proof.md",
+      "sha256": "1d60014dc9bb23698a08fd160a0b0060cdd520a7baf73b3219a2a4ee193559d8"
+    },
+    {
+      "path": "goals/effect-vitest-canon/research/cli-identity-tsconfig-runtime-resource-proof.md",
+      "sha256": "901bf9ef6c94b36cde5c7a8e9ce8de2e9f526279e5962f0a83ea1f71338d5a64"
+    }
+  ],
+  "remaining": [
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/lint-security.test.ts:13",
+      "file": "packages/tooling/tool/cli/test/lint-security.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "Root acquisition 13; setup 22-27 creates internal/external files and loop/escape symlinks; assertion 31; only success-path removal 33.",
+      "requiredRepair": "Use makeTempDirectoryScoped at 13 and remove success-only teardown 33. Add setup failure, failed assertion/body, interruption and cleanup-failure controls on the actual constructor."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/purge-security.test.ts:14",
+      "file": "packages/tooling/tool/cli/test/purge-security.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "withTempDirectories 16-32 acquires roots 19 and 20 in one acquireUseRelease acquisition; release 27-30 is installed only after both succeed. Second allocation failure leaks first; Effect.all release may fail before cleaning the second.",
+      "requiredRepair": "Own each root independently with makeTempDirectoryScoped before acquiring the next. Reuse canonical provideScopedLayer for test-owned platform. Preserve both security cases; inject second-acquisition failure and each cleanup failure."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/quality-scheduler.test.ts:415",
+      "file": "packages/tooling/tool/cli/test/quality-scheduler.test.ts",
+      "classification": "partially-fixed",
+      "currentLifetime": "runtime root 427 and six additional allocation sites are scoped; old ignored root removal is repaired. Permission subject at 4935-4938 already brackets chmod. Queue chmod 5642 has only successful restore 5646; leases chmod 5672 restores at 5678 after assertions. Failures/interruption can leave modes 000/500 and block outer root cleanup. Mode 755 at 887 is traversable and does not need the same restrictive-mode restoration.",
+      "requiredRepair": "Reuse acquireUseRelease permission bracket at 4935-4938 around the two restrictive-mode bodies, restoration orDie before root finalizer. Preserve queue/lease failure and origin-release assertions; test failure/interruption during use and restoration failure."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/quality-tasks.test.ts:275",
+      "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
+      "classification": "partially-fixed",
+      "currentLifetime": "temporaryRepository 307-324 owns root 310 before process.cwd FUNCTION replacement 311-320 and .git 322. This is not process.chdir. Artifact roots 1428,1476,1505 have no root cleanup; 1694,1736,1787,1841,1895,2949 remove only on success at 1724,1775,1829,1883,1934,2996. Diff fixture 3267 owns acquisition before Git but release 3268 ignores failure. Fixture 4919 installs finalizer 4920-4922 before Git/setup inside an intentionally shorter scope; old Git-setup gap is closed, but split allocation/finalizer has interruption seam.",
+      "requiredRepair": "Scope all nine artifact/ledger roots; remove six success-only removals. Make diff-fixture cleanup failure observable (orDie). Prefer atomic makeTempDirectoryScoped at 4919 within existing inner scope. Retain cwd FUNCTION override semantics; CommandTest temporaryWorkingDirectory is not equivalent."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts:21",
+      "file": "packages/tooling/tool/cli/test/regenerate-merge-driver.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "Root 22 precedes Git/bash driver fixture setup, merge conflict assertions and setup-script invocation; removal 62 is success-only.",
+      "requiredRepair": "Use makeTempDirectoryScoped at 22; remove teardown 62. Keep actual driver/setup processes and failed-merge witness; test setup/body failure and interruption."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/skills-command.test.ts:138",
+      "file": "packages/tooling/tool/cli/test/skills-command.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "withTempRepoCommand 139-157 acquires root 143, reads cwd 144, changes cwd 146 and makes .git 147 before returning state 149. Release only then restores cwd 154 and removes root 155. mkdir failure leaks both root and cwd state.",
+      "requiredRepair": "Replace acquisition with existing temporaryWorkingDirectory, then .git inside owned scope under CommandTestLayer. Reuse shared finalizers and canonical provideScopedLayer; no new helper needed. Controls: .git setup failure, body failure, interruption, cwd restoration and remove failure."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/step-git-exec.test.ts:257",
+      "file": "packages/tooling/tool/cli/test/step-git-exec.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "Archive root 261 has ensuring removal 346, but release failure is ignored. Guard root 370 performs realPath on unowned directory before installing ensuring 432, also ignoring cleanup failure. Other setup runs inside body covered by ensuring. attributes removal 427 is a subject transition, not fixture teardown.",
+      "requiredRepair": "Use makeTempDirectoryScoped for both roots before realPath, drop redundant ensuring/ignore. Retain hostile attributes/umask differential witnesses and worktree common-dir case. Prove realPath/setup failure, interruption and observable cleanup failure."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/version-sync-effect.test.ts:44",
+      "file": "packages/tooling/tool/cli/test/version-sync-effect.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "Sixteen unscoped roots at 71,112,210,247,288,338,375,498,528,651,695,738,901,926,953,979; corresponding success-only removals 103,135,236,279,314,366,389,519,572,687,705,773,917,934,968,989. Existing scoped roots 147 and 457 are already correct and must remain.",
+      "requiredRepair": "Replace all sixteen allocations with makeTempDirectoryScoped and remove paired success-only removals. Reuse existing scoped examples at 147/457; no cwd helper required. Prove setup/body failure and interruption plus observable release failure; preserve exact pin/JSONC/YAML diagnostics."
+    },
+    {
+      "id": "L-RES-02:packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts:51",
+      "file": "packages/tooling/tool/cli/test/yeet-pr-provenance.test.ts",
+      "classification": "actual-residue",
+      "currentLifetime": "All six homes/roots 56,92,121,159,182,215 lack a finalizer. Reads, writes and native Git setup follow allocation; provideScopedLayer owns platform services but not unscoped directories.",
+      "requiredRepair": "Use makeTempDirectoryScoped at all six sites. Retain malformed-model/session matching assertions, actual Git initialized paths and existing controlled TestClock adjustment 196; prove setup/body failure, interruption and root removal."
+    }
+  ],
+  "limits": [
+    "10 fixed-all rows have selected repair/control receipts. The eleventh (doctest) has inspected upstream semantic diff and ordinary package receipt but no selected dedicated cancellation-control receipt. Native subjects justify keeping native coverage, not waiving resource leaks.",
+    "No global census or new source change is claimed.",
+    "Original IDs and evidence remain intact; only status/reason/fixSha changed."
+  ]
+}

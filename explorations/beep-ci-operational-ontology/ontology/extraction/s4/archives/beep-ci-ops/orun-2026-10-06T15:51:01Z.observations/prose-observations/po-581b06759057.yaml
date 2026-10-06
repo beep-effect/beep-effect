@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts"
+  },
+  "source_span": {
+    "start_line": 194,
+    "end_line": 194
+  },
+  "quote": "export const ProofStage = LiteralKit([\"repair-loop\", \"pre-push\", \"merged-preview\", \"hosted\"]).pipe(",
+  "epistemic_status": "quoted_prose"
+}

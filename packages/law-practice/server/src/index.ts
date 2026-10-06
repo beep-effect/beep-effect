@@ -35,6 +35,16 @@ export * from "./Layer.ts";
  */
 export * from "./PracticeKg.claims.ts";
 /**
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./PracticeKg.contacts.ts";
+/**
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./PracticeKg.correspondents.ts";
+/**
  * @category errors
  * @since 0.0.0
  */

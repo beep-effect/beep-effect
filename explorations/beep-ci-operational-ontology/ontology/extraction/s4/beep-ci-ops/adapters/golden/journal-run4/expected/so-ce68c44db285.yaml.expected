@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:ce68c44db28552ed9ea6ec9b6f73ec7b7f138e8617f332022fda3f1be79de5ed",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/live/leading.properties"
+  },
+  "source_span": {
+    "start_line": 2,
+    "end_line": 3,
+    "content_sha256": "c586e5ec541dc26a8aafd1097df3be23ab57d0b973ed8f461136d07801c4ff68"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/leading.properties:record=0",
+    "lexical_name": "tailkey",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "tailkey=after"
+    }
+  ],
+  "source_excerpt": "# record 0\ntailkey=after\n",
+  "epistemic_status": "parser_derived"
+}

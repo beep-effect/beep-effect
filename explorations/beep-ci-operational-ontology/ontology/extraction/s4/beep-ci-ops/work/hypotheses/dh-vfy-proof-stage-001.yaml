@@ -1,0 +1,88 @@
+id: dh:vfy-proof-stage:001
+observation_refs:
+- po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+- po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900
+- po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4
+- so:sha256:1a2d6fd275d6a810eef1cdb03ab5e1085b17b844f91a70009548bde6dab21710
+- so:sha256:1dc3d062f26a6e613885a56fd596bd45efd94e166c269a2b4ca2c9a090efd7fc
+- so:sha256:1de864e5f2e5020e5a85639e2caf651d4dc1f49ac7f0399a9438fd1bc84de90a
+- so:sha256:306f2bbb87ce8ffa9e686a3a471988b4a98b9a5bc27a49037cc23764a1322f7e
+- so:sha256:3df0321fa2303fa9f583571346a2e2ae0d1a3d9ca7d4f02191891b0e85cbc597
+- so:sha256:4cab473a4ae30a83a496368b6cd6ebcdabeb17571a4dc8fc10e232b1479b09f1
+- so:sha256:5447e14345260d1316f5f04b00835e541e88f9646b161d2b690fec4338c17042
+- so:sha256:7c5446b68304183946ec6a774cb60b328403e84d1feac71ce6f6ba7748e4b525
+- so:sha256:7dfd18c974612418dbbd3729d76d1c49346d7b1cfc8ce2e4347baf190d4b032d
+- so:sha256:b1c417f143294008bf47a9b1d6e8030b874e0644de3d12599b1f585937e4462d
+- so:sha256:d07a64721ca62bee951bfb9ee76a2d26ea05767d82e99a1ef274ab165a780fdd
+- so:sha256:d649f17f1b974b62bb254501a557b1256551454c201d5fa08cf4bead41477ec9
+- so:sha256:da248e006495f81c7b5a0301e935c3bd847f8f1e4fb42bb5d697b3bc653c63e8
+- so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0
+- so:sha256:dd058663d3079e0532fa11e5c25d345fa1ac6be5a8399e0cbd7afd0c2b4b44f6
+- so:sha256:de6b9f85651a7fd50a492b7fe0cf6fe2116e3442604e3afa33984b4745a1ede7
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+cq_warrants: []
+proposed_referent:
+  label: proof stage (the point in the verification workflow at which an attempt runs and its evidence is produced)
+  description: 'One instance is one stage of the verification workflow: `repair-loop`, `pre-push`, `merged-preview` or `hosted`
+    in the deployed `ProofStage` literal list (po-581b06759057, restated in po-fd56d2b008d1). It is carried as `stage` on
+    attempt-started rows (so-eefbf95beb8d with its twin so-ff071fc9a2a9: `repair-loop`; so-10c2570fe2f6: `pre-push`; so-3bf9cacb55b4:
+    `merged-preview`), on the quarantined lease so-a8d270b5e19d (`stage=pre-push`), and on proof-ledger facts and shadows
+    (`stage=pre-push`, `stage=repair-loop`, for example so-3df0321fa230, so-40abdcaf1156, so-5447e1434526, so-c997b4851faa);
+    both censuses index starts and facts by it (po-58c65850834f, po-563da43a9f12). Each attempt carries one stage, and the
+    same tier value `full` occurs under every stage shown, so stage and tier vary apart. Individuated by its position in the
+    stage order, not by the spelling. No pinned CQ needs the stage; it disambiguates the CQ-warranted assurance tier (dh:vfy-assurance-tier:001)
+    by keeping where evidence is produced apart from the level it is produced toward, so it is judged on evidence with no
+    warrant. The `hosted` stage has no fact, shadow or start in the capture-window censuses; merged preview is dormant in
+    the capture window, never observed-and-empty (dh:vfy-merged-preview-stage:001). Record pairs so-1a2d6fd275d6/so-1dc3d062f26a,
+    so-eefbf95beb8d/so-ff071fc9a2a9 are each one record span seen twice (the vocabulary record a strict subset of its twin):
+    one individual, both cited.'
+representation_status: domain_referent
+alternatives:
+- label: a phase of a verification episode (an anti-rigid state of the episode)
+  representation_status: domain_referent
+  plausibility: viable
+- label: the deployed stage literal as a code (a member spelling only)
+  representation_status: lexical_alias
+  plausibility: viable
+- label: a journal and ledger field value
+  representation_status: information_artifact
+  plausibility: viable
+- label: an assurance tier under another name
+  representation_status: lexical_alias
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The null falls: within one run and over one resolved head, two attempts start in time order at different stages,
+    each stage value going with a different workflow mode, so the stage marks where in the workflow a verification occurrence
+    ran. The two attempts carry different `diffFingerprint` values, so the records do not show them over one identical working
+    state; the discriminator rests on the shared run and head only. The ledger-only reading left the null standing for want
+    of an attempt record or the stage census; both are among the cited records. Phase versus activity type is the foundational
+    seat''s question.'
+  discriminator: 'so-eefbf95beb8d (`stage=repair-loop`, `mode=repair`, `startedAt=2026-09-08T19:28:29.547Z`) and so-10c2570fe2f6
+    (`stage=pre-push`, `mode=closeout`, `startedAt=2026-09-08T19:57:41.381Z`) carry one `runId` value and one `resolvedHeadSha`
+    value and two different `diffFingerprint` values: within one run on one resolved head the earlier attempt runs at `repair-loop`
+    in repair mode and the later at `pre-push` in closeout mode, which would be false if the stage value had no workflow counterpart.'
+epistemic_status: proposed
+confidence:
+  value: 0.5
+  use_for_acceptance: false

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:61be88bdc8e728ab88dd3f3c3eaeb891737003f013f50aac2d484578b072b09e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 335,
+    "end_line": 342
+  },
+  "quote": "- id: iv-1021-fallow-health-lane\n  title: \"PR #1021 — a blocking fallow:health gate joins the pre-push, cheap-gates and CI-parity assemblies\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T03:33:07Z\"\n  mergeCommit: 74efb548f16aa2c37f14cb3ea8b71ef47d2315ab\n  pr: 1021\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

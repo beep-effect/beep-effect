@@ -732,6 +732,54 @@ export const AdmissionRowCustody = LiteralKit(["live", "surrogate", "redacted"])
  */
 export type AdmissionRowCustody = typeof AdmissionRowCustody.Type;
 
+/**
+ * Origin-coordination protocol a scheduler ticket or lease records, read by value.
+ *
+ * **Details**
+ *
+ * Mirrors the deployed `AdmissionCoordinationProtocol` literals. The deployed
+ * scheduler decodes a persisted record without the field as
+ * `legacy-origin-lock/v1`; journal decoding here never applies that default,
+ * so an absent field stays absent (an absent field read as legacy would be a
+ * false green on CQ-009's legacy-origin-drain arm).
+ *
+ * **Example** (Recognize the current protocol)
+ *
+ * ```ts
+ * import { AdmissionCoordinationProtocol } from "@/projection/Schemas"
+ *
+ * console.log(
+ *   AdmissionCoordinationProtocol.is["scheduler-origin-concurrency/v1"]("scheduler-origin-concurrency/v1")
+ * ) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AdmissionCoordinationProtocol = LiteralKit([
+  "legacy-origin-lock/v1",
+  "scheduler-origin-concurrency/v1",
+]).pipe(
+  $I.annoteSchema("AdmissionCoordinationProtocol", {
+    description: "Origin-coordination protocol a journal row records by value; never defaulted on decode.",
+  })
+);
+
+/**
+ * Decoded protocol accepted by {@link AdmissionCoordinationProtocol}.
+ *
+ * @see {@link AdmissionCoordinationProtocol} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionCoordinationProtocol = typeof AdmissionCoordinationProtocol.Type;
+
+// Read by value only: no decoding default, so a row without the field decodes to `None`.
+const optionalCoordinationProtocol = AdmissionCoordinationProtocol.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
+
 // Run-3 Ruling 11 surrogates (owner and checkout references) are salted 12-hex digests.
 const optionalSurrogateRef = S.String.check(S.isPattern(/^[0-9a-f]{12}$/)).pipe(
   S.OptionFromOptionalKey,
@@ -827,6 +875,8 @@ export const admissionRowCustody = (row: OwnerCarrier): AdmissionRowCustody =>
  * `pid` and `procStart` while preserving all admission-order carriers. Pinned
  * corpus rows carry a surrogate `ownerRef`/`ownerRefVariant` pair instead of
  * `pid` (run-3 Ruling 11); decode rejects a row that carries both.
+ * `coordinationProtocol` is read by value and never defaulted: the deployed
+ * journal writer does not record it, so pinned rows decode it as `None`.
  *
  * **Example** (Construct a redacted admitted event)
  *
@@ -870,6 +920,7 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
     originKey: S.String,
     enqueuedAtMillis: S.Natural,
     admittedAtMillis: S.Natural,
+    coordinationProtocol: optionalCoordinationProtocol,
   }).check(legacyAtMostOneOwner, pairedOwnerVariant),
   $I.annote("AdmissionJournalAdmitted", {
     description: "Journal transition recording one pending request becoming an active grant.",
@@ -971,6 +1022,7 @@ class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`
     checkoutRoot: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     checkoutRef: optionalSurrogateRef,
     branch: S.String,
+    coordinationProtocol: optionalCoordinationProtocol,
   }).check(v3OneOwner, pairedOwnerVariant, v3OneCheckout),
   $I.annote("AdmissionJournalV3Identity", {
     description: "V3 journal identity: exactly one live or surrogate owner and one checkout attribution.",

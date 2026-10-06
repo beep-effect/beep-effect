@@ -3,6 +3,7 @@
 # S6 STATUSES PROJECTED by ../s6/scripts/apply_s6_dispositions.py after the
 # steward sitting recorded in ABOX.yaml. Do not hand-edit these transitions.
 # 2026-09-10 amendment: additive run-2/run-3 ratification projection; see the contract.
+# 2026-10-06 amendment: additive run-4 ratification projection (rat-071..rat-078); see the contract.
 generated_by: scripts/build_dispositions.py
 contract: ontology/docs/s5-taxonomy-contract.md
 sittings_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
@@ -94,9 +95,14 @@ candidates:
 - seq: 9
   candidate: CommittedFailure
   kind: class
-  ruling: parked-run-2
-  join_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
-  justification: episode/occurrence/provenance class conceded at §4b (sitting 2c)
+  ruling: accepted-via
+  join_ref: rat-074
+  justification: 'episode/occurrence/provenance class conceded at §4b (sitting 2c) Superseded by goals/ciops-ontology-pipeline/research/decisions.md
+    "2026-10-06 — run-4 sitting 3", rat-074: "Accept otp:vfy-committed-failure:001 as CommittedFailure,
+    the failure an attempt commits at one step, warranted by CQ-022''s typed failure. It is a leaf event
+    whose criterion rests on the attempt and the step, not a core sortal. Retained as flags: rigidity
+    under a retried step or revised failed step, the obsoletion-point rival with its exit-instant discriminator,
+    the single cited verdict, and the parked inAttempt edge."'
 - seq: 10
   candidate: ContendedResource
   kind: class
@@ -153,10 +159,16 @@ candidates:
     effective authorization continuity deferred to run 4 as flagged." DECISIONS.md "2026-09-10 — run-3
     sitting 3", rat-068: "Accept otp:att-admission-allocation:001 as the SeatGrant recorded-lease-value
     reuse under sitting-1 Ruling 2, treating the two heartbeat reports as snapshots of one candidate subject,
-    with effective allocation continuity deferred to run 4 as flagged."'
+    with effective allocation continuity deferred to run 4 as flagged." goals/ciops-ontology-pipeline/research/decisions.md
+    "2026-10-06 — run-4 sitting 3", rat-076: "Accept otp:vfy-seat-grant:001 as an exact reuse of SeatGrant
+    at the lease grain, warranted by CQ-008 and CQ-009, affirming the ratified rigid value and the CQ-009
+    re-scope built over it. The SeatGrant flag persists with no lift claimed; run 4 adds as flags the
+    relator-against-held-phase question, the unshown legacy-origin arm, the absent capacity-pool dependence,
+    and the superseded mention of the withdrawn checkout proposal."'
   later_ratifications:
   - rat-066
   - rat-068
+  - rat-076
 - seq: 18
   candidate: SeatRequest
   kind: class
@@ -169,11 +181,17 @@ candidates:
     distinctions, with demand-versus-description grain and handling/resubmission continuity deferred to
     run 4 as flagged." DECISIONS.md "2026-09-10 — run-3 sitting 3", rat-067: "Accept otp:admb-seat-request:001
     as the SeatRequest recorded-demand-account reuse under sitting-1 Ruling 2, with account-copy identity,
-    effective queue participation and withdrawal/resubmission continuity deferred to run 4 as flagged."'
+    effective queue participation and withdrawal/resubmission continuity deferred to run 4 as flagged."
+    goals/ciops-ontology-pipeline/research/decisions.md "2026-10-06 — run-4 sitting 3", rat-075: "Accept
+    otp:vfy-seat-request:001 as an exact reuse of SeatRequest at the ticket grain, warranted by CQ-021
+    and CQ-023, affirming the ratified rigid value. The SeatRequest flag persists with no lift claimed;
+    run 4 adds as flags the relator-against-waiting-phase category question, the attempt-alias and demand-continuity
+    rivals, the unshown capacity dependence, and the journal tickets with no enqueue row."'
   later_ratifications:
   - rat-034
   - rat-061
   - rat-067
+  - rat-075
 - seq: 19
   candidate: StarvationException
   kind: class
@@ -202,9 +220,14 @@ candidates:
     object, boundaries from the journal''s own start/finish events." DECISIONS.md "2026-09-10 — run-3
     sitting 3", rat-069: "Accept otp:att-verification-attempt:001 as the VerificationAttempt recorded-history
     reuse under sitting-1 Ruling 2, with account-version identity and effective invocation continuity
-    deferred to run 4 as flagged."'
+    deferred to run 4 as flagged." goals/ciops-ontology-pipeline/research/decisions.md "2026-10-06 — run-4
+    sitting 3", rat-072: "Accept otp:vfy-verification-attempt:001 as an exact reuse of VerificationAttempt
+    on the support arm toward CommittedFailure and WorkUnitExecution, affirming that run 4 denotes the
+    ratified term at its ratified rigid value. The flag persists with no lift claimed, and run 4 adds
+    as flags the seat-request alias rival, the process-while-running rival and the unshown request tie."'
   later_ratifications:
   - rat-069
+  - rat-072
 - seq: 23
   candidate: VerificationEvidence
   kind: class
@@ -226,9 +249,14 @@ candidates:
 - seq: 25
   candidate: WorkUnitExecution
   kind: class
-  ruling: parked-run-2
-  join_ref: DECISIONS.md §'2026-08-30 — S5 sittings 1–2' + sitting 3 (docket policy)
-  justification: episode/occurrence/provenance class conceded at §4b (sitting 2c)
+  ruling: accepted-via
+  join_ref: rat-073
+  justification: 'episode/occurrence/provenance class conceded at §4b (sitting 2c) Superseded by goals/ciops-ontology-pipeline/research/decisions.md
+    "2026-10-06 — run-4 sitting 3", rat-073: "Accept otp:vfy-lane-execution:001 as WorkUnitExecution,
+    one started invocation of one lane''s procedure inside one attempt, counted from its start, warranted
+    by CQ-022, CQ-024 and CQ-025. It is a leaf event, not a core sortal. Retained as flags: rigidity,
+    the process-while-running rival, wrapper parthood beyond the containment shown, reruns, whole-attempt
+    executions, and the ungrounded execution predicates."'
 - seq: 26
   candidate: activeTokens
   kind: property
@@ -249,9 +277,15 @@ candidates:
   justification: 'exact-name join to ratified term admissionChargeTokens (sitting rule: join pass) DECISIONS.md
     "2026-09-10 — run-3 sitting 3", rat-053: "Accept otp:ov-admission-token-charge:001 as the admissionChargeTokens
     recorded-value property reuse within the joint ordering cluster, with repricing, assertion replacement,
-    request/grant continuity and pre-admission capacity evidence deferred to run 4 as flagged."'
+    request/grant continuity and pre-admission capacity evidence deferred to run 4 as flagged." goals/ciops-ontology-pipeline/research/decisions.md
+    "2026-10-06 — run-4 sitting 3", rat-077: "Accept otp:vfy-admission-charge:001 as an exact reuse of
+    the data property admissionChargeTokens at the recorded-value grain, warranted by CQ-010 and CQ-021,
+    which read the property directly. The flag persists with no lift claimed; run 4 adds as flags the
+    four category readings and the ungrounded capacity at admission, and its mention of the withdrawn
+    work-kind proposal is superseded."'
   later_ratifications:
   - rat-053
+  - rat-077
 - seq: 29
   candidate: admissionTokenWeight
   kind: property
