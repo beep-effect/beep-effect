@@ -222,6 +222,7 @@ const StubM365Layer = Layer.effect(
       findEventsByIdempotencyKey: notScripted,
       getEvent: notScripted,
       getListItem: notScripted,
+      getMailFolder: notScripted,
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
         yield* called("getMessage", request);
         return (yield* Ref.get(state)).draft;
