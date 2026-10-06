@@ -318,6 +318,32 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/practice-mail-tagging": {
+      "name": "@beep/practice-mail-tagging",
+      "version": "0.0.0",
+      "bin": {
+        "practice-mail-tagging": "./src/bin.ts",
+      },
+      "dependencies": {
+        "@beep/box": "workspace:^",
+        "@beep/duckdb": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/law-practice-domain": "workspace:^",
+        "@beep/law-practice-server": "workspace:^",
+        "@beep/law-practice-use-cases": "workspace:^",
+        "@beep/m365": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/professional-desktop": {
       "name": "@beep/professional-desktop",
       "version": "0.0.3",
@@ -4040,6 +4066,8 @@
     "@beep/postgres": ["@beep/postgres@workspace:packages/drivers/postgres"],
 
     "@beep/practice-kg-mcp": ["@beep/practice-kg-mcp@workspace:apps/practice-kg-mcp"],
+
+    "@beep/practice-mail-tagging": ["@beep/practice-mail-tagging@workspace:apps/practice-mail-tagging"],
 
     "@beep/pretext": ["@beep/pretext@workspace:packages/drivers/pretext"],
 

@@ -24,7 +24,8 @@ The strict `@shadcn/lint` policy for Tailwind classes and style props, its fix r
 new UI workspace joins it: [design-system lint](runbooks/design-system-lint.md). Statecharts with
 XState v6 and `@xstate/effect`, their tests, inspector, CLI, and MCP: [statecharts](runbooks/xstate-effect-statecharts.md). The operator-attended Entra
 registration for the docket intake service, scoped to one mailbox: [docket intake registration](runbooks/docket-intake-entra-registration.md). The operator-attended Entra
-registration for the agent outbox (mail with attachments, drafts, calendar writes): [agent outbox registration](runbooks/m365-agent-outbox-registration.md).
+registration for the agent outbox (mail with attachments, drafts, calendar writes): [agent outbox registration](runbooks/m365-agent-outbox-registration.md). First run, counts, undo, and failure modes of the
+mail-tagging job: [practice mail tagging](runbooks/practice-mail-tagging.md).
 
 ## Rules
 
