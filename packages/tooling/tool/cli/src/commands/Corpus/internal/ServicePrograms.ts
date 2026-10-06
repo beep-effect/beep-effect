@@ -31,6 +31,7 @@ import {
   processFile,
 } from "@beep/file-processing/Service";
 import {
+  classifySourceFormat,
   DeferredSelectedStrategy,
   SupportedSelectedStrategy,
   UnsupportedSelectedStrategy,
@@ -42,6 +43,8 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
 import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto } from "@beep/uspto";
 import * as O from "@beep/utils/Option";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import {
   Console,
   DateTime,
@@ -59,6 +62,7 @@ import {
 } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -114,6 +118,7 @@ import type {
   ExtractedProcessFileResult,
   FileProcessingFailureRecord,
 } from "@beep/file-processing/Extraction";
+import type { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape, FileProcessingService } from "@beep/file-processing/Service";
 import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } from "@beep/file-processing/Strategy";
 import type * as Crypto from "effect/Crypto";
@@ -791,6 +796,8 @@ const extractCoverageFormats: ReadonlyArray<FileFormatFamily> = [
   "xhtml",
   "pdf-text-layer",
   "pst",
+  "eml",
+  "msg",
   "plain-text",
   "markdown",
   "image-metadata",
@@ -893,6 +900,8 @@ const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function
 interface CorpusExtractOutcome {
   readonly childArtifactCount: number;
   readonly failure: O.Option<FileProcessingFailureRecord>;
+  // Present only on a failure that the engine routing decides, so it settles.
+  readonly routingKey: O.Option<Sha256Hex>;
   readonly sourceRecord: SourceProcessingRecord;
   readonly strategy: SelectedStrategy;
 }
@@ -906,9 +915,11 @@ const failedOutcome = (
     readonly relativePath: PosixPath;
   },
   reason: "file-detection-failed" | "engine-unavailable" | "unsupported-file-format",
-  message: string
+  message: string,
+  routingKey: O.Option<Sha256Hex> = O.none()
 ): CorpusExtractOutcome => ({
   childArtifactCount: 0,
+  routingKey,
   failure: O.some(
     FailedFileProcessingFailureRecord.make({
       artifactId: ids.artifactId,
@@ -1028,7 +1039,67 @@ const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArt
 // tree, claim, and child manifest of one source starts with this prefix.
 const extractArtifactIdLength = 73;
 
-const isSettledExtractOutcome = (outcome: CorpusExtractOutcome): boolean => outcome.sourceRecord.status !== "failed";
+// Succeeded and deferred sources are settled. A failure is settled only when it
+// carries a routing key: no engine routes the source's format, which no retry
+// can change until the routing does.
+const isSettledExtractOutcome = (outcome: CorpusExtractOutcome): boolean =>
+  outcome.sourceRecord.status !== "failed" || O.isSome(outcome.routingKey);
+
+// Fingerprint of everything that decides which engine a format reaches. It is
+// derived from the engine descriptors, so adding a format to an engine changes
+// it without anyone bumping a version.
+const extractRoutingBase = (engines: ReadonlyArray<FileProcessingEngineShape>): string =>
+  A.join(
+    A.map(
+      engines,
+      ({ descriptor }) =>
+        `${descriptor.name}:${A.join(descriptor.capabilities, ",")}:${A.join(descriptor.supportedFormats, ",")}`
+    ),
+    "|"
+  );
+
+const extractRoutingKey = (routingBase: string, format: FileFormatFamily): Sha256Hex =>
+  Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${routingBase}#${format}`))));
+
+// One extract per output label: the lock file sits beside the output tree so
+// `--overwrite` cannot delete it, and names the holder's pid. A holder that is
+// no longer running (a killed run) is taken over.
+const acquireExtractRunLock = Effect.fn("CorpusCommandService.acquireExtractRunLock")(function* (
+  lockPath: string
+): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const createLock = fs.writeFileString(lockPath, `${process.pid}\n`, { flag: "wx" });
+  yield* fs
+    .makeDirectory(path.dirname(lockPath), { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating extract staging root for "${lockPath}".`));
+  const created = yield* Effect.result(createLock);
+  if (Result.isSuccess(created)) {
+    return;
+  }
+  if (created.failure.reason._tag !== "AlreadyExists") {
+    return yield* CorpusCommandError.make({
+      cause: created.failure,
+      message: `Failed creating extract run lock "${lockPath}".`,
+    });
+  }
+  const holder = Str.trim(yield* fs.readFileString(lockPath).pipe(Effect.orElseSucceed(() => "")));
+  const holderPid = O.filter(Num.parse(holder), Number.isSafeInteger);
+  const holderRunning = O.isSome(holderPid)
+    ? yield* fs.exists(`/proc/${holderPid.value}`).pipe(Effect.orElseSucceed(() => false))
+    : false;
+  if (holderRunning) {
+    return yield* CorpusCommandError.make({
+      message: `Another corpus extract (pid ${holder}) is running on this output; wait for it to finish. Lock: "${lockPath}".`,
+    });
+  }
+  yield* fs
+    .remove(lockPath, { force: true })
+    .pipe(
+      Effect.andThen(createLock),
+      CorpusCommandError.mapError(`Failed taking over extract run lock "${lockPath}".`)
+    );
+});
 
 const dedupeBySha256 = <A extends { readonly sha256: string }>(
   records: ReadonlyArray<A>
@@ -1090,6 +1161,20 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
 ): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const outLabel = yield* extractOutputLabel(options.outLabel);
+  const lockPath = path.join(options.corpusRoot, "staging", `.${outLabel}.extract.lock`);
+  return yield* Effect.acquireUseRelease(
+    acquireExtractRunLock(lockPath),
+    () => extractCorpusLocked(options),
+    () => fs.remove(lockPath, { force: true }).pipe(Effect.ignore)
+  );
+});
+
+const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked")(function* (
+  options: CorpusExtractOptions
+): Effect.fn.Return<CorpusExtractSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
 
   const rawRoot = path.join(options.corpusRoot, "raw");
   const outLabel = yield* extractOutputLabel(options.outLabel);
@@ -1126,10 +1211,16 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const tikaEngine = yield* makeTikaAppFileProcessingEngine(
     TikaAppEngineConfig.make({
       jarPath: options.tikaJarPath,
-      ...O.getSomesStruct({ javaPath: O.fromUndefinedOr(options.javaPath) }),
+      ...O.getSomesStruct({
+        javaPath: O.fromUndefinedOr(options.javaPath),
+        timeoutMillis: O.fromUndefinedOr(options.tikaTimeoutMillis),
+      }),
     })
   );
   const engines: ReadonlyArray<FileProcessingEngineShape> = [libpffEngine, tikaEngine];
+  const routingBase = extractRoutingBase(engines);
+  const routingKeyFor = (record: CorpusProvenanceRecord): Sha256Hex =>
+    extractRoutingKey(routingBase, classifySourceFormat(extensionOf(basenameOf(record.relativePath)), undefined));
 
   const deriveSourceIds = Effect.fn("CorpusCommandService.deriveExtractSourceIds")(function* (
     record: CorpusProvenanceRecord
@@ -1180,7 +1271,9 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
           candidate.exportChildren === options.exportChildren &&
           candidate.sourceRecord.operationId === ids.operationId &&
           candidate.sourceRecord.relativePath === ids.relativePath &&
-          isSettledExtractOutcome(candidate)
+          isSettledExtractOutcome(candidate) &&
+          // A settled failure stands only while the routing that produced it does.
+          !O.exists(candidate.routingKey, (routingKey) => routingKey !== routingKeyFor(record))
       )
     );
     if (O.isNone(marker)) {
@@ -1235,6 +1328,13 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
 
   const completedRef = yield* Ref.make(0);
   const total = A.length(pendingRecords);
+  const isRoutingFailure = (error: FileProcessingOperationError): boolean =>
+    error.reason === "engine-unavailable" &&
+    error.engine === undefined &&
+    O.exists(
+      O.fromUndefinedOr(error.format),
+      (format) => !A.some(engines, ({ descriptor }) => descriptor.supportsFormat(format))
+    );
 
   const processOneSource = Effect.fn("CorpusCommandService.processOneSource")(function* (
     record: CorpusProvenanceRecord
@@ -1294,7 +1394,11 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
               record,
               ids,
               error.reason === "engine-unavailable" ? "engine-unavailable" : "unsupported-file-format",
-              error.message
+              error.message,
+              // No engine was selected and none supports the detected format:
+              // the routing decided this failure, so it is settled. Driver
+              // failures (timeout, spawn, parse) name their engine and retry.
+              isRoutingFailure(error) ? O.some(routingKeyFor(record)) : O.none()
             )
           ),
         onSuccess: (result) =>
@@ -1326,6 +1430,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                     sizeBytes: record.sizeBytes,
                     status: "succeeded",
                   }),
+                  routingKey: O.none<Sha256Hex>(),
                   strategy: SupportedSelectedStrategy.make({
                     disposition: "supported",
                     engine: engineFamilyFromName(archive.engine),
@@ -1371,6 +1476,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                     status: "succeeded",
                     ...(O.isNone(textPath) ? {} : { textPath: textPath.value }),
                   }),
+                  routingKey: O.none<Sha256Hex>(),
                   strategy: SupportedSelectedStrategy.make({
                     disposition: "supported",
                     engine: engineFamilyFromName(extracted.engine),
@@ -1406,6 +1512,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                   skipReason: skipped.skipReason,
                   status: "skipped",
                 }),
+                routingKey: O.none<Sha256Hex>(),
                 strategy: DeferredSelectedStrategy.make({
                   disposition: "deferred",
                   engine: engineFamilyFromName(skipped.engine),
@@ -1431,6 +1538,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
           childArtifactCount: S.Natural.make(outcome.childArtifactCount),
           exportChildren: options.exportChildren,
           failure: outcome.failure,
+          routingKey: outcome.routingKey,
           sha256,
           sourceRecord: outcome.sourceRecord,
           strategy: outcome.strategy,
@@ -1505,14 +1613,20 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   yield* writeExtractArtifact(path.join(outDir, "sources.jsonl"), jsonlContent(sourceLines));
   yield* writeExtractArtifact(path.join(outDir, "failures.jsonl"), jsonlContent(failureLines));
 
-  // Failed sources never carry a marker, so every failure belongs to this run
-  // and the three counts partition the selected sources.
+  const failedOutcomes = A.filter(outcomes, (outcome) => outcome.sourceRecord.status === "failed");
+  const reusedFailedCount = A.length(
+    A.filter(
+      resumeStates,
+      O.exists((outcome) => outcome.sourceRecord.status === "failed")
+    )
+  );
   const summary = CorpusExtractSummary.make({
     alreadyCompleteCount: S.Natural.make(alreadyCompleteCount),
     childArtifactCount: S.Natural.make(childArtifactCount),
     duplicatesSkipped: S.Natural.make(duplicatesSkipped),
-    extractedCount: S.Natural.make(A.length(pendingRecords) - coverage.failedCount),
+    extractedCount: S.Natural.make(A.length(pendingRecords) - (A.length(failedOutcomes) - reusedFailedCount)),
     failedCount: coverage.failedCount,
+    noEngineFailedCount: S.Natural.make(A.length(A.filter(failedOutcomes, (outcome) => O.isSome(outcome.routingKey)))),
     skippedCount: coverage.skippedCount,
     sourceCount: coverage.sourceCount,
     succeededCount: coverage.succeededCount,
@@ -1524,7 +1638,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   yield* writeExtractArtifact(path.join(outDir, "extract-summary.json"), `${summaryJson}\n`);
 
   yield* Console.log(
-    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
+    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} noEngine=${summary.noEngineFailedCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
   );
   yield* Console.log(`corpus extract: output "${outDir}"`);
 

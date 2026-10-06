@@ -1185,7 +1185,8 @@ exit 0
 
 // Engine stubs for the resume tests: each invocation appends one line to a call
 // log, so a test can prove which sources a run actually sent to an engine. The
-// java stub fails any source whose bytes carry the `extract-must-fail` marker.
+// java stub fails any source whose bytes carry the `extract-must-fail` marker
+// and hangs on `extract-must-hang`.
 const countingPffexportStub = (callLog: string): string =>
   Str.replace("#!/usr/bin/env bash\n", `#!/usr/bin/env bash\nprintf 'pffexport\\n' >> "${callLog}"\n`)(stubPffexport);
 
@@ -1193,6 +1194,7 @@ const countingJavaStub = (callLog: string): string => `#!/usr/bin/env bash
 printf 'java\\n' >> "${callLog}"
 for arg in "$@"; do
   if [ -f "$arg" ] && grep -q "extract-must-fail" "$arg"; then exit 3; fi
+  if [ -f "$arg" ] && grep -q "extract-must-hang" "$arg"; then exec sleep 20; fi
 done
 printf '%s' '[{"Content-Type":"text/plain","X-TIKA:content":"\\n  stub text body\\n"}]'
 exit 0
@@ -1249,6 +1251,7 @@ const summaryCountKeys = [
   "alreadyCompleteCount",
   "extractedCount",
   "failedCount",
+  "noEngineFailedCount",
   "skippedCount",
   "sourceCount",
   "succeededCount",
@@ -1300,10 +1303,17 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
 
   return {
     engineCalls,
+    lockPath: path.join(corpusRoot, "staging", ".extract.extract.lock"),
     markerPath: (content: string) => path.join(outDir, "outcomes", `${contentDigest(content)}.json`),
     outDir,
     rawDir,
-    run: (overrides: { readonly exportChildren?: boolean; readonly overwrite?: boolean } = {}) =>
+    run: (
+      overrides: {
+        readonly exportChildren?: boolean;
+        readonly overwrite?: boolean;
+        readonly tikaTimeoutMillis?: number;
+      } = {}
+    ) =>
       extractCorpus(
         CorpusExtractOptions.make({
           concurrency: 1,
@@ -1314,6 +1324,7 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
           overwrite: overrides.overwrite ?? false,
           pffexportPath,
           tikaJarPath: manifestPath,
+          ...(overrides.tikaTimeoutMillis === undefined ? {} : { tikaTimeoutMillis: overrides.tikaTimeoutMillis }),
         })
       ),
   };
@@ -1707,7 +1718,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
   );
 
   it.effect(
-    "retries failed sources on resume and keeps the summary counts a partition",
+    "retries engine failures on resume but settles sources no engine routes",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const fixture = yield* makeExtractResumeFixture([
@@ -1719,33 +1730,134 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
 
       const first = yield* fixture.run();
       const brokenMarker = yield* fs.exists(fixture.markerPath("extract-must-fail"));
-      const unsupportedMarker = yield* fs.exists(fixture.markerPath("opaque payload"));
+      const unroutedMarker = yield* fs.readFileString(fixture.markerPath("opaque payload"));
       const resumed = yield* fixture.run();
-      const javaCalls = yield* fixture.engineCalls("java");
+      const callsAfterResume = yield* fixture.engineCalls("java");
+
+      // A marker written under different routing no longer settles the source.
+      const staleRoutingKey = Str.repeat(64)("0");
+      const recordedRoutingKey = yield* Effect.fromOption(
+        A.get(Str.split(A.get(Str.split(unroutedMarker, '"routingKey":"'), 1).pipe(O.getOrElse(() => "")), '"'), 0)
+      );
+      yield* fs.writeFileString(
+        fixture.markerPath("opaque payload"),
+        Str.replace(recordedRoutingKey, staleRoutingKey)(unroutedMarker)
+      );
+      const rerouted = yield* fixture.run();
+      const unroutedMarkerAfter = yield* fs.readFileString(fixture.markerPath("opaque payload"));
 
       expect(Struct.pick(first, summaryCountKeys)).toEqual({
         alreadyCompleteCount: 0,
         extractedCount: 2,
         failedCount: 2,
+        noEngineFailedCount: 1,
         skippedCount: 0,
         sourceCount: 4,
         succeededCount: 2,
       });
       expect(brokenMarker).toBe(false);
-      expect(unsupportedMarker).toBe(false);
+      expect(A.length(recordedRoutingKey)).toBe(64);
 
-      // Both failures (engine error and unsupported format) are retried; the
-      // engine is only invoked again for the source it can attempt.
+      // The engine failure is retried; the unrouted source is reused as settled.
       expect(Struct.pick(resumed, summaryCountKeys)).toEqual({
-        alreadyCompleteCount: 2,
+        alreadyCompleteCount: 3,
         extractedCount: 0,
         failedCount: 2,
+        noEngineFailedCount: 1,
         skippedCount: 0,
         sourceCount: 4,
         succeededCount: 2,
       });
-      expect(resumed.alreadyCompleteCount + resumed.extractedCount + resumed.failedCount).toBe(resumed.sourceCount);
-      expect(javaCalls).toBe(4);
+      expect(callsAfterResume).toBe(4);
+
+      expect(rerouted.alreadyCompleteCount).toBe(2);
+      expect(rerouted.noEngineFailedCount).toBe(1);
+      expect(unroutedMarkerAfter).toBe(unroutedMarker);
+    })
+  );
+
+  it.effect(
+    "routes saved mail to the Tika engine",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const fixture = yield* makeExtractResumeFixture([
+        {
+          content:
+            "From: sender@example.test\nTo: reader@example.test\nSubject: Synthetic\n\nSynthetic message body.\n",
+          name: "letter.eml",
+        },
+        { content: "synthetic outlook item", name: "note.msg" },
+      ]);
+
+      const summary = yield* fixture.run();
+      const sourceLines = yield* readProvenanceLines(path.join(fixture.outDir, "sources.jsonl"));
+      const javaCalls = yield* fixture.engineCalls("java");
+
+      expect(Struct.pick(summary, summaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 2,
+        failedCount: 0,
+        noEngineFailedCount: 0,
+        skippedCount: 0,
+        sourceCount: 2,
+        succeededCount: 2,
+      });
+      expect(summary.textArtifactCount).toBe(2);
+      expect(javaCalls).toBe(2);
+      expect(A.some(sourceLines, (line) => pipe(line, Str.includes('"format":"eml"')))).toBe(true);
+      expect(A.some(sourceLines, (line) => pipe(line, Str.includes('"format":"msg"')))).toBe(true);
+    })
+  );
+
+  it.effect(
+    "applies the configured Tika timeout and retries the timed-out source",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "extract-must-hang", name: "slow.txt" },
+      ]);
+
+      const summary = yield* fixture.run({ tikaTimeoutMillis: 300 });
+      const slowMarker = yield* fs.exists(fixture.markerPath("extract-must-hang"));
+
+      expect(Struct.pick(summary, summaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 1,
+        failedCount: 1,
+        noEngineFailedCount: 0,
+        skippedCount: 0,
+        sourceCount: 2,
+        succeededCount: 1,
+      });
+      expect(slowMarker).toBe(false);
+    })
+  );
+
+  it.effect(
+    "refuses a second extract on a locked output and takes over a dead holder",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeExtractResumeFixture([{ content: "alpha body", name: "alpha.txt" }]);
+      yield* fs.makeDirectory(path.dirname(fixture.lockPath), { recursive: true });
+
+      // This test process is alive, so its pid stands in for a running extract.
+      yield* fs.writeFileString(fixture.lockPath, `${process.pid}\n`);
+      const refused = yield* fixture.run().pipe(Effect.flip);
+      const lockKept = yield* fs.readFileString(fixture.lockPath);
+      const outputCreated = yield* fs.exists(fixture.outDir);
+
+      // Above the kernel's pid ceiling, so no such process can exist.
+      yield* fs.writeFileString(fixture.lockPath, "4999999\n");
+      const takenOver = yield* fixture.run();
+      const lockReleased = yield* fs.exists(fixture.lockPath);
+
+      expect(refused.message).toContain("Another corpus extract");
+      expect(lockKept).toBe(`${process.pid}\n`);
+      expect(outputCreated).toBe(false);
+      expect(takenOver.succeededCount).toBe(1);
+      expect(lockReleased).toBe(false);
     })
   );
 });
