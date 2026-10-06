@@ -8,6 +8,8 @@
 // Every tag names a distinct recovery a caller would actually make, and every
 // cause is carried structurally rather than stringified. Core's `PlatformError`
 // passes through untranslated rather than being wrapped.
+// Message fields initialize after schema fields: Bun may inspect Error.message
+// during base construction, before a derived getter can safely read those fields.
 
 import { $ScratchpadId } from "@beep/identity";
 import * as A from "effect/Array";
@@ -24,6 +26,8 @@ const quote = (value: string): string => Result.getOrElse(encodeString(value), (
 
 /**
  * `S.SchemaError` as a schema of itself.
+ *
+ * **Details**
  *
  * A schema issue tree is a live object graph, not something with a wire form,
  * so it is declared by its type guard rather than given an encoding. That is
@@ -42,6 +46,8 @@ const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
 /**
  * A journal line that is not valid JSON.
  *
+ * **Details**
+ *
  * **This is the expected steady state at the tail of a live journal**, not
  * necessarily corruption: a writer caught mid-`write` leaves a partial final
  * line, and `LineSlice.terminated` is what distinguishes the two cases. An
@@ -51,12 +57,12 @@ const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
  * Malformed input always fails through this typed channel — never as a defect,
  * and never by being silently dropped from a read.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Construct a MalformedLine failure)
+ * ```ts import.meta.vitest name="Construct a MalformedLine failure"
  * import { LineSlice } from "@beep/scratchpad/effected/jsonl/index";
  * const line = LineSlice.make({ offset: 0, end: 1, length: 1, text: "{", terminated: false });
  * import { MalformedLine } from "@beep/scratchpad/effected/jsonl/index";
- * console.log(MalformedLine.make({ line }).message); // JSONL unterminated final line at byte offset 0
+ * MalformedLine.make({ line }).message // => "JSONL unterminated final line at byte offset 0"
  * ```
  *
  * @public
@@ -82,25 +88,25 @@ export class MalformedLine extends S.TaggedError<MalformedLine>($I`MalformedLine
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the malformed-line message)
+   * ```ts import.meta.vitest name="Read the malformed-line message"
    * import { LineSlice } from "@beep/scratchpad/effected/jsonl/index";
    * const line = LineSlice.make({ offset: 0, end: 1, length: 1, text: "{", terminated: false });
    * import { MalformedLine } from "@beep/scratchpad/effected/jsonl/index";
-   * console.log(MalformedLine.make({ line }).message); // JSONL unterminated final line at byte offset 0
+   * MalformedLine.make({ line }).message // => "JSONL unterminated final line at byte offset 0"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    const kind = this.line.terminated ? "malformed line" : "unterminated final line";
-    return `JSONL ${kind} at byte offset ${this.line.offset}`;
-  }
+  override readonly message =
+    `JSONL ${this.line.terminated ? "malformed line" : "unterminated final line"} at byte offset ${this.line.offset}`;
 }
 
 /**
  * A line whose `event` tag is not in the registry.
+ *
+ * **Details**
  *
  * Typed rather than a defect on purpose: a journal written by an older or newer
  * version of the same application is hostile input in the technical sense, and
@@ -108,13 +114,13 @@ export class MalformedLine extends S.TaggedError<MalformedLine>($I`MalformedLine
  * past one. The known tags travel with the error so a caller can report the
  * mismatch without reaching back for the registry.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Report an unknown event tag)
+ * ```ts import.meta.vitest name="Report an unknown event tag"
  * import { LineSlice } from "@beep/scratchpad/effected/jsonl/index";
  * const line = LineSlice.make({ offset: 0, end: 1, length: 1, text: "{", terminated: false });
  * import { UnknownEvent } from "@beep/scratchpad/effected/jsonl/index";
  * const error = UnknownEvent.make({ line, event: "foreign", known: ["started"] });
- * console.log(error.known); // ["started"]
+ * error.known // => ["started"]
  * ```
  *
  * @public
@@ -155,25 +161,25 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the unknown-event message)
+   * ```ts import.meta.vitest name="Read the unknown-event message"
    * import { LineSlice } from "@beep/scratchpad/effected/jsonl/index";
    * const line = LineSlice.make({ offset: 0, end: 1, length: 1, text: "{", terminated: false });
    * import { UnknownEvent } from "@beep/scratchpad/effected/jsonl/index";
    * const error = UnknownEvent.make({ line, event: "foreign", known: ["started"] });
-   * console.log(error.known); // ["started"]
+   * error.known // => ["started"]
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    return `unknown JSONL event ${quote(this.event)} at byte offset ${this.line.offset}`;
-  }
+  override readonly message = `unknown JSONL event ${quote(this.event)} at byte offset ${this.line.offset}`;
 }
 
 /**
  * A line whose envelope or payload failed schema validation.
+ *
+ * **Details**
  *
  * Covers both stages of the two-stage decode, distinguished by `event`: the
  * frame itself (`O.none()` — the line is JSON but not an envelope) and a
@@ -184,8 +190,8 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
  * tree with its paths and expected types intact. Nothing here is stringified;
  * `message` renders lazily and only when something asks for it.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Inspect invalid payload details)
+ * ```ts import.meta.vitest name="Inspect invalid payload details"
  * import { pipe } from "effect";
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
@@ -194,7 +200,7 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
  * import * as S from "effect/Schema";
  * const events = [JsonlEvent.make("started", { data: S.String })];
  * const failure = pipe(Line.split('42'), A.head, O.map(Envelope.decodeResult(events)));
- * console.log(O.isSome(failure) && Result.isFailure(failure.value) && failure.value.failure._tag); // InvalidData
+ * O.isSome(failure) && Result.isFailure(failure.value) && failure.value.failure._tag // => "InvalidData"
  * ```
  *
  * @public
@@ -216,8 +222,8 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
      */
     event: S.String.pipe(
       S.Option,
-      S.withConstructorDefault(Effect.succeed(O.none<string>())),
-      S.withDecodingDefault(Effect.succeed(O.none<string>())),
+      S.withConstructorDefault(Effect.succeedNone),
+      S.withDecodingDefault(Effect.succeedNone),
       $I.annoteKey("InvalidData.event", {
         description:
           "The event tag whose payload schema rejected the data, or `none` when it was the envelope frame itself that failed.",
@@ -239,8 +245,8 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the invalid-payload message)
+   * ```ts import.meta.vitest name="Read the invalid-payload message"
    * import { pipe } from "effect";
    * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
    * import * as A from "effect/Array";
@@ -249,30 +255,30 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
    * import * as S from "effect/Schema";
    * const events = [JsonlEvent.make("started", { data: S.String })];
    * const failure = pipe(Line.split('42'), A.head, O.map(Envelope.decodeResult(events)));
-   * console.log(O.isSome(failure) && Result.isFailure(failure.value) && failure.value.failure._tag); // InvalidData
+   * O.isSome(failure) && Result.isFailure(failure.value) && failure.value.failure._tag // => "InvalidData"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    const where = O.isSome(this.event) ? `payload for event ${quote(this.event.value)}` : "envelope";
-    return `invalid JSONL ${where} at byte offset ${this.line.offset}: ${this.error.message}`;
-  }
+  override readonly message =
+    `invalid JSONL ${O.match(this.event, { onNone: () => "envelope", onSome: (event) => `payload for event ${quote(event)}` })} at byte offset ${this.line.offset}: ${this.error.message}`;
 }
 
 /**
  * An append attempted after a terminal event, by an event not marked `reopen`.
  *
+ * **Details**
+ *
  * A journal whose tail is terminal is quiescent: it is finished, and appending
  * to it would silently resurrect a closed loop. Reopening is legal but must be
  * declared, which is what `reopen` marks.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Construct a TerminalViolation failure)
+ * ```ts import.meta.vitest name="Construct a TerminalViolation failure"
  * import { TerminalViolation } from "@beep/scratchpad/effected/jsonl/index";
  * const error = TerminalViolation.make({ event: "updated", terminal: "closed" });
- * console.log(error.terminal); // closed
+ * error.terminal // => "closed"
  * ```
  *
  * @public
@@ -302,23 +308,23 @@ export class TerminalViolation extends S.TaggedError<TerminalViolation>($I`Termi
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the terminal-journal message)
+   * ```ts import.meta.vitest name="Read the terminal-journal message"
    * import { TerminalViolation } from "@beep/scratchpad/effected/jsonl/index";
    * const error = TerminalViolation.make({ event: "updated", terminal: "closed" });
-   * console.log(error.terminal); // closed
+   * error.terminal // => "closed"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    return `cannot append ${quote(this.event)}: the journal is terminal at ${quote(this.terminal)}`;
-  }
+  override readonly message = `cannot append ${quote(this.event)}: the journal is terminal at ${quote(this.terminal)}`;
 }
 
 /**
  * An operation against a journal file that does not exist.
+ *
+ * **Details**
  *
  * A missing journal is a **legal state** — building the layer over a path that
  * does not exist yet succeeds, and the watcher activates once the file appears.
@@ -327,10 +333,10 @@ export class TerminalViolation extends S.TaggedError<TerminalViolation>($I`Termi
  * cannot quietly produce a second, empty journal that looks like a working
  * system with no history. Creation is always explicit, via `create`.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Construct a JournalNotFound failure)
+ * ```ts import.meta.vitest name="Construct a JournalNotFound failure"
  * import { JournalNotFound } from "@beep/scratchpad/effected/jsonl/index";
- * console.log(JournalNotFound.make({ path: "events.jsonl" }).path); // events.jsonl
+ * JournalNotFound.make({ path: "events.jsonl" }).path // => "events.jsonl"
  * ```
  *
  * @public
@@ -354,22 +360,22 @@ export class JournalNotFound extends S.TaggedError<JournalNotFound>($I`JournalNo
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the missing-journal message)
+   * ```ts import.meta.vitest name="Read the missing-journal message"
    * import { JournalNotFound } from "@beep/scratchpad/effected/jsonl/index";
-   * console.log(JournalNotFound.make({ path: "events.jsonl" }).path); // events.jsonl
+   * JournalNotFound.make({ path: "events.jsonl" }).path // => "events.jsonl"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    return `journal not found: ${this.path}`;
-  }
+  override readonly message = `journal not found: ${this.path}`;
 }
 
 /**
  * A payload that validated against its schema but cannot be serialized to JSON.
+ *
+ * **Details**
  *
  * A payload codec can accept values that JSON cannot represent, such as a
  * bigint or a reference cycle. Encoding through the JSON schema catches that
@@ -378,15 +384,15 @@ export class JournalNotFound extends S.TaggedError<JournalNotFound>($I`JournalNo
  * Fix InvalidData by satisfying the registered codec; fix UnserializableData
  * by choosing a representation that the JSON format can carry.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Report a nonserializable payload)
+ * ```ts import.meta.vitest name="Report a nonserializable payload"
  * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
  * import * as DateTime from "effect/DateTime";
  * import * as Result from "effect/Result";
  * import * as S from "effect/Schema";
  * const events = [JsonlEvent.make("snapshot", { data: S.Unknown })];
  * const result = Envelope.encodeResult({ at: DateTime.makeUnsafe(0), event: "snapshot", data: 1n }, events);
- * console.log(Result.isFailure(result) && result.failure._tag); // UnserializableData
+ * Result.isFailure(result) && result.failure._tag // => "UnserializableData"
  * ```
  *
  * @public
@@ -418,30 +424,29 @@ export class UnserializableData extends S.TaggedError<UnserializableData>($I`Uns
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the serialization message)
+   * ```ts import.meta.vitest name="Read the serialization message"
    * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
    * import * as DateTime from "effect/DateTime";
    * import * as Result from "effect/Result";
    * import * as S from "effect/Schema";
    * const events = [JsonlEvent.make("snapshot", { data: S.Unknown })];
    * const result = Envelope.encodeResult({ at: DateTime.makeUnsafe(0), event: "snapshot", data: 1n }, events);
-   * console.log(Result.isFailure(result) && result.failure._tag); // UnserializableData
+   * Result.isFailure(result) && result.failure._tag // => "UnserializableData"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    // Deliberately does not render `cause`: it may be the very cyclic value
-    // that could not be serialized in the first place.
-    const detail = P.isError(this.cause) ? this.cause.message : "value is not JSON-serializable";
-    return `cannot serialize payload for event ${quote(this.event)}: ${detail}`;
-  }
+  // A non-Error cause may itself be cyclic; do not render it.
+  override readonly message =
+    `cannot serialize payload for event ${quote(this.event)}: ${P.isError(this.cause) ? this.cause.message : "value is not JSON-serializable"}`;
 }
 
 /**
  * An append refused because the journal's scope has closed.
+ *
+ * **Details**
  *
  * Its own tag rather than a flavour of {@link TerminalViolation}, because the
  * recoveries have nothing in common: a terminal journal is a *state* the
@@ -453,10 +458,10 @@ export class UnserializableData extends S.TaggedError<UnserializableData>($I`Uns
  * suspend the late append with no failure channel, turning "the journal is
  * closing" into a hang; failing fast is what lets a caller react.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Construct a JournalClosed failure)
+ * ```ts import.meta.vitest name="Construct a JournalClosed failure"
  * import { JournalClosed } from "@beep/scratchpad/effected/jsonl/index";
- * console.log(JournalClosed.make({ event: "updated" }).event); // updated
+ * JournalClosed.make({ event: "updated" }).event // => "updated"
  * ```
  *
  * @public
@@ -482,22 +487,22 @@ export class JournalClosed extends S.TaggedError<JournalClosed>($I`JournalClosed
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the closed-journal message)
+   * ```ts import.meta.vitest name="Read the closed-journal message"
    * import { JournalClosed } from "@beep/scratchpad/effected/jsonl/index";
-   * console.log(JournalClosed.make({ event: "updated" }).event); // updated
+   * JournalClosed.make({ event: "updated" }).event // => "updated"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    return `cannot append ${quote(this.event)}: the journal is closed`;
-  }
+  override readonly message = `cannot append ${quote(this.event)}: the journal is closed`;
 }
 
 /**
  * The journal file was truncated or replaced beneath a reader.
+ *
+ * **Details**
  *
  * The cooperative-writer contract is append-only: a journal only ever grows,
  * and every cursor this package hands out depends on that. When the file shrinks
@@ -515,18 +520,17 @@ export class JournalClosed extends S.TaggedError<JournalClosed>($I`JournalClosed
  * and replacement have the **same** recovery, and a tag per cause would split
  * one recovery across two tags.
  *
- * **Details**
  * Detection is as complete as the platform allows and no more. Truncation is
  * caught by size; replacement is caught by inode identity, which
  * `FileSystem.File.Info` exposes as an **`Option`** — on a platform that does
  * not report it, a replacement at equal or greater size is undetectable and
  * only truncation is caught.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Construct a JournalResync failure)
+ * ```ts import.meta.vitest name="Construct a JournalResync failure"
  * import { JournalResync } from "@beep/scratchpad/effected/jsonl/index";
  * const error = JournalResync.make({ path: "events.jsonl", reason: "truncated", expected: 100, actual: 0 });
- * console.log(error.reason); // truncated
+ * error.reason // => "truncated"
  * ```
  *
  * @public
@@ -570,33 +574,34 @@ export class JournalResync extends S.TaggedError<JournalResync>($I`JournalResync
   /**
    * Human-readable context for this failure; structured fields retain its details.
    *
-   * **Example** (Inspect the failure)
-   * ```ts
+   * **Example** (Read the resync message)
+   * ```ts import.meta.vitest name="Read the resync message"
    * import { JournalResync } from "@beep/scratchpad/effected/jsonl/index";
    * const error = JournalResync.make({ path: "events.jsonl", reason: "truncated", expected: 100, actual: 0 });
-   * console.log(error.reason); // truncated
+   * error.reason // => "truncated"
    * ```
    *
-   * @category getters
+   * @category error-handling
    * @since 0.0.0
    */
-  override get message(): string {
-    return `journal ${this.reason} beneath the reader at ${this.path}: consumed ${this.expected}, file is now ${this.actual}`;
-  }
+  override readonly message =
+    `journal ${this.reason} beneath the reader at ${this.path}: consumed ${this.expected}, file is now ${this.actual}`;
 }
 
 /**
  * Every error this package raises from the pure core and the journal service.
  *
+ * **Details**
+ *
  * Core's `PlatformError` is deliberately **not** a member: IO failures pass
  * through untranslated rather than being wrapped in a taxonomy that would add
  * no recovery information.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Recognize a journal domain failure)
+ * ```ts import.meta.vitest name="Recognize a journal domain failure"
  * import { JsonlError, JournalClosed } from "@beep/scratchpad/effected/jsonl/index";
  * const error = JournalClosed.make({ event: "updated" });
- * console.log(JsonlError.guards.JournalClosed(error)); // true
+ * JsonlError.guards.JournalClosed(error) // => true
  * ```
  *
  * @public

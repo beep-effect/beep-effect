@@ -42,12 +42,21 @@ const LF = 0x0a;
 /**
  * The default tail window.
  *
+ * **Details**
+ *
  * Large enough that a snapshot journal's last line is almost always inside it
  * on the first read, small enough that reading it is cheap against a journal of
  * any age. When it misses, {@link readTail} widens rather than failing.
  *
+ * **Example** (Inspect the initial read budget)
+ *
+ * ```ts import.meta.vitest name="Inspect the initial read budget"
+ * import { DEFAULT_WINDOW } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * DEFAULT_WINDOW // => 8192
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category constants
  * @since 0.0.0
  */
 export const DEFAULT_WINDOW = 8192;
@@ -55,8 +64,16 @@ export const DEFAULT_WINDOW = 8192;
 /**
  * A decoded tail window.
  *
+ * **Example** (Describe a complete tail window)
+ *
+ * ```ts import.meta.vitest name="Describe a complete tail window"
+ * import { TailWindow } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * const window = TailWindow.make({text:"42\n",start:0,size:3,atFileStart:true});
+ * window.size // => 3
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category models
  * @since 0.0.0
  */
 export class TailWindow extends S.Class<TailWindow>($I`TailWindow`)(
@@ -73,14 +90,31 @@ const hasBom = (bytes: Uint8Array): boolean =>
 /**
  * Probe the first three bytes of a file for a BOM.
  *
+ * **Details**
+ *
  * This is a property of the FILE, so it is read once from the start rather than
  * inferred from whatever window happens to be in hand. Inferring it from window
  * position was a real defect: a BOM'd journal larger than the window never has
  * a window at offset 0, so every offset it emitted was physical — silently off
  * by three against a file the package itself had described as post-BOM.
  *
+ * **Example** (Detect a leading UTF-8 BOM)
+ *
+ * ```ts
+ * import { probeBomBytes } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import { Effect } from "effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
+ *   const bytes = yield* probeBomBytes(fs,"/events.jsonl");
+ *   bytes // => 3
+ * });
+ * await Effect.runPromise(program);
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category resource-management
  * @since 0.0.0
  */
 export const probeBomBytes: {
@@ -101,6 +135,8 @@ export const probeBomBytes: {
 
 /**
  * Read the last `window` bytes of a journal, decoded from a line boundary.
+ *
+ * **Details**
  *
  * Three disciplines, each load-bearing:
  *
@@ -124,8 +160,23 @@ export const probeBomBytes: {
  * maximum — and is carried on spencerbeggs/effected#233, not added underneath
  * it.
  *
+ * **Example** (Read a complete tail window)
+ *
+ * ```ts
+ * import { readTail } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import { Effect } from "effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
+ *   const window = yield* readTail(fs,"/events.jsonl",8192,3);
+ *   window.text // => "42\n"
+ * });
+ * await Effect.runPromise(program);
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category resource-management
  * @since 0.0.0
  */
 export const readTail: {
@@ -186,12 +237,31 @@ export const readTail: {
  * Read widening windows until `decode` finds something, or the whole file has
  * been seen.
  *
+ * **Details**
+ *
  * The widening is what makes the bounded read *correct* rather than merely
  * cheap: a journal whose last line is longer than the initial window would
  * otherwise report "no valid envelope" for a perfectly healthy file.
  *
+ * **Example** (Widen a tail search)
+ *
+ * ```ts
+ * import { readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+ * import { Effect } from "effect";
+ * import * as O from "effect/Option";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
+ *   const found = yield* readTailUntil(fs,"/events.jsonl",3,(window) => Line.lastValid(window.text));
+ *   found.pipe(O.map((row) => row.value)) // => O.some(42)
+ * });
+ * await Effect.runPromise(program);
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category resource-management
  * @since 0.0.0
  */
 export const readTailUntil: {
@@ -236,6 +306,8 @@ export const readTailUntil: {
 /**
  * Read a byte range and decode it as text, safely across chunk boundaries.
  *
+ * **Details**
+ *
  * The byte→string seam lives here, in the service layer, because `Line.split`
  * is string-in by design and the pure core must never learn about buffers.
  *
@@ -246,8 +318,23 @@ export const readTailUntil: {
  * kind that reaches production. The final `decode()` with no argument flushes
  * any trailing partial sequence.
  *
+ * **Example** (Read a physical byte range)
+ *
+ * ```ts
+ * import { readRangeText } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import { Effect } from "effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
+ *   const text = yield* readRangeText(fs,"/events.jsonl",3,3);
+ *   text // => "42\n"
+ * });
+ * await Effect.runPromise(program);
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category resource-management
  * @since 0.0.0
  */
 export const readRangeText: {

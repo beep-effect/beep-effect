@@ -1,9 +1,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import {
+  type AppendOptions,
+  type CursoredSlice,
   Envelope,
   type EnvelopeUnion,
   type EnvelopeWithTag,
   Journal,
+  type JournalConfig,
   type JournalShape,
   JsonlEvent,
   Line,
@@ -13,6 +16,7 @@ import { canMerge, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal
 import { probeBomBytes, readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -26,13 +30,14 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
+import * as Tuple from "effect/Tuple";
 import { expectTypeOf } from "vitest";
 
 const $I = $ScratchpadId.create("test/jsonl");
 const Updated = JsonlEvent.make("updated", { data: S.Struct({ count: S.Finite, label: S.String }) });
 const Closed = JsonlEvent.make("closed", { data: S.Null, terminal: true });
 const Reopened = JsonlEvent.make("reopened", { data: S.Null, reopen: true });
-const events = [Updated, Closed, Reopened] as const;
+const events = Tuple.make(Updated, Closed, Reopened);
 type Registry = typeof events;
 
 class TestJournal extends Journal.Service<TestJournal>()($I`TestJournal`, { events }) {}
@@ -56,23 +61,38 @@ describe("JSONL schema and facade types", () => {
     const source = line(text);
     const decoded = pipe(source, Envelope.decodeResult(events));
     expectTypeOf<Result.Result.Success<typeof decoded>>().toEqualTypeOf<EnvelopeUnion<Registry>>();
-    expect(decoded).toEqual(Envelope.decodeResult(source, events));
-    expect(
-      pipe(
-        source,
-        Envelope.decodeSelectedResult(events, () => true),
-      ),
-    ).toEqual(Envelope.decodeSelectedResult(source, events, () => true));
-    expect(
+    const expected: EnvelopeWithTag<Registry, "updated"> = {
+      at,
+      event: "updated",
+      data: { count: 2, label: "a" },
+      line: source,
+    };
+    assertSuccess(decoded, expected);
+    assertSuccess(Envelope.decodeResult(source, events), expected);
+    const selected = pipe(
+      source,
+      Envelope.decodeSelectedResult(events, () => true),
+    );
+    assertSome(selected.pipe(O.map(Result.getOrThrow)), expected);
+    assertSome(Envelope.decodeSelectedResult(source, events, () => true).pipe(O.map(Result.getOrThrow)), expected);
+    assertNone(
       pipe(
         source,
         Envelope.decodeSelectedResult(events, () => false),
       ),
-    ).toEqual(O.none());
-    expect(pipe(text, Envelope.decodeAllResult(events))).toEqual(Envelope.decodeAllResult(text, events));
-    expect(pipe(`${text}\n{`, Envelope.lastValidResult(events))).toEqual(Envelope.lastValidResult(`${text}\n`, events));
-    expect(pipe({ at, event: "updated", data: { count: 2, label: "a" } }, Envelope.encodeResult(events))).toEqual(
-      Envelope.encodeResult({ at, event: "updated", data: { count: 2, label: "a" } }, events),
+    );
+    assertSuccess(Result.all(pipe(`${text}\n`, Envelope.decodeAllResult(events))), [expected]);
+    assertSuccess(Result.all(Envelope.decodeAllResult(`${text}\n`, events)), [expected]);
+    assertSome(pipe(`${text}\n{`, Envelope.lastValidResult(events)), expected);
+    assertSome(Envelope.lastValidResult(`${text}\n{`, events), expected);
+    const input = { at, event: "updated", data: { count: 2, label: "a" } } satisfies {
+      at: DateTime.Utc;
+      event: "updated";
+      data: { count: number; label: string };
+    };
+    assertSuccess(
+      pipe(input, Envelope.encodeResult(events)),
+      '{"at":"2026-10-06T00:00:00.000Z","event":"updated","data":{"count":2,"label":"a"}}\n',
     );
   });
 
@@ -103,7 +123,7 @@ describe("JSONL schema and facade types", () => {
       { offset: 14, end: 15, length: 1, text: "{", terminated: false },
     ]);
     expect(Line.consumedOffset(source)).toBe(14);
-    expect(Line.lastValid(source).pipe(O.map((parsed) => parsed.value))).toEqual(O.some("é"));
+    assertSome(Line.lastValid(source).pipe(O.map((parsed) => parsed.value)), "é");
     expect(A.length(Line.parseAll(source))).toBe(3);
     expect(Line.split("")).toEqual([]);
     expect(A.length(Line.split("\n"))).toBe(1);
@@ -118,10 +138,10 @@ describe("JSONL schema and facade types", () => {
       expect(bom).toBe(3);
       const decode = (window: { readonly text: string }) => Line.lastValid(window.text);
       const direct = yield* readTailUntil(fs, path, bom, decode);
-      expect(yield* pipe(fs, readTailUntil(path, bom, decode))).toEqual(direct);
-      expect(yield* readTailUntil(fs, path, bom, decode, 2)).toEqual(direct);
-      expect(yield* pipe(fs, readTailUntil(path, bom, decode, 2))).toEqual(direct);
-      expect(direct.pipe(O.map((parsed) => parsed.line.offset))).toEqual(O.some(0));
+      assertSome(yield* pipe(fs, readTailUntil(path, bom, decode)), O.getOrThrow(direct));
+      assertSome(yield* readTailUntil(fs, path, bom, decode, 2), O.getOrThrow(direct));
+      assertSome(yield* pipe(fs, readTailUntil(path, bom, decode, 2)), O.getOrThrow(direct));
+      assertSome(direct.pipe(O.map((parsed) => parsed.line.offset)), 0);
     }),
   );
 
@@ -146,8 +166,9 @@ describe("JSONL schema and facade types", () => {
       events,
     );
     expectTypeOf<Result.Result.Success<typeof decoded>>().toEqualTypeOf<EnvelopeUnion<Registry>>();
-    expect(Result.isSuccess(decoded)).toBe(true);
-    if (Result.isSuccess(decoded) && decoded.success.event === "updated") {
+    assertSuccess(decoded, Result.getOrThrow(decoded));
+    expect(decoded.success.data).toEqual({ count: 2, label: "a" });
+    if (decoded.success.event === "updated") {
       expectTypeOf(decoded.success.data).toEqualTypeOf<{ readonly count: number; readonly label: string }>();
       expect(decoded.success.data.count).toBe(2);
     }
@@ -155,44 +176,57 @@ describe("JSONL schema and facade types", () => {
 
   it("does not decode payloads rejected by the frame filter", () => {
     const invalid = line('{"at":"2026-10-06T00:00:00Z","event":"updated","data":{"count":"bad"}}');
-    expect(O.isNone(Envelope.decodeSelectedResult(invalid, events, () => false))).toBe(true);
+    assertNone(Envelope.decodeSelectedResult(invalid, events, () => false));
     const selected = Envelope.decodeSelectedResult(invalid, events, () => true);
-    expect(O.isSome(selected) && Result.isFailure(selected.value)).toBe(true);
+    assertSome(
+      selected.pipe(
+        O.map((result) =>
+          result.pipe(
+            Result.getFailure,
+            O.map((error) => error._tag),
+            O.getOrThrow,
+          ),
+        ),
+      ),
+      "InvalidData",
+    );
     const unknown = Envelope.decodeResult(line('{"at":"2026-10-06T00:00:00Z","event":"foreign","data":null}'), events);
-    expect(Result.isFailure(unknown) && unknown.failure._tag).toBe("UnknownEvent");
+    assertFailure(
+      Result.mapError(unknown, (error) => error._tag),
+      "UnknownEvent",
+    );
   });
 
   it("decodes a transformed payload once and keeps its decoded type", () => {
-    const transformed = [JsonlEvent.make("number", { data: S.FiniteFromString })] as const;
+    const transformed = Tuple.make(JsonlEvent.make("number", { data: S.FiniteFromString }));
     const encoded = Envelope.encodeResult({ at, event: "number", data: 42 }, transformed);
-    expect(Result.isSuccess(encoded)).toBe(true);
-    if (Result.isSuccess(encoded)) {
+    assertSuccess(encoded, Result.getOrThrow(encoded));
+    {
       const decoded = Envelope.decodeResult(line(encoded.success), transformed);
-      expect(Result.isSuccess(decoded)).toBe(true);
-      if (Result.isSuccess(decoded)) {
-        expectTypeOf(decoded.success.data).toEqualTypeOf<number>();
-        expect(decoded.success.data).toBe(42);
-      }
+      assertSuccess(decoded, Result.getOrThrow(decoded));
+      expectTypeOf(decoded.success.data).toEqualTypeOf<number>();
+      expect(decoded.success.data).toBe(42);
     }
   });
 
   it("reports serializability failures in the typed Result channel", () => {
-    const permissive = [JsonlEvent.make("unknown", { data: S.Unknown })] as const;
+    const permissive = Tuple.make(JsonlEvent.make("unknown", { data: S.Unknown }));
     const encoded = Envelope.encodeResult({ at, event: "unknown", data: 1n }, permissive);
-    expect(Result.isFailure(encoded) && encoded.failure._tag).toBe("UnserializableData");
+    assertFailure(
+      Result.mapError(encoded, (error) => error._tag),
+      "UnserializableData",
+    );
   });
 
   it("round-trips payloadless events through JSON null", () => {
-    const payloadless = [JsonlEvent.make("empty", { data: S.Void })] as const;
+    const payloadless = Tuple.make(JsonlEvent.make("empty", { data: S.Void }));
     const encoded = Envelope.encodeResult({ at, event: "empty", data: undefined }, payloadless);
-    expect(Result.isSuccess(encoded)).toBe(true);
-    if (Result.isSuccess(encoded)) {
+    assertSuccess(encoded, Result.getOrThrow(encoded));
+    {
       const decoded = Envelope.decodeResult(line(encoded.success), payloadless);
-      expect(Result.isSuccess(decoded)).toBe(true);
-      if (Result.isSuccess(decoded)) {
-        expectTypeOf(decoded.success.data).toEqualTypeOf<void>();
-        expect(decoded.success.event).toBe("empty");
-      }
+      assertSuccess(decoded, Result.getOrThrow(decoded));
+      expectTypeOf(decoded.success.data).toEqualTypeOf<void>();
+      expect(decoded.success.event).toBe("empty");
     }
   });
 });
@@ -202,8 +236,8 @@ describe("JSONL generic engine", () => {
     const patch = S.decodeResult(S.fromJsonString(S.Record(S.String, S.Unknown)))(
       '{"count":2,"nested":{"after":true},"__proto__":{"polluted":true},"constructor":"bad","prototype":"bad"}',
     );
-    expect(Result.isSuccess(patch)).toBe(true);
-    if (Result.isSuccess(patch)) {
+    assertSuccess(patch, Result.getOrThrow(patch));
+    {
       const base = { count: 1, nested: { before: true } };
       expect(pipe(base, canMerge(patch.success))).toBe(true);
       const merged = pipe(base, shallowMerge(patch.success));
@@ -243,7 +277,7 @@ describe("JSONL generic engine", () => {
         expectTypeOf<Stream.Success<typeof query>>().toEqualTypeOf<EnvelopeWithTag<Registry, "updated">>();
         const rows = yield* Stream.runCollect(query);
         expect(A.map(rows, (row) => row.data.count)).toEqual([2]);
-        expect(yield* SubscriptionRef.get(journal.latest)).toEqual(O.some(second));
+        assertSome(yield* SubscriptionRef.get(journal.latest), second);
       }),
     ),
   );
@@ -257,11 +291,14 @@ describe("JSONL generic engine", () => {
         yield* journal.append("closed", null);
         expect(yield* journal.quiescent).toBe(true);
         const rejected = yield* Effect.result(journal.append("updated", { count: 4, label: "b" }));
-        expect(Result.isFailure(rejected) && rejected.failure._tag).toBe("TerminalViolation");
+        assertFailure(
+          Result.mapError(rejected, (error) => error._tag),
+          "TerminalViolation",
+        );
         const projected = yield* journal
           .projection(0, (sum, envelope) => sum + envelope.data.count, { events: ["updated"], cursor: 0 })
           .pipe(Stream.runCollect);
-        expect(A.last(projected)).toEqual(O.some(3));
+        assertSome(A.last(projected), 3);
         yield* journal.append("reopened", null);
         expect(yield* journal.quiescent).toBe(false);
         const full = journal.query();
@@ -274,7 +311,7 @@ describe("JSONL generic engine", () => {
   it.effect("seeds latest from disk and retains class payloads through patches", () =>
     Effect.gen(function* () {
       class Payload extends S.Class<Payload>($I`Payload`)({ count: S.Finite, label: S.String }) {}
-      const definitions = [JsonlEvent.make("boxed", { data: Payload })] as const;
+      const definitions = Tuple.make(JsonlEvent.make("boxed", { data: Payload }));
       class BoxedJournal extends Journal.Service<BoxedJournal>()($I`BoxedJournal`, { events: definitions }) {}
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString(
@@ -287,7 +324,7 @@ describe("JSONL generic engine", () => {
       yield* Effect.gen(function* () {
         const journal = yield* BoxedJournal;
         const latest = yield* SubscriptionRef.get(journal.latest);
-        expect(O.isSome(latest) && latest.value.line.offset).toBe(0);
+        assertSome(latest.pipe(O.map((row) => row.line.offset)), 0);
         const patched = yield* journal.appendPatch("boxed", { count: 2 });
         expect(patched.data).toBeInstanceOf(Payload);
         expect(patched.data.label).toBe("seed");
@@ -326,6 +363,29 @@ const rejectsInvalidCalls = (
   const invalid8 = Envelope.encodeResult(events)({ at, event: "updated", data: null });
   // @ts-expect-error Effectful piped encoding also rejects foreign tags.
   const invalid9 = Envelope.encode(events)({ at, event: "foreign", data: null });
-  return [invalid0, invalid1, invalid2, invalid3, invalid4, invalid5, invalid6, invalid7, invalid8, invalid9];
+  // @ts-expect-error Omission is accepted, explicit undefined is not.
+  const invalid10: AppendOptions = { scope: undefined };
+  // @ts-expect-error Optional configuration keys are exact.
+  const invalid11: JournalConfig = { path, capacity: undefined };
+  // @ts-expect-error Slice keys are exact optional properties.
+  const invalid12: CursoredSlice<Registry, "updated"> = { events: undefined };
+  // @ts-expect-error A cursor must be omitted rather than explicitly undefined.
+  const invalid13: CursoredSlice<Registry, "updated"> = { cursor: undefined };
+  return [
+    invalid0,
+    invalid1,
+    invalid2,
+    invalid3,
+    invalid4,
+    invalid5,
+    invalid6,
+    invalid7,
+    invalid8,
+    invalid9,
+    invalid10,
+    invalid11,
+    invalid12,
+    invalid13,
+  ];
 };
 void rejectsInvalidCalls;

@@ -1,6 +1,8 @@
 /**
  * Append-only, schema-validated JSONL journals as a definable Effect service.
  *
+ * **Details**
+ *
  * The subject is not the format — one JSON value per line needs no library.
  * The subject is the file as a live object: a journal that only ever grows,
  * whose current state is its last valid line, whose tail may be torn mid-append,
@@ -10,11 +12,11 @@
  * current state of a journal with no Effect runtime at all.
  *
  * **Example** (Read the last valid snapshot)
- * ```ts
+ * ```ts import.meta.vitest name="Read the last valid snapshot"
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as O from "effect/Option";
  * const state = Line.lastValid('{"count":1}\n{');
- * console.log(state.pipe(O.map((parsed) => parsed.value))); // Some({ count: 1 })
+ * state.pipe(O.map((parsed) => parsed.value)) // => O.some({ count: 1 })
  * ```
  *
  * @see {@link https://effect.website | Effect} for the runtime and schema library.

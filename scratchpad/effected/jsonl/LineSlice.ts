@@ -13,6 +13,8 @@ const $I = $ScratchpadId.create("LineSlice");
 /**
  * A single candidate line: its text, and where it lives in the source **in bytes**.
  *
+ * **Details**
+ *
  * Every offset on this class is a UTF-8 byte offset, never a UTF-16 code-unit
  * index, because these values are cursors into a file: they are handed to
  * `FileSystem.stream`'s `offset` option and persisted across process restarts.
@@ -23,18 +25,18 @@ const $I = $ScratchpadId.create("LineSlice");
  * the trailing `\n`, and exclude the `\r` of a `\r\n` pair. `end` includes it,
  * which is why `end - offset` is not always `length`.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Locate a terminated line in UTF-8 bytes)
+ * ```ts import.meta.vitest name="Locate a terminated line in UTF-8 bytes"
  * import { pipe } from "effect";
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";
  * const first = pipe(Line.split('{"a":1}\r\n{"b":2}\n'), A.head);
- * console.log(first.pipe(O.map((line) => [line.offset, line.length, line.end]))); // Some([0, 7, 9])
+ * first.pipe(O.map((line) => [line.offset, line.length, line.end])) // => O.some([0, 7, 9])
  * ```
  *
- * @category models
  * @public
+ * @category models
  * @since 0.0.0
  */
 export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
@@ -48,6 +50,8 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
     /**
      * UTF-8 byte offset just past this line's terminator — the offset at which
      * the next line begins, and the resume cursor for an incremental read.
+     *
+     * **Details**
      *
      * Equal to `offset + length` when the line is unterminated.
      */
@@ -72,6 +76,8 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
     ),
     /**
      * Whether a `\n` terminated this line in the source.
+     *
+     * **Details**
      *
      * `false` can only occur on the final line, and means the line **may be a
      * torn tail** — a writer caught mid-append. A reader walks back over it and

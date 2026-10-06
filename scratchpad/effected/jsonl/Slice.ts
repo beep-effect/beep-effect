@@ -22,10 +22,10 @@ const $I = $ScratchpadId.create("effected/jsonl/Slice");
 // Selection options are plain boundary inputs. Their schemas retain literal tags
 // while preserving ordinary object-literal calls to query, changes and projection.
 const fields = <T extends string>(event: S.Codec<T>) => ({
-  events: event.pipe(S.Array, S.optional),
-  scopes: S.String.pipe(S.Array, S.optional),
-  from: S.optional(S.DateTimeUtc),
-  to: S.optional(S.DateTimeUtc),
+  events: event.pipe(S.Array, S.optionalKey),
+  scopes: S.String.pipe(S.Array, S.optionalKey),
+  from: S.optionalKey(S.DateTimeUtc),
+  to: S.optionalKey(S.DateTimeUtc),
 });
 const slice = <T extends string>(event: S.Codec<T>) =>
   event
@@ -34,7 +34,7 @@ const slice = <T extends string>(event: S.Codec<T>) =>
 const cursoredSlice = <T extends string>(event: S.Codec<T>) =>
   S.Struct({
     ...fields(event),
-    cursor: S.optional(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+    cursor: S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))),
   }).annotate(
     $I.annote("CursoredSlice", { description: "Frame selection resumed at a logical post-BOM byte offset." }),
   );
@@ -63,11 +63,22 @@ export type CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEvent.Ta
 /**
  * Whether a frame satisfies a slice.
  *
+ * **Details**
+ *
  * Takes the **frame**, never a decoded envelope — that is what keeps matching
  * ahead of the payload schema on the read path.
  *
+ * **Example** (Select a frame without decoding data)
+ *
+ * ```ts import.meta.vitest name="Select a frame without decoding data"
+ * import { matchesFrame } from "@beep/scratchpad/effected/jsonl/Slice";
+ * import * as DateTime from "effect/DateTime";
+ * const frame = {at:DateTime.makeUnsafe(0),event:"started",data:null};
+ * matchesFrame(frame, {events:["started"]}) // => true
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category filtering
  * @since 0.0.0
  */
 export const matchesFrame: {

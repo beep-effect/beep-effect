@@ -15,6 +15,8 @@ import * as Str from "effect/String";
 /**
  * The UTF-8 byte length of a JavaScript string.
  *
+ * **Details**
+ *
  * Journal offsets are **bytes**, because that is what `FileSystem.stream`'s
  * `offset` option and every persisted cursor mean. `String.length` counts
  * UTF-16 code units and is wrong for every non-ASCII journal: `"\u{1F600}"` has
@@ -24,8 +26,15 @@ import * as Str from "effect/String";
  * that an unpaired surrogate encodes as U+FFFD (3 bytes), but without
  * allocating a buffer per call.
  *
+ * **Example** (Measure an astral character)
+ *
+ * ```ts import.meta.vitest name="Measure an astral character"
+ * import { utf8Length } from "@beep/scratchpad/effected/jsonl/internal/utf8";
+ * utf8Length("😀") // => 4
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category getters
  * @since 0.0.0
  */
 export const utf8Length = (text: string): number => {

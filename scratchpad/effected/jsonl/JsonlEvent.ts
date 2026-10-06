@@ -16,6 +16,8 @@ import { Envelope } from "./Envelope.js";
  * The bound every registered payload schema must satisfy: a codec requiring
  * **no services** in either direction.
  *
+ * **Details**
+ *
  * This is a contract, not an implementation detail. The pure core decodes with
  * `S.decodeUnknownResult` and encodes with `S.encodeUnknownResult`,
  * both of which demand `never` in both service slots — so a payload schema that
@@ -48,16 +50,16 @@ export type JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
 /**
  * Runtime type identifier marking a JSONL event definition.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Identify an event definition)
+ * ```ts import.meta.vitest name="Identify an event definition"
  * import { JsonlEvent, JsonlEventTypeId } from "@beep/scratchpad/effected/jsonl/index";
  * import * as S from "effect/Schema";
  * const event = JsonlEvent.make("started", { data: S.String });
- * console.log(event[JsonlEventTypeId] === JsonlEventTypeId); // true
+ * event[JsonlEventTypeId] === JsonlEventTypeId // => true
  * ```
  *
  * @public
- * @category utilities
+ * @category type-ids
  * @since 0.0.0
  */
 export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
@@ -65,6 +67,8 @@ export const JsonlEventTypeId: JsonlEventTypeId = "~effected/jsonl/JsonlEvent";
 /**
  * One event definition: a tag, the schema its `data` must satisfy, and the two
  * lifecycle markings.
+ *
+ * **Details**
  *
  * The type parameters are what make a registry more than a runtime list — the
  * literal `Tag`, the payload schema and the `terminal`/`reopen` flags all
@@ -91,6 +95,8 @@ export interface JsonlEvent<
   /**
    * Whether this event makes the journal quiescent.
    *
+   * **Details**
+   *
    * After a terminal event is the tail, appending fails with
    * `TerminalViolation` unless the appended event is marked `reopen`.
    */
@@ -109,6 +115,8 @@ export interface JsonlEvent<
 export declare namespace JsonlEvent {
   /**
    * A type-erased event definition.
+   *
+   * **Details**
    *
    * Note `data` is bounded by {@link DataSchema} rather than widened to
    * `S.Top`: erasing to `Top` would lose the no-services guarantee that
@@ -180,6 +188,8 @@ export declare namespace JsonlEvent {
 /**
  * Defines an event.
  *
+ * **Details**
+ *
  * The `const` type parameters are load-bearing: they keep `"unlinked"` a
  * literal rather than widening it to `string`, and keep `terminal: true` a
  * literal `true`, so both survive into the derived envelope union where the
@@ -189,18 +199,18 @@ export declare namespace JsonlEvent {
  * explicitly with `S.Void`, because a silent default would make a typo in
  * the options object look like a deliberate void payload.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Define payload and lifecycle contracts)
+ * ```ts import.meta.vitest name="Define payload and lifecycle contracts"
  * import { JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
  * import * as S from "effect/Schema";
  * const updated = JsonlEvent.make("updated", { data: S.Struct({ count: S.Finite }) });
  * const closed = JsonlEvent.make("closed", { data: S.Null, terminal: true });
  * const reopened = JsonlEvent.make("reopened", { data: S.Null, reopen: true });
- * console.log(updated.tag, closed.terminal, reopened.reopen); // updated true true
+ * [updated.tag, closed.terminal, reopened.reopen] // => ["updated", true, true]
  * ```
  *
  * @public
- * @category utilities
+ * @category constructors
  * @since 0.0.0
  */
 export const JsonlEvent = { make };

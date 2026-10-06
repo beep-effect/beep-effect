@@ -26,12 +26,12 @@ const $I = $ScratchpadId.create("effected/jsonl/Envelope");
  * A transient Struct avoids allocating a class for frames that are discarded.
  *
  * **Example** (Read a frame without validating its payload)
- * ```ts
+ * ```ts import.meta.vitest name="Read a frame without validating its payload"
  * import { EnvelopeFrame } from "@beep/scratchpad/effected/jsonl/Envelope";
  * import * as S from "effect/Schema";
  * import * as Result from "effect/Result";
- * const result = S.decodeUnknownResult(EnvelopeFrame)({ at: "2026-10-06T00:00:00Z", event: "started", data: null });
- * console.log(Result.isSuccess(result)); // true
+ * const result = S.decodeResult(EnvelopeFrame)({ at: "2026-10-06T00:00:00Z", event: "started", data: null });
+ * Result.isSuccess(result) // => true
  * ```
  * @category schemas
  * @since 0.0.0
@@ -277,7 +277,7 @@ const encode: {
  * returns its pipeable form. Selected decoding filters the frame before data.
  *
  * **Example** (Decode in a pipeline)
- * ```ts
+ * ```ts import.meta.vitest name="Decode in a pipeline"
  * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
  * import { pipe } from "effect";
  * import * as A from "effect/Array";
@@ -285,19 +285,194 @@ const encode: {
  * import * as S from "effect/Schema";
  * const events = [JsonlEvent.make("started", { data: S.String })];
  * const decoded = pipe(Line.split('{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}'), A.head, O.map(Envelope.decodeResult(events)));
- * console.log(O.isSome(decoded)); // true
+ * O.isSome(decoded) // => true
  * ```
  * @category codecs
  * @since 0.0.0
  */
 export const Envelope = {
+  /**
+   * Constructs the runtime schema for one decoded envelope, including its source line. The data codec is applied to decoded input; wire frames are decoded separately.
+   *
+   * **Example** (Validate a decoded envelope)
+   *
+   * ```ts import.meta.vitest name="Validate a decoded envelope"
+   * import { Envelope, Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * import * as S from "effect/Schema";
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * const line = O.getOrThrow(A.head(Line.split(text)));
+   * import * as DateTime from "effect/DateTime";
+   * const schema = Envelope.schema("started", S.String);
+   * S.is(schema)({at:DateTime.makeUnsafe(0),event:"started",data:"ready",line}) // => true
+   * ```
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
   schema,
+  /**
+   * Parses JSON and validates the timestamp, tag and optional scope while leaving data unknown. A malformed frame is reported even when a later selection would exclude it.
+   *
+   * **Example** (Read a frame without its registry)
+   *
+   * ```ts import.meta.vitest name="Read a frame without its registry"
+   * import { Envelope, Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * const line = O.getOrThrow(A.head(Line.split(text)));
+   * import * as Result from "effect/Result";
+   * Result.map(Envelope.frameResult(line), (frame) => frame.event) // => Result.succeed("started")
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   frameResult,
+  /**
+   * Validates one line with its registered payload codec. Supply the registry last, or curry the registry and pipe the line into the result. The registry is frozen on its first lookup.
+   *
+   * **Example** (Pipe a line through its registry)
+   *
+   * ```ts import.meta.vitest name="Pipe a line through its registry"
+   * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * const line = O.getOrThrow(A.head(Line.split(text)));
+   * import { pipe } from "effect";
+   * import * as Result from "effect/Result";
+   * pipe(line, Envelope.decodeResult(events), Result.map((row) => row.data)) // => Result.succeed("ready")
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   decodeResult,
+  /**
+   * Applies selection to the validated frame before decoding data. None means excluded; Some contains either the decoded envelope or its typed failure. Frame failures are always reported.
+   *
+   * **Example** (Exclude a frame before payload validation)
+   *
+   * ```ts import.meta.vitest name="Exclude a frame before payload validation"
+   * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * const line = O.getOrThrow(A.head(Line.split(text)));
+   * Envelope.decodeSelectedResult(line, events, (frame) => frame.event === "closed") // => O.none()
+   * ```
+   *
+   * @category filtering
+   * @since 0.0.0
+   */
   decodeSelectedResult,
+  /**
+   * Decodes every nonblank line in source order. Each line has its own Result, including malformed interior lines and an incomplete final line.
+   *
+   * **Example** (Preserve a malformed interior line)
+   *
+   * ```ts import.meta.vitest name="Preserve a malformed interior line"
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * import * as Result from "effect/Result";
+   * A.map(Envelope.decodeAllResult(text + "\nbad\n", events), Result.isSuccess) // => [true, false]
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   decodeAllResult,
+  /**
+   * Walks backward to the last valid registered envelope. Malformed JSON, unknown tags and invalid payloads are skipped; None means no envelope is valid. A scalar torn tail cannot count as an envelope.
+   *
+   * **Example** (Walk back past a scalar torn tail)
+   *
+   * ```ts import.meta.vitest name="Walk back past a scalar torn tail"
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as O from "effect/Option";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * Envelope.lastValidResult(text + "\n4", events).pipe(O.map((row) => row.data)) // => O.some("ready")
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   lastValidResult,
+  /**
+   * Validates a correlated tag and payload, then returns one JSON line including its newline. Void payloads encode as null and absent scope keys stay omitted. Unserializable values fail in the Result channel.
+   *
+   * **Example** (Encode a correlated payload with a terminator)
+   *
+   * ```ts import.meta.vitest name="Encode a correlated payload with a terminator"
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * import * as DateTime from "effect/DateTime";
+   * import * as Result from "effect/Result";
+   * import * as Str from "effect/String";
+   * const encoded = Envelope.encodeResult({at:DateTime.makeUnsafe(0),event:"started",data:"ready"}, events);
+   * Result.map(encoded, Str.endsWith("\n")) // => Result.succeed(true)
+   * ```
+   *
+   * @category encoding
+   * @since 0.0.0
+   */
   encodeResult,
+  /**
+   * Lazily decodes a line in Effect, preserving the synchronous decoder's typed errors. Supply the registry to the curried form when piping a line.
+   *
+   * **Example** (Decode a line in Effect)
+   *
+   * ```ts import.meta.vitest name="Decode a line in Effect"
+   * import { Envelope, JsonlEvent, Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * const text = '{"at":"2026-10-06T00:00:00Z","event":"started","data":"ready"}';
+   * const line = O.getOrThrow(A.head(Line.split(text)));
+   * import { Effect } from "effect";
+   * const program = Effect.gen(function* () {
+   *   const envelope = yield* Envelope.decode(line, events);
+   *   envelope.data // => "ready"
+   * });
+   * await Effect.runPromise(program);
+   * ```
+   *
+   * @category decoding
+   * @since 0.0.0
+   */
   decode,
+  /**
+   * Lazily validates and encodes an envelope in Effect. Constructing the Effect performs no encoding; typed validation and serialization failures occur only when it runs.
+   *
+   * **Example** (Encode a payload lazily)
+   *
+   * ```ts import.meta.vitest name="Encode a payload lazily"
+   * import { Envelope, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as S from "effect/Schema";
+   * const events = [JsonlEvent.make("started", { data: S.String })];
+   * import { Effect } from "effect";
+   * import * as DateTime from "effect/DateTime";
+   * import * as Str from "effect/String";
+   * const program = Envelope.encode({at:DateTime.makeUnsafe(0),event:"started",data:"ready"}, events);
+   * Str.endsWith("\n")(await Effect.runPromise(program)) // => true
+   * ```
+   *
+   * @category encoding
+   * @since 0.0.0
+   */
   encode,
 };

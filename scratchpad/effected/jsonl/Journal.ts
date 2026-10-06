@@ -49,6 +49,8 @@ const $I = $ScratchpadId.create("effected/jsonl/Journal");
 /**
  * The failure channel of a write operation.
  *
+ * **Details**
+ *
  * `PlatformError` rides through untranslated per the taxonomy's rule. **Any
  * `PlatformError` out of an append must be treated as a possibly-torn tail**:
  * `writeAll` reports no byte count, so a failure cannot be read as "nothing was
@@ -80,18 +82,18 @@ export type JournalReadError = JournalNotFound | PlatformError.PlatformError;
 /**
  * Options for one append.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Select an append partition)
+ * ```ts import.meta.vitest name="Select an append partition"
  * import { AppendOptions } from "@beep/scratchpad/effected/jsonl/index";
- * console.log(AppendOptions.make({ scope: "mail" }).scope); // mail
+ * AppendOptions.make({ scope: "mail" }).scope // => "mail"
  * ```
  *
  * @public
- * @category utilities
+ * @category configuration
  * @since 0.0.0
  */
 // Structs keep configuration as plain data at the service-construction boundary.
-export const AppendOptions = S.Struct({ scope: S.optional(S.String) }).annotate(
+export const AppendOptions = S.Struct({ scope: S.optionalKey(S.String) }).annotate(
   $I.annote("AppendOptions", { description: "Partition selection for one append." }),
 );
 
@@ -113,6 +115,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * Validate, encode and append one envelope.
    *
+   * **Details**
+   *
    * `at` is stamped here from the Effect `Clock` — never by the caller — so
    * ordering does not depend on two writers agreeing about the time, and
    * `TestClock` controls it exactly in tests.
@@ -127,6 +131,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * Inherit-and-patch: read the last valid envelope, shallow-merge `patch`
    * over its `data`, validate the result and append it.
    *
+   * **Details**
+   *
    * This is the snapshot-journal primitive — each line is a complete state and
    * most transitions change one field. The merge is **shallow** by decision: a
    * nested object in the patch replaces the one beneath it.
@@ -140,6 +146,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * The current last valid **envelope**, as an observable `Option`.
    *
+   * **Details**
+   *
    * "Last valid" always means the last valid envelope, never merely the last
    * valid JSON — a torn scalar tail parses as a different value and only the
    * envelope contract detects it.
@@ -149,6 +157,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * Whether the journal is quiescent — its tail is an event marked `terminal`.
    *
+   * **Details**
+   *
    * Derived from {@link JournalShape.latest} rather than tracked separately, so
    * the two cannot disagree.
    */
@@ -157,6 +167,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * Historical read: a finite `Stream` of the envelopes matching `slice`.
    *
+   * **Details**
+   *
    * Every element carries its logical byte offsets on `line`, so iteration is
    * resumable across process restarts by persisting `line.end` and passing it
    * back as `cursor`.
@@ -164,7 +176,6 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * Filtering happens on the envelope **frame**, strictly before the payload
    * schema runs, so a non-matching line's `data` is never decoded.
    *
-   * **Details**
    * **Cost, stated rather than implied.** As built, the requested region —
    * `cursor` to the end of the file — is read in ONE allocation bounded by the
    * file's size, and the matching envelopes are buffered before the first is
@@ -187,6 +198,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * Live read: a `Stream` of matching envelopes as they are appended.
    *
+   * **Details**
+   *
    * With a `cursor`, replay-from-cursor and the live tail are **one seam**: the
    * replayed history and the live tail are the same stream, filtered the same
    * way, so a consumer cannot observe a gap or a duplicate at the join.
@@ -195,7 +208,6 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * (a `terminal` event reaches the tail) or its scope closes. Subscribing to
    * an already-quiescent journal ends immediately.
    *
-   * **Details**
    * Two properties are worth knowing before relying on them.
    *
    * The **delivered-before-end guarantee is scoped to consuming subscribers**:
@@ -220,6 +232,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 
   /**
    * A running fold over a slice, emitted as it advances.
+   *
+   * **Details**
    *
    * The fold only ever sees its own slice, so a per-scope state machine over a
    * shared journal is exhaustively checkable against just that scope's events.
@@ -246,6 +260,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   /**
    * The internal hub, exposed for the read surfaces built over it.
    *
+   * **Details**
+   *
    * Elements are `Take` chunks and end-of-stream is a published `Exit`, which
    * is what lets quiescence and graceful shutdown arrive at a subscriber as a
    * normal stream end. Never shut this down to signal completion —
@@ -260,16 +276,16 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 /**
  * Configuration for one journal layer.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Bound journal shutdown)
+ * ```ts import.meta.vitest name="Bound journal shutdown"
  * import { JournalConfig } from "@beep/scratchpad/effected/jsonl/index";
  * import * as Duration from "effect/Duration";
  * const config = JournalConfig.make({ path: "events.jsonl", shutdownPublishTimeout: Duration.seconds(2) });
- * console.log(config.path); // events.jsonl
+ * config.path // => "events.jsonl"
  * ```
  *
  * @public
- * @category utilities
+ * @category configuration
  * @since 0.0.0
  */
 export const JournalConfig = S.Struct({
@@ -293,6 +309,8 @@ export type JournalConfig = typeof JournalConfig.Type;
 /**
  * How long scope close waits for the terminal `Exit` to be accepted by the hub.
  *
+ * **Details**
+ *
  * Bounded rather than indefinite: a subscriber that never consumes cannot
  * observe completion, so waiting on it forever only converts "one stuck
  * subscriber" into "the process cannot shut down".
@@ -302,6 +320,8 @@ const SHUTDOWN_PUBLISH_TIMEOUT = Duration.seconds(5);
 /**
  * How many times the watcher re-arms a watch that ends without observing
  * anything before it gives up.
+ *
+ * **Details**
  *
  * A watch that completes instantly — an unsupported backend, a path that keeps
  * vanishing — would otherwise spin the supervisor at full speed, and no timer
@@ -314,6 +334,8 @@ const MAX_IMMEDIATE_REARMS = 8;
  * Scheduler turns yielded to a freshly-forked watch consumer before the
  * catch-up read runs.
  *
+ * **Details**
+ *
  * See the arming comment in `supervise`: this orders arming ahead of catch-up
  * by scheduling rather than by synchronisation, because `fs.watch` offers no
  * registration signal.
@@ -322,6 +344,8 @@ const ARM_YIELDS = 3;
 
 /**
  * Index of the last path separator, on either convention.
+ *
+ * **Details**
  *
  * Both are checked because a Windows path contains no `/` at all: matching only
  * on `/` returns `-1` there, which makes the whole path its own basename and
@@ -337,6 +361,8 @@ const lastSeparator = (path: string): number =>
 /**
  * The last segment of a path.
  *
+ * **Details**
+ *
  * Used for **comparison only** — matching a watch event's basename against the
  * journal's filename. `event.path` is never opened or read, on any watch.
  */
@@ -346,6 +372,8 @@ const basenameOf = (path: string): string => Str.slice(lastSeparator(path) + 1)(
  * The directory a path sits in — the single derived path this package ever
  * hands to the filesystem, and only as {@link JournalConfig.directory}'s
  * default.
+ *
+ * **Details**
  *
  * Path arithmetic is otherwise forbidden here: paths are opaque strings handed
  * straight to `FileSystem`. This one derivation exists because the activation
@@ -364,6 +392,8 @@ const parentOf = (path: string): string => {
 /**
  * The last valid envelope in a tail window, with its offsets rebased onto the
  * journal.
+ *
+ * **Details**
  *
  * The walk-back itself is **not** reimplemented here: `Envelope.lastValidResult`
  * is the binding definition of "the journal's current state" — which lines
@@ -407,6 +437,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   /**
    * The publish baton.
    *
+   * **Details**
+   *
    * Each append links a fresh Deferred onto this chain **while holding the
    * write permit**, so publish order is fixed to write order; it then awaits
    * its predecessor and publishes OUTSIDE the write permit. That is what lets
@@ -420,6 +452,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   let bomBytes = 0;
   /**
    * The watched file's identity, for detecting replacement.
+   *
+   * **Details**
    *
    * Size alone cannot see a same-size replace; inode identity can. `ino` is
    * an `Option` in core's `File.Info`, so on a platform that does not report
@@ -464,6 +498,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
 
   /**
    * Read `[from, to)` and decode the complete lines in it, in file order.
+   *
+   * **Details**
    *
    * The one decode loop the external-growth paths share. Both the watcher's
    * catch-up ingest and an append whose bytes landed past another writer's
@@ -513,6 +549,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
 
   /**
    * The one write path.
+   *
+   * **Details**
    *
    * `build` runs **inside the write permit**, so an inherit-and-patch reads
    * the current state under the same lock that serializes the write. Reading
@@ -662,6 +700,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   /**
    * Read the file from `cursor`, frame-filtered before payload decode.
    *
+   * **Details**
+   *
    * **What this actually does, as built**: ONE read of the requested region
    * — `cursor` to the end of the file, bounded by the file's size — whose
    * matching envelopes are buffered and then emitted. It is bounded by the
@@ -726,6 +766,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
 
   /**
    * Envelope-level matching, for the live path.
+   *
+   * **Details**
    *
    * The frame-level {@link matchesFrame} is the one that carries the
    * filter-before-decode guarantee; this is its counterpart for envelopes
@@ -815,6 +857,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    * Ingest whatever has been appended since `consumed`, publishing it into
    * the SAME hub, `latest` and projections as a local append.
    *
+   * **Details**
+   *
    * Runs under the write permit and links the publish baton exactly as
    * `appendWith` does, so external and local envelopes enter the hub in FILE
    * order as one interleaved sequence — a subscriber cannot tell them apart,
@@ -822,6 +866,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    */
   /**
    * Serializes ingests against each other.
+   *
+   * **Details**
    *
    * Once the catch-up read stopped being the only ingest, a catch-up can run
    * concurrently with an event-driven one — and `ingest` reads `consumed`,
@@ -1019,10 +1065,14 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     // lives in. Seeding it physically put every subsequent append's offset
     // three bytes out on a BOM'd journal.
     consumed = ByteSize.toNumberUnsafe(info.size) - bomBytes;
+    // Detect replacement even before the supervisor's first catch-up read.
+    identity = identityOf(info);
   }
 
   /**
    * Watch for the life of the layer scope.
+   *
+   * **Details**
    *
    * Two watches, and the distinction matters:
    *
@@ -1199,7 +1249,6 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
   /**
    * Build the layer for this journal.
    *
-   * **Details**
    * **Construction can fail with a `PlatformError`, and that is deliberate.** A
    * journal file that does not exist yet is a legal state and constructs
    * cleanly — but a file that exists and cannot be read (`EACCES`, a bad
@@ -1207,19 +1256,39 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
    * it arrive as an untypeable defect that no caller could catch.
    *
    * **Bind the result to a const and provide that const.** Layers are memoized
+   * **Details**
+   *
    * by reference, so calling this twice mints **two independent journals over
    * one file** — two semaphores, two hubs, two `latest` refs — and their
    * appends are not serialized against each other. That is the in-process form
    * of exactly the interleaving the cooperative-writer rules exist to prevent,
    * and it typechecks perfectly.
    *
-   * ```ts
-   * // correct
-   * export const layer = MailJournal.layer({ path });
+   * **Example** (Share one journal layer across consumers)
    *
-   * // WRONG — a second, unserialized journal over the same file
-   * Effect.provide(program, MailJournal.layer({ path }));
+   * ```ts
+   * import { $ScratchpadId } from "@beep/identity/packages";
+   * import { Journal, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+   * import { Effect } from "effect";
+   * import * as Layer from "effect/Layer";
+   * import * as S from "effect/Schema";
+   * const $I = $ScratchpadId.create("examples/jsonl/layer");
+   * class MailJournal extends Journal.Service<MailJournal>()($I`MailJournal`, {
+   *   events: [JsonlEvent.make("started", { data: S.String })],
+   * }) {}
+   * const layer = MailJournal.layer({ path: "/mail.jsonl" }).pipe(Layer.provide(MemoryFileSystem.layer));
+   * const program = Effect.gen(function* () {
+   *   const journal = yield* MailJournal;
+   *   yield* journal.create;
+   *   const envelope = yield* journal.append("started", "ready");
+   *   envelope.data // => "ready"
+   * });
+   * await Effect.runPromise(Effect.provide(program, layer));
    * ```
+   *
+   * @category layers
+   * @since 0.0.0
    */
   readonly layer: (config: JournalConfig) => Layer.Layer<Self, PlatformError.PlatformError, FileSystem.FileSystem>;
 }
@@ -1227,16 +1296,19 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
 /**
  * Define a `Journal` service class over a registry.
  *
+ * **Details**
+ *
  * A `Context.Service` cannot itself be generic over the registry — the shape
  * binds at declaration and a Key cannot be parameterized at retrieval — so each
  * registry gets its own uniquely-keyed class, and several journals coexist in
  * one layer graph with each one's operations typed by *its* registry. This
- * mirrors `ConfigFile.Service<Self, A>()(id)`.
+ * preserves the caller-provided Self identity in the same way as Effect RPC
+ * service classes and Schema.Class.
  *
  * Pass the registry as `options.events`; the returned class exposes it as
  * `events` and builds the scoped layer with `.layer(config)`.
  *
- * **Example** (Observe the result)
+ * **Example** (Define a registry-specific service)
  * ```ts
  * import { $ScratchpadId } from "@beep/identity/packages";
  * import { Journal, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
@@ -1246,11 +1318,11 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
  *   events: [JsonlEvent.make("started", { data: S.Void })],
  * }) {}
  * export const layer = MailJournal.layer({ path: "mail.jsonl" });
- * console.log(MailJournal.events[0].tag); // started
+ * MailJournal.events[0].tag // => "started"
  * ```
  *
  * @public
- * @category utilities
+ * @category services
  * @since 0.0.0
  */
 export const Journal = {

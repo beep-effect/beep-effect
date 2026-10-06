@@ -1,6 +1,8 @@
 /**
  * Pollution-safe shallow merge for `appendPatch`.
  *
+ * **Details**
+ *
  * Ported from `@effected/config-file`'s `internal/deepMerge.ts` recipe, minus
  * the recursion: `appendPatch` is a **shallow** merge by decision, so a nested
  * object in the patch replaces the one beneath it rather than merging into it.
@@ -16,6 +18,8 @@ import * as R from "effect/Record";
 
 /**
  * Keys that must never be copied from either side.
+ *
+ * **Details**
  *
  * `__proto__` reaches `Object.prototype`'s inherited accessor; `constructor`
  * and `prototype` are the neighbouring escape hatches. Filtering only the
@@ -44,14 +48,24 @@ const define = (target: Record<string, unknown>, key: string, value: unknown): v
 /**
  * Whether a value can take part in a merge at all.
  *
+ * **Details**
+ *
  * Record-**like**, deliberately: a decoded `Schema.Class` payload is a class
  * instance, and excluding those would make the kit's dominant payload idiom
  * silently unpatchable. Arrays, `Date`s, scalars and `null` are excluded —
  * `Object.prototype.toString` distinguishes them where a `typeof` check does
  * not.
  *
+ * **Example** (Distinguish records from arrays)
+ *
+ * ```ts import.meta.vitest name="Distinguish records from arrays"
+ * import { isRecordLike } from "@beep/scratchpad/effected/jsonl/internal/merge";
+ * isRecordLike({count:1}) // => true
+ * isRecordLike([]) // => false
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category predicates
  * @since 0.0.0
  */
 export const isRecordLike = (value: unknown): value is Record<string, unknown> =>
@@ -60,8 +74,15 @@ export const isRecordLike = (value: unknown): value is Record<string, unknown> =
 /**
  * Whether a plain record, not a class instance, `Date`, array or `null`.
  *
+ * **Example** (Recognize a plain patch)
+ *
+ * ```ts import.meta.vitest name="Recognize a plain patch"
+ * import { isPlainRecord } from "@beep/scratchpad/effected/jsonl/internal/merge";
+ * isPlainRecord({count:1}) // => true
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category predicates
  * @since 0.0.0
  */
 export const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
@@ -75,6 +96,8 @@ export const isPlainRecord = (value: unknown): value is Record<string, unknown> 
 /**
  * Whether `patch` may be merged into `base`.
  *
+ * **Details**
+ *
  * **Asymmetric, and deliberately unlike `@effected/config-file`'s `canMerge`.**
  * There, two *peer documents* are merged and requiring an identical prototype
  * keeps the merge honest. Here the patch is a caller-supplied **partial** —
@@ -87,8 +110,15 @@ export const isPlainRecord = (value: unknown): value is Record<string, unknown> 
  * prototype — it is either a plain object (the normal case) or shares the
  * base's. Two instances of different classes do not merge.
  *
+ * **Example** (Check a partial patch)
+ *
+ * ```ts import.meta.vitest name="Check a partial patch"
+ * import { canMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
+ * canMerge({count:1,label:"a"},{count:2}) // => true
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category predicates
  * @since 0.0.0
  */
 export const canMerge: {
@@ -104,6 +134,8 @@ export const canMerge: {
 
 /**
  * Shallow-merge `patch` over `base`, with `patch` winning.
+ *
+ * **Details**
  *
  * **Assignment is the hazard, not the keys.** `result[key] = value` and
  * `Object.assign` both use `[[Set]]`, which for a key named `__proto__` reaches
@@ -124,8 +156,15 @@ export const canMerge: {
  * future refactor ever returns the merged value to a caller directly, any
  * invariant a constructor establishes is silently bypassed.
  *
+ * **Example** (Retain untouched fields)
+ *
+ * ```ts import.meta.vitest name="Retain untouched fields"
+ * import { shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
+ * shallowMerge({count:1,label:"a"},{count:2}) // => {count:2,label:"a"}
+ * ```
+ *
  * @internal
- * @category utilities
+ * @category combinators
  * @since 0.0.0
  */
 export const shallowMerge: {

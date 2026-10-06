@@ -25,24 +25,26 @@ const $I = $ScratchpadId.create("Line");
 /**
  * A line that parsed as JSON, paired with the slice it came from.
  *
+ * **Details**
+ *
  * `value` is deliberately `unknown`: this layer knows JSON, not envelopes.
  * Validating `event`, `at`, `scope` and the registered payload schema is the
  * envelope layer's job, and keeping the split means a malformed *envelope* and
  * a malformed *line* stay distinguishable failures.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Inspect a parsed value and its source)
+ * ```ts import.meta.vitest name="Inspect a parsed value and its source"
  * import { pipe } from "effect";
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as A from "effect/Array";
  * import * as O from "effect/Option";
  * import * as Result from "effect/Result";
  * const result = pipe(Line.split('42'), A.head, O.map(Line.parseResult));
- * console.log(O.isSome(result) && Result.isSuccess(result.value) && result.value.success.value); // 42
+ * O.isSome(result) && Result.isSuccess(result.value) && result.value.success.value // => 42
  * ```
  *
  * @public
- * @category utilities
+ * @category models
  * @since 0.0.0
  */
 export class ParsedLine extends S.Class<ParsedLine>($I`ParsedLine`)(
@@ -74,27 +76,31 @@ const decodeJson = S.decodeResult(S.fromJsonString(S.Unknown));
 /**
  * Splitting, parsing and corrupt-tail walk-back over JSONL text.
  *
+ * **Details**
+ *
  * Every operation is total and synchronous: it returns a value for every
  * input, including empty text, torn tails, and text that is not JSONL at all.
  * Nothing here throws — a `JSON.parse` failure becomes a {@link MalformedLine}
  * in the returned `Result`, because a journal is untrusted input and untrusted
  * input fails typed.
  *
- * **Example** (Observe the result)
- * ```ts
+ * **Example** (Recover the last valid JSON value)
+ * ```ts import.meta.vitest name="Recover the last valid JSON value"
  * import { Line } from "@beep/scratchpad/effected/jsonl/index";
  * import * as O from "effect/Option";
- * console.log(Line.byteLength("😀")); // 4
- * console.log(Line.lastValid('42\n{').pipe(O.map((line) => line.value))); // Some(42)
+ * Line.byteLength("😀") // => 4
+ * Line.lastValid('42\n{').pipe(O.map((line) => line.value)) // => O.some(42)
  * ```
  *
  * @public
- * @category utilities
+ * @category parsing
  * @since 0.0.0
  */
 export const Line = {
   /**
    * The UTF-8 byte length of a string.
+   *
+   * **Details**
    *
    * Exposed because callers doing their own offset arithmetic must measure
    * the same way this module does. `String.length` is a different number for
@@ -105,8 +111,8 @@ export const Line = {
    * even though the character itself cannot survive the round trip — text
    * read back from a UTF-8 journal never contains one.
    *
-   * **Example** (Use the API)
-   * ```ts
+   * **Example** (Measure encoded bytes)
+   * ```ts import.meta.vitest name="Measure encoded bytes"
    * import { Line } from "@beep/scratchpad/effected/jsonl/index";
    *
    * Line.byteLength("\u{1F600}"); // 4
@@ -120,6 +126,8 @@ export const Line = {
   /**
    * Split text into candidate lines with byte-exact offsets.
    *
+   * **Details**
+   *
    * Lines are separated by `\n`; a `\r` immediately preceding it is treated as
    * part of the terminator, so CRLF journals split identically to LF ones. A
    * bare `\r` is ordinary content, because only `\n` terminates.
@@ -131,8 +139,18 @@ export const Line = {
    *
    * Only the final slice can have `terminated: false`.
    *
+   * **Example** (Track CRLF byte boundaries)
+   *
+   * ```ts import.meta.vitest name="Track CRLF byte boundaries"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+   * const slices = Line.split("42\r\ntrue\n");
+   * slices[1]?.offset // => 4
+   * ```
+   *
    * @param text - JSONL source text.
    * @returns One {@link LineSlice} per candidate line, in source order.
+   * @category parsing
+   * @since 0.0.0
    */
   split(text: string): ReadonlyArray<LineSlice> {
     if (Str.isEmpty(text)) return A.empty();
@@ -152,13 +170,24 @@ export const Line = {
   /**
    * The byte offset up to which this text has been fully consumed.
    *
+   * **Details**
+   *
    * This is the offset past the last **terminated** line. An unterminated
    * final line is left unconsumed on purpose: it may be a writer caught
    * mid-append, and re-reading from this offset once the file grows sees the
    * completed line rather than gluing a stale fragment to fresh bytes.
    *
+   * **Example** (Resume before an incomplete tail)
+   *
+   * ```ts import.meta.vitest name="Resume before an incomplete tail"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+   * Line.consumedOffset("42\n{") // => 3
+   * ```
+   *
    * @param text - JSONL source text.
    * @returns The resume cursor, in UTF-8 bytes.
+   * @category getters
+   * @since 0.0.0
    */
   consumedOffset(text: string): number {
     return pipe(
@@ -172,13 +201,28 @@ export const Line = {
   /**
    * Parse one candidate line's JSON.
    *
+   * **Details**
+   *
    * Any JSON value succeeds — objects, arrays and scalars alike. This layer
    * does not know what an envelope is.
+   *
+   * **Example** (Parse one candidate line)
+   *
+   * ```ts import.meta.vitest name="Parse one candidate line"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * import * as Result from "effect/Result";
+   * const line = O.getOrThrow(A.head(Line.split("42")));
+   * Result.map(Line.parseResult(line), (parsed) => parsed.value) // => Result.succeed(42)
+   * ```
    *
    * @param line - A slice from {@link Line.split}.
    * @returns The {@link ParsedLine}, or a {@link MalformedLine} carrying the
    *   slice so the caller can locate the damage and decide whether an
    *   unterminated line is a torn tail worth waiting for.
+   * @category parsing
+   * @since 0.0.0
    */
   parseResult(line: LineSlice): Result.Result<ParsedLine, MalformedLine> {
     return decodeJson(line.text).pipe(
@@ -190,6 +234,8 @@ export const Line = {
   /**
    * Parse every non-blank line, reporting failures rather than dropping them.
    *
+   * **Details**
+   *
    * There is deliberately no "valid lines only" variant. A hole in the middle
    * of a journal is information — it means a line was written that no reader
    * can interpret — and whether that is tolerable is the caller's decision,
@@ -200,8 +246,19 @@ export const Line = {
    * information to lose, and reporting them would make a hand-edited journal
    * look corrupt.
    *
+   * **Example** (Retain malformed interior lines)
+   *
+   * ```ts import.meta.vitest name="Retain malformed interior lines"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as A from "effect/Array";
+   * import * as Result from "effect/Result";
+   * A.map(Line.parseAll("42\nbad\ntrue\n"), Result.isSuccess) // => [true, false, true]
+   * ```
+   *
    * @param text - JSONL source text.
    * @returns One `Result` per non-blank line, in source order.
+   * @category parsing
+   * @since 0.0.0
    */
   parseAll(text: string): ReadonlyArray<Result.Result<ParsedLine, MalformedLine>> {
     return pipe(
@@ -213,6 +270,8 @@ export const Line = {
 
   /**
    * Walk back from the end to the last line that parses.
+   *
+   * **Details**
    *
    * This is the whole read path for a snapshot-style journal, where the
    * current state *is* the last valid line: a session killed mid-append leaves
@@ -232,8 +291,18 @@ export const Line = {
    * package's contract rather than an option. Check `LineSlice.terminated` on
    * the result when it matters.
    *
+   * **Example** (Recover from a torn object tail)
+   *
+   * ```ts import.meta.vitest name="Recover from a torn object tail"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/index";
+   * import * as O from "effect/Option";
+   * Line.lastValid("42\n{").pipe(O.map((parsed) => parsed.value)) // => O.some(42)
+   * ```
+   *
    * @param text - JSONL source text.
    * @returns The last parseable line, or `O.none()` if none parses.
+   * @category parsing
+   * @since 0.0.0
    */
   lastValid(text: string): O.Option<ParsedLine> {
     return pipe(
