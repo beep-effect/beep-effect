@@ -31,7 +31,6 @@ import * as Str from "effect/String";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
@@ -225,10 +224,7 @@ const sweepClone = Effect.fn("Yeet.sweepClone")(function* (options: YeetSweepOpt
     yield* Console.log(yield* renderPlanOutput(options.json, yield* planSweep(context)));
     return;
   }
-  const report = yield* executeSweep(context);
-  // The ledger row that retires this checkout's "resume me" entry; best effort.
-  yield* recordSweepDone({ gitCwd: context.repoRoot, checkout: context.repoRoot, branch: context.branch });
-  yield* Console.log(yield* renderReportOutput(options.json, report));
+  yield* Console.log(yield* renderReportOutput(options.json, yield* executeSweep(context)));
 });
 
 const encodeRetireSweepPlan = (document: YeetRetireSweepPlan): Effect.Effect<string, YeetCommandError> =>
@@ -326,9 +322,8 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
     return yield* printRetirePlan(options, retire, state, activePackets, yield* planSweep(cloneContext));
   }
   const receipt = yield* retireInvokingWorktree(retire, state);
-  const sweep = yield* executeSweep(cloneContext);
-  // The lane is gone; its ledger row is closed from the owning clone.
-  yield* recordSweepDone({ gitCwd: retire.owningClone, checkout: retire.worktreePath, branch: retire.branch });
+  // The lane is gone; the sweep closes the lane's ledger row, not the clone's.
+  const sweep = yield* executeSweep(cloneContext, { ledgerCheckout: retire.worktreePath });
   yield* printRetireReport(options, retire, receipt, activePackets, sweep);
 });
 

@@ -16,9 +16,13 @@ name="${slug#*/}"
 root="${BEEP_SESSION_STATE_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/beep/sessions}"
 file="$root/github.com__${owner}__${name}.jsonl"
 [ -s "$file" ] || exit 0
-jq -r -s '
-  map(select(type == "object"))
-  | group_by(.checkout)
+# One row per line; a torn or corrupt line is dropped on its own instead of
+# hiding every other row the way a whole-file slurp would.
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  printf '%s\n' "$line" | jq -c 'select(type == "object")' 2>/dev/null || true
+done < "$file" | jq -r -s '
+  group_by(.checkout)
   | map(max_by(.recordedAt))
   | map(select(.state != "done"))
   | sort_by(.recordedAt) | reverse | .[:12]
@@ -26,5 +30,5 @@ jq -r -s '
       "[session-ledger] \(length) live session(s) for this repository (bun run beep session open):",
       (.[] | "- \(.state) \(.lane) (\(.branch)\(if .pr then ", PR #\(.pr)" else "" end)) \(.recordedAt): \(.next)")
     end
-' "$file" 2>/dev/null || true
+' 2>/dev/null || true
 exit 0

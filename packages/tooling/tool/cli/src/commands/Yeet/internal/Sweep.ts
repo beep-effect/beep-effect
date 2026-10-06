@@ -108,6 +108,7 @@ import {
   runTmpfsReap,
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
+import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -276,6 +277,41 @@ const holdsBranch = (held: boolean, headBranch: string, branch: string): boolean
 
 const pullRequestIsMerged = (state: SweepGitState): boolean =>
   O.exists(state.pullRequestState, (value) => value === "MERGED");
+
+/**
+ * Whether a sweep writes the session ledger's `done` row: only when the
+ * branch's pull request was observed MERGED. A sweep never fails, so a
+ * branch that did not merge still sweeps (every merge-gated step records a
+ * skip), and its "resume me" row must survive that.
+ *
+ * **Example** (A merged observation writes the row)
+ *
+ * ```ts
+ * import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const base = {
+ *   branch: "feat/x",
+ *   mainBranch: "main",
+ *   headBranch: "feat/x",
+ *   worktreeDirty: false,
+ *   mainCheckedOutElsewhere: false,
+ *   branchCheckedOutElsewhere: false,
+ *   branchMergedIntoBase: false,
+ *   lockfileMovedOnMainUpdate: false,
+ *   statusProbeUnreliable: false,
+ *   worktreeProbeUnreliable: false,
+ * }
+ * console.log(sweepWritesLedgerDone(SweepGitState.make({ ...base, pullRequestState: O.some("MERGED") }))) // true
+ * console.log(sweepWritesLedgerDone(SweepGitState.make(base))) // false
+ * ```
+ *
+ * @param state - The observed git and pull request facts.
+ * @returns True only for an observed MERGED pull request.
+ * @category planning
+ * @since 0.0.0
+ */
+export const sweepWritesLedgerDone = pullRequestIsMerged;
 
 const unreliableProbePrecondition = (command: string): SweepPrecondition =>
   precondition(`${command} succeeded without truncation`, false);
@@ -1424,7 +1460,8 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
  * @since 0.0.0
  */
 export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  options: { readonly ledgerCheckout?: string } = {}
 ): Effect.fn.Return<
   SweepReport,
   YeetCommandError,
@@ -1450,6 +1487,16 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
     Effect.mapError(YeetCommandError.new("Failed to encode the yeet sweep report."))
   );
   yield* writeTextFile(yield* sweepReportPath(context), encoded);
+  // Every sweep entrypoint (sweep, sweep --retire, merge, monitor
+  // --until-merged) passes here, so this is where the session ledger learns
+  // the checkout's work is done; only an observed MERGED pull request counts.
+  if (pullRequestIsMerged(state)) {
+    yield* recordSweepDone({
+      gitCwd: context.repoRoot,
+      checkout: options.ledgerCheckout ?? context.repoRoot,
+      branch: context.branch,
+    });
+  }
   return report;
 });
 

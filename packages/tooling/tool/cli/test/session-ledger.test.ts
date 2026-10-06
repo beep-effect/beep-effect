@@ -12,6 +12,7 @@ import {
   sessionHarness,
   sessionLedgerFileName,
 } from "@beep/repo-cli/test/Session";
+import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
@@ -129,6 +130,19 @@ const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effec
 
 const runSession = Command.runWith(sessionCommand, { version: "0.0.0" });
 
+const gitStateBase = {
+  branch: "feat/lane",
+  mainBranch: "main",
+  headBranch: "feat/lane",
+  worktreeDirty: false,
+  mainCheckedOutElsewhere: false,
+  branchCheckedOutElsewhere: false,
+  branchMergedIntoBase: false,
+  lockfileMovedOnMainUpdate: false,
+  statusProbeUnreliable: false,
+  worktreeProbeUnreliable: false,
+};
+
 describe("session ledger rows", () => {
   it("keeps the newest row per checkout, drops done checkouts, and sorts newest first", () => {
     const rows = [
@@ -181,6 +195,18 @@ describe("session ledger rows", () => {
       );
       expect(unknown).toStrictEqual({ harness: "unknown", sessionId: O.none() });
     }).pipe(Effect.runPromise));
+});
+
+describe("sweep ledger gate", () => {
+  it("writes the done row only for an observed MERGED pull request", () => {
+    expect(sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("MERGED") }))).toBe(
+      true
+    );
+    expect(sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("OPEN") }))).toBe(
+      false
+    );
+    expect(sweepWritesLedgerDone(SweepGitState.make(gitStateBase))).toBe(false);
+  });
 });
 
 describe("session ledger service", () => {

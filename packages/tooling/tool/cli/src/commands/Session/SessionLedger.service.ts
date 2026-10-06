@@ -444,9 +444,11 @@ export const noteSession = Effect.fn("SessionLedger.note")(function* (input: Ses
 });
 
 /**
- * Record that a sweep finished a checkout's work. Best effort: a missing
- * ledger, a non-GitHub origin, or an unreadable checkout never fails the
- * sweep.
+ * Record that a sweep finished a checkout's work. `executeSweep` calls this
+ * for every entrypoint (`sweep`, `sweep --retire`, `merge`, `monitor
+ * --until-merged`) once it has observed the pull request MERGED. Best
+ * effort: a missing ledger, a non-GitHub origin, or an unreadable checkout
+ * never fails the sweep.
  *
  * **Example** (Build the effect)
  *

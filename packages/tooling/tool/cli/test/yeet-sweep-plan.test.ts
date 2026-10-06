@@ -504,6 +504,9 @@ const prViewJson = `{"number":559,"headRefName":"feat/merge-loop","state":"MERGE
 // The probes answer for a clone at /repo whose only worktree is the sweeping
 // one; the temp directory below is where the artifact lands, not what git sees.
 const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
+  // The session-ledger probe after a MERGED sweep; a non-GitHub origin means
+  // the ledger row is skipped, so the stub never writes to the real ledger.
+  ["git config --get remote.origin.url", nonzero(1)],
   ["git rev-parse --abbrev-ref HEAD", ok("main")],
   ["git rev-parse --show-toplevel", ok("/repo")],
   ["git rev-parse --verify --quiet refs/heads/main", ok(mainTipBeforeUpdate)],
@@ -551,6 +554,9 @@ const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
 // The same clone as `mergedSweepStubs`, parked on `head` instead of main; the
 // sweeping worktree is the one holding that branch.
 const cloneOn = (head: string, tip: string): ReadonlyArray<readonly [string, CommandStub]> => [
+  // The session-ledger probe after a MERGED sweep; a non-GitHub origin means
+  // the ledger row is skipped, so the stub never writes to the real ledger.
+  ["git config --get remote.origin.url", nonzero(1)],
   ["git rev-parse --abbrev-ref HEAD", ok(head)],
   ["git worktree list --porcelain", ok(`worktree /repo\nHEAD ${tip}\nbranch refs/heads/${head}`)],
   ...mergedSweepStubs,
