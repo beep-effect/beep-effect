@@ -1,6 +1,7 @@
 import * as PatternOntology from "@beep/schema/PatternOntology";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -28,8 +29,8 @@ describe("@beep/schema PatternOntology", () => {
 
   it("reads a stamped pattern from a class declaration", () => {
     expect(O.getOrNull(getPoPattern(Leaf))).toBe("atom");
-    expect(O.isNone(getPoPattern(Bare))).toBe(true);
-    expect(O.isNone(getPoPattern(S.String.annotate({ po: "not-a-pattern" as never })))).toBe(true);
+    assertNone(getPoPattern(Bare));
+    assertNone(getPoPattern(S.String.annotate({ po: "not-a-pattern" as never })));
   });
 
   it("collects every reachable tagged constructor once and surfaces missing patterns", () => {
