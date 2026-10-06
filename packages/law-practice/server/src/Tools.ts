@@ -7,15 +7,21 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
-import { composeGatedLayers, gatedLayer, SourceAuthRegistration, sanitizedToolkit } from "@beep/mcp-kit";
+import {
+  composeGatedLayers,
+  gatedLayer,
+  handshakeMcpProtocols,
+  SourceAuthRegistration,
+  sanitizedToolkit,
+} from "@beep/mcp-kit";
 import { Layer } from "effect";
-import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
 import type { Path } from "effect";
 import type * as Arr from "effect/Array";
+import type * as McpProtocol from "effect/ai/McpProtocol";
 import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
@@ -109,17 +115,19 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 );
 
 /**
- * MCP protocol versions the practice KG host answers.
+ * MCP protocol versions the practice KG host answers: the kit's
+ * `handshakeMcpProtocols`, under this host's own name.
  *
  * **Gotchas**
  *
  * This host is installed into Claude Desktop, which opens every server with an
  * `initialize` handshake (it offered `2025-11-25` on 2026-10-06). A host that
  * lists only the stateless `2026-07-28` adapter refuses that handshake and
- * never starts, so the handshake-era adapters stay listed here. The stateless
+ * never starts, so the handshake-era adapters stay listed. The stateless
  * adapter comes first, which keeps it the default for clients that send no
- * handshake. Do not narrow this list without proving the result against a real
- * Claude Desktop install.
+ * handshake. The list itself lives in `@beep/mcp-kit`; do not point this
+ * alias at a narrower one without proving the result against a real Claude
+ * Desktop install.
  *
  * **Example** (Count the supported versions)
  *
@@ -133,13 +141,7 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
  * @category constants
  * @since 0.0.0
  */
-export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.ProtocolAdapter> = [
-  McpProtocol.v2026_07_28,
-  McpProtocol.v2025_11_25,
-  McpProtocol.v2025_06_18,
-  McpProtocol.v2025_03_26,
-  McpProtocol.v2024_11_05,
-];
+export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.ProtocolAdapter> = handshakeMcpProtocols;
 
 /**
  * Instructions the host advertises on `initialize` and through `server/discover`.
@@ -164,12 +166,13 @@ export const PRACTICE_KG_MCP_INSTRUCTIONS =
  *
  * **Details**
  *
- * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
- * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
- * and call tools with request metadata; a legacy `initialize` is answered
- * with `-32022` and the supported list. There is no session. The kit
- * conformance runner mounts {@link PracticeKgToolkitLayer} on its own
- * transport, which is how the host proves the protocol.
+ * The host serves {@link practiceKgMcpProtocols}: the stateless `2026-07-28`
+ * adapter first, then the handshake-era adapters. Stateless clients open with
+ * `server/discover` and call tools with request metadata; a client that opens
+ * with a classic `initialize`, as Claude Desktop does, gets a negotiated
+ * result. The kit conformance runner mounts {@link PracticeKgToolkitLayer} on
+ * its own stateless transport, which is how the host proves the `2026-07-28`
+ * revision.
  *
  * **Example** (Build the server layer)
  *
