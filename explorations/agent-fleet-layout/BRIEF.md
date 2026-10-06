@@ -38,14 +38,14 @@ no new daemons, one new config value.
 ### Layout
 
 ```
-~/YeeBois/projects/beep/                 fleet root (one per repository)
+<configured fleet root>/                 fleet root (one per repository)
   seats/
     main/        operator WebStorm seat; tracks main; agents may help here
     ops/         owns every user timer; tracks main; nobody tinkers
     a/ b/ c/     chat-start seats; agents branch lanes off them
   lanes/
     <slug>/      one lane per packet or PR; git worktree of some seat
-~/YeeBois/projects/beep-private/         second fleet for beep-effect-private
+<configured private fleet root>/         second fleet for beep-effect-private
 ```
 
 A seat is a full clone with its own `.git`. A lane is a linked worktree of
@@ -75,8 +75,8 @@ on sight by the same scan the mirror already performs.
 `yeet sweep --fleet`, the worktree service's managed root, residue-reap and
 the timer renderers all derive "where the fleet is" today from the repo
 root's parent or a baked `WorkingDirectory`. Replace that with one setting
-(working name `BEEP_FLEET_ROOT`, default `~/YeeBois/projects/beep`) that the
-CLI reads and the unit renderers bake. A fleet root may also list sibling
+(working name `BEEP_FLEET_ROOT`, defaulting to a new `beep` directory under the
+configured projects root) that the CLI reads and the unit renderers bake. A fleet root may also list sibling
 legacy roots so discovery sees `projects/beep-effect*` until the drain ends.
 
 ### Lane bootstrap

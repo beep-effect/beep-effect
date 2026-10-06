@@ -79,8 +79,7 @@
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
-    "The implementation would exceed named scope.",
-    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

@@ -56,7 +56,7 @@ the live matter still needs its measured `spec.json` under the corpus root.
 
 - Real matter material (spec, photos, CAD code, renders, PDFs, sign-off
   events) lives only under `BEEP_OPPOLD_CORPUS_ROOT`
-  (`~/data-home/oppold-corpus`); the repo carries a synthetic fixture article.
+  as a configured external corpus root; the repo carries a synthetic fixture article.
 - Shared bricks with agentic-cad are owned by whichever packet lands them
   first (`packages/drivers/*` per its D7); never duplicated.
 - The live matter's description and sketch disagree on a base-geometry

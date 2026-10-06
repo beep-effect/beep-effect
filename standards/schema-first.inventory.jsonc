@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-05",
+  "generatedOn": "2026-10-06",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -860,6 +860,22 @@
       "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
+      "symbol": "SessionCheckoutFacts",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Ephemeral facts assembled from Git commands and passed as a plain structural result. S.Struct supplies the annotated schema while avoiding class construction for a value with no identity or methods."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
+      "symbol": "SessionNoteInput",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "CLI boundary input assembled as a plain object by command callers, with an optional runtime Option override. S.Struct preserves the existing call shape without forcing class construction across the command boundary."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
@@ -902,6 +918,14 @@
       "line": 370,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+      "symbol": "StateRepository",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic workstation state partition key shared by PR-session and session-ledger helpers. It accepts existing plain repository objects and PrRepository instances; S.Struct preserves that structural contract without a redundant class constructor."
     },
     {
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",

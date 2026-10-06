@@ -108,6 +108,7 @@ import {
   runTmpfsReap,
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
+import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -276,6 +277,64 @@ const holdsBranch = (held: boolean, headBranch: string, branch: string): boolean
 
 const pullRequestIsMerged = (state: SweepGitState): boolean =>
   O.exists(state.pullRequestState, (value) => value === "MERGED");
+
+/**
+ * Whether a sweep writes the session ledger's `done` row.
+ *
+ * **Details**
+ *
+ * Two facts must hold. The branch's pull request was observed MERGED: a
+ * sweep never fails, so a branch that did not merge still sweeps (every
+ * merge-gated step records a skip) and its "resume me" row must survive
+ * that. And the row being closed belongs to the checkout that held the
+ * branch: `yeet sweep --branch <merged>` run from a checkout parked on some
+ * third branch must not retire that checkout's own row, so without an
+ * explicit `ledgerCheckout` the sweeping checkout's HEAD must be movable
+ * ({@link headIsMovable}: on the swept branch, or already back on main, which
+ * is the documented second pass for a merged branch the clone no longer
+ * stands on). A retirement names the lane it just removed as
+ * `ledgerCheckout`, which vouches for it.
+ *
+ * **Example** (Merged and held writes the row; parked does not)
+ *
+ * ```ts
+ * import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const base = {
+ *   branch: "feat/x",
+ *   mainBranch: "main",
+ *   headBranch: "feat/x",
+ *   worktreeDirty: false,
+ *   mainCheckedOutElsewhere: false,
+ *   branchCheckedOutElsewhere: false,
+ *   branchMergedIntoBase: false,
+ *   lockfileMovedOnMainUpdate: false,
+ *   statusProbeUnreliable: false,
+ *   worktreeProbeUnreliable: false,
+ * }
+ * const merged = SweepGitState.make({ ...base, pullRequestState: O.some("MERGED") })
+ * console.log(sweepWritesLedgerDone(merged, O.none())) // true
+ * console.log(sweepWritesLedgerDone(SweepGitState.make({ ...merged, headBranch: "main" }), O.none())) // true
+ * console.log(sweepWritesLedgerDone(SweepGitState.make({ ...merged, headBranch: "feat/other" }), O.none())) // false
+ * console.log(sweepWritesLedgerDone(SweepGitState.make({ ...merged, headBranch: "feat/other" }), O.some("/lanes/x"))) // true
+ * console.log(sweepWritesLedgerDone(SweepGitState.make(base), O.none())) // false
+ * ```
+ *
+ * @param state - The observed git and pull request facts; the data-last form takes it alone.
+ * @param ledgerCheckout - The checkout a retirement vouches for, when any.
+ * @returns True only for an observed MERGED pull request on a checkout that held the branch or stands on main.
+ * @category planning
+ * @since 0.0.0
+ */
+export const sweepWritesLedgerDone: {
+  (state: SweepGitState, ledgerCheckout: O.Option<string>): boolean;
+  (ledgerCheckout: O.Option<string>): (state: SweepGitState) => boolean;
+} = dual(
+  2,
+  (state: SweepGitState, ledgerCheckout: O.Option<string>): boolean =>
+    pullRequestIsMerged(state) && (O.isSome(ledgerCheckout) || headIsMovable(state))
+);
 
 const unreliableProbePrecondition = (command: string): SweepPrecondition =>
   precondition(`${command} succeeded without truncation`, false);
@@ -1424,7 +1483,8 @@ export const sweepReportPath = Effect.fn("Yeet.sweepReportPath")(function* (
  * @since 0.0.0
  */
 export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
-  context: RepoRunContext
+  context: RepoRunContext,
+  options: { readonly ledgerCheckout?: string } = {}
 ): Effect.fn.Return<
   SweepReport,
   YeetCommandError,
@@ -1450,6 +1510,17 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
     Effect.mapError(YeetCommandError.new("Failed to encode the yeet sweep report."))
   );
   yield* writeTextFile(yield* sweepReportPath(context), encoded);
+  // Every sweep entrypoint (sweep, sweep --retire, merge, monitor
+  // --until-merged) passes here, so this is where the session ledger learns
+  // the checkout's work is done; only an observed MERGED pull request counts.
+  const ledgerCheckout = O.fromUndefinedOr(options.ledgerCheckout);
+  if (sweepWritesLedgerDone(state, ledgerCheckout)) {
+    yield* recordSweepDone({
+      gitCwd: context.repoRoot,
+      checkout: O.getOrElse(ledgerCheckout, () => context.repoRoot),
+      branch: context.branch,
+    });
+  }
   return report;
 });
 

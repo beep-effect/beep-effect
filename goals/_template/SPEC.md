@@ -45,10 +45,18 @@ Higher sources outrank lower sources when they conflict.
 ## Stop Conditions
 
 - Required source files are missing or materially contradictory.
-- The implementation would exceed named scope.
-- Verification requires credentials, cost, destructive side effects, or policy
-  approval not named in this spec.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
 - The same blocker repeats after reasonable investigation.
+
+Scope growth, destructive side effects and policy calls are not stops: decide
+them and record each in the Decision Log.
+
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| None | N/A | N/A | N/A |
 
 ## Exception Ledger
 

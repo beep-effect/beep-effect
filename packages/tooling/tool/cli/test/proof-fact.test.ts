@@ -109,26 +109,18 @@ const assertRejects = Effect.fn("ProofFactTest.assertRejects")(function* <Schema
 });
 
 describe("ProofFact schemas", () => {
-  it("round-trips schema-derived arbitrary ledger rows", () => {
-    const arbitrary = Arbitrary.schema(ProofLedgerRow);
-    const equivalent = S.toEquivalence(ProofLedgerRow);
-
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([arbitrary]),
-          ([value]) =>
-            equivalent(
-              Result.getOrThrow(
-                decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))
-              ),
-              value
-            ),
-          fcRuns(20)
+  it.prop(
+    "round-trips schema-derived arbitrary ledger rows",
+    { value: Arbitrary.schema(ProofLedgerRow) },
+    ({ value }) =>
+      expect(
+        S.toEquivalence(ProofLedgerRow)(
+          Result.getOrThrow(decodeUnknownProofLedgerRowResult(Result.getOrThrow(encodeProofLedgerRowResult(value)))),
+          value
         )
-      )._tag
-    ).toBe("Passed");
-  });
+      ).toBe(true),
+    { arbitrary: fcRuns(20) }
+  );
 
   it.effect("round-trips every schema and derives a working S.is guard", () =>
     Effect.gen(function* () {
