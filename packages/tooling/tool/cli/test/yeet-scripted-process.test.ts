@@ -46,10 +46,11 @@ import {
   YeetStatusArtifact,
   YeetStatusRemote,
 } from "@beep/repo-cli/test/Yeet";
-import { NodeServices } from "@effect/platform-node";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, Effect, FileSystem, flow, Path, pipe, Ref, Result, Sink, Stream } from "effect";
+import { ConfigProvider, Effect, FileSystem, flow, Layer, Path, pipe, Ref, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -148,6 +149,11 @@ const withProcesses =
 
 const makeCommands = Ref.make<ReadonlyArray<string>>([]);
 const makeRecorder = Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+const failClosedSpawnerLayer = Layer.effect(
+  ChildProcessSpawner.ChildProcessSpawner,
+  makeCommands.pipe(Effect.map((commands) => scriptedSpawner([], commands)))
+);
+const testLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer, failClosedSpawnerLayer);
 
 // A create lane carries no explicit status (the verdict derives it from the exit
 // code); stamp and label lanes record theirs.
@@ -163,7 +169,7 @@ const guardFailure = Effect.fnUntraced(function* (options: Partial<YeetRunOption
   return error.message;
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet guards", (it) => {
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) => {
   it.effect("rejects every illegal flag combination with the rule's own message", () =>
     Effect.gen(function* () {
       const cases: ReadonlyArray<readonly [Partial<YeetRunOptions>, string]> = [
@@ -299,7 +305,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet guards", (it) => {
   );
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifecycle", (it) => {
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request lifecycle", (it) => {
   describe("gh pr view", () => {
     it.effect("maps each gh failure mode to its own command error", () =>
       Effect.gen(function* () {
@@ -367,7 +373,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
         const context = contextAt("/repo");
         const replies: ReadonlyArray<Reply> = [
           ["gh pr view", 1, "GraphQL: API rate limit exceeded"],
-          ["gh api repos/{owner}/{repo}/pulls?head={owner}:feat%2Fcoverage-restore&state=open", 0, `[${prView()}]`],
+          ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
+          [
+            "gh api repos/{owner}/{repo}/pulls?head=beep-effect%3Afeat%2Fcoverage-restore&state=open",
+            0,
+            `[${prView()}]`,
+          ],
         ];
         const view = yield* runGhPullRequestView(context).pipe(withProcesses(replies, commands));
         expect(view.number).toBe(7);
@@ -376,6 +387,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
           O.map(found, (pr) => pr.number),
           7
         );
+      })
+    );
+
+    it.effect("uses the pushed fork owner and protects branch prefixes from gh placeholders", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const branch = "repo-cli/fix";
+        const context = contextAt("/repo", branch);
+        const view = yield* runGhPullRequestView(context).pipe(
+          withProcesses(
+            [
+              ["gh pr view", 1, "GraphQL: API rate limit exceeded"],
+              ["git remote get-url --push origin", 0, "https://github.com/fork-owner/beep-effect.git"],
+              [
+                "gh api repos/{owner}/{repo}/pulls?head=fork-owner%3Arepo-cli%2Ffix&state=open",
+                0,
+                `[${prView({ headRefName: branch })}]`,
+              ],
+            ],
+            commands
+          )
+        );
+        expect(view.headRefName).toBe(branch);
+        expect(A.some(yield* Ref.get(commands), Str.includes("head=fork-owner%3Arepo-cli%2Ffix"))).toBe(true);
       })
     );
 
@@ -388,6 +423,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
             withProcesses(
               [
                 ["gh pr view", 1, "GraphQL: API rate limit already exceeded"],
+                ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
                 ["gh api repos/{owner}/{repo}/pulls?head=", restExit, restOutput],
               ],
               commands
@@ -541,6 +577,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
               ["log -1", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
+              ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
               ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
               ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
               ["gh pr view", 0, prView()],
@@ -572,6 +609,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
               ["log -1", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
+              ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
               ["gh api repos/{owner}/{repo}/pulls?head=", 0, `[${prView({ url: PR_URL })}]`],
             ],
             commands
@@ -689,7 +727,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
   });
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet retire packet advisories", (it) => {
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet retire packet advisories", (it) => {
   it.effect("names the unexplained active packets from the branch diff when gh cannot list the files", () =>
     Effect.gen(function* () {
       const commands = yield* makeCommands;
@@ -812,7 +850,7 @@ describe("yeet plan step models", () => {
   });
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate over gh", (it) => {
+it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate over gh", (it) => {
   const HEAD_SHA = "c051bba853c051bba853c051bba853c051bba853";
   const passingCheck = {
     bucket: "pass",
@@ -1013,7 +1051,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate over gh
       expect(yield* refusal(headless, headless)).toContain("the head moved (gate unknown, live unknown)");
     })
   );
+});
 
+// runYeetReady locates the checked-out repository from process.cwd(), so this
+// single integration case needs the host filesystem; the scripted gh process
+// still prevents any real GitHub command.
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready native repo root", (it) => {
   it.effect("runs the gate for the checked-out branch and refuses when it has no pull request", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

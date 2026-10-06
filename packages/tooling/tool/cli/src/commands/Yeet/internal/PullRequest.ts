@@ -50,10 +50,26 @@ const ghPullRequestViewOutput = (context: RepoRunContext) =>
     onFailure: (failure) => failure,
   });
 
+const originPushOwner = Effect.fn("Yeet.originPushOwner")(function* (context: RepoRunContext) {
+  const remote = Str.trim(yield* runGitOutput(context.repoRoot, ["remote", "get-url", "--push", "origin"]));
+  const owner = pipe(
+    O.fromNullishOr(remote.match(/^(?:[^@/\s]+@[^:/\s]+:|ssh:\/\/[^/]+\/|https?:\/\/[^/]+\/)([^/?#\s]+)\/[^/?#\s]+$/)),
+    O.flatMap((parts) => O.fromNullishOr(parts[1]))
+  );
+  return yield* Effect.fromOption(owner, () =>
+    YeetCommandError.make({
+      message: "Failed to identify the pushed origin repository owner for GitHub REST pull request lookup.",
+      command: "git remote get-url --push origin",
+      exitCode: 1,
+    })
+  );
+});
+
 const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestViaRest")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const endpoint = `repos/{owner}/{repo}/pulls?head={owner}:${encodeURIComponent(context.branch)}&state=open&per_page=100`;
+  const headOwner = yield* originPushOwner(context);
+  const endpoint = `repos/{owner}/{repo}/pulls?head=${encodeURIComponent(headOwner)}%3A${encodeURIComponent(context.branch)}&state=open&per_page=100`;
   const output = yield* ghOutput({
     args: [
       "api",
