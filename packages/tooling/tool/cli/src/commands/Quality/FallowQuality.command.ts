@@ -19,6 +19,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseDocument } from "yaml";
 import { runCapturedStreams } from "../../internal/process/index.ts";
+import {
+  ensureFallowAuditCacheRoot,
+  fallowAuditCacheEnv,
+  fallowAuditCacheRemoveArgs,
+  resolveFallowAuditCacheSettings,
+} from "../../internal/repo-run/index.ts";
 import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
 import {
   FallowAttributionKinds,
@@ -376,9 +382,11 @@ type FallowCommandOptions = {
   readonly advisory: boolean;
   readonly base: string;
   readonly check: boolean;
+  readonly discardBaseCache: boolean;
   readonly out: string;
   readonly quiet: boolean;
 };
+type ProcessEnv = Record<string, string>;
 type FallowAuditDiffFallbackArgsOptions = {
   readonly diffPath: string;
   readonly quiet: boolean;
@@ -793,12 +801,14 @@ const formatEpochMillis = (millis: number): string =>
 const collectProcessOutput = Effect.fn("FallowQuality.collectProcessOutput")(function* (
   repoRoot: string,
   command: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  env: ProcessEnv = {}
 ): Effect.fn.Return<ProcessResult, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCapturedStreams({
     command,
     args,
     cwd: repoRoot,
+    env,
     extendEnv: true,
   }).pipe(
     QualityScriptCommandError.mapError(`Failed to run ${commandText(command, args)}.`, {
@@ -1008,6 +1018,7 @@ const wrapperArgs = (feature: FallowFeature, options: FallowCommandOptions, out:
   "--base",
   options.base,
   ...(options.check ? ["--check"] : []),
+  ...(options.discardBaseCache ? ["--discard-base-cache"] : []),
   "--out",
   out,
   ...(options.quiet ? ["--quiet"] : []),
@@ -1284,7 +1295,8 @@ export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectA
 const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiffFallbackOutput")(function* (
   repoRoot: string,
   options: FallowCommandOptions,
-  original: ProcessResult
+  original: ProcessResult,
+  fallowEnv: ProcessEnv
 ): Effect.fn.Return<ProcessResult, QualityScriptCommandError, FallowQualityEnvironment> {
   if (!fallowAuditNeedsDiffFallbackForTesting(original)) {
     return original;
@@ -1313,7 +1325,8 @@ const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiff
       return yield* collectProcessOutput(
         repoRoot,
         "bun",
-        fallowAuditDiffFallbackArgsForTesting(options.base, { diffPath, quiet: options.quiet })
+        fallowAuditDiffFallbackArgsForTesting(options.base, { diffPath, quiet: options.quiet }),
+        fallowEnv
       );
     }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
@@ -1388,6 +1401,22 @@ const envelopeFromProcessResult = Effect.fn("FallowQuality.envelopeFromProcessRe
   );
 });
 
+// Only this project's snapshot goes: `audit-cache remove --root` never touches
+// a snapshot another live lane owns, so a shared cache root stays intact.
+const discardOwnBaseCache = Effect.fn("FallowQuality.discardOwnBaseCache")(function* (
+  repoRoot: string,
+  fallowEnv: ProcessEnv
+): Effect.fn.Return<void, never, FallowQualityEnvironment> {
+  const removal = yield* collectProcessOutput(repoRoot, "bun", fallowAuditCacheRemoveArgs(repoRoot), fallowEnv).pipe(
+    Effect.option
+  );
+  if (!O.exists(removal, (result) => result.exitCode === 0)) {
+    yield* Console.error(
+      `Fallow audit base cache for ${repoRoot} was not discarded; the janitor reaps it once the lane is gone.`
+    );
+  }
+});
+
 const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
   feature: FallowFeature,
   options: FallowCommandOptions
@@ -1428,13 +1457,25 @@ const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
     return;
   }
 
+  // Fallow keys its reusable base snapshot by TMPDIR; steer it at the
+  // disk-backed beep cache root so idle snapshots never sit in tmpfs/zram.
+  const cacheSettings = yield* resolveFallowAuditCacheSettings().pipe(
+    Effect.flatMap(ensureFallowAuditCacheRoot),
+    QualityScriptCommandError.mapError("Failed to prepare the Fallow audit cache root.")
+  );
+  const fallowEnv = fallowAuditCacheEnv(cacheSettings);
   const args = fallowArgs(feature, options.base, options.quiet);
-  const initialResult = yield* collectProcessOutput(repoRoot, "bun", args);
+  const initialResult = yield* collectProcessOutput(repoRoot, "bun", args, fallowEnv);
   const result =
-    feature === "audit" ? yield* collectAuditDiffFallbackOutput(repoRoot, options, initialResult) : initialResult;
+    feature === "audit"
+      ? yield* collectAuditDiffFallbackOutput(repoRoot, options, initialResult, fallowEnv)
+      : initialResult;
   const envelope = yield* envelopeFromProcessResult(feature, options, paths, generatedAt, toolVersion, isDirty, result);
 
   yield* writeEnvelope(paths, result.output, envelope);
+  if (feature === "audit" && options.discardBaseCache && !shouldFailInvocation(envelope, options)) {
+    yield* discardOwnBaseCache(repoRoot, fallowEnv);
+  }
 
   if (shouldFailInvocation(envelope, options)) {
     return yield* QualityScriptCommandError.make({
@@ -2193,6 +2234,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
           advisory: true,
           base: defaultBaseRef,
           check: false,
+          discardBaseCache: false,
           out,
           quiet: true,
         },
@@ -2209,6 +2251,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
       advisory: false,
       base: defaultBaseRef,
       check: true,
+      discardBaseCache: false,
       out: path.join(outDir, "audit-check.json"),
       quiet: true,
     },
@@ -2222,6 +2265,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
       advisory: true,
       base: "refs/heads/definitely-not-real-fallow-base",
       check: true,
+      discardBaseCache: false,
       out: path.join(outDir, "boundaries-bad-base-check.json"),
       quiet: true,
     },
@@ -2234,6 +2278,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
       advisory: true,
       base: defaultBaseRef,
       check: false,
+      discardBaseCache: false,
       out: path.join(outDir, "health-tool-failed.json"),
       quiet: true,
     },
@@ -2251,6 +2296,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
       advisory: true,
       base: defaultBaseRef,
       check: false,
+      discardBaseCache: false,
       out: path.join(outDir, "dead-code-invalid-json.json"),
       quiet: true,
     },
@@ -2268,6 +2314,7 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
       advisory: true,
       base: defaultBaseRef,
       check: false,
+      discardBaseCache: false,
       out: path.join(outDir, "flags-invalid-report.json"),
       quiet: true,
     },
@@ -2328,17 +2375,24 @@ const makeFallowFeatureCommand = (feature: FallowFeature) =>
         Flag.withDefault(false),
         Flag.withDescription("Fail only for promoted blocking lanes; advisory P1 lanes do not promote findings")
       ),
+      discardBaseCache: Flag.Boolean("discard-base-cache").pipe(
+        Flag.withDefault(false),
+        Flag.withDescription(
+          "After a passing audit, delete this checkout's reusable Fallow base snapshot (other lanes' snapshots stay)"
+        )
+      ),
       out: Flag.String("out").pipe(Flag.withDefault(""), Flag.withDescription("Envelope output path")),
       quiet: Flag.Boolean("quiet").pipe(
         Flag.withDefault(false),
         Flag.withDescription("Suppress Fallow tool chatter in raw output where supported")
       ),
     },
-    ({ advisory, base, check, out, quiet }) =>
+    ({ advisory, base, check, discardBaseCache, out, quiet }) =>
       runFallowFeature(feature, {
         advisory,
         base,
         check,
+        discardBaseCache,
         out: Str.isNonEmpty(out) ? out : `${defaultOutDir}/${fallowEnvelopeFileName(feature, advisory)}`,
         quiet,
       })

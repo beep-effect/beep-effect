@@ -10,6 +10,10 @@ is blocking in `quality github-checks pre-push`; `fallow:audit` was later
 downgraded to advisory-only (`295eb62557`, 2026-06-18). Manifest lifecycle:
 `completed-retained`.
 
+Post-close amendment (2026-10-06): the audit lane's reusable base snapshot
+moved from tmpfs to `~/.cache/beep/fallow` with retire-time and janitor
+reclaim; see the SPEC Decision Log and `docs/runbooks/fallow-audit-cache.md`.
+
 ### Closeout reconciliation (2026-07-11)
 
 The work shipped weeks before this paperwork closeout. Git evidence: advisory

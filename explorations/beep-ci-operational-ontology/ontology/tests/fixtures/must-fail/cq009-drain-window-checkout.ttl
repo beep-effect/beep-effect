@@ -1,0 +1,13 @@
+# Drain-window guard (lab-lift PR, #1490 review follow-up; same-checkout arm scoped to the
+# current protocol): during the legacy drain the pre-#929 release (e76c4db079^,
+# isTicketSkippable) admits a review-fix lease (originKey "") beside a full-proof lease in ONE
+# CHECKOUT. Both grants are legacy-origin-lock/v1 and share no non-empty origin, so this is
+# lawful drain-window state and CQ-009 must return no row (rows_eq_0).
+@prefix ciops: <https://oip.law/ontology/ci-ops#> .
+ciops:co-1 a ciops:Checkout .
+ciops:g1 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "origin-a" ; ciops:hasCheckout ciops:co-1 ;
+    ciops:hasCoordinationProtocol "legacy-origin-lock/v1" .
+ciops:g2 a ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+    ciops:hasOriginKey "" ; ciops:hasCheckout ciops:co-1 ;
+    ciops:hasCoordinationProtocol "legacy-origin-lock/v1" .
