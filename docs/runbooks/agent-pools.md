@@ -82,8 +82,10 @@ CLIProxyAPI management API when it exposes quota, else probe fallback (D8).
 
 **Fail-open (D17, amended 2026-10-01).** Cursor is step 2 of both chains, so a confirmed quota,
 availability, or unsupported-model failure on step 1 is the only trigger that moves a lane onto
-it; Cursor then counts as available until a lane proves otherwise. Ordinary code failures and
-unfavorable reviews never move a lane. No official per-account usage endpoint exists for individual Ultra.
+it; Cursor then counts as available until a lane proves otherwise, unless the dashboard already
+shows less than 5% remaining in the target bucket (see Human meter). A below-floor bucket marks
+Cursor below floor before admission, and the lane steps straight to grok-build. Ordinary code
+failures and unfavorable reviews never move a lane. No official per-account usage endpoint exists for individual Ultra.
 Team Admin API routes (`/teams/spend`, `/teams/daily-usage-data`) are team-scoped. `cursor-agent
 about`/`status` carry no usage. stream-json emits no usage or rate-limit events
 (https://cursor.com/docs/cli/reference/output-format).

@@ -15,6 +15,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as Context from "effect/Context";
 import * as O from "effect/Option";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import { parseDocument, stringify as stringifyYaml } from "yaml";
 import { ModelsManifestError } from "./Models.errors.ts";
@@ -161,14 +162,31 @@ const makeManifestStore = Effect.fnUntraced(function* () {
     return ManifestAdoption.make({ file, backup });
   });
 
-  const backupManifest = Effect.fnUntraced(function* (file: string) {
+  // A timestamp alone is not unique (two adoptions can land in the same
+  // millisecond, and a TestClock pins it), so every sibling name carries a
+  // random suffix and is created with the exclusive `wx` flag: a collision
+  // fails loudly instead of overwriting an earlier backup.
+  const uniqueSuffix = Effect.fnUntraced(function* () {
     const now = yield* DateTime.now;
     const stamp = DateTime.formatIso(now).replace(/[:.]/g, "").replace(/-/g, "");
-    const target = `${file}.bak-${stamp}`;
-    yield* fs.copyFile(file, target).pipe(ModelsManifestError.mapError(`Failed to back up ${file} to ${target}`, file));
+    const salt = yield* Random.nextIntBetween(0, 0xffffff);
+    return `${stamp}-${salt.toString(16).padStart(6, "0")}`;
+  });
+
+  const backupManifest = Effect.fnUntraced(function* (file: string) {
+    const target = `${file}.bak-${yield* uniqueSuffix()}`;
+    const content = yield* fs
+      .readFileString(file)
+      .pipe(ModelsManifestError.mapError(`Failed to read ${file} for backup`, file));
+    yield* fs
+      .writeFileString(target, content, { flag: "wx" })
+      .pipe(ModelsManifestError.mapError(`Failed to back up ${file} to ${target}`, file));
     return O.some(target);
   });
 
+  // The manifest is replaced through a same-directory temporary file and a
+  // rename, so an interrupted or failed write never leaves a truncated
+  // manifest at the live path.
   const writeManifest = Effect.fnUntraced(function* (file: string, manifest: ModelsManifest) {
     const encoded = yield* encodeManifest(manifest).pipe(
       ModelsManifestError.mapError("Failed to encode the seed models manifest", file)
@@ -177,9 +195,12 @@ const makeManifestStore = Effect.fnUntraced(function* () {
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(ModelsManifestError.mapError(`Failed to create ${directory}`, directory));
-    yield* fs
-      .writeFileString(file, stringifyYaml(encoded, { lineWidth: 0 }))
-      .pipe(ModelsManifestError.mapError(`Failed to write ${file}`, file));
+    const temporary = `${file}.tmp-${yield* uniqueSuffix()}`;
+    yield* fs.writeFileString(temporary, stringifyYaml(encoded, { lineWidth: 0 }), { flag: "wx" }).pipe(
+      Effect.flatMap(() => fs.rename(temporary, file)),
+      Effect.onError(() => Effect.ignore(fs.remove(temporary))),
+      ModelsManifestError.mapError(`Failed to write ${file}`, file)
+    );
   });
 
   return ModelsManifestStore.of({ load, init, adopt });

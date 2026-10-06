@@ -55,6 +55,28 @@ layer(testLayer)("models init command", (it) => {
     }).pipe(Effect.scoped)
   );
 
+  it.effect("repeated adoptions keep distinct backups and leave no temporary files", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-adopt-twice-" });
+      const manifestPath = path.join(home, "config", "models.yaml");
+      yield* fs.makeDirectory(path.dirname(manifestPath), { recursive: true });
+      yield* fs.writeFileString(manifestPath, "version: beep-models/v1\nbindings: []\ntargets: []\nsuperseded: []\n");
+      const args = ["init", "--adopt", "--home", home, "--repo", home, "--manifest", manifestPath];
+
+      // Both runs read the same pinned TestClock instant, so the timestamp
+      // alone would collide; the random suffix must keep both backups.
+      yield* runModelsCommand(args);
+      yield* runModelsCommand(args);
+
+      const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
+      expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(2);
+      expect(A.filter(siblings, Str.startsWith("models.yaml.tmp-"))).toHaveLength(0);
+      expect(yield* fs.readFileString(manifestPath)).toContain("gpt-6.1-sol");
+    }).pipe(Effect.scoped)
+  );
+
   it.effect("adopt on an empty slot behaves like init", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
