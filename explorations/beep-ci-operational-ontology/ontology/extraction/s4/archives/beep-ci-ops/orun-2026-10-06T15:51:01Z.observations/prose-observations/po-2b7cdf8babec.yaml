@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:2b7cdf8babec65435dcb9a12a4477d6d6423207028baa810f4ec103f9817a1de",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 32,
+    "end_line": 35
+  },
+  "quote": "2. **`AssuranceTierId` is NOT yeet's proof-tier enum.** `YeetProofTier`\n   (`full | cheap-gates | review-fix`, `Yeet/internal/Planner.ts`) is a distinct source\n   domain; its mapping into assurance tiers is an S4 extraction question, recorded in\n   scope.md.",
+  "epistemic_status": "quoted_prose"
+}

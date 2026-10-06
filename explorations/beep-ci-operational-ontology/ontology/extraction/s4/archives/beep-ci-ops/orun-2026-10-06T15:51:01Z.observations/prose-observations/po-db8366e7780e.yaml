@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:db8366e7780e92846d2c2454b651a5e31d975b34772c83ef2cdf49b2dcc8c22f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 467,
+    "end_line": 479
+  },
+  "quote": "| Proposed term | Role | Subject → object / value |\n| --- | --- | --- |\n| `LanePlan` | lane-plan class | Class of one sha256-pinned lane-order plan |\n| `LaneStep` | lane-step class | Class of one ordered lane position in a lane plan; never `ScheduleStep`, and its identity (tuple versus component) is undecided |\n| `hasLanePlan` | episode → plan edge | `VerificationEpisode` → `LanePlan`; no current-selection reading |\n| `hasLaneStep` | plan → step edge | `LanePlan` → `LaneStep` |\n| `hasLanePlanSpecification` | plan → specification edge | `LanePlan` → `LanePlanSpecification` |\n| `LanePlanSpecification` | lane-plan specification class | Class of the governing lane-plan specification |\n| `laneStepIndex` | step index | `LaneStep` → 0-based ordinal (`xsd:integer`) |\n| `laneIdRef` | lane reference | `LaneStep` → `laneId` (`xsd:string`); lane-grain evidence with no lane IRI |\n| `precedesLaneStep` | consecutive-step precedence edge | `LaneStep` at index `i` → `LaneStep` at `i+1`; derived from `laneStepIndex`, provisional precedence, not dependency |\n| `handoffDigest` | handoff digest | `LanePlanSpecification` → supplied handoff SHA-256 (`xsd:string`) |\n| `laneOrderRule` | order rule | `LanePlanSpecification` → `gate-order-lexicographic/v1` (`xsd:string`) |",
+  "epistemic_status": "quoted_prose"
+}

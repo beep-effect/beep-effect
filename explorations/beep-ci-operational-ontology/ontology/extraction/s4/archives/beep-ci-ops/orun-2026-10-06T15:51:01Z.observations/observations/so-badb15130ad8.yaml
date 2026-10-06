@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:badb15130ad8293960f1761f0153ff98df8eec9904daca4f5fb69e35c549f7b6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 12,
+    "end_line": 19,
+    "content_sha256": "1ff9324af7a74b88129fdc4c2af4194ccf7a54f3e733ace5f9510d490026a3c5"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:record=1",
+    "lexical_name": "checkoutRoot",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1790848553872"
+    }
+  ],
+  "source_excerpt": "# record 1\nownerRef=a0de0df18879\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=ee7d63bd-e882-49f9-8a30-960a6df24ac4\nreleasedAtMillis=1790848553872\n",
+  "epistemic_status": "parser_derived"
+}

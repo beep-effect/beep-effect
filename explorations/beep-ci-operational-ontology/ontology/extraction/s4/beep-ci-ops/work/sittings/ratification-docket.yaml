@@ -1,0 +1,369 @@
+# Run-4 sitting-3 ratification docket for beep-ci-ops (orun-2026-10-06T15:51:01Z).
+# ADVISORY ONLY. Written by the ratification-docket lane for the orchestrator, who rules sitting 3
+# under the operator autonomy charter (P3 Ruling 2) and writes every ratification in its own words.
+# Nothing here is a steward utterance, a verbatim decision or a draft of one. Slots are suggestions.
+docket: ratification-docket
+run: "orun-2026-10-06T15:51:01Z"
+pin_commit_12: "71c7357adc"
+date: "2026-10-06"
+author_role: ratification-docket lane (advisory)
+inputs:
+  ratification_contract: .claude/skills/_shared/schemas/ratification.schema.yaml
+  skill_steps: .claude/skills/ontology-foundational-auditor/SKILL.md (steps 7-9, Tool Commands step 8 and 9)
+  ontoclean_rules: .claude/skills/_shared/ontoclean-rules.yaml
+  gate_log:
+    path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/review-audit/gate-log-final-pre-scribe.txt
+    sha256_12: "7ca37ec36f7d"
+    result: "ARTIFACTS VALID — GATE PASSED (flags above go to the steward)"
+    lines: 156
+    composition: "1 unresolved-fraction line (54/198 = 27%, carried rows excluded), 138 FLAGGED carried-row lines (the call (c) noise; the steward judges each re-park truthful), 16 FLAGGED proposal lines, 1 PASS line"
+  dispositions_index: {path: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/dispositions.index.yaml, sha256_12: "2d70f0ffcaf5", rows: 342, live: {mapped: 96, proposed: 48, unresolved: 54, irrelevant: 6}, carried_unresolved: 138}
+  taxonomy: {path: explorations/beep-ci-operational-ontology/ontology/extraction/s5/TAXONOMY.yaml, sha256_12: "140107074ad5"}
+  predicates: {path: explorations/beep-ci-operational-ontology/ontology/extraction/s6/PREDICATES.yaml, sha256_12: "93b8172adc08"}
+  cq_suite: {path: explorations/beep-ci-operational-ontology/ontology/docs/competency-questions.yaml, sha256_12: "e1ed9c0f65f5"}
+  decision_log: goals/ciops-ontology-pipeline/research/decisions.md (from "2026-10-06 — P3 opened; run-4 launch sitting" to the end; Rulings 1-27, calls (a)-(ai))
+  sitting_mirrors_checked: "sitting-1, sitting-2, sitting-w1, sitting-w2 and sitting-w3 mirrors are byte-equal to their decision-log sections"
+numbering:
+  ratifications_next: rat-071
+  rejections_next: rej-001
+  basis: "Ruling 13; the live governance/ratifications/ and work/rejections/ directories are empty, run-3 rat-053..070 sit in the shelter (TAXONOMY rows cite rat-061, rat-066, rat-053, rat-033, rat-039, rat-065). Shelters were not opened by this lane; the orchestrator re-runs the Ruling 13 maximum over the live directory and every shelter before scribing."
+  suggested_slots_order_rationale: "Ruled clusters adjacent: the change event alone, then the CQ-022 trio with its anchor first, then the seat cluster with its property, then the lane."
+  rejection_slots: "rej-001 is unused by every recommendation below; it is the first slot if the sitting rejects any proposal."
+
+proposals:
+  - id: "otp:chg-change-landing:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-chg-change-landing-001.yaml
+    proposal_sha256: "8164d4c90e0a82696649f379c4c8add11b90d6afdca085e5be83feed7e994157"
+    suggested_slot: rat-071
+    term: {local_name: OperationalChangeEvent, iri: "https://oip.law/ontology/ci-ops#OperationalChangeEvent", entity_kind: class, new_or_reuse: new}
+    warrant: {decision_cqs: ["CQ-016 (should_have; query types ?iv a ciops:OperationalChangeEvent)"], support_targets: []}
+    foundational_status: analyzed
+    category: {ufo: event, gufo: "gufo:Event, no subtype (instant vs interval unresolved)", blinded_seat: event, gate_category_divergence: false}
+    ontoclean: {rigidity: rigid, identity: unresolved, dependence: relational}
+    review_history:
+      - {round: r1, target_12: "c771b3345865", verdict: FAIL, landed: [record-property-as-differentia]}
+      - {round: r2, target_12: "8164d4c90e0a", verdict: PASS, landed: [], revision_log_addresses: [record-property-as-differentia], nonblocking: ["optional success-dependent-differentia wording ('one change set whose content alters ...')"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-chg-change-landing-001.yaml: DISPUTED — the review lists still-viable rivals"
+    viable_rivals:
+      - {rival: "landing is the apply or go-live occurrence for rows titled 'applied' or 'live'", discriminator: "one such change's merge time and apply or go-live time given separately beside its landedAt, with the zone of the titled date (#1141 'live 2026-09-15' vs landedAt 2026-09-16T00:18:38Z)"}
+      - {rival: "one change revised or superseded across rows is one landing at a coarser grain (#1019/#1022; #870/#929)", discriminator: "a record saying whether the earlier row's alteration still holds after the later row lands, or naming the later row a revision"}
+      - {rival: "category: the curated ledger row (information object)", discriminator: "a ledger row corrected while the landed change stays the same"}
+      - {rival: "category: the change artifact, pull request or merge commit (information object)", discriminator: "one change's merge time and its applied or live time given separately"}
+    blinded_seat_divergence_not_gate_flagged: "The blinded pair keeps a process reading (a rollout from merge through apply to adoption) viable, which the primary does not list, and grades the ledger-row reading not viable, which the primary keeps viable."
+    queue_duty: "Queue G pair (OperationalChangeEvent, ciops:landedAt): the class side only. landedAt stays seed-only in PREDICATES (its chain dh:chg-landing-instant:001 keeps its null unrejected), so CQ-016 returns no row on run-4 vocabulary (Ruling 23)."
+    index_rows_closed: {outcome: proposed, count: 45, which: "all 45 chg-batch observations: the 44 change-event ledger rows and the KPI law section 2 block"}
+    step8_ontoclean:
+      core_sortal: false
+      reasoning: "Rigidity is resolved (rigid) on card and proposal, so the step-8 rule does not fire whatever the class's status. It is a leaf event class with no parents or children. Identity is unresolved, but the 'Kind with no identity provider' BLOCK applies to kinds, and the proposal claims event; the gate's mechanical OntoClean block (kind/subkind/role/phase only) passed."
+    recommended_arm: accept-flagged
+    grounds: "Converged after one landed FAIL whose rule the revision addressed; the r2 PASS re-attacked the same rule and survived. The CQ-016 query types the class, so Ruling 20's warrant holds for the class alone, and Ruling 23 asks exactly whether it ratifies alone: the class gives P4 a typed subject and closes 45 index rows. Every open point already has a named discriminator, so each can be retained as a flag instead of blocking."
+    flags_to_retain:
+      - "identity unresolved (supplies and carries); pull request and merge commit are re-identification evidence only"
+      - "temporality unresolved; no gufo subtype asserted"
+      - "rival: apply or go-live vs merge, with its discriminator"
+      - "rival: supersession grain, with its discriminator"
+      - "category rival: ledger row (information object)"
+      - "category rival: change artifact (information object)"
+      - "CQ-016 answered for its subject only: landedAt seed-only, no surviving chain"
+      - "adoption not claimed (dh:chg-adoption:001 unproposed); evidence is observational seed data"
+    rejected_alternative: "Hold (revise) until a landedAt chain survives so the CQ-016 pair ratifies together. Rejected because it leaves P4 on seed rows for the class as well, turns the 45 proposed index rows unresolved, and the class's warrant does not depend on the property (Ruling 20 reads the type pattern)."
+    tracked_followups:
+      - "optional r2 wording: tie the differentia to what the change set specifies, not an achieved effect"
+      - "Ruling 23: the open-issues wording citing a later 'P0 Ruling 3' (closure-grounded reason: a row records a merge commit)"
+
+  - id: "otp:vfy-verification-attempt:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-verification-attempt-001.yaml
+    proposal_sha256: "e269f12b346de662e553e1002ce5e5d9eb884b860138f9c4381acdde1e59fdc6"
+    suggested_slot: rat-072
+    term: {local_name: VerificationAttempt, iri: "https://oip.law/ontology/ci-ops#VerificationAttempt", entity_kind: class, new_or_reuse: "reuse (exact) of the ratified row rat-033, rigidity rigid, no flags field in TAXONOMY"}
+    warrant: {decision_cqs: [], support_targets: ["otp:vfy-committed-failure:001", "otp:vfy-lane-execution:001"], note: "Ruling 20 moved it to the support arm (CQ-022 joins by inAttempt without typing the attempt)."}
+    foundational_status: analyzed
+    category: {ufo: event, gufo: "gufo:Event", blinded_seat: event, gate_category_divergence: false}
+    ontoclean: {rigidity: unresolved, identity: supplies, dependence: relational}
+    review_history:
+      - {round: r1, target_12: "2986e1d5b2c4", verdict: PASS, landed: [], note: "sitting 1: the validity audit's null attack does not land (Ruling 19, recorded-value reuse judged on semantic match); warrant falls under Ruling 20 and reached synthesis as a ruling row"}
+      - {round: r2, target_12: "e269f12b346d", verdict: PASS, landed: [], revision_log_addresses: ["ruling 20 (support arm)"], nonblocking: ["hypothesis still individuates by attemptId (identifier-as-identity)", "TAXONOMY row for VerificationAttempt carries no flags field; name where the flag lives"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-verification-attempt-001.yaml: DISPUTED — the review lists still-viable rivals"
+    viable_rivals:
+      - {rival: "alias of the seat request (one individual under two names)", discriminator: "an attempt-started row and an admission chain sharing one attemptId, or two admission chains under one attemptId"}
+      - {rival: "process counted while running (CQ-022 in-flight queries)", discriminator: "a record of an attempt while running, before its verdict"}
+    blinded_seat_divergence_not_gate_flagged: "The blinded pair grades the seat-request alias not viable and rates the class rigid; the primary card leaves rigidity unresolved because of that alias."
+    queue_duty: "Queue A recorded-value reuse deferral (Ruling 21 names VerificationAttempt). The proposal carries the exact phrase 'flag VerificationAttempt persists; no lift claimed'. The deferral (account-version identity, effective invocation continuity) lives in the Queue A docket, not in a TAXONOMY flags field."
+    index_rows_closed: {outcome: mapped, count: 7, which: "po-fd56d2b008d1 (KPI law retention) and six attempt-journal source observations"}
+    step8_ontoclean:
+      core_sortal: "yes for the CQ-022 cluster, by its support role: both decision terms individuate their referent within an attempt"
+      reasoning: "Ruling 23 sends this case to sitting 3: a reuse carrying rigidity unresolved over a ratified rigid row. A reuse ratification affirms that the run-4 chain denotes the ratified term; it does not re-decide the ratified row's rigidity (no prior ratification changes, Ruling 23; flags are never removed, Ruling 14). The step-8 BLOCK therefore turns on whether the sitting treats the run-4 card's unresolved rigidity as a claim of this ratification. If it does, the rule blocks; if the ratified rigid value is held to govern, the card's doubt is retained as a named deferral (the alias discriminator) and the rule does not fire. The sitting must say which, explicitly, as a shared-IRI grain ruling."
+    recommended_arm: accept-flagged
+    grounds: "Two PASS reviews and no landed attack; the reuse is same-grain by the reviewer's semantic-match test; its support targets need it to say which attempt; 7 mapped rows rest on it. The rigidity doubt comes from one identity rival with a named discriminator that the blinded seat independently rejects. Recommended only together with the explicit shared-IRI ruling above that the ratified 'rigid' governs and the alias reading is a retained deferral."
+    flags_to_retain:
+      - "flag VerificationAttempt persists; no lift claimed (Queue A deferral: account-version identity, effective invocation continuity)"
+      - "run-4 card rigidity unresolved under the seat-request alias rival (discriminator above)"
+      - "process-while-running rival"
+      - "lane-execution parthood and the tie to a seat request not shown (no cross-record attemptId join)"
+    rejected_alternative: "Reject as an unresolved-rigidity core sortal. Rejected because it would strip the anchor both CQ-022 decision terms individuate by, re-disposition 7 mapped rows, and treat a doubt the ratified row already settles as if this reuse re-decided it."
+    tracked_followups:
+      - "align the hypothesis wording (attemptId as evidence, start event as criterion)"
+      - "state where the VerificationAttempt deferral is recorded, since TAXONOMY has no flags field for it"
+
+  - id: "otp:vfy-lane-execution:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-lane-execution-001.yaml
+    proposal_sha256: "fc32f78288d5b68abae6f18b7b95327e058bbe34777abe922ac88964365a24fc"
+    suggested_slot: rat-073
+    term: {local_name: WorkUnitExecution, iri: "https://oip.law/ontology/ci-ops#WorkUnitExecution", entity_kind: class, new_or_reuse: "new (no TAXONOMY row; the spec side is the ratified WorkUnitSpecification)"}
+    warrant: {decision_cqs: ["CQ-022 (must_have; types ?exec)", "CQ-024 (should_have; types ?exec)", "CQ-025 (should_have; types ?exec)"], support_targets: []}
+    foundational_status: analyzed
+    category: {ufo: event, gufo: "gufo:Event", blinded_seat: event, gate_category_divergence: false}
+    ontoclean: {rigidity: unresolved, identity: supplies, dependence: relational}
+    review_history:
+      - {round: r1, target_12: "dea4a5863697", verdict: PASS, landed: [], note: "sitting 1 Ruling 19 landed a missed identity attack (wrapper containment; the journal/ledger join bearing on the two-referent rival), sent upstream"}
+      - {round: r2, target_12: "5e095484e0cd", verdict: FAIL, landed: [definition-excludes-warrant-rows], revision_log_addresses: [unity-contradicted-by-closure, lost-rival]}
+      - {round: r3, target_12: "fc32f78288d5", verdict: PASS, landed: [], revision_log_addresses: [definition-excludes-warrant-rows], nonblocking: ["card and analysis still say 'ended by a verdict'", "fact/shadow agreement sentence omits attemptId", "say whether whole-attempt executions (CQ-025 notes) are out of this grain"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-lane-execution-001.yaml: DISPUTED — the review lists still-viable rivals"
+    viable_rivals:
+      - {rival: "process counted while running (CQ-022 RunningExecution) rather than an event", discriminator: "a running-state record of a lane execution written before its verdict"}
+    blinded_seat_divergence_not_gate_flagged: "The blinded pair keeps 'temporal part of the attempt without individuality of its own' viable; the primary grades the nearest reading (the attempt as a whole, lanes unindividuated) not viable on separate lane verdicts."
+    queue_duty: "None beyond CQ-022/024/025; the properties those queries also need (hasExecutionState, RunningExecution, hasCancelClass, hasCachePosture, actualWallMs, usedCostEstimate, inAttempt) are not grounded by this chain."
+    index_rows_closed: {outcome: proposed, count: 2, which: "so-5d4b45aa3226 (verdict with nested lane entries), so-bbe03a405b80"}
+    step8_ontoclean:
+      core_sortal: "the hardest call of the docket"
+      reasoning: "It supplies identity and leaves rigidity unresolved, the profile the step-8 rule targets. For non-core: it is a leaf with no parents or children, and the card's rigidity doubt (an invocation later folded into a parent lane's execution, or relabelled to another lane) is the open wrapper parthood question, not a doubt about membership while the invocation persists. For core: it is the execution-side sortal of the ruled spec/execution split, and three CQs type it. The gate's mechanical block does not reach it (category event). The sitting must rule it non-core with reasons before accepting it; if it rules core, the rule blocks and the arm becomes revise."
+    recommended_arm: accept-flagged
+    grounds: "Three rounds: one sitting-landed identity attack and one adversary FAIL were answered on changed bytes, and the r3 PASS re-attacked the failed rule. The warrant is the strongest in the run (three typed queries, one must_have). The definition now admits running and cancelled invocations (the CQ-022 rows) and excludes not-run entries from minting. Accept only with the step-8 non-core ruling stated."
+    flags_to_retain:
+      - "rigidity unresolved (absorption into a wrapper, relabelling)"
+      - "process-while-running rival"
+      - "wrapper parthood vs temporal containment open; peer counting double-counts CQ-025 actualWallMs"
+      - "rerun edge: (attempt, lane) is evidence only while no rerun occurs"
+      - "two-referent rival rejected on one joined pair; a disagreeing pair revives it"
+      - "naming grain: the class claims lane invocations only; whether a work unit adds a scope grain is not shown"
+    rejected_alternative: "Revise to wait for a wrapper entry with its own instants or a running-state record. Rejected because the loop is closed (Ruling 11), the open points are named deferrals rather than defects, and CQ-022's cancel-candidate rows need a typed execution class."
+    tracked_followups:
+      - "r3 non-blocking requests (card wording, attemptId in the fact/shadow agreement, whole-attempt grain for CQ-025)"
+
+  - id: "otp:vfy-committed-failure:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-committed-failure-001.yaml
+    proposal_sha256: "929755435984178b52a49b35365ec02d7c6e05316ce1c0d91cda3ed23eeaff27"
+    suggested_slot: rat-074
+    term: {local_name: CommittedFailure, iri: "https://oip.law/ontology/ci-ops#CommittedFailure", entity_kind: class, new_or_reuse: new}
+    warrant: {decision_cqs: ["CQ-022 (must_have; types the harness-bound ?failure)"], support_targets: []}
+    foundational_status: analyzed
+    category: {ufo: event, gufo: "gufo:Event", blinded_seat: "event (blinded verdict explicitly_deferred)", gate_category_divergence: false}
+    ontoclean: {rigidity: unresolved, identity: supplies, dependence: relational}
+    review_history:
+      - {round: r1, target_12: "929755435984", verdict: PASS, landed: [], nonblocking: ["keep 'earlier steps at status passed' as an example, not a condition", "say committed=false (the repair-commit member) is not evidence"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-committed-failure-001.yaml: DISPUTED — the review lists still-viable rivals"
+    viable_rivals:
+      - {rival: "the commitment or obsoletion point CQ-022 names, distinct from the step exit", discriminator: "a record of the failing step's exit instant together with executions of the same attempt still running at that instant"}
+    blinded_seat_divergence_not_gate_flagged: "The blinded pair defers and keeps two more rivals viable: a role of the failed step execution, and a failed phase of the attempt (the primary grades the phase not viable). It also records supplies_identity false (the attempt supplies identity; the step is the locus)."
+    queue_duty: "None; CQ-022 cluster member. inAttempt is parked-run-2 and unproposed, so CQ-022 returns no row on run-4 vocabulary."
+    index_rows_closed: {outcome: proposed, count: 1, which: "so-ca8b3f90e57c (the attempt verdict carrying failedStepId)"}
+    step8_ontoclean:
+      core_sortal: false
+      reasoning: "Leaf event class, no parents or children; no other proposal takes identity from it. The blinded card reads its identity as derived from the attempt, and the primary criterion is the pair (attempt, step), so the supplied criterion rests on two other individuals. The rigidity doubt (a retried step or a revised failedStepId) bears on whether a step exit stays the committing failure, which is the obsoletion-point rival's question. The sitting should still state the non-core reading."
+    recommended_arm: accept-flagged
+    grounds: "PASS with no landed attack; one identity rival with a named discriminator; must_have warrant by typing. It carries a single observation, so every claim beyond shape is a flag, and the proposal says so."
+    flags_to_retain:
+      - "rigidity unresolved (retry within an attempt; revised failedStepId)"
+      - "obsoletion-point rival"
+      - "no instant claimed (no verdict instant is the step exit instant)"
+      - "termination counterexample: an attempt ended by an attempt-terminated reason has no committed failure under this criterion"
+      - "one cited observation: a shape, never a count or an absence"
+      - "inAttempt unproposed; CQ-022 cluster incomplete"
+    rejected_alternative: "Revise to defer until the obsoletion point is separated. Rejected because the rival is carried with its discriminator, the review found nothing to repair, and deferring removes the subject CQ-022's whole answer hangs on."
+    tracked_followups:
+      - "the two r1 non-blocking wording requests"
+
+  - id: "otp:vfy-seat-request:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-seat-request-001.yaml
+    proposal_sha256: "e0d884c7f13365044be197ff9ecff94b27906dc3b6c195655bc393d4bff6ed22"
+    suggested_slot: rat-075
+    term: {local_name: SeatRequest, iri: "https://oip.law/ontology/ci-ops#SeatRequest", entity_kind: class, new_or_reuse: "reuse (exact) of rat-061, rigidity rigid, flagged: demand-versus-description grain and handling/resubmission continuity"}
+    warrant: {decision_cqs: ["CQ-021 (must_have; types ?req)", "CQ-023 (must_have; types ?req)"], support_targets: []}
+    foundational_status: explicitly_deferred
+    category: {ufo: unresolved, gufo: "none asserted", blinded_seat: relator, gate_category_divergence: true}
+    ontoclean: {rigidity: unresolved, identity: unresolved, dependence: unresolved}
+    review_history:
+      - {round: r1, target_12: "e0d884c7f133", verdict: PASS, landed: [], nonblocking: ["the definition's 'opened by an admission-enqueued row' misses v1-journal tickets, which leave only an admitted row carrying enqueuedAtMillis, kind, priority and weightTokens"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-seat-request-001.yaml: DISPUTED — the review lists still-viable rivals"
+      - "FLAGGED - proposals/otp-vfy-seat-request-001.yaml: DISPUTED — alternative seat says 'relator', primary says 'unresolved'; steward chooses"
+      - "FLAGGED - proposals/otp-vfy-seat-request-001.yaml: submits FLAGGED (explicitly_deferred): An admission chain that separates the readings: a grant evicted or released and then re-queued or re-admitted under the same nonce (favours one engagement with phases), one request admitted into two grants or a lease whose nonce differs from its ticket's (favours two relators), or an admitted row whose charge, owner or checkout differs from the same chain's enqueue row. For the attempt rival: an attempt-journal end row joined to an admission chain by attemptId, showing whether the attempt ends where the request ends. For demand continuity: a record linking two chains, such as a shared demand id or a resubmission marker on a chain that follows a withdrawal. For relational dependence (the card leaves it unresolved): a record stating the capacity a request waits on (a pool, queue or capacity snapshot named on or joined to the enqueue row), which no cited record carries."
+    viable_rivals:
+      - {rival: "rigid relator ending at admission (two-relator split)", discriminator: "one request admitted into two grants, or a lease whose nonce differs from its ticket's"}
+      - {rival: "waiting phase (anti-rigid) of one admission engagement that continues as the grant", discriminator: "a grant evicted or released and re-queued or re-admitted under the same nonce; or an admitted row whose charge, owner or checkout differs from its enqueue row"}
+      - {rival: "the verification attempt under another name", discriminator: "an attempt-journal end row joined to an admission chain by attemptId"}
+      - {rival: "one demand persisting across a withdrawal and a later resubmission", discriminator: "a shared demand id or resubmission marker linking two chains"}
+    blinded_seat_reading: "relator founded by one enqueue occurrence, rigid, supplies identity, relational dependence on the requesting party and the admission queue; keeps the phase and enduring-demand rivals viable."
+    queue_duty: "Queue A recorded-value reuse deferral. Exact phrase present: 'flag SeatRequest persists; no lift claimed'."
+    index_rows_closed: {outcome: mapped, count: 45, which: "45 admission-journal source observations (see the index for ids)"}
+    step8_ontoclean:
+      core_sortal: true
+      reasoning: "Core sortal of the admission cluster: CQ-021 and CQ-023 type it and the ratified schedulesSeatRequest ranges over it. Its run-4 rigidity is unresolved between rigid (relator) and anti-rigid (phase), which is a direct conflict with the ratified row's 'rigid' if the phase reading holds. As a reuse it claims no lift and cannot re-decide the ratified row (Ruling 23). The rule is satisfied only if the sitting rules that this ratification affirms the denotation under the ratified rigid value and records the phase reading as a new named deferral; otherwise it blocks."
+    recommended_arm: accept-flagged
+    grounds: "PASS with no landed attack; same grain as the ticket side of the ruled ticket/lease split; 45 mapped rows rest on it; the blinded seat independently reads it as a relator, the rigid reading the ratified row records. Recommended only with the explicit shared-IRI ruling and ruled jointly with SeatGrant (one discriminating chain decides both)."
+    flags_to_retain:
+      - "flag SeatRequest persists; no lift claimed (rat-061 deferrals: demand-versus-description grain, handling/resubmission continuity)"
+      - "run-4 category deferral: two-relator vs waiting-phase reading, with the explicitly_deferred needed evidence"
+      - "identity rivals: attempt alias, demand continuity"
+      - "dependence unresolved (no record names the capacity a request waits on)"
+      - "definition scope: v1-journal tickets leave no enqueue row"
+    rejected_alternative: "Reject the reuse because the explicitly deferred category leaves rigidity open on a core sortal. Rejected: it re-dispositions 45 mapped rows and removes run 4's only record that the flag was re-examined, while the ratified row keeps every consequence the rejection would aim at."
+    tracked_followups:
+      - "the v1-journal definition-scope request"
+
+  - id: "otp:vfy-seat-grant:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-seat-grant-001.yaml
+    proposal_sha256: "050395fdde0cb4423ffb205a05413358a39a0b68b5cde54807d270dff13a8cbd"
+    suggested_slot: rat-076
+    term: {local_name: SeatGrant, iri: "https://oip.law/ontology/ci-ops#SeatGrant", entity_kind: class, new_or_reuse: "reuse (exact) of rat-066, rigidity rigid, flagged: account-copy identity and effective authorization continuity"}
+    warrant: {decision_cqs: ["CQ-008 (must_have; types ?grant)", "CQ-009 (must_have; types ?g1 and ?g2)"], support_targets: [], note: "CQ-010 deliberately not cited (it types nothing)."}
+    foundational_status: explicitly_deferred
+    category: {ufo: unresolved, gufo: "none asserted", blinded_seat: relator, gate_category_divergence: true}
+    ontoclean: {rigidity: unresolved, identity: unresolved, dependence: relational}
+    review_history:
+      - {round: r1, target_12: "050395fdde0c", verdict: PASS, landed: [], nonblocking: ["the hypothesis's 'revoked when the heartbeat stops' is a causal reading the card disowns"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-seat-grant-001.yaml: DISPUTED — the review lists still-viable rivals"
+      - "FLAGGED - proposals/otp-vfy-seat-grant-001.yaml: DISPUTED — alternative seat says 'relator', primary says 'unresolved'; steward chooses"
+      - "FLAGGED - proposals/otp-vfy-seat-grant-001.yaml: submits FLAGGED (explicitly_deferred): The same discriminating chain as the seat-request pair: a grant released or evicted and then re-admitted under the same nonce, one request admitted into two grants, a lease whose nonce differs from its ticket's, or a grant renewed or transferred to another holder while keeping its admission instant. For CQ-009's legacy-origin arm, a grant record carrying the legacy-origin-lock/v1 protocol, or a grant persisted without the protocol field (which decodes as legacy-origin-lock/v1). For a dependence on a capacity pool: a record stating the capacity a grant is charged against (a pool or capacity snapshot member on a grant row)."
+    viable_rivals:
+      - {rival: "rigid relator founded at admission", discriminator: "one request admitted into two grants, or a lease whose nonce differs from its ticket's"}
+      - {rival: "held phase (anti-rigid) of one admission engagement that began at enqueue", discriminator: "a grant released or evicted and re-admitted under the same nonce; a grant renewed or transferred keeping its admission instant"}
+    blinded_seat_reading: "relator founded by admission, rigid, supplies identity, dependent on the holder and the shared capacity; keeps the held-phase rival viable."
+    queue_duty: "Queue A recorded-value reuse deferral. Exact phrase present: 'flag SeatGrant persists; no lift claimed'."
+    index_rows_closed: {outcome: mapped, count: 13, which: "13 admission-journal source observations (admitted, released and lease-evicted chains and lease records; see the index for ids)"}
+    step8_ontoclean:
+      core_sortal: true
+      reasoning: "Same profile as SeatRequest: core sortal of the admission cluster (CQ-008 and CQ-009 type it; admittedBy and hasCheckout range over or from it); run-4 rigidity open between rigid relator and anti-rigid phase against a ratified rigid row. Same resolution path, and it must match the SeatRequest ruling, since one chain decides both."
+    recommended_arm: accept-flagged
+    grounds: "PASS with no landed attack; same grain as the lease side of the ruled split; the blinded seat independently reads a relator; 13 mapped rows. Ruled with SeatRequest and under the same explicit shared-IRI ruling."
+    flags_to_retain:
+      - "flag SeatGrant persists; no lift claimed (rat-066 deferrals: account-copy identity, effective authorization continuity)"
+      - "run-4 category deferral: relator vs held-phase reading, with the explicitly_deferred needed evidence"
+      - "CQ-009 legacy-origin arm unshown; hasCheckout and hasCoordinationProtocol seed-only (decoded-value law, call (t))"
+      - "no capacity-pool dependence shown"
+    rejected_alternative: "Reject or hold for the discriminating chain. Rejected for the SeatRequest reasons, and because CQ-009's re-scope (Ruling 5) was built over this class."
+    tracked_followups:
+      - "open issue still names the withdrawn otp:vfy-checkout:001 as the held checkout (Ruling 23 follow-up); bytes bind it"
+      - "hypothesis causal heartbeat wording"
+
+  - id: "otp:vfy-admission-charge:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-admission-charge-001.yaml
+    proposal_sha256: "e79c5e12a08c3f131fe3ed1e7fb9aeea2839925539c540c5093344370e5e1696"
+    suggested_slot: rat-077
+    term: {local_name: admissionChargeTokens, iri: "https://oip.law/ontology/ci-ops#admissionChargeTokens", entity_kind: data_property, new_or_reuse: "reuse (exact) of rat-053, rigidity unresolved, flagged: repricing, assertion replacement, request/grant continuity, pre-admission capacity evidence"}
+    warrant: {decision_cqs: ["CQ-010 (must_have; uses the property on the grant)", "CQ-021 (must_have; uses the property on the request)"], support_targets: []}
+    foundational_status: explicitly_deferred
+    category: {ufo: unresolved, gufo: "none asserted", blinded_seat: quality, gate_category_divergence: true}
+    ontoclean: {rigidity: unresolved, identity: unresolved, dependence: unresolved}
+    review_history:
+      - {round: r1, target_12: "e79c5e12a08c", verdict: PASS, landed: [], nonblocking: ["restate the null discriminator as a claim fixed at enqueue against measured use, not a refutation of every implementation-only reading"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-admission-charge-001.yaml: DISPUTED — the review lists still-viable rivals"
+      - "FLAGGED - proposals/otp-vfy-admission-charge-001.yaml: DISPUTED — alternative seat says 'quality', primary says 'unresolved'; steward chooses"
+      - "FLAGGED - proposals/otp-vfy-admission-charge-001.yaml: submits FLAGGED (explicitly_deferred): The category stays unresolved among four viable readings. To retire one of the quality and value-only rivals: an admission chain whose weightTokens differs between its admission-enqueued and admission-admitted rows (repricing), or a deployed statement that the charge is recomputed at admission. To decide the relational claim mode: a record showing whether the charge can exist apart from a capacity pool or snapshot (a charge stated with no pool, or one restated against a second pool). To decide the work-kind attribute: one work kind carrying two weights, or a charge recomputed per request."
+    viable_rivals:
+      - {rival: "quality individual inhering in the request or grant", discriminator: "repricing between enqueue and admit rows, or a deployed recompute-at-admission statement"}
+      - {rival: "quality value only (no individual)", discriminator: "same as above"}
+      - {rival: "relational claim mode on a capacity pool", discriminator: "a charge stated with no pool, or restated against a second pool"}
+      - {rival: "attribute of the work kind (named by the review)", discriminator: "one work kind carrying two weightTokens values, or a chain whose enqueue and admit rows differ"}
+    blinded_seat_reading: "quality of the seat request carried into its grant, rigid, intrinsic; keeps the work-kind mode rival viable; grades grant-only not viable."
+    queue_duty: "Queue A/D flagged property. Exact phrase present: 'flag admissionChargeTokens persists; no lift claimed'."
+    index_rows_closed: {outcome: none, count: 0, which: "no index row refs this proposal; its three cited observations are mapped to otp:vfy-seat-request:001 and otp:vfy-seat-grant:001"}
+    step8_ontoclean:
+      core_sortal: false
+      reasoning: "A data property is not a sortal; the rule does not apply. The ratified row (rat-053) already records rigidity unresolved, so there is no shared-IRI rigidity conflict."
+    recommended_arm: accept-flagged
+    grounds: "PASS with no landed attack; same recorded-value grain as rat-053; both warrant queries use the property. The chain survives, so call (y) requires a reuse proposal to carry the flagged term even though it closes no index row."
+    flags_to_retain:
+      - "flag admissionChargeTokens persists; no lift claimed (rat-053 deferrals stand: no repricing, assertion replacement, continuity join or pre-admission capacity evidence)"
+      - "category among four readings; entity kind stays a data property on the ratified row"
+      - "capacityAtAdmissionTokens (CQ-010's other side) not grounded by this chain"
+    rejected_alternative: "Revise to drop the open-issues line that names the withdrawn otp:vfy-admission-work-kind:001 as a dependency. Rejected: the W3 receipt and Ruling 27 already rule it prose routing, not an edge, and a revise forces a fresh review after the loop closed for a line that changes no claim. A ratification still binds those bytes, so the sitting should say the line is superseded by Ruling 27."
+    tracked_followups:
+      - "stale dependency line on the withdrawn admission-work-kind proposal"
+      - "r1 non-blocking null-discriminator restatement"
+
+  - id: "otp:vfy-verification-lane:001"
+    file: explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-verification-lane-001.yaml
+    proposal_sha256: "23c86967b5d5e0b55788227b61870bde3818cc03adfbb38d78ad95c5b19ac7ff"
+    suggested_slot: rat-078
+    term: {local_name: VerificationLane, iri: "https://oip.law/ontology/ci-ops#VerificationLane", entity_kind: class, new_or_reuse: "reuse (exact) of rat-039, rigidity rigid, identity_ref ic:pa-turbo-task-specification:001, NO flags field and not a Queue A deferral"}
+    warrant: {decision_cqs: ["CQ-001 (must_have; types ?lane)", "CQ-006 (must_have; cited, but see warrant_finding)"], support_targets: []}
+    warrant_finding: "CQ-006's query binds ?lane only as the object of requiresLane and dischargesObligation and names no lane individual (it binds a tier individual), so under Ruling 20 it warrants nothing. Sitting 1 recorded that 'the other proposals' queries type their terms'; this citation was not examined there. The warrant stands on CQ-001 alone. The reviewer raised the same point as non-blocking."
+    foundational_status: explicitly_deferred
+    category: {ufo: unresolved, gufo: "none asserted", blinded_seat: information_object, gate_category_divergence: true}
+    ontoclean: {rigidity: unresolved, identity: unresolved, dependence: unresolved}
+    review_history:
+      - {round: r1, target_12: "23c86967b5d5", verdict: PASS, landed: [], nonblocking: ["CQ-006 binds ?lane untyped; state the warrant basis"]}
+    gate_flags:
+      - "FLAGGED - proposals/otp-vfy-verification-lane-001.yaml: DISPUTED — the review lists still-viable rivals"
+      - "FLAGGED - proposals/otp-vfy-verification-lane-001.yaml: DISPUTED — alternative seat says 'information_object', primary says 'unresolved'; steward chooses"
+      - "FLAGGED - proposals/otp-vfy-verification-lane-001.yaml: submits FLAGGED (explicitly_deferred): To settle the identity criterion: one laneId carrying two commandDigest values across ledgers or over time, or two laneIds sharing one commandDigest. To rule the category between information object and process type: a record that gives the lane properties of its own apart from its executions (a deployed lane definition with its command and obligations, revisable as a document) or a record that classifies executions under a lane type with no specification of its own. For lane kind (CQ-001): a second laneClass value, or the deployed lane-class domain."
+    viable_rivals:
+      - {rival: "process type its executions instantiate (vs procedure specification as an information object)", discriminator: "a deployed lane definition with properties of its own, revisable as a document; or executions classified under a type with no specification"}
+      - {rival: "identity by name lineage vs by command content (blinded: a named slot persisting across command revisions)", discriminator: "one laneId with two commandDigest values, or two laneIds sharing one"}
+    blinded_seat_reading: "information object, rigid, no dependence; identity unresolved between name and content; keeps the persisting-slot rival viable."
+    queue_duty: "No flag phrase: VerificationLane is unflagged in TAXONOMY and outside Ruling 21's Queue A list, so it took the full standard on every surface (and passed). Accepting it adds the first deferrals to an unflagged ratified row."
+    index_rows_closed: {outcome: mapped, count: 31, which: "31 source observations (see the index for ids)"}
+    step8_ontoclean:
+      core_sortal: "yes for the lane side (CQ-001 types it; WorkUnitExecution and lane obligations hang on it)"
+      reasoning: "Run-4 rigidity is unresolved (a lane retired while its command remains) against a ratified rigid row with no flag. Unlike the Queue A reuses there is no standing deferral to carry the doubt, so accepting writes a new flag onto an unflagged row (additive under Ruling 14, which forbids only removal). The step-8 rule is satisfied on the same terms as the seat pair: the ratified rigid value governs and the run-4 doubt is a named deferral. The sitting must also rule the grain against the ratified identity card (a turbo task specification) versus this chain's laneId-plus-commandDigest procedure; the reviewer's reuse-semantic-match attack did not land."
+    recommended_arm: accept-flagged
+    grounds: "PASS under the full standard; same specification grain as rat-039 by the reviewer's test; the blinded seat independently reads an information object, which is consistent with a rigid specification; 31 mapped rows. Recommended with three explicit rulings: CQ-006 does not count toward warrant, the ratified rigid value governs, and the new deferrals are added as the row's first flag."
+    flags_to_retain:
+      - "identity: name lineage vs command content"
+      - "category: information object vs process type"
+      - "lane kind: laneClass cli-runnable is the only value; CQ-001's hasLaneKind ungrounded"
+      - "warrant rests on CQ-001 only (Ruling 20 reading of CQ-006)"
+    rejected_alternative: "Revise to drop CQ-006 from operational_warrant before ratifying. Rejected because the sitting can rule the citation void without changing bytes, and a revise reopens review after the loop closed; the warrant holds on CQ-001 either way."
+    tracked_followups:
+      - "drop or annotate the CQ-006 citation in a later run's re-presentation"
+
+cluster_questions:
+  - id: CQ-022-trio
+    members: ["otp:vfy-committed-failure:001", "otp:vfy-lane-execution:001", "otp:vfy-verification-attempt:001"]
+    question: "Rule the three together: the two decision terms individuate within an attempt, so VerificationAttempt's acceptance is what makes their definitions closed. If VerificationAttempt were rejected, both decision terms' definitions would cite an unratified anchor. inAttempt stays parked-run-2 and unproposed (it needs its own chain), and hasExecutionState and RunningExecution are parked, hasCancelClass seed-only, so CQ-022 returns no row on run-4 vocabulary even with all three accepted. State that as the CQ-022 outcome."
+  - id: CQ-022-trio-step8
+    members: ["otp:vfy-committed-failure:001", "otp:vfy-lane-execution:001", "otp:vfy-verification-attempt:001"]
+    question: "All three carry identity 'supplies' with rigidity unresolved. Rule the step-8 core-sortal question for each, in one consistent test (leaf vs anchor; derived vs supplied criterion; reuse vs new), not three ad hoc answers."
+  - id: seat-cluster
+    members: ["otp:vfy-seat-request:001", "otp:vfy-seat-grant:001", "otp:vfy-admission-charge:001"]
+    question: "One discriminating chain decides the request and the grant together (relator split vs one engagement in two phases), and the charge's bearer question turns on the same split. Rule one shared-IRI position for all three: the ratified values (SeatRequest and SeatGrant rigid; admissionChargeTokens unresolved) govern, the run-4 category deferral is added as a named flag, and no lift is claimed. Also state whether the SeatRequest flag can lift singly (the proposal says undecided, since schedulesSeatRequest sits in the joint ordering cluster)."
+  - id: shared-IRI-grain
+    members: ["otp:vfy-verification-attempt:001", "otp:vfy-seat-request:001", "otp:vfy-seat-grant:001", "otp:vfy-verification-lane:001"]
+    question: "Ruling 23 sends reuses with rigidity unresolved over a ratified rigid row to sitting 3. Rule once, explicitly: does a reuse ratification bind the run-4 card's ontoclean values, or affirm the denotation under the ratified row's values with the card's doubt retained as a flag? The step-8 BLOCK depends on the answer for all four."
+  - id: CQ-016-landedAt
+    members: ["otp:chg-change-landing:001"]
+    question: "Ruling 23: does OperationalChangeEvent ratify alone while landedAt is unproposed (its chain dh:chg-landing-instant:001 keeps its null unrejected; PREDICATES status seed-only)? If yes, CQ-016 stays half answered on run-4 vocabulary and the P4 hand-off must say so. If no, the 45 proposed index rows re-disposition."
+  - id: stale-withdrawn-refs
+    members: ["otp:vfy-admission-charge:001", "otp:vfy-seat-grant:001"]
+    question: "Two proposals' bound bytes name withdrawn proposals in open issues (otp:vfy-admission-work-kind:001, Ruling 27; otp:vfy-checkout:001, Ruling 18). Rule that these lines are superseded by the withdrawal rulings rather than revise the bytes."
+  - id: tier-prior-refutation
+    members: []
+    question: "Call (ab)(4) reserved the answer to the Queue H prior refutation (fa-pb-yeet-proof-tier-001 in the run-2 shelter) for the sitting that rules the tier proposal. No tier proposal exists (dh:vfy-assurance-tier:001 is null-standing). The sitting should record where that answer now goes."
+  - id: rejection-consequence
+    members: []
+    question: "Any reject or revise changes the index: rows whose ref names the proposal must re-disposition (45, 45, 31, 13, 7, 2, 1 or 0 rows by proposal) before the post-scribe gate re-run (step 9), which joins rejections to work/rejections/rej-<nnn>.yaml."
+
+p4_handoff_ruling_17:
+  tier_outcome: "Queue H stays open (call (ag)): no pair rules tier against stage. dh:vfy-assurance-tier:001 is null-standing and unresolved (needed: a deployed record carrying an AssuranceTierId member, a recorded mapping from proofTier values into the three levels, or a lane-obligation set that differs between two levels); the merged-preview tier reading does not survive (call (ad)); dh:vfy-deployed-proof-tier:001 null-standing because every cited record carries proofTier=full; merged preview is dormant in the capture window. The fourth AssuranceTier member stays blocked on the parked AssuranceTierId domain (Ruling 10). 13 live index rows carry these tier needs."
+  change_event_ratification_state: "At docket time: otp:chg-change-landing:001 (OperationalChangeEvent) proposed, gate-passed, PASS at r2, recommended accept-flagged with identity, temporality and four rivals as flags; ciops:landedAt seed-only in PREDICATES and unproposed. The final state is whatever sitting 3 rules."
+  w1_freshness_at_pin: "Call (r): the W1 lever query was re-run as Pass 5 over the window since 8b7392fe00 up to the run base 50b79e470b (ten PRs; two rows survived both refuters: iv-1427-push-first-publish, landed 2026-10-06T01:36:13Z, and iv-1422-spot-pool-drop-r6a, landed 2026-10-06T02:22:00Z from its apply record; eight excluded, none contested). The ledger stands at 44 rows (sha256 f520b302424f) at the pin 71c7357adc, and all 44 rows are transcribed as run-4 prose observations closed by the change-landing proposal."
+  lane_plan_intake_outcome: "Call (ab)(3) and call (ag): the eleven provisional lane-plan terms entered intake through the lpl batch (S7 contract section 8 with the lane-plan Turtle, 25 observations, 12 hypotheses); none survived denotation, so no analysis pair and no proposal. 23 lpl observations are unresolved with the missing lane-order CQ named ('a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009') and 2 are irrelevant (contract governance notes; the W5 live-replay generator). The terms stay provisional."
+  tier_derivation_for_change_event_rows: "Ruling 10: rows never gain a structured tier member in this phase; tier derivation for W8 is a P4 hand-off. Call (r): #1427 partitions the local series only (no hosted mechanism in its diff; rows partition only their own tier's series under P0 Ruling 2), and W8 must state the hosted population shift as a confounder at that instant. The change-landing proposal rejects subclassing by mechanismChanged and proposes no tier member."
+
+run3_precedent_weighed: "Run 3 ratified converged flagged submissions as drafted, each named deferral retained as a flag, ruled shared-IRI grain conflicts explicitly, and withdrew with named evidence what could not stand. Run 4 already did the withdrawal half (Rulings 18, 26, 27: six proposals). Every standing proposal converged (latest review PASS) and every open point carries a named discriminator, so accept-flagged is recommended for all eight on the merits. The precedent is not copied: three proposals need an explicit step-8 core-sortal ruling (WorkUnitExecution, and the trio's other members for consistency), four need the shared-IRI rigidity ruling, VerificationLane gains its first flag and needs a Ruling 20 reading of CQ-006, and two carry stale references to withdrawn proposals."
+
+self_check:
+  proposals_on_disk: 8
+  proposals_in_docket: 8
+  each_once: true
+  sha256_verified_against_files: true
+  latest_review_target_matches_file_sha256: true
+  no_verbatim_decisions: true
+  no_home_paths_or_user_names: true

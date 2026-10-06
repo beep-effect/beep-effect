@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:29afca5918a47b9efdbbcc6c0ee4cc9b0f6040a88ffa9ed457d7b7bff6c627d6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 40,
+    "end_line": 42
+  },
+  "quote": "4. Adding a member to any domain is a T-Box change: it requires a Must/Should CQ that\n   needs the new member (or a named semantic-support license under the two-kind law),\n   and goes through the extend → re-run-all → diff loop (R5).",
+  "epistemic_status": "quoted_prose"
+}

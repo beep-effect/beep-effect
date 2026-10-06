@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:306f2bbb87ce8ffa9e686a3a471988b4a98b9a5bc27a49037cc23764a1322f7e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect2/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "b64631af21e423ac698796be65457b7f7e184765178ca3be66ed3ffdd05a2aa4"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect2/proof-ledger.properties:record=0",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a0f77c46-d29f-4bd6-8c67-10f9f7b3d2c3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/effect-vitest-cli-continuation"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=268507.139645"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=489118aa8da"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=quality:jsdoc-ratchet"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-28T18:17:50.432Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=a0f77c46-d29f-4bd6-8c67-10f9f7b3d2c3\nlaneId=quality:jsdoc-ratchet\nbranch=codex/effect-vitest-cli-continuation\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=489118aa8da\nreason=no-fact\nobserved=passed\ndurationMs=268507.139645\nrecordedAt=2026-09-28T18:17:50.432Z\n",
+  "epistemic_status": "parser_derived"
+}

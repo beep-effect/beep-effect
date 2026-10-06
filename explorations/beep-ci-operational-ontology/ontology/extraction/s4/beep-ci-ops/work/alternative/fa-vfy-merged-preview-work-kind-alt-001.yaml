@@ -1,0 +1,36 @@
+id: "fa:vfy-merged-preview-work-kind-alt:001"
+hypothesis_ref: "dh:vfy-merged-preview-work-kind:001"
+identity_card_ref: "ic:vfy-merged-preview-work-kind-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "member of the admission work-kind classification (this card)"
+    still_viable: true
+  - label: "classifier individual of the work-kind set rather than a subkind"
+    still_viable: true
+  - label: "the merged-preview proof stage under the kind spelling"
+    still_viable: false
+  - label: "a fourth assurance-tier member"
+    still_viable: false
+  - label: "a shared word with no work category behind the ticket value"
+    still_viable: false
+strongest_counterexample: >-
+  The member is warranted only through its class: CQ-021 binds the work kind of each queued request generically
+  and names no merged-preview member, so the member stands or falls with dh:vfy-admission-work-kind:001, and inside
+  that class the subkind and classifier-individual readings are observationally equivalent on current evidence.
+verdict: analyzed
+needed_evidence: >-
+  Subkind versus classifier individual: a kind-level property beyond the charge that only an individual member can
+  bear, or a request re-kinded within one chain (which would defeat both). For Queue H reading (c) as against (a)
+  and (b): the records already put the member outside the stage (so-a8d270b5e19d: kind=merged-preview at
+  stage=pre-push) and outside any assurance level (no record ties a request kind to a tier); a tier reading would
+  need a record verifying an episode to a merged-preview level.
+rationale: >-
+  The member fixes a capacity claim of its own under both priority classes (weightTokens=5 on so-d99a3c53086c at
+  priority=verify and so-0d75ae7174ed at priority=publish, against 3 on the full-proof chains so-95b7d78a061f and
+  so-363f9b7f07dc), and it is carried through every kind of end: withdrawal, queued eviction (so-29a5ac8607a2),
+  release and lease eviction. A work kind is what is requested, not what was executed (spec_vs_execution
+  separated); it is kept apart from its literal and from the request that bears it.

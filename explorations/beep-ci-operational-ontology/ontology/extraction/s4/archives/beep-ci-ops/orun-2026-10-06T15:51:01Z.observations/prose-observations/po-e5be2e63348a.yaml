@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:e5be2e63348a4fc1c8ceff39348a8a3db79ff4157f2b21a88d43d1dbcb49f707",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 440,
+    "end_line": 447
+  },
+  "quote": "- id: iv-1049-quality-lanes-pr1\n  title: \"PR #1049 — quality-lane audit PR-1: test tasks depend on ^transit, duplicate lanes removed, doctest joins pre-push\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T12:04:17Z\"\n  mergeCommit: bed30c6adf3beed7de8538209fbdc84d26a3b8ce\n  pr: 1049\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

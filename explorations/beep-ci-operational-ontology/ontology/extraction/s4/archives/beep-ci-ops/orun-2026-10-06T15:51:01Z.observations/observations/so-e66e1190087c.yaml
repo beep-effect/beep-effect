@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:e66e1190087c8409cfabc00e8361ad9c3643e76ea166589a0140234282c0f04c",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1635,
+    "end_line": 1648,
+    "content_sha256": "9e8596adeee6ba7b078d72112316aed0c2c656b9f27e07a88dc28fba01320245"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect/proof-ledger.properties:record=76",
+    "lexical_name": "factRecordedAt",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "factRecordedAt=2026-09-24T22:06:28.678Z"
+    }
+  ],
+  "source_excerpt": "# record 76\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=be390c0d-c2c7-4775-9924-eb7a5ad0c798\nlaneId=quality:test-integration\nbranch=@slop/09-22-26\nstage=pre-push\nenvProfile=local\nkind=hit\nkey=0e19f89094f\nfactRecordedAt=2026-09-24T22:06:28.678Z\nobserved=passed\ndurationMs=169571.850667\nrecordedAt=2026-09-24T22:31:54.073Z\n",
+  "epistemic_status": "parser_derived"
+}

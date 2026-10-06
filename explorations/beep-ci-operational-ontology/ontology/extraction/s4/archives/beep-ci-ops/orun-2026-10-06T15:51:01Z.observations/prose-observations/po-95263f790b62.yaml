@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 385,
+    "end_line": 392
+  },
+  "quote": "- id: iv-1050-heavy-pool-on-demand\n  title: \"PR #1050 — the heavy CI pool moves from Spot to On-Demand (applied 2026-09-09)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T09:13:51Z\"\n  mergeCommit: de84d4218e935d1dae6519a9d537ba9468b18eff\n  pr: 1050\n  mechanismChanged: hosted-runner-capacity",
+  "epistemic_status": "quoted_prose"
+}

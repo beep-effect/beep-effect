@@ -1,0 +1,33 @@
+id: "fa:vfy-peak-memory-use-alt:001"
+hypothesis_ref: "dh:vfy-peak-memory-use:001"
+identity_card_ref: "ic:vfy-peak-memory-use-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: unresolved
+  role_vs_bearer: not_applicable
+  context_reification_needed: false
+rival_models:
+  - label: "quality (peak memory magnitude) of the work run under one grant (this card)"
+    still_viable: true
+  - label: "recorded reading at release (information object)"
+    still_viable: true
+  - label: "quality of the grant relator itself"
+    still_viable: true
+  - label: "a configured setting of the request (null reading)"
+    still_viable: false
+strongest_counterexample: >-
+  Only readings are observed: every cited value is one memoryPeakBytes on one release row. A magnitude of the
+  work and a reading of it predict the same records, so on current evidence the quality and the information
+  object are observationally equivalent, and nothing separates a quality of the work from a quality of the grant.
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (magnitude of the work, magnitude borne by the grant, reading).
+  Decisive observations: two readings of one held span by different instruments or at different instants that
+  disagree (separates reading from magnitude), and a grant whose work outlives or precedes the held span with the
+  peak attributed to one or the other (separates work from grant). No pinned CQ needs the value itself; it
+  disambiguates the CQ-warranted charge (CQ-010, CQ-021).
+rationale: >-
+  The null falls: two full-proof grants at one charge (weightTokens=3) carry peaks a factor of ten apart
+  (so-95b7d78a061f, so-363f9b7f07dc), so the value is not a setting. Use is an execution magnitude, the charge a
+  claim set before work runs (spec_vs_execution separated). No anti-rigid classification is proposed for the
+  bearer, so the role test does not apply.

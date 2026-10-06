@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:da248e006495f81c7b5a0301e935c3bd847f8f1e4fb42bb5d697b3bc653c63e8",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect3/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "396d71d163090df6776b633da8a1b46e95600db63cd2723f048f24f468862fc3"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect3/proof-ledger.properties:record=0",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=21573f03-bc8d-4a64-a208-ab929257ba58"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@chore/get-main-green"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=12608.366001"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=4eb9bc4a67f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-28T06:15:05.701Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=21573f03-bc8d-4a64-a208-ab929257ba58\nlaneId=fallow:audit\nbranch=@chore/get-main-green\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=4eb9bc4a67f\nreason=no-fact\nobserved=passed\ndurationMs=12608.366001\nrecordedAt=2026-09-28T06:15:05.701Z\n",
+  "epistemic_status": "parser_derived"
+}

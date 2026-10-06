@@ -1,0 +1,112 @@
+{
+  "id": "so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3987,
+    "end_line": 4039,
+    "content_sha256": "023e939e9e1b19af109597f25467833e0e23d097057eb3075a9b73e8ec7213ec"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=a5a7aeda-f0c8-4798-92e7-500640cae704",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-lease-evicted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1790923601047"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=94011725-dd0a-4914-ba03-cc915649d3dc"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/effect-vitest-inventory-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790923601025"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "evictedAtMillis=1790927704104"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "lastHeartbeatAtMillis=1790925883215"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=a5a7aeda-f0c8-4798-92e7-500640cae704"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=e3d173a7881e"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=fb848803cec8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=owner-dead-or-reused"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 328\nownerRef=e3d173a7881e\nownerRefVariant=pid_pair\nattemptId=94011725-dd0a-4914-ba03-cc915649d3dc\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next\nbranch=codex/effect-vitest-inventory-next\nenqueuedAtMillis=1790923601025\nnonce=a5a7aeda-f0c8-4798-92e7-500640cae704\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 329\nownerRef=e3d173a7881e\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=a5a7aeda-f0c8-4798-92e7-500640cae704\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790923601025\nadmittedAtMillis=1790923601047\nattemptId=94011725-dd0a-4914-ba03-cc915649d3dc\n# record 330\nownerRef=ecf8ccc50bfb\nownerRefVariant=pid_pair\nattemptId=f175f73d-5f0d-42b1-83c8-79300275e851\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-backlog-next\nbranch=codex/effect-vitest-backlog-next\nenqueuedAtMillis=1790927704083\nnonce=15b1bf3f-ee20-487f-a39c-0ea2a1c62c09\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 331\nownerRef=fb848803cec8\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next\nbranch=codex/effect-vitest-inventory-next\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=a5a7aeda-f0c8-4798-92e7-500640cae704\nattemptId=94011725-dd0a-4914-ba03-cc915649d3dc\nevictedAtMillis=1790927704104\nreason=owner-dead-or-reused\nlastHeartbeatAtMillis=1790925883215\n",
+  "epistemic_status": "parser_derived"
+}

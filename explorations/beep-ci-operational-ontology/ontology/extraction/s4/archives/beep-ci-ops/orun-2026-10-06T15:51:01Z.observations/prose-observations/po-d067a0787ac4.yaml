@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d067a0787ac432b22b76b62e369842928da6ca13e281c16fd56ef77e8e743908",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 16,
+    "end_line": 16
+  },
+  "quote": "| `ContendedResourceId` | `MachineProofLock`, `TurboDaemonResource` *(supports: ContendedResource — Turbo daemon work consumes shared machine capacity)*, `CpuCoresResource` *(supports: ContendedResource — admitted work contends for finite CPU)*, `MemoryPoolResource` *(supports: ContendedResource — admission is bounded by available memory)*, `SharedCacheResource` *(supports: ContendedResource — the cache mount is shared across checkouts)* | CQ-008 |",
+  "epistemic_status": "quoted_prose"
+}

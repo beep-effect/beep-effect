@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:7fa2e91b7760f2d323b1a2e0d60cbc5a19a46728da1b51e9b4be41a2e3c2e29e",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 3337,
+    "end_line": 3510,
+    "content_sha256": "db60b4c62faa34136d4d264eebd1d193daee4a23a726c170bc32975e32ba8a3a"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=750d30f1-696c-4d86-91b3-18f025009340",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=b509db2b-d92f-4e8d-b95f-7fb786ab6d38"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/boolean-creep-r54-remainder-2026-10-01"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790895131565"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=750d30f1-696c-4d86-91b3-18f025009340"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=daf36a8b960f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1790898462911"
+    }
+  ],
+  "source_excerpt": "# record 275\nownerRef=daf36a8b960f\nownerRefVariant=pid_pair\nattemptId=b509db2b-d92f-4e8d-b95f-7fb786ab6d38\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01\nbranch=codex/boolean-creep-r54-remainder-2026-10-01\nenqueuedAtMillis=1790895131565\nnonce=750d30f1-696c-4d86-91b3-18f025009340\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 276\nownerRef=8446afc7810c\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next\nbranch=codex/effect-vitest-inventory-next\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=7afd65d4-f79b-44c5-8b67-ba0b9622a624\nreleasedAtMillis=1790895807108\nattemptId=317c2006-3130-4730-8ba4-f4f565a0f2a9\n# record 277\nownerRef=a07460ade318\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=9a5fca1f-e83f-4798-82d1-671219b8834e\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790891080150\nadmittedAtMillis=1790895846277\nattemptId=3053c929-f715-4390-bf1f-ba216f6a840c\n# record 278\nownerRef=c7eb343f6486\nownerRefVariant=pid_pair\nattemptId=cdad0e0c-5c25-4cd4-85e8-9747162d9341\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next\nbranch=codex/effect-vitest-inventory-next\nenqueuedAtMillis=1790896904962\nnonce=f96dbaa1-547c-4fd0-a357-d2abab72bcff\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 279\nownerRef=1739ec4afe6f\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-signed-implementation\nbranch=codex/qualification-signed-implementation\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=9a5fca1f-e83f-4798-82d1-671219b8834e\nreleasedAtMillis=1790897282038\nattemptId=3053c929-f715-4390-bf1f-ba216f6a840c\n# record 280\nownerRef=ddbb63ce6ac6\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=070b2fe9-9e85-4f4a-92d9-2d791fc0e19c\nkind=review-fix\nweightTokens=1\npriority=verify\nenqueuedAtMillis=1790891226205\nadmittedAtMillis=1790897285501\n# record 281\nownerRef=d9c6f2f45986\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=070b2fe9-9e85-4f4a-92d9-2d791fc0e19c\nreleasedAtMillis=1790897314166\n# record 282\nownerRef=106f52089c3a\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=695da96a-cd29-41c7-9639-3e4cb5381426\nkind=review-fix\nweightTokens=1\npriority=verify\nenqueuedAtMillis=1790891226754\nadmittedAtMillis=1790897315824\n# record 283\nownerRef=785a5ff84604\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=695da96a-cd29-41c7-9639-3e4cb5381426\nreleasedAtMillis=1790897338339\n# record 284\nownerRef=a4baed9854b1\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=aabd0eea-07a1-4055-9cc4-8baa4e23d334\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790893914144\nadmittedAtMillis=1790897340743\nattemptId=733d351a-5c02-4f28-af23-20c738cdbf4e\n# record 285\nownerRef=8db0bfc70551\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect7-worktrees/xstate-effect-statechart\nbranch=feat/xstate-effect-statechart\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=ad65da64-d98f-4397-ac2e-11a4b1890326\nreleasedAtMillis=1790897965709\nmemoryPeakBytes=31956443136\nattemptId=96c60b29-bb48-4eb4-af53-90378f9e506b\n# record 286\nownerRef=c359cb345e17\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=c520ab95-3f31-4127-9309-2de2cdea1786\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790892632560\nadmittedAtMillis=1790897968030\nattemptId=ba0f4aa6-7720-4441-8ed3-aa78db3a5c19\n# record 287\nownerRef=57b702212772\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect7-worktrees/xstate-effect-statechart\nbranch=feat/xstate-effect-statechart\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=c520ab95-3f31-4127-9309-2de2cdea1786\nreleasedAtMillis=1790897968690\nmemoryPeakBytes=2127884288\nattemptId=ba0f4aa6-7720-4441-8ed3-aa78db3a5c19\n# record 288\nownerRef=1f4c26708d91\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=12ae4573-e3bc-4c25-9d0e-43720fc1f6c6\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790894297676\nadmittedAtMillis=1790897973044\nattemptId=b18a0e30-6479-41e7-8e88-0ef363ccfa31\n# record 289\nownerRef=daf36a8b960f\nownerRefVariant=pid_pair\nattemptId=b509db2b-d92f-4e8d-b95f-7fb786ab6d38\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01\nbranch=codex/boolean-creep-r54-remainder-2026-10-01\nenqueuedAtMillis=1790895131565\nnonce=750d30f1-696c-4d86-91b3-18f025009340\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790898462911\n",
+  "epistemic_status": "parser_derived"
+}

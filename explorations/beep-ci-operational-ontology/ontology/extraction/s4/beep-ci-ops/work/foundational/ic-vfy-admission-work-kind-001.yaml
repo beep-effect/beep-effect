@@ -1,0 +1,79 @@
+id: "ic:vfy-admission-work-kind:001"
+hypothesis_ref: "dh:vfy-admission-work-kind:001"
+referent_grain: >-
+  A classifier over seat requests and grants: one member of a closed domain of requested-work
+  kinds, individuated by what kind of work it asks capacity for, not by its spelling.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: two work-kind members are the same iff they classify the same kind of requested
+    work, but whether a member is a kind of work (a type the granted work instantiates) or a
+    scheduling class (a code that fixes charge and nothing else) is not decided by the cited
+    records; needed is a record joining an admission chain to the work run under its grant.
+  reidentification_key:
+    - kind (the literal value, evidence only)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: ""
+  dependence: none
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      categorizer whose members are subkinds of requested work (FullProofWork and the rest as rigid
+      specializations of the work a request asks for)
+    - >-
+      controlled-vocabulary code list (information objects that fix a charge and a scheduling
+      class, with no kind of work behind them)
+  existential_dependencies: []
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The quarantined lease so-a8d270b5e19d carries kind=merged-preview beside stage=pre-push and
+      proofTier=full on the lease itself. If the member named a kind of work, the work run under the
+      grant would be a merged-tree preview. The record's own span also carries a command line (in
+      its source excerpt; the parser did not lift it into its observed facts) naming the gate
+      commands launched under the grant: the cheap-gates and pre-push github-checks runs and an
+      affected local CI run against origin/main. That is a pre-push gate set, matching the lease's
+      own stage=pre-push, and so consistent with the code reading (a merged-preview ticket whose
+      work is not a merged-tree preview). It does not settle subkind against code: it is one
+      quarantined record, possibly anomalous; the command line is what was launched under the
+      lease, issued and not shown realized, and no attempt-journal or proof-ledger record joined by
+      its attemptId shows the stage, tree or outcome of the work; it cannot show whether the kind or
+      the stage member chose the commands; and with one kind it cannot show whether the work differs
+      by kind, which the subkind reading needs compared across at least two kind values.
+  - description: >-
+      The deployed list quoted in po-2f209664dde0 has four members, including publish, and no cited
+      chain carries kind=publish. A criterion that individuates members by the work they ask for
+      cannot be tested on a member with no observed request; that is a sample limit, not an absence.
+      The pinned CQ-021 note says "the publish kind is RESERVED and UNUSED by deployed callers", so
+      the member may have no requests to observe at all.
+status: proposed
+evidence_refs:
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"
+  - CQ-021
+rationale:
+  identity: >-
+    The records show only that each chain carries one kind value and that the kind, not the
+    priority, sets the charge. That settles what a member does to admission, not what it is.
+  rigidity: >-
+    Rigid for requests if the kind is part of what a request asks for. The cited records cannot show
+    whether a request's kind could change without the request ending, so rigidity stays unresolved.
+  dependence: >-
+    None: the members depend on no particular request, and no cited record shows a policy or other
+    individual they depend on. The literal-domains row (po-2f209664dde0) quotes the deployed
+    AdmissionWorkKind list as a closed domain; that is a record of the domain, not a dependence.
+  category: >-
+    The enum has no higher-order type. Under the categorizer reading the members are subkinds of
+    requested work; under the code reading they are information objects. Choosing either now would
+    be the enum-is-taxonomy shortcut or its mirror image.

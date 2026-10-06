@@ -1,0 +1,40 @@
+id: "dh:lpl-same-checkout-exclusion-rule:001"
+observation_refs: ["po:sha256:983855896b09b9d9aa905075137e4ace72075aa786f829d6a0cdee065978db50"]
+cq_warrants: []
+proposed_referent:
+  label: "same-checkout exclusion rule (the scheduler's standing rule against admitting a second request for a leased checkout)"
+  description: >-
+    One instance would be one standing admission rule, individuated by what it excludes and the
+    period it is deployed for, not by any occasion of its use. The record dates it (since #929 the
+    deployed scheduler skips a request whose checkout already holds a lease), says admission v1 does
+    not model it, and uses it as the attribution class for first-choice disagreements in the live
+    replay. Written as its own hypothesis because the policy-versus-application split is a viable
+    rival to dh:lpl-same-checkout-skip:001: the record's wording is general (a rule with a start,
+    stated without reference to any skipped request), which favours this reading but does not decide
+    it. It bears on the CQ-009 same-checkout exclusion arm (CQ-009's natural language names the
+    deployed post-#929 exclusion law and its query requires zero rows over seat grants sharing a
+    checkout), so it is a candidate support for the seat-grant kind CQ-009 needs; the query needs
+    grants and checkouts, not a rule individual, so cq_warrants is empty and the supported kind is
+    named here.
+representation_status: unresolved
+alternatives:
+  - label: "occurrences of skipping rather than a standing rule (dh:lpl-same-checkout-skip:001); discriminated by an admission-chain observation of a request passed over while an admitted lease held its checkout (an occurrence) as against a record of the rule changing version or scope with no skip occurring (the rule)"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "a constraint the ontology states as a CQ (a zero-row integrity check) and not a referent of its own; discriminated by whether anything is said of the rule itself (its version, its deployment period, its ratification) beyond the zero-row condition"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The single record is the contract author's prose about deployed scheduler
+    behaviour, with no source observation of the scheduler's rule or of a version change; a
+    description of a rule is not an observation that the rule is anything beyond the scheduler's
+    code path. No pinned Must/Should CQ needs the rule as a referent (CQ-009 needs the grants it
+    constrains). Needed evidence: a source observation of the deployed exclusion (a rule version,
+    a protocol value or a chain whose ticket is skipped on a held checkout); likely a cross-batch
+    duplicate of a kind denoted from the admission records.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.3, use_for_acceptance: false}

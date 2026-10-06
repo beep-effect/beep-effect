@@ -1,0 +1,68 @@
+id: "otp:chg-change-landing:001"
+hypothesis_ref: "dh:chg-change-landing:001"
+identity_card_ref: "ic:chg-change-landing:001"
+foundational_status: analyzed
+term:
+  preferred_label: "operational change event"
+  local_name: "OperationalChangeEvent"
+  proposed_iri: "https://oip.law/ontology/ci-ops#OperationalChangeEvent"
+  owl_entity_kind: class
+definition:
+  text: "An event (a dated occurrence) that is the landing of one change set altering how an arrangement of verification works, such as the heavy CI pool, the pre-push wave or the gate-order ladder as the recorded rows title them. Membership rests on the occurrence alone: whether a ledger row records the landing, when it is tagged, and whether a KPI series is partitioned at its instant are facts about the record and its consumers, not differentia of the class. A comparison made at the landing is observational, a temporal association and never a cause, unless a supporting design upgrades it; whether a given checkout falls after the landing is a further, adoption-qualified relation between the landing and that checkout, not part of the landing."
+  source:
+  - "CQ-016"
+  - "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f"
+  - "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+  - "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+  - "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+  - "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+  - "po:sha256:0258120378b55876a0457e1548e119aa5cdf844af23f0da49661a58b98e3449a"
+  - "po:sha256:b754409ff756f696e06de016e1fab4b65cbaab4201c75bbb1707a0477dad7568"
+foundational:
+  ufo_category: "event"
+  gufo_alignment: "gufo:Event (a dated occurrence; no gufo subtype is asserted while the instant-versus-interval question stays unresolved on the card)"
+ontoclean:
+  rigidity: "rigid"
+  identity: unresolved
+  dependence: "relational"
+parents: []
+revision_log:
+- from_sha256: "c771b3345865aedff11207763aa4c1791c6eaf3634a2632668318ec066196d43"
+  addressed:
+  - "record-property-as-differentia"
+reuse:
+  searched: true
+  exact_reuse_found: false
+  mappings: []
+operational_warrant:
+  competency_questions:
+  - "CQ-016"
+  semantic_support_for: []
+alternatives_rejected:
+- "A causal control intervention (the FA grades it not still viable): the KPI law section 2 record labels every partition-point comparison observational unless a supporting design of paired pre/post cohorts under adoption qualification upgrades it, so causal standing qualifies a comparison made at the landing, never the landing; the rows' self-applied causalStatus value is not used as evidence for or against this."
+- "Exact reuse of a TAXONOMY term: no ratified TAXONOMY term denotes a change landing, so there is no same-grain reuse proposal to make."
+- "Exact reuse of an external term: the reuse scan lists schema:Action as a closeMatch (medium) and sosa:Actuation as related (low) for the earlier name ControlIntervention, and the landedAt property against prov:atTime as a closeMatch; none is an exactMatch, schema:Action presumes an agent-performed action and sosa:Actuation an actuation of a system property, and neither carries the observational partition-point reading, so no mapping is recorded here."
+- "An identity criterion keyed on the landing instant alone, or on the mechanism tag alone (card counterexamples 4 and 5): two rows with distinct pull requests land seconds apart, one pair under one tag, and one row bundles several alterations under one tag."
+- "Subclassing by the rows' mechanismChanged tag: that field is ledger-field governance, never a class, member or subclass, and no tier member or tier subclass is proposed either."
+open_issues:
+- "Warrant (CQ-016, should_have, present in the pinned suite): its query binds `?iv a ciops:OperationalChangeEvent ; ciops:landedAt ?landedAt`. Without this class the query has no typed subject: it cannot pick out which individuals are change events, so CQ-016 loses the set of partition points it is asked to list. The term is warranted by that query alone, not by the CQ's notes or required_classes list."
+- "CQ-016 also requires the data property landedAt, which this batch does not propose: its chain dh:chg-landing-instant:001 keeps its null hypothesis unrejected, so it is not a surviving chain. Until a landedAt chain survives, CQ-016 is answered for its subject only. Needed evidence, as that hypothesis names it: a source record of the merge time or the apply time of one change set beside its landedAt, and a record of when the ledger row was written."
+- "Distinct observations for the CQ-016 pair: this proposal's hypothesis cites all 44 change-event rows and the KPI law section 2 block, and so do the other five hypotheses of this batch, none of which is proposed. One ref per index row means the class and a future landedAt proposal must close distinct observations; the assignment is the index-close lane's, and this proposal claims none of it."
+- "Steward choice (rival still viable on the FA, event grain, different act): for changes titled 'applied' or 'live' (#1050, #1141, #1364, #1422), the landing may be the apply or go-live occurrence rather than the merge. This differs in identity criterion, so it is not stated as a second proposal. Discriminating evidence: a source record giving one such change's merge time and its apply or go-live time separately beside its landedAt, with the zone of the titled date (the #1141 row's 'live 2026-09-15' against landedAt 2026-09-16T00:18:38Z is the card's strongest counterexample)."
+- "Steward choice (rival still viable on the FA, coarser event grain): one change revised or superseded across rows (#1019 'superseded by #1022'; the #870 lock retained until the #929 row retires it; #891 and #894, a link inferred from titles alone) may be one landing recorded in several rows. Differs in identity criterion and in how many landings the 44 rows record, so it goes here, not to a second proposal. Discriminating evidence: a record saying whether an earlier row's alteration still holds after the later row lands, or naming the later row a revision of the earlier change."
+- "Steward choice (category rival still viable on the FA): the referent may be the curated ledger row, an information object (dh:chg-change-record:001, whose null is not rejected), rather than the occurrence it records. A category rival is never a second proposal on this hypothesis. Discriminating evidence: a record of a ledger row corrected while the landed change stays the same."
+- "Steward choice (category rival still viable on the FA): the referent may be the change artifact, the pull request or merge commit, an information object (dh:chg-change-artifact:001, whose null is not rejected), rather than its landing. Every row, the 'applied' and 'live' rows included, carries one pr and one mergeCommit, so the records do not split artifact from landing. Discriminating evidence: a record giving one change's merge time and its applied or live time separately."
+- "Identity is unresolved on the card (supplies_identity and carries_identity both unresolved): pull request and merge commit are re-identification evidence, never the criterion, and no cited record states what makes two change sets the same apart from those keys. Needed evidence: a record of a change set's content against which two rows can be compared, plus the merge-versus-apply and supersession records above."
+- "Temporality is unresolved on the card: the records give one instant per row, so whether a landing is instantaneous or spans an interval (for example a rollout between merge and go-live) is open; no gufo subtype of event is asserted."
+- "Adoption is not claimed: dh:chg-adoption:001 keeps its null hypothesis unrejected and is not proposed. The KPI law section 2 record makes post-period membership adoption-qualified (HEAD ancestry includes the event's merge commit); a decision that needs adoption itself has no pinned query, so a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009. Needed evidence for the relation: a per-checkout HEAD-ancestry census for one change."
+- "Evidence is seed data: the 44 rows are curated ledger rows, observational by default; they show that such landings are recorded with an instant, not a count, a rate or a cause. The rows' self-applied 'class: OperationalChangeEvent' label, their row slugs and their causalStatus value are not used as evidence (dh:chg-ledger-bookkeeping:001)."
+- "No dependency on another batch's proposal; no parent edge is asserted (no ratified term is a settled parent of a change landing)."
+- "Revision r1 (record-property-as-differentia): the definition no longer makes being recorded with an instant, or being a KPI partition point, part of membership. The recorded instant belongs to the landedAt property (its chain dh:chg-landing-instant:001 is not surviving, so it stays unproposed) and the partitioning to the KPI-law consumer (po-d63c0a7e9e45). Rigidity re-checked against the reworded definition: the card's rationale argues rigidity for 'the landing of a change' only, which is now the whole differentia, so ontoclean.rigidity 'rigid' is copied from the card unchanged and is no longer contradicted by a recorded conjunct."
+- "Scope against the CQ-016 wording 'For each tagged operational change event': the class denotes every landing of a verification change, recorded or tagged or not, and not only tagged (curated) landings. Tagging is an act done after the landing (the #1029 and #1098 rows carry their mechanism tag under a comment naming a later 'P0 Ruling 3'; the #1006 row marks its tag 'new value'), so a 'tagged landing' class would be anti-rigid and would move toward the ledger-row rival; that reading is declined. CQ-016's query selects the individuals the data types as this class; that the data holds only curated rows bounds the answer set, not the class."
+- "Lead, not evidence, for the merge-versus-apply rival: two rows titled 'applied' carry landedAt values on whole minutes (#1364 at 2026-10-01T12:05:00Z, #1422 at 2026-10-06T02:22:00Z) while the other recorded rows carry non-zero seconds, the #1141 'live' row included (00:18:38Z). This hints that some landedAt values may date an apply rather than a merge; it does not settle either reading, and the needed evidence stays a record giving one such change's merge time and apply time separately."
+revision_requests: []
+review:
+  foundational_agent: "fa:chg-change-landing:001"
+  adversarial_agent: pending
+  steward: pending
+status: proposed

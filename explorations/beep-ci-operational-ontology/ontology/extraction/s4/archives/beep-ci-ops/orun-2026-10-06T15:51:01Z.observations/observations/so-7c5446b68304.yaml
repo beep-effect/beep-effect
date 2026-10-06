@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:7c5446b68304183946ec6a774cb60b328403e84d1feac71ce6f6ba7748e4b525",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 17201,
+    "end_line": 17214,
+    "content_sha256": "a887739d9bc4b3ad6db3863003bc4c5b423c822a7bf98c4fa864321744a0b03d"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect/proof-ledger.properties:record=800",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=a8cae8f5-ea18-4954-a67d-447ddf2db3ce"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=docs/roadmap-re-eval-2026-10-02"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=944700.484338"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=5e0115ccb1b"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=quality:coverage"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-10-05T17:49:10.317Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 800\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=a8cae8f5-ea18-4954-a67d-447ddf2db3ce\nlaneId=quality:coverage\nbranch=docs/roadmap-re-eval-2026-10-02\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=5e0115ccb1b\nreason=no-fact\nobserved=failed\ndurationMs=944700.484338\nrecordedAt=2026-10-05T17:49:10.317Z\n",
+  "epistemic_status": "parser_derived"
+}

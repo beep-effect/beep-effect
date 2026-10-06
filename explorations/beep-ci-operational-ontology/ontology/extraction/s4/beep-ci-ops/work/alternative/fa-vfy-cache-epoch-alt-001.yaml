@@ -1,0 +1,35 @@
+id: "fa:vfy-cache-epoch-alt:001"
+hypothesis_ref: "dh:vfy-cache-epoch:001"
+identity_card_ref: "ic:vfy-cache-epoch-alt:001"
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: true
+rival_models:
+  - label: "configuration situation of a clone's toolchain surface, spanning attempts (this card)"
+    still_viable: true
+  - label: "per-attempt environment snapshot"
+    still_viable: true
+  - label: "task-input state at turbo task-hash grain"
+    still_viable: true
+  - label: "per-record cache key"
+    still_viable: false
+strongest_counterexample: >-
+  No cited record shows an epochDigest shared by two attempts: within attempt so-12d5a26fbfac / so-d6adeec15c79
+  the value is shared across lanes, and within so-40abdcaf1156 / so-c997b4851faa likewise, but each attempt has
+  its own. The situation reading and the per-attempt snapshot reading are observationally equivalent on current
+  evidence.
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (situation spanning attempts versus per-attempt snapshot).
+  Decisive observation: two facts from different attempts, or on different headSha values, carrying one
+  epochDigest (favours the situation), or two attempts with identical surface members but different
+  epochDigest (favours the snapshot). CQ-014's beganAt needs a record of an epoch change with its instant,
+  none of which is cited. The task-hash grain rival needs one inputDigest across two trees.
+rationale: >-
+  The key rival is out: one epochDigest under different commandDigest and laneId values in one attempt is
+  false for a per-lane key. An epoch is not rerunnable, so spec_vs_execution does not apply. The situation is
+  kept apart from its digest (world_vs_information) and from the clone that bears it, which has a current
+  epoch only for a while (role_vs_bearer separated). CQ-005 and CQ-006 condition validity jointly on tree and
+  epoch, so the applicability context must be reified.

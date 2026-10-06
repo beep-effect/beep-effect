@@ -1114,3 +1114,223 @@ those bytes. They are retired outside the repository with their digests, and a f
 the whole batch from the same input manifest; a dead seat's partial output is never continued
 (same-context rule). No upstream record changed after synthesis started. Reversal: restore the retired
 files from their digest list.
+
+## 2026-10-06 — run-4 withdrawal sitting W1 (orchestrator under the autonomy charter)
+
+Run-4 rulings continue the launch sitting's numbering (Rulings 1–17). Adversary round 1 landed a
+`discriminator-true-of-dto` attack on three `vfy` proposals. The denotation seat, sent the landed
+attacks as repair rows, found no cited record false under the named twin and set each null not
+rejected: `dh:vfy-cache-epoch:001` (each cited epoch digest belongs to one attempt, which an opaque
+per-attempt digest also shows), `dh:vfy-checkout:001` (a recurring checkout root is equally a path label
+stored on each request; it also moved its warrant from CQ-009, whose query compares values, to CQ-015)
+and `dh:vfy-verification-evidence-record:001` (a later lookup and an expiry are equally true of a
+skip-only build-cache entry). A proposal needs a surviving chain, so these three cannot stand.
+
+**Ruling 18 — withdraw the three proposals whose chains no longer survive.**
+`otp:vfy-cache-epoch:001` (CacheEpoch), `otp:vfy-checkout:001` (Checkout) and
+`otp:vfy-verification-evidence-record:001` (VerificationEvidence, a reuse) are withdrawn. The synthesis
+seat writes the receipt with the files' digests; the orchestrator verifies them and deletes the
+proposals and their round-1 reviews. No proposal depends on them. Their identity cards, analyses and
+blinded pairs stay as records of non-surviving chains, and the index-close lane carries their
+observations with the needed evidence each hypothesis now names: one epoch digest across two attempts,
+heads or clone ledgers; tree state carried by one checkout root across two requests or attempts, or a
+checkout mounting a cache; an issued fact consulted for something other than skipping work, or copied
+or corrected as the same item. CQ-005, CQ-006, CQ-014 and CQ-015 therefore lose these subjects in run
+4; no CQ edit is made (Ruling 5). Reversal: a later run re-presents a term from a fresh chain that cites
+the named record.
+
+## 2026-10-06 — run-4 sitting 1 (adversary adjudication, orchestrator under the autonomy charter)
+
+Docket: 15 adversary reviews over 14 proposals (round 1: 11 PASS / 4 FAIL, no INDETERMINATE;
+round 2: the revised change-landing class, PASS), three proposals already withdrawn at sitting W1,
+and the review-validity audit by three independent auditors who read the closure only
+(`work/review-audit/validity-report-r1-{chg,vfy-admission,vfy-verification}.md`). Every landed attack
+the audit examined is demonstrated; none is struck. Of the 11 latest PASS reviews, 6 are sound
+(change-landing, admission-charge, seat-grant, seat-request, committed-failure, verification-lane)
+and 5 are not, each for an attack the reviewer tried with a twin or a record reading the closure
+refutes.
+
+**Ruling 19 — four missed attacks land; one is outside the reviewer's standard.** The sitting lands:
+on `otp:vfy-lane-execution:001`, identity (the cited verdict record's durations show the wrapper lane
+containing its 32 child lane executions, which the card says the record does not show, and the same
+record and a ledger fact share one attempt and one duration, which bears on the two-referent rival);
+on `otp:vfy-tree-state:001`, the null discriminator (every shared head value in the chain is equally
+shared by a per-attempt or per-run writer stamp); on `otp:vfy-merged-preview-work-kind:001`, the null
+discriminator (the still-viable charge-code reading makes every cited charge fact true); on
+`otp:vfy-admission-work-kind:001`, the warrant (Ruling 20). The audit's null attack on
+`otp:vfy-verification-attempt:001` does not land: VerificationAttempt is a Queue A recorded-value
+reuse deferral, and the adversary brief judges a reuse that keeps its flag on semantic match only, the
+standard the reviewer applied. Its warrant falls under Ruling 20. Rejected: re-running the adversary
+blind on unchanged bytes (the reviewer may miss again, and the audit already shows the attack from
+the closure).
+
+**Ruling 20 — a decision warrant needs a query that uses the term itself.** A Must/Should CQ warrants
+a decision term only when its executable query types by the class, uses the property, or names the
+individual. A query that binds the referent as an untyped join or harness-bound node, with the class
+only in `required_classes`, needs the individual but not the term, and warrants nothing (the briefs'
+"a CQ that only mentions the term warrants nothing", applied to the query text). Such a term takes the
+support arm toward a same-run decision term it is necessary to define, constrain or disambiguate, or it
+defers. This reaches `otp:vfy-admission-work-kind:001` (CQ-021 reaches the kind only as the object of
+`hasWorkKind`), `otp:vfy-tree-state:001` (no CQ-005, CQ-006 or CQ-014 query types the tree) and
+`otp:vfy-verification-attempt:001` (CQ-022 joins executions to the attempt without typing it); the
+other proposals' queries type their terms. Rejected: reading `required_classes` as a warrant (it
+licenses every listed class with no query need).
+
+**Ruling 21 — the semantic-match exemption covers flagged reuses only.** A reuse is attacked on
+semantic match only when the ratified term is flagged in TAXONOMY or is one of the Queue A
+recorded-value reuse deferrals (SeatRequest, SeatGrant, VerificationAttempt, VerificationResultArtifact)
+and the proposal says the flag persists and claims no lift. Every other reuse, including an unflagged
+literal member such as MergedPreviewWork, takes the full standard on every surface.
+
+**Ruling 22 — how the landed attacks reach the seats.** An attack the sitting lands on a hypothesis or
+analysis reaches that record's own seat as a `landed` row (call (ab) shape; the sitting is the one that
+landed it) and then the synthesis seat as an `upstream` row; a Ruling 20 warrant defect reaches the
+synthesis seat as a `ruling` row. A chain whose null then stands is withdrawn at a further sitting. A
+revised proposal is reviewed by a fresh adversary at its own next round. No validity-audit text reaches
+any seat.
+
+**Ruling 23 — questions held for sitting 3.** The change-landing class keeps its CQ-016 warrant (the
+query types it), but `landedAt` has no surviving chain, so CQ-016 cannot return a row on run-4
+vocabulary; sitting 3 decides whether the class ratifies alone. PASS with DISPUTED is the intended
+outcome when a proposal carries steward-choice rivals, and an explicitly deferred proposal submits
+FLAGGED; sitting 3 rules each. Identity rivals carried as steward-choice issues on an analyzed verdict
+(committed-failure's obsoletion point, verification-attempt's request alias) are allowed, and sitting 3
+weighs them. Reuse proposals that carry rigidity unresolved over a ratified rigid row meet the step-8
+OntoClean rule at sitting 3; no prior ratification changes before then. Tracked follow-ups: the
+change-landing proposal's "later P0 Ruling 3" wording (the closure-grounded reason is that a row
+records a merge commit), and the seat-grant proposal's open issue that names the withdrawn checkout
+proposal. Reversal: a later sitting supersedes any ruling here.
+
+## 2026-10-06 — run-4 sitting 2 (carried-row adjudication, orchestrator under the autonomy charter)
+
+Docket: the 138 prior unresolved rows (91 source, 47 prose; 84 live in Queue C(i)–C(iii), 54 carried
+run-2 rows in C(iv)), clustered on the intake docket's groups and the run-3 fifteen-cluster frame
+(`work/sittings/carried-rows-docket.md` and `carried-clusters.yaml`). No run-4 observation re-observes
+a prior chain (no shared nonce or attempt id) and no run-4 analysis cites a prior id, so nothing
+re-clusters and nothing retires by re-identification. The lane's checks hold: 138 ids, each once,
+equal to the prior unresolved set; every row `unresolved`, `carried_from_prior: true`,
+`since: 2026-10-06`; no needed evidence repeats the prior text; the 48 rows on duties that need a new
+Must/Should CQ name "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009".
+
+**Ruling 24 — all 138 rows re-park with fresh evidence; none retires.** The index-close lane writes
+the carried rows exactly as `carried-clusters.yaml` gives them. The four retirement candidates are
+rejected for run 4: recovery-durations (the run-4 chain holds that observation on policy recurrence,
+not on execution boundaries, so re-identification would drop the duty); comparison-operand-binding
+with the freshness duty (the ground is the workspace-bookkeeping null, a hypothesis no proposal or
+review has tested); governing-specification-comparison (the contract's diagnostic-only wording speaks
+of the admission model; whether any gate consumes the comparison stays the open question); and the
+origin-block rows (the change ledger row that retires the per-origin lock is observational seed data,
+and CQ-009's legacy-drain arm still needs the origin regime). Rejected: retiring the synthetic-corpus
+rows because run 4 dropped that corpus (the duties concern boundaries an organic record leaves just as
+open).
+
+**Ruling 25 — the zero-ledger premise has changed.** Run 4 captures writer-issued proof-ledger facts
+and shadows, so the issuance duties that rested on there being no ledger now narrow to copy,
+correction (the time-to-certainty C4.2 check) and custody, plus their CQ duties; the fresh needed
+evidence says so row by row. The frozen-replay rows stay bound to the frozen S6 snapshot; moving them
+to the live-replay report needs a transcription lane in a later run. The deferred-tail row stays
+decision-gated, with the same-checkout skip named as the candidate consumer for the next capture.
+Reversal: the next run's sitting 2 re-adjudicates.
+
+## 2026-10-06 — run-4 withdrawal sitting W2 (orchestrator under the autonomy charter)
+
+Under Rulings 19 and 22 the denotation seat received the two null-discriminator attacks the sitting
+landed and again found no cited record false under the named twin: every head value that recurs in
+`dh:vfy-tree-state:001` stays inside one attempt or one run, as a writer stamp's would, and every
+charge fact in `dh:vfy-merged-preview-work-kind:001` is equally true of a charge code with no kind of
+work behind it. It set both nulls not rejected and named the needed evidence: one head value across two
+runs, or across two attempts that share no run; and a merged-preview chain charged other than 5, or a
+work fact beside the kind that no full-proof record carries.
+
+**Ruling 26 — withdraw the two proposals whose chains no longer survive.** `otp:vfy-tree-state:001`
+(TreeState) and `otp:vfy-merged-preview-work-kind:001` (MergedPreviewWork, a support individual) are
+withdrawn on the Ruling 18 procedure: the synthesis seat writes the receipt, the orchestrator verifies
+the digests, deletes the proposals and their reviews and keeps a backup. No proposal depends on either.
+The index-close lane carries their observations with the named evidence. In the same synthesis pass,
+`otp:vfy-admission-work-kind:001` and `otp:vfy-verification-attempt:001` answer Ruling 20 (support arm
+or deferral) and `otp:vfy-lane-execution:001` answers the repaired card and analysis; a proposal the
+seat returns as a withdrawal candidate is withdrawn at the next sitting. Tracked follow-up: the
+alternatives of sibling hypotheses that still describe these two referents as domain referents.
+Reversal: a later run re-presents either term from a fresh chain that cites the named record.
+
+**Call (ai) — the W2 withdrawal receipt.** The synthesis pass for Ruling 26 stopped before writing its
+receipt: both withdrawal passes ran at `ROUND: r1`, so the brief's fixed name
+`withdrawals-vfy-r1.yaml` already held the Ruling 18 receipt and the seat correctly refused to overwrite
+it. It returned the digests instead. The orchestrator wrote `work/sittings/withdrawals-vfy-w2.yaml`,
+naming itself as author and transcribing the seat-computed digests after checking each against its own
+pre-pass digests and the files, then kept a backup and deleted the two proposals and their reviews.
+The same pass moved `otp:vfy-admission-work-kind:001` to the support arm (toward the seat-request and
+admission-charge proposals) and `otp:vfy-verification-attempt:001` to the support arm (toward the
+committed-failure and lane-execution proposals) under Ruling 20, and re-derived
+`otp:vfy-lane-execution:001` from its repaired card and analysis. Next run's brief should name the
+receipt by pass, not by round. Reversal: restore the backup and rerun the pass.
+
+## 2026-10-06 — run-4 withdrawal sitting W3 (orchestrator under the autonomy charter)
+
+Adversary round 3, the last round under Ruling 11, closed the review loop. `otp:vfy-lane-execution:001`
+(WorkUnitExecution) passed: the round-2 rule did not land again on the revised definition, which now
+counts an execution from its start, and its one rival (a process counted while running) makes it
+DISPUTED. `otp:vfy-admission-work-kind:001` (AdmissionWorkKind, an exact reuse moved to the support arm
+under Ruling 20) failed again on `support-not-necessary`, with a new counterexample: CQ-021 already keeps
+the work kind and the priority apart on two properties with distinct member names, so the class could
+disambiguate them only as the range of `hasWorkKind`, which is parked with its range unknown, and no
+cited chain carries the publish-and-publish case it would separate.
+
+**Ruling 27 — withdraw the round-3 FAIL with named evidence.** `otp:vfy-admission-work-kind:001` is
+withdrawn on the Ruling 18 procedure. It returns only with: a ratified range of `ciops:hasWorkKind` equal
+to AdmissionWorkKind (an S6 refresh) together with a SeatRequest constraint that a request has exactly
+one work kind from that class; or a pinned Must/Should CQ whose query types the kind; and, for the
+disambiguation case, an admission chain carrying kind and priority both equal to publish. No proposal
+depends on it. The ratified AdmissionWorkKind row is untouched: this withdraws a run-4 reuse proposal,
+not a prior ratification. Reversal: a later run re-presents the reuse from a chain citing that evidence.
+
+## 2026-10-06 — run-4 sitting 3 (ratification, orchestrator under the autonomy charter)
+
+Docket: the eight proposals that stand after three adversary rounds and six withdrawals
+(`work/sittings/ratification-docket.md` and `.yaml`, advisory only). Latest reviews: 8 PASS, 0 FAIL,
+0 INDETERMINATE. The pre-scribe gate at the pin printed ARTIFACTS VALID — GATE PASSED with 154 flags
+(138 carried rows, 12 DISPUTED, 4 explicitly deferred) and an unresolved fraction of 54/198 = 27%, so
+no waiver is in play (Ruling 16). The blinded seat agreed with the primary seat's event category on the
+four event proposals; it named a category (quality, relator, relator, information object) where the
+primary seat left four deferred reuses unresolved. Every ratification below names the orchestrator role
+as steward under Ruling 2 and is in the orchestrator's own words.
+
+**Ruling 28 — a reuse ratification affirms denotation under the ratified values.** When a run-4 chain is
+mapped to an already ratified term at the same grain, ratifying the mapping affirms that run 4 denotes
+that term; it does not overwrite the ratified row's category, rigidity or identity. The run-4 card's
+unresolved values and still-viable rivals enter the row as flags with their discriminating evidence, and
+a Queue A flag that the proposal says persists keeps persisting. The step-8 OntoClean rule therefore does
+not fire for the five reuses (VerificationAttempt, SeatRequest, SeatGrant, admissionChargeTokens,
+VerificationLane): none submits a new core sortal, and each ratified rigid value stands. The seat cluster
+takes this one position together, and no SeatRequest flag lifts singly. Rejected: rejecting the reuses for
+unresolved rigidity, which would re-disposition 96 mapped index rows and erase run 4's re-examination
+while the ratified rows stand regardless.
+
+**Ruling 29 — the new event classes are not core sortals.** The step-8 rule's core sortal is an endurant
+type that supplies identity to other types, a kind or subkind anchor. CommittedFailure and
+WorkUnitExecution are events whose criteria derive from an attempt and a step or a lane; nothing takes
+identity from them. Their rigidity doubts (a retried step or revised failed step; a wrapper absorbing its
+children, or a relabelled lane) become flags. OperationalChangeEvent's rigidity is resolved. Rejected:
+holding them for revision until wrapper parthood and the obsoletion point are decided; the review loop is
+closed (Ruling 11) and each doubt carries its discriminating record.
+
+**Ruling 30 — all eight are accepted as flagged accepts,** scribed individually as rat-071 to rat-078:
+OperationalChangeEvent, VerificationAttempt, WorkUnitExecution, CommittedFailure, SeatRequest,
+SeatGrant, admissionChargeTokens and VerificationLane. VerificationLane's run-4 doubts become the first
+flags on an unflagged ratified row; projection stays additive (Ruling 14).
+
+**Ruling 31 — what the accepted terms answer, stated plainly.** CQ-016 is answered for its subject only:
+`landedAt` stays seed-only and unproposed because its chain did not survive. CQ-022 returns no row on run-4
+vocabulary even with its three terms accepted, since `inAttempt`, `hasExecutionState` and
+RunningExecution are parked and `hasCancelClass` is seed-only. VerificationLane's CQ-006 citation is void
+under Ruling 20 (the query binds the lane untyped); its warrant stands on CQ-001. Prose in the
+admission-charge and seat-grant proposals that names the withdrawn admission-work-kind and checkout
+proposals is superseded by Rulings 27 and 18; the bound bytes are not revised.
+
+**Ruling 32 — Queue H's prior refutation stands.** The run-2 analysis `fa-pb-yeet-proof-tier-001` refuted
+reading Yeet proof tiers as AssuranceTiers because both use the word tier; run 4 affirms it: the
+literal-domains table keeps YeetProofTier apart from AssuranceTierId, every cited `proofTier` is `full`,
+and no tier chain survived denotation. No tier proposal exists, so no fourth AssuranceTier member is
+ratified: the member stays blocked on the parked AssuranceTierId domain, and KPI law §6 keeps merged
+preview a sub-partition of TierLocalFullProof. This goes to the P4 hand-off. Reversal for Rulings 28–32:
+a later sitting supersedes with revise or reject ratifications; a scribed ratification is never deleted.

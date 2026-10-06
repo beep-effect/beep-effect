@@ -1,0 +1,99 @@
+id: "ic:vfy-seat-grant:001"
+hypothesis_ref: "dh:vfy-seat-grant:001"
+referent_grain: >-
+  A held admission at the grain of one admission chain's held span: a run's hold on shared
+  verification capacity from its admission to its release or eviction, holding one checkout at one
+  charge; individuated by the admission that began it.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: two seat grants are the same iff they were begun by the same admission, and the
+    chain nonce and the lease's own members are evidence of that, never the criterion. Open is
+    whether the grant is a new individual founded at admission or the held phase of one admission
+    engagement that began at enqueue. A renewal or transfer, which would test persistence through a
+    change of holder or term, is not shown.
+  reidentification_key:
+    - nonce of the admission chain (evidence)
+    - admittedAtMillis (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One admission-begun held span bounded by one end event. Heartbeat members appear on the cited
+    lease-evicted chains and the lease state record; the cited records do not show whether every
+    grant carries one.
+  dependence: relational
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      relator: a lease mediating the holding run and the checkout it holds, founded by admission and
+      ended by release or eviction (rigid); whether a capacity pool is also mediated is unshown
+    - >-
+      phase of one admission engagement (anti-rigid): the held phase of the individual that waited as
+      the seat request under the same nonce
+    - the lease file or journal rows (information object; rejected as the referent)
+  existential_dependencies:
+    - the holding run
+    - the checkout it holds
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - released
+    - evicted (reason owner-dead-or-reused)
+counterexamples:
+  - description: >-
+      Liveness: so-860cff0d673e is admitted and then lease-evicted with reason owner-dead-or-reused
+      and a last heartbeat instant earlier than the eviction instant. The record carries that reason
+      value and the two instants, not a cause; read at its word, the grant ended on a condition of
+      its owner, and its heartbeat member is one no cited queued request row carries. That favours a
+      distinct grant, but the engagement reading reaches the same result by giving the held phase its
+      own end conditions.
+  - description: >-
+      Release-only stanzas: so-badb15130ad8 and the record-10 pair so-df1f4d8ba41f and
+      so-3013eedf6f82 (one release span seen twice) show a release with no admit row in the stanza.
+      Counting stanzas as grants would make individuals of release rows, and the pair would become
+      two grants.
+status: proposed
+evidence_refs:
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020"
+  - "so:sha256:6f5b7aebafecd74f1991f241f2ab447da364d854ef9a8f3d6a8352a532a8dcf8"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:badb15130ad8293960f1761f0153ff98df8eec9904daca4f5fb69e35c549f7b6"
+  - "so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71"
+  - "so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c"
+  - CQ-008
+  - CQ-009
+  - CQ-010
+rationale:
+  identity: >-
+    Admitted-and-released chains (so-95b7d78a061f, so-363f9b7f07dc, so-8fcf58cfd24c) and
+    lease-evicted chains (so-860cff0d673e, so-a9ed1352e2bc) show held spans with their own ends. The
+    quarantined lease so-a8d270b5e19d carries admission members (enqueue and admit instants, charge)
+    beside attempt members. Whether those were copied from the request rows is not shown, since no
+    cited request chain shares its nonce. That is consistent with both readings.
+  rigidity: >-
+    Rigid under the relator-split reading and anti-rigid under the engagement reading. The deciding
+    record is missing.
+  dependence: >-
+    Marked relational on what the cited records show: each grant chain names the checkout it holds
+    (a checkoutRoot member) and carries owner members, so the grant is read as existing only while a
+    holder and that checkout stand in the holding relation. No cited record of this hypothesis names
+    a capacity pool, so a dependence on a pool is unshown; a record stating the capacity a grant is
+    charged against (a pool or capacity snapshot member) is the needed evidence. The cited
+    lease-evicted chains carry a last heartbeat instant before the eviction instant and the
+    reason owner-dead-or-reused; no cited record states that eviction follows from a stopped
+    heartbeat.
+  category: >-
+    Relator or phase of a relator. Deferred together with the seat-request pair, because one record
+    decides both.
+  temporality: >-
+    It persists over its held span; heartbeat members appear on the cited lease-evicted chains and
+    the lease state record, and a peak-memory reading on some release rows. Renewal and transfer are
+    not shown.

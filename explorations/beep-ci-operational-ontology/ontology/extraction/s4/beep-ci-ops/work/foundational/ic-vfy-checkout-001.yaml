@@ -1,0 +1,89 @@
+id: "ic:vfy-checkout:001"
+hypothesis_ref: "dh:vfy-checkout:001"
+referent_grain: >-
+  A working tree on one workstation, located by its tree root; the cited records fit both one tree
+  that persists at a root while its branch changes and successive trees occupying one root location,
+  and they do not say which.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two checkouts are the same iff they are the same continuously existing working-tree directory on
+    one workstation; its root location re-identifies it while it exists, and the branch checked out
+    in it is a changing state, never part of its identity. A tree removed and later recreated at the
+    same root would be a different checkout; no cited record shows such a removal.
+  reidentification_key:
+    - checkoutRoot (the root location, evidence; the fleet path label is a capture placeholder)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    The files under one tree root, unified by sharing that root, and excluding any nested linked
+    worktree that has its own root.
+  dependence: none
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      kind: the working tree as an enduring object with its own identity condition (directory
+      continuity); needs its rigidity argued from a record
+    - >-
+      a location slot on the workstation filesystem that successive trees occupy (the place, not the tree)
+    - branch (rejected: one root carries two branches)
+    - path string only (rejected as the referent)
+  existential_dependencies:
+    - the workstation filesystem it resides on
+    - for a linked worktree, the clone whose git state it shares (not shown by the cited records)
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - removed from the workstation (not shown by any cited record)
+counterexamples:
+  - description: >-
+      Remove and recreate: a lane worktree retired and later re-added at the same root is two trees
+      under one location. The card's criterion counts two checkouts; the deployed same-checkout
+      exclusion compares roots and would count one. The cited records show no removal, so the
+      difference never bites here.
+  - description: >-
+      Nesting: so-1c1a47ab0a24 locates a checkout under a .claude/worktrees directory inside the root
+      that so-a8d270b5e19d locates. Containment of one root in another must not make the inner tree
+      a part of the outer checkout; the criterion uses exact root equality, not path prefix.
+status: proposed
+evidence_refs:
+  - "so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff"
+  - "so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa"
+  - "so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c"
+  - "so:sha256:1c1a47ab0a24f2030f9adbd35e1cb70302f0537ccd94a8b6f815a15956f246e9"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:badb15130ad8293960f1761f0153ff98df8eec9904daca4f5fb69e35c549f7b6"
+  - CQ-009
+rationale:
+  identity: >-
+    One root occurs with branch @chore/deps-update-10-1-26 (so-cac0a9e757f0) and with branch
+    @chore/organizing-goals-and-explorations (so-2d8a12f68b8f, so-fba5f4273ae5) on separate chains.
+    That is consistent with one tree persisting while the branch in it changed and equally with one
+    location slot occupied by a tree whose branch changed or by successive trees; the records do not
+    separate the two. Either way the branch is not the identity. hasCheckout is seed-only and is not
+    evidence.
+  rigidity: >-
+    Unresolved. Rigidity asks whether something that is a checkout could persist while ceasing to be
+    one, for example a directory that stays on disk after it stops being a git working tree. The
+    cited records show each root only while requests are made from it and never show a tree before
+    or after that, so they neither show nor rule out such a loss. A record of a worktree retired and
+    its directory kept or re-added would be the evidence.
+  dependence: >-
+    No external relational dependence is needed for a tree to be a checkout. Its residence on a
+    filesystem is constitutive location, and the linked-worktree dependence on a clone belongs to a
+    possible subkind.
+  category: >-
+    Left unresolved between a kind (on which an enduring tree would change branch and contents
+    without ceasing) and a location slot (on which successive trees would occupy one root). A kind needs rigidity, which no record argues, and the tree and
+    slot readings fit the same records.
+  temporality: >-
+    It exists over an interval on either reading: a tree is present on disk while requests are made
+    from it. Whether it changes branch without losing identity is unresolved: one root with two
+    branches on separate chains is consistent with one tree whose branch changed and equally with
+    successive trees at one location, and a record of a worktree retired and re-added at the same
+    root, or one tree's branch switch recorded in place, would decide it. Its end, removal, is not
+    shown by any cited record.

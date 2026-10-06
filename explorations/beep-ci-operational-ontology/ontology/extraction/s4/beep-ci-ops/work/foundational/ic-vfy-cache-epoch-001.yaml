@@ -1,0 +1,121 @@
+id: "ic:vfy-cache-epoch:001"
+hypothesis_ref: "dh:vfy-cache-epoch:001"
+referent_grain: >-
+  A configuration state of the build environment (lockfile, root tsconfig, root turbo config,
+  toolchain and policy-pack versions taken together), individuated by that configuration surface
+  or by its period (unresolved) and shared by the lanes of each cited attempt run against it;
+  coarser than any one task's inputs.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: two viable criteria count epochs differently. Under the content criterion two cache
+    epochs are the same iff the configuration surface they consist of is the same (equal lockfile,
+    root tsconfig and root turbo config contents with equal bun, node and policy-pack versions);
+    under the period criterion an epoch is one stretch of a checkout's environment bounded by
+    configuration-changing events, so one surface obtaining again after an intervening different
+    surface is a new epoch. The deciding record is one clone ledger in which an epoch digest recurs
+    after an intervening different one, or a record of an epoch change with its instant (CQ-014
+    beganAt). The epoch digest is re-identification evidence, never the criterion.
+  reidentification_key:
+    - epochDigest (evidence; equal to the digest member in every cited fact)
+    - lockfileDigest, rootTsconfigDigest, rootTurboConfigDigest (evidence of the surface parts)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: >-
+    A whole of configuration parts (lockfile, root tsconfig, root turbo config, toolchain versions,
+    policy pack) unified by being the surface one build environment resolves against; a change to
+    any part yields a different whole.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      situation individuated by content: a configuration of parts obtaining over an interval, which
+      facts are issued under
+    - >-
+      a temporal period of a checkout's environment bounded by configuration-changing events (an
+      era, individuated by its beginning rather than its content)
+    - >-
+      an epoch taken per verification attempt or per head commit (one value stamped for each
+      attempt or head, not a state shared across attempts)
+    - an environment fingerprint digest (information object; rejected as the referent, kept as evidence)
+    - task-input state at turbo task-hash grain (a different, finer referent)
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: false
+  terminal_states:
+    - >-
+      content reading: ceases to obtain when any part of the configuration surface changes, and may
+      obtain again if an earlier surface is restored
+    - >-
+      period reading: ends at the next configuration-changing event in its checkout and never
+      recurs; a restored surface begins a new epoch
+    - "per-attempt or per-head reading: ends with its attempt or is superseded by the next head"
+counterexamples:
+  - description: >-
+      Revert: a lockfile change followed by its revert restores an earlier surface. The content
+      criterion counts one epoch obtaining twice; a period criterion counts two epochs. CQ-014 asks
+      when the current epoch began, which has one answer only under the period criterion. No cited
+      clone ledger shows an epoch digest recurring after a different one.
+  - description: >-
+      Grain: so-12d5a26fbfac and so-d6adeec15c79 share one epoch digest while their inputDigest
+      members differ (one undeclared, one a turbo task hash). An epoch at task-hash grain would count
+      two states there; the records keep epoch and task input apart on one record, so the epoch is
+      not the task-input state.
+  - description: >-
+      Per attempt or per head: every cited pair of facts that shares an epoch digest is two lanes of
+      one attempt at one head (so-12d5a26fbfac with so-d6adeec15c79; so-40abdcaf1156 with
+      so-c997b4851faa). That fits an epoch shared by lanes run against one environment state and
+      equally an epoch taken once per attempt or per head. One epoch digest on two attempts or two
+      heads would favour the shared state; two digests on two attempts over an unchanged surface
+      would favour the per-attempt reading.
+status: proposed
+evidence_refs:
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - CQ-005
+  - CQ-006
+  - CQ-014
+  - CQ-015
+rationale:
+  identity: >-
+    Facts sharing an epoch digest also share lockfile, tsconfig and turbo digests with the same
+    toolchain versions (so-12d5a26fbfac with so-d6adeec15c79; so-40abdcaf1156 with so-c997b4851faa),
+    and within each cited attempt the digest is shared across lanes with different commands, so it
+    names something the lanes of that attempt run in; whether it is shared beyond one attempt or
+    head is not shown. In one clone ledger the surface differs between so-12d5a26fbfac (2026-09-23)
+    and so-40abdcaf1156 (2026-09-24) in every digest part, so epochs succeed one another. The content
+    and period criteria fit all of this, so identity is left unresolved.
+  rigidity: >-
+    Unresolved. Rigidity asks whether something that is a cache epoch could persist while ceasing to
+    be one, for example a configuration surface that stays in place after it stops being the epoch
+    facts are issued under. Under the content criterion that cannot happen; under the period
+    criterion the period ends when the surface changes. No cited record shows an epoch before or
+    after facts are issued under it, so the records do not decide; the recurrence record named in
+    the criterion would.
+  dependence: >-
+    Unresolved, because it differs by reading. Under the content reading there is no external
+    dependence: its configuration parts are constituents listed under unity, and one epoch could
+    obtain in several checkouts. Under the period reading the epoch is a stretch of one checkout's
+    environment and depends on that checkout. The deciding record is the one named in the criterion:
+    one clone ledger in which an epoch digest recurs after an intervening different one, or a record
+    of an epoch change with its instant.
+  category: >-
+    Unresolved, with situation kept as an alternative. Under the content reading the epoch is a
+    situation: a configuration of parts obtaining over an interval, which facts are issued under.
+    Under the period reading it is a temporal stretch of one checkout's environment individuated by
+    its beginning, and whether such a period is a situation is not argued here; under the
+    per-attempt reading it is a value stamped per attempt or head. Not an information object on any
+    reading: the digest is the record of the state. The recurrence or epoch-change record decides.
+  temporality: >-
+    It cannot change configuration and stay the same epoch: any part changing changes the whole.
+    It obtains over an interval, but when that interval begins is not recorded on any cited fact
+    (CQ-014's beganAt).

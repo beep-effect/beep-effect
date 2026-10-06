@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:598f326644533c1d3d340286dc326e7fe66ce0ad3b3be578d07a5f12f1db3956",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1101,
+    "end_line": 1108
+  },
+  "quote": "- id: iv-1427-push-first-publish\n  title: \"PR #1427 — yeet publish goes push-first: cheap-gates and the head-install preflight alone hold the push\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-06T01:36:13Z\"\n  mergeCommit: 01d8c18f314661a7957ef6420b2180ffb29804d1\n  pr: 1427\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

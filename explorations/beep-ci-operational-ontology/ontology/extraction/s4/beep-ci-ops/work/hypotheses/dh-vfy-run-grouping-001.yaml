@@ -1,0 +1,67 @@
+id: dh:vfy-run-grouping:001
+observation_refs:
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+cq_warrants:
+- CQ-007
+- CQ-012
+proposed_referent:
+  label: verification episode the runId grouping may carry (a multi-attempt verification streak toward certainty)
+  description: 'The referent under test is the verification episode that CQ-007 and CQ-012 need in their pinned queries (one
+    instance: a red-to-green streak of attempts toward certainty, whose time-to-certainty and its decomposition those queries
+    read), taken under the warrant rule that a candidate carrier takes the warrant of the kind it may carry; the `runId` grouping
+    is the candidate carrier tested here, not the referent. Under that carrier an instance would be individuated by one `runId`.
+    In the attempt journals one run file holds a repair attempt and a later closeout attempt over one head (so-eefbf95beb8d
+    with its twin so-ff071fc9a2a9, then so-10c2570fe2f6), and so-6390d5f857ae and so-3bf9cacb55b4 open attempts of other
+    runs. In the proof ledger every cited fact carries a `runId`, and one value spans an attempt at `stage=pre-push` on one
+    head (so-12d5a26fbfac, so-d6adeec15c79 with its twin so-fcbe894799ea) and a later attempt at `stage=repair-loop` on another
+    head (so-40abdcaf1156, so-c997b4851faa). So a run groups several attempts, across stages and across trees. The KPI law
+    (po-fd56d2b008d1) retains terminal attempts per run-id file and keys its M1 proxy per branch, not per (checkout, branch).
+    What is open is whether one run bounds one episode. One rule is applied across the vfy records: a warrant follows need,
+    not the null''s standing, so a record lists every pinned Must/Should CQ whose query needs the kind it proposes, or proposes
+    a candidate carrier of, whether its null stands or falls (as dh:vfy-owning-agent:001, dh:vfy-priority-class:001, dh:vfy-coordination-protocol:001,
+    dh:vfy-repository-origin:001 and dh:vfy-assurance-tier:001 keep theirs with the null standing), and the null alone carries
+    the evidence question. Record pairs so-d6adeec15c79/so-fcbe894799ea and so-eefbf95beb8d/so-ff071fc9a2a9 are each one
+    record span seen twice (the vocabulary record a strict subset of its twin, so-ff071fc9a2a9 lacking the `runId` key its
+    twin carries): one individual, both cited.'
+representation_status: unresolved
+alternatives:
+- label: the bare runId grouping (attempts sharing one run label, with no episode boundary of its own)
+  representation_status: information_artifact
+  plausibility: viable
+- label: the per-branch attempt journal file
+  representation_status: information_artifact
+  plausibility: viable
+- label: a branch-derived run label minted by the tool
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: the records show attempts sharing a run id, but no episode boundary (a first red and a later
+    green within one run) and no rule that one run is one episode; the runId values read as branch-derived labels. Needed
+    evidence: an attempt-finished verdict with a success outcome in the same run as a failed attempt, or a record that opens
+    or closes an episode.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.3
+  use_for_acceptance: false

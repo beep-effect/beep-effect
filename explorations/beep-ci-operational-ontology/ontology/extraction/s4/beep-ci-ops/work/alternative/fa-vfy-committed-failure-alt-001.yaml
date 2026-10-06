@@ -1,0 +1,35 @@
+id: "fa:vfy-committed-failure-alt:001"
+hypothesis_ref: "dh:vfy-committed-failure:001"
+identity_card_ref: "ic:vfy-committed-failure-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: false
+rival_models:
+  - label: "event committing one attempt to failure at one step (this card)"
+    still_viable: true
+  - label: "role of the failed step execution that fixes the verdict under fail-fast"
+    still_viable: true
+  - label: "phase (failed) of the attempt"
+    still_viable: true
+  - label: "verdict fields only, with nothing that happened"
+    still_viable: false
+strongest_counterexample: >-
+  One vocabulary stanza is the whole evidence: so-ca8b3f90e57c carries failedStepId=prepare:05-docgen,
+  failureKind=step-exit, failurePolicy=fail-fast and outcome=failure beside one lane entry at status=passed.
+  It cannot show whether the failure is an occurrence of its own, the failing step run under a role, or a
+  state of the attempt, because all three predict exactly these fields.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Observationally equivalent on current evidence (event, role of a failed step run, phase of the attempt).
+  Decisive observation: a verdict whose failedStepId names a wrapper step while the failing exit is an inner
+  lane (failure located apart from the failed run, favouring an event or attempt state), or an attempt with two
+  failed steps of which only one is the failedStepId (favouring a role singled out among bearers), or a run
+  under a non-fail-fast policy that records a failure without stopping. Only the verdict record's attempt is
+  among the observations; its attempt key is not in the stanza's facts.
+rationale: >-
+  The fail-fast policy is a specification and the failure an execution occurrence (spec_vs_execution
+  separated); the occurrence is kept apart from the verdict fields (world_vs_information separated). Whether
+  the failure is a role of a failed step run is exactly what stays open. CQ-022 needs only an individual with
+  inAttempt, which every surviving rival can supply.

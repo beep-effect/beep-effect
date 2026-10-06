@@ -1,0 +1,50 @@
+id: "ic:vfy-verification-lane-alt:001"
+hypothesis_ref: "dh:vfy-verification-lane:001"
+referent_grain: >-
+  A repeatable verification procedure (a lane specification) that many runs execute, as against any run of it,
+  the command text that implements it, and the obligation a tier places on it.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: whether two runs execute the same lane when the lane name persists but its command changes is not
+    shown; every cited fallow:audit record carries one commandDigest, so no record separates identity by lane name
+    from identity by procedure content.
+  reidentification_key:
+    - "laneId (evidence only)"
+    - "commandDigest (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    A procedure description unified by one command; laneClass=cli-runnable is its only class value in the cited
+    records and is held as a field, not a referent.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "a lane as a slot or obligation that persists across command revisions (kind individuated by name)"
+    - "the command definition as a document"
+    - "a label grouping ledger rows"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Eight cited fallow:audit facts in eight clone ledgers (so-d6adeec15c79, so-1872cd0bda84, so-6c4e9189d15e,
+      so-3c8a4efed3f9, so-e26c033721f6, so-a953d730c7ec, so-2816ffb640ed, so-bcccc2d7545b) share one commandDigest over
+      different heads and epochs. If the lane were individuated by command content, a one-character change to its
+      command would mint a new lane and orphan every tier obligation (CQ-006 requiresLane) naming the old one; if by
+      name, the same lane could run a different procedure. My card cannot say which.
+status: proposed
+evidence_refs:
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b"
+  - "so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918"
+  - "so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3"
+  - "so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385"
+  - "so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8"
+  - "so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f"
+  - "so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c"

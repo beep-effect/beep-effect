@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:c5e4a3fa5cb9cca578d93207a4aadc2c418e7d3186187c27493b1a5467c54826",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 128,
+    "end_line": 135
+  },
+  "quote": "- id: iv-871-docgen-direct-package-check\n  title: \"PR #871 — the docgen:local JSDoc check gates only directly selected packages\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-08-30T08:34:57Z\"\n  mergeCommit: 4b8f3c4f600bcec006a892c93e2de77adff13664\n  pr: 871\n  mechanismChanged: gate-selection",
+  "epistemic_status": "quoted_prose"
+}

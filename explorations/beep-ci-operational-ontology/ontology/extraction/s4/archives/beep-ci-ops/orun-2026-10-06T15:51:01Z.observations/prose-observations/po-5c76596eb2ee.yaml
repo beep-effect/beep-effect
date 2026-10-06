@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5c76596eb2ee73cc00d6e73430145466369d86c2e2b2a95246f36195f8f9a872",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 467,
+    "end_line": 474
+  },
+  "quote": "- id: iv-1054-storybook-config-typecheck-lanes\n  title: \"PR #1054 — quality:storybook and repo-sanity:config-typecheck join pre-push; the Storybook lane is gated on Turbo's affected set\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T13:46:50Z\"\n  mergeCommit: d68f1a11dd41579660a6c72f3d3e060d6b61352d\n  pr: 1054\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

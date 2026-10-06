@@ -1,0 +1,34 @@
+id: "fa:vfy-lane-execution-alt:001"
+hypothesis_ref: "dh:vfy-lane-execution:001"
+identity_card_ref: "ic:vfy-lane-execution-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "lane run as an event within one attempt (this card)"
+    still_viable: true
+  - label: "temporal part of the attempt without individuality of its own"
+    still_viable: true
+  - label: "verdict entry or ledger record only"
+    still_viable: false
+  - label: "the reusable lane"
+    still_viable: false
+strongest_counterexample: >-
+  Wrapper and inner runs: so-5d4b45aa3226 shows a lane run nested under full:01-pre-push. If the wrapper is a run
+  and the inner lanes are runs, CQ-025's actualWallMs double counts wall time when summed per attempt; if only one
+  level is a run, the card must say which, and the observations do not.
+verdict: analyzed
+needed_evidence: >-
+  For the nesting question: a verdict that records wrapper and inner lane runs with their own start and end
+  instants in observed_facts, showing whether the wrapper's span equals the union of its inner runs. For the two
+  record classes: an observed_facts-level pair of a verdict lane entry and a ledger fact of one attempt and lane
+  with equal durationMs (the excerpt of so-5d4b45aa3226 hints at one, but excerpt text outside observed_facts is
+  not evidence). For state change during a run (CQ-022 RunningExecution): any record of a run observed while
+  still running; every cited run is terminal.
+rationale: >-
+  The record-only rival fails: the fact so-2601c6b77d87 and its shadow so-b1c417f14329 agree on one durationMs and
+  verdict, and so-ca8b3f90e57c records an exit code, so something ran. The lane-spec rival fails: one laneId recurs
+  across attempts and trees while each run has its own duration. Execution states (running, completed) are kept
+  apart from the run that passes through them (role_vs_bearer separated).

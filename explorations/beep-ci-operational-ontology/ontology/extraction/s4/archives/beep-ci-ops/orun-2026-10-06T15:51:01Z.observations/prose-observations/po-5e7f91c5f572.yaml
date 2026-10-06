@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:5e7f91c5f572ae0bfeb423d2b11232a959c987cb174979bdb92603a3ed47de83",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 801,
+    "end_line": 808
+  },
+  "quote": "- id: iv-1165-heavy-skip-satisfied\n  title: \"PR #1165 — unadmitted heavy lanes pass without work on GitHub-hosted runners\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-16T16:08:36Z\"\n  mergeCommit: 1e5d570bfe55f26f52243dd9615cd2691ce7ab3a\n  pr: 1165\n  mechanismChanged: gate-selection",
+  "epistemic_status": "quoted_prose"
+}

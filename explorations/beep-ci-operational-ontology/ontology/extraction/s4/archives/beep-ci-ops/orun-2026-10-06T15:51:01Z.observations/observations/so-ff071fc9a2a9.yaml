@@ -1,0 +1,56 @@
+{
+  "id": "so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 17,
+    "content_sha256": "2cff80fbcedc9b5c52a719e55a5911163fe3d5ca4cf99eb644abda282a3e0680"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties:record=0",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "diffFingerprint=1b678335df4b3e65350b94a8144a14043da582722235646064333a18023d49f8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=18473d2c82c2"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=ownerpid"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "proofTier=full"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "resolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=repair-loop"
+    }
+  ],
+  "source_excerpt": "# record 0\nownerRef=18473d2c82c2\nownerRefVariant=ownerpid\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=92a93aa1-4b48-4c5d-9f11-f8a37810c1b9\nrunId=chore_deps-update-09-05-26-64c41f08b79f\nbranch=@chore/deps-update-09-05-26\nbase=origin/main\nhead=6cb733fe1013d65693b7f594689f341df69f76a8\nmode=repair\nstartedAt=2026-09-08T19:28:29.547Z\nresolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8\ndiffFingerprint=1b678335df4b3e65350b94a8144a14043da582722235646064333a18023d49f8\nproofTier=full\nenvProfile=local\nstage=repair-loop\n",
+  "epistemic_status": "parser_derived"
+}

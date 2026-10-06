@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:136c4cb2ebee9bf5b7b6b51ae56fff3937a695071e167b695fb31d66bb48b836",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1001,
+    "end_line": 1008
+  },
+  "quote": "- id: iv-1381-app-env-out-of-build-hash\n  title: \"PR #1381 — app env patterns and unresolved op:// values leave shared build hashes\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-01T16:16:58Z\"\n  mergeCommit: 43585c73b41323db538160fa5584431eb5316379\n  pr: 1381\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

@@ -1,0 +1,56 @@
+id: "ic:vfy-seat-grant-alt:001"
+hypothesis_ref: "dh:vfy-seat-grant:001"
+referent_grain: >-
+  One held admission to shared verification capacity, founded by an admission occurrence and mediating the
+  holder and the capacity, as against the journal rows and lease state record about it.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two grants are the same iff they are founded by the same admission occurrence and hold the same claim on
+    capacity continuously between their observations; the nonce shared by a chain's rows is evidence of that
+    continuity, never the criterion. A copy of the lease record elsewhere is a record of the grant, not a second
+    grant.
+  reidentification_key:
+    - "nonce chain (evidence only)"
+    - "admittedAtMillis (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    Unified as one claim from its admitted row to one end (release or lease eviction); rows of two journal formats
+    (yeet-admission-journal/v1 and /v3 on so-95b7d78a061f, so-363f9b7f07dc) record one grant.
+  dependence: relational
+ufo_analysis:
+  candidate_category: relator
+  alternatives:
+    - "held phase of one admission engagement that begins at enqueue"
+    - "the lease file or journal rows only (information object)"
+  existential_dependencies:
+    - "the holder that keeps it alive by heartbeat"
+    - "the shared admission capacity it claims"
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: true
+  terminal_states:
+    - "released"
+    - "lease-evicted"
+counterexamples:
+  - description: >-
+      The admitted row repeats the request's enqueuedAtMillis and weightTokens unchanged (so-95b7d78a061f: one
+      enqueuedAtMillis value on both rows; the lease so-a8d270b5e19d also carries enqueuedAtMillis). A grant that
+      carries its request's enqueue instant as its own history is what the engagement rival predicts: if request and
+      grant are one admission, my card counts two individuals where there is one.
+  - description: >-
+      On so-a9ed1352e2bc the last heartbeat precedes the eviction by about thirty minutes, and the eviction falls 21 ms
+      after an unrelated enqueue (record 330). Between the holder's last heartbeat and the eviction the grant still
+      stood in the store; if a grant exists only while its holder is alive, my card overstates its span, and CQ-008
+      would list a dead holder's grant as active.
+status: proposed
+evidence_refs:
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:6f5b7aebafecd74f1991f241f2ab447da364d854ef9a8f3d6a8352a532a8dcf8"

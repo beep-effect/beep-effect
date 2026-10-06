@@ -1,0 +1,59 @@
+id: dh:vfy-assurance-tier:001
+observation_refs:
+- po:sha256:6087c33b5bbd69d66ddedb67da1e0fcad5f35d1cf15f776db2d97820ed9a87ee
+- po:sha256:2b7cdf8babec65435dcb9a12a4477d6d6423207028baa810f4ec103f9817a1de
+- po:sha256:29afca5918a47b9efdbbcc6c0ee4cc9b0f6040a88ffa9ed457d7b7bff6c627d6
+- po:sha256:6fa7edcaaf52ffbd41207ca29fcd39f018ab4a4530ea3d7807eefa5a1f7732fb
+- po:sha256:1b7ce8179ee9ea1bd29260242a48fa76c3f2039a9d37ae1baf3790a6b03b3281
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- po:sha256:3b2e9bc3edf2a3be3253d9d0cc4751719f9e86b598106f79a370c32a66b4cf36
+- so:sha256:93883668edeeac6fbab8532c248f0f56e52e6c311e82a9c687c69d7b8ba85afa
+cq_warrants:
+- CQ-002
+- CQ-006
+- CQ-017
+proposed_referent:
+  label: assurance tier (the level of verified assurance an episode targets or holds)
+  description: One instance would be one level of assurance a verification episode can be verified to; the AssuranceTierId row (po-6087c33b5bbd)
+    lists three members, TierRepairGreen, TierLocalFullProof and TierCiMergeGreen, with repair-green annotated as the prerequisite
+    assurance state. Individuated by the set of lane obligations the level requires (CQ-006 and CQ-017 query requiresLane
+    per tier), not by a spelling. Literal-domains rule 2 (po-2b7cdf8babec) separates it from the deployed YeetProofTier enum
+    (`full | cheap-gates | review-fix`), whose mapping into tiers is open (see dh:vfy-deployed-proof-tier:001). The KPI law
+    (po-fd56d2b008d1, under the section 6 amendment header po-3b2e9bc3edf2) keeps the three-tier list and reports merged preview
+    as a sub-partition of TierLocalFullProof (a reporting rule quoted, not a category). Rules 4 and 5 (po-29afca5918a4, po-6fa7edcaaf52)
+    state that adding a member is a T-Box change needing a Must/Should CQ or a named semantic-support license, and rule 3
+    (po-1b7ce8179ee9) binds deployed-literal fidelity; these are cited as the conditions a member hypothesis must meet. This
+    is the tier CLASS kind the merged-preview member hypotheses would support. CQ-002, CQ-006 and CQ-017 each need the referent
+    in their pinned query (targetsTier, the target tier binding, the two tier individuals).
+representation_status: unresolved
+alternatives:
+- label: closed reporting vocabulary used by the KPI law to partition readings
+  representation_status: information_artifact
+  plausibility: viable
+- label: the deployed YeetProofTier enum under another spelling
+  representation_status: lexical_alias
+  plausibility: weak
+- label: packet-side label set with no CI-operations counterpart (the null reading); told apart from the level reading by
+    a deployed record that carries a tier member or a per-tier lane obligation
+  representation_status: implementation_artifact_only
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands for want of a record-backed discriminator. The member list (po-6087c33b5bbd) and its rules (po-2b7cdf8babec,
+    po-1b7ce8179ee9, po-29afca5918a4, po-6fa7edcaaf52) are the packet''s own design text, self-applied as dh:vfy-literal-domain-table:001
+    records, and the KPI law (po-fd56d2b008d1) is a reading rule over that list; none is a deployed occurrence of a tier.
+    The closeout record so-93883668edee checks `requiredChecksGreen=true` and `mergeable=true` but names no tier, and the
+    deployed records in this batch carry only the proof-tier value `full` (dh:vfy-deployed-proof-tier:001), whose mapping
+    into assurance tiers is open. Contrasting the tier list with the deployed enum argues against the lexical-alias rival,
+    not against the null. Warrants kept: CQ-002, CQ-006 and CQ-017 need the tier class in their pinned queries (the target
+    tier binding, targetsTier, the two tier individuals), and a warrant follows need, not the null''s standing. Needed evidence:
+    a deployed record that carries an assurance-tier member (an attempt, episode or closeout stamped with the level it targets
+    or holds), a recorded mapping from the deployed proof-tier values into the three levels, or a deployed lane-obligation
+    set that differs between two levels (the CQ-017 asymmetry shape). Whether the tiers are states of an episode or target
+    specifications is the foundational seat''s question once evidence exists.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

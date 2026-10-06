@@ -1,0 +1,58 @@
+id: "fa:vfy-verification-lane:001"
+hypothesis_ref: "dh:vfy-verification-lane:001"
+identity_card_ref: "ic:vfy-verification-lane:001"
+referent_grain: >-
+  A repeatable verification procedure at specification grain: one lane (fallow:audit,
+  quality:coverage and the rest) that many executions run against many trees, individuated by the
+  procedure, not by any run of it.
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: unresolved
+rival_models:
+  - label: procedure specification as an information object
+    still_viable: true
+  - label: process type that executions instantiate
+    still_viable: true
+  - label: label grouping ledger rows
+    still_viable: false
+strongest_counterexample: >-
+  A command revision under one laneId: the name criterion keeps one lane and the content criterion
+  makes two, so the identity of the lane that CQ-006 obligations attach to turns on a record that
+  none of the cited ledgers carries.
+verdict: explicitly_deferred
+needed_evidence: >-
+  To settle the identity criterion: one laneId carrying two commandDigest values across ledgers or
+  over time, or two laneIds sharing one commandDigest. To rule the category between information
+  object and process type: a record that gives the lane properties of its own apart from its
+  executions (a deployed lane definition with its command and obligations, revisable as a document)
+  or a record that classifies executions under a lane type with no specification of its own. For lane
+  kind (CQ-001): a second laneClass
+  value, or the deployed lane-class domain.
+evidence_refs:
+  - "so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b"
+  - "so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918"
+  - "so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - CQ-001
+  - CQ-006
+rationale:
+  spec_vs_execution: >-
+    One lane recurs across clones with different durations and trees, so the lane is the
+    specification and each ledger record is about one execution of it.
+  world_vs_information: >-
+    The ledger's laneId and commandDigest record the lane. The lane is the procedure the
+    obligations name.
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    Unresolved. If a lane is a lane only as a member of a deployed lane set, that set is a context
+    its being a lane depends on and would have to be reified; the card leaves that dependence open
+    because no cited record shows the deployed lane set. On the process-type reading no such
+    context is needed. A record of the deployed lane set over time (a lane added or retired while
+    its command remains) decides it.
+  rivals: >-
+    The grouping-label rival fails because one command digest recurs under one name across seven
+    ledgers. Information object and process type remain, and no cited record argues one over the
+    other, so the category is deferred rather than ruled.

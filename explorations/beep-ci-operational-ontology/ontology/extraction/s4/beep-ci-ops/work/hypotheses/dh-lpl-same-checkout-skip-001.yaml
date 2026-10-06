@@ -1,0 +1,35 @@
+id: "dh:lpl-same-checkout-skip:001"
+observation_refs: ["po:sha256:983855896b09b9d9aa905075137e4ace72075aa786f829d6a0cdee065978db50"]
+cq_warrants: []
+proposed_referent:
+  label: "same-checkout admission skip (one occurrence of the scheduler passing over a request)"
+  description: >-
+    One instance would be one occasion on which the deployed scheduler skips a request because its
+    checkout already holds a lease, individuated by the skipped request and the instant of the
+    scheduling decision. The single record is the contract's prose: since #929 the deployed scheduler
+    skips a request whose checkout already holds a lease; admission v1 does not model that skip; it
+    is the attribution class for first-choice disagreements in the live replay. It bears on the
+    CQ-009 same-checkout exclusion (seat grants holding one checkout), so it is a candidate support
+    for the seat-grant kind CQ-009 needs; CQ-009's query needs grants and checkouts, not this skip,
+    so cq_warrants is empty and the supported kind is named here. The standing rule, as against its
+    occurrences, is a viable rival kind with its own hypothesis (dh:lpl-same-checkout-exclusion-rule:001).
+representation_status: unresolved
+alternatives:
+  - label: "the standing exclusion rule rather than an occurrence of skipping (dh:lpl-same-checkout-exclusion-rule:001); discriminated by an admission-chain observation of a request passed over while an admitted lease held its checkout (an occurrence) as against a record of the rule changing version or scope with no skip occurring (the rule)"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "a diagnostic attribution label used only in replay reporting; weak because the record says disagreements are reported with that attribution and never modelled, so the label is a reporting use of the same exclusion, not a further thing it denotes"
+    representation_status: information_artifact
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The single record is the contract author's prose description of deployed
+    behaviour; it shows no admission chain in which a request was skipped, and a description is not
+    an occurrence. Needed evidence: admission-chain observations in which a request for a checkout
+    already holding a lease is passed over (not in this batch); likely a cross-batch duplicate of a
+    kind denoted from the admission records.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.3, use_for_acceptance: false}

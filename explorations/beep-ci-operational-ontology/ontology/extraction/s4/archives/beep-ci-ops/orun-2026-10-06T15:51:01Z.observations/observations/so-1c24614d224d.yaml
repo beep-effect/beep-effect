@@ -1,0 +1,76 @@
+{
+  "id": "so:sha256:1c24614d224d000137cf6f3d3cea93d13e81c64b3521d5035febc1e728bbf000",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 2880,
+    "end_line": 2943,
+    "content_sha256": "da2c51a5bce16f062628832d8edd8ed440a0a2705884d3c0ab6395220f1816c2"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=ca56bb6a-fb3e-41e3-ba3b-17ee5b0f7390",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790889097647"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=review-fix"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=ca56bb6a-fb3e-41e3-ba3b-17ee5b0f7390"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=b5cb8a837b50"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=verify"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1790889848274"
+    }
+  ],
+  "source_excerpt": "# record 239\nownerRef=b5cb8a837b50\nownerRefVariant=pid_pair\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nenqueuedAtMillis=1790889097647\nnonce=ca56bb6a-fb3e-41e3-ba3b-17ee5b0f7390\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=1\n# record 240\nownerRef=e6076adc5060\nownerRefVariant=pid_pair\nattemptId=7a5e6cb1-8428-4105-a395-1c0349892df2\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-inventory-next\nbranch=codex/effect-vitest-inventory-next\nenqueuedAtMillis=1790889462013\nnonce=51916223-beaa-4068-9ab8-efd819feb491\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 241\nownerRef=b3a9d9ca4aaa\nownerRefVariant=pid_pair\nattemptId=2a61c966-bd82-49c6-aff9-79b8ab586e52\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01\nbranch=codex/boolean-creep-r54-remainder-2026-10-01\nenqueuedAtMillis=1790889011457\nnonce=c214ae1d-f930-4956-9bb9-700eff8a9cf7\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790889736722\n# record 242\nownerRef=cf7e3c1609da\nownerRefVariant=pid_pair\nattemptId=ff6a2666-3819-4271-beb2-8a665bdb5149\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect9-worktrees/boolean-creep-r54-remainder-2026-10-01\nbranch=codex/boolean-creep-r54-remainder-2026-10-01\nenqueuedAtMillis=1790889772800\nnonce=3544d69e-1623-46e1-b3ae-5e8b9a95741e\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 243\nownerRef=b5cb8a837b50\nownerRefVariant=pid_pair\nkind=review-fix\npriority=verify\ncheckoutRoot=<fleet>/beep-effect2-worktrees/qualification-workflow-v9\nenqueuedAtMillis=1790889097647\nnonce=ca56bb6a-fb3e-41e3-ba3b-17ee5b0f7390\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790889848274\n",
+  "epistemic_status": "parser_derived"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:55f2cd5382bf4d12effffe37768a446ba2650c80a1a9a37f7ab3e3eba9a41f8b",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1024,
+    "end_line": 1031
+  },
+  "quote": "- id: iv-1380-shadcn-lint-lane\n  title: \"PR #1380 — quality:shadcn-lint joins pre-push at rank 3, local beep ci and the Lint Policy battery\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-01T20:15:16Z\"\n  mergeCommit: 736f6f7b0c210b4861c12c1b614958b1751b8f78\n  pr: 1380\n  mechanismChanged: lane-assembly",
+  "epistemic_status": "quoted_prose"
+}

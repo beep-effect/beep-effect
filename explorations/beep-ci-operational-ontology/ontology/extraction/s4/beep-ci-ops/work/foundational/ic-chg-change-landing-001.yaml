@@ -1,0 +1,110 @@
+id: "ic:chg-change-landing:001"
+hypothesis_ref: "dh:chg-change-landing:001"
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Two recorded landings are the same landing when they are the same dated landing act of
+    one change set, the single act a row dates by its landedAt instant and ties to its merge
+    commit and pull request. The change-set leg is unresolved: the records name a change set
+    only by its pull request and merge commit, which are re-identification evidence, and give
+    nothing else about it but a title, so no cited record states what makes two change sets
+    the same apart from those keys; the needed evidence is a record of a change set's content
+    (the alteration it makes) against which two rows can be compared without them. Taking effect is not the criterion: the KPI law section 2 record
+    makes taking effect per checkout (a checkout is in the post-period only when its HEAD
+    ancestry includes the event's merge commit; old binaries keep old behavior), so on that
+    record landing and per-checkout adoption are two instants, the landing once and each
+    checkout's adoption as a further instant of its own. The class criterion survives that
+    split because it rests on the landing act alone and leaves adoption to the relation
+    between the landing and a checkout. A shared instant is never sufficient (#1067 and #1068
+    land 16 s apart) and a shared mechanism tag is never sufficient (the same pair carries
+    one tag). Open, and named as missing evidence: whether a change whose title dates an
+    apply or go-live lands at its merge or at its apply; whether a later row that supersedes
+    or retires an earlier change records a second landing or a revision of the first; and a
+    per-checkout HEAD-ancestry census showing one change's adoption instants varying across
+    checkouts while its landedAt stays one, the evidence that discriminates the landing act
+    from per-checkout taking effect.
+  reidentification_key:
+  - "the row's mergeCommit value, one per row (re-identification evidence, never the criterion)"
+  - "the row's pr number, one per row (re-identification evidence, never the criterion)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: "Unified as the single dated landing act of one change set; a landing may alter several mechanisms at once (the #874 and #1049 rows bundle several lane, gate and reuse alterations under one tag), so unity follows the change set, not the mechanism tag."
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+  - "information_object: the curated ledger row about the change (the hypothesis grades it viable and names dh:chg-change-record:001 beside it); kept viable here, because on the row-grain reading each row pairs one-to-one with one landing and no cited record splits the row from the landing; the supersession and retirement rows (#1019 'superseded by #1022'; the #870 lock retained until the #929 row retires it) also bear on this rival, since under the coarser-grain rival two rows record one landing, which would separate row from landing, and the records do not say which reading holds; discriminated by a record of a row corrected while the landed change stays the same, which no cited record holds"
+  - "information_object: the change artifact, pull request or merge commit (the hypothesis grades it viable and names dh:chg-change-artifact:001 beside it); kept viable here, because every row, the 'applied' and 'live' rows included, carries one mergeCommit and one pr, so the records do not split artifact from landing; discriminated by a record giving one change's merge time and its applied or live time separately, which no cited record holds"
+  - "event at a coarser grain: one change revised across several rows (#1019 superseded by #1022 and the #870 lock retained until #929, as those rows state; #891 then #894 runtime root, a link inferred from the two titles alone, which no cited record states and which is named as needed evidence)"
+  - "event of a different act: the apply or go-live of an infrastructure change rather than its merge (#1050, #1141, #1364, #1422 rows)"
+  existential_dependencies:
+  - "the change set it lands (carried by the pull request and merge commit the row names)"
+  - "the arrangements the row titles say the change alters, in the titles' own words: the admission queue and proof locks (#891, #894), the weighted admission scheduler (#870, #929), the pre-push wave (#1006), gates and lanes that join pre-push, cheap-gates or lint:policy (#1021, #1029, #1067, #1380), the lane-proof reuse key (#1019, #1022), Turbo task inputs (#1146), partition shards (#982), the deprecated-apis ESLint pass that shards packages/tooling by subtree (#1007), the heavy CI pool or fleet (#1050, #1141, #1364, #1422); the rows' mechanismChanged values are ledger-field governance and are not adopted as dependence targets"
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+- description: "The #1141 row titles its change 'live 2026-09-15', a date with no zone, and records landedAt 2026-09-16T00:18:38Z beside a mergeCommit. If the go-live date is read in UTC or a zone ahead of it and landing is the go-live, the recorded instant postdates it and the merge is a second occurrence for one change, so a per-row criterion keyed on the merge would date the wrong occurrence; if the date is read in a zone behind UTC, 00:18:38Z can still fall on 2026-09-15 there and the two may be one occurrence. The record does not say which zone the date uses (strongest counterexample)."
+- description: "The #1019 row says 'superseded by #1022' and both alter the lane-proof reuse key: one criterion counts two landings, the other one change revised in two steps; no record says whether #1019's alteration still holds after #1022 lands."
+- description: "The #870 row retains the per-origin proof lock 'until #929' and the #929 row retires it after drain: the retirement may be a landing of its own or the completion of the change #870 began."
+- description: "The #1380 and #1384 rows land 13 seconds apart with distinct pull requests, merge commits and mechanism tags: a criterion based on the instant alone would wrongly merge them. The #1067 and #1068 rows, two pull requests 16 seconds apart, carry the same mechanism tag and both alter the cheap-gates lane list: that pair is a counterexample to both an instant-only and a mechanism-only criterion."
+- description: "The #874 row bundles publish-before-admission, a CI-parity step, lane-proof reuse and new pre-push lanes under one mechanism tag: a criterion keyed on mechanism altered would wrongly split one landing into several."
+status: proposed
+referent_grain: "Recorded-occurrence grain: one dated landing of one change set on the verification mechanisms it alters, individuated by the change set it lands and the dated act of its landing; not the ledger row that records it, not the pull request or merge commit that carries it, and not the instant that dates it."
+evidence_refs:
+  - "po:sha256:0258120378b55876a0457e1548e119aa5cdf844af23f0da49661a58b98e3449a"
+  - "po:sha256:08cf23fabaa45189e9e6710eb5ed66fddf66416358b540ed6fe85bce6014e209"
+  - "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+  - "po:sha256:136c4cb2ebee9bf5b7b6b51ae56fff3937a695071e167b695fb31d66bb48b836"
+  - "po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b"
+  - "po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2"
+  - "po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6"
+  - "po:sha256:29ec308ddb8ba42273b33b41212d92fc8dcb32afcc10bf4c04bccce61750e450"
+  - "po:sha256:3c219ae9a67306b44262ce221588e8a5ba129806c5bca6cc2e857a0d32ade524"
+  - "po:sha256:4f2194be0321759c7240f0581c5c16ddc108a72a73c1fb883eea6156e574eb59"
+  - "po:sha256:5397ff7a760ea1513b6970820c3b93465e633b05efe6f0fa32dea382425a467e"
+  - "po:sha256:55f2cd5382bf4d12effffe37768a446ba2650c80a1a9a37f7ab3e3eba9a41f8b"
+  - "po:sha256:598f326644533c1d3d340286dc326e7fe66ce0ad3b3be578d07a5f12f1db3956"
+  - "po:sha256:5c76596eb2ee73cc00d6e73430145466369d86c2e2b2a95246f36195f8f9a872"
+  - "po:sha256:5e7f91c5f572ae0bfeb423d2b11232a959c987cb174979bdb92603a3ed47de83"
+  - "po:sha256:61be88bdc8e728ab88dd3f3c3eaeb891737003f013f50aac2d484578b072b09e"
+  - "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+  - "po:sha256:702c9ad1e7b9982dde9e8d3f63c4f83d4b1bbfafd5527ce6ddc302c9f21e639f"
+  - "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+  - "po:sha256:85169b5374bfc407cfa0dfb1aae29a6712f5748f7ee00e4dbab776a9b4e4b321"
+  - "po:sha256:8bd00f950c715a284a1513cfd6fc6989fc1dbd63838db80369f2a906bb83def2"
+  - "po:sha256:8c81693c678e2a600ba135176c5290919381ab31f3b914a22284c1c2d68844a5"
+  - "po:sha256:9389cb99afdae9d9d738725da15a3bec96ff83d4280d73c899ed9d400c29e03e"
+  - "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+  - "po:sha256:99af3e66ee3c31b939f46bf2bf738f23dab5d528e3d33f2b689c334745b70d40"
+  - "po:sha256:a48d2b4f63642d8415fa3248c76a25fae15d6e1b21cc0d5f96d0d59e0a7a8fb0"
+  - "po:sha256:ab2046e4d8c1dbe7ca21fac8029f50f5bf547eb6076d95566c51888613e5a1b0"
+  - "po:sha256:ae86a035a2b303af5fbe1e2407ef8c8353dee26c3248ffcce434a31e103f2fe8"
+  - "po:sha256:b4578e170e3ab95485e9caff8f42b1cf7880ce26e730438f9f91b9d1eab3d940"
+  - "po:sha256:b74a72ab063a9397c7f157e4683423bfd2f22abd1055ce360789e9e3e0574763"
+  - "po:sha256:b754409ff756f696e06de016e1fab4b65cbaab4201c75bbb1707a0477dad7568"
+  - "po:sha256:bf3e9b98c9907b6e670ba25e920d836bdec14c3f2414c5aa885a905bf4cdeca2"
+  - "po:sha256:bf6c75787a7d8ff2492b0054431e6b4f7a9c8e8f34009187fcefa7bbf31ae51d"
+  - "po:sha256:c1e5823a17169f61139ee8782f7f97e45533ca31792c47cb840fc9e7e315b7ea"
+  - "po:sha256:c44335db46ef1faada673625348a66831c800d20182303aed0e3996cbcbe72b3"
+  - "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf"
+  - "po:sha256:c5e4a3fa5cb9cca578d93207a4aadc2c418e7d3186187c27493b1a5467c54826"
+  - "po:sha256:d2f81ee522b55c797dc675442f919ca37dca39ea57eebc214da66495efffa312"
+  - "po:sha256:d5b4a4eadd3fc86fca26be407d25a681ce732593df4a3e9320a1f222a7518401"
+  - "po:sha256:db48832ece458c823c749f99c0f7b0731ce9bdf3109f379f4371d509a934ccfb"
+  - "po:sha256:e5be2e63348a4fc1c8ceff39348a8a3db79ff4157f2b21a88d43d1dbcb49f707"
+  - "po:sha256:f3f68fe22e119fcd646d8a5b9a28ebef53fb4f243baa2c47f3e3d99bf2faea5f"
+  - "po:sha256:fc75c895d1ba5461d5ed42ab2b3f63deb1e89f01887b5c20f9a594f65ee7abb0"
+  - "po:sha256:fd2608fb2e655c02344a1d2b0f9e78e96b045caa6d56d2600979e46fc11e7ff4"
+  - "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f"
+  - "CQ-016"
+rationale:
+  identity: "Every row names one change set (one pull request, one merge commit) and one landedAt; that each row pairs one-to-one with one dated landing is the row-grain reading only, since under the coarser-grain rival the supersession and retirement rows (#1019 and #1022; #870 and #929) record one landing in two rows, which would also separate row from landing and so bears on the ledger-row rival. The KPI law section 2 quote partitions series at the wall-clock landedAt while it places taking effect per checkout, at the instant a checkout's HEAD ancestry comes to include the event's merge commit. Landing and per-checkout adoption are therefore two instants on that record, and the criterion is stated on the dated landing act, which occurs once, not on taking effect, which recurs per checkout. Timestamp proximity and mechanism tags fail as criteria (counterexamples 4 and 5). Whether the class supplies a finished criterion of its own is unresolved because no cited record says what makes two change sets the same apart from the pull request and merge commit that only re-identify them, because the merge-versus-apply and supersession questions change how many landings the 44 rows record, and because no cited record holds the per-checkout HEAD-ancestry census that would show adoption instants varying under one landedAt."
+  carries_identity: "Unresolved. An event class carries identity only from a supplying sortal of occurrences, and no cited record names one: the rows give a landedAt, a merge commit and a pull request per row, which are re-identification evidence, and the criterion above is still open on which act lands (merge or apply) and on supersession. Discriminating evidence: a record giving one 'applied' or 'live' change's merge time and apply or go-live time separately beside its landedAt; a record saying whether #1019's alteration still holds after #1022 lands, or naming a later row a revision of an earlier change; and a per-checkout HEAD-ancestry census for one change."
+  rigidity: "An occurrence that is the landing of a change cannot cease to be that landing; the observational-versus-causal label of KPI law section 2 qualifies comparisons made at the landing, not the landing itself, so a later causal upgrade would not reclassify it."
+  dependence: "A landing exists only as the landing of a particular change set that alters the arrangements its row title names; it depends on those participants, which are not its parts."
+  temporality: "Events do not change state: a later supersession is a further occurrence, not a state of the earlier one, so terminal_states is empty. Whether a landing is instantaneous or spans an interval is unresolved: the records give one instant per row. The #1141 row's 'live 2026-09-15' carries no zone; landedAt 2026-09-16T00:18:38Z postdates that go-live date unless the date is read in a zone behind UTC, where that instant still falls on 2026-09-15. If the gap exists, it may be the extent of a rollout or two separate acts."
+  category: "Event (a dated occurrence) is argued from the discriminator rows (the heavy CI pool moving from Spot to On-Demand, contained to two Spot runners), which date changes to things outside the ledger, and from the KPI law section 2 record, which partitions KPI series at the landing; under both event-grain rivals the category holds, since merge and apply are both occurrences. The two information-object readings, the ledger row and the pull request or merge commit, are not argued away. On the row-grain reading each row pairs one-to-one with one landing and carries one pr and one mergeCommit, so on that reading no cited record separates row or artifact from landing; the supersession and retirement rows (#1019 and #1022; #870 and #929) also bear on the ledger-row rival, since if either pair records one landing, two rows record one landing and row and landing come apart, and the records do not say which. Both stay viable on this card with their discriminators (a row corrected while the landed change stays the same; one change's merge time and applied or live time given separately) named as missing evidence. Neither discriminator would by itself move the category to information_object: the merge-versus-apply record would split the merge from the apply and so favour an event reading (merge or apply as the landing act) over the change-artifact reading; the corrected-row record would show only that row and landing come apart, telling against reading them as one individual without saying which of the two the class term denotes, so it favours neither category."

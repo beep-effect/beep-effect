@@ -1,0 +1,88 @@
+{
+  "id": "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 892,
+    "end_line": 947,
+    "content_sha256": "333547c70c9cd472118fe5ef7951854fe13eb2f7d0cc325b04018549c36ebb46"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=8c9ed8a4-b49e-47c4-bdca-55a976348e35",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=5cbabe5d-8397-4a88-9268-a88db9f90b16"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/shadcn-lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect6-worktrees/shadcn-lint"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790861201468"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=8c9ed8a4-b49e-47c4-bdca-55a976348e35"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=b0d3e63caccd"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=1790862253344"
+    }
+  ],
+  "source_excerpt": "# record 79\nownerRef=b0d3e63caccd\nownerRefVariant=pid_pair\nattemptId=5cbabe5d-8397-4a88-9268-a88db9f90b16\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect6-worktrees/shadcn-lint\nbranch=feat/shadcn-lint\nenqueuedAtMillis=1790861201468\nnonce=8c9ed8a4-b49e-47c4-bdca-55a976348e35\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 80\nownerRef=4cec80cc99be\nownerRefVariant=pid_pair\nattemptId=2c7bf2e6-3798-4ed5-983b-2b392f5b3879\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-console-followup\nbranch=codex/effect-vitest-console-followup\nenqueuedAtMillis=1790859843949\nnonce=36fe0ecd-8325-43ca-91d6-ac5cd6805a2a\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790861419928\n# record 81\nownerRef=c86dd237ae18\nownerRefVariant=pid_pair\nattemptId=a49c2318-c467-463c-bef2-a0aa61d168af\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-console-followup\nbranch=codex/effect-vitest-console-followup\nenqueuedAtMillis=1790861525427\nnonce=c98ad76e-f785-427a-804a-e0ebfabca94d\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 82\nownerRef=b0d3e63caccd\nownerRefVariant=pid_pair\nattemptId=5cbabe5d-8397-4a88-9268-a88db9f90b16\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect6-worktrees/shadcn-lint\nbranch=feat/shadcn-lint\nenqueuedAtMillis=1790861201468\nnonce=8c9ed8a4-b49e-47c4-bdca-55a976348e35\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nwithdrawnAtMillis=1790862253344\n",
+  "epistemic_status": "parser_derived"
+}

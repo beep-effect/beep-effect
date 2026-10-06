@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:5ecc4af84671a1589c51ebd81bce2278400b5605cc536e23e41eab87ceb2db1f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 46,
+    "end_line": 87,
+    "content_sha256": "adae579549f3084e6d4e7cbc75f0addfe104d7254f45d66dd308cdbd83a553eb"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-09-05-26-64c41f08b79f/attempts.properties:record=3",
+    "lexical_name": "tier",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 3\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=c6cc426b-bafa-497e-b1e8-211ad8e2f22d\nrecordedAt=2026-09-08T19:57:48.531Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=@chore/deps-update-09-05-26\ncommitted=false\ncreatedAt=2026-09-08T19:57:48.531Z\nfailurePolicy=fail-fast\nhead=6cb733fe1013d65693b7f594689f341df69f76a8\nid=closeout:01-pr-context\nlabel=closeout:pr-context\nphase=monitor\nstatus=not-run\ntier=full\nid=closeout:02-review-gates\nlabel=closeout:review-gates\nphase=monitor\nstatus=not-run\ntier=full\nmessage=yeet PR closeout failed with 8 issue(s).\nmode=closeout\noutcome=failure\npushed=false\nrunId=chore_deps-update-09-05-26-64c41f08b79f\nattemptId=c6cc426b-bafa-497e-b1e8-211ad8e2f22d\nresolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8\ndiffFingerprint=221e14f1e995c85b18cf4fc4b16f1773c74f73fedbf57dac2fa1eaceb402215f\nproofTier=full\nstartedAt=2026-09-08T19:57:41.381Z\nendedAt=2026-09-08T19:57:48.531Z\nelapsedMs=7151\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nfailedStepId=closeout:01-pr-context\nfailureKind=handler-error\nresolvedHeadSha=6cb733fe1013d65693b7f594689f341df69f76a8\ndiffFingerprint=221e14f1e995c85b18cf4fc4b16f1773c74f73fedbf57dac2fa1eaceb402215f\nproofTier=full\nenvProfile=local\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

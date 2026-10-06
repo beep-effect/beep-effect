@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d5aed299bcd9e802aec99b8cd0353adff7c161bd7d63764656f34e0d0cd909f0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "apps/labs/ciops/test/fixtures/lane-plan-v1.ttl"
+  },
+  "source_span": {
+    "start_line": 8,
+    "end_line": 8
+  },
+  "quote": "ciops-prov:episode-lane%2Dplan%2Dgolden%2D1 rdf:type ciops-prov:VerificationEpisode .",
+  "epistemic_status": "quoted_prose"
+}

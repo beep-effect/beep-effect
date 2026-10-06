@@ -1,0 +1,31 @@
+id: "dh:lpl-live-replay-evidence:001"
+observation_refs: ["po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792"]
+cq_warrants: []
+proposed_referent:
+  label: "live-replay evidence rendering (the generated report of the W5 live replay over the run4-fleet pin)"
+  description: >-
+    The observed construct is the rendering of the W5 live replay's evidence: a generated document
+    written by a lab script, check-by-default (only a write flag renders), beside a frozen earlier
+    replay-evidence document that is never re-rendered. Split out of the contract-governance
+    hypothesis in repair because it is its own construct: a generated evidence report and its
+    rendering discipline, not amendment or term-usage governance. The replay itself (a comparison
+    of the admission engine with the deployed journal over the pin) is mentioned here but carries
+    no occurrence facts in this record.
+representation_status: implementation_artifact_only
+alternatives:
+  - label: "a replay-evidence report as an information artifact recording a comparison of the admission engine with the deployed journal; weak because the record gives only its path, generator and rendering rule, not any content it records"
+    representation_status: information_artifact
+    plausibility: weak
+  - label: "the live replay as an occurrence (one comparison run over the pin); weak because no record in this batch carries an instant, an input or an outcome of the run"
+    representation_status: domain_referent
+    plausibility: weak
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands: a generator script, an output path and a check-by-default rendering rule are
+    bookkeeping of the evidence pipeline, nothing in the record would be false if they were pure
+    implementation, and no pinned CQ asks about replay-evidence rendering.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.6, use_for_acceptance: false}

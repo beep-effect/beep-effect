@@ -1,0 +1,34 @@
+id: "fa:vfy-seat-grant-alt:001"
+hypothesis_ref: "dh:vfy-seat-grant:001"
+identity_card_ref: "ic:vfy-seat-grant-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "relator founded by admission, mediating holder and capacity (this card)"
+    still_viable: true
+  - label: "held phase of one nonce-bounded admission engagement"
+    still_viable: true
+  - label: "lease file or journal row only"
+    still_viable: false
+strongest_counterexample: >-
+  Continuity across the enqueue/admit boundary: every admitted chain carries one nonce, one weightTokens value and
+  the enqueue instant on the admitted row itself. A distinct grant founded at admission and the held phase of one
+  engagement founded at enqueue predict the same rows; on current evidence the two are observationally equivalent.
+verdict: analyzed
+needed_evidence: >-
+  Observationally equivalent on current evidence (grant relator versus held phase of one engagement). Decisive
+  observation: a chain whose admitted row changes a member the enqueued row fixed (charge, owner, checkout),
+  favouring two individuals. Queue A allocation continuity: no renewal, transfer or account-copy chain is among the
+  observations, so whether a grant survives renewal or transfer is unresolved; the quarantined lease state record
+  so-a8d270b5e19d is a copy held apart from the journal, and whether it is the grant's account or a second account
+  needs a record of the same grant in both the journal and the quarantine store.
+rationale: >-
+  The record-only rival fails: a lease ends for its holder's death after its heartbeat stops (so-860cff0d673e:
+  lastHeartbeatAtMillis before evictedAtMillis, reason=owner-dead-or-reused; so-6f5b7aebafec carries the same end),
+  a liveness condition no row of the queued request carries. The admission rule (coordination protocol, eviction
+  switch) is a specification and the grant one of its outcomes (spec_vs_execution separated); the grant is kept
+  apart from its rows (world_vs_information separated) and from the anti-rigid states ActiveGrant and the holder
+  role it mediates (role_vs_bearer separated).

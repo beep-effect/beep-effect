@@ -1,0 +1,72 @@
+target: "otp:vfy-lane-execution:001"
+target_sha256: "dea4a5863697b905f3d3a47c4b5bff6b74e2d5f34ec0bfeda982c9539ca7c3a9"
+chain_sha256: "8d0bde5ebe64ecdf3793fa4f2301592cb0fb8fb32c6e620c48fed68e2f6d4ed6"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking: the local name WorkUnitExecution is the class the CQs bind, while the definition
+    individuates an invocation of a lane. CQ-002's query keeps a work unit apart from the lane it
+    executes (executesLane), and the ratified WorkUnitSpecification is the spec side that admittedBy
+    attaches to. State in open_issues which specification an execution realizes for CQ-025's
+    usedCostEstimate, or that the choice is left open.
+attacks:
+  - surface: taxonomy
+    rule: gufo-alignment-check
+    counterexample: >-
+      Tried the lane-grain against work-unit-grain mismatch: one lane run under two scopes in one
+      attempt would be two work-unit executions of one lane. The invocation criterion counts two as
+      well, so the counts agree, and no parent edge to WorkUnitSpecification or VerificationLane is
+      asserted. The process rival (counted while running) is named as a steward choice. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: >-
+      Tried the fact/shadow pair as two executions: so-2601c6b77d87 (fact, quality:coverage,
+      outcome=failed) and so-b1c417f14329 (shadow, observed=failed) share attempt, lane and
+      durationMs 618708.236225, so the card's one-execution reading holds. Tried nesting:
+      so-5d4b45aa3226 names parentLaneId=full:01-pre-push. The card leaves parthood open and names the
+      double-counting risk for CQ-025. No rerun appears in the closure. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether CQ-022, CQ-024 or CQ-025 answers without the class: each types ?exec with
+      rdf:type ciops:WorkUnitExecution, so none does. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: hypothetical-read-as-realized
+    counterexample: >-
+      Tried a shadow read as a realized claim: so-b1c417f14329 is a miss shadow (reason
+      changed-package-tripwire). The definition reads only its observed verdict and duration, which
+      record the run that happened, and makes no reuse, copy or transfer claim from it. Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: a ledger row pair written as bookkeeping for a cache write. That would carry a duration,
+      but not the attempt journal's own step record: so-ca8b3f90e57c records prepare:01-effect-imports
+      with exitCode=0 and durationMs=7094.398349, a process exit that a bookkeeping row does not
+      produce. Survived.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    two referents, the journal verdict-lane step and the ledger lane run; discriminating fact: a
+    verdict lane entry and a ledger record of the same attempt and lane
+  - >-
+    process counted while running; discriminating fact: a running-state record of a lane execution
+    written before its verdict
+evidence:
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - "so:sha256:b1c417f143294008bf47a9b1d6e8030b874e0644de3d12599b1f585937e4462d"
+  - "so:sha256:5d4b45aa3226c4c535dbfc1d052a7d78900d8244f6417a238f327d8f6f8b8c27"
+  - CQ-022
+  - CQ-024
+  - CQ-025

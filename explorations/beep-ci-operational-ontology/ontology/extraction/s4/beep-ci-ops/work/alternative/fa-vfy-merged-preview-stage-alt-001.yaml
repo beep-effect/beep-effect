@@ -1,0 +1,42 @@
+id: "fa:vfy-merged-preview-stage-alt:001"
+hypothesis_ref: "dh:vfy-merged-preview-stage:001"
+identity_card_ref: "ic:vfy-merged-preview-stage-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: unresolved
+  context_reification_needed: unresolved
+rival_models:
+  - label: "proof-stage member, read as a phase of a verification run (this card)"
+    still_viable: true
+  - label: "proof-stage member, read as a rigid subkind of attempt"
+    still_viable: true
+  - label: "fourth assurance-tier target state of the same category as the AssuranceTierId members"
+    still_viable: true
+  - label: "the merged-preview admission work kind under the stage spelling"
+    still_viable: false
+  - label: "scheduler literal with no workflow counterpart"
+    still_viable: false
+strongest_counterexample: >-
+  Queue H asks whether merged preview is an assurance tier or a stage inside one. Every cited record that
+  carries the value at all (so-3bf9cacb55b4, so-a8d270b5e19d) carries proofTier=full, the deployed proof-tier value
+  whose mapping into assurance levels is not shown, and the assurance-tier class hypothesis did not survive in
+  this batch. So no record places merged preview at, or inside, any assurance level: the tier reading is neither
+  supported nor refuted, and the stage reading is supported only as membership of the ProofStage domain.
+verdict: explicitly_deferred
+needed_evidence: >-
+  Queue H, in full. Tier versus stage: a record verifying an attempt or episode to a merged-preview level
+  distinct from the three AssuranceTierId levels, or a lane obligation required at a merged-preview level and not
+  for TierLocalFullProof (CQ-017 asymmetry shape), favours a fourth tier; a record tying merged-preview attempts to
+  one of the three levels as their target favours a stage inside that tier. A member's category cannot be ruled
+  while its class has no surviving hypothesis: missing is a surviving tier-class hypothesis grounded in a deployed
+  record that carries a tier member. Bound: a new AssuranceTierId member needs a Must/Should CQ requiring it or a
+  named support license; a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009. Phase versus
+  subkind: as for the proof stage (an episode record or an in-attempt stage change). The stage reads dormant in the
+  capture window (po-563da43a9f12, po-82648cf8d37a, po-58c65850834f); no reading is argued from those counts.
+rationale: >-
+  Under every reading the work kind and the stage come apart (so-a8d270b5e19d), so the shared word is one literal
+  with two referents. Identity under the stage reading: the same workflow position across attempts, rigid or
+  not according to the open phase/subkind question; under the tier reading: the same target state, which no
+  record evidences. The stage is a position of a workflow specification and the attempt at it an execution
+  (spec_vs_execution separated), kept apart from its literal (world_vs_information separated).

@@ -1,0 +1,28 @@
+id: dh:vfy-capture-census:001
+observation_refs:
+- po:sha256:d1774b7edfc21c7fd04105756bbd4441a0c12df37f7fa8a6c29346cc2f7415e2
+- po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900
+- po:sha256:82648cf8d37a61140f3d401033e492b8f3483209d3a76dfdddef77ff73c38a7c
+- po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1
+cq_warrants: []
+proposed_referent:
+  label: capture-window census and gate reading
+  description: 'The observed construct: the pin manifests'' capture readings, the ledger gate block (po-d1774b7edfc2: a checked
+    plan line and post-cut pre-push fact count), the ledger stage census and merged-preview reading (po-563da43a9f12, po-82648cf8d37a)
+    and the fleet attempt-start census by stage (po-58c65850834f: cut, census basis, row basis). These records also serve
+    as evidence lines for dh:vfy-proof-stage:001 and the merged-preview hypotheses.'
+representation_status: implementation_artifact_only
+alternatives:
+- label: a measurement of the verification fleet over a window
+  representation_status: information_artifact
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: every capture field (cut, census basis, gate rule, counts) is capture provenance, never vocabulary,
+    and a census describes the capture window only; merged preview reads as dormant in the capture window, never observed-and-empty.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.7
+  use_for_acceptance: false

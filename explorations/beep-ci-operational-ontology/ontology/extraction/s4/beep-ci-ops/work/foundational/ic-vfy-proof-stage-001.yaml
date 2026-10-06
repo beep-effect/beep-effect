@@ -1,0 +1,99 @@
+id: "ic:vfy-proof-stage:001"
+hypothesis_ref: "dh:vfy-proof-stage:001"
+referent_grain: >-
+  A classifier at workflow grain: one of the four deployed stage values (repair-loop, pre-push,
+  merged-preview, hosted) under which a verification attempt runs and its evidence is produced;
+  what individuates a stage beyond its spelling (a position in a stage order or not) is unresolved.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: a stage could be individuated by its position in an ordered verification workflow,
+    so that a renamed literal would be the same stage, but no cited record establishes a stage
+    order. The deployed list (po-581b06759057) is an array, not a stated order, and the cited
+    ledger facts of one run sit at pre-push and later at repair-loop, against the array order. A
+    record fixing the stage order (a deployed transition rule, or a workflow specification that
+    orders the stages) is the needed evidence. Whether the class supplies identity is unresolved
+    with it: under the plan-step reading the stage class would supply the identity of its steps (a
+    step is the same step by its position in the order), while under the categorizer and phase
+    readings an attempt or run at a stage keeps its own identity and the stage supplies none. The
+    stage-order record decides that too.
+  reidentification_key:
+    - stage (the literal on attempt-started rows, leases and ledger records; evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: ""
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      categorizer over verification attempts, members as rigid subkinds (an attempt started at
+      pre-push stays a pre-push attempt; a stage change is a new attempt)
+    - >-
+      phase of a longer-lived run or episode (anti-rigid: one run's records sit at more than one
+      stage)
+    - >-
+      step of the verification workflow specification (a plan part, an information object), with
+      attempts as executions at that step
+    - >-
+      assurance tier under another name (not the deployed proofTier; whether a stage is an
+      AssuranceTierId tier is open until a proofTier-to-AssuranceTierId mapping is evidenced)
+  existential_dependencies:
+    - >-
+      on the plan-step reading only: the verification workflow specification it is a step of. The
+      subkind and phase readings claim no workflow dependence (a phase depends on its run or
+      episode, a subkind of attempt on nothing beyond its instances). The deciding evidence is a
+      stage-order record (a deployed transition rule or a workflow specification that orders the
+      stages); no cited record fixes that order, so this entry holds only if that reading wins.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states: []
+counterexamples:
+  - description: >-
+      Bearer-relative rigidity: the attempt-started rows so-eefbf95beb8d (repair-loop) and
+      so-10c2570fe2f6 (pre-push) share one runId and are two attempts, so for these cited attempts
+      the stage is fixed per attempt and the stage changed with a new attempt; that is shown only for
+      them. The ledger facts so-12d5a26fbfac (pre-push, 2026-09-23) and so-40abdcaf1156
+      (repair-loop, 2026-09-24) share a different runId and two attemptIds, so relative to that run
+      the stage changed once. No cited record shows a run returning to an earlier stage. Rigid for
+      one bearer and anti-rigid for the other: no single meta-property assignment fits until the
+      bearer is fixed.
+  - description: >-
+      Tier alias: proofTier=full occurs at repair-loop (so-eefbf95beb8d), pre-push (so-10c2570fe2f6)
+      and merged-preview (so-3bf9cacb55b4), and the ledger tier member is full at both repair-loop
+      and pre-push. Stage and the deployed proofTier vary apart, so a stage is not the deployed
+      proofTier under another name; whether proofTier is the assurance tier is not shown here.
+status: proposed
+evidence_refs:
+  - "po:sha256:581b06759057aa8515b572e6f2fb9579b9bcb249eedd6cdbf3f9477370c05057"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "po:sha256:58c65850834f2e158eb26d15bb5f67b353f81bcb02f5b31e5a33f2c611cde1a1"
+  - "po:sha256:563da43a9f12d76e11ed921432bd8defef6bb2c717530d2a0b81da6cd6c27900"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+rationale:
+  identity: >-
+    The deployed literal list (po-581b06759057) spells four values. Whether a stage is a position in
+    an order, so that a renamed literal would be the same stage, needs a record fixing that order.
+  rigidity: >-
+    Unresolved because it depends on the bearer: over the cited attempts each start row carries one
+    stage and the stage differed between two attempts of one run; over runs, the cited ledger facts
+    of one run sit at pre-push and then at repair-loop. Neither the run nor the episode has a
+    surviving analysis in this batch.
+  dependence: >-
+    Under the phase reading the condition is intrinsic to the run's progress; under the plan-step
+    reading the stage depends on the workflow specification. The test cannot run until the reading
+    is chosen.
+  category: >-
+    Three readings fit every cited record. Picking subkind or phase would assign a meta-property the
+    bearer question has not settled.
+  temporality: >-
+    Depends on the reading: a plan step persists unchanged, while a phase holds over an interval of
+    its bearer.

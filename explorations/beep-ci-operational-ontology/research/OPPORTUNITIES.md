@@ -1054,3 +1054,17 @@
   foundational brief lists "a file of your prefix exists and REPAIR does not name it" as a Stop, which
   read literally stops every partial repair; call (af) had to restate it in the launch message.
   Prevention: word the Stop as "never rewrite a pair no row names" in the next run's brief.
+- Arithmetic in a repair row. Work: the sitting-landed unity row on the lane-execution card. Evidence:
+  the row said the child lanes' summed durations exceed the attempt's elapsed time; on the cited record
+  only the wrapper's duration plus the children's sum does. The seat recomputed and corrected it, and the
+  conclusion held. Prevention: a row that carries arithmetic states its operands, so the seat checks
+  rather than re-derives them.
+- Stale repair manifest. Work: the second upstream denotation repair. Evidence: the manifest reused for
+  it listed 35 of the 36 vfy hypotheses, leaving out one created by an earlier repair; the seat's
+  coverage check loaded it mechanically without opening it. Prevention: rebuild every repair manifest
+  from the live directory at launch instead of filtering an older manifest.
+- Support targets missing from an adversary manifest. Work: round 2 on two proposals moved to the
+  support arm. Evidence: the orchestrator's manifest builder looked for `semantic_support_for` at the
+  record's top level, but the field sits under `operational_warrant`, so the support targets were not
+  listed and the seat stopped on a truncated closure for both. Prevention: the builder reads the field
+  where the contract puts it and asserts that every support target and parent is listed.

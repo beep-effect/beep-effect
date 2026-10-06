@@ -1,0 +1,51 @@
+id: "ic:vfy-tree-state-alt:001"
+hypothesis_ref: "dh:vfy-tree-state:001"
+referent_grain: >-
+  The source content a verification is about, taken as a content snapshot (an information object), as against
+  the commit that names it, the checkout that holds it for a while, and the working diff over it.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two tree states are the same iff their content is the same file for file; a commit hash on a fact is evidence
+    of content (two commits may name one content), never the criterion, and a working diff over a head yields a
+    different content than the head alone.
+  reidentification_key:
+    - "headSha on ledger facts (evidence only)"
+    - "resolvedHeadSha with diffFingerprint on attempt-started rows and the lease state record (evidence only)"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    A content snapshot is unified as the whole set of tracked files under one root at one content; it has no
+    temporal parts and does not change.
+  dependence: none
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - "the commit object (another information object, naming a content and carrying history)"
+    - "the verified working state at head-plus-diff grain"
+    - "a world-side state of the checkout (an enduring object's condition at a time)"
+  existential_dependencies: []
+temporality:
+  exists_during_interval: false
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      so-eefbf95beb8d and so-10c2570fe2f6 share one resolvedHeadSha and carry different diffFingerprint values, so the
+      two attempts verified different content over one head; ledger facts carry headSha only. On my content criterion
+      a fact stamped with the head alone may be about a content that is not the head's, so CQ-005's provesTree edge,
+      read off headSha, would overclaim for any fact issued over a non-empty diff.
+  - description: >-
+      Two commits re-made over one content (a rebase that changes no file) are two headSha values and, on my
+      criterion, one tree state; a card that keys on headSha would count two and refuse evidence reuse that content
+      identity licenses.
+status: proposed
+evidence_refs:
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
