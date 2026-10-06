@@ -282,6 +282,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/professional-desktop",
       "@beep/freshbooks",
       "@beep/xstate",
+      "@beep/practice-mail-tagging",
     ],
   }),
   CiLanePartition.make({
@@ -521,6 +522,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/ontology-domain",
       "@beep/fc-runs",
       "@beep/types",
+      "@beep/practice-mail-tagging",
     ],
   }),
 ];

@@ -196,7 +196,8 @@ const generatedComposers = $I.compose(
   "box-provisioning",
   "freshbooks",
   "test-runner",
-  "xstate"
+  "xstate",
+  "practice-mail-tagging"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2680,3 +2681,21 @@ export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = com
  * @since 0.0.0
  */
 export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$XstateId;
+
+/**
+ * Identity composer for `@beep/practice-mail-tagging`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PracticeMailTaggingId } from "@beep/identity/packages"
+ *
+ * const id = $PracticeMailTaggingId.make("PracticeMailTagging")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PracticeMailTaggingId: Identity.IdentityComposer<"@beep/practice-mail-tagging"> =
+  composers.$PracticeMailTaggingId;

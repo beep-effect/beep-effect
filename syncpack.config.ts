@@ -111,6 +111,7 @@ const config = {
     "packages/drivers/box-provisioning/package.json",
     "packages/drivers/freshbooks/package.json",
     "packages/drivers/xstate/package.json",
+    "apps/practice-mail-tagging/package.json",
   ],
   customTypes: {
     catalog: {

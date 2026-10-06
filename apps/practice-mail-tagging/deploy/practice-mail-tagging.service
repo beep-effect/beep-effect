@@ -1,0 +1,32 @@
+# Sample systemd USER unit for the practice mail-tagging watch loop.
+#
+# Nothing installs this file. Copy it to ~/.config/systemd/user/ by hand, and
+# only after the first-run sequence in docs/runbooks/practice-mail-tagging.md.
+# Replace every REPLACE_ value first: systemd does not expand them.
+
+[Unit]
+Description=Practice mail tagging: Outlook categories by matter and attachment filing
+Documentation=https://github.com/kriegcloud/beep-effect/blob/main/docs/runbooks/practice-mail-tagging.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+# PLACEHOLDER: absolute path of the beep-effect checkout the job runs from.
+WorkingDirectory=/REPLACE_WITH_CHECKOUT_PATH
+# PLACEHOLDER: the environment file shared with docket-intake (mode 0600).
+# apps/practice-mail-tagging/.env.example lists every variable it must carry.
+EnvironmentFile=/REPLACE_WITH_SHARED_ENV_FILE
+# PLACEHOLDER: absolute path of the bun binary; a user unit has no mise shims.
+ExecStart=/REPLACE_WITH_BUN_PATH run apps/practice-mail-tagging/src/bin.ts watch --yes
+Restart=on-failure
+RestartSec=5min
+# 2 = a write was not confirmed, 3 = a provider throttled the job. Neither is
+# fixed by a restart, and restarting on 3 would hammer the provider.
+RestartPreventExitStatus=2 3
+MemoryHigh=1536M
+MemoryMax=2G
+Slice=agent-runs.slice
+
+[Install]
+WantedBy=default.target

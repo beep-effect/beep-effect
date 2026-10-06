@@ -612,6 +612,12 @@
         ]
       },
       {
+        "name": "@beep/practice-mail-tagging",
+        "patterns": [
+          "apps/practice-mail-tagging/src/**"
+        ]
+      },
+      {
         "name": "@beep/pretext",
         "patterns": [
           "packages/drivers/pretext/src/**"
@@ -3132,6 +3138,35 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/practice-mail-tagging",
+        "allow": [
+          "@beep/box",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/practice-mail-tagging",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/box",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/practice-mail-tagging",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {

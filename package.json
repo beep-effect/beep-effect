@@ -580,6 +580,7 @@
     "apps/todox",
     "packages/drivers/box-provisioning",
     "packages/drivers/freshbooks",
-    "packages/drivers/xstate"
+    "packages/drivers/xstate",
+    "apps/practice-mail-tagging"
   ]
 }
