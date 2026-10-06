@@ -58,7 +58,7 @@ export type SessionLedgerState = typeof SessionLedgerState.Type;
  *
  * ```ts
  * import { PrRepository, SessionLedgerRow } from "@beep/repo-cli/test/Session"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const row = SessionLedgerRow.make({
@@ -106,6 +106,15 @@ export class SessionLedgerRow extends S.Class<SessionLedgerRow>($I`SessionLedger
 /**
  * JSON-string codec for one ledger row (one JSON Lines entry).
  *
+ * **Example** (Decode a line)
+ *
+ * ```ts
+ * import { SessionLedgerRowJson } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(SessionLedgerRowJson.decodeOption("not-json"))) // true
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -136,6 +145,15 @@ export class SessionOpenReport extends S.Class<SessionOpenReport>($I`SessionOpen
 
 /**
  * JSON-string codec for {@link SessionOpenReport}.
+ *
+ * **Example** (Decode a report)
+ *
+ * ```ts
+ * import { SessionOpenReportJson } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(SessionOpenReportJson.decodeOption("{}"))) // true
+ * ```
  *
  * @category codecs
  * @since 0.0.0

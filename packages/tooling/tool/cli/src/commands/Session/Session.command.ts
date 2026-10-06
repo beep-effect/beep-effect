@@ -33,7 +33,7 @@ const reportFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
  *
  * ```ts
  * import { PrRepository, renderSessionRow, SessionLedgerRow } from "@beep/repo-cli/test/Session"
- * import { DateTime } from "effect"
+ * import * as DateTime from "effect/DateTime"
  * import * as O from "effect/Option"
  *
  * const row = SessionLedgerRow.make({

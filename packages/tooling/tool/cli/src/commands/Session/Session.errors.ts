@@ -14,12 +14,37 @@ const $I = $RepoCliId.create("commands/Session/Session.errors");
 /**
  * Failure category for the session ledger.
  *
+ * **Example** (Narrow a reason)
+ *
+ * ```ts
+ * import { SessionLedgerErrorReason } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(SessionLedgerErrorReason.is.usage("usage")) // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
 export const SessionLedgerErrorReason = LiteralKit(["io", "decode", "denied", "git", "usage"]).pipe(
   $I.annoteSchema("SessionLedgerErrorReason", { description: "Failure category for session ledger operations." })
 );
+
+/**
+ * Failure category for session ledger operations.
+ *
+ * **Example** (Annotate a reason)
+ *
+ * ```ts
+ * import type { SessionLedgerErrorReason } from "@beep/repo-cli/test/Session"
+ *
+ * const reason: SessionLedgerErrorReason = "io"
+ * console.log(reason) // "io"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type SessionLedgerErrorReason = typeof SessionLedgerErrorReason.Type;
 
 /**
  * A session ledger operation failed.

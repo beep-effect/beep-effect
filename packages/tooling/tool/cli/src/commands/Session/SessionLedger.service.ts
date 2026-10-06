@@ -51,7 +51,7 @@ export interface SessionLedgerShape {
  *
  * ```ts
  * import { SessionLedger } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(Effect.gen(function* () { return yield* SessionLedger }))) // true
  * ```
@@ -137,7 +137,7 @@ export const sessionLedgerFileName = (repository: PrRepository): string =>
  *
  * ```ts
  * import { makeSessionLedgerLive } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeSessionLedgerLive())) // true
  * ```
@@ -188,6 +188,16 @@ export const makeSessionLedgerLive = Effect.fn("SessionLedger.makeLive")(functio
 /**
  * Live filesystem ledger layer.
  *
+ * **Example** (Provide the live ledger)
+ *
+ * ```ts
+ * import { layerSessionLedgerLive, SessionLedger } from "@beep/repo-cli/test/Session"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.gen(function* () { return yield* SessionLedger }).pipe(Effect.provide(layerSessionLedgerLive))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -200,7 +210,7 @@ export const layerSessionLedgerLive = Layer.effect(SessionLedger, makeSessionLed
  *
  * ```ts
  * import { layerSessionLedgerMemory, SessionLedger } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () { return yield* SessionLedger }).pipe(Effect.provide(layerSessionLedgerMemory))
  * console.log(Effect.isEffect(program)) // true
@@ -247,6 +257,22 @@ const gitLine = Effect.fn("SessionLedger.gitLine")(function* (cwd: string, args:
 /**
  * The checkout facts a ledger row is stamped with.
  *
+ * **Example** (Describe a checkout)
+ *
+ * ```ts
+ * import { PrRepository } from "@beep/repo-cli/test/Session"
+ * import type { SessionCheckoutFacts } from "@beep/repo-cli/test/Session"
+ *
+ * const facts: SessionCheckoutFacts = {
+ *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   clone: "/work/beep-effect",
+ *   checkout: "/work/beep-effect-worktrees/lane",
+ *   lane: "lane",
+ *   branch: "feat/lane",
+ * }
+ * console.log(facts.lane) // "lane"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -266,7 +292,7 @@ export interface SessionCheckoutFacts {
  *
  * ```ts
  * import { sessionCheckoutFacts } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(sessionCheckoutFacts("/work/beep-effect"))) // true
  * ```
@@ -305,7 +331,7 @@ const optionalConfigString = (name: string): Effect.Effect<O.Option<string>> =>
  *
  * ```ts
  * import { sessionHarness } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(sessionHarness)) // true
  * ```
@@ -327,6 +353,16 @@ export const sessionHarness: Effect.Effect<{
 /**
  * What a `session note` says, before it is stamped with checkout facts.
  *
+ * **Example** (Describe a note)
+ *
+ * ```ts
+ * import type { SessionNoteInput } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * const input: SessionNoteInput = { cwd: "/work/beep-effect", state: "open", next: "resume", summary: O.none(), pr: O.none() }
+ * console.log(input.state) // "open"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -347,7 +383,7 @@ export interface SessionNoteInput {
  *
  * ```ts
  * import { buildSessionRow } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const row = buildSessionRow({ cwd: "/work/beep-effect", state: "open", next: "resume", summary: O.none(), pr: O.none() })
@@ -388,7 +424,7 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
  *
  * ```ts
  * import { noteSession } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  *
  * const write = noteSession({ cwd: "/work/beep-effect", state: "open", next: "resume", summary: O.none(), pr: O.none() })
@@ -416,7 +452,7 @@ export const noteSession = Effect.fn("SessionLedger.note")(function* (input: Ses
  *
  * ```ts
  * import { recordSweepDone } from "@beep/repo-cli/test/Session"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(recordSweepDone({ gitCwd: "/work/beep-effect", checkout: "/work/lane", branch: "feat/x" }))) // true
  * ```
