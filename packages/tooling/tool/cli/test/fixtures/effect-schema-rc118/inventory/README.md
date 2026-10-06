@@ -3,7 +3,7 @@
 The pinned Effect schema inventory: `schema-inventory/v1` rows for 24 upstream
 modules, owned by `bun run beep lint effect-schema-inventory` in `@beep/repo-cli`
 (`src/commands/Lint/EffectSchemaInventory.ts`). Pinned to `inventoryPin`
-`df77fff9396fe31de72d1947ecb5b74f8cee89e1` (`effect@4.0.0-rc.118-9-gdf77fff939`).
+`460272d30457f4697d8b8c52cad41caccbcace08` (`effect@4.0.1`).
 The rows began as the effect-schema-parity research prototype; the
 2026-09-28 refresh deltas are in
 `explorations/effect-schema-parity/research/2026-09-28-inventory-refresh.md`,
@@ -15,7 +15,7 @@ and the History section below records every regeneration since.
 | `bun run beep lint effect-schema-inventory --check` | The default mode. Regenerates in memory and fails with a per-file drift report unless every owned fixture file is byte-identical and every generated lane prompt under `goals/effect-schema-parity/ops/prompts/` re-renders to its committed bytes outside its graft section. Writes nothing. |
 | `bun run beep lint effect-schema-inventory --prompt <module>` | Writes a lane prompt for one module: each row resolved at the pin to its full declaration and JSDoc block, plus local graft context. Fails when graft cannot be read. Defaults to `goals/effect-schema-parity/ops/prompts/<slug>.md`; `--out <path>` overrides it. |
 
-All three modes fail loud when the catalog entry is not a snapshot URL, when
+All three modes fail loud when the catalog entry has no valid immutable source pin, when
 `.repos/effect` is missing or is not a git checkout, or when it lacks the pinned
 commit, and `--write` and `--check` fail when extraction yields zero rows in
 total (one empty module, `enable`, is expected). A fixture directory that exists
@@ -27,7 +27,7 @@ writes them.
 
 | Input | Rule | Owner |
 | --- | --- | --- |
-| Pin | The 40-character sha after `effect@` in the root `package.json` catalog entry for `effect` (a pkg.pr.new snapshot URL). The command fails with `EffectSchemaInventoryCatalogPinError` when the value is not such a URL, with `EffectSchemaInventoryReferenceMissingError` when `.repos/effect` is absent or not a git checkout, and with `EffectSchemaInventoryPinAbsentError` when `git -C .repos/effect cat-file -e <pin>^{commit}` fails (the nightly pull has not reached the pin yet). The reference clone's HEAD (`referenceHead`) is never compared with the pin. | `internal/EffectSchemaInventoryModules.ts` `parseEffectSchemaInventoryPin`; `internal/EffectSchemaInventorySource.ts` `verifyPin` |
+| Pin | The 40-character SHA in a snapshot catalog URL, or `config.effectSource.commit` when `config.effectSource.version` equals the exact stable catalog version. The command fails with `EffectSchemaInventoryCatalogPinError` when provenance is missing or mismatched, with `EffectSchemaInventoryReferenceMissingError` when `.repos/effect` is absent or not a git checkout, and with `EffectSchemaInventoryPinAbsentError` when `git -C .repos/effect cat-file -e <pin>^{commit}` fails (the nightly pull has not reached the pin yet). The reference clone's HEAD (`referenceHead`) is never compared with the pin. | `internal/EffectSchemaInventoryModules.ts` `parseEffectSchemaInventoryPin`; `internal/EffectSchemaInventorySource.ts` `verifyPin` |
 | Source bytes | `git -C .repos/effect show <pin>:<file>` only. The reference working tree and `node_modules/effect/src` are never read (the published tarball's `src/Schema.ts` differs from the git bytes). `.repos/effect` resolves against the repository root. | `internal/EffectSchemaInventorySource.ts` `readPinned` |
 | Module list | 24 files in fixed order: 12 package-root modules, the 9 files under `packages/effect/src/schema/`, and 3 provenance-only internals. `CAPTURE.md` is append-only stage-0 history and is not read. | `internal/EffectSchemaInventoryModules.ts` `EffectSchemaInventoryModules` |
 | Parser | The TypeScript compiler bundled with `ts-morph` (a repo-cli dependency; no fallback into the reference clone). The version is stamped into `INDEX.md`, so a parser bump alone changes bytes. The P1 regeneration used `6.0.2`; the research prototype used the root `typescript` `6.0.3`, and every JSONL byte came out identical. | `internal/EffectSchemaInventoryExtract.ts` |
@@ -41,7 +41,7 @@ byte-identical.
 
 | Field | Meaning |
 | --- | --- |
-| `sha` | The full 40-character `inventoryPin` (`df77fff9396fe31de72d1947ecb5b74f8cee89e1`), identical on every row and on the `INDEX.md` pin line (D4). The `51d4a2f08a` snapshot used a 10-character prefix. |
+| `sha` | The full 40-character `inventoryPin` (`460272d30457f4697d8b8c52cad41caccbcace08`), identical on every row and on the `INDEX.md` pin line (D4). The `51d4a2f08a` snapshot used a 10-character prefix. |
 | `module` | Effect import path: `effect/` plus the source path without `packages/effect/src/`, `.ts` and a trailing `/index` (`schema/index.ts` is `effect/schema`). For provenance-only rows this is a path, not an importable specifier. |
 | `file`, `line` | Upstream-relative path and one-based declaration/export-specifier line at the pin; read with `git -C .repos/effect show <pin>:<file>`, never the working tree. |
 | `symbol` | Exported name; direct members use `Parent.member`. Computed/quoted names preserve source spelling; anonymous calls/indexes/constructors use `<call>`, `<index>`, `<new>`. |
@@ -87,7 +87,7 @@ Evidence lines are at the pin, relative to `.repos/effect/`, read with `git show
 Count commands (run from repo root; the grep reads the pinned bytes, not the working tree):
 
 ```sh
-P=$(jq -r '.catalog.effect' package.json | sed 's/.*effect@//')
+P=$(jq -r '.config.effectSource.commit // (.catalog.effect | split("effect@")[1])' package.json)
 I=packages/tooling/tool/cli/test/fixtures/effect-schema-rc118/inventory
 for f in $(jq -r .file "$I"/*.jsonl | sort -u); do
   git -C .repos/effect show "$P:$f" | grep -c '^export \* from'
@@ -108,7 +108,7 @@ Hosted CI never reads `.repos/effect`, graft, or a model. `packages/tooling/tool
 - every row's `sha` equals the `INDEX.md` pin line and the root `package.json` catalog pin, so an Effect bump PR fails until it regenerates this fixture with `--write`;
 - the `INDEX.md` row digest matches the JSONL bytes, and re-rendering `INDEX.md` from the committed rows reproduces it byte for byte.
 
-Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-400/`) follows the same local-regenerate, hosted-verify split.
+Hosted CI cannot verify the lane prompts: re-rendering a prompt needs the pinned sources, so prompt verification runs only in local `--check`, which splices each committed prompt's graft section (local graft output) into the re-render and compares every other byte. `--check` is the local byte-for-byte proof against the pinned sources; the effect-vitest fixture beside this one (`../../effect-vitest-401/`) follows the same local-regenerate, hosted-verify split.
 
 ## Verification
 
@@ -128,6 +128,8 @@ bun run beep lint effect-schema-inventory --check
 `--check` regenerates in memory, so a failed or interrupted check leaves nothing behind. Drift output names each missing, stale, or unexpected file; a stale file reports its first differing line and column with both sides of that line.
 
 ## History
+
+- 2026-10-06: moved to stable `effect@4.0.1` at `460272d30457f4697d8b8c52cad41caccbcace08`. Stable catalogs retain the exact source version and commit in `config.effectSource`; snapshot catalogs remain supported. All 2,232 rows and 24 module identities are retained.
 
 - 2026-09-29 P1 productization: the research generator, verifier and module list moved into `beep lint effect-schema-inventory`, and this directory moved here with `git mv` from the effect-schema-parity exploration's research inventory directory. Regeneration kept all 24 JSONL files byte-identical (2,232 rows, 998,102 bytes). `INDEX.md` changed only in its header: the parser line (`6.0.3` to `6.0.2`, the TypeScript bundled with `ts-morph`), the module-list path, the regenerate command, the fixture paths in the count commands, the new `Row digest` line, and the verification sentence that now names the hosted test instead of the generator's ripgrep census.
 - 2026-09-29 regeneration (`e5f7d12af9` → `df77fff939`, PR #1330's snapshot bump, which did not regenerate the inventory itself): of the 24 modules only `packages/effect/src/Schema.ts` changed upstream (effect #8580, single brand key typing). Rows stay at 2,232 with no identity added or removed; six `effect/Schema` rows changed signature (`brand` function and interface, `brand."Type"`, `brand."Iso"`, `brand."~type.make"`, `fromBrand`), line numbers after the change shifted, and every row's `sha` moved to the new pin. JSONL bytes 998,009 → 998,102.

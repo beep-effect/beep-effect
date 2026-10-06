@@ -267,7 +267,7 @@ export {
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory", (it) => {
   it.effect(
-    "reads the pin from a snapshot catalog and rejects anything else",
+    "reads snapshot pins and rejects versions without release provenance",
     Effect.fnUntraced(function* () {
       strictEqual(yield* parseEffectSchemaInventoryPin(snapshotManifest(PIN)), PIN);
       strictEqual(
@@ -285,6 +285,33 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("effect-schema-inventory
       strictEqual(missing.specifier, "<missing>");
       const broken = yield* Effect.flip(parseEffectSchemaInventoryPin("{"));
       strictEqual(broken._tag, "EffectSchemaInventoryCatalogPinError");
+    })
+  );
+
+  it.effect(
+    "reads stable release provenance and rejects stale versions or abbreviated commits",
+    Effect.fnUntraced(function* () {
+      strictEqual(
+        yield* parseEffectSchemaInventoryPin(
+          `{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
+        ),
+        PIN
+      );
+      strictEqual(
+        yield* parseEffectSchemaInventoryPin(
+          `{"workspaces":{"catalog":{"effect":"4.0.1"}},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`
+        ),
+        PIN
+      );
+      for (const manifest of [
+        `{"catalog":{"effect":"4.0.2"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
+        `{"catalog":{"effect":"^4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"${PIN}"}}}`,
+        '{"catalog":{"effect":"4.0.1"},"config":{"effectSource":{"version":"4.0.1","commit":"460272d304"}}}',
+        `{"catalog":{"effect":"4.0.1-rc.1"},"config":{"effectSource":{"version":"4.0.1-rc.1","commit":"${PIN}"}}}`,
+      ]) {
+        const failure = yield* Effect.flip(parseEffectSchemaInventoryPin(manifest));
+        strictEqual(failure._tag, "EffectSchemaInventoryCatalogPinError");
+      }
     })
   );
 

@@ -9,12 +9,57 @@ Three repo CLI commands render systemd **user** units into
 | `bun run beep graft deep install-timer --owner <clone>` | `beep-graft-deep-refresh.{service,timer}` | nightly 02:30 |
 | `bun run beep refs install-timer --owner <clone>` | `beep-refs-refresh.{service,timer}` | nightly 03:30 |
 
-The refs timer refreshes the `effect` and `effect-tsgo` members under
+The refs timer refreshes every manifest member under
 `$HOME/YeeBois/references/effect`, provisioned from `scripts/references.json` by
 `scripts/setup-effect-ref.sh` (`BEEP_REFERENCES_ROOT` overrides the root).
 Its deep tier uses `claude-opus-5` through CLIProxyAPI and reuses
 `$HOME/.config/beep-graft/env`; see [graft recovery](graft-local-recovery.md)
 for the shared provider environment.
+
+## Add a reference repository
+
+The manifest is the membership authority. Add a unique `name`, upstream `url`,
+and `tier` to `scripts/references.json`. `deep` joins the existing nightly
+summary/concept pass; `structural` only builds the tree-sitter graph.
+The Effect workspace includes `effect`, `effect-tsgo`, and these Spencer Beggs
+repositories: `ai-plugin-marketplace-manager`, `okfit`, `tsdoctor`, `effected`,
+`pluginfinity`, and `vitest-agent`.
+
+For an existing temporary clone, first check its status, remotes, submodules,
+and registered worktrees. Move the complete clone to the manifest root rather
+than copying just source files. Do not overwrite an existing destination.
+Keep a migration receipt with source/destination paths and HEADs, and remove
+the temporary parent with `rmdir` only after verification. Moving each clone
+back and removing its manifest entry reverses the migration.
+
+Run the setup script from the checkout containing the updated manifest:
+
+```sh
+bash scripts/setup-effect-ref.sh
+bun run beep refs plan
+```
+
+Setup preserves existing clones and creates `.repos/<member>` links plus
+`.repos/effect-workspace`. When moving an existing clone, add `graft/`,
+`.graft/`, and `.ignore` to its `.git/info/exclude`; do not edit upstream's
+tracked ignore files. Build each added member from inside its directory,
+then the parent workspace, with `GRAFT_NO_GITIGNORE=1 graft build`. Verify with
+`graft check` and a source query against each member. No dependency install or
+initialization of the upstream repositories' reference submodules is needed.
+
+```sh
+graft ask "How are YAML codecs implemented?" .repos/effected --source
+graft ask "How are plugins discovered?" .repos/effect-workspace --source
+```
+
+Merge the manifest change and ensure the installed timer's durable owner has
+that commit. Other checkouts receive individual member links when setup runs;
+their existing workspace link already resolves to the shared parent. Structural
+queries work immediately. Deep summaries are separate evidence: verify them
+in the next nightly refresh receipt before claiming the meaning tier is complete.
+Do not start the operator-only deep refresh from an agent merely to add a member.
+
+## Refresh behavior
 
 Each refs run first checks the Graft dist patches with
 `<owner>/scripts/graft/apply-dist-patches.sh --check`, as the graft deep refresh
