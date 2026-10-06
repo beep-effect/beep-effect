@@ -46,7 +46,7 @@ enumerated; a fired gate reopens this packet at `decompose`.
 - `BEEP_FLEET_ROOT` (or its config-file equivalent) is set to
   `$HOME/YeeBois/projects/beep` with `$HOME/YeeBois/projects` listed as a legacy
   root;
-- `mkdir -p $HOME/YeeBois/projects/beep/{seats,lanes}` plus a fresh clone at
+- `mkdir -p "$HOME/YeeBois/projects/beep/seats" "$HOME/YeeBois/projects/beep/lanes"` plus a fresh clone at
   `seats/main` is discovered by `beep worktree fleet` alongside the 223
   legacy checkouts;
 - the joined view prints, for this very lane
