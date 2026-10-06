@@ -109,21 +109,6 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 );
 
 /**
- * Instructions the host advertises through `server/discover`.
- *
- * **Example** (Reading the advertised instructions)
- *
- * ```ts
- * import { PRACTICE_KG_MCP_INSTRUCTIONS } from "@beep/law-practice-server"
- *
- * console.log(PRACTICE_KG_MCP_INSTRUCTIONS.startsWith("Local practice knowledge graph"))
- * // true
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-/**
  * MCP protocol versions the practice KG host answers.
  *
  * **Gotchas**
@@ -156,6 +141,21 @@ export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.Proto
   McpProtocol.v2024_11_05,
 ];
 
+/**
+ * Instructions the host advertises on `initialize` and through `server/discover`.
+ *
+ * **Example** (Reading the advertised instructions)
+ *
+ * ```ts
+ * import { PRACTICE_KG_MCP_INSTRUCTIONS } from "@beep/law-practice-server"
+ *
+ * console.log(PRACTICE_KG_MCP_INSTRUCTIONS.startsWith("Local practice knowledge graph"))
+ * // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const PRACTICE_KG_MCP_INSTRUCTIONS =
   "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Clients may open with an initialize handshake or call tools directly; both work.";
 

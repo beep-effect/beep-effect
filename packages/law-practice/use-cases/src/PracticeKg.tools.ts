@@ -980,13 +980,13 @@ export const KgCandidateClaimsTool = readTool(
 );
 
 /**
- * Resolves graph or document provenance, or bundle status when called without a key.
+ * Resolves one reference from mail or a document to the practice matter it belongs to.
  *
- * **Example** (Log provenance tool name)
+ * **Example** (Log matter-lookup tool name)
  *
  * ```ts
- * import { KgProvenanceTool } from "@beep/law-practice-use-cases/server"
- * console.log(KgProvenanceTool.name)
+ * import { KgMatterLookupTool } from "@beep/law-practice-use-cases/server"
+ * console.log(KgMatterLookupTool.name)
  * ```
  *
  * @category tools
@@ -999,6 +999,19 @@ export const KgMatterLookupTool = readTool(
   PracticeKgToolResult
 );
 
+/**
+ * Resolves graph or document provenance, or bundle status when called without a key.
+ *
+ * **Example** (Log provenance tool name)
+ *
+ * ```ts
+ * import { KgProvenanceTool } from "@beep/law-practice-use-cases/server"
+ * console.log(KgProvenanceTool.name)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
 export const KgProvenanceTool = readTool(
   "kg_provenance",
   "Resolve provenance for a graph node (by iri or natural_key) or a document (by digest); with no identity, return bundle build status. A node row names the catalog row or USPTO record it was projected from and its attribution_source says why it sits in its family. Zero rows with a note means no such record; an error names a store or decode failure.",
