@@ -23,6 +23,8 @@ Restart=on-failure
 RestartSec=5min
 # 2 = a write was not confirmed, 3 = a provider throttled the job. Neither is
 # fixed by a restart, and restarting on 3 would hammer the provider.
+# 4 = an attended command holds the state-directory lock; it is left out on
+# purpose, so systemd retries after RestartSec once that command has finished.
 RestartPreventExitStatus=2 3
 MemoryHigh=1536M
 MemoryMax=2G

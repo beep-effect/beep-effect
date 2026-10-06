@@ -79,6 +79,30 @@ describe("practiceMailTaggingConfig", () => {
     })
   );
 
+  it.effect("raises a zero or sub-minute wait to the floor and never backs off for less than the poll interval", () =>
+    Effect.gen(function* () {
+      const zero = yield* parse(practiceMailTaggingConfig, {
+        ...settingsEnvironment,
+        PRACTICE_MAIL_TAGGING_POLL_INTERVAL: "0 seconds",
+        PRACTICE_MAIL_TAGGING_MAX_BACKOFF: "0 seconds",
+      });
+      const subMinute = yield* parse(practiceMailTaggingConfig, {
+        ...settingsEnvironment,
+        PRACTICE_MAIL_TAGGING_MAX_BACKOFF: "30 seconds",
+      });
+      const belowPoll = yield* parse(practiceMailTaggingConfig, {
+        ...settingsEnvironment,
+        PRACTICE_MAIL_TAGGING_POLL_INTERVAL: "10 minutes",
+        PRACTICE_MAIL_TAGGING_MAX_BACKOFF: "2 minutes",
+      });
+
+      expect(Duration.toMinutes(zero.pollInterval)).toBe(1);
+      expect(Duration.toMinutes(zero.maxBackoff)).toBe(1);
+      expect(Duration.toMinutes(subMinute.maxBackoff)).toBe(5);
+      expect(Duration.toMinutes(belowPoll.maxBackoff)).toBe(10);
+    })
+  );
+
   it.effect("fails when a private path, the mailbox, or a usable page size is missing", () =>
     Effect.gen(function* () {
       const { PRACTICE_MAIL_TAGGING_FOLDER_MAP_PATH: _dropped, ...withoutFolderMap } = settingsEnvironment;
@@ -115,6 +139,20 @@ describe("m365AppOnlyConfig", () => {
       expect(Redacted.value(config.credential.privateKey)).toBe("line-one\nline-two");
       expect(`${config.credential.privateKey}`).toBe("<redacted>");
       expect(`${config.credential.privateKey}`).not.toContain("line-one");
+    })
+  );
+
+  it.effect("restores every literal backslash-n of a one-line key read from an environment file", () =>
+    Effect.gen(function* () {
+      const config = yield* parse(m365AppOnlyConfig, {
+        ...credentialEnvironment,
+        CLOUD_M365_DOCKET_CERT_PRIVATE_KEY: "-----BEGIN PLACEHOLDER-----\\nAAAA\\nBBBB\\n-----END PLACEHOLDER-----\\n",
+      });
+
+      assertInstanceOf(config.credential, M365CertificateCredential);
+      expect(Redacted.value(config.credential.privateKey)).toBe(
+        "-----BEGIN PLACEHOLDER-----\nAAAA\nBBBB\n-----END PLACEHOLDER-----\n"
+      );
     })
   );
 

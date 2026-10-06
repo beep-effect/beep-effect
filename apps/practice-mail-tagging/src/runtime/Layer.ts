@@ -27,6 +27,7 @@ import {
   stateDirectoryConfig,
 } from "../PracticeMailTagging.config.ts";
 import { PracticeMailTaggingError } from "../PracticeMailTagging.errors.ts";
+import { makeStateLock, ProcessProbeLive, StateLock } from "../PracticeMailTagging.lock.ts";
 import { MailTaggingPasses, MailTaggingPassSchedule, makeMailTaggingPasses } from "../PracticeMailTagging.passes.ts";
 import type { BoxError } from "@beep/box";
 import type { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
@@ -227,3 +228,32 @@ export const MailTaggingStateLive: Layer.Layer<
     )
   )
 );
+
+/**
+ * The writer lock of the configured state directory, over the running
+ * process.
+ *
+ * **When to use**
+ *
+ * Use with the writing commands (`apply`, `watch`, `undo` without
+ * `--dry-run`), so two writers never share a state directory.
+ *
+ * **Example** (Reference the lock layer)
+ *
+ * ```ts
+ * import * as Layer from "effect/Layer"
+ * import { StateLockLive } from "@/runtime/Layer"
+ *
+ * console.log(Layer.isLayer(StateLockLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const StateLockLive: Layer.Layer<StateLock, PracticeMailTaggingError, FileSystem.FileSystem | Path.Path> =
+  Layer.effect(
+    StateLock,
+    Effect.gen(function* () {
+      return yield* makeStateLock(yield* stateDirectoryConfig);
+    }).pipe(Effect.mapError(PracticeMailTaggingError.fromConfig))
+  ).pipe(Layer.provide(ProcessProbeLive));

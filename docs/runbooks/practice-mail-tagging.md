@@ -46,6 +46,16 @@ The examples shorten that to `practice-mail-tagging <command>`.
    items 2 to 4, plus the Box call ledger path, have no default: the job
    fails at start when one is missing.
 
+   Put any value that contains a space or a backslash in double quotes. The
+   file is read two ways, by systemd's `EnvironmentFile=` and by
+   `set -a; . file`, and only a double-quoted value means the same to both.
+   This matters most for `CLOUD_M365_DOCKET_CERT_PRIVATE_KEY`: write the PEM
+   key on one line with each line break as `\n`, inside double quotes.
+   Unquoted, systemd drops the backslashes (`\n` becomes `n`) and the shell
+   splits the value at its spaces, and the key no longer parses. The job turns
+   each `\n` back into a line break. Durations with a space, such as
+   `"5 minutes"`, need quotes for the same reason.
+
 Optional: `matter-contacts.json` in the state directory, an attorney-curated
 list of contact addresses and domains per matter. Without it the job matches
 on application, patent, and docket numbers only, and files only USPTO mail.
@@ -129,6 +139,24 @@ Do these in order. Do not enable the unit before step 6.
 
    Nothing in the repository installs or starts this unit.
 
+7. **Attended writes once the unit runs.** From now on, stop the unit before
+   any attended writing command (`apply --yes`, `undo --run <runId> --yes`)
+   and start it again afterwards:
+
+   ```bash
+   systemctl --user stop practice-mail-tagging.service
+   practice-mail-tagging undo --run <runId> --yes
+   systemctl --user start practice-mail-tagging.service
+   ```
+
+   Every writing command takes a lock file, `writer.lock`, in the state
+   directory and holds it until it exits; `watch` holds it across all its
+   passes. Two writers on one state directory would interleave ledger lines
+   and checkpoint writes, so a second writer is refused with exit code 4
+   instead. If you forget to stop the unit, the attended command is the one
+   refused, and nothing is written. `dry-run`, `undo --dry-run`, and `report`
+   take no lock and are safe while the unit runs.
+
 ## 3. What each count means
 
 Run report (`dry-run`, `apply`):
@@ -200,7 +228,10 @@ line. A dry run uploads nothing and therefore writes none.
 | `MailTaggingStateError`, `matter-folders` or `known-documents` | The folder-id map or the known-files index is missing or does not decode. The pass stops before reading any message. | Regenerate the file with the Box onboarding run, or fix the path in the environment file. |
 | `MailTaggingStateError`, `matter-contacts` | The contacts overlay exists and has an invalid row. | Fix or remove `matter-contacts.json`. |
 | `ConfigError` naming a variable | A required setting is missing or invalid. | Fix the environment file. |
-| `watch` logs `mail-tagging pass failed` and keeps running | A pass failed for another reason (network, a provider error). | Nothing at once: the next attempt comes after the poll interval, then twice that, up to `PRACTICE_MAIL_TAGGING_MAX_BACKOFF`. Investigate if it repeats. |
+| Exit code 4, `another writer holds the state directory: <path> (pid <n>)` | Another writing command, usually the unit's `watch`, holds `writer.lock`. | Stop the unit (`systemctl --user stop practice-mail-tagging.service`), run the attended command, then start the unit. If the unit itself exits 4, an attended command holds the lock; systemd retries after `RestartSec`, which is intended. |
+| A warning `taking over a stale state lock` with a `stalePid` | The lock's recorded process no longer runs (a crash, a reboot, a killed process). | Nothing: the new command replaced the lock. |
+| `pid unknown` in the exit-4 message | `writer.lock` exists but cannot be read. | Make sure no writer runs (`systemctl --user status practice-mail-tagging.service`, `pgrep -af practice-mail-tagging`), then delete the file. |
+| `watch` logs `mail-tagging pass failed` and keeps running | A pass failed for another reason (network, a provider error). | Nothing at once: the next attempt comes after the poll interval, then twice that, up to `PRACTICE_MAIL_TAGGING_MAX_BACKOFF` (never less than the poll interval). Investigate if it repeats. |
 | `Mailbox.setCategories` failure after a retry | Someone changed the message's categories twice while the job was writing. The job retries a stale write once from a fresh read and never overwrites. | The next pass repairs the message (`repaired`). |
 | `pending intents` above zero in `report` | An upload was interrupted. | Run a pass: it retries the upload under the same folder and name. A taken name is abandoned and the file is stored under a short-hash name; a duplicate in Box is possible, a lost attachment is not. |
 | `attachments skipped no-folder` grows | Matters are matched that the folder-id map does not list. | Provision those matters through Box onboarding and regenerate the map; the job re-reads it on every pass. |

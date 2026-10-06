@@ -38,8 +38,11 @@ const PageSize = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive 
  * **Details**
  *
  * The paths are private operator state. None has a default except the state
- * directory, which falls back to a directory under `HOME`. `pollInterval` is
- * never shorter than one minute, whatever the environment says.
+ * directory, which falls back to a directory under `HOME`. When read through
+ * {@link practiceMailTaggingConfig}, `pollInterval` is never shorter than one
+ * minute and `maxBackoff` is never shorter than `pollInterval`, whatever the
+ * environment says: a failed `watch` pass is retried after the poll interval,
+ * then after twice that, and so on, capped at `maxBackoff`.
  *
  * **Example** (Build the settings by hand)
  *
@@ -104,7 +107,7 @@ export class PracticeMailTaggingConfig extends S.Class<PracticeMailTaggingConfig
       description: "Pause between two watch passes; at least one minute.",
     }),
     maxBackoff: S.Duration.annotateKey({
-      description: "Longest pause after consecutive failed watch passes.",
+      description: "Longest pause after consecutive failed watch passes; never shorter than pollInterval.",
     }),
   },
   $I.annote("PracticeMailTaggingConfig", {
@@ -152,6 +155,10 @@ export const stateDirectoryConfig: Config.Config<string> = Config.NonEmptyString
  * graph bundle, the folder-id map, the known-documents index, and the Box
  * call ledger have no default: a missing one fails the read.
  *
+ * Both waits are clamped, never rejected. `pollInterval` is raised to one
+ * minute, and `maxBackoff` is raised to the poll interval, so a `0 seconds`
+ * value can never make `watch` retry a failing provider in a tight loop.
+ *
  * **Example** (Read the settings from a provider)
  *
  * ```ts
@@ -195,7 +202,14 @@ export const practiceMailTaggingConfig: Config.Config<PracticeMailTaggingConfig>
     Config.map(Duration.max(minimumPollInterval))
   ),
   maxBackoff: Config.Duration("PRACTICE_MAIL_TAGGING_MAX_BACKOFF").pipe(Config.withDefault(defaultMaxBackoff)),
-}).pipe(Config.map((settings) => PracticeMailTaggingConfig.make(settings)));
+}).pipe(
+  Config.map((settings) =>
+    PracticeMailTaggingConfig.make({
+      ...settings,
+      maxBackoff: Duration.max(settings.maxBackoff, settings.pollInterval),
+    })
+  )
+);
 
 // An environment file carries a PEM key on one line with literal `\n` marks.
 const restoreLineBreaks = (key: Redacted.Redacted<string>): Redacted.Redacted<string> =>

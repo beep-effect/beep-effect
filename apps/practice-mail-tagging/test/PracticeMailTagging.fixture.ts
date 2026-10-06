@@ -29,7 +29,7 @@ import {
   MatterDirectoryShape,
 } from "@beep/law-practice-use-cases/MailTagging";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
-import { ConfigProvider, Context, Effect, Layer, Path, Ref, Stdio, Terminal } from "effect";
+import { ConfigProvider, Context, Effect, FileSystem, Layer, Path, Ref, Stdio, Terminal } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
@@ -42,8 +42,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { makePracticeMailTaggingCommand } from "@/PracticeMailTagging.command";
+import { makeStateLock, ProcessProbe, StateLock, stateLockFileName } from "@/PracticeMailTagging.lock";
 import { MailTaggingPasses, MailTaggingPassSchedule, makeMailTaggingPasses } from "@/PracticeMailTagging.passes";
-import type { FileSystem } from "effect";
 import type { MailTaggingPassLayer } from "@/PracticeMailTagging.passes";
 
 const $I = $PracticeMailTaggingId.create("test/PracticeMailTagging.fixture");
@@ -231,10 +231,47 @@ const PassesOverScenario = Layer.effect(
  */
 export const World = Layer.provideMerge(Layer.effect(Scenario, makeScenario), Platform);
 
+/** Process id the fake probe reports for this process. */
+export const ownPid = 1000;
+
+/** The one process id the fake probe reports as no longer running. */
+export const deadPid = 999;
+
+/** Process id of a live writer that is not this process. */
+export const otherWriterPid = 4242;
+
+const probe = Layer.succeed(
+  ProcessProbe,
+  ProcessProbe.of({
+    pid: ownPid,
+    isAlive: Effect.fn("FakeProcessProbe.isAlive")((pid: number) => Effect.succeed(pid !== deadPid)),
+  })
+);
+
+/** Full path of the writer lock in the in-memory state directory. */
+export const lockPath = `${stateDirectory}/${stateLockFileName}`;
+
+/** Writes a lock file as another process would have left it. */
+export const writeLock = (text: string) =>
+  Effect.flatMap(FileSystem.FileSystem, (fs) =>
+    Effect.andThen(fs.makeDirectory(stateDirectory, { recursive: true }), fs.writeFileString(lockPath, text))
+  );
+
+/** A well-formed lock line naming a holder process. */
+export const lockOf = (pid: number) => `{"pid":${pid},"command":"apply","acquiredAt":"2026-07-01T00:00:00.000Z"}`;
+
+/** The lock file's text; none when no lock exists. */
+export const lockNow = Effect.flatMap(FileSystem.FileSystem, (fs) =>
+  Effect.flatMap(fs.exists(lockPath), (exists) =>
+    exists ? Effect.asSome(fs.readFileString(lockPath)) : Effect.succeedNone
+  )
+);
+
 /** Runs the real command line over the scenario's mailbox and the in-memory state directory. */
 export const run = Command.runWith(
   makePracticeMailTaggingCommand({
     passes: PassesOverScenario,
+    lock: Layer.effect(StateLock, makeStateLock(stateDirectory)).pipe(Layer.provide(probe)),
     state: MailTaggingStateFile.pipe(Layer.provide(stateLocation)),
   }),
   { version: "0.0.0" }

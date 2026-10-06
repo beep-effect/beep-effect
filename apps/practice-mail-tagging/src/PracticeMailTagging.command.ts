@@ -8,13 +8,14 @@
 
 import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import { RunMailTaggingRequest, UndoMailTaggingRequest } from "@beep/law-practice-use-cases/MailTagging";
-import { Effect, Schedule } from "effect";
+import { Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PracticeMailTaggingError, PracticeMailTaggingFailureKind } from "./PracticeMailTagging.errors.ts";
+import { StateLock } from "./PracticeMailTagging.lock.ts";
 import { MailTaggingPasses, makeRunId } from "./PracticeMailTagging.passes.ts";
 import {
   printRunReport,
@@ -24,7 +25,6 @@ import {
 } from "./PracticeMailTagging.report.ts";
 import type { TaggingMode, TaggingRunReport } from "@beep/law-practice-domain/values/MailTagging";
 import type { BackfillCheckpointStore, FilingLedger, TagLedger } from "@beep/law-practice-use-cases/MailTagging";
-import type { Layer } from "effect";
 import type * as DateTime from "effect/DateTime";
 
 const positive = (name: string) =>
@@ -122,8 +122,22 @@ const dryRunCommand = Command.make("dry-run", passFlags, (flags) =>
   Effect.flatMap(runPass("dry-run", flags), printRunReport)
 ).pipe(Command.withDescription("Run one pass that reads, decides, and reports, and writes nothing."));
 
+// A writing command holds the state-directory lock until its process ends.
+const writing =
+  (command: string) =>
+  <A, E, R>(work: Effect.Effect<A, E, R>) =>
+    Effect.scoped(
+      Effect.andThen(
+        StateLock.use((lock) => lock.hold(command)),
+        work
+      )
+    );
+
 const applyCommand = Command.make("apply", { ...passFlags, yes }, (flags) =>
-  Effect.andThen(confirmed("apply", flags.yes), Effect.flatMap(runPass("apply", flags), printRunReport))
+  Effect.andThen(
+    confirmed("apply", flags.yes),
+    writing("apply")(Effect.flatMap(runPass("apply", flags), printRunReport))
+  )
 ).pipe(Command.withDescription("Run one pass that tags mail and files attachments; needs --yes."));
 
 const watchCommand = Command.make(
@@ -136,7 +150,7 @@ const watchCommand = Command.make(
       Flag.withDescription("Stop after this many successful passes; unset runs until stopped.")
     ),
   },
-  (flags) => Effect.andThen(confirmed("watch", flags.yes), watch(flags, flags.maxPasses))
+  (flags) => Effect.andThen(confirmed("watch", flags.yes), writing("watch")(watch(flags, flags.maxPasses)))
 ).pipe(Command.withDescription("Run apply passes on the poll interval until stopped or throttled; needs --yes."));
 
 const undoCommand = Command.make(
@@ -156,10 +170,11 @@ const undoCommand = Command.make(
     yield* confirmed("undo", flags.dryRun || flags.yes);
     const passes = yield* MailTaggingPasses;
     const runId = yield* makeRunId("undo");
-    const report = yield* passes.runUndo(
-      UndoMailTaggingRequest.make({ originalRunId: flags.run, runId, mode: undoMode(flags.dryRun) })
+    const undo = Effect.flatMap(
+      passes.runUndo(UndoMailTaggingRequest.make({ originalRunId: flags.run, runId, mode: undoMode(flags.dryRun) })),
+      printUndoReport
     );
-    yield* printUndoReport(report);
+    yield* flags.dryRun ? undo : writing("undo")(undo);
   })
 ).pipe(Command.withDescription("Remove the categories one run added; needs --yes unless --dry-run."));
 
@@ -180,6 +195,11 @@ const reportCommand = Command.make("report", {}, () =>
  * the ledgers and the checkpoint only, so it needs no mailbox or Box setting.
  * A layer is built when its subcommand runs, not before.
  *
+ * The writing commands, `apply`, `watch`, and `undo` without `--dry-run`, hold
+ * the state-directory lock from after the `--yes` check until the process
+ * ends; `watch` holds it across all its passes. `dry-run`, `undo --dry-run`,
+ * and `report` take no lock.
+ *
  * **Example** (Reference the command constructor)
  *
  * ```ts
@@ -189,22 +209,25 @@ const reportCommand = Command.make("report", {}, () =>
  * console.log(P.isFunction(makePracticeMailTaggingCommand)) // true
  * ```
  *
- * @param layers - The pass runner and the state stores.
+ * @param layers - The pass runner, the state-directory lock, and the state stores.
  * @returns The root command with its five subcommands.
  * @category cli-commands
  * @since 0.0.0
  */
-export const makePracticeMailTaggingCommand = <E1, R1, E2, R2>(layers: {
+export const makePracticeMailTaggingCommand = <E1, R1, E2, R2, E3, R3>(layers: {
   readonly passes: Layer.Layer<MailTaggingPasses, E1, R1>;
+  readonly lock: Layer.Layer<StateLock, E3, R3>;
   readonly state: Layer.Layer<TagLedger | FilingLedger | BackfillCheckpointStore, E2, R2>;
-}) =>
-  Command.make("practice-mail-tagging").pipe(
+}) => {
+  const writer = Layer.merge(layers.passes, layers.lock);
+  return Command.make("practice-mail-tagging").pipe(
     Command.withDescription("Tag the attorney mailbox by matter and file attachments into the matter folders."),
     Command.withSubcommands([
       Command.provide(dryRunCommand, layers.passes),
-      Command.provide(applyCommand, layers.passes),
-      Command.provide(watchCommand, layers.passes),
-      Command.provide(undoCommand, layers.passes),
+      Command.provide(applyCommand, writer),
+      Command.provide(watchCommand, writer),
+      Command.provide(undoCommand, writer),
       Command.provide(reportCommand, layers.state),
     ])
   );
+};
