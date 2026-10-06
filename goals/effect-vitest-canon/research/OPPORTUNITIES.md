@@ -6829,3 +6829,16 @@ typecheck had passed. The full package verifier was started to build its
 dependency graph before audit/check. A quick verifier preflight that either
 builds required declarations or reports the missing dependency build plainly
 would prevent this misleading wall of diagnostics.
+
+### PR merged before its Heavy coverage result (2026-10-06)
+
+PR #1460 merged at `e3b7a59320` at 05:30 UTC while its exact-head `Heavy /
+Coverage Regression` job was still running. The job completed red at 05:31
+UTC. Its ratchet named uncovered `PracticeKg.families.ts` units and coverage
+losses in Yeet/repo-cli files and the law-practice-server branch total. The
+merge timestamp and the completed job log establish this ordering; neither a
+structural mergeable state nor six green Heavy jobs proved the seventh gate.
+A server-side gate requiring every Heavy job to complete successfully before
+merge would have kept the red visible as a PR repair rather than a post-merge
+follow-up. The goal follow-up lane must restore coverage from actual tests and
+prove it against the current main floor.
