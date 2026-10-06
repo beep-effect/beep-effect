@@ -59,9 +59,11 @@ a correspondent lookup for the docket-intake, email, and Box services
 emails and docket register are in the bundle (`2026-10-06-03` on his PC with
 extension 0.3.1; `2026-10-07-01` with extension 0.4.0 adds anchor dominance
 (D-23) and matter correspondents (D-24)). Installs are verified without a
-person by `practice-kg-mcp --self-check`. What remains needs people: an
-in-chat `kg_provenance` check on his PC, his first questions (AC-6), and his
-correctness calls on G-1..G-5.
+person by `practice-kg-mcp --self-check`. Bundle `2026-10-07-01` with
+extension 0.4.0 is on his PC (self-check ok, 2026-10-06). What remains needs
+people: one session with him, scripted in `research/attorney-session.md`
+(in-chat `kg_provenance`, G-1..G-5 verdicts, his own questions for AC-6). P11
+widens correspondents from the mail archives.
 
 ## Latest Evidence
 

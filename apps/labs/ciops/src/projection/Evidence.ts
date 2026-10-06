@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import { decodeAdmissionPolicyParams } from "./AboxPolicy.ts";
 import {
   buildLiveReplayReport,
+  Cq009PairRegime,
   decodeAdmissionJournal,
   FirstChoiceAgreement,
   LiveReplayReport,
@@ -33,7 +34,15 @@ import {
   requireReplayMatch,
 } from "./Replay.ts";
 import { PolicyDecodeError } from "./Schemas.ts";
-import type { AttributedMismatch, ReplayReport, ReplaySkippedRow } from "./Replay.ts";
+import type {
+  AttributedMismatch,
+  Cq009Censorship,
+  Cq009LegacyDrainArm,
+  Cq009SameCheckoutArm,
+  Cq009SameCheckoutPair,
+  ReplayReport,
+  ReplaySkippedRow,
+} from "./Replay.ts";
 import type { AdmissionPolicyParams, ReplayMismatchError } from "./Schemas.ts";
 
 const $I = $CiopsId.create("projection/Evidence");
@@ -808,14 +817,59 @@ const custodySection = (live: LiveReplayReport): ReadonlyArray<string> => [
   "`live` rows carry a deployed `pid`, `surrogate` rows a run-3 Ruling 11 `ownerRef`, `redacted` rows neither (P2 Ruling 8).",
 ];
 
+const nonceList = (nonces: ReadonlyArray<string>): string =>
+  A.match(nonces, { onEmpty: () => "", onNonEmpty: (all) => ` (${A.join(A.map(all, cell), ", ")})` });
+
+const sameCheckoutPairLine = (pair: Cq009SameCheckoutPair): string =>
+  `| ${pair.eventIndex} | ${pair.overlapBeginsAtMillis} | ${cell(pair.holderNonce)} | ${cell(pair.entrantNonce)} | ${cell(pair.checkoutRoot)} | ${cell(pair.regime)} |`;
+
+const sameCheckoutResult = (arm: Cq009SameCheckoutArm): string => {
+  const inScope = A.countBy(arm.pairs, (pair) => Cq009PairRegime.is["in-scope"](pair.regime));
+  const drainWindow = A.length(arm.pairs) - inScope;
+  const drainNote = drainWindow === 0 ? "" : `; ${drainWindow} drain-window pair(s), never violations`;
+  return A.isReadonlyArrayEmpty(arm.pairs)
+    ? "Same-checkout arm — holds: 0 pairs."
+    : `Same-checkout arm — ${arm.status}: ${inScope} in-scope pair(s)${drainNote}.`;
+};
+
+const sameCheckoutLines = (arm: Cq009SameCheckoutArm): ReadonlyArray<string> => [
+  sameCheckoutResult(arm),
+  ...A.match(arm.pairs, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (pairs) => [
+      "",
+      "| Event index | Overlap begins ms | Holder nonce | Entrant nonce | Checkout | Regime |",
+      "| ---: | ---: | --- | --- | --- | --- |",
+      ...A.map(pairs, sameCheckoutPairLine),
+    ],
+  }),
+  "",
+  `- Evaluated grants: ${arm.evaluatedGrants}, every admitted row the replay folded; each pair is a grant active in the replayed ledger when another was admitted, and the overlap begins at that admission.`,
+  `- Grants without a checkout: ${arm.grantsWithoutCheckout}. Admitted rows carry no \`checkoutRoot\`; a grant's checkout is joined by nonce from its own chain's v3 rows, and a grant whose chain carries none is counted here, never given one.`,
+  `- Grants without a recorded coordination protocol: ${arm.grantsWithoutProtocol} of ${arm.evaluatedGrants}. They stay in the arm's scope: an absent protocol is never read as \`legacy-origin-lock/v1\`. A pair with a grant that records \`legacy-origin-lock/v1\` by value is drain-window state (the pre-#929 release admits it during the legacy drain), never a violation, as the pinned query's current-protocol scope reads it.`,
+];
+
+const legacyDrainLines = (arm: Cq009LegacyDrainArm): ReadonlyArray<string> => [
+  "Legacy-origin-drain arm — unobservable in the journal. The arm reads each grant's coordination protocol; the deployed journal writer does not record it, and the pinned query reads the decoded value, under which a missing field decodes as `legacy-origin-lock/v1`, so treating an absent field as an answer would be a false green.",
+  "",
+  `- Grants with a non-empty \`originKey\`: ${arm.grantsWithOriginKey}.`,
+  `- Rows that carry \`coordinationProtocol\` by value: ${arm.rowsWithProtocol}; rows without it: ${arm.rowsWithoutProtocol}.`,
+  `- Concurrently active grant pairs sharing a non-empty \`originKey\`: ${arm.sharedOriginActivePairs}. The journal shows this fact; it is not the arm's answer, because since #929 current-protocol same-origin grants are capacity peers.`,
+];
+
+const censorshipLine = (censorship: Cq009Censorship): string =>
+  `What this evaluation cannot see: rows before ${cell(DateTime.formatIso(censorship.firstRetainedInstant))} or after ${cell(DateTime.formatIso(censorship.lastRetainedInstant))} (the retained window); the ${censorship.preV3Chains} pre-v3 chain(s), whose enqueue rows were trimmed; ${censorship.ledgerCensoredVerdicts} ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; ${censorship.withdrawnRows} withdrawn and ${censorship.ticketEvictedRows} ticket-evicted request row(s), which never became grants; ${A.length(censorship.grantsActiveAtFirstEdge)} grant(s) active at the first edge${nonceList(censorship.grantsActiveAtFirstEdge)}, outside the replayed set; and ${A.length(censorship.grantsActiveAtLastEdge)} grant(s) still active at the last edge${nonceList(censorship.grantsActiveAtLastEdge)}, whose later overlaps are unseen.`;
+
 const cq009Section = (live: LiveReplayReport): ReadonlyArray<string> => [
   "## CQ-009",
   "",
-  live.cq009.preCutRows === 0
-    ? `CQ-009 — temporally out of scope: 0 of ${live.cq009.totalRows} pinned rows precede #929 (graduation Ruling 9).`
-    : `CQ-009 — ${live.cq009.preCutRows} of ${live.cq009.totalRows} pinned rows precede #929; only those rows fall in CQ-009's temporal scope, and this lab does not evaluate them (graduation Ruling 9).`,
+  "CQ-009 is evaluated arm by arm over the replayed active grant set (the replay fold over the pinned journal, with its retained window and skip rule; P3 Ruling 15, superseding P2 Ruling 9's CQ-009 sentence). The arms carry no combined verdict.",
   "",
-  "This is a scope statement, never a pass or a failure.",
+  ...sameCheckoutLines(live.cq009.sameCheckout),
+  "",
+  ...legacyDrainLines(live.cq009.legacyOriginDrain),
+  "",
+  censorshipLine(live.cq009.censorship),
 ];
 
 /**

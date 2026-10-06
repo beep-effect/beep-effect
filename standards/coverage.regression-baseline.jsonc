@@ -4360,8 +4360,8 @@
     },
     "@beep/docket-intake": {
       "path": "apps/docket-intake",
-      "lines": 99.23,
-      "statements": 99.29,
+      "lines": 99.6,
+      "statements": 99.63,
       "branches": 100,
       "functions": 100,
       "uncovered": {
@@ -4419,6 +4419,30 @@
             "functions": 0
           }
         },
+        "apps/docket-intake/src/DryRun.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "apps/docket-intake/src/Main.ts": {
           "lines": 100,
           "statements": 100,
@@ -4432,6 +4456,18 @@
           }
         },
         "apps/docket-intake/src/Smoke.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Undo.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

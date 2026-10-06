@@ -18,6 +18,7 @@ import * as Str from "effect/String";
 import { projectSchedule } from "./Engine.ts";
 import { PosInt } from "./PosInt.ts";
 import {
+  AdmissionCoordinationProtocol,
   AdmissionJournalEvent,
   AdmissionRowCustody,
   AdmissionWorkKind,
@@ -73,7 +74,9 @@ export type ReplayEventOutcome = typeof ReplayEventOutcome.Type;
  * `ledgerCensored` defaults to `false`. A windowed replay sets it on every
  * verdict before the last terminal row it skipped: until that row, the
  * deployed ledger held a grant admitted before the retained window, which the
- * replayed ledger cannot see (P2 Ruling 9).
+ * replayed ledger cannot see (P2 Ruling 9). `activeGrantNonces` defaults to
+ * empty; replay fills it with the grants active in the replayed ledger at the
+ * grant instant, sorted, before this grant joins it.
  *
  * **Example** (Construct a passing event verdict)
  *
@@ -106,6 +109,7 @@ export class ReplayEventVerdict extends S.Class<ReplayEventVerdict>($I`ReplayEve
     activeTokenTotal: S.Natural,
     outcome: ReplayEventOutcome,
     ledgerCensored: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    activeGrantNonces: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed([]))),
   },
   $I.annote("ReplayEventVerdict", {
     description: "Expected and projected first admission at one golden-journal grant instant.",
@@ -813,6 +817,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
       O.getOrElse(() => Str.empty)
     );
     const passed = Eq.equals(projectedNonce, admitted.nonce);
+    const activeGrantNonces = ledger.activeGrants.pipe(HashMap.keys, A.fromIterable, A.sort(Order.String));
     verdicts = A.append(
       verdicts,
       ReplayEventVerdict.make({
@@ -823,6 +828,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
         pendingCount: S.Natural.make(A.length(pending)),
         activeTokenTotal: ledger.activeTokenTotal,
         outcome: passed ? "pass" : "mismatch",
+        activeGrantNonces,
       })
     );
     if (!passed) {
@@ -838,7 +844,7 @@ export const replayAdmissionJournal = Effect.fn("Replay.replayAdmissionJournal")
           requestWeightTokens: admitted.weightTokens,
           wouldBeActiveTokenTotal: PosInt.make(ledger.activeTokenTotal + admitted.weightTokens),
           capacityMaxTokens: policy.capacityMaxTokens,
-          activeGrantNonces: ledger.activeGrants.pipe(HashMap.keys, A.fromIterable, A.sort(Order.String)),
+          activeGrantNonces,
         })
       );
     }
@@ -1156,64 +1162,338 @@ export class CustodyCensus extends S.Class<CustodyCensus>($I`CustodyCensus`)(
 ) {}
 
 /**
- * Temporal scope reading of CQ-009 over a replayed journal.
+ * The two arms of CQ-009, as the pinned query binds them in `?arm`.
  *
- * **Details**
- *
- * Since #929 concurrent same-origin admissions are legal (graduation
- * Ruling 9), so CQ-009 is in scope only for rows before that cut. The lab
- * never evaluates CQ-009; it reports the scope, never a pass or a failure.
- *
- * **Example** (Recognize the out-of-scope reading)
+ * **Example** (Recognize the same-checkout arm)
  *
  * ```ts
- * import { Cq009Scope } from "@/projection/Replay"
+ * import { Cq009Arm } from "@/projection/Replay"
  *
- * console.log(Cq009Scope.is["temporally-out-of-scope"]("temporally-out-of-scope")) // true
+ * console.log(Cq009Arm.is["same-checkout"]("same-checkout")) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const Cq009Scope = LiteralKit(["temporally-out-of-scope", "pre-929-rows-present"]).pipe(
-  $I.annoteSchema("Cq009Scope", {
-    description: "Whether any replayed row precedes the #929 cut that bounds CQ-009's temporal scope.",
+export const Cq009Arm = LiteralKit(["same-checkout", "legacy-origin-drain"]).pipe(
+  $I.annoteSchema("Cq009Arm", {
+    description: "One arm of CQ-009: the same-checkout exclusion or the legacy-origin drain.",
   })
 );
 
 /**
- * Decoded CQ-009 scope accepted by {@link Cq009Scope}.
+ * Decoded arm accepted by {@link Cq009Arm}.
  *
- * @see {@link Cq009Scope} for runtime decoding and literal helpers.
+ * @see {@link Cq009Arm} for runtime decoding and literal helpers.
  * @category models
  * @since 0.0.0
  */
-export type Cq009Scope = typeof Cq009Scope.Type;
+export type Cq009Arm = typeof Cq009Arm.Type;
 
 /**
- * CQ-009 scope census: rows before the #929 cut out of all replayed rows.
+ * What the replayed journal says about one CQ-009 arm.
  *
- * **Example** (Describe an all-post-#929 journal)
+ * **Details**
+ *
+ * `holds`: the arm was evaluated and returned no in-scope pair. `violated`:
+ * at least one in-scope pair. `unobservable`: the journal does not record what
+ * the arm reads, so it is neither held nor violated.
+ *
+ * **Example** (Recognize an unobservable arm)
+ *
+ * ```ts
+ * import { Cq009ArmStatus } from "@/projection/Replay"
+ *
+ * console.log(Cq009ArmStatus.is.unobservable("unobservable")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Cq009ArmStatus = LiteralKit(["holds", "violated", "unobservable"]).pipe(
+  $I.annoteSchema("Cq009ArmStatus", {
+    description: "Whether one CQ-009 arm holds, is violated, or cannot be observed in the journal.",
+  })
+);
+
+/**
+ * Decoded arm status accepted by {@link Cq009ArmStatus}.
+ *
+ * @see {@link Cq009ArmStatus} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type Cq009ArmStatus = typeof Cq009ArmStatus.Type;
+
+/**
+ * Whether a same-checkout pair falls inside the arm's scope.
+ *
+ * **Details**
+ *
+ * `drain-window`: either grant records `legacy-origin-lock/v1` by value. The
+ * pre-#929 release admits such pairs during the legacy drain, so they are
+ * lawful drain-window state, never violations. `in-scope`: every other pair,
+ * including one whose protocol the journal does not record; an absent
+ * protocol is never read as legacy.
+ *
+ * **Example** (Recognize drain-window state)
+ *
+ * ```ts
+ * import { Cq009PairRegime } from "@/projection/Replay"
+ *
+ * console.log(Cq009PairRegime.is["drain-window"]("drain-window")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Cq009PairRegime = LiteralKit(["in-scope", "drain-window"]).pipe(
+  $I.annoteSchema("Cq009PairRegime", {
+    description: "Whether a same-checkout pair is in the arm's scope or legacy drain-window state.",
+  })
+);
+
+/**
+ * Decoded pair regime accepted by {@link Cq009PairRegime}.
+ *
+ * @see {@link Cq009PairRegime} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type Cq009PairRegime = typeof Cq009PairRegime.Type;
+
+/**
+ * Two concurrently active grants that hold the same checkout.
+ *
+ * **Details**
+ *
+ * `holderNonce` was active in the replayed ledger when `entrantNonce` was
+ * admitted at `eventIndex`, so the overlap begins at the entrant's
+ * `overlapBeginsAtMillis`.
+ *
+ * **Example** (Describe one same-checkout overlap)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { Cq009Reading } from "@/projection/Replay"
+ * import { Cq009SameCheckoutPair } from "@/projection/Replay"
  *
- * const reading = Cq009Reading.make({
- *   scope: "temporally-out-of-scope",
- *   preCutRows: S.Natural.make(0),
- *   totalRows: S.Natural.make(689)
+ * const pair = Cq009SameCheckoutPair.make({
+ *   eventIndex: S.Natural.make(3),
+ *   holderNonce: "holder",
+ *   entrantNonce: "entrant",
+ *   checkoutRoot: "<fleet>/fixture",
+ *   overlapBeginsAtMillis: S.Natural.make(1200),
+ *   regime: "in-scope"
  * })
- * console.log(reading.preCutRows) // 0
+ * console.log(pair.regime) // "in-scope"
  * ```
  *
  * @category diagnostics
  * @since 0.0.0
  */
-export class Cq009Reading extends S.Class<Cq009Reading>($I`Cq009Reading`)(
-  { scope: Cq009Scope, preCutRows: S.Natural, totalRows: S.Natural },
-  $I.annote("Cq009Reading", {
-    description: "Count of replayed rows that precede #929 and the resulting CQ-009 temporal scope.",
+export class Cq009SameCheckoutPair extends S.Class<Cq009SameCheckoutPair>($I`Cq009SameCheckoutPair`)(
+  {
+    eventIndex: S.Natural,
+    holderNonce: S.NonEmptyString,
+    entrantNonce: S.NonEmptyString,
+    checkoutRoot: S.String,
+    overlapBeginsAtMillis: S.Natural,
+    regime: Cq009PairRegime,
+  },
+  $I.annote("Cq009SameCheckoutPair", {
+    description: "Two concurrently active replayed grants on one checkout and the instant their overlap begins.",
+  })
+) {}
+
+/**
+ * CQ-009's same-checkout arm evaluated over the replayed active grant set.
+ *
+ * **Details**
+ *
+ * `pairs` lists every same-checkout overlap, in-scope or drain-window; the
+ * arm is `violated` exactly when one is in scope. A grant's checkout is joined
+ * by nonce from its own chain's rows; a grant whose chain carries none is
+ * counted in `grantsWithoutCheckout`, never given one. `grantsWithoutProtocol`
+ * counts the evaluated grants whose chain records no protocol by value.
+ *
+ * **Example** (Describe a holding arm)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Cq009SameCheckoutArm } from "@/projection/Replay"
+ *
+ * const arm = Cq009SameCheckoutArm.make({
+ *   status: "holds",
+ *   pairs: [],
+ *   evaluatedGrants: S.Natural.make(2),
+ *   grantsWithoutCheckout: S.Natural.make(0),
+ *   grantsWithoutProtocol: S.Natural.make(2)
+ * })
+ * console.log(arm.arm) // "same-checkout"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class Cq009SameCheckoutArm extends S.Class<Cq009SameCheckoutArm>($I`Cq009SameCheckoutArm`)(
+  {
+    arm: S.tag(Cq009Arm.Enum["same-checkout"]),
+    status: Cq009ArmStatus.pick(["holds", "violated"]),
+    pairs: S.Array(Cq009SameCheckoutPair),
+    evaluatedGrants: S.Natural,
+    grantsWithoutCheckout: S.Natural,
+    grantsWithoutProtocol: S.Natural,
+  },
+  $I.annote("Cq009SameCheckoutArm", {
+    description: "Same-checkout arm of CQ-009 over the replayed active grant set, with its pairs and gaps.",
+  })
+) {}
+
+/**
+ * CQ-009's legacy-origin-drain arm: unobservable in the journal, with its census.
+ *
+ * **Details**
+ *
+ * The arm reads each grant's coordination protocol, which the deployed journal
+ * writer does not record, and the pinned query reads the decoded value, under
+ * which a missing field would be a false green. Its status is therefore always
+ * `unobservable`. `sharedOriginActivePairs` counts concurrently active replayed
+ * grant pairs that share a non-empty `originKey`: a journal fact, never this
+ * arm's answer, because current-protocol same-origin grants are capacity peers.
+ *
+ * **Example** (Describe the census of an unrecorded journal)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Cq009LegacyDrainArm } from "@/projection/Replay"
+ *
+ * const arm = Cq009LegacyDrainArm.make({
+ *   status: "unobservable",
+ *   grantsWithOriginKey: S.Natural.make(1),
+ *   rowsWithProtocol: S.Natural.make(0),
+ *   rowsWithoutProtocol: S.Natural.make(4),
+ *   sharedOriginActivePairs: S.Natural.make(0)
+ * })
+ * console.log(arm.status) // "unobservable"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class Cq009LegacyDrainArm extends S.Class<Cq009LegacyDrainArm>($I`Cq009LegacyDrainArm`)(
+  {
+    arm: S.tag(Cq009Arm.Enum["legacy-origin-drain"]),
+    status: Cq009ArmStatus.pick(["unobservable"]),
+    grantsWithOriginKey: S.Natural,
+    rowsWithProtocol: S.Natural,
+    rowsWithoutProtocol: S.Natural,
+    sharedOriginActivePairs: S.Natural,
+  },
+  $I.annote("Cq009LegacyDrainArm", {
+    description: "Legacy-origin-drain arm of CQ-009, unobservable in the journal, with its protocol census.",
+  })
+) {}
+
+/**
+ * What the CQ-009 evaluation over a retained journal window cannot see.
+ *
+ * **Details**
+ *
+ * Rows outside the retained window; the pre-v3 chains; the ledger-censored
+ * verdicts; withdrawn and ticket-evicted requests, which never became grants;
+ * grants active before the first retained row (outside the replayed set) and
+ * grants still active at the last retained row (later overlaps unseen).
+ *
+ * **Example** (Describe an uncensored window)
+ *
+ * ```ts
+ * import { DateTime } from "effect"
+ * import * as S from "effect/Schema"
+ * import { Cq009Censorship } from "@/projection/Replay"
+ *
+ * const zero = S.Natural.make(0)
+ * const censorship = Cq009Censorship.make({
+ *   firstRetainedInstant: DateTime.makeUnsafe(0),
+ *   lastRetainedInstant: DateTime.makeUnsafe(0),
+ *   preV3Chains: zero,
+ *   ledgerCensoredVerdicts: zero,
+ *   withdrawnRows: zero,
+ *   ticketEvictedRows: zero,
+ *   grantsActiveAtFirstEdge: [],
+ *   grantsActiveAtLastEdge: []
+ * })
+ * console.log(censorship.grantsActiveAtLastEdge.length) // 0
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class Cq009Censorship extends S.Class<Cq009Censorship>($I`Cq009Censorship`)(
+  {
+    firstRetainedInstant: S.DateTimeUtcFromString,
+    lastRetainedInstant: S.DateTimeUtcFromString,
+    preV3Chains: S.Natural,
+    ledgerCensoredVerdicts: S.Natural,
+    withdrawnRows: S.Natural,
+    ticketEvictedRows: S.Natural,
+    grantsActiveAtFirstEdge: S.Array(S.String),
+    grantsActiveAtLastEdge: S.Array(S.String),
+  },
+  $I.annote("Cq009Censorship", {
+    description: "Window edges, pre-v3 chains, censored verdicts and never-granted requests CQ-009 cannot see.",
+  })
+) {}
+
+/**
+ * Typed CQ-009 verdict over a replayed live journal, arm by arm.
+ *
+ * **Details**
+ *
+ * Supersedes the "temporally out of scope" reading (P3 Ruling 15). There is
+ * no overall pass or failure: the same-checkout arm holds or is violated, the
+ * legacy-origin-drain arm is unobservable, and the censorship says what
+ * neither arm can see.
+ *
+ * **Example** (Read the arms of a verdict)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { DateTime } from "effect"
+ * import * as S from "effect/Schema"
+ * import { buildLiveReplayReport, ReplayReport, ReplayWindow } from "@/projection/Replay"
+ *
+ * const zero = S.Natural.make(0)
+ * const report = ReplayReport.make({
+ *   eventCount: zero,
+ *   admittedCount: zero,
+ *   releasedCount: zero,
+ *   verdicts: [],
+ *   mismatches: [],
+ *   evictions: [],
+ *   passed: true
+ * })
+ * const window = ReplayWindow.make({
+ *   firstRetainedInstant: DateTime.makeUnsafe(0),
+ *   lastRetainedInstant: DateTime.makeUnsafe(0),
+ *   preV3Chains: zero,
+ *   journalSha256: Sha256Hex.make("a".repeat(64)),
+ *   manifestSha256: Sha256Hex.make("b".repeat(64))
+ * })
+ * const { cq009 } = buildLiveReplayReport([], report, window)
+ * console.log(cq009.sameCheckout.status, cq009.legacyOriginDrain.status) // "holds" "unobservable"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class Cq009Verdict extends S.Class<Cq009Verdict>($I`Cq009Verdict`)(
+  {
+    sameCheckout: Cq009SameCheckoutArm,
+    legacyOriginDrain: Cq009LegacyDrainArm,
+    censorship: Cq009Censorship,
+  },
+  $I.annote("Cq009Verdict", {
+    description: "CQ-009 arm by arm over a replayed journal: same-checkout, legacy drain and censorship.",
   })
 ) {}
 
@@ -1226,7 +1506,7 @@ export class Cq009Reading extends S.Class<Cq009Reading>($I`Cq009Reading`)(
  * pre-v3 chains that replayed; the skipped ones are `report.skippedRows`.
  * `withdrawnRows` and `ticketEvictedRows` count the requests the pending-set
  * reconstruction never lets compete, because it rebuilds pending requests
- * from admitted rows only.
+ * from admitted rows only. `cq009` is the typed {@link Cq009Verdict}.
  *
  * **Example** (Wrap an empty replay)
  *
@@ -1235,7 +1515,7 @@ export class Cq009Reading extends S.Class<Cq009Reading>($I`Cq009Reading`)(
  * import { DateTime } from "effect"
  * import * as S from "effect/Schema"
  * import {
- *   Cq009Reading,
+ *   buildLiveReplayReport,
  *   CustodyCensus,
  *   FirstChoiceAgreement,
  *   LiveReplayReport,
@@ -1244,30 +1524,32 @@ export class Cq009Reading extends S.Class<Cq009Reading>($I`Cq009Reading`)(
  * } from "@/projection/Replay"
  *
  * const zero = S.Natural.make(0)
+ * const report = ReplayReport.make({
+ *   eventCount: zero,
+ *   admittedCount: zero,
+ *   releasedCount: zero,
+ *   verdicts: [],
+ *   mismatches: [],
+ *   evictions: [],
+ *   passed: true
+ * })
+ * const window = ReplayWindow.make({
+ *   firstRetainedInstant: DateTime.makeUnsafe(0),
+ *   lastRetainedInstant: DateTime.makeUnsafe(0),
+ *   preV3Chains: zero,
+ *   journalSha256: Sha256Hex.make("a".repeat(64)),
+ *   manifestSha256: Sha256Hex.make("b".repeat(64))
+ * })
  * const live = LiveReplayReport.make({
- *   report: ReplayReport.make({
- *     eventCount: zero,
- *     admittedCount: zero,
- *     releasedCount: zero,
- *     verdicts: [],
- *     mismatches: [],
- *     evictions: [],
- *     passed: true
- *   }),
- *   window: ReplayWindow.make({
- *     firstRetainedInstant: DateTime.makeUnsafe(0),
- *     lastRetainedInstant: DateTime.makeUnsafe(0),
- *     preV3Chains: zero,
- *     journalSha256: Sha256Hex.make("a".repeat(64)),
- *     manifestSha256: Sha256Hex.make("b".repeat(64))
- *   }),
+ *   report,
+ *   window,
  *   agreement: FirstChoiceAgreement.make({ agreed: zero, total: zero }),
  *   attributedMismatches: [],
  *   enqueueLessAdmissions: zero,
  *   withdrawnRows: zero,
  *   ticketEvictedRows: zero,
  *   custody: CustodyCensus.make({ live: zero, surrogate: zero, redacted: zero }),
- *   cq009: Cq009Reading.make({ scope: "temporally-out-of-scope", preCutRows: zero, totalRows: zero })
+ *   cq009: buildLiveReplayReport([], report, window).cq009
  * })
  * console.log(live.agreement.total) // 0
  * ```
@@ -1285,15 +1567,12 @@ export class LiveReplayReport extends S.Class<LiveReplayReport>($I`LiveReplayRep
     withdrawnRows: S.Natural,
     ticketEvictedRows: S.Natural,
     custody: CustodyCensus,
-    cq009: Cq009Reading,
+    cq009: Cq009Verdict,
   },
   $I.annote("LiveReplayReport", {
     description: "Replay report over a live pin with agreement, attributions, censorship and custody census.",
   })
 ) {}
-
-// #929 (`e76c4db079`) committer instant: since then same-origin concurrent admission is legal.
-const issue929CutMillis = DateTime.toEpochMillis(DateTime.makeUnsafe("2026-08-31T08:20:45Z"));
 
 const checkoutRootOf = (event: AdmissionJournalEvent): O.Option<string> =>
   "checkoutRoot" in event ? event.checkoutRoot : O.none();
@@ -1328,14 +1607,148 @@ const rowsTagged = (events: ReadonlyArray<AdmissionJournalEvent>, tag: Admission
 const custodyCount = (events: ReadonlyArray<AdmissionJournalEvent>, custody: AdmissionRowCustody) =>
   S.Natural.make(A.countBy(events, (event) => Eq.equals(admissionRowCustody(event), custody)));
 
-const cq009Reading = (events: ReadonlyArray<AdmissionJournalEvent>): Cq009Reading => {
-  const preCutRows = A.countBy(events, (event) => A.some(eventInstants(event), (millis) => millis < issue929CutMillis));
-  return Cq009Reading.make({
-    scope: preCutRows === 0 ? Cq009Scope.Enum["temporally-out-of-scope"] : Cq009Scope.Enum["pre-929-rows-present"],
-    preCutRows: S.Natural.make(preCutRows),
-    totalRows: S.Natural.make(A.length(events)),
+// Each verdict pairs its admitted grant (the entrant) with every grant the
+// replayed ledger held at that instant (the holders): one row per overlap.
+type ActiveOverlap = readonly [verdict: ReplayEventVerdict, holderNonce: string];
+
+const activeOverlaps = (verdicts: ReadonlyArray<ReplayEventVerdict>): ReadonlyArray<ActiveOverlap> =>
+  A.flatMap(verdicts, (verdict) => A.map(verdict.activeGrantNonces, (holder): ActiveOverlap => [verdict, holder]));
+
+const protocolOf = (event: AdmissionJournalEvent): O.Option<AdmissionCoordinationProtocol> =>
+  "coordinationProtocol" in event ? event.coordinationProtocol : O.none();
+
+// A grant's protocol is joined by nonce from its own chain's rows, read by value only.
+const protocolsByNonce = (
+  events: ReadonlyArray<AdmissionJournalEvent>
+): HashMap.HashMap<string, AdmissionCoordinationProtocol> =>
+  A.reduce(events, HashMap.empty<string, AdmissionCoordinationProtocol>(), (protocols, event) =>
+    O.match(protocolOf(event), {
+      onNone: () => protocols,
+      onSome: (protocol) => HashMap.set(protocols, event.nonce, protocol),
+    })
+  );
+
+const recordsLegacy = (protocols: HashMap.HashMap<string, AdmissionCoordinationProtocol>, nonce: string): boolean =>
+  O.exists(HashMap.get(protocols, nonce), AdmissionCoordinationProtocol.is["legacy-origin-lock/v1"]);
+
+const pairRegime = (
+  protocols: HashMap.HashMap<string, AdmissionCoordinationProtocol>,
+  holderNonce: string,
+  entrantNonce: string
+): Cq009PairRegime =>
+  recordsLegacy(protocols, holderNonce) || recordsLegacy(protocols, entrantNonce)
+    ? Cq009PairRegime.Enum["drain-window"]
+    : Cq009PairRegime.Enum["in-scope"];
+
+const sameCheckoutPair =
+  (roots: HashMap.HashMap<string, string>, protocols: HashMap.HashMap<string, AdmissionCoordinationProtocol>) =>
+  ([verdict, holderNonce]: ActiveOverlap): O.Option<Cq009SameCheckoutPair> =>
+    pipe(
+      HashMap.get(roots, verdict.expectedNonce),
+      O.filter((root) => O.exists(HashMap.get(roots, holderNonce), Eq.equals(root))),
+      O.map((checkoutRoot) =>
+        Cq009SameCheckoutPair.make({
+          eventIndex: verdict.eventIndex,
+          holderNonce,
+          entrantNonce: verdict.expectedNonce,
+          checkoutRoot,
+          overlapBeginsAtMillis: verdict.admittedAtMillis,
+          regime: pairRegime(protocols, holderNonce, verdict.expectedNonce),
+        })
+      )
+    );
+
+const grantsMissing = <V>(verdicts: ReadonlyArray<ReplayEventVerdict>, joined: HashMap.HashMap<string, V>) =>
+  S.Natural.make(A.countBy(verdicts, (verdict) => !HashMap.has(joined, verdict.expectedNonce)));
+
+const sameCheckoutArm = (
+  events: ReadonlyArray<AdmissionJournalEvent>,
+  verdicts: ReadonlyArray<ReplayEventVerdict>
+): Cq009SameCheckoutArm => {
+  const roots = checkoutRootsByNonce(events);
+  const protocols = protocolsByNonce(events);
+  const pairs = A.getSomes(A.map(activeOverlaps(verdicts), sameCheckoutPair(roots, protocols)));
+  return Cq009SameCheckoutArm.make({
+    status: A.some(pairs, (pair) => Cq009PairRegime.is["in-scope"](pair.regime))
+      ? Cq009ArmStatus.Enum.violated
+      : Cq009ArmStatus.Enum.holds,
+    pairs,
+    evaluatedGrants: S.Natural.make(A.length(verdicts)),
+    grantsWithoutCheckout: grantsMissing(verdicts, roots),
+    grantsWithoutProtocol: grantsMissing(verdicts, protocols),
   });
 };
+
+const originKeysByNonce = (events: ReadonlyArray<AdmissionJournalEvent>): HashMap.HashMap<string, string> =>
+  HashMap.fromIterable(A.map(admittedRows(events), (admitted) => [admitted.nonce, admitted.originKey] as const));
+
+const sharesNonEmptyOrigin =
+  (origins: HashMap.HashMap<string, string>) =>
+  ([verdict, holderNonce]: ActiveOverlap): boolean =>
+    O.exists(
+      HashMap.get(origins, verdict.expectedNonce),
+      (origin) => Str.isNonEmpty(origin) && O.exists(HashMap.get(origins, holderNonce), Eq.equals(origin))
+    );
+
+const legacyDrainArm = (
+  events: ReadonlyArray<AdmissionJournalEvent>,
+  verdicts: ReadonlyArray<ReplayEventVerdict>
+): Cq009LegacyDrainArm => {
+  const rowsWithProtocol = A.countBy(events, (event) => O.isSome(protocolOf(event)));
+  return Cq009LegacyDrainArm.make({
+    status: Cq009ArmStatus.Enum.unobservable,
+    grantsWithOriginKey: S.Natural.make(
+      A.countBy(admittedRows(events), (admitted) => Str.isNonEmpty(admitted.originKey))
+    ),
+    rowsWithProtocol: S.Natural.make(rowsWithProtocol),
+    rowsWithoutProtocol: S.Natural.make(A.length(events) - rowsWithProtocol),
+    sharedOriginActivePairs: S.Natural.make(
+      A.countBy(activeOverlaps(verdicts), sharesNonEmptyOrigin(originKeysByNonce(events)))
+    ),
+  });
+};
+
+// Grants admitted in the window with no terminal row in it and no inferred eviction.
+const grantsActiveAtLastEdge = (
+  events: ReadonlyArray<AdmissionJournalEvent>,
+  report: ReplayReport
+): ReadonlyArray<string> => {
+  const closed = HashSet.union(
+    HashSet.union(noncesTagged(events, "admission-released"), noncesTagged(events, "admission-lease-evicted")),
+    HashSet.fromIterable(A.map(report.evictions, (eviction) => eviction.evictedNonce))
+  );
+  return A.filter(
+    A.map(report.verdicts, (verdict) => verdict.expectedNonce),
+    (nonce) => !HashSet.has(closed, nonce)
+  );
+};
+
+const cq009Censorship = (
+  events: ReadonlyArray<AdmissionJournalEvent>,
+  report: ReplayReport,
+  window: ReplayWindow
+): Cq009Censorship =>
+  Cq009Censorship.make({
+    firstRetainedInstant: window.firstRetainedInstant,
+    lastRetainedInstant: window.lastRetainedInstant,
+    preV3Chains: window.preV3Chains,
+    ledgerCensoredVerdicts: S.Natural.make(A.countBy(report.verdicts, (verdict) => verdict.ledgerCensored)),
+    withdrawnRows: rowsTagged(events, "admission-withdrawn"),
+    ticketEvictedRows: rowsTagged(events, "admission-ticket-evicted"),
+    grantsActiveAtFirstEdge: A.dedupe(A.map(report.skippedRows, (row) => row.nonce)),
+    grantsActiveAtLastEdge: grantsActiveAtLastEdge(events, report),
+  });
+
+const cq009Verdict = (
+  events: ReadonlyArray<AdmissionJournalEvent>,
+  report: ReplayReport,
+  window: ReplayWindow
+): Cq009Verdict =>
+  Cq009Verdict.make({
+    sameCheckout: sameCheckoutArm(events, report.verdicts),
+    legacyOriginDrain: legacyDrainArm(events, report.verdicts),
+    censorship: cq009Censorship(events, report, window),
+  });
 
 /**
  * Wraps a windowed replay report with the live agreement and census.
@@ -1345,8 +1758,12 @@ const cq009Reading = (events: ReadonlyArray<AdmissionJournalEvent>): Cq009Readin
  * Agreement counts `pass` verdicts out of all verdicts, the golden unit.
  * Every disagreement is attributed by joining nonces to the pinned rows'
  * `checkoutRoot`: when the projected head's checkout equals an active grant's
- * checkout, the deployed #929 same-checkout skip explains it. Censuses are
- * computed in fixed literal order, so the result is byte-deterministic.
+ * checkout, the deployed #929 same-checkout skip explains it. CQ-009 is
+ * evaluated over the replayed active set each verdict records: the
+ * same-checkout arm holds or is violated, the legacy-origin-drain arm is
+ * unobservable with its census, and the censorship states the window's
+ * blind spots. Censuses are computed in fixed literal order, so the result
+ * is byte-deterministic.
  *
  * **Example** (Wrap an empty replay)
  *
@@ -1373,7 +1790,7 @@ const cq009Reading = (events: ReadonlyArray<AdmissionJournalEvent>): Cq009Readin
  *   journalSha256: Sha256Hex.make("a".repeat(64)),
  *   manifestSha256: Sha256Hex.make("b".repeat(64))
  * })
- * console.log(buildLiveReplayReport([], report, window).cq009.scope) // "temporally-out-of-scope"
+ * console.log(buildLiveReplayReport([], report, window).cq009.sameCheckout.status) // "holds"
  * ```
  *
  * @category diagnostics
@@ -1402,7 +1819,7 @@ export const buildLiveReplayReport: {
         surrogate: custodyCount(events, AdmissionRowCustody.Enum.surrogate),
         redacted: custodyCount(events, AdmissionRowCustody.Enum.redacted),
       }),
-      cq009: cq009Reading(events),
+      cq009: cq009Verdict(events, report, window),
     });
   }
 );

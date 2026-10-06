@@ -1,6 +1,7 @@
 /**
- * A scripted `M365` service for the smoke proofs. Only the verbs the smoke
- * check calls are scripted; every other verb is a defect if it is reached.
+ * A scripted `M365` service for the smoke and undo proofs. Only the verbs
+ * those commands call are scripted; every other verb is a defect if it is
+ * reached.
  */
 import {
   GraphEvent,
@@ -14,11 +15,15 @@ import {
 } from "@beep/m365";
 import { Context, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 
 export type M365Script = {
   readonly createEvent: Effect.Effect<GraphEvent, M365Error>;
   readonly deleteEvent: Effect.Effect<void, M365Error>;
   readonly findEvents: Effect.Effect<M365EventCollection, M365Error>;
+  readonly getEvent: Effect.Effect<GraphEvent, M365Error>;
+  readonly getMessage: Effect.Effect<GraphMessage, M365Error>;
+  readonly updateMessageCategories: Effect.Effect<GraphMessage, M365Error>;
   readonly listCategories: Effect.Effect<M365OutlookCategoryCollection, M365Error>;
   readonly listMessages: Effect.Effect<M365MessageCollection, M365Error>;
 };
@@ -34,6 +39,7 @@ export class FakeM365 extends Context.Service<FakeM365, FakeM365Shape>()("@beep/
 export const refused = M365Error.fromReason("response status", { status: 403 });
 export const unreachable = M365Error.fromReason("transport");
 export const ambiguous = M365Error.fromReason("ambiguous write");
+export const throttled = M365Error.fromReason("throttled", { status: 429 });
 
 /** A found-events answer holding the given event ids. */
 export const eventsFound = (ids: ReadonlyArray<string>) =>
@@ -43,6 +49,11 @@ export const passingScript: M365Script = {
   createEvent: Effect.succeed(GraphEvent.make({ id: "event-1" })),
   deleteEvent: Effect.void,
   findEvents: eventsFound(["event-1"]),
+  getEvent: Effect.succeed(GraphEvent.make({ categories: O.some(["Docket - unverified"]), id: "event-1" })),
+  getMessage: Effect.succeed(
+    GraphMessage.make({ categories: O.some(["M: FIX-0001", "Docket - entered"]), changeKey: O.some("ck-1"), id: "m1" })
+  ),
+  updateMessageCategories: Effect.succeed(GraphMessage.make({ id: "m1" })),
   listCategories: Effect.succeed(
     M365OutlookCategoryCollection.make({
       value: A.map(["Docket - unverified", "Docket - entered", "M: FIX-0001"], (displayName) =>
@@ -82,10 +93,14 @@ export const FakeM365Layer = Layer.effect(
       findEventsByIdempotencyKey: Effect.fnUntraced(function* () {
         return yield* run("findEvents", (script) => script.findEvents);
       }),
-      getEvent: unused,
+      getEvent: Effect.fnUntraced(function* (request) {
+        return yield* run(`getEvent ${request.eventId}`, (script) => script.getEvent);
+      }),
       getListItem: unused,
       getMailFolder: unused,
-      getMessage: unused,
+      getMessage: Effect.fnUntraced(function* (request) {
+        return yield* run(`getMessage ${request.messageId}`, (script) => script.getMessage);
+      }),
       getMessageAuthoredText: unused,
       getSite: unused,
       listDriveItemVersions: unused,
@@ -101,7 +116,12 @@ export const FakeM365Layer = Layer.effect(
       listSites: unused,
       sendDraftMessage: unused,
       updateEvent: unused,
-      updateMessageCategories: unused,
+      updateMessageCategories: Effect.fnUntraced(function* (request) {
+        return yield* run(
+          `updateMessageCategories ${request.messageId} ${A.join(request.categories, "|")}`,
+          (script) => script.updateMessageCategories
+        );
+      }),
     });
   })
 ).pipe(

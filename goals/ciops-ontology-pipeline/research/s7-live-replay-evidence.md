@@ -59,6 +59,18 @@ The unit is one `admission-admitted` row: the projection's first prescribed admi
 
 ## CQ-009
 
-CQ-009 — temporally out of scope: 0 of 689 pinned rows precede #929 (graduation Ruling 9).
+CQ-009 is evaluated arm by arm over the replayed active grant set (the replay fold over the pinned journal, with its retained window and skip rule; P3 Ruling 15, superseding P2 Ruling 9's CQ-009 sentence). The arms carry no combined verdict.
 
-This is a scope statement, never a pass or a failure.
+Same-checkout arm — holds: 0 pairs.
+
+- Evaluated grants: 200, every admitted row the replay folded; each pair is a grant active in the replayed ledger when another was admitted, and the overlap begins at that admission.
+- Grants without a checkout: 0. Admitted rows carry no `checkoutRoot`; a grant's checkout is joined by nonce from its own chain's v3 rows, and a grant whose chain carries none is counted here, never given one.
+- Grants without a recorded coordination protocol: 200 of 200. They stay in the arm's scope: an absent protocol is never read as `legacy-origin-lock/v1`. A pair with a grant that records `legacy-origin-lock/v1` by value is drain-window state (the pre-#929 release admits it during the legacy drain), never a violation, as the pinned query's current-protocol scope reads it.
+
+Legacy-origin-drain arm — unobservable in the journal. The arm reads each grant's coordination protocol; the deployed journal writer does not record it, and the pinned query reads the decoded value, under which a missing field decodes as `legacy-origin-lock/v1`, so treating an absent field as an answer would be a false green.
+
+- Grants with a non-empty `originKey`: 148.
+- Rows that carry `coordinationProtocol` by value: 0; rows without it: 689.
+- Concurrently active grant pairs sharing a non-empty `originKey`: 99. The journal shows this fact; it is not the arm's answer, because since #929 current-protocol same-origin grants are capacity peers.
+
+What this evaluation cannot see: rows before `2026-10-01T09:32:09.602Z` or after `2026-10-06T01:51:50.495Z` (the retained window); the 3 pre-v3 chain(s), whose enqueue rows were trimmed; 4 ledger-censored verdict(s), whose replayed ledger lacked a pre-window grant; 44 withdrawn and 1 ticket-evicted request row(s), which never became grants; 1 grant(s) active at the first edge (`f7d10df1-9ca0-4206-af3f-d54b368d4eaf`), outside the replayed set; and 0 grant(s) still active at the last edge, whose later overlaps are unseen.
