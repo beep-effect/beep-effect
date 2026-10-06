@@ -1,0 +1,13 @@
+# CQ-009 pre-#929 temporal scope: the #870 origin-keyed law for admission state before #929
+# (e76c4db079, 2026-08-31); retained regression over must-fail/cq009-two-grants.ttl, oracle rows_ge_1;
+# graduation Ruling 9, P3 Ruling 5. Hand-authored; regen_cq_artifacts.py neither writes nor deletes it.
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX ciops: <https://oip.law/ontology/ci-ops#>
+SELECT ?g1 ?g2 ?origin WHERE {
+  ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasOriginKey ?origin .
+  ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
+      ciops:hasOriginKey ?origin .
+  FILTER (?g1 != ?g2)
+  FILTER (?origin != "")
+}

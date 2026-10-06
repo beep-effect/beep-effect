@@ -7,7 +7,7 @@ Change event invalidation blast radius,UC-003,CQ-005,VerificationEvidence;CacheE
 Certainty accounting before publish,UC-004,CQ-006,AssuranceTier;VerificationEvidence;TreeState;CacheEpoch;requiresLane;dischargesObligation;provesTree;validInEpoch;invalidates,ontology/tests/cq-006.sparql
 KPI attribution and lever discovery,UC-005,CQ-007,VerificationEpisode;timeToCertaintyMs;queueWaitMs;lockWaitMs;executionMs;repairGapMs;ciWaitMs,ontology/tests/cq-007.sparql
 Scheduler grants seats under backpressure,UC-002,CQ-008,ContendedResource;SeatGrant;GrantState;contendsFor;hasGrantState,ontology/tests/cq-008.sparql
-Scheduler grants seats under backpressure,UC-002,CQ-009,SeatGrant;GrantState;hasOriginKey;hasGrantState,ontology/tests/cq-009.sparql
+Scheduler grants seats under backpressure,UC-002,CQ-009,SeatGrant;GrantState;hasOriginKey;hasGrantState;hasCheckout;hasCoordinationProtocol,ontology/tests/cq-009.sparql
 Scheduler grants seats under backpressure,UC-002,CQ-010,WorkUnit;SeatGrant;admittedBy;admissionChargeTokens;capacityAtAdmissionTokens,ontology/tests/cq-010.sparql
 Change event invalidation blast radius,UC-003,CQ-011,InvalidationEvent;HashSurface;VerificationLane;PackageRef;touchesHashSurface;feedsLane;radiatesToPackage;occurredAt,ontology/tests/cq-011.sparql
 KPI attribution and lever discovery,UC-005,CQ-012,VerificationEpisode;queueWaitMs;lockWaitMs;executionMs;repairGapMs;ciWaitMs;timeToCertaintyMs;episodeStartedAt,ontology/tests/cq-012.sparql
