@@ -1,9 +1,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { policyToolsFingerprint, StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, it } from "@effect/vitest";
+import { expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -77,22 +78,17 @@ const lawHashes = Effect.fn("LawsTurboTest.lawHashes")(function* (root: string, 
 });
 
 it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B laws Turbo inputs", (it) => {
-  it("round-trips schema-derived Turbo summaries through JSON", () =>
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          summaryArbitrary,
-          (summary) => {
-            const encoded = Effect.runSync(encodeSummary(summary));
-            const decoded = Effect.runSync(decodeSummary(encoded));
-            expect(summaryEquivalent(decoded, summary)).toBe(true);
-            expect(Effect.runSync(encodeSummary(decoded))).toBe(encoded);
-            return true;
-          },
-          fcRuns(25)
-        )
-      )._tag
-    ).toBe("Passed"));
+  it.effect.prop(
+    "round-trips schema-derived Turbo summaries through JSON",
+    [summaryArbitrary],
+    Effect.fnUntraced(function* ([summary]) {
+      const encoded = yield* encodeSummary(summary);
+      const decoded = yield* decodeSummary(encoded);
+      expect(summaryEquivalent(decoded, summary)).toBe(true);
+      expect(yield* encodeSummary(decoded)).toBe(encoded);
+    }),
+    { arbitrary: fcRuns(25) }
+  );
 
   it.effect(
     "keeps the law verdict cacheable and the root script nonrecursive",
