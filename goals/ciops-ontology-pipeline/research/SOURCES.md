@@ -101,3 +101,11 @@ Corrections carried from frozen exploration files, which are never edited:
 - **Close economics.** `goals/time-to-certainty/research/economics-close.json` (round 25,
   sha256 `cc75d260c7076fba4e5fada7ba5dbcdf09302a43402648fe9a2a60932f002924` at HEAD) and
   `economics-close.md` are the M1 reference for the W9 verdict.
+
+## 6. P1 pins (2026-10-06)
+
+- `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/MANIFEST.yaml`
+  and `…/corpus/run4-ledger/MANIFEST.yaml`: `corpus_commit` `26269bb0ec`, `corpus_tree`
+  `edc79dd7b6`, `capture_head` `28d962ec6b`; every repository citation in both manifests resolves
+  against that tree (graduation Ruling 8, P1 Ruling 4). P2 reads the admission chains, the per-root
+  window boundaries and the Queue D reconciliation from the `run4-fleet` manifest by path.

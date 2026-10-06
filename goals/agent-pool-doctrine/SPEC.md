@@ -49,7 +49,9 @@ copied).
   check; both dry → hold and notify; Fable children never a fallback; grok-4.6 lanes research-only.
   Amended 2026-09-24 (operator directive, `history/2026-09-27-opus-default.md`): pool 1 is Opus 5.5
   (`claude-opus-5-5`) for every sub-agent; Cursor runs only when the operator authorizes it; Codex
-  is opt-in only, its floor and pins kept for that case.
+  is opt-in only, its floor and pins kept for that case. Amended 2026-10-01 (operator policy,
+  `history/2026-10-01-fallback-chains.md`): Codex is a first-class route again on `gpt-6.1-sol`
+  medium, and each orchestrator steps down its own chain to Cursor on Opus 5.5, then grok-build.
 - Hooks (D9, D13): pulse rows must flow for preToolUse, postToolUse, postToolUseFailure, sessionEnd;
   `stop`/`beforeSubmitPrompt` are registered but recorded as headless GAPs; Notification is a GAP.
 - Permission hooks must answer `{"permission":"allow"}` (empty stdout on a permission event blocks), and
@@ -62,6 +64,7 @@ copied).
 
 - `AGENTS.md` states the three-step order (Opus 5.5 sub-agents, operator-authorized Cursor, hold),
   floors, seat map, never-list, deny list, corpus rule, and points at the runbook; Codex is opt-in
+  (amended 2026-10-01: default route `gpt-6.1-sol` with per-orchestrator fallback chains)
   only and its pins are unchanged in wording for that case (amended 2026-09-24).
 - `docs/runbooks/agent-pools.md` contains the Codex meter probe (copy-paste), the Cursor recipe v2 with
   success rule and jq cookbook, the seat map with list prices and buckets, the deny list rationale, the

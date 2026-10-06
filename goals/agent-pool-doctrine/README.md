@@ -8,10 +8,11 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Make the volume-pool order binding — Opus 5.5 (`claude-opus-5-5`) for every sub-agent, then the
-Cursor agent when the operator authorizes it, then hold; Codex is opt-in only since the 2026-09-24
-directive — and make the Cursor lane a measurable, structurally guarded pool: pulse hooks, a
-committed deny list, and a runbook every orchestrator can copy from.
+Make the model defaults and per-orchestrator fallback chains binding — Codex on `gpt-6.1-sol`
+medium and Claude Code on `claude-opus-5-5` medium, each falling back to the Cursor agent on Opus
+5.5 and then to grok-build on `grok-4.7` (policy of 2026-10-01, which superseded the 2026-09-24
+Opus-only order) — and make the Cursor lane a measurable, structurally guarded pool: pulse hooks,
+a committed deny list, and a runbook every orchestrator can copy from.
 
 ## Launch
 
@@ -28,7 +29,9 @@ committed deny list, and a runbook every orchestrator can copy from.
 3. [`PLAN.md`](./PLAN.md) - active execution plan.
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - carried source ledger; primary is the exploration.
-6. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
+6. [`history/2026-10-01-fallback-chains.md`](./history/2026-10-01-fallback-chains.md) - the
+   2026-10-01 policy, verified identifiers, and the Junie open decision.
+7. [`../../explorations/cursor-agent-pool/`](../../explorations/cursor-agent-pool/) - BRIEF, DECISIONS
    D1–D21, RESEARCH with the hooks smoke test and the Codex meter proof.
 
 ## Current Phase
