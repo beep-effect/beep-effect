@@ -46,7 +46,6 @@ const PACKS = [
   "jsonl",
   "glob",
   "schemastore",
-  "semver",
   "memfs",
   "beep-docs",
   "codemode",
@@ -78,7 +77,6 @@ const packFor = (rel: string): PackId => {
   if (rel.startsWith("jsonl/")) return "jsonl";
   if (rel.startsWith("glob/")) return "glob";
   if (rel.startsWith("schemastore/")) return "schemastore";
-  if (rel.startsWith("semver/")) return "semver";
   if (rel.startsWith("memfs/")) return "memfs";
   if (rel.startsWith("beep-docs/")) return "beep-docs";
   if (rel.startsWith("codemode/")) return "codemode";

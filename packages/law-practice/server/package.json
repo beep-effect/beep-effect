@@ -39,6 +39,7 @@
     "./CandorPromotionGate": "./src/CandorPromotionGate/index.ts",
     "./CandorRecord": "./src/CandorRecord/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
+    "./MailTagging": "./src/MailTagging/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
