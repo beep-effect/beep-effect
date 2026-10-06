@@ -341,7 +341,6 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
  *   bots: "greptile,coderabbit,chatgpt",
  *   ciParity: false,
  *   collectAll: false,
- *   fast: false,
  *   head: "HEAD",
  *   json: false,
  *   merged: false,
@@ -351,7 +350,8 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
  *   noEdit: false,
  *   packetDir: ".beep/yeet",
  *   plan: true,
- *   pr: false,
+ *   pr: true,
+ *   proveFirst: false,
  *   pushOnly: false,
  *   remote: false,
  *   replyBody: "",
@@ -364,7 +364,6 @@ export class QualityIssueIndex extends S.Class<QualityIssueIndex>($I`QualityIssu
  *   reuseVerified: false,
  *   stagedOnly: false,
  *   summary: false,
- *   startPrEarly: false,
  *   tier: "full"
  * })
  * console.log(options.base)
@@ -381,7 +380,6 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
     bots: S.String,
     ciParity: S.Boolean,
     collectAll: S.Boolean,
-    fast: S.Boolean,
     head: S.String,
     json: S.Boolean,
     merged: S.Boolean,
@@ -392,6 +390,7 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
     packetDir: S.String,
     plan: S.Boolean,
     pr: S.Boolean,
+    proveFirst: S.Boolean,
     pushOnly: S.Boolean,
     remote: S.Boolean,
     replyBody: S.String,
@@ -404,11 +403,44 @@ export class YeetRunOptions extends S.Class<YeetRunOptions>($I`YeetRunOptions`)(
     reuseVerified: S.Boolean,
     stagedOnly: S.Boolean,
     summary: S.Boolean,
-    startPrEarly: S.Boolean,
     tier: YeetProofTier,
   },
   $I.annote("YeetRunOptions", {
     description: "Runtime options accepted by the yeet handler.",
+  })
+) {}
+
+/**
+ * Options accepted by `yeet ready`, the draft-to-ready flip.
+ *
+ * **Details**
+ *
+ * The flip reads the branch's pull request through the same status read the
+ * readiness monitor uses, so it needs only the coordinates that locate the
+ * checkout's run artifacts. It has no `--force`: the gate (every review thread
+ * answered, required checks green on the current head) is the whole contract
+ * (push-first-publish D10).
+ *
+ * **Example** (Construct ready options)
+ *
+ * ```ts
+ * import { YeetReadyOptions } from "@beep/repo-cli/commands/Yeet"
+ *
+ * const options = YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" })
+ * console.log(options.base) // "origin/main"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReadyOptions extends S.Class<YeetReadyOptions>($I`YeetReadyOptions`)(
+  {
+    base: S.String,
+    head: S.String,
+    packetDir: S.String,
+  },
+  $I.annote("YeetReadyOptions", {
+    description: "Options accepted by yeet ready, which flips a draft pull request to ready under the D10 gate.",
   })
 ) {}
 
@@ -551,7 +583,6 @@ export const defaultYeetRunOptions = (overrides: Partial<YeetRunOptions> = {}): 
     bots: "greptile",
     ciParity: false,
     collectAll: false,
-    fast: false,
     head: "HEAD",
     json: false,
     merged: false,
@@ -561,7 +592,8 @@ export const defaultYeetRunOptions = (overrides: Partial<YeetRunOptions> = {}): 
     noEdit: false,
     packetDir: DEFAULT_YEET_PACKET_DIR,
     plan: false,
-    pr: false,
+    pr: true,
+    proveFirst: false,
     pushOnly: false,
     remote: false,
     replyBody: "",
@@ -574,7 +606,6 @@ export const defaultYeetRunOptions = (overrides: Partial<YeetRunOptions> = {}): 
     reuseVerified: false,
     stagedOnly: false,
     summary: false,
-    startPrEarly: false,
     tier: "full",
     ...overrides,
   });

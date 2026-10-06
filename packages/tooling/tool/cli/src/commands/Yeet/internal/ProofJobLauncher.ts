@@ -15,6 +15,7 @@ import {
   DateTime,
   Duration,
   Effect,
+  Equal,
   FileSystem,
   HashSet,
   Order,
@@ -76,6 +77,14 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 // journal helper's 25 ms pause (about 5 s) before failing with a retryable "stayed busy" error, so a
 // brief stall never loses a transition: the caller reruns cancel, finalize, or the bookkeeping.
 const PROOF_JOB_LOCK_RETRY_ATTEMPTS = 200;
+// The readiness-monitor submit lock is held across a registry read and one detached submit
+// (a child CLI start plus `systemd-run`), so contenders wait about a minute. A dead holder's
+// generation is reclaimed by the journal lock helper, and a contender that still cannot take
+// the lock proceeds unlocked: a duplicate monitor is cheaper than a publish with none.
+const READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS = 2400;
+const READY_MONITOR_SUBMIT_LOCK_FILE = "ready-monitor-submit.lock";
+// Same 25 ms cadence as the journal lock helper; paid between attempts, never while holding the lock.
+const READY_MONITOR_SUBMIT_LOCK_RETRY_PAUSE = Duration.millis(25);
 const decodeUUIDOption = S.decodeOption(UUID);
 const decodeUUID = S.decodeEffect(UUID);
 
@@ -164,11 +173,20 @@ export type ProofJobWaitResult = typeof ProofJobWaitResult.Type;
  *   share that definition. Reads recover unstamped finished records with an unknown stamp.
  * - Each transition uses a per-record file mutex for consistency, not an admission lock.
  * - Cancel saves its request under that mutex before asking systemd to stop the unit.
+ *   When the stop fails and the unit still exists (`stop-failed`), it clears its
+ *   own stamp again under the mutex so the job reads as live and publish keeps
+ *   reusing the monitor instead of submitting a second one; `stop-requested` and
+ *   `unit-absent` keep the stamp.
  * - `bindPullRequest` records the pull request a monitor job follows; `wait` then
  *   also returns when a new wave lands on that pull request (wake-set rows no
  *   earlier wait returned, or a required red set on the same head that names a
  *   red the last return did not), and records the returned row ids and red set
  *   so a re-run waits for the next wave.
+ * - `withReadyMonitorSubmitLock` serializes a publish's "is a readiness monitor
+ *   already polling this pull request, else submit one" decision across
+ *   processes in the checkout, so two concurrent publishes cannot both read an
+ *   empty registry and both submit. A contender announces that it is waiting,
+ *   waits interruptibly, and after about a minute warns and runs unlocked.
  *
  * **Example** (Name a launcher operation)
  *
@@ -196,6 +214,9 @@ export interface ProofJobLauncherShape {
   readonly submit: (submission: ProofJobSubmission) => Effect.Effect<ProofJobRecord, YeetCommandError>;
   readonly support: Effect.Effect<RunScopeSupport>;
   readonly wait: (jobId: UUID, options: ProofJobWaitOptions) => Effect.Effect<ProofJobWaitResult, YeetCommandError>;
+  readonly withReadyMonitorSubmitLock: <Value, Error, Requirements>(
+    operation: Effect.Effect<Value, Error, Requirements>
+  ) => Effect.Effect<Value, Error | YeetCommandError, Requirements>;
 }
 
 const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
@@ -272,11 +293,9 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     if (O.isNone(record)) return yield* YeetCommandError.make({ message: `Unknown proof job ${id}.` });
     return record.value;
   });
-  const withRecordLock = Effect.fn("ProofJob.withRecordLock")(function* <Value, Error, Requirements>(
-    operation: Effect.Effect<Value, Error, Requirements>,
-    id: UUID
-  ) {
-    const lockPath = path.join(jobsRoot, `${id}.lock`);
+  // Take the named lock file under the jobs root and report whether this caller owns it.
+  const acquireJobsLock = Effect.fn("ProofJob.acquireJobsLock")(function* (fileName: string, retryAttempts: number) {
+    const lockPath = path.join(jobsRoot, fileName);
     yield* readContainedFileStringNoFollow(repoRoot, lockPath).pipe(
       Effect.provide(context),
       Effect.mapError(guardError)
@@ -285,16 +304,54 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     const start = yield* processStartIdentityForPid(process.pid).pipe(Effect.provide(context));
     const nonce = yield* crypto.randomUUIDv4.pipe(Effect.mapError(guardError));
     const token = `${process.pid}:${O.getOrElse(start, constant("unknown"))}:${nonce}`;
+    const owned = yield* acquireJournalFileLock(lockPath, token, retryAttempts).pipe(Effect.provide(context));
+    return { lockPath, owned, token };
+  });
+  const releaseJobsLock = (lock: { readonly lockPath: string; readonly owned: boolean; readonly token: string }) =>
+    lock.owned ? releaseJournalFileLock(lock.lockPath, lock.token).pipe(Effect.provide(context)) : Effect.void;
+  const withRecordLock = Effect.fn("ProofJob.withRecordLock")(function* <Value, Error, Requirements>(
+    operation: Effect.Effect<Value, Error, Requirements>,
+    id: UUID
+  ) {
     return yield* Effect.acquireUseRelease(
-      acquireJournalFileLock(lockPath, token, PROOF_JOB_LOCK_RETRY_ATTEMPTS).pipe(
-        Effect.provide(context),
-        Effect.flatMap((owned) =>
-          owned ? Effect.void : Effect.fail(YeetCommandError.make({ message: `Proof job ${id} stayed busy.` }))
+      acquireJobsLock(`${id}.lock`, PROOF_JOB_LOCK_RETRY_ATTEMPTS).pipe(
+        Effect.filterOrFail(
+          (lock) => lock.owned,
+          () => YeetCommandError.make({ message: `Proof job ${id} stayed busy.` })
         )
       ),
       () => operation,
-      () => releaseJournalFileLock(lockPath, token).pipe(Effect.provide(context))
+      releaseJobsLock
     );
+  });
+  const withReadyMonitorSubmitLock = Effect.fn("ProofJob.withReadyMonitorSubmitLock")(function* <
+    Value,
+    Error,
+    Requirements,
+  >(operation: Effect.Effect<Value, Error, Requirements>) {
+    // One short attempt per turn inside `acquireUseRelease`, whose acquire is
+    // uninterruptible: the lock is never held without its release registered.
+    // The pause between turns holds nothing and stays interruptible, so Ctrl-C
+    // lands within one pause instead of after the whole wait.
+    const attempt = Effect.acquireUseRelease(
+      acquireJobsLock(READY_MONITOR_SUBMIT_LOCK_FILE, 1),
+      (lock) => (lock.owned ? Effect.asSome(operation) : Effect.succeedNone),
+      releaseJobsLock
+    );
+    for (let turn = 0; turn < READY_MONITOR_SUBMIT_LOCK_RETRY_ATTEMPTS; turn++) {
+      const ran = yield* attempt;
+      if (O.isSome(ran)) return ran.value;
+      if (turn === 0) {
+        yield* Console.error(
+          "[yeet] waiting for the readiness-monitor submit lock (another publish in this checkout holds it)"
+        );
+      }
+      yield* Effect.sleep(READY_MONITOR_SUBMIT_LOCK_RETRY_PAUSE);
+    }
+    yield* Console.error(
+      "[yeet] warning: the readiness-monitor submit lock stayed busy; continuing without it (a duplicate monitor is possible; check `bun run beep yeet job list`)"
+    );
+    return yield* operation;
   });
   const command = Effect.fn("ProofJob.command")(function* (exe: string, args: ReadonlyArray<string>) {
     const PATH = yield* configStringOption("PATH");
@@ -388,6 +445,17 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       inboxRowId: O.some(yeetProofJobRowId(record)),
       attemptTerminated: false,
     });
+  });
+  // Only the stamp this cancel wrote is rolled back: a settled or terminal record, or one a
+  // later cancel re-stamped (whose stop may have succeeded), is left as it is.
+  const clearCancelRequestLocked = Effect.fn("ProofJob.clearCancelRequestLocked")(function* (
+    id: UUID,
+    stamp: O.Option<string>
+  ) {
+    const record = yield* requireRecord(id);
+    if (isTerminalProofJobPhase(record.phase) || isSettledProofJob(record)) return record;
+    if (!Equal.equals(record.cancelRequestedAt, stamp)) return record;
+    return yield* save(ProofJobRecord.make({ ...record, cancelRequestedAt: O.none() }));
   });
   const markPublishedLocked = Effect.fn("ProofJob.markPublishedLocked")(function* (id: UUID) {
     const record = yield* requireRecord(id);
@@ -530,6 +598,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     list,
     prune,
     finalize,
+    withReadyMonitorSubmitLock,
     submit: Effect.fn("ProofJob.submit")(function* (submission: ProofJobSubmission) {
       if ((yield* support) !== "active")
         return yield* YeetCommandError.make({
@@ -610,9 +679,11 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
       const result = yield* command("systemctl", ["--user", "stop", record.unit.unitName]);
       if (result.exitCode === 0) return ProofJobCancelOutcome.Enum["stop-requested"];
       const state = yield* command("systemctl", ["--user", "show", record.unit.unitName, "-p", "LoadState", "--value"]);
-      return Str.trim(state.output) === "not-found"
-        ? ProofJobCancelOutcome.Enum["unit-absent"]
-        : ProofJobCancelOutcome.Enum["stop-failed"];
+      if (Str.trim(state.output) === "not-found") return ProofJobCancelOutcome.Enum["unit-absent"];
+      // The unit is still running: a stamp left behind would hide the job from
+      // `isLiveReadyMonitorJob` for good, so publish would submit a second monitor.
+      yield* withRecordLock(clearCancelRequestLocked(id, record.cancelRequestedAt), id);
+      return ProofJobCancelOutcome.Enum["stop-failed"];
     }),
     bindPullRequest: Effect.fn("ProofJob.bindPullRequest")(function* (id: UUID, prNumber: number) {
       const record = yield* requireRecord(id);
