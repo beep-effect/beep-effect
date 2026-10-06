@@ -2,7 +2,13 @@ import { BunRuntime } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { Console, Effect, Layer } from "effect";
-import { decodeEvidenceMode, EvidenceMode, EvidencePaths, generateReplayEvidence } from "@/projection/Evidence";
+import {
+  decodeEvidenceMode,
+  EvidenceMode,
+  EvidencePaths,
+  EvidenceWriteScript,
+  generateReplayEvidence,
+} from "@/projection/Evidence";
 import type { EvidenceRun } from "@/projection/Evidence";
 
 const paths = EvidencePaths.make({
@@ -15,7 +21,7 @@ const paths = EvidencePaths.make({
 // only `--write` regenerates it, and only after the replay matched. The
 // default (check) mode prints the recomputed report instead of writing it.
 const generate = Effect.gen(function* () {
-  const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv);
+  const mode: EvidenceMode = yield* decodeEvidenceMode(process.argv, EvidenceWriteScript.Enum["evidence:s7:write"]);
   const run: EvidenceRun = yield* generateReplayEvidence(mode, paths);
   if (EvidenceMode.is.check(run.mode)) {
     yield* Console.log(run.rendered);
