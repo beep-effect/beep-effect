@@ -57,6 +57,7 @@ const ok = (label: string, windows: ReadonlyArray<UsageWindow>) =>
       windows,
       credits: [],
       limitResets: O.none(),
+      asOf: O.none(),
     }),
   });
 
@@ -322,6 +323,7 @@ const runLive = <A, E>(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
+    yield* fs.makeDirectory(path.join(root, "snapshots"));
     yield* Effect.forEach(
       Object.entries(files),
       ([name, content]) => fs.writeFileString(path.join(root, name), content),
@@ -334,7 +336,9 @@ const runLive = <A, E>(
       Effect.provideService(HttpClient.HttpClient, client),
       Effect.provideService(
         ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnv({ env: { BEEP_ACCOUNTS_AUTH_DIR: root, HOME: root } })
+        ConfigProvider.fromEnv({
+          env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
+        })
       )
     );
   }).pipe(Effect.provide(NodeServices.layer));
@@ -415,6 +419,52 @@ describe("live account poller", () => {
         })
       );
       expect(outcome).toEqual([0, "NeedsLogin"]);
+    })
+  );
+});
+
+describe("local snapshots", () => {
+  const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
+
+  it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const usages = yield* runLive(
+        { "snapshots/cursor.json": snapshot, "snapshots/broken.json": "{", "snapshots/notes.txt": "x" },
+        client,
+        pollAccounts
+      );
+      expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+        ["cursor", "me@example.com", "Ok"],
+      ]);
+      expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
+        A.join(
+          [
+            "[accounts] use first: cursor me@example.com",
+            "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
+          ],
+          "\n"
+        )
+      );
+    })
+  );
+
+  it.effect("does not poll a provider that only exists as a snapshot", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const outcome = yield* runLive(
+        { "claude-me.json": authFiles["claude-me.json"] },
+        client,
+        Effect.gen(function* () {
+          const usage = yield* AccountsUsage;
+          const listed = yield* usage.accounts;
+          const polled = yield* Effect.forEach(listed, (ref) =>
+            usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
+          );
+          return A.map(polled, (row) => row.outcome._tag);
+        })
+      );
+      expect(outcome).toEqual(["Failed"]);
     })
   );
 });

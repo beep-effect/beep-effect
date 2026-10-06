@@ -44,6 +44,40 @@ export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok"]).p
 export type AccountProvider = typeof AccountProvider.Type;
 
 /**
+ * A provider name on a report row: one of the polled providers, or any name a
+ * local snapshot file uses.
+ *
+ * **Example** (Guard a provider name)
+ *
+ * ```ts
+ * import { AccountProviderName } from "@beep/repo-cli/test/Accounts"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AccountProviderName)("cursor")) // true
+ * console.log(S.is(AccountProviderName)("Not A Name")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AccountProviderName = S.String.check(
+  S.isPattern(/^[a-z][a-z0-9-]{0,31}$/, {
+    identifier: "AccountProviderName",
+    title: "Account provider name",
+    description: "Lowercase letters, digits, and hyphens, starting with a letter.",
+    message: "a provider name uses lowercase letters, digits, and hyphens",
+  })
+).pipe($I.annoteSchema("AccountProviderName", { description: "Provider name shown on a report row." }));
+
+/**
+ * Provider name shown on a report row.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AccountProviderName = typeof AccountProviderName.Type;
+
+/**
  * The operator's name for one account: a directory-safe label such as an
  * email address.
  *
@@ -78,9 +112,9 @@ export const AccountLabel = S.String.check(
 export type AccountLabel = typeof AccountLabel.Type;
 
 /**
- * One account: its provider, label, and the stored-login file its usage is
- * read with. The file belongs to the local proxy, which keeps it refreshed;
- * the poller only reads it.
+ * One account: its provider, label, and the file its usage comes from. For a
+ * polled provider that is the local proxy's stored login, which the proxy keeps
+ * refreshed and the poller only reads; for a snapshot it is the snapshot file.
  *
  * **Example** (Make an account)
  *
@@ -95,8 +129,8 @@ export type AccountLabel = typeof AccountLabel.Type;
  * @since 0.0.0
  */
 export class AccountRef extends S.Class<AccountRef>($I`AccountRef`)(
-  { provider: AccountProvider, label: AccountLabel, source: S.String },
-  $I.annote("AccountRef", { description: "An account and the stored-login file its usage is read with." })
+  { provider: AccountProviderName, label: AccountLabel, source: S.String },
+  $I.annote("AccountRef", { description: "An account and the file its usage comes from." })
 ) {}
 
 /**
@@ -113,15 +147,16 @@ export class AccountRef extends S.Class<AccountRef>($I`AccountRef`)(
  * @category models
  * @since 0.0.0
  */
-export const UsageWindowKind = LiteralKit(["session", "weekly", "weekly-scoped"]).pipe(
+export const UsageWindowKind = LiteralKit(["session", "weekly", "weekly-scoped", "cycle", "cycle-scoped"]).pipe(
   $I.annoteSchema("UsageWindowKind", {
-    description: "Short session limit, account-wide weekly limit, or a weekly limit scoped to one model.",
+    description:
+      "Short session limit; account-wide weekly or billing-cycle limit; or one of those scoped to a model group.",
   })
 );
 
 /**
- * Short session limit, account-wide weekly limit, or a weekly limit scoped to
- * one model.
+ * Short session limit; account-wide weekly or billing-cycle limit; or one of
+ * those scoped to a model group.
  *
  * @category models
  * @since 0.0.0
@@ -221,7 +256,8 @@ export class CreditBalance extends S.Class<CreditBalance>($I`CreditBalance`)(
  * **Details**
  *
  * `Ok` carries the windows, any credit balances, and the number of unused
- * limit-reset grants when the provider reports one. `NeedsLogin` means the stored login is missing or
+ * limit-reset grants when the provider reports one; `asOf` is set when the
+ * numbers come from a snapshot file and absent for a live poll. `NeedsLogin` means the stored login is missing or
  * no longer refreshes, so the operator must sign that account in again.
  * `Failed` is any other read, network, or decode failure.
  *
@@ -244,6 +280,7 @@ export const AccountUsageOutcome = S.TaggedUnion({
     windows: S.Array(UsageWindow),
     credits: S.Array(CreditBalance),
     limitResets: S.OptionFromNullOr(S.Finite),
+    asOf: S.OptionFromNullOr(S.DateTimeUtcFromString),
   },
   NeedsLogin: { detail: S.String },
   Failed: { detail: S.String },
@@ -314,7 +351,9 @@ export type AccountAvailability = typeof AccountAvailability.Type;
  *
  * **Details**
  *
- * `burnRate` is the weekly percent that must be spent per hour to finish the
+ * The `weekly*` fields describe the account-wide window, which is the billing
+ * cycle for a provider that meters by cycle. `snapshotAgeHours` is set when the
+ * row comes from a snapshot file. `burnRate` is the percent that must be spent per hour to finish the
  * week at 100%: `weeklyRemainingPercent / hoursUntilReset`. The account with
  * the highest rate is the one most at risk of wasting quota, so it ranks
  * first.
@@ -338,9 +377,61 @@ export class AccountRanking extends S.Class<AccountRanking>($I`AccountRanking`)(
     weeklyRemainingPercent: S.OptionFromNullOr(S.Finite),
     hoursUntilWeeklyReset: S.OptionFromNullOr(S.Finite),
     burnRate: S.OptionFromNullOr(S.Finite),
+    snapshotAgeHours: S.OptionFromNullOr(S.Finite),
   },
   $I.annote("AccountRanking", { description: "An account's availability and how urgently its weekly quota needs use." })
 ) {}
+
+/**
+ * A usage snapshot written by a local collector for a provider the poller
+ * cannot read itself.
+ *
+ * **Details**
+ *
+ * The command shows every `*.json` snapshot in the accounts state directory as
+ * a report row with its age. What writes the file is outside this package.
+ *
+ * **Example** (Decode a snapshot)
+ *
+ * ```ts
+ * import { AccountSnapshotJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const text = '{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me","capturedAt":"2026-01-05T00:00:00.000Z","plan":null,"windows":[]}'
+ * console.log(O.isSome(AccountSnapshotJson.decodeOption(text))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AccountSnapshot extends S.Class<AccountSnapshot>($I`AccountSnapshot`)(
+  {
+    schemaVersion: S.Literal("accounts-snapshot/v1"),
+    provider: AccountProviderName,
+    label: AccountLabel,
+    capturedAt: S.DateTimeUtcFromString,
+    plan: S.OptionFromNullOr(S.String),
+    windows: S.Array(UsageWindow),
+  },
+  $I.annote("AccountSnapshot", { description: "Usage windows a local collector captured for one account." })
+) {}
+
+/**
+ * JSON-string codec for {@link AccountSnapshot}.
+ *
+ * **Example** (Reject malformed text)
+ *
+ * ```ts
+ * import { AccountSnapshotJson } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(AccountSnapshotJson.decodeOption("not-json"))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const AccountSnapshotJson = JsonStringCodec(AccountSnapshot);
 
 /**
  * The `accounts status --json` document.
@@ -404,10 +495,18 @@ const unavailable = (usage: AccountUsage): AccountRanking =>
     weeklyRemainingPercent: O.none(),
     hoursUntilWeeklyReset: O.none(),
     burnRate: O.none(),
+    snapshotAgeHours: O.none(),
   });
 
-const rankOk = (now: DateTime.Utc, usage: AccountUsage, windows: ReadonlyArray<UsageWindow>): AccountRanking => {
-  const weekly = firstOfKind(windows, "weekly");
+const rankOk = (
+  now: DateTime.Utc,
+  usage: AccountUsage,
+  windows: ReadonlyArray<UsageWindow>,
+  asOf: O.Option<DateTime.Utc>
+): AccountRanking => {
+  // The account-wide window that decides urgency: weekly, or the billing cycle
+  // for a provider that meters by cycle.
+  const weekly = O.orElse(firstOfKind(windows, "weekly"), () => firstOfKind(windows, "cycle"));
   const remaining = O.map(weekly, (window) => Math.max(100 - window.usedPercent, 0));
   const hours = O.map(weekly, (window) =>
     O.match(window.resetsAt, { onNone: () => UNSTARTED_WEEK_HOURS, onSome: (at) => hoursUntil(now, at) })
@@ -424,6 +523,9 @@ const rankOk = (now: DateTime.Utc, usage: AccountUsage, windows: ReadonlyArray<U
     weeklyRemainingPercent: remaining,
     hoursUntilWeeklyReset: hours,
     burnRate: O.zipWith(remaining, hours, (left, time) => left / time),
+    snapshotAgeHours: O.map(asOf, (at) =>
+      Math.max((DateTime.toEpochMillis(now) - DateTime.toEpochMillis(at)) / MILLIS_PER_HOUR, 0)
+    ),
   });
 };
 
@@ -456,7 +558,7 @@ export const rankAccount: {
   2,
   (usage: AccountUsage, now: DateTime.Utc): AccountRanking =>
     AccountUsageOutcome.match(usage.outcome, {
-      Ok: ({ windows }) => rankOk(now, usage, windows),
+      Ok: ({ windows, asOf }) => rankOk(now, usage, windows, asOf),
       NeedsLogin: () => unavailable(usage),
       Failed: () => unavailable(usage),
     })

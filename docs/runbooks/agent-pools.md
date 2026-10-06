@@ -45,7 +45,9 @@ runs its own chain. The meter and recipe below describe that route.
 the local proxy holds a login for and ranks them by how urgently the weekly quota needs use
 (weekly percent left per hour until reset). A row also shows credit balances (Claude cloud session
 credits with their expiry, ChatGPT credits) and unused ChatGPT limit resets. Muse reports no
-windows while its five-hour window is idle; Cursor is not polled (D17). It only reads the proxy's stored logins under `~/.cli-proxy-api`; an account
+windows while its five-hour window is idle. Cursor is not polled (D17): the command only shows
+`accounts-snapshot/v1` files that a local collector leaves in `~/.local/state/beep/accounts/`
+(`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each as a row with its age. It only reads the proxy's stored logins under `~/.cli-proxy-api`; an account
 appears once it is signed in to the proxy, and one whose login the provider rejects shows as
 `needs login`. The usage endpoints are undocumented and can change without notice, so inside a
 running lane the signal is still the request itself. A delegation that fails with `rate_limit_error` ("This request would exceed your

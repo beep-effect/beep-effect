@@ -50,12 +50,17 @@ export const renderHours = (hours: number): string => {
 
 const percent = (value: number): string => `${Math.round(value)}%`;
 
+const isScoped = (window: UsageWindow): boolean => window.kind === "weekly-scoped" || window.kind === "cycle-scoped";
+
+const isAccountWide = (window: UsageWindow): boolean => window.kind === "weekly" || window.kind === "cycle";
+
 const windowLabel = (window: UsageWindow): string =>
-  window.kind === "weekly-scoped" ? O.getOrElse(window.scope, () => "scoped") : window.kind;
+  isScoped(window) ? O.getOrElse(window.scope, () => "scoped") : window.kind;
 
 const otherWindows = (windows: ReadonlyArray<UsageWindow>): ReadonlyArray<string> =>
   A.map(
-    A.filter(windows, (window) => window.kind !== "weekly"),
+    // The first account-wide window is already in the summary.
+    A.filter(windows, (window) => !O.contains(A.findFirst(windows, isAccountWide), window)),
     (window) => `${windowLabel(window)} ${percent(window.usedPercent)}`
   );
 
@@ -73,11 +78,12 @@ const renderCredit = (credit: CreditBalance): string =>
     " "
   );
 
-const weeklySummary = (row: AccountRanking): O.Option<string> =>
+const weeklySummary = (row: AccountRanking, windows: ReadonlyArray<UsageWindow>): O.Option<string> =>
   O.zipWith(
     row.weeklyRemainingPercent,
     row.hoursUntilWeeklyReset,
-    (left, hours) => `weekly ${percent(left)} left, resets in ${renderHours(hours)}`
+    (left, hours) =>
+      `${O.match(A.findFirst(windows, isAccountWide), { onNone: () => "weekly", onSome: windowLabel })} ${percent(left)} left, resets in ${renderHours(hours)}`
   );
 
 /**
@@ -111,7 +117,7 @@ export const renderAccountRanking = (row: AccountRanking): string => {
       A.join(
         [
           `${name}: ${row.availability}`,
-          ...O.toArray(weeklySummary(row)),
+          ...O.toArray(weeklySummary(row, windows)),
           ...otherWindows(windows),
           ...A.map(credits, renderCredit),
           ...O.toArray(
@@ -121,6 +127,7 @@ export const renderAccountRanking = (row: AccountRanking): string => {
             )
           ),
           ...O.toArray(O.map(plan, (value) => `plan ${value}`)),
+          ...O.toArray(O.map(row.snapshotAgeHours, (hours) => `snapshot ${renderHours(hours)} old`)),
         ],
         " · "
       ),

@@ -19,9 +19,17 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { AccountsError } from "./Accounts.errors.ts";
-import { AccountProvider, AccountRef, AccountUsage, AccountUsageOutcome } from "./Accounts.schemas.ts";
+import {
+  AccountProvider,
+  AccountRef,
+  AccountSnapshotJson,
+  AccountUsage,
+  AccountUsageOutcome,
+} from "./Accounts.schemas.ts";
 import {
   ClaudeUsageBodyJson,
   CodexUsageBodyJson,
@@ -36,6 +44,7 @@ import {
   ProxyAuthFileJson,
 } from "./Accounts.wire.schemas.ts";
 import type { PlatformError } from "effect";
+import type { AccountSnapshot } from "./Accounts.schemas.ts";
 import type { ProxyAuthFile } from "./Accounts.wire.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
@@ -48,7 +57,9 @@ const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
  *
  * `poll` never fails: a missing login, a rejected token, a network error, or
  * an undecodable response becomes that account's outcome, so one bad account
- * cannot hide the others.
+ * cannot hide the others. `snapshots` reads the usage a local collector wrote
+ * for providers the poller cannot read itself; an unreadable snapshot file is
+ * skipped.
  *
  * **Example** (Poll every account)
  *
@@ -65,6 +76,7 @@ const $I = $RepoCliId.create("commands/Accounts/AccountsUsage.service");
 export interface AccountsUsageShape {
   readonly accounts: Effect.Effect<ReadonlyArray<AccountRef>, AccountsError>;
   readonly poll: (account: AccountRef) => Effect.Effect<AccountUsage>;
+  readonly snapshots: Effect.Effect<ReadonlyArray<AccountUsage>, AccountsError>;
 }
 
 /**
@@ -92,6 +104,8 @@ const GROK_BILLING_URL = "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokC
 const GROK_EMPTY_REQUEST = new Uint8Array(5);
 const REQUEST_TIMEOUT = Duration.seconds(20);
 const POLL_CONCURRENCY = 4;
+
+const isPolledProvider = S.is(AccountProvider);
 
 // The proxy names a stored login by its upstream; the report names the product.
 const providerOfLoginType = (type: string): O.Option<AccountProvider> =>
@@ -164,6 +178,7 @@ export const claudeUsageOutcome = (response: {
         windows: claudeUsageWindows(body),
         credits: claudeCreditBalances(response.body),
         limitResets: O.none(),
+        asOf: O.none(),
       });
     },
   });
@@ -202,6 +217,7 @@ export const codexUsageOutcome = (response: {
         windows: codexUsageWindows(body),
         credits: codexCreditBalances(body),
         limitResets: codexLimitResets(body),
+        asOf: O.none(),
       }),
   });
 };
@@ -240,6 +256,7 @@ export const museUsageOutcome = (response: {
         windows: museUsageWindows(body),
         credits: [],
         limitResets: O.none(),
+        asOf: O.none(),
       }),
   });
 };
@@ -277,6 +294,7 @@ export const grokUsageOutcome = (response: {
         windows,
         credits: [],
         limitResets: O.none(),
+        asOf: O.none(),
       }),
   });
 };
@@ -471,6 +489,9 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "the proxy holds no readable login for it" }),
       });
     }
+    if (!isPolledProvider(account.provider)) {
+      return AccountUsage.make({ account, outcome: failed(`${account.provider} is read from a snapshot, not polled`) });
+    }
     const outcome = yield* fetchOutcome(account.provider, login.value).pipe(
       Effect.timeoutOption(REQUEST_TIMEOUT),
       Effect.map(O.getOrElse(() => failed(`no answer within ${Duration.format(REQUEST_TIMEOUT)}`))),
@@ -479,7 +500,49 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     return AccountUsage.make({ account, outcome });
   });
 
-  return AccountsUsage.of({ accounts, poll });
+  const snapshotDirectory = yield* resolveWorkstationStateDir({
+    override: "BEEP_ACCOUNTS_SNAPSHOT_DIR",
+    store: "accounts",
+  }).pipe(
+    Effect.mapError((cause) =>
+      AccountsError.make({ reason: "usage", message: "Could not resolve the accounts snapshot directory.", cause })
+    )
+  );
+
+  const snapshotAt = (source: string) =>
+    fs.readFileString(source).pipe(
+      Effect.map(AccountSnapshotJson.decodeOption),
+      Effect.orElseSucceed(O.none<AccountSnapshot>),
+      Effect.map(
+        O.map((snapshot) =>
+          AccountUsage.make({
+            account: AccountRef.make({ provider: snapshot.provider, label: snapshot.label, source }),
+            outcome: AccountUsageOutcome.cases.Ok.make({
+              identity: O.some(snapshot.label),
+              plan: snapshot.plan,
+              windows: snapshot.windows,
+              credits: [],
+              limitResets: O.none(),
+              asOf: O.some(snapshot.capturedAt),
+            }),
+          })
+        )
+      )
+    );
+
+  const snapshots = fs.readDirectory(snapshotDirectory).pipe(
+    Effect.catchTag("PlatformError", (error) =>
+      error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(mapPlatformError(error))
+    ),
+    Effect.map(A.filter(Str.endsWith(".json"))),
+    Effect.flatMap(
+      Effect.forEach((name) => snapshotAt(path.join(snapshotDirectory, name)), { concurrency: POLL_CONCURRENCY })
+    ),
+    Effect.map(A.getSomes),
+    Effect.withSpan("AccountsUsage.snapshots")
+  );
+
+  return AccountsUsage.of({ accounts, poll, snapshots });
 });
 
 /**
@@ -517,7 +580,6 @@ export const layerAccountsUsageLive = Layer.effect(AccountsUsage, makeAccountsUs
  */
 export const pollAccounts = Effect.gen(function* () {
   const usage = yield* AccountsUsage;
-  return dedupeAccountUsages(
-    yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY })
-  );
+  const polled = yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY });
+  return dedupeAccountUsages(A.appendAll(polled, yield* usage.snapshots));
 }).pipe(Effect.withSpan("AccountsUsage.pollAll"));
