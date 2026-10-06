@@ -41939,6 +41939,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The atomic-replacement test creates its filesystem override from the body-owned temporary directory. A fresh manifest layer must capture the failing rename service rather than reuse the outer live store; the shorter scope closes before independent filesystem cleanup assertions."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:955:provideScopedLayer@15#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 955,
+      "endLine": 955,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:4243d8e40501686f209e6d0702bac1296576d1bc129f5cd5bff6a285556b4b88",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before a second validation or independent SQL read-back; the public outer fixture owns the temporary directories. Preserve this shorter scope and the exact claims/evidence assertions."
     }
   ]
 }
