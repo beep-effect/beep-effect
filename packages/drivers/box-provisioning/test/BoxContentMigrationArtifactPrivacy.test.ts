@@ -8,6 +8,7 @@ import {
   BoxContentFailureKind,
   BoxContentJournalEntry,
   BoxContentJournalSkipped,
+  BoxContentJournalStarted,
   BoxContentMigrationPlan,
   BoxContentMigrationReceipt,
   BoxContentMigrationRuleId,
@@ -18,6 +19,8 @@ import {
   BoxSourceRevision,
   decodeBoxContentMigrationPlan,
   decodeBoxContentMigrationReceipt,
+  encodeBoxContentJournalEntry,
+  makeExampleContentJournalFields,
 } from "@beep/box-provisioning";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -172,6 +175,16 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
       true,
     ]);
   });
+
+  it.effect(
+    "encodes a journal entry built from the documented example fields to the baseline shape",
+    Effect.fnUntraced(function* () {
+      const entry = BoxContentJournalStarted.make(makeExampleContentJournalFields());
+      const decoded = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(yield* encodeBoxContentJournalEntry(entry));
+
+      expect(decoded).toEqual({ ...journalBase, actionKind: "file", phase: "Started", planDigest: "c".repeat(64) });
+    })
+  );
 
   describe("cannot decode a plan carrying a sentinel in any string field", () => {
     it.effect.each(sensitiveSentinels)(

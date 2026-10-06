@@ -11,25 +11,12 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node-shared/NodeFileSystem";
 import * as NodePath from "@effect/platform-node-shared/NodePath";
-import {
-  Context,
-  DateTime,
-  Effect,
-  Layer,
-  Match,
-  MutableHashMap,
-  MutableHashSet,
-  Order,
-  pipe,
-  Ref,
-  Semaphore,
-} from "effect";
+import { Context, DateTime, Effect, Layer, Match, MutableHashMap, Order, pipe, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -67,7 +54,6 @@ import {
   BoxContentMigrationMapError,
   BoxProvisioningDriftError,
   BoxProvisioningInvariantError,
-  BoxProvisioningSchemaError,
 } from "./BoxProvisioningErrors.ts";
 import { boxFolderNamesEquivalent, boxNameEquivalenceKey } from "./BoxProvisioningIntent.ts";
 import { BoxProviderId } from "./BoxProvisioningObserved.ts";
@@ -97,6 +83,7 @@ import type {
 } from "./BoxContentMigrationReceipt.ts";
 import type {
   BoxProvisioningApplyJournalError,
+  BoxProvisioningSchemaError,
   BoxProvisioningSubjectMismatchError,
   BoxProvisioningTenantMismatchError,
 } from "./BoxProvisioningErrors.ts";
@@ -223,7 +210,8 @@ type PlannedFile = {
   readonly source: SourceState;
 };
 
-type SourceStates = MutableHashMap.MutableHashMap<Sha256Hex, SourceState>;
+/** One state per map file, in map order. */
+type SourceStates = ReadonlyArray<SourceState>;
 
 type PlanContext = {
   readonly files: ReadonlyArray<PlannedFile>;
@@ -239,12 +227,12 @@ type PlanContext = {
 
 const rootPathKey = "";
 
-type DigestError = BoxCanonicalDigestError | S.SchemaError;
-
-const digestFailure = (error: DigestError): PlatformError.PlatformError | BoxProvisioningSchemaError =>
-  P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "migration-plan" });
-
-const hashed = <A>(effect: Effect.Effect<A, DigestError, Crypto.Crypto>) => effect.pipe(Effect.mapError(digestFailure));
+/**
+ * Digests here hash canonical JSON this module just built or a plan that already
+ * decoded, so a digest failure is an invariant violation, not a recoverable error.
+ */
+const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError | S.SchemaError, Crypto.Crypto>) =>
+  Effect.orDie(effect);
 
 const folderPathDigest = (pathKeys: ReadonlyArray<string>) =>
   hashed(digestEncoded({ kind: "box-content-folder", path: pathKeys }));
@@ -273,18 +261,20 @@ const isFolderCreate = S.is(BoxContentFolderCreate);
 const isFolderExists = S.is(BoxContentFolderExists);
 const isSkipIdentical = S.is(BoxContentSkipIdentical);
 
-const budgetError = (run: Run, phase: BudgetPhase, usedProviderCalls: number) =>
-  BoxContentMigrationBudgetError.make({
-    maxProviderCalls: O.getOrElse(run.maxProviderCalls, () => 0),
-    phase,
-    usedProviderCalls,
-  });
+/** The configured cap when `cost` more calls on top of `used` would exceed it. */
+const exceededBudget = (run: Run, used: number, cost: number): O.Option<number> =>
+  O.filter(run.maxProviderCalls, (max) => used + cost > max);
 
 /** Charges one required read against the hard budget, failing before the call when it cannot be afforded. */
 const spendRead = Effect.fnUntraced(function* (run: Run, phase: BudgetPhase) {
   const used = yield* Ref.get(run.calls);
-  if (O.exists(run.maxProviderCalls, (max) => used + 1 > max)) {
-    return yield* budgetError(run, phase, used);
+  const exceeded = exceededBudget(run, used, 1);
+  if (O.isSome(exceeded)) {
+    return yield* BoxContentMigrationBudgetError.make({
+      maxProviderCalls: exceeded.value,
+      phase,
+      usedProviderCalls: used,
+    });
   }
   yield* Ref.set(run.calls, used + 1);
 });
@@ -441,16 +431,13 @@ const postPlanProviderCalls = (
   listings: MutableHashMap.MutableHashMap<BoxProviderId, FolderListing>
 ): number => {
   const additions = MutableHashMap.empty<string, number>();
-  const listed = MutableHashSet.empty<string>();
   const add = (pathKey: string, count: number) =>
     MutableHashMap.set(additions, pathKey, O.getOrElse(MutableHashMap.get(additions, pathKey), () => 0) + count);
   A.forEach(folders, (planned) => {
     const parentKey = O.getOrElse(planned.folder.parentPathKey, () => rootPathKey);
-    MutableHashSet.add(listed, parentKey);
     add(parentKey, isFolderCreate(planned.action) ? 1 : 0);
   });
   A.forEach(files, (planned) => {
-    MutableHashSet.add(listed, planned.folderPathKey);
     add(planned.folderPathKey, isUpload(planned.action) ? 1 : 0);
   });
   const currentEntries = (pathKey: string): number =>
@@ -459,11 +446,11 @@ const postPlanProviderCalls = (
       O.flatMap((folderId) => MutableHashMap.get(listings, folderId)),
       O.match({ onNone: () => 0, onSome: (listing) => listing.entryCount })
     );
+  // Every folder that will be listed has an entry in `additions`, possibly zero.
   return A.reduce(
-    A.fromIterable(listed),
+    A.fromIterable(additions),
     1,
-    (calls, pathKey) =>
-      calls + listingPages(currentEntries(pathKey) + O.getOrElse(MutableHashMap.get(additions, pathKey), () => 0))
+    (calls, [pathKey, added]) => calls + listingPages(currentEntries(pathKey) + added)
   );
 };
 
@@ -486,18 +473,12 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
     { concurrency: 1 }
   );
   const sources = yield* O.match(knownSources, {
-    onNone: Effect.fnUntraced(function* () {
-      const states: SourceStates = MutableHashMap.empty();
-      yield* Effect.forEach(
-        entries,
-        ({ entryDigest, file }) =>
-          inspectSource(sourcePaths.resolve(map.sourceRoot, file.sourceRelativePath), file).pipe(
-            Effect.map((state) => MutableHashMap.set(states, entryDigest, state))
-          ),
-        { concurrency: sourceInspectionConcurrency, discard: true }
-      );
-      return states;
-    }),
+    onNone: () =>
+      Effect.forEach(
+        map.files,
+        (file) => inspectSource(sourcePaths.resolve(map.sourceRoot, file.sourceRelativePath), file),
+        { concurrency: sourceInspectionConcurrency }
+      ),
     onSome: Effect.succeed,
   });
 
@@ -553,10 +534,9 @@ const buildPlan = Effect.fn("BoxContentMigration.buildPlan")(function* (
   );
 
   const files = yield* Effect.forEach(
-    entries,
-    Effect.fnUntraced(function* ({ entryDigest, file }) {
+    A.zip(entries, sources),
+    Effect.fnUntraced(function* ([{ entryDigest, file }, source]) {
       const folderPathKey = contentPathKey(file.folderPath);
-      const source = O.getOrElse(MutableHashMap.get(sources, entryDigest), (): SourceState => ({ _tag: "Missing" }));
       const listing = yield* O.match(MutableHashMap.get(folderIds, folderPathKey), {
         onNone: () => Effect.succeed(O.none<FolderListing>()),
         onSome: (folderId) => Effect.asSome(listFolder(folderId)),
@@ -786,7 +766,7 @@ const applyPlan = Effect.fn("BoxContentMigration.applyPlan")(function* (
   /** Whether `cost` more calls still leave room for the post-apply plan. */
   const affordable = Effect.fnUntraced(function* (cost: number) {
     const used = yield* Ref.get(run.calls);
-    return !O.exists(run.maxProviderCalls, (max) => used + cost + context.postPlanReserve > max);
+    return O.isNone(exceededBudget(run, used, cost + context.postPlanReserve));
   });
   const charge = (cost: number) => Ref.update(run.calls, (used) => used + cost);
 
@@ -1165,8 +1145,13 @@ const makeService = (
     }
     // A run that cannot afford its own post-apply verification writes nothing.
     const usedByPlan = yield* Ref.get(run.calls);
-    if (O.exists(run.maxProviderCalls, (max) => usedByPlan + context.postPlanReserve > max)) {
-      return yield* budgetError(run, "post-plan", usedByPlan);
+    const exceeded = exceededBudget(run, usedByPlan, context.postPlanReserve);
+    if (O.isSome(exceeded)) {
+      return yield* BoxContentMigrationBudgetError.make({
+        maxProviderCalls: exceeded.value,
+        phase: "post-plan",
+        usedProviderCalls: usedByPlan,
+      });
     }
     const attemptId = yield* O.match(options.attemptId, {
       onNone: () => Effect.map(crypto.randomUUIDv4, BoxApplyAttemptId.make),

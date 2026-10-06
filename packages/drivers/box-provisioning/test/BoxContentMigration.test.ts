@@ -70,6 +70,8 @@ type Harness = {
   readonly failJournalAt: Ref.Ref<O.Option<number>>;
   readonly fake: FakeBox;
   readonly journal: Ref.Ref<ReadonlyArray<BoxContentJournalEntry>>;
+  /** Runs just before an entry is recorded, at the exact point the engine is about to act on it. */
+  readonly onAppend: Ref.Ref<(entry: BoxContentJournalEntry) => Effect.Effect<void>>;
 };
 
 class MigrationHarness extends Context.Service<MigrationHarness, Harness>()(
@@ -78,7 +80,7 @@ class MigrationHarness extends Context.Service<MigrationHarness, Harness>()(
 
 type TestServices = BoxContentMigration | MigrationHarness | FileSystem.FileSystem | Path.Path;
 
-const makeTestLayer = (options: FakeBoxOptions): Layer.Layer<TestServices> => {
+const makeTestLayer = (options: FakeBoxOptions, recordJournal = true): Layer.Layer<TestServices> => {
   const harness = Layer.effect(
     MigrationHarness,
     Effect.gen(function* () {
@@ -86,25 +88,30 @@ const makeTestLayer = (options: FakeBoxOptions): Layer.Layer<TestServices> => {
         failJournalAt: yield* Ref.make(O.none<number>()),
         fake: makeFakeBox(options),
         journal: yield* Ref.make<ReadonlyArray<BoxContentJournalEntry>>(A.empty()),
+        onAppend: yield* Ref.make<Harness["onAppend"] extends Ref.Ref<infer Hook> ? Hook : never>(() => Effect.void),
       });
     })
   );
   const box = Layer.unwrap(Effect.map(MigrationHarness, ({ fake }) => B.Box.makeLayerFromClient(fake.client)));
   const journal = Layer.effect(
     BoxContentMigrationJournal,
-    Effect.map(MigrationHarness, ({ failJournalAt, journal: entries }) =>
+    Effect.map(MigrationHarness, ({ failJournalAt, journal: entries, onAppend }) =>
       BoxContentMigrationJournal.of({
         append: Effect.fn("BoxContentMigrationTest.append")(function* (entry) {
           if (O.contains(yield* Ref.get(failJournalAt), entry.sequence)) {
             return yield* BoxProvisioningApplyJournalError.make({ operation: "append" });
           }
+          yield* (yield* Ref.get(onAppend))(entry);
           yield* Ref.update(entries, A.append(entry));
         }),
       })
     )
   );
-  return BoxContentMigration.liveLayerWithJournal.pipe(
-    Layer.provideMerge(Layer.mergeAll(box, journal)),
+  const migration = recordJournal
+    ? BoxContentMigration.liveLayerWithJournal.pipe(Layer.provide(journal))
+    : BoxContentMigration.liveLayer;
+  return migration.pipe(
+    Layer.provideMerge(box),
     Layer.provideMerge(harness),
     Layer.provideMerge(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer))
   );
@@ -114,9 +121,10 @@ const makeTestLayer = (options: FakeBoxOptions): Layer.Layer<TestServices> => {
 const scenario = (
   name: string,
   options: FakeBoxOptions,
-  body: () => Effect.Effect<void, unknown, TestServices | Scope.Scope>
+  body: () => Effect.Effect<void, unknown, TestServices | Scope.Scope>,
+  recordJournal = true
 ): void =>
-  it.layer(makeTestLayer(options), { timeout: "60 seconds" })(name, (it) => {
+  it.layer(makeTestLayer(options, recordJournal), { timeout: "60 seconds" })(name, (it) => {
     it.effect("holds", body);
   });
 
@@ -689,5 +697,249 @@ scenario(
     // Identity check, three pages of the root, one page of the destination folder.
     expect(plan.summary.planProviderCalls).toBe(5);
     expect(fake.listedFolderIds()).toEqual(["100", "100", "100", "200"]);
+  })
+);
+
+const failedOutcomes = (outcomes: ReadonlyArray<BoxContentActionOutcome>) =>
+  A.filter(outcomes, (outcome) => outcome._tag === "Failed");
+
+const inboxFile = [source("a.txt", ["Inbox"], "a.txt", "alpha")];
+
+scenario(
+  "@beep/box-provisioning content migration blocks a name taken by a folder or a web link",
+  {
+    entries: [
+      folder("200", "Inbox"),
+      folder("210", "taken.txt", "200"),
+      { id: "211", name: "link.txt", parentId: "200", type: "web_link" },
+      folder("212", "", "200"),
+    ],
+  },
+  Effect.fnUntraced(function* () {
+    const { fake } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare([
+      source("taken.txt", ["Inbox"], "taken.txt", "one"),
+      source("link.txt", ["Inbox"], "link.txt", "two"),
+      source("free.txt", ["Inbox"], "free.txt", "three"),
+    ]);
+
+    const { plan, result } = yield* planAndApply(mapInput);
+
+    expect(fileTags(plan)).toEqual(["BlockedNameConflict", "BlockedNameConflict", "Upload"]);
+    expect(
+      A.sort(
+        A.map(
+          A.filter(plan.fileActions, (action) => action._tag === "BlockedNameConflict"),
+          (action) => action.providerId
+        ),
+        Str.Order
+      )
+    ).toEqual(["210", "211"]);
+    expect(result.verdict).toBe("incomplete");
+    expect(A.map(fake.uploads(), (upload) => upload.name)).toEqual(["free.txt"]);
+    expect(A.length(fake.entries())).toBe(5);
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration runs without a journal sink and uploads an empty file",
+  {},
+  Effect.fnUntraced(function* () {
+    const { fake, journal } = yield* MigrationHarness;
+    const sources = [
+      source("a.txt", ["Inbox"], "a.txt", "alpha", "kept"),
+      source("empty.bin", ["Inbox"], "empty.bin", ""),
+      source("c.txt", ["Inbox"], "c.txt", "charlie"),
+    ];
+    const prepared = yield* prepare(sources);
+    // Only the first file keeps its rule; the other two are grouped under "no rule".
+    const mapInput = {
+      ...prepared.mapInput,
+      files: A.map(prepared.mapInput.files, ({ ruleId, ...file }) => (ruleId === "kept" ? { ...file, ruleId } : file)),
+    };
+
+    const { plan, result } = yield* planAndApply(mapInput);
+
+    expect(A.map(plan.summary.uploadCountsByRule, (count) => [count.ruleId._tag, count.uploadCount])).toEqual([
+      ["None", 2],
+      ["Some", 1],
+    ]);
+    expect(result.verdict).toBe("complete");
+    expect(result.receipt.uploadedBytes).toBe(12);
+    expect(A.filter(fake.entries(), (entry) => entry.name === "empty.bin")).toMatchObject([
+      { sha1: sha1Hex(bytes("")), type: "file" },
+    ]);
+    expect(yield* Ref.get(journal)).toEqual([]);
+  }),
+  false
+);
+
+scenario(
+  "@beep/box-provisioning content migration fails a folder create whose name is held by a file",
+  { entries: [storedFile("300", "Inbox", rootFolderId, "a file, not a folder")] },
+  Effect.fnUntraced(function* () {
+    const { fake } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare(inboxFile);
+
+    const { result } = yield* planAndApply(mapInput);
+
+    // The 409 is re-listed, no folder with that name exists, so nothing is adopted and nothing is replaced.
+    expect(failedOutcomes(result.receipt.outcomes)).toMatchObject([
+      { actionKind: "folder", failureKind: "name-in-use", status: { _tag: "Some", value: 409 } },
+    ]);
+    expect(outcomeTags(result.receipt.outcomes, "file")).toEqual(["NotAttempted"]);
+    expect(result.verdict).toBe("incomplete");
+    expect(fake.entries()).toEqual([storedFile("300", "Inbox", rootFolderId, "a file, not a folder")]);
+    expect(fake.calls.uploadFile).toBe(0);
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration reports a failed re-list after a folder conflict",
+  {},
+  Effect.fnUntraced(function* () {
+    const { fake, onAppend } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare(inboxFile);
+    fake.raceFolder("Inbox");
+    // The root listing fails only once the create has been journaled, i.e. on the adoption re-list.
+    yield* Ref.set(onAppend, (entry) =>
+      Effect.sync(() => {
+        if (entry.phase === "Started" && entry.actionKind === "folder") {
+          fake.failListingOnce(rootFolderId);
+        }
+      })
+    );
+
+    const { result } = yield* planAndApply(mapInput);
+
+    expect(failedOutcomes(result.receipt.outcomes)).toMatchObject([
+      { actionKind: "folder", failureKind: "provider-error", status: { _tag: "Some", value: 503 } },
+    ]);
+    expect(outcomeTags(result.receipt.outcomes, "file")).toEqual(["NotAttempted"]);
+    expect(folderTags(result.postPlan)).toEqual(["FolderExists"]);
+    expect(fileTags(result.postPlan)).toEqual(["Upload"]);
+    expect(result.verdict).toBe("incomplete");
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration never spends past the budget on an adoption re-list",
+  {
+    entries: A.map(["One", "Two", "Three", "Four", "Five", "Six"], (name, index) => folder(`21${index}`, name)),
+    pageSize: 1,
+  },
+  Effect.fnUntraced(function* () {
+    const { fake, journal } = yield* MigrationHarness;
+    const migration = yield* BoxContentMigration;
+    const { mapInput } = yield* prepare(inboxFile);
+    const options = BoxContentMigrationOptions.make({ maxProviderCalls: O.some(12) });
+    const plan = yield* migration.plan(mapInput, options);
+    fake.raceFolder("Inbox");
+    const callsBefore = fake.totalCalls();
+
+    const error = yield* Effect.flip(
+      migration.applyReviewedPlan(mapInput, yield* encodeBoxContentMigrationPlan(plan), options)
+    );
+
+    // Seven one-entry pages were needed to re-list the root; the cap allowed four, then stopped the run.
+    expect(plan.summary.planProviderCalls).toBe(7);
+    expect(error).toMatchObject({ _tag: "BoxContentMigrationBudgetError", maxProviderCalls: 12, phase: "post-plan" });
+    expect(fake.totalCalls() - callsBefore).toBe(12);
+    expect(A.map(yield* Ref.get(journal), (entry) => entry.phase)).toEqual(["Started", "Failed", "Skipped"]);
+    expect(A.filter(yield* Ref.get(journal), (entry) => entry.phase === "Failed")).toMatchObject([
+      { actionKind: "folder", failureKind: "budget-exhausted" },
+    ]);
+    expect(fake.calls.uploadFile).toBe(0);
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration leaves a folder create unattempted when the budget cannot cover it",
+  {},
+  Effect.fnUntraced(function* () {
+    const { fake } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare(inboxFile);
+
+    const { result } = yield* planAndApply(mapInput, BoxContentMigrationOptions.make({ maxProviderCalls: O.some(5) }));
+
+    expect(A.filter(result.receipt.outcomes, (outcome) => outcome._tag === "NotAttempted")).toMatchObject([
+      { actionKind: "folder", reason: "budget-exhausted" },
+      { actionKind: "file", reason: "dependency-failed" },
+    ]);
+    expect(result.receipt.providerCalls).toBe(4);
+    expect(result.verdict).toBe("incomplete");
+    expect(fake.calls).toMatchObject({ createFolder: 0, uploadFile: 0 });
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration fails a folder create it cannot verify",
+  {},
+  Effect.fnUntraced(function* () {
+    const { fake } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare(inboxFile);
+    fake.malformFolder("Inbox");
+
+    const { result } = yield* planAndApply(mapInput);
+
+    expect(failedOutcomes(result.receipt.outcomes)).toMatchObject([
+      { actionKind: "folder", failureKind: "unreadable-response" },
+    ]);
+    expect(outcomeTags(result.receipt.outcomes, "file")).toEqual(["NotAttempted"]);
+    expect(fake.calls.uploadFile).toBe(0);
+    // The folder does exist, so the next plan picks it up without creating a second one.
+    expect(folderTags(result.postPlan)).toEqual(["FolderExists"]);
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration fails uploads whose response cannot be verified",
+  { entries: [folder("200", "Inbox")] },
+  Effect.fnUntraced(function* () {
+    const { fake } = yield* MigrationHarness;
+    const { mapInput } = yield* prepare([
+      source("a.txt", ["Inbox"], "a.txt", "alpha"),
+      source("b.txt", ["Inbox"], "b.txt", "bravo"),
+    ]);
+    fake.emptyUploadResponse("a.txt");
+    fake.hashlessUpload("b.txt");
+
+    const { result } = yield* planAndApply(mapInput);
+
+    const failures = failedOutcomes(result.receipt.outcomes);
+    expect(A.map(failures, (outcome) => outcome.failureKind)).toEqual(["unreadable-response", "unreadable-response"]);
+    // Only the response that named a file carries its provider id.
+    expect(
+      A.sort(
+        A.map(failures, (outcome) => outcome.providerId._tag),
+        Str.Order
+      )
+    ).toEqual(["None", "Some"]);
+    expect(result.receipt.uploadedBytes).toBe(0);
+    // Box did store both files intact, which the independent post-apply listing then proves.
+    expect(fileTags(result.postPlan)).toEqual(["SkipIdentical", "SkipIdentical"]);
+    expect(result.verdict).toBe("complete");
+  })
+);
+
+scenario(
+  "@beep/box-provisioning content migration fails an upload whose source vanishes mid-run",
+  { entries: [folder("200", "Inbox")] },
+  Effect.fnUntraced(function* () {
+    const { fake, onAppend } = yield* MigrationHarness;
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const { mapInput, sourceRoot } = yield* prepare(inboxFile);
+    yield* Ref.set(onAppend, (entry) =>
+      entry.phase === "Started" ? Effect.orDie(fs.remove(path.join(sourceRoot, "a.txt"))) : Effect.void
+    );
+
+    const { result } = yield* planAndApply(mapInput);
+
+    expect(failedOutcomes(result.receipt.outcomes)).toMatchObject([
+      { actionKind: "file", failureKind: "provider-error" },
+    ]);
+    expect(A.filter(fake.entries(), (entry) => entry.type === "file")).toEqual([]);
+    expect(result.verdict).toBe("incomplete");
   })
 );

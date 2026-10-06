@@ -224,6 +224,10 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
   let corruptUploads = A.empty<string>();
   let failFolders = A.empty<string>();
   let raceFolders: ReadonlyArray<string> = A.empty();
+  let failListingsOnce: ReadonlyArray<string> = A.empty();
+  let malformedFolders = A.empty<string>();
+  let emptyUploadResponses = A.empty<string>();
+  let hashlessUploads = A.empty<string>();
   const calls = { createFolder: 0, getFolderItems: 0, getUserMe: 0, uploadBigFile: 0, uploadFile: 0 };
   const pageSize = options.pageSize ?? 1000;
 
@@ -237,7 +241,9 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
   const itemJson = (entry: FakeBoxEntry) =>
     entry.type === "file"
       ? { id: entry.id, name: entry.name, sha1: entry.sha1, type: entry.type }
-      : { id: entry.id, name: entry.name, type: entry.type };
+      : entry.name === ""
+        ? { id: entry.id, type: entry.type }
+        : { id: entry.id, name: entry.name, type: entry.type };
 
   const store = (
     transport: FakeBoxUpload["transport"],
@@ -269,14 +275,14 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
     const entry: FakeBoxEntry = { id: allocateId(), name, parentId, sha1: storedSha1, type: "file" };
     entries = A.append(entries, entry);
     record(true);
-    return Promise.resolve({
+    const stored = {
       id: entry.id,
       name,
       parent: { id: parentId, type: "folder" },
-      sha1: storedSha1,
       size: A.reduce(chunks, 0, (total, chunk) => total + chunk.byteLength),
       type: "file",
-    });
+    };
+    return Promise.resolve(A.contains(hashlessUploads, name) ? stored : { ...stored, sha1: storedSha1 });
   };
 
   const client = {
@@ -308,13 +314,18 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
           etag: "0",
           id: entry.id,
           name,
-          parent: { id: parent.id, type: "folder" },
+          // A malformed response names a parent the request never asked for.
+          parent: { id: A.contains(malformedFolders, name) ? "unexpected-parent" : parent.id, type: "folder" },
           type: "folder",
         });
       },
       getFolderItems: (folderId: string, optionalsInput: FakeListOptionals): Promise<unknown> => {
         calls.getFolderItems += 1;
         listedFolderIds = A.append(listedFolderIds, folderId);
+        if (A.contains(failListingsOnce, folderId)) {
+          failListingsOnce = removeFirst(failListingsOnce, folderId);
+          return reject(503, "unavailable");
+        }
         const start = pipe(
           O.fromNullishOr(optionalsInput.queryParams?.marker),
           O.flatMap(Num.parse),
@@ -335,7 +346,9 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
           .then((chunks) =>
             store("single", parent.id, name, chunks, O.fromNullishOr(optionalsInput.headers?.contentMd5))
           )
-          .then((file) => ({ entries: [file], totalCount: 1 }));
+          .then((file) =>
+            A.contains(emptyUploadResponses, name) ? { entries: [], totalCount: 0 } : { entries: [file], totalCount: 1 }
+          );
       },
     },
     users: {
@@ -360,7 +373,23 @@ export const makeFakeBox = (options: FakeBoxOptions = {}) => {
     corruptUpload: (name: string): void => {
       corruptUploads = A.append(corruptUploads, name);
     },
+    /** Answer the next upload of `name` with an empty entry list, although the file was stored. */
+    emptyUploadResponse: (name: string): void => {
+      emptyUploadResponses = A.append(emptyUploadResponses, name);
+    },
     entries: (): ReadonlyArray<FakeBoxEntry> => entries,
+    /** Reject only the next listing of folder `folderId` with a 503. */
+    failListingOnce: (folderId: string): void => {
+      failListingsOnce = A.append(failListingsOnce, folderId);
+    },
+    /** Answer uploads of `name` without a `sha1`, although the file was stored. */
+    hashlessUpload: (name: string): void => {
+      hashlessUploads = A.append(hashlessUploads, name);
+    },
+    /** Answer creates of a folder named `name` with a parent the request did not name. */
+    malformFolder: (name: string): void => {
+      malformedFolders = A.append(malformedFolders, name);
+    },
     /** Reject every create of a folder named `name` with a 503. */
     failFolder: (name: string): void => {
       failFolders = A.append(failFolders, name);

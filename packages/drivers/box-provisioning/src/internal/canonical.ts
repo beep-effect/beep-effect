@@ -155,7 +155,7 @@ export const hasValidBoxProvisioningPlanDigest = Effect.fnUntraced(function* (pl
 
 const joinPath = A.join("/");
 
-/** Entry-order-independent form of a migration map: folders by path, files by destination then source. */
+/** Entry-order-independent form of a migration map: folders by path, files by destination (unique in a valid map). */
 export const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): BoxContentMigrationMap =>
   BoxContentMigrationMap.make({
     ...map,
@@ -165,7 +165,6 @@ export const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): Bo
       Order.combineAll([
         Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => joinPath(file.folderPath)),
         Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => file.fileName),
-        Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => file.sourceRelativePath),
       ])
     ),
   });

@@ -58,29 +58,25 @@ export const requiredContentFolders = (map: BoxContentMigrationMap): ReadonlyArr
   );
   const byPathKey = MutableHashMap.empty<string, RequiredContentFolder>();
   A.forEach(paths, (path) =>
-    A.forEach(A.range(1, A.length(path)), (depth) => {
-      const prefix = A.take(path, depth);
-      const pathKeys = contentPathKeys(prefix);
+    A.forEach(path, (name, index) => {
+      const depth = index + 1;
+      const pathKeys = contentPathKeys(A.take(path, depth));
       const pathKey = A.join(pathKeys, "/");
       if (MutableHashMap.has(byPathKey, pathKey)) {
         return;
       }
-      O.match(O.all({ name: A.last(prefix), nameKey: A.last(pathKeys) }), {
-        onNone: () => undefined,
-        onSome: ({ name, nameKey }) =>
-          MutableHashMap.set(
-            byPathKey,
-            pathKey,
-            RequiredContentFolder.make({
-              depth,
-              name,
-              nameKey,
-              parentPathKey: depth > 1 ? O.some(A.join(A.take(pathKeys, depth - 1), "/")) : O.none(),
-              pathKey,
-              pathKeys,
-            })
-          ),
-      });
+      MutableHashMap.set(
+        byPathKey,
+        pathKey,
+        RequiredContentFolder.make({
+          depth,
+          name,
+          nameKey: boxNameEquivalenceKey(name),
+          parentPathKey: depth > 1 ? O.some(A.join(A.take(pathKeys, depth - 1), "/")) : O.none(),
+          pathKey,
+          pathKeys,
+        })
+      );
     })
   );
   return A.sort(MutableHashMap.values(byPathKey), byDepthThenPathKey);
