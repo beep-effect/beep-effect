@@ -217,6 +217,14 @@ export class RegisterReport extends S.Class<RegisterReport>($I`RegisterReport`)(
 /**
  * JSON codec for the register report.
  *
+ * **Example** (Encode a report)
+ *
+ * ```ts
+ * import { RegisterReportJson } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof RegisterReportJson.encode) // "function"
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -293,7 +301,7 @@ const optionCell = (value: O.Option<string>): string => O.getOrElse(value, () =>
  *
  * @param rows - Append-only rows as read from the file.
  * @returns A GitHub-flavoured Markdown table, header rows first.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderRegisterMarkdown = (rows: ReadonlyArray<RegisterRow>): string =>

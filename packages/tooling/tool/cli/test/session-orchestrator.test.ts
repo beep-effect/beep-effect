@@ -13,7 +13,7 @@ import {
   sessionOrchestrator,
 } from "@beep/repo-cli/test/Session";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime, Effect } from "effect";
+import { DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -160,8 +160,10 @@ describe("orchestrator register", () => {
       expect(decoded.rows[0]?.waitingOnOrchestrator).toEqual(O.some("final sha"));
     })
   );
+});
 
-  it.effect("the memory layer appends and lists per repository", () =>
+it.layer(Layer.fresh(layerOrchestratorRegisterMemory))("orchestrator register memory layer", (it) => {
+  it.effect("appends and lists per repository", () =>
     Effect.gen(function* () {
       const register = yield* OrchestratorRegister;
       yield* register.append(registerRow({ address: "a" }));
@@ -173,6 +175,6 @@ describe("orchestrator register", () => {
       );
       const rows = yield* register.list(repository);
       expect(A.map(rows, (row) => row.address)).toEqual(["a"]);
-    }).pipe(Effect.provide(layerOrchestratorRegisterMemory))
+    })
   );
 });

@@ -5,6 +5,8 @@ import {
   makeSessionLedgerLive,
   openSessionRows,
   PrRepository,
+  RegisterReport,
+  RegisterReportJson,
   recordSweepDone,
   renderSessionRow,
   SessionLedger,
@@ -391,6 +393,157 @@ describe("beep session", () => {
           expect(outside._tag).toBe("Failure");
           const usage = yield* captureOutput(runSession([]));
           expect(usage).toContain("Session commands:");
+        })
+      )
+    );
+
+    it.effect("records who holds the orchestrator role and prints the holder first", () =>
+      withScratchCheckout(({ clone, lane }) =>
+        Effect.gen(function* () {
+          yield* captureOutput(withCwd(lane, runSession(["note", "--next", "work"])));
+          const none = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(none).toContain("[session] orchestrator: none recorded");
+
+          const noted = yield* captureOutput(
+            withCwd(lane, runSession(["note", "--role", "orchestrator", "--next", "run the gate table"]))
+          );
+          expect(noted).toContain("[session] noted open [orchestrator] for lane (feat/lane): run the gate table");
+          const held = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(held).toContain("[session] orchestrator: lane (feat/lane) session thread-1 since ");
+          expect(held).toContain("by codex [orchestrator]");
+
+          // Handing the role back is one more append: the newest row no longer claims it.
+          yield* captureOutput(withCwd(lane, runSession(["note", "--role", "member", "--next", "idle"])));
+          const released = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(released).toContain("[session] orchestrator: none recorded");
+
+          const bad = yield* withCwd(lane, runSession(["note", "--role", "boss", "--next", "x"])).pipe(Effect.flip);
+          expect(bad.message).toContain('--role must be one of orchestrator, member; got "boss".');
+        })
+      )
+    );
+
+    it.effect("registers coordinated units and lists them as text, JSON and Markdown", () =>
+      withScratchCheckout(({ clone, lane }) =>
+        Effect.gen(function* () {
+          const usage = yield* captureOutput(runSession(["register"]));
+          expect(usage).toContain("Register commands:");
+          const empty = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
+          expect(empty).toContain("[session] register is empty for beep-effect/beep-effect");
+
+          const added = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "codex-lane",
+                "--address",
+                " PR #1468 ",
+                "--name",
+                "yeet REST discovery",
+                "--owns",
+                "PR #1468, lane yeet-rest-pr-discovery,",
+                "--waiting",
+                "merge at gate",
+                "--last-contact",
+                "2026-10-06T11:08:00Z",
+                "--orphan-plan",
+                "post 'orchestrator: ...' on the PR; after 2h take it over",
+                "--note",
+                "2 threads",
+              ])
+            )
+          );
+          expect(added).toContain("[session] registered codex-lane PR #1468 (active)");
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "systemd-unit",
+                "--address",
+                "m365-register.service",
+                "--state",
+                "blocked",
+                "--orphan-plan",
+                "systemctl --user status; re-run the script",
+              ])
+            )
+          );
+
+          const text = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
+          expect(text).toContain("[session] 2 registered unit(s):");
+          expect(text).toContain("- systemd-unit m365-register.service [blocked] owns: ");
+          expect(text).toContain(
+            "- codex-lane PR #1468 (yeet REST discovery) [active] owns: PR #1468, lane yeet-rest-pr-discovery"
+          );
+          expect(text).toContain("  waiting on orchestrator: merge at gate");
+          expect(text).toContain("  orphan plan: post 'orchestrator: ...' on the PR; after 2h take it over");
+
+          const json = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--json"])));
+          expect(json).toContain('"schemaVersion":"orchestrator-register-report/v1"');
+          expect(json).toContain('"lastContact":"2026-10-06T11:08:00.000Z"');
+          const markdown = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--markdown"])));
+          expect(markdown).toContain(
+            "| codex-lane | PR #1468 | yeet REST discovery | PR #1468, lane yeet-rest-pr-discovery | active |"
+          );
+
+          // Retiring a unit is an append, and a retired unit drops out of the list.
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "systemd-unit",
+                "--address",
+                "m365-register.service",
+                "--state",
+                "retired",
+                "--orphan-plan",
+                "none",
+              ])
+            )
+          );
+          const after = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
+          expect(after).toContain("[session] 1 registered unit(s):");
+        })
+      )
+    );
+
+    it.effect("rejects a register row it could not act on, and reports a failed report encode", () =>
+      withScratchCheckout(({ clone, lane }) =>
+        Effect.gen(function* () {
+          const base = ["register", "add", "--kind", "codex-lane", "--address", "PR #1", "--orphan-plan", "take over"];
+          const cases: ReadonlyArray<readonly [ReadonlyArray<string>, string]> = [
+            [["register", "add", "--kind", "robot", "--address", "x", "--orphan-plan", "y"], "--kind must be one of"],
+            [[...base, "--state", "asleep"], "--state must be one of"],
+            [
+              ["register", "add", "--kind", "codex-lane", "--address", "  ", "--orphan-plan", "y"],
+              "--address must say",
+            ],
+            [
+              ["register", "add", "--kind", "codex-lane", "--address", "x", "--orphan-plan", " "],
+              "--orphan-plan must say",
+            ],
+            [[...base, "--last-contact", "yesterday"], '--last-contact must be an ISO instant; got "yesterday".'],
+          ];
+          for (const [args, message] of cases) {
+            const error = yield* withCwd(lane, runSession(args)).pipe(Effect.flip);
+            expect(error.message).toContain(message);
+          }
+          const cause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
+          const encoder = vi.spyOn(RegisterReportJson, "encode").mockReturnValue(Effect.fail(cause));
+          const error = yield* withCwd(clone, runSession(["register", "list", "--json"])).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => encoder.mockRestore()))
+          );
+          expect(error.message).toBe("[session] Failed to encode the register report.");
         })
       )
     );

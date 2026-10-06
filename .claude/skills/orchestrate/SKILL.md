@@ -20,7 +20,8 @@ not a session: a successor must be able to take it over from files alone.
 | `~/.cache/beep/orchestrator/STATE.md` | you | Append-only journal (one timestamped line per event). Never read whole; `tail -40` only. |
 
 None of these are committed. The register and ledger live under
-`~/.local/state` because `~/.cache` is disposable by contract.
+the workstation state root (`$XDG_STATE_HOME/beep/<store>`) because a cache
+directory is disposable by contract.
 
 ## Smart zone: keep your own context small
 

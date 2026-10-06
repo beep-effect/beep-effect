@@ -1,6 +1,7 @@
 import {
   decideMergeGate,
   MergeGateCheckRun,
+  MergeGateCommandOptions,
   MergeGateHold,
   MergeGateRead,
   MergeGateTolerance,
@@ -9,17 +10,19 @@ import {
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
+  runYeetMergeGate,
   YeetReviewWindowElapsed,
   YeetReviewWindowOpen,
   YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
-import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import checkRunsFixture from "./fixtures/yeet-merge-gate/check-runs.json" with { type: "json" };
 import checkSuitesFixture from "./fixtures/yeet-merge-gate/check-suites.json" with { type: "json" };
@@ -295,136 +298,199 @@ const context = RepoRunContext.make({
 });
 
 const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
-  Layer.mergeAll(
-    BunCrypto.layer,
-    TestConsole.layer,
-    Layer.succeed(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
-        const line = A.join([command.command, ...command.args], " ");
-        return Ref.update(calls, A.append(line)).pipe(
-          Effect.map(() => {
-            if (Str.includes("/merge")(line)) return stubHandle(0, script.mergeResponse);
-            // The review-window reader asks for instants through --jq: answer with the recorded values.
-            if (Str.includes("/timeline")(line)) return stubHandle(script.windowExit, `${readyAtIso}\n`);
-            if (Str.includes("/check-suites")(line)) return stubHandle(script.windowExit, A.join(suiteInstants, "\n"));
-            if (Str.includes("graphql")(line)) return stubHandle(script.threadsExit, JSON.stringify(threadsFixture));
-            if (Str.includes("rules/branches/")(line))
-              return stubHandle(script.rulesExit, JSON.stringify(rulesFixture));
-            if (Str.includes("/check-runs")(line)) return stubHandle(0, JSON.stringify([checkRunsFixture]));
-            if (Str.includes(`/pulls/${pullFixture.number}`)(line)) return stubHandle(0, JSON.stringify(pullFixture));
-            return stubHandle(1, `unexpected command: ${line}`);
-          })
-        );
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
+    const line = A.join([command.command, ...command.args], " ");
+    return Ref.update(calls, A.append(line)).pipe(
+      Effect.map(() => {
+        if (command.command === "git") return stubHandle(0, "feat/gate\n");
+        if (Str.includes("/merge")(line)) return stubHandle(0, script.mergeResponse);
+        // The review-window reader asks for instants through --jq: answer with the recorded values.
+        if (Str.includes("/timeline")(line)) return stubHandle(script.windowExit, `${readyAtIso}\n`);
+        if (Str.includes("/check-suites")(line)) return stubHandle(script.windowExit, A.join(suiteInstants, "\n"));
+        if (Str.includes("graphql")(line)) return stubHandle(script.threadsExit, JSON.stringify(threadsFixture));
+        if (Str.includes("rules/branches/")(line)) return stubHandle(script.rulesExit, JSON.stringify(rulesFixture));
+        if (Str.includes("/check-runs")(line)) return stubHandle(0, JSON.stringify([checkRunsFixture]));
+        if (Str.includes(`/pulls/${pullFixture.number}`)(line)) return stubHandle(0, JSON.stringify(pullFixture));
+        return stubHandle(1, `unexpected command: ${line}`);
       })
+    );
+  });
+
+// Every scripted run records the argv it was asked for, so a test can prove the merge was or was not sent.
+const withScriptedGh = <A, E, R>(
+  script: GhScript,
+  use: (calls: Ref.Ref<ReadonlyArray<string>>) => Effect.Effect<A, E, R>
+) =>
+  // The test clock starts at the epoch; put "now" a minute past the recorded window.
+  TestClock.setTime(DateTime.toEpochMillis(windowClosed)).pipe(
+    Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
+    Effect.flatMap((calls) =>
+      use(calls).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls)))
     )
   );
 
-describe("yeet merge-gate against recorded gh payloads", () => {
-  it.live("reads the PR, check runs, review window, threads and ruleset into one read", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const result = yield* readMergeGate(context, pullFixture.number).pipe(
-        Effect.provide(scriptedGh(defaultScript, calls))
-      );
-      expect(result.headSha).toBe(headSha);
-      expect(result.draft).toBe(false);
-      expect(result.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
-      expect(O.map(result.requiredContexts, A.length)).toEqual(O.some(16));
-      expect(result.window._tag).toBe("elapsed");
-      if (result.window._tag === "elapsed") expect(result.window.anchoredAt).toBe(DateTime.formatIso(anchoredAt));
-      expect(result.unresolvedThreads).toEqual(O.some(0));
-      const lines = yield* Ref.get(calls);
-      expect(A.some(lines, Str.includes("/merge"))).toBe(false);
-    })
-  );
+const mergeWasSent = (calls: Ref.Ref<ReadonlyArray<string>>) =>
+  Ref.get(calls).pipe(Effect.map(A.some(Str.includes("/merge"))));
 
-  it.live("a failed thread read becomes an unknown count, and the gate holds on it", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const result = yield* readMergeGate(context, pullFixture.number).pipe(
-        Effect.provide(scriptedGh({ ...defaultScript, threadsExit: 1 }, calls))
-      );
-      expect(result.unresolvedThreads).toEqual(O.none());
-      expect(holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt }) }))).toBe(
-        "threads-unknown"
-      );
-    })
-  );
+const commandOptions = (overrides: Partial<ConstructorParameters<typeof MergeGateCommandOptions>[0]> = {}) =>
+  MergeGateCommandOptions.make({
+    base: "origin/main",
+    head: "HEAD",
+    packetDir: ".beep/yeet",
+    pr: pullFixture.number,
+    sha: headSha,
+    tolerate: [],
+    forceWindow: false,
+    dryRun: true,
+    ...overrides,
+  });
 
-  it.live("a failed window read becomes an unknown window, which holds even when forced", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const result = yield* readMergeGate(context, pullFixture.number).pipe(
-        Effect.provide(scriptedGh({ ...defaultScript, windowExit: 1 }, calls))
-      );
-      expect(result.window._tag).toBe("unknown");
-      expect(
-        holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt, forceWindow: true }) }))
-      ).toBe("review-window-unknown");
-    })
-  );
+it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 seconds" })(
+  "yeet merge-gate against recorded gh payloads",
+  (it) => {
+    it.effect("reads the PR, check runs, review window, threads and ruleset into one read", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          const result = yield* readMergeGate(context, pullFixture.number);
+          expect(result.headSha).toBe(headSha);
+          expect(result.draft).toBe(false);
+          expect(result.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
+          expect(O.map(result.requiredContexts, A.length)).toEqual(O.some(16));
+          expect(result.window._tag).toBe("elapsed");
+          if (result.window._tag === "elapsed") expect(result.window.anchoredAt).toBe(DateTime.formatIso(anchoredAt));
+          expect(result.unresolvedThreads).toEqual(O.some(0));
+          expect(yield* mergeWasSent(calls)).toBe(false);
+        })
+      )
+    );
 
-  it.live("an unreadable ruleset becomes unknown required contexts", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const result = yield* readMergeGate(context, pullFixture.number).pipe(
-        Effect.provide(scriptedGh({ ...defaultScript, rulesExit: 1 }, calls))
-      );
-      expect(result.requiredContexts).toEqual(O.none());
-    })
-  );
+    it.effect("a failed thread read becomes an unknown count, and the gate holds on it", () =>
+      withScriptedGh({ ...defaultScript, threadsExit: 1 }, () =>
+        Effect.gen(function* () {
+          const result = yield* readMergeGate(context, pullFixture.number);
+          expect(result.unresolvedThreads).toEqual(O.none());
+          expect(holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt }) }))).toBe(
+            "threads-unknown"
+          );
+        })
+      )
+    );
 
-  it.live("--dry-run decides without sending the merge", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const decision = yield* runMergeGate(context, {
-        prNumber: pullFixture.number,
-        wantSha: headSha.slice(0, 10),
-        tolerate: [],
-        forceWindow: false,
-        dryRun: true,
-      }).pipe(Effect.provide(scriptedGh(defaultScript, calls)));
-      expect(decision._tag).toBe("merge");
-      expect(A.some(yield* Ref.get(calls), Str.includes("/merge"))).toBe(false);
-    })
-  );
+    it.effect("a failed window read becomes an unknown window, which holds even when forced", () =>
+      withScriptedGh({ ...defaultScript, windowExit: 1 }, () =>
+        Effect.gen(function* () {
+          const result = yield* readMergeGate(context, pullFixture.number);
+          expect(result.window._tag).toBe("unknown");
+          expect(
+            holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt, forceWindow: true }) }))
+          ).toBe("review-window-unknown");
+        })
+      )
+    );
 
-  it.live("a met gate squash-merges at the pinned head with `<title> (#n)`", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      yield* runMergeGate(context, {
-        prNumber: pullFixture.number,
-        wantSha: headSha,
-        tolerate: [],
-        forceWindow: false,
-        dryRun: false,
-      }).pipe(Effect.provide(scriptedGh(defaultScript, calls)));
-      const merge = A.findFirst(yield* Ref.get(calls), Str.includes("/merge"));
-      expect(O.isSome(merge)).toBe(true);
-      if (O.isSome(merge)) {
-        expect(merge.value).toContain("-X PUT");
-        expect(merge.value).toContain("merge_method=squash");
-        expect(merge.value).toContain(`sha=${headSha}`);
-        expect(merge.value).toContain(`commit_title=${pullFixture.title} (#${pullFixture.number})`);
-      }
-    })
-  );
+    it.effect("an unreadable ruleset becomes unknown required contexts", () =>
+      withScriptedGh({ ...defaultScript, rulesExit: 1 }, () =>
+        Effect.gen(function* () {
+          const result = yield* readMergeGate(context, pullFixture.number);
+          expect(result.requiredContexts).toEqual(O.none());
+        })
+      )
+    );
 
-  it.live("a hold exits non-zero with the routed reason and never merges", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make(A.empty<string>());
-      const failure = yield* runMergeGate(context, {
-        prNumber: pullFixture.number,
-        wantSha: "0000000000",
-        tolerate: [],
-        forceWindow: false,
-        dryRun: false,
-      }).pipe(Effect.provide(scriptedGh(defaultScript, calls)), Effect.flip);
-      expect(failure.message).toContain("HOLD head-moved");
-      expect(failure.exitCode).toBe(1);
-      expect(A.some(yield* Ref.get(calls), Str.includes("/merge"))).toBe(false);
-    })
-  );
-});
+    it.effect("--dry-run decides without sending the merge", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          const decision = yield* runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: headSha.slice(0, 10),
+            tolerate: [],
+            forceWindow: false,
+            dryRun: true,
+          });
+          expect(decision._tag).toBe("merge");
+          expect(yield* mergeWasSent(calls)).toBe(false);
+        })
+      )
+    );
+
+    it.effect("a met gate squash-merges at the pinned head with `<title> (#n)`", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          yield* runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: headSha,
+            tolerate: [],
+            forceWindow: false,
+            dryRun: false,
+          });
+          const merge = A.findFirst(yield* Ref.get(calls), Str.includes("/merge"));
+          expect(O.isSome(merge)).toBe(true);
+          if (O.isSome(merge)) {
+            expect(merge.value).toContain("-X PUT");
+            expect(merge.value).toContain("merge_method=squash");
+            expect(merge.value).toContain(`sha=${headSha}`);
+            expect(merge.value).toContain(`commit_title=${pullFixture.title} (#${pullFixture.number})`);
+          }
+        })
+      )
+    );
+
+    it.effect("GitHub declining the merge is a failure, never a silent pass", () =>
+      withScriptedGh(
+        { ...defaultScript, mergeResponse: JSON.stringify({ merged: false, message: "Head branch was modified" }) },
+        () =>
+          Effect.gen(function* () {
+            const failure = yield* runMergeGate(context, {
+              prNumber: pullFixture.number,
+              wantSha: headSha,
+              tolerate: [],
+              forceWindow: false,
+              dryRun: false,
+            }).pipe(Effect.flip);
+            expect(failure.message).toContain("Head branch was modified");
+          })
+      )
+    );
+
+    it.effect("a hold exits non-zero with the routed reason and never merges", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          const failure = yield* runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: "0000000000",
+            tolerate: [],
+            forceWindow: false,
+            dryRun: false,
+          }).pipe(Effect.flip);
+          expect(failure.message).toContain("HOLD head-moved");
+          expect(failure.exitCode).toBe(1);
+          expect(yield* mergeWasSent(calls)).toBe(false);
+        })
+      )
+    );
+
+    it.effect("the command refuses a malformed --tolerate before reading anything", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          const failure = yield* runYeetMergeGate(commandOptions({ tolerate: ["Heavy / Coverage Regression"] })).pipe(
+            Effect.flip
+          );
+          expect(failure.message).toContain('--tolerate needs "<check name>=<attribution>"');
+          expect(yield* Ref.get(calls)).toHaveLength(0);
+        })
+      )
+    );
+
+    it.effect("the command decodes tolerances, resolves the repo and runs the gate", () =>
+      withScriptedGh(defaultScript, (calls) =>
+        Effect.gen(function* () {
+          yield* runYeetMergeGate(commandOptions({ tolerate: ["Heavy / Coverage Regression=inherited: red on main"] }));
+          const lines = yield* Ref.get(calls);
+          expect(A.some(lines, Str.includes(`/pulls/${pullFixture.number}`))).toBe(true);
+          expect(yield* mergeWasSent(calls)).toBe(false);
+        })
+      )
+    );
+  }
+);

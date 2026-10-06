@@ -34,6 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import type * as Crypto from "effect/Crypto";
@@ -213,6 +214,15 @@ export type MergeGateHoldReason = typeof MergeGateHoldReason.Type;
 /**
  * The gate held: nothing is merged, and the reason is routed to whoever owns it.
  *
+ * **Example** (A routed hold)
+ *
+ * ```ts
+ * import { MergeGateHold } from "@beep/repo-cli/test/Yeet"
+ *
+ * const held = MergeGateHold.make({ prNumber: 7, reason: "draft", detail: "still draft" })
+ * console.log(held._tag) // "hold"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -224,6 +234,21 @@ export class MergeGateHold extends S.TaggedClass<MergeGateHold>($I`MergeGateHold
 
 /**
  * The gate is met: merge at this head with this squash title.
+ *
+ * **Example** (A met gate)
+ *
+ * ```ts
+ * import { MergeGateMerge } from "@beep/repo-cli/test/Yeet"
+ *
+ * const met = MergeGateMerge.make({
+ *   prNumber: 7,
+ *   headSha: "abc",
+ *   commitTitle: "fix: x (#7)",
+ *   windowAgeSeconds: 1260,
+ *   tolerated: [],
+ * })
+ * console.log(met._tag) // "merge"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -242,6 +267,16 @@ export class MergeGateMerge extends S.TaggedClass<MergeGateMerge>($I`MergeGateMe
 
 /**
  * The gate's verdict.
+ *
+ * **Example** (Check a decision)
+ *
+ * ```ts
+ * import { MergeGateDecision, MergeGateHold } from "@beep/repo-cli/test/Yeet"
+ *
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(MergeGateDecision)(MergeGateHold.make({ prNumber: 7, reason: "draft", detail: "still draft" }))) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -269,6 +304,17 @@ export type MergeGateDecision = typeof MergeGateDecision.Type;
  * definition governs both. `forceWindow` exists for one case only: a fix that
  * unblocks `main`. The ruling text is in `feedback-review-window-before-merge`;
  * the flag is recorded in the merge line so the hand-off log shows every override.
+ *
+ * **Example** (State the caller's assertions)
+ *
+ * ```ts
+ * import { MergeGateOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * import { DateTime } from "effect"
+ *
+ * const options = MergeGateOptions.make({ wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false })
+ * console.log(options.forceWindow) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -515,7 +561,7 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
  *
  * @param decision - The gate verdict.
  * @returns One line for the hand-off log.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderMergeGateDecision = (decision: MergeGateDecision): string =>
@@ -584,6 +630,14 @@ const decodeOrFail = <A>(what: string, decode: (input: unknown) => Effect.Effect
  * call allowed to fail softly, and it fails to `None`, which the decision
  * treats as a hold.
  *
+ * **Example** (Build the read effect)
+ *
+ * ```ts
+ * import { readMergeGate } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof readMergeGate) // "function"
+ * ```
+ *
  * @category workflows
  * @since 0.0.0
  */
@@ -650,6 +704,14 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
 /**
  * Result of the squash merge GitHub reported.
  *
+ * **Example** (A confirmed merge)
+ *
+ * ```ts
+ * import { MergeGateMerged } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MergeGateMerged.make({ prNumber: 7, mergeSha: "feedface", commitTitle: "fix: x (#7)" }).prNumber) // 7
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -666,6 +728,14 @@ export class MergeGateMerged extends S.Class<MergeGateMerged>($I`MergeGateMerged
  * The `sha` field makes GitHub refuse server-side when the head moved between
  * the read and the merge, so a push landing in that window is never merged
  * sight-unseen.
+ *
+ * **Example** (Build the merge effect)
+ *
+ * ```ts
+ * import { executeMergeGate } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof executeMergeGate) // "function"
+ * ```
  *
  * @category workflows
  * @since 0.0.0
@@ -706,6 +776,15 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
 /**
  * Options for one `yeet merge-gate` run.
  *
+ * **Example** (Describe one run)
+ *
+ * ```ts
+ * import { MergeGateRunOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * const run = MergeGateRunOptions.make({ prNumber: 7, wantSha: "abc", tolerate: [], forceWindow: false, dryRun: true })
+ * console.log(run.dryRun) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -728,6 +807,14 @@ export class MergeGateRunOptions extends S.Class<MergeGateRunOptions>($I`MergeGa
  * A hold exits non-zero with the routed reason so a background waiter can
  * loop on it; a merge prints the merge sha and any tolerated attribution. The
  * window override is printed whenever it was used.
+ *
+ * **Example** (Build the gate effect)
+ *
+ * ```ts
+ * import { runMergeGate } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runMergeGate) // "function"
+ * ```
  *
  * @category workflows
  * @since 0.0.0
@@ -759,4 +846,87 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   const merged = yield* executeMergeGate(context, decision);
   yield* Console.log(`[yeet] MERGED #${merged.prNumber} -> ${merged.mergeSha.slice(0, 10)} "${merged.commitTitle}"`);
   return decision;
+});
+
+/**
+ * The `yeet merge-gate` flags as the CLI parses them, before `--tolerate` is decoded.
+ *
+ * **Example** (Describe an invocation)
+ *
+ * ```ts
+ * import { MergeGateCommandOptions } from "@beep/repo-cli/test/Yeet"
+ *
+ * const options = MergeGateCommandOptions.make({
+ *   base: "origin/main",
+ *   head: "HEAD",
+ *   packetDir: ".beep/yeet",
+ *   pr: 1459,
+ *   sha: "212fe39b4f",
+ *   tolerate: [],
+ *   forceWindow: false,
+ *   dryRun: true,
+ * })
+ * console.log(options.pr) // 1459
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MergeGateCommandOptions extends S.Class<MergeGateCommandOptions>($I`MergeGateCommandOptions`)(
+  {
+    base: S.String,
+    head: S.String,
+    packetDir: S.String,
+    pr: S.Finite,
+    sha: S.String,
+    tolerate: S.Array(S.String),
+    forceWindow: S.Boolean,
+    dryRun: S.Boolean,
+  },
+  $I.annote("MergeGateCommandOptions", { description: "Parsed yeet merge-gate flags before tolerances are decoded." })
+) {}
+
+/**
+ * Run `yeet merge-gate`: decode the tolerances, resolve the repo root, gate, and merge.
+ *
+ * **Details**
+ *
+ * Unlike `yeet merge`, which merges the current branch's pull request and
+ * sweeps the clone, this takes any pull request number and never sweeps: the
+ * owning session retires its own lane after the orchestrator reports the
+ * merge. A malformed `--tolerate` is refused before anything is read.
+ *
+ * **Example** (Build the command effect)
+ *
+ * ```ts
+ * import { runYeetMergeGate } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runYeetMergeGate) // "function"
+ * ```
+ *
+ * @param options - The parsed command flags.
+ * @returns Nothing; a hold fails with the routed reason.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* (options: MergeGateCommandOptions) {
+  const parsed = A.map(options.tolerate, parseMergeGateTolerance);
+  const malformed = A.filter(A.zip(options.tolerate, parsed), ([, tolerance]) => O.isNone(tolerance));
+  if (A.isReadonlyArrayNonEmpty(malformed)) {
+    return yield* YeetCommandError.make({
+      message: `--tolerate needs "<check name>=<attribution>"; got ${A.join(
+        A.map(malformed, ([value]) => JSON.stringify(value)),
+        ", "
+      )}.`,
+      exitCode: 1,
+    });
+  }
+  const context = yield* hydrateYeetReadOnlyContext(options);
+  yield* runMergeGate(context, {
+    prNumber: options.pr,
+    wantSha: options.sha,
+    tolerate: A.getSomes(parsed),
+    forceWindow: options.forceWindow,
+    dryRun: options.dryRun,
+  });
 });

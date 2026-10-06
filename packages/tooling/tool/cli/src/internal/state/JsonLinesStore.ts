@@ -19,6 +19,15 @@ import type { PlatformError } from "effect";
 /**
  * Rows that decoded from a JSON Lines file, and how many non-empty lines did not.
  *
+ * **Example** (A read with one corrupt line)
+ *
+ * ```ts
+ * import { type JsonLinesRead } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const read: JsonLinesRead<string> = { rows: ["ok"], corruptLineCount: 1 }
+ * console.log(read.corruptLineCount) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -56,6 +65,20 @@ export const partitionJsonLines =
 
 /**
  * How an append-only log is reduced to its current state.
+ *
+ * **Example** (Key rows by name)
+ *
+ * ```ts
+ * import { type NewestPerKeyOptions } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * import { DateTime } from "effect"
+ *
+ * const options: NewestPerKeyOptions<{ name: string; at: number }> = {
+ *   key: (row) => row.name,
+ *   at: (row) => DateTime.makeUnsafe(row.at),
+ * }
+ * console.log(options.key({ name: "a", at: 0 })) // "a"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -115,6 +138,15 @@ export const newestPerKey =
 /**
  * What a JSON Lines store needs to know about its rows and its files.
  *
+ * **Example** (Name the label)
+ *
+ * ```ts
+ * import { type JsonLinesStoreOptions } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const label: JsonLinesStoreOptions<string, string, never>["label"] = { scope: "session", noun: "ledger" }
+ * console.log(label.noun) // "ledger"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -137,6 +169,15 @@ export interface JsonLinesStoreOptions<Row, Partition, E> {
 
 /**
  * The two operations of an append-only store.
+ *
+ * **Example** (Name the operations)
+ *
+ * ```ts
+ * import { type JsonLinesStore } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const operations: ReadonlyArray<keyof JsonLinesStore<string, string, never>> = ["append", "list"]
+ * console.log(operations.length) // 2
+ * ```
  *
  * @category models
  * @since 0.0.0

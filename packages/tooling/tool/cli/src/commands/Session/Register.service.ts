@@ -32,6 +32,15 @@ const equivalentRepository = S.toEquivalence(PrRepository);
 /**
  * Service contract for the register: append one row, list a repository's rows.
  *
+ * **Example** (Name the operations)
+ *
+ * ```ts
+ * import { type OrchestratorRegisterShape } from "@beep/repo-cli/test/Session"
+ *
+ * const operations: ReadonlyArray<keyof OrchestratorRegisterShape> = ["append", "list"]
+ * console.log(operations.length) // 2
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -66,6 +75,14 @@ export class OrchestratorRegister extends Context.Service<OrchestratorRegister, 
 /**
  * Decoded register rows plus the count of corrupt lines skipped.
  *
+ * **Example** (An empty read)
+ *
+ * ```ts
+ * import { DecodedRegister } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(DecodedRegister.make({ rows: [], corruptLineCount: 0 }).corruptLineCount) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -96,6 +113,15 @@ export const decodeRegister = (content: string): DecodedRegister =>
 /**
  * The register file name for a repository.
  *
+ * **Example** (Name the file)
+ *
+ * ```ts
+ * import { PrRepository, registerFileName } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(registerFileName(PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" })))
+ * // "github.com__beep-effect__beep-effect.jsonl"
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -103,6 +129,14 @@ export const registerFileName: (repository: PrRepository) => string = repository
 
 /**
  * Build the live register store against the workstation state directory.
+ *
+ * **Example** (Build the live register effect)
+ *
+ * ```ts
+ * import { makeOrchestratorRegisterLive } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof makeOrchestratorRegisterLive) // "function"
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -127,6 +161,14 @@ export const makeOrchestratorRegisterLive = Effect.fn("OrchestratorRegister.make
 
 /**
  * The register layer that writes the workstation JSON Lines file.
+ *
+ * **Example** (Check the layer)
+ *
+ * ```ts
+ * import { layerOrchestratorRegisterLive } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof layerOrchestratorRegisterLive) // "object"
+ * ```
  *
  * @category layers
  * @since 0.0.0
@@ -171,6 +213,14 @@ export const layerOrchestratorRegisterMemory = Layer.effect(
  * register row can be written from any lane of the clone. `recordedBy` is the
  * harness session id when the harness exposes one, so a successor can tell
  * which orchestrator wrote each row.
+ *
+ * **Example** (Build the append effect)
+ *
+ * ```ts
+ * import { noteRegister } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof noteRegister) // "function"
+ * ```
  *
  * @category workflows
  * @since 0.0.0

@@ -33,14 +33,13 @@ import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
-import { parseMergeGateTolerance } from "./internal/MergeGate.ts";
+import { runYeetMergeGate } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
   rejectYeetUntilReadyPairing,
   runYeetMerge,
-  runYeetMergeGate,
   runYeetMergeLoop,
   runYeetReplyPass,
   runYeetSweep,
@@ -1166,27 +1165,7 @@ const yeetMergeGateCommand = Command.make(
     forceWindow: mergeGateForceWindowFlag,
     dryRun: mergeGateDryRunFlag,
   },
-  Effect.fn(function* ({ pr, sha, tolerate, forceWindow, dryRun, ...porcelain }) {
-    const parsed = A.map(tolerate, (value) => ({ value, tolerance: parseMergeGateTolerance(value) }));
-    const malformed = A.filter(parsed, (entry) => O.isNone(entry.tolerance));
-    if (A.isReadonlyArrayNonEmpty(malformed)) {
-      return yield* YeetCommandError.make({
-        message: `--tolerate needs "<check name>=<attribution>"; got ${A.join(
-          A.map(malformed, (entry) => JSON.stringify(entry.value)),
-          ", "
-        )}.`,
-        exitCode: 1,
-      });
-    }
-    yield* runYeetMergeGate({
-      ...porcelain,
-      prNumber: pr,
-      wantSha: sha,
-      tolerate: A.getSomes(A.map(parsed, (entry) => entry.tolerance)),
-      forceWindow,
-      dryRun,
-    });
-  })
+  runYeetMergeGate
 ).pipe(
   Command.withDescription(
     "Orchestrator merge gate: re-verify one PR at a pinned head (required checks, attributed tolerances, 20-minute review window, re-read threads) and squash-merge it"

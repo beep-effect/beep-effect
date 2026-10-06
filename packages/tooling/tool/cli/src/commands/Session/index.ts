@@ -12,6 +12,13 @@
  */
 
 /**
+ * Public orchestrator register command exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Register.command.ts";
+/**
  * Public orchestrator register schema exports.
  *
  * @category cli-commands
