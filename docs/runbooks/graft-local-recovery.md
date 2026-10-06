@@ -506,7 +506,7 @@ version manager tree, and `graft telemetry disable` has been run once on the
 workstation:
 
 ```sh
-npm install -g --prefix "$HOME/.local" @nanonets/graft@0.19.0
+npm install -g --prefix "$HOME/.local" @nanonets/graft@0.21.1
 graft --version
 ```
 
@@ -546,7 +546,7 @@ needs no `graft init`.
 
 ### Meaning-tier ignore list (`.graftignore`)
 
-Graft 0.19.0 still selects files from `git ls-files` plus a fixed directory skip
+Graft 0.21.1 still selects files from `git ls-files` plus a fixed directory skip
 list, so a generated file the model cannot summarize (the 17,000-line
 `packages/drivers/box/src/_generated/Box.models.gen.ts` answers every crux
 call with an empty tool call) was retried twice per night and left `graft

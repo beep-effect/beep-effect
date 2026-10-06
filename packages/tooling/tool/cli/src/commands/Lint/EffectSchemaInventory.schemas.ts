@@ -64,7 +64,7 @@ export const EffectSchemaInventoryReferencePath = ".repos/effect";
 export const EffectSchemaInventoryPromptRoot = "goals/effect-schema-parity/ops/prompts";
 
 /**
- * Full 40-character Effect commit sha read from the root `package.json` catalog (`inventoryPin`).
+ * Full 40-character Effect commit sha read from the root catalog or release provenance (`inventoryPin`).
  *
  * **Example** (Accept a full sha and reject an abbreviation)
  *
@@ -81,7 +81,8 @@ export const EffectSchemaInventoryPromptRoot = "goals/effect-schema-parity/ops/p
  */
 export const EffectSchemaInventoryPin = S.String.check(S.isPattern(/^[0-9a-f]{40}$/u)).pipe(
   $I.annoteSchema("EffectSchemaInventoryPin", {
-    description: "Full 40-character lowercase Effect commit sha pinned by the root package.json catalog.",
+    description:
+      "Full 40-character lowercase Effect commit sha pinned by the root package.json catalog or config.effectSource.",
   })
 );
 

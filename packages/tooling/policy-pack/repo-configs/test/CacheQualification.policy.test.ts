@@ -21,6 +21,7 @@ import {
   CacheSignedExecutionProfile,
   CacheTaskConfiguration,
   CacheTaskContract,
+  cacheBaselineSubject,
   cacheLedgerFailures,
   cachePromotionFailures,
   isCacheTransitionAllowed,
@@ -350,7 +351,7 @@ const projection = CachePolicyProjection.make({
   sources: [CachePolicySource.make({ path: "turbo.json", sha256: digest(2) })],
 });
 const baseline = CachePolicyBaseline.make({
-  review,
+  reviews: { "//": review, [cacheBaselineSubject(key.computation)]: review },
   profile: key.profile,
   epoch: key.epoch,
   scope: [key.computation],

@@ -31,7 +31,7 @@ const decodeStatusUnknown = S.decodeUnknownEffect(RefsRefreshStatus);
 
 describe("reference manifest schemas", () => {
   it.effect(
-    "decodes the real S1 manifest",
+    "decodes the canonical reference manifest",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -41,6 +41,12 @@ describe("reference manifest schemas", () => {
       expect(manifest.members.map((member) => [member.name, member.tier])).toEqual([
         ["effect", "deep"],
         ["effect-tsgo", "deep"],
+        ["ai-plugin-marketplace-manager", "deep"],
+        ["okfit", "deep"],
+        ["tsdoctor", "deep"],
+        ["effected", "deep"],
+        ["pluginfinity", "deep"],
+        ["vitest-agent", "deep"],
       ]);
       assertNone(manifest.members[0]?.onlyDir ?? O.none());
     }, testPlatform)

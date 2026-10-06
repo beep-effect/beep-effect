@@ -49,7 +49,7 @@ export const fixture = Effect.fn("RefsTest.fixture")(function* () {
   const bin = path.join(temp, "bin");
   for (const directory of [path.join(owner, "scripts"), root, home, bin])
     yield* fs.makeDirectory(directory, { recursive: true });
-  const manifestPath = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
+  const manifestPath = yield* path.fromFileUrl(new URL("./fixtures/refs-manifest.json", import.meta.url));
   yield* fs.copyFile(manifestPath, path.join(owner, "scripts", "references.json"));
   yield* fs.makeDirectory(path.join(owner, "scripts", "graft"), { recursive: true });
   yield* writeExecutable(path.join(owner, "scripts", "graft", "apply-dist-patches.sh"), patchKitStub);
