@@ -865,7 +865,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/repo-cli",
-      "reason": "In-process git probe result (repository, clone, checkout, lane, branch) assembled by readSessionCheckoutFacts and consumed by buildSessionRow in the same call; its repository member is the schema-backed PrRepository and the row it becomes is a schema class, so the intermediate is never decoded or persisted."
+      "reason": "In-process git probe result (repository, clone, checkout, lane, branch) assembled by sessionCheckoutFacts and consumed in the same call by buildSessionRow and sessionOpenCommand; its repository member is the schema-backed PrRepository and the row it becomes is a schema class, so the intermediate is never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
