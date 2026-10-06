@@ -50,9 +50,12 @@ jq . goals/<slug>/ops/manifest.json
 git diff --check -- goals/<slug>
 ```
 
-Stop and report before changing public API, schema, data migration, auth, infra,
-security behavior, dependencies, lockfiles, generated files, or destructive
-state unless `SPEC.md` explicitly requires it.
+Decide changes to public API, schema, data migration, auth, infra, security
+behavior, dependencies, lockfiles, generated files, or destructive state
+yourself when the goal needs them: record each in the decision log with its
+reason and how to reverse it, then continue. Escalate only what AGENTS.md
+"Autonomy" lists.
 
-Done only when acceptance passes and verification is complete, or when a blocker
-is reported with file/command evidence.
+Done only when the goal reaches `completed-retained` (acceptance passes,
+verification is complete, closeout and reflection landed), or when a blocker
+that needs the operator is reported with file/command evidence.
