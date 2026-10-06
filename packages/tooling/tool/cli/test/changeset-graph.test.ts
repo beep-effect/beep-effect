@@ -8,13 +8,12 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { Console, Effect, FileSystem, flow, Path, Result } from "effect";
 import * as P from "effect/Predicate";
 import { ChildProcess } from "effect/process";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const runGit = Effect.fn("ChangesetGraphTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
@@ -206,7 +205,7 @@ Record a null bump.
     });
   });
 
-  it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it.effect("accepts tracked workspace changesets through the release-path check", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -229,7 +228,7 @@ Patch demo.
           references: 1,
           missingReferences: [],
         });
-      })
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("accepts retired package references declared in the repo retirement record", () =>
@@ -262,7 +261,7 @@ Record retired package release cleanup.
           references: 1,
           missingReferences: [],
         });
-      })
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("rejects tracked changesets that reference packages outside the workspace graph", () =>
@@ -289,7 +288,32 @@ Patch missing package.
           "[changeset-graph] changeset package references outside current workspace graph:",
           "- .changeset/demo.md :: @beep/missing",
         ]);
-      })
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("does not carry a previous release-path error into the next test", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "changeset-graph-test-" });
+        yield* writeFixtureRepo(
+          tmpDir,
+          `---
+"@beep/another-missing": patch
+---
+
+Patch another missing package.
+`
+        );
+
+        const error = yield* runChangesetGraphCheck(tmpDir).pipe(Effect.flip);
+        const errorLines = yield* TestConsole.errorLines;
+
+        expect(error).toMatchObject({ message: "Changeset package graph validation failed." });
+        expect(errorLines).toEqual([
+          "[changeset-graph] changeset package references outside current workspace graph:",
+          "- .changeset/demo.md :: @beep/another-missing",
+        ]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("treats tracked empty changesets as release-path no-ops", () =>
@@ -313,7 +337,7 @@ Record a private workspace change.
           references: 0,
           missingReferences: [],
         });
-      })
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
 });

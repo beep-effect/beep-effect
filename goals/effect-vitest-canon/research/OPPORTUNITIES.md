@@ -6735,3 +6735,14 @@ branch resolves four patched packages and records a short-lived exact-version
 exception for the unpatched `sprintf-js`; it waits for the overlapping postcss
 PR before publication. Main-head root-gate preflight on each owning PR, with
 OSV advisories refreshed at review time, would prevent this cross-PR repair.
+
+### Shared test console hid an order-dependent assertion (2026-10-05)
+
+PR #1445 review found that `changeset-graph.test.ts` provided
+`TestConsole.layer` once to an `it.layer` block, so a second failure-path test
+could see error lines from the first. The reviewer's second-case reproduction
+made the exact assertion fail with four lines instead of two. Each test now
+creates its own test console, and a two-failure regression passes on Node and
+Bun; the full repo-cli package proof passes. A test fixture check that runs
+two output-producing cases within each shared layer would have exposed this
+before review.
