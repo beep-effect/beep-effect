@@ -307,16 +307,16 @@ const bindSegments = (segments: ReadonlyArray<string>, modelId: string): Readonl
  * **Example** (Bind a per-model effort pointer)
  *
  * ```ts
- * import { BOUND_MODEL_SEGMENT, bindLocatorModel } from "@beep/repo-cli/commands/Models"
- * import type { Locator } from "@beep/repo-cli/commands/Models"
+ * import { BOUND_MODEL_SEGMENT, bindLocatorModel, Locator } from "@beep/repo-cli/commands/Models"
+ * import * as S from "effect/Schema"
  *
- * const locator = {
+ * const locator = S.decodeUnknownSync(Locator)({
  *   _tag: "json-key",
  *   binding: { role: "orchestrator", surface: "claude-code", field: "effort" },
  *   render: { _tag: "verbatim" },
  *   pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
  *   fallbacks: [["effortLevel"]],
- * } as Locator
+ * })
  * const bound = bindLocatorModel(locator, "claude-opus-5-6")
  * console.log(bound._tag === "json-key" ? bound.pointer.join(".") : "") // "modelSettings.claude-opus-5-6.effortLevel"
  * ```
