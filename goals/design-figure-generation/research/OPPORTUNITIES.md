@@ -50,3 +50,15 @@
 - **Cost:** one wave diagnosis.
 - **Would have prevented it:** #1432 updating the assertion in the same PR; or the monitor
   attributing a red to the last commit that touched the asserted file.
+
+## 2026-10-06 — Heavy matrix cancelled unrun; the census reports it as failures
+
+- **Doing:** babysitting PR #1439 at head `3b63bee` (run `37391377568`).
+- **Evidence:** `Heavy / Check` job `112037561279` started 23:59:37Z, completed 00:38:24Z with
+  `runner_name: ""` and no steps; Build, Coverage Regression, Docgen, Lint Policy, and Test
+  Integration ended `cancelled` the same way. `gh pr checks` and the yeet inbox list all six as
+  `fail` / P0, indistinguishable from real reds.
+- **Cost:** one wave triage to separate "never ran" from "ran and failed".
+- **Would have prevented it:** the monitor classing a job with an empty runner and no steps as
+  `not-admitted` (environment-only) instead of a P0 failure, as it already does for
+  `heavy-not-admitted`.
