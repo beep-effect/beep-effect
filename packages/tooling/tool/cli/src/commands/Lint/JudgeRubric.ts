@@ -22,6 +22,7 @@ import { Fn } from "@beep/schema";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, HashSet, Order, Path, pipe } from "effect";
 import { Command } from "effect/cli";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
@@ -213,7 +214,7 @@ const lintOneRubric = Effect.fn("lintOneRubric")(function* (
 const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
   const repoRoot = yield* findRepoRoot();
   const counts = yield* Effect.forEach(RUBRICS, (rubric) => lintOneRubric(repoRoot, rubric));
-  const violationCount = A.reduce(counts, 0, (sum, n) => sum + n);
+  const violationCount = Num.sumAll(counts);
   if (violationCount > 0) {
     yield* Console.error(`[lint:judge-rubric] found ${violationCount} lens drift violation(s).`);
     return yield* failWithReportedExit("lint judge-rubric: a judge prompt and its QaLens family have drifted.");
