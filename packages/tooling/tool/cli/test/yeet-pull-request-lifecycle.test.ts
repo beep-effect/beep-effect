@@ -108,7 +108,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
         yield* validateMonitorGuards(context, defaultYeetRunOptions({ monitor: true, pr: true }));
         const output = yield* encodeView({ number: 42, state: "OPEN", headRefName: context.branch });
         yield* validateMonitorGuards(context, defaultYeetRunOptions({ mode: "closeout" })).pipe(withGh(output));
-      })
+      }).pipe(withGh(""))
     );
 
     it.effect("accepts commitlint success and preserves rejection output and status", () =>

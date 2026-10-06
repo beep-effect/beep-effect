@@ -217,8 +217,11 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         modelSettings: { "claude-opus-5": { effortLevel: "low" } },
       });
       expect(A.map(drift, (entry) => entry.kind)).toEqual(["stale"]);
-      assertSome(drift[0]!.current, "low");
-    }).pipe(Effect.scoped)
+      assertSome(
+        O.flatMap(A.head(drift), (finding) => finding.current),
+        "low"
+      );
+    })
   );
 
   it.effect("reports routable unbound Codex candidates without proposing hidden or already-bound slugs", () =>
