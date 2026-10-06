@@ -15,7 +15,7 @@ import {
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -196,7 +196,7 @@ describe("session ledger rows", () => {
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
       );
       expect(unknown.harness).toBe("unknown");
-      assertTrue(O.isNone(unknown.sessionId));
+      assertNone(unknown.sessionId);
     })
   );
 });

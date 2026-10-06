@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/test/Quality";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A } from "@beep/utils";
+import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Path, Result, Sink, Stream } from "effect";
 import * as O from "effect/Option";
@@ -73,6 +74,7 @@ const statusTestLayer = (
   Layer.mergeAll(
     MemoryFileSystem.layer,
     Path.layer,
+    NodeCrypto.layer,
     TestConsole.layer,
     gitFixtureLayer(changedFiles, addedChangesets, spawned)
   );
