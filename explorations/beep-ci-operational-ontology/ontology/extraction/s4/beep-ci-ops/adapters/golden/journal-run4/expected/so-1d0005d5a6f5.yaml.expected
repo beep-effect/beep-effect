@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:1d0005d5a6f539b41488911993e85f6caf0ebed0909537f6a8ac7f7982aed536",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/sidecar.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 6,
+    "content_sha256": "c80ab967d27b50526d22fe7afe799b81cb3a6cbe4b53913bb16bc226201e07a6"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/sidecar.properties:record=0",
+    "lexical_name": "sidecar",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "sidecar=present"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-lease-evicted\nnonce=sidecar-dead\nevictedAtMillis=600\nsidecar=present\n",
+  "epistemic_status": "parser_derived"
+}

@@ -950,3 +950,19 @@ the files, so no seat deletes another seat's records. Ruling 11's cap holds: a r
 withdrawn, except that a sitting which strikes every landed attack of that FAIL may order one more
 review of the unchanged bytes, recorded in that sitting entry. The orchestrator runs the mechanical
 gate in the pin worktree before every adversary round and checks slug freshness against the shelters.
+
+**Call (z) — adapter v1.3.0 accepted; the pin's observation set.** v1.3.0 (`0e6d17963817` in the
+working tree; the run manifest pins the committed blob) emits 109 source observations in 0.44 MB with
+a largest record of 11.5 KB: 24 stanza-scoped vocabulary records, 52 admission chains (44 with a
+withdrawal, 3 with an eviction, 5 plain, one per (kind, priority) class) and the first-v3-tag record, 3
+first-stage records and 29 ledger records. With the 95 prose observations the run opens at 204,
+inside the budget. The golden holds 65 expected records over 21 synthetic inputs, and fifty-five
+single-substitution variants of the adapter all fail it. Ruled with it: the one record that equals its
+file (the three-line protocol projection, a single stanza) meets call (u) in intent; five pairs of
+records share path, span and name and differ only in facts, the vocabulary record being a strict
+subset, so they stay, the denotation brief names the pattern and each pair is batched together; the
+chain definition stays v1.2.0's; Queue D's resubmission evidence is sufficient as emitted (all 44
+withdrawal chains and all 3 eviction chains, with a later same-checkout enqueue emitted as its own
+chain for 20 of the withdrawals), so no further version is ordered: the withdrawn readings turn on a
+demand referent and consumers the journal does not carry. The run manifest is written from the pin's
+blobs and the prose set is emitted in the pin worktree, never from lane scratch.

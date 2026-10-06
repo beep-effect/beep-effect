@@ -864,3 +864,138 @@
   `goals/turborepo-task-qualification/research/`), one more hosted run. Prevention: run
   `bun run beep quality cache-policy` locally whenever a package's scripts block changes, before the
   push, and re-record in the same commit as the scripts.
+
+## 2026-10-06: P3 pin lane — engine step — friction
+- Canary probe shape. Work: the blinded-root canary (call k) from the engine brief's A5 block.
+  Evidence: the block's prompt reads two files only, while the paragraph under it and call (k) need
+  a third outcome (a write of `./wrote.txt` inside the root); a log reader that printed the first
+  300 characters of the error `tool_result` hid its last sentence, which names the outside path
+  ("Path is outside allowed working directories"), so the lane first reported the denial text as
+  generic and the skeptic corrected it. Prevention: put the three-outcome prompt in the command
+  block, read the whole `tool_result`, and test the denial on both the text and
+  `permission_denials[].tool_input.file_path`.
+- Inherited permission mode. Work: informational probe B (no permission flags). Evidence: the init
+  event reports `permissionMode: auto` (the user-level default) and the outside read succeeds, so a
+  seat launched without the explicit flags is not blinded by the harness; and under the first probed
+  shape (explicit permission flags, user settings still loaded) the skeptic read the outside file
+  through a shell command that a user-level allow rule admits. Prevention: the seat launcher passes
+  `--restricted --tools "Read,Write"` with `--setting-sources project,local` (recorded call (s)) and
+  asserts the init event's `permissionMode`, tool list and MCP count before it trusts a run.
+- Leftover empty directories. Work: the run-3 rotation (step B). Evidence: `ONT/work/` also holds
+  three empty untracked directories (`observations`, `prose-observations`, `rejections`) that the
+  brief's census of seven subtrees does not name; the guards pass (they count files) and the three
+  stay behind, so `find ONT/work -mindepth 1` is not empty after the move. Prevention: name them in
+  the brief as expected leftovers of the run-3 rotation (`SKILL.md` re-creates the two observation
+  roots) so a later lane does not read them as a half-finished move.
+- Call range. Work: reading the sitting. Evidence: the common brief cites "calls a–q"; the entry as
+  filed carries calls (a)–(r). Prevention: generate the brief's call range from the entry.
+
+## 2026-10-06: P3 pin lane — CQ-009 and docket steps — friction
+
+- Closed-world census is hard-coded. Work: folding the CQ-009 re-scope (Commit A, step A4).
+  Evidence: `ontology/extraction/s6/scripts/build_predicates.py` exits with
+  `expected 14 closed-world declarations, found <n>` on any other count, so the new same-checkout
+  arm cannot declare a `hasCheckout` closure without an S6 script edit the run does not admit; the
+  fold rewrites only the `hasOriginKey` note and records the closure as undeclared (call (n)).
+  Prevention: derive the expected count from `closed-world.yaml` (or pin it in a data file) so a
+  fifteenth declaration is a data change with a ruling, not a generator edit.
+- Stale brief anchors after the relocation commit. Work: step 0 and B1 of the docket brief.
+  Evidence: the brief reads run-3 artifacts as `git show HEAD:<ONT/work or ONT/governance path>`
+  and expects `MOVE=0 README=no` or `333/yes`; at launch the move was already committed, so the
+  probe prints `MOVE=0 README=yes` and every run-3 read uses the shelter path. Prevention: issue
+  lane briefs after the commit they depend on, or have the probe key on the shelter README alone.
+
+## 2026-10-06: P3 pin lane — engine step — friction (stage 2)
+
+- The sandbox runner cannot write a golden. Work: authoring `adapters/golden/journal-run4/expected/`
+  for adapter-journal v1.2.0. Evidence: `run_adapter_sandbox.sh` has two modes, `self-check`
+  (compare only) and `observe` (reads the corpus root named in the adapter), and the lane law
+  forbids running an adapter outside it; the expected set was produced by a throwaway copy of the
+  trusted adapter whose corpus root and commit source were pointed at the fixture, run through
+  `observe`, then proven by the real adapter's `self-check` (28 records) and deleted. Prevention:
+  a third runner mode that writes the regenerated set to a scratch output, so no variant script is
+  ever needed and the expected bytes come from the adapter under test.
+- Vocabulary and event records can collide. Work: the first golden draft. Evidence:
+  `adapter-journal: 12-hex observation filename collision` when a fixture file was one record whose
+  every pair was new: the whole-file vocabulary record and the event record share span and facts
+  and differ only in `qualified_name`. v1.1.0 has the same closed failure; neither run-4 pin trips
+  it. Prevention: a later version names the event record's span in the id payload, or lets the
+  event rule subsume a coincident vocabulary record; recorded as a known limit in the adapter
+  record.
+- The unchanged admission rule overshoots the budget under journal v3. Work: the provisional
+  observe (step D2). Evidence: 287 source observations against a budget near 250, 243 of them
+  nonce chains; the v1.1.0 contention test (an enqueue followed by an admission or a withdrawal)
+  is true for every admitted ticket once enqueue rows are journaled (196 plain
+  enqueued-admitted-released chains, 44 withdrawals, 3 evictions). Prevention: re-measure a
+  carried-over selection rule against the new pin before a brief declares it unchanged; the
+  tightening proposal is in the engine report.
+- Whole-file vocabulary excerpts scale with the pin. Work: the same observe. Evidence: three
+  vocabulary records carry their whole source file as `source_excerpt` (about 2.2 MB, 0.9 MB and
+  0.27 MB; 5.2 MB for the emission, against 1.7 MB in run 3), because the v1.1.0 record builder
+  quotes the full span and the run-4 projections are single large files. Prevention: a vocabulary
+  rule that spans only the stanzas holding first occurrences, decided before the pin.
+- A line-number edit broke a fixture silently. Work: locking the `first-event-tag` arm in the
+  golden. Evidence: a `sed -i '34,35d'` removed a record marker instead of two value lines; the
+  self-check still passed, because the expected set had been regenerated from the broken input.
+  Caught by reading the regenerated spans, then the fixture was rewritten whole. Prevention:
+  rewrite small fixtures whole, and review a regenerated golden by its span list before trusting a
+  green self-check.
+
+## 2026-10-06: P3 pin lane — engine step — friction (review round 1)
+
+- A green golden self-check did not prove the rule locks. Work: the skeptic review of the run-4
+  adapter golden. Evidence: nine single-edit variants of the adapter (an R4 key component dropped,
+  R4 (b) or (c) keyed per clone, the v3 guard removed) each still printed
+  `adapter-journal@1.2.0 self-check PASS (28 records)`, because every fixture record that depended
+  on one key component also differed in a second one, and one record carried two claimed locks.
+  The fixture was rewritten so each component has a record that differs in it alone; thirty
+  variants now fail against 39 expected records. Prevention: author a golden together with its
+  mutant list (one variant per README claim, run through the sandbox runner) and treat a surviving
+  variant as an unlocked claim; a runner mode that takes a variants directory would make that one
+  command.
+
+## 2026-10-06: P3 pin lane — engine step — friction (stage 3)
+
+- A per-stanza vocabulary rule and an event rule can describe the same record. Work: adapter
+  v1.3.0 (recorded call (u)), R1 per record stanza. Evidence: the record id covers commit, path,
+  span and facts but not the name, so a stanza whose new pairings are all of its pairings and
+  which an event rule also selects is one record; with two names the adapter stops on
+  `12-hex observation filename collision`. Vocabulary records therefore use the event rules'
+  `:record=N` name and the shared record is counted under `vocabulary` (R3 shows 3 records for 4
+  classes on the pin). Prevention: decide the naming of overlapping rules when a rule's grain
+  changes, before the golden is written.
+- The same overlap unlocked an old golden claim. Work: re-running the thirty v1.2.0 variants
+  against the v1.3.0 golden. Evidence: the variant without the v3 guard printed
+  `adapter-journal@1.3.0 self-check PASS (58 records)`: the v1 withdrawal row it wrongly selects
+  was the fixture's first stanza, which the new vocabulary rule emits with the same span and
+  facts. Moving that row to second place restored the lock; forty-four variants now fail.
+  Prevention: re-run the whole variant list after any rule change, never only the new variants.
+- The provisional-manifest generator in the lane scratch still carried the pre-CQ-009 suite and
+  scope digests. Work: step C/D2 of this stage. Evidence: recorded call (t) fixed the committed
+  digests after the generator was written; the generator was copied with the two values replaced
+  before any scan ran, so no red scan resulted. Prevention: the generator should read both digests
+  from `git show HEAD:` instead of carrying literals.
+- A sampling rule can keep an event and drop its sequel. Work: the Queue D check over the v1.3.0
+  emission. Evidence: all 44 withdrawal chains and all 3 eviction chains are emitted, but of the 34
+  withdrawal chains that a later admitted enqueue of the same checkout and kind follows in the
+  pin, that later chain is itself an emitted record for 2. Prevention: when a queue needs a
+  sequence (withdrawn, then resubmitted), name the sequence in the selection rule, or accept the
+  interleaved excerpt rows as the evidence, before the rule is ruled.
+
+## 2026-10-06: P3 pin lane — engine step — friction (review round 2)
+
+- A lock claimed in a golden README had no failing variant behind it, three times over. Work:
+  review round 2 of adapter v1.3.0. Evidence: variants that sampled ticket-eviction chains, never
+  reset the class sets, or tested a released row on a checkout alone each printed
+  `adapter-journal@1.3.0 self-check PASS (58 records)`; one of them was the stage-3 overlap again
+  (the per-stanza vocabulary rule emitted the very record the stage rule should have selected
+  alone). Prevention: one named failing variant per sentence of the lock table, written in the
+  same change as the sentence.
+- The earlier stage kept the variant names but not their substitutions. Work: re-running the
+  forty-four variants. Evidence: the scratch log lists `m01` to `n44` with exit codes only, so
+  each substitution was rebuilt from its name. Prevention: keep the variant list (name, from, to)
+  as a file beside the proof log, or give the sandbox runner a variants mode that reads one.
+- A Unicode escape typed in a shell command arrived as the character itself. Work: the BOM-strip
+  variant. Evidence: the exact-once guard printed `SUBSTITUTION-COUNT=0 (not applied)` for the
+  literal form of the escape; a pattern that does not spell the escape applied once. Prevention:
+  keep the exact-once count guard on every substitution, and match such bytes by pattern.

@@ -1,0 +1,44 @@
+{
+  "id": "so:sha256:7df167ac4226c3453d6066c2af6674ad4feecfad385879bda97bd3a44509f46f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 5,
+    "content_sha256": "12dabf6fafbb30c18d271009b0b4b9d799bd0fbc6371cc51449adb47f27ae0c6"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:record=0",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=80"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=legacy"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=legacy\nadmittedAtMillis=80\n",
+  "epistemic_status": "parser_derived"
+}

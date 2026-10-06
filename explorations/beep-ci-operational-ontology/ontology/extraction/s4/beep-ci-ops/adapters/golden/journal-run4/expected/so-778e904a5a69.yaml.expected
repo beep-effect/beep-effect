@@ -1,0 +1,84 @@
+{
+  "id": "so:sha256:778e904a5a69d15e2204214260a92f5450c9e26d36d4acc33d61644863929900",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/alpha/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 15,
+    "end_line": 30,
+    "content_sha256": "996cbe69fe570172b75316db5121f5990b56bac2e5970acacdc577b561fb8749"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/alpha/proof-ledger.properties:record=1",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=attempt-one"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=10.5"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=turbo-task-hash"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=first"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=<fixture>/alpha"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-01-01T00:00:00.000Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 1\nkind=fact\nschemaVersion=proof-fact/v1\nschemaVersion=proof-fact/v1\nlaneId=lint:alpha\nlaneClass=cli-runnable\nenvProfile=local\ninputSource=turbo-task-hash\nkey=first\noutcome=passed\ndurationMs=10.5\nattemptId=attempt-one\noriginKey=<fixture>/alpha\ntier=full\nstage=pre-push\nrecordedAt=2026-01-01T00:00:00.000Z\n",
+  "epistemic_status": "parser_derived"
+}

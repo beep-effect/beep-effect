@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:087fd24215c1e9724c8ddc5c45f7e3b982a45be0e264cc10599259758a89f498",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 241,
+    "end_line": 257,
+    "content_sha256": "6cc1b7079df0b7cf5aa8f0304c2ac7017ee85ed55b4e7f040b2d6e45370a1535"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=odd-start",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=950"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=970"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=960"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=novel"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=odd-start"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=high"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    }
+  ],
+  "source_excerpt": "# record 41\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=odd-start\nadmittedAtMillis=950\n# record 42\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=odd-start\nenqueuedAtMillis=960\nkind=novel\npriority=high\n# record 43\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-admitted\nnonce=odd-start\nadmittedAtMillis=970\n",
+  "epistemic_status": "parser_derived"
+}

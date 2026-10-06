@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:de9e36d323bde30dfada3cbccb7d1f57448ed744976f137e762d1101bd50fa1d",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/alpha/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 91,
+    "end_line": 100,
+    "content_sha256": "f242b0b5e2986589efad96c92232751c621bd03dd0daf2b586126ace1304a173"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/alpha/proof-ledger.properties:record=8",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "inputSource=undeclared"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=third"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneClass=cli-runnable"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:gamma"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "tier=full"
+    }
+  ],
+  "source_excerpt": "# record 8\nkind=fact\nschemaVersion=proof-fact/v1\nlaneId=lint:gamma\nlaneClass=cli-runnable\ninputSource=undeclared\nkey=third\noutcome=passed\ntier=full\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

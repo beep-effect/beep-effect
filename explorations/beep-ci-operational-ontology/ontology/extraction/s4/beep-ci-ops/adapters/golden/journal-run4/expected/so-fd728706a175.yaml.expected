@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:fd728706a17553e08f1225c8529936eb588a8c61f87c3e6230f92019e7ed73ba",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 176,
+    "end_line": 187,
+    "content_sha256": "46413e55318677a932d93e928ddbfd93528eb91b02df3c4d37c3014483a29184"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=early-withdrawn",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=840"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=slow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=early-withdrawn"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=low"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=850"
+    }
+  ],
+  "source_excerpt": "# record 30\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nnonce=early-withdrawn\nenqueuedAtMillis=840\nkind=slow\npriority=low\n# record 31\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-withdrawn\nnonce=early-withdrawn\nwithdrawnAtMillis=850\n",
+  "epistemic_status": "parser_derived"
+}
