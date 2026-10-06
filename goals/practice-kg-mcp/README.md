@@ -50,17 +50,25 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P6 Graph-integrity repair: the two blocker mechanisms (bare-family keying,
-mention-derived membership) are fixed in the build (`SPEC.md` D-11) and the
-bundle was rebuilt from the corpus on 2026-10-05 — family 10013 splits by
-client, family 10073 carries zero phantom patents, no application is filed
-from more than one family. Remaining before P6 closes: rerun the P3 claims
-batch onto the rebuilt bundle (metered), copy it to the Windows target, and
-run the G-1/G-3 spot re-runs. P5 correctness calls on G-1..G-5 remain Tom's;
-AC-2 node provenance is P7.
+P8 Handoff + close. P6 and P7 are complete (2026-10-06): the graph is keyed
+by client, every row resolves to provenance (AC-2, proved by `verify.ts`),
+the server needs no network (AC-5, proved under enforced isolation), and the
+bundle exposes a stable matter-lookup contract for the docket-intake, email,
+and Box services (`research/matter-lookup-contract.md`). The server and bundle are on
+the attorney's PC and pass eleven of eleven tool-level checks there with zero
+network connections. What remains needs people: replacing the July extension with
+the new package in Claude Desktop, his first questions (AC-6), and his correctness calls
+on G-1..G-5.
 
 ## Latest Evidence
 
+- 2026-10-06: **P7 landed** — `kg_matter_lookup` and the
+  `PracticeKgMatterLookup` service over new `matters` / `matter_dockets`
+  tables; claims carried into the rebuilt bundle with no model run; bundle
+  `2026-10-06-01` verified (8,240 of 8,240 nodes resolve, 0 unresolved
+  references, 16 claims); typed tool failures, withheld-column and match-offset
+  signalling; nine spot calls byte-identical with and without network.
+  Evidence: [`history/p7/`](./history/p7/).
 - 2026-10-05: **P6 graph-integrity repair landed** — families keyed
   `<client>.<family>` from the documents' own reference form, anchors placed
   by unique mention with `mentioned_in_family` edges for the rest,

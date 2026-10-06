@@ -13743,6 +13743,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/PracticeKg.families.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/PracticeKg.fts.ts": {
           "lines": 100,
           "statements": 100,
@@ -13767,6 +13779,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/PracticeKg.matters.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/PracticeKg.projections.ts": {
           "lines": 95.89,
           "statements": 96.02,
@@ -13780,6 +13804,18 @@
           }
         },
         "packages/law-practice/server/src/PracticeKg.queries.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/PracticeKg.references.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -13827,6 +13863,18 @@
             "functions": 1
           }
         },
+        "packages/law-practice/server/src/PracticeKg.verify.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/server/src/Tools.ts": {
           "lines": 80,
           "statements": 80,
@@ -13840,6 +13888,18 @@
           }
         },
         "packages/law-practice/server/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/PosInt.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -14625,6 +14685,18 @@
             "functions": 0
           }
         },
+        "packages/law-practice/use-cases/src/PracticeKg.matter-lookup.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/use-cases/src/PracticeKg.tools.ts": {
           "lines": 100,
           "statements": 100,
@@ -14650,6 +14722,30 @@
           }
         },
         "packages/law-practice/use-cases/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/PosInt.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/internal/effectOutput.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -19519,6 +19615,18 @@
             "statements": 92,
             "branches": 12,
             "functions": 23
+          }
+        },
+        "apps/practice-kg-mcp/src/verify.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 13,
+            "statements": 13,
+            "branches": 0,
+            "functions": 4
           }
         }
       }
@@ -26143,6 +26251,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Session/Session.command.ts": {
+          "lines": 97.91,
+          "statements": 98.11,
+          "branches": 100,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts": {
