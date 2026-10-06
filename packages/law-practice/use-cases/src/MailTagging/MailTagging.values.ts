@@ -355,14 +355,98 @@ export class DocumentUploaded extends S.TaggedClass<DocumentUploaded>($I`Documen
 ) {}
 
 /**
+ * SHA-1 of a stored file's bytes as 40 lowercase hex characters.
+ *
+ * **Details**
+ *
+ * Document stores that report a content hash for a name conflict report
+ * SHA-1. It is used only to recognize a file as the attachment that was
+ * uploaded; the filing ledger's own identity stays SHA-256.
+ *
+ * **Example** (Guard a SHA-1 digest)
+ *
+ * ```ts
+ * import { ContentSha1 } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ContentSha1)("da39a3ee5e6b4b0d3255bfef95601890afd80709")) // true
+ * console.log(S.is(ContentSha1)("DA39A3EE")) // false
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const ContentSha1 = S.String.check(
+  S.isPattern(/^[0-9a-f]{40}$/u, {
+    identifier: $I`ContentSha1PatternCheck`,
+    title: "Content SHA-1",
+    description: "A SHA-1 digest as exactly 40 lowercase hexadecimal characters.",
+    message: "Content SHA-1 must be 40 lowercase hexadecimal characters.",
+  })
+).pipe(
+  S.brand("ContentSha1"),
+  $I.annoteSchema("ContentSha1", {
+    description: "SHA-1 of a stored file's bytes as 40 lowercase hex characters.",
+  })
+);
+
+/**
+ * Runtime type for {@link ContentSha1}.
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export type ContentSha1 = typeof ContentSha1.Type;
+
+/**
+ * What a document store says about the file that already holds a name.
+ *
+ * **Details**
+ *
+ * A store reports what it can: always the id, and the size and SHA-1 when it
+ * has them. The filer treats the holder as its own earlier upload only when a
+ * reported hash, or failing that a reported size, matches the attachment.
+ *
+ * **Example** (Describe a holder by id only)
+ *
+ * ```ts
+ * import { DocumentFileId } from "@beep/law-practice-domain/values/MailTagging"
+ * import { ExistingDocument } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as O from "effect/Option"
+ *
+ * const holder = ExistingDocument.make({ fileId: DocumentFileId.make("file-0001") })
+ * console.log(O.isNone(holder.contentSha1)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExistingDocument extends S.Class<ExistingDocument>($I`ExistingDocument`)(
+  {
+    fileId: DocumentFileId.annotateKey({
+      description: "Id of the file holding the name.",
+    }),
+    byteLength: S.Option(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "Size of the holder in bytes, when the store reports it.",
+    }),
+    contentSha1: S.Option(ContentSha1).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "SHA-1 of the holder's bytes, when the store reports it.",
+    }),
+  },
+  $I.annote("ExistingDocument", {
+    description: "What a document store says about the file that already holds a name.",
+  })
+) {}
+
+/**
  * Outcome of an upload the store refused because the folder already has a
  * file of that name; nothing was written.
  *
  * **Details**
  *
- * `existingFileId` is the id of the file holding the name, when the store can
- * tell. The filer needs it to record a completion for an upload that landed
- * before its ledger line did.
+ * `existing` describes the file holding the name, when the store can tell.
+ * The filer needs it to decide whether that file is an upload of its own that
+ * landed before its ledger line did.
  *
  * **Example** (Report a held name)
  *
@@ -371,7 +455,7 @@ export class DocumentUploaded extends S.TaggedClass<DocumentUploaded>($I`Documen
  * import * as O from "effect/Option"
  *
  * const result = DocumentNameTaken.make({})
- * console.log(O.isNone(result.existingFileId)) // true
+ * console.log(O.isNone(result.existing)) // true
  * ```
  *
  * @category models
@@ -380,8 +464,8 @@ export class DocumentUploaded extends S.TaggedClass<DocumentUploaded>($I`Documen
 export class DocumentNameTaken extends S.TaggedClass<DocumentNameTaken>($I`DocumentNameTaken`)(
   "DocumentNameTaken",
   {
-    existingFileId: S.Option(DocumentFileId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
-      description: "Id of the file that already holds the name, when the store reports it.",
+    existing: S.Option(ExistingDocument).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "The file that already holds the name, when the store describes it.",
     }),
   },
   $I.annote("DocumentNameTaken", {

@@ -273,8 +273,8 @@ export class MatterFolderDirectory extends Context.Service<MatterFolderDirectory
  *
  * `upload` creates a new file and answers `DocumentUploaded` with its id. When
  * the folder already has a file of that name it writes nothing and answers
- * `DocumentNameTaken`, with the id of the file holding the name when the store
- * can tell. It never replaces a file. The port has no overwrite and no delete
+ * `DocumentNameTaken`, describing the file holding the name (its id, and its
+ * size and SHA-1 when the store has them) when the store can tell. It never replaces a file. The port has no overwrite and no delete
  * verb, so filing cannot destroy a document.
  *
  * **Example** (Build a store that names every file the same)

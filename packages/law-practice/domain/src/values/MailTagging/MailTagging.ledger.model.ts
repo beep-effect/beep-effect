@@ -568,6 +568,13 @@ export class FilingLedgerEntry extends S.TaggedClass<FilingLedgerEntry>($I`Filin
 /**
  * Why a filing intent was given up without storing a file.
  *
+ * **Details**
+ *
+ * `name-taken`: a first upload found its name held, so the holder is a file
+ * the ledger never stored. `holder-mismatch`: a retried upload found its name
+ * held by a file whose reported hash or size is not the attachment's, or
+ * whose content the store did not describe at all.
+ *
  * **Example** (Guard an abandon reason)
  *
  * ```ts
@@ -575,13 +582,14 @@ export class FilingLedgerEntry extends S.TaggedClass<FilingLedgerEntry>($I`Filin
  * import * as S from "effect/Schema"
  *
  * console.log(S.is(FilingAbandonReason)("name-taken")) // true
+ * console.log(S.is(FilingAbandonReason)("holder-mismatch")) // true
  * console.log(S.is(FilingAbandonReason)("timeout")) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const FilingAbandonReason = LiteralKit(["name-taken"]).pipe(
+export const FilingAbandonReason = LiteralKit(["name-taken", "holder-mismatch"]).pipe(
   $I.annoteSchema("FilingAbandonReason", {
     description: "Why a filing intent was given up without storing a file.",
   })
@@ -601,9 +609,10 @@ export type FilingAbandonReason = typeof FilingAbandonReason.Type;
  * **Details**
  *
  * A first upload that finds its name taken proves the name belongs to a file
- * the ledger never stored. The abandonment settles that {@link FilingIntent},
- * so a later run does not mistake the foreign file for an interrupted upload
- * of its own.
+ * the ledger never stored, and a retried upload can find its name held by a
+ * file that is not the attachment. Either abandonment settles that
+ * {@link FilingIntent}, so a later run does not mistake the foreign file for
+ * an interrupted upload of its own.
  *
  * **Example** (Decode a filing abandonment)
  *

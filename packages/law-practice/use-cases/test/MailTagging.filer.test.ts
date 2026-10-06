@@ -1,4 +1,4 @@
-import { DocumentFileId, FilingLedgerEntry, FilingLedgerRecord } from "@beep/law-practice-domain/values/MailTagging";
+import { FilingLedgerEntry, FilingLedgerRecord } from "@beep/law-practice-domain/values/MailTagging";
 import {
   AttachmentFiler,
   completedFilings,
@@ -12,7 +12,6 @@ import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import {
   acmeEntry,
@@ -197,7 +196,7 @@ describe("MailTagging attachment filer", () => {
     scenario({
       envelopes: [usptoMail],
       attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "notice.pdf", bytes: pdf })]]],
-      digestFails: true,
+      failingDigests: ["SHA-256"],
     }),
     { timeout: "30 seconds" }
   )("hash failure", (it) => {
@@ -312,6 +311,25 @@ const sameNameTwice = () =>
     ],
   });
 
+const plainKey = "folder-acme-uspto-incoming/2026-07-01 office-action.pdf";
+const shortHashKey = "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf";
+
+/** What the ledger and the store hold once a foreign holder was disowned and the content filed. */
+const disownedThenFiled = {
+  lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingCompleted"],
+  pending: [],
+  completed: [["2026-07-01 office-action (315d429b).pdf", "file-1", false]],
+  uploads: [shortHashKey],
+};
+
+const abandonReasons = Effect.fn("MailTaggingFilerTest.abandonReasons")(function* () {
+  const state = yield* World;
+  return A.map(
+    A.filter(yield* Ref.get(state.filingRecords), FilingLedgerRecord.guards.FilingAbandoned),
+    (line) => line.reason
+  );
+});
+
 const ledgerShape = Effect.fn("MailTaggingFilerTest.ledgerShape")(function* () {
   const state = yield* World;
   const records = yield* Ref.get(state.filingRecords);
@@ -382,7 +400,7 @@ describe("MailTagging two-phase filing", () => {
         const state = yield* World;
         yield* Ref.set(state.failingFilingAppend, O.some(2));
         yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
-        yield* Ref.set(state.anonymousStore, true);
+        yield* Ref.set(state.holderDetail, "nothing");
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
 
         assertInstanceOf(failure, MailTaggingPortError);
@@ -455,10 +473,7 @@ describe("MailTagging two-phase filing", () => {
       "abandons the intent, files under the short-hash name, and does not treat the abandoned name as its own",
       Effect.fnUntraced(function* () {
         const state = yield* World;
-        yield* Ref.update(
-          state.storedFiles,
-          HashMap.set("folder-acme-uspto-incoming/2026-07-01 office-action.pdf", DocumentFileId.make("foreign-1"))
-        );
+        yield* state.holdName({ key: plainKey, bytes: [0] });
         const report = yield* file({ mode: "apply", message: usptoMail });
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.wrote]).toStrictEqual([1, 0, true]);
@@ -488,17 +503,8 @@ describe("MailTagging two-phase filing", () => {
       "abandons both intents, fails with a typed error, and leaves nothing pending for the next run",
       Effect.fnUntraced(function* () {
         const state = yield* World;
-        yield* Ref.update(state.storedFiles, (stored) =>
-          HashMap.set(
-            HashMap.set(
-              stored,
-              "folder-acme-uspto-incoming/2026-07-01 office-action.pdf",
-              DocumentFileId.make("foreign-1")
-            ),
-            "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf",
-            DocumentFileId.make("foreign-2")
-          )
-        );
+        yield* state.holdName({ key: plainKey, bytes: [0] });
+        yield* state.holdName({ key: shortHashKey, bytes: [0] });
         const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
         const abandoned = A.filter(yield* Ref.get(state.filingRecords), FilingLedgerRecord.guards.FilingAbandoned);
 
@@ -571,6 +577,156 @@ describe("MailTagging two-phase filing", () => {
         expect(pendingFilingIntents(A.appendAll(completions, intents))).toStrictEqual(intents);
         expect(pendingFilingIntents(A.appendAll(intents, renamed))).toStrictEqual(intents);
         expect(completedFilings(intents)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })(
+    "foreign holder, first upload failed before the name check",
+    (it) => {
+      it.effect(
+        "disowns the holder, uploads under the short-hash name, and later copies dedupe against our file",
+        Effect.fnUntraced(function* () {
+          const state = yield* World;
+          yield* state.holdName({ key: plainKey, bytes: [7, 7, 7, 7] });
+          yield* Ref.set(state.failingUpload, O.some(1));
+          yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+          expect((yield* ledgerShape()).pending).toStrictEqual(["2026-07-01 office-action.pdf"]);
+
+          const rerun = yield* file({ mode: "apply", message: usptoMail });
+          const third = yield* file({ mode: "apply", message: clientMail });
+
+          expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
+          expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+          expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+          expect([third.attachmentsDeduped, third.attachmentsFiled]).toStrictEqual([1, 0]);
+        })
+      );
+    }
+  );
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("foreign holder, abandonment line lost", (it) => {
+    it.effect(
+      "disowns the holder on the rerun instead of completing against it",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* state.holdName({ key: plainKey, bytes: [7, 7, 7, 7] });
+        yield* Ref.set(state.failingFilingAppend, O.some(2));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingStateError);
+        expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended"]);
+
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+        const third = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
+        expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        expect(third.attachmentsDeduped).toBe(1);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("store reports a size and no hash", (it) => {
+    it.effect(
+      "reconciles its own upload by size",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.holderDetail, "size-only");
+        yield* Ref.set(state.lyingUpload, O.some(1));
+        yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([1, 0]);
+        expect((yield* ledgerShape()).completed).toStrictEqual([["2026-07-01 office-action.pdf", "file-1", true]]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("store reports a different size and no hash", (it) => {
+    it.effect(
+      "disowns the holder",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.holderDetail, "size-only");
+        yield* state.holdName({ key: plainKey, bytes: [7, 7] });
+        yield* Ref.set(state.failingUpload, O.some(1));
+        yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+
+        expect(rerun.attachmentsFiled).toBe(1);
+        expect(yield* ledgerShape()).toStrictEqual({ ...disownedThenFiled, uploadCalls: 3 });
+        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("store reports the holder's id only", (it) => {
+    it.effect(
+      "does not adopt a holder it cannot prove is the attachment, even its own upload",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.holderDetail, "id-only");
+        yield* Ref.set(state.lyingUpload, O.some(1));
+        yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 0]);
+        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        expect((yield* ledgerShape()).completed).toStrictEqual([
+          ["2026-07-01 office-action (315d429b).pdf", "file-2", false],
+        ]);
+      })
+    );
+  });
+
+  it.layer(sameNameTwice(), { timeout: "30 seconds" })("foreign holder under the short-hash name", (it) => {
+    it.effect(
+      "abandons the intent and fails, because there is no other name to try",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* file({ mode: "apply", message: usptoMail });
+        yield* Ref.set(state.failingUpload, O.some(2));
+        yield* Effect.flip(file({ mode: "apply", message: clientMail }));
+
+        expect((yield* ledgerShape()).pending).toStrictEqual(["2026-07-01 office-action (31609426).pdf"]);
+
+        yield* state.holdName({
+          key: "folder-acme-from-client/2026-07-01 office-action (31609426).pdf",
+          bytes: [7],
+        });
+        const failure = yield* Effect.flip(file({ mode: "apply", message: clientMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect([failure.port, failure.operation]).toStrictEqual(["DocumentStore", "upload"]);
+        expect(yield* abandonReasons()).toStrictEqual(["holder-mismatch"]);
+        expect((yield* ledgerShape()).pending).toStrictEqual([]);
+        expect((yield* ledgerShape()).completed).toHaveLength(1);
+      })
+    );
+  });
+
+  it.layer(
+    scenario({
+      envelopes: [usptoMail],
+      attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "office-action.pdf", bytes: pdf })]]],
+      failingDigests: ["SHA-1"],
+    }),
+    { timeout: "30 seconds" }
+  )("SHA-1 unavailable while comparing a holder", (it) => {
+    it.effect(
+      "fails with a typed content-hasher error and records no outcome",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.lyingUpload, O.some(1));
+        yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect([failure.port, failure.operation]).toStrictEqual(["ContentHasher", "sha1"]);
+        expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended"]);
       })
     );
   });

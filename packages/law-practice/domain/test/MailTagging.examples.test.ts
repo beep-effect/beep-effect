@@ -17,9 +17,12 @@ import {
   TagLedgerRecordJsonLine,
 } from "@beep/law-practice-domain/values/MailTagging";
 import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -35,6 +38,7 @@ const decodeCheckpointJson = S.decodeEffect(BackfillCheckpointJson);
 const encodeCheckpointJson = S.encodeEffect(BackfillCheckpointJson);
 const decodeAbandoned = S.decodeEffect(FilingAbandoned);
 const sameFilingRecord = S.toEquivalence(FilingLedgerRecord);
+const sameCheckpoint = S.toEquivalence(BackfillCheckpoint);
 
 describe("MailTagging ledger model examples", () => {
   it.effect(
@@ -136,9 +140,40 @@ describe("MailTagging ledger model examples", () => {
       const abandonedLine = yield* encodeFilingLine(abandoned);
 
       expect(abandoned.reason).toBe("name-taken");
+      expect(FilingAbandonReason.literals).toStrictEqual(["name-taken", "holder-mismatch"]);
       expect(S.is(FilingAbandonReason)("timeout")).toBe(false);
+
+      const disowned = FilingAbandoned.make({ ...abandoned, reason: "holder-mismatch" });
+
+      expect(sameFilingRecord(yield* decodeFilingLine(yield* encodeFilingLine(disowned)), disowned)).toBe(true);
+      expect(sameFilingRecord(disowned, abandoned)).toBe(false);
       expect(sameFilingRecord(yield* decodeFilingLine(abandonedLine), abandoned)).toBe(true);
     })
+  );
+
+  it.effect.prop(
+    "round-trips every schema-derived filing-ledger record through one JSONL line",
+    { record: Arbitrary.schema(FilingLedgerRecord) },
+    ({ record }) =>
+      Effect.gen(function* () {
+        const line = yield* encodeFilingLine(record);
+
+        expect(Str.includes("\n")(line)).toBe(false);
+        expect(sameFilingRecord(yield* decodeFilingLine(line), record)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
+  );
+
+  it.effect.prop(
+    "round-trips every schema-derived checkpoint through its JSON document",
+    { checkpoint: Arbitrary.schema(BackfillCheckpoint) },
+    ({ checkpoint }) =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeCheckpointJson(yield* encodeCheckpointJson(checkpoint));
+
+        expect(sameCheckpoint(decoded, checkpoint)).toBe(true);
+      }),
+    { arbitrary: fcRuns(50) }
   );
 
   it.effect(
