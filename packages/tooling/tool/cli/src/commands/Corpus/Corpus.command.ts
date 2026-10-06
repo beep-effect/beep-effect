@@ -109,9 +109,16 @@ const maxFilesFlag = Flag.Int("max-files").pipe(
   Flag.optional
 );
 /** @since 0.0.0 */
+const tikaTimeoutMillisFlag = Flag.Int("tika-timeout-millis").pipe(
+  Flag.withDescription("Per-source Tika extraction timeout in milliseconds (driver default when omitted)"),
+  Flag.optional
+);
+/** @since 0.0.0 */
 const extractOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Replace an existing staging/extract output tree")
+  Flag.withDescription(
+    "Discard an existing output tree and redo every source; without it a run resumes and extracts only unfinished sources"
+  )
 );
 /** @since 0.0.0 */
 const sampleStrideFlag = Flag.Int("sample-stride").pipe(
@@ -322,6 +329,7 @@ const corpusExtractCommand = Command.make(
     pffexport: pffexportFlag,
     source: sourceLabelFlag,
     tikaJar: tikaJarFlag,
+    tikaTimeoutMillis: tikaTimeoutMillisFlag,
   },
   // fallow-ignore-next-line complexity -- pre-existing extract-command flag adapter re-entered the diff through adjacent preserve subcommands; this function's control flow is unchanged
   Effect.fn(function* ({
@@ -336,6 +344,7 @@ const corpusExtractCommand = Command.make(
     pffexport,
     source,
     tikaJar,
+    tikaTimeoutMillis,
   }) {
     yield* extractCorpus(
       CorpusExtractOptions.make({
@@ -350,11 +359,14 @@ const corpusExtractCommand = Command.make(
         ...(O.isNone(outLabel) ? {} : { outLabel: outLabel.value }),
         ...(O.isNone(pffexport) ? {} : { pffexportPath: pffexport.value }),
         ...(O.isNone(source) ? {} : { sourceLabel: source.value }),
+        ...(O.isNone(tikaTimeoutMillis) ? {} : { tikaTimeoutMillis: tikaTimeoutMillis.value }),
       })
     ).pipe(Effect.asVoid);
   })
 ).pipe(
-  Command.withDescription("Run libpff and Tika extraction over salvaged raw/ files into staging/extract"),
+  Command.withDescription(
+    "Run libpff and Tika extraction over salvaged raw/ files into staging/extract, resuming an interrupted run"
+  ),
   Command.provide(CorpusCommandServiceLive)
 );
 

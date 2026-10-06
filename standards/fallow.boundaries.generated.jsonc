@@ -1190,6 +1190,7 @@
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
           "@beep/architecture-lab-use-cases",
+          "@beep/identity",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -1200,6 +1201,7 @@
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
           "@beep/architecture-lab-use-cases",
+          "@beep/identity",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -1241,6 +1243,7 @@
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1249,6 +1252,7 @@
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
           "@beep/effect-drizzle",
+          "@beep/identity",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1307,14 +1311,16 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/box",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1464,8 +1470,12 @@
         "allow": [
           "@beep/architecture-lab-tables",
           "@beep/db-admin",
+          "@beep/documents-domain",
           "@beep/documents-tables",
+          "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/identity",
+          "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/postgres",
           "@beep/test-runner",
@@ -1476,8 +1486,12 @@
         "allowTypeOnly": [
           "@beep/architecture-lab-tables",
           "@beep/db-admin",
+          "@beep/documents-domain",
           "@beep/documents-tables",
+          "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/identity",
+          "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/postgres",
           "@beep/test-runner",
@@ -1877,6 +1891,9 @@
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/identity",
+          "@beep/provenance",
+          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1885,6 +1902,9 @@
           "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/identity",
+          "@beep/provenance",
+          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
@@ -1898,6 +1918,7 @@
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
@@ -1910,6 +1931,7 @@
           "@beep/epistemic-ui",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
@@ -2245,7 +2267,8 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
@@ -2255,7 +2278,8 @@
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2276,9 +2300,11 @@
           "@beep/libpff",
           "@beep/mcp-kit",
           "@beep/md",
+          "@beep/nlp",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/shared-use-cases",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -2301,9 +2327,11 @@
           "@beep/libpff",
           "@beep/mcp-kit",
           "@beep/md",
+          "@beep/nlp",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/shared-use-cases",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -2317,6 +2345,7 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
+          "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
         ],
@@ -2324,6 +2353,7 @@
           "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
+          "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils"
         ]
@@ -2340,10 +2370,12 @@
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/nlp",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
@@ -2355,10 +2387,12 @@
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/nlp",
+          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2754,7 +2788,9 @@
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
+          "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
@@ -2767,7 +2803,9 @@
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
+          "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
@@ -2810,12 +2848,15 @@
         "allow": [
           "@beep/api-transport",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
           "@beep/ontology-config",
+          "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
           "@beep/oxigraph",
+          "@beep/rdf",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
@@ -2826,12 +2867,15 @@
         "allowTypeOnly": [
           "@beep/api-transport",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/mcp-kit",
           "@beep/n3",
           "@beep/ontology-config",
+          "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
           "@beep/oxigraph",
+          "@beep/rdf",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
@@ -3117,6 +3161,7 @@
           "@beep/agents-server",
           "@beep/agents-use-cases",
           "@beep/anthropic",
+          "@beep/box",
           "@beep/cosmos",
           "@beep/doc-text",
           "@beep/dock",
@@ -3167,6 +3212,7 @@
           "@beep/agents-server",
           "@beep/agents-use-cases",
           "@beep/anthropic",
+          "@beep/box",
           "@beep/cosmos",
           "@beep/doc-text",
           "@beep/dock",
@@ -3325,6 +3371,7 @@
           "@beep/duckdb",
           "@beep/exiftool",
           "@beep/face-detection",
+          "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/firecrawl",
@@ -3343,6 +3390,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3354,6 +3402,7 @@
           "@beep/duckdb",
           "@beep/exiftool",
           "@beep/face-detection",
+          "@beep/fc-runs",
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/firecrawl",
@@ -3372,6 +3421,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
@@ -3558,6 +3608,7 @@
       {
         "from": "@beep/semantic-web",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -3567,6 +3618,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -3724,13 +3776,15 @@
           "@beep/epistemic-ui",
           "@beep/graph-3d",
           "@beep/storybook",
-          "@beep/ui"
+          "@beep/ui",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
           "@beep/storybook",
-          "@beep/ui"
+          "@beep/ui",
+          "@beep/utils"
         ]
       },
       {
@@ -3850,6 +3904,7 @@
       {
         "from": "@beep/ui",
         "allow": [
+          "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3857,6 +3912,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/identity",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -4093,11 +4149,13 @@
         "allow": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/xstate"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-runner",
           "@beep/xstate"
         ]
       }
