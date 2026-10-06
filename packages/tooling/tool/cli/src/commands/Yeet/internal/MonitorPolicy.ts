@@ -102,7 +102,9 @@ export const YEET_MONITOR_POLL_ERROR_BUDGET = 5;
  * pull request is still a draft and the draft flag is the only thing between it
  * and readiness, so the loop ends with exit 0 and names
  * `bun run beep yeet ready` instead of flipping the draft itself
- * (push-first-publish D9). `wave` is the attached `--until-ready`
+ * (push-first-publish D9). The owner should have flipped at content-final
+ * already; the review window starts at the flip, so a draft left until green
+ * waits the whole window afterwards (review-window ruling, 2026-10-06). `wave` is the attached `--until-ready`
  * hand-back: a new P0/P1 inbox wave landed on the pull request and the loop
  * stops so the operator can fix and re-run it. `settle-timeout` and
  * `poll-error-budget` are the failure terminals; which terminals a policy
@@ -415,14 +417,15 @@ export const yeetMonitorExitFor = (terminal: YeetMonitorTerminalState): YeetMoni
       YeetMonitorExit.make({
         terminal: "ready",
         exitCode: 0,
-        summary: "merge-ready: yes; every hard criterion is green; hand the pull request to the operator",
+        summary:
+          "merge-ready: yes; every hard criterion is green and the review window has elapsed; re-read the review threads, then merge",
       })
     ),
     Match.when("ready-pending-flip", () =>
       YeetMonitorExit.make({
         terminal: "ready-pending-flip",
         exitCode: 0,
-        summary: `ready-pending-flip: the draft flag is the only blocker; flip it with ${YEET_READY_COMMAND}`,
+        summary: `ready-pending-flip: the pull request is still a draft and nothing else blocks it; its owner must flip it with ${YEET_READY_COMMAND} (due at content-final, not at green), and the review window starts at the flip`,
       })
     ),
     Match.when("wave", () =>

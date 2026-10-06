@@ -43,6 +43,7 @@ import * as Str from "effect/String";
 import type {
   DocketCalendarEntry,
   DocketIntakeOutcome,
+  DocketSourceFolder,
   MatterLookupResult,
   ParalegalEntry,
 } from "@beep/law-practice-use-cases/DocketIntake";
@@ -78,6 +79,15 @@ const message = (id: string, minute = 0): DocketMessage =>
     receivedAt: `2030-01-09T10:${Str.padStart(2, "0")(`${minute}`)}:00Z`,
     receivedDate: RECEIVED,
     webLink: O.some(`https://outlook.fixture.invalid/mail/${id}`),
+  });
+
+const foundIn = (id: string, sourceFolder: DocketSourceFolder): DocketMessage =>
+  DocketMessage.make({
+    bodyText: "Synthetic fixture body.",
+    messageId: id,
+    receivedAt: "2030-01-09T10:00:00Z",
+    receivedDate: RECEIVED,
+    sourceFolder,
   });
 
 const threeMonths = DocketResponsePeriod.make({ amount: 3, unit: "months" });
@@ -762,6 +772,70 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([]);
         assertTrue(O.exists(due, (entry) => Str.includes("Matter: family 0000.0002\n")(entry.bodyText)));
+      })
+    );
+  });
+
+  it.layer(testLayer(), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "enters a message found in Junk Email like any other and says on the entry where it was found",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(foundIn("m1", "junk"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual(["junk-folder"]);
+        assertTrue(O.exists(due, (entry) => Str.includes("Found in the Junk Email folder.")(entry.bodyText)));
+        assertTrue(O.exists(due, (entry) => Str.includes("Check: junk-folder")(entry.bodyText)));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(docketEntry()),
+      review: () => Effect.succeed(SecretaryReview.make({ isDocketItem: true, notes: "No date anywhere." })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "flags a needs-review entry for a message found in Deleted Items",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(foundIn("m1", "deleted"), TODAY);
+        const review = A.head(kinds(yield* entriesOf, "needs-review"));
+
+        expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual([
+          "source-document-missing",
+          "deleted-folder",
+        ]);
+        assertTrue(O.exists(review, (entry) => Str.includes("Found in the Deleted Items folder.")(entry.bodyText)));
+        assertTrue(
+          O.exists(review, (entry) => Str.includes("Check: source-document-missing, deleted-folder")(entry.bodyText))
+        );
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." })),
+      review: () => Effect.succeed(SecretaryReview.make({ isDocketItem: false, notes: "Agreed." })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "stays silent about a Junk Email message that is not a docket item",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(foundIn("m1", "junk"), TODAY);
+
+        expect(tagOf(outcome)).toBe("NotDocketItem");
+        expect(yield* entriesOf).toHaveLength(0);
       })
     );
   });

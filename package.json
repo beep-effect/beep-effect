@@ -589,6 +589,7 @@
     "packages/drivers/box-provisioning",
     "packages/drivers/freshbooks",
     "packages/drivers/xstate",
+    "apps/docket-intake",
     "packages/drivers/occt",
     "packages/drivers/pdf-tools"
   ]

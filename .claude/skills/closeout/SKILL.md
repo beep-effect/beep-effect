@@ -23,7 +23,9 @@ Every stopping point, not only the end of a task:
 
 - the requested work is done and verified;
 - the work is blocked on something only the operator can decide or do;
-- a PR reached `merge-ready: yes` (hand-off, never a merge unless authorized);
+- a PR reached `merge-ready: yes`: it left draft at content-final, its checks
+  are green, its threads are answered and its 20-minute review window has
+  elapsed (hand-off, never a merge unless authorized);
 - a merge landed and the lane was retired;
 - any moment you would otherwise end the turn with a question.
 

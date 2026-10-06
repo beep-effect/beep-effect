@@ -31,8 +31,11 @@ const FakeM365 = Layer.effect(
   Effect.gen(function* () {
     const message = yield* S.decodeUnknownEffect(GraphMessageAuthoredText)(recordedReply);
     return M365.of({
+      addMessageAttachment: unused,
+      createDraftMessage: unused,
       createEvent: unused,
       createMasterCategory: unused,
+      deleteDraftMessage: unused,
       deleteEvent: unused,
       deltaDriveItems: unused,
       downloadDriveItemContent: unused,
@@ -54,6 +57,7 @@ const FakeM365 = Layer.effect(
       listMessageAttachments: unused,
       listMessages: unused,
       listSites: unused,
+      sendDraftMessage: unused,
       updateEvent: unused,
       updateMessageCategories: unused,
     });

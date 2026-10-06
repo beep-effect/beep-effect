@@ -127,6 +127,7 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    reviewWindowElapsed: true,
     greptileScore: O.none(),
   });
   return YeetStatusSnapshot.make({
