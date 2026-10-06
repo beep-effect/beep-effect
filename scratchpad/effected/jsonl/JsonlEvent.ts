@@ -10,7 +10,7 @@
 // module recognizes this one. The mechanism is ours; the vocabulary is theirs.
 
 import type * as S from "effect/Schema";
-import { Envelope } from "./Envelope.js";
+import { Envelope } from "./Envelope.ts";
 
 /**
  * The bound every registered payload schema must satisfy: a codec requiring
@@ -217,15 +217,15 @@ export const JsonlEvent = { make };
 
 function make<const Tag extends string, Data extends DataSchema>(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal?: false | undefined; readonly reopen?: false | undefined },
+  options: { readonly data: Data; readonly terminal?: false | undefined; readonly reopen?: false | undefined }
 ): JsonlEvent<Tag, Data>;
 function make<const Tag extends string, Data extends DataSchema, const Terminal extends boolean>(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal: Terminal; readonly reopen?: false | undefined },
+  options: { readonly data: Data; readonly terminal: Terminal; readonly reopen?: false | undefined }
 ): JsonlEvent<Tag, Data, Terminal>;
 function make<const Tag extends string, Data extends DataSchema, const Reopen extends boolean>(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal?: false | undefined; readonly reopen: Reopen },
+  options: { readonly data: Data; readonly terminal?: false | undefined; readonly reopen: Reopen }
 ): JsonlEvent<Tag, Data, false, Reopen>;
 function make<
   const Tag extends string,
@@ -234,15 +234,15 @@ function make<
   const Reopen extends boolean,
 >(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal: Terminal; readonly reopen: Reopen },
+  options: { readonly data: Data; readonly terminal: Terminal; readonly reopen: Reopen }
 ): JsonlEvent<Tag, Data, Terminal, Reopen>;
 function make<const Tag extends string, Data extends DataSchema>(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal?: boolean | undefined; readonly reopen?: boolean | undefined },
+  options: { readonly data: Data; readonly terminal?: boolean | undefined; readonly reopen?: boolean | undefined }
 ): JsonlEvent<Tag, Data, boolean, boolean>;
 function make<Tag extends string, Data extends DataSchema>(
   tag: Tag,
-  options: { readonly data: Data; readonly terminal?: boolean | undefined; readonly reopen?: boolean | undefined },
+  options: { readonly data: Data; readonly terminal?: boolean | undefined; readonly reopen?: boolean | undefined }
 ): JsonlEvent<Tag, Data, boolean, boolean> {
   const data: S.Codec<Data["Type"], Data["Encoded"]> = options.data;
   return {

@@ -11,7 +11,7 @@ import {
   JsonlEvent,
   Line,
   LineSlice,
-} from "../effected/jsonl/index.ts";
+} from "@beep/scratchpad/effected/jsonl/index";
 import { canMerge, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
 import { probeBomBytes, readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
@@ -39,6 +39,7 @@ const Updated = JsonlEvent.make("updated", { data: S.Struct({ count: S.Finite, l
 const Closed = JsonlEvent.make("closed", { data: S.Null, terminal: true });
 const Reopened = JsonlEvent.make("reopened", { data: S.Null, reopen: true });
 const events = Tuple.make(Updated, Closed, Reopened);
+const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
 type Registry = typeof events;
 
 class TestJournal extends Journal.Service<TestJournal>()($I`TestJournal`, { events }) {}
@@ -72,15 +73,15 @@ describe("JSONL schema and facade types", () => {
     assertSuccess(Envelope.decodeResult(source, events), expected);
     const selected = pipe(
       source,
-      Envelope.decodeSelectedResult(events, () => true),
+      Envelope.decodeSelectedResult(events, () => true)
     );
     assertSome(selected.pipe(O.map(Result.getOrThrow)), expected);
     assertSome(Envelope.decodeSelectedResult(source, events, () => true).pipe(O.map(Result.getOrThrow)), expected);
     assertNone(
       pipe(
         source,
-        Envelope.decodeSelectedResult(events, () => false),
-      ),
+        Envelope.decodeSelectedResult(events, () => false)
+      )
     );
     assertSuccess(Result.all(pipe(`${text}\n`, Envelope.decodeAllResult(events))), [expected]);
     assertSuccess(Result.all(Envelope.decodeAllResult(`${text}\n`, events)), [expected]);
@@ -93,7 +94,7 @@ describe("JSONL schema and facade types", () => {
     };
     assertSuccess(
       pipe(input, Envelope.encodeResult(events)),
-      '{"at":"2026-10-06T00:00:00.000Z","event":"updated","data":{"count":2,"label":"a"}}\n',
+      '{"at":"2026-10-06T00:00:00.000Z","event":"updated","data":{"count":2,"label":"a"}}\n'
     );
   });
 
@@ -104,7 +105,7 @@ describe("JSONL schema and facade types", () => {
       expectTypeOf(decoded).toEqualTypeOf<EnvelopeUnion<Registry>>();
       expect(decoded.data).toEqual({ count: 2, label: "a" });
       expect(encoded).toBe(yield* Envelope.encode({ at, event: "updated", data: { count: 2, label: "a" } }, events));
-    }),
+    })
   );
 
   it("preserves byte offsets across CRLF, blank lines, multibyte characters and torn tails", () => {
@@ -116,7 +117,7 @@ describe("JSONL schema and facade types", () => {
         length,
         text,
         terminated,
-      })),
+      }))
     ).toEqual([
       { offset: 0, end: 8, length: 6, text: '"😀"', terminated: true },
       { offset: 8, end: 9, length: 0, text: "", terminated: true },
@@ -143,7 +144,7 @@ describe("JSONL schema and facade types", () => {
       assertSome(yield* readTailUntil(fs, path, bom, decode, 2), O.getOrThrow(direct));
       assertSome(yield* pipe(fs, readTailUntil(path, bom, decode, 2)), O.getOrThrow(direct));
       assertSome(direct.pipe(O.map((parsed) => parsed.line.offset)), 0);
-    }),
+    })
   );
 
   it("preserves lifecycle literals and the caller's service identity", () => {
@@ -164,7 +165,7 @@ describe("JSONL schema and facade types", () => {
   it("derives a discriminated envelope union from the selected event codec", () => {
     const decoded = Envelope.decodeResult(
       line('{"at":"2026-10-06T00:00:00Z","event":"updated","data":{"count":2,"label":"a"}}'),
-      events,
+      events
     );
     expectTypeOf<Result.Result.Success<typeof decoded>>().toEqualTypeOf<EnvelopeUnion<Registry>>();
     assertSuccess(decoded, Result.getOrThrow(decoded));
@@ -185,16 +186,16 @@ describe("JSONL schema and facade types", () => {
           result.pipe(
             Result.getFailure,
             O.map((error) => error._tag),
-            O.getOrThrow,
-          ),
-        ),
+            O.getOrThrow
+          )
+        )
       ),
-      "InvalidData",
+      "InvalidData"
     );
     const unknown = Envelope.decodeResult(line('{"at":"2026-10-06T00:00:00Z","event":"foreign","data":null}'), events);
     assertFailure(
       Result.mapError(unknown, (error) => error._tag),
-      "UnknownEvent",
+      "UnknownEvent"
     );
   });
 
@@ -215,7 +216,7 @@ describe("JSONL schema and facade types", () => {
     const encoded = Envelope.encodeResult({ at, event: "unknown", data: 1n }, permissive);
     assertFailure(
       Result.mapError(encoded, (error) => error._tag),
-      "UnserializableData",
+      "UnserializableData"
     );
   });
 
@@ -234,8 +235,8 @@ describe("JSONL schema and facade types", () => {
 
 describe("JSONL generic engine", () => {
   it("keeps shallow patches pipeable while excluding prototype keys", () => {
-    const patch = S.decodeResult(S.fromJsonString(S.Record(S.String, S.Unknown)))(
-      '{"count":2,"nested":{"after":true},"__proto__":{"polluted":true},"constructor":"bad","prototype":"bad"}',
+    const patch = S.decodeResult(JsonRecord)(
+      '{"count":2,"nested":{"after":true},"__proto__":{"polluted":true},"constructor":"bad","prototype":"bad"}'
     );
     assertSuccess(patch, Result.getOrThrow(patch));
     {
@@ -260,8 +261,8 @@ describe("JSONL generic engine", () => {
         yield* journal.append("closed", null);
         const received = yield* Fiber.join(reader);
         expect(A.map(received, (envelope) => envelope.data.label)).toEqual(["live"]);
-      }),
-    ),
+      })
+    )
   );
 
   it.effect("appends, patches and resumes queries with typed results", () =>
@@ -279,8 +280,8 @@ describe("JSONL generic engine", () => {
         const rows = yield* Stream.runCollect(query);
         expect(A.map(rows, (row) => row.data.count)).toEqual([2]);
         assertSome(yield* SubscriptionRef.get(journal.latest), second);
-      }),
-    ),
+      })
+    )
   );
 
   it.effect("replays terminal history, projects selected payloads, and reopens", () =>
@@ -294,7 +295,7 @@ describe("JSONL generic engine", () => {
         const rejected = yield* Effect.result(journal.append("updated", { count: 4, label: "b" }));
         assertFailure(
           Result.mapError(rejected, (error) => error._tag),
-          "TerminalViolation",
+          "TerminalViolation"
         );
         const projected = yield* journal
           .projection(0, (sum, envelope) => sum + envelope.data.count, { events: ["updated"], cursor: 0 })
@@ -305,8 +306,8 @@ describe("JSONL generic engine", () => {
         const full = journal.query();
         expectTypeOf<Stream.Success<typeof full>>().toEqualTypeOf<EnvelopeUnion<Registry>>();
         expect(A.length(yield* Stream.runCollect(full))).toBe(3);
-      }),
-    ),
+      })
+    )
   );
 
   it.effect("seeds latest from disk and retains class payloads through patches", () =>
@@ -317,10 +318,10 @@ describe("JSONL generic engine", () => {
       const fs = yield* MemoryFileSystem.make;
       yield* fs.writeFileString(
         path,
-        '\ufeff{"at":"2026-10-06T00:00:00Z","event":"boxed","data":{"count":1,"label":"seed"}}\n',
+        '\ufeff{"at":"2026-10-06T00:00:00Z","event":"boxed","data":{"count":1,"label":"seed"}}\n'
       );
       const context = yield* Layer.build(
-        BoxedJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs))),
+        BoxedJournal.layer({ path }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
       );
       yield* Effect.gen(function* () {
         const journal = yield* BoxedJournal;
@@ -331,7 +332,7 @@ describe("JSONL generic engine", () => {
         expect(patched.data.label).toBe("seed");
         expect(patched.data.count).toBe(2);
       }).pipe(Effect.provideContext(context));
-    }).pipe(Effect.scoped),
+    }).pipe(Effect.scoped)
   );
 });
 
@@ -339,7 +340,7 @@ describe("JSONL generic engine", () => {
 // fails the compiler if an invalid operation becomes accepted by the facade.
 const rejectsInvalidCalls = (
   journal: JournalShape<Registry>,
-  needsService: S.Codec<string, string, FileSystem.FileSystem>,
+  needsService: S.Codec<string, string, FileSystem.FileSystem>
 ) => {
   // @ts-expect-error The selected tag controls the payload type.
   const invalid0 = journal.append("updated", { count: "wrong", label: "a" });
@@ -354,7 +355,7 @@ const rejectsInvalidCalls = (
   const invalid5 = journal.projection(
     0,
     // @ts-expect-error A projection cannot narrow through its callback alone.
-    (sum, envelope: EnvelopeWithTag<Registry, "updated">) => sum + envelope.data.count,
+    (sum, envelope: EnvelopeWithTag<Registry, "updated">) => sum + envelope.data.count
   );
   // @ts-expect-error Pure codecs must reject service-requiring schemas at registration.
   const invalid6 = JsonlEvent.make("service", { data: needsService });

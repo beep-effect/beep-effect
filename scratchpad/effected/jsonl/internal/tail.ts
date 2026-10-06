@@ -80,7 +80,7 @@ export class TailWindow extends S.Class<TailWindow>($I`TailWindow`)(
   { text: S.String, start: S.Finite, atFileStart: S.Boolean, size: S.Finite },
   $I.annote("TailWindow", {
     description: "A tail read beginning at a line boundary, with post-BOM offsets.",
-  }),
+  })
 ) {}
 
 /** Does the buffer begin with a UTF-8 BOM? */
@@ -124,13 +124,13 @@ export const probeBomBytes: {
   2,
   Effect.fn("Jsonl.probeBomBytes")(function* (
     fs: FileSystem.FileSystem,
-    path: string,
+    path: string
   ): Effect.fn.Return<number, PlatformError.PlatformError, Scope.Scope> {
     const file = yield* fs.open(path, { flag: "r" });
     const head = yield* file.readAlloc(BOM.length);
     const bytes = O.getOrElse(head, () => new Uint8Array(0));
     return hasBom(bytes) ? BOM.length : 0;
-  }, Effect.scoped),
+  }, Effect.scoped)
 );
 
 /**
@@ -184,12 +184,12 @@ export const readTail: {
     fs: FileSystem.FileSystem,
     path: string,
     window: number,
-    bomBytes: number,
+    bomBytes: number
   ): Effect.Effect<TailWindow, PlatformError.PlatformError>;
   (
     path: string,
     window: number,
-    bomBytes: number,
+    bomBytes: number
   ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError>;
 } = dual(
   4,
@@ -197,7 +197,7 @@ export const readTail: {
     fs: FileSystem.FileSystem,
     path: string,
     window: number,
-    bomBytes: number,
+    bomBytes: number
   ): Effect.fn.Return<TailWindow, PlatformError.PlatformError, Scope.Scope> {
     const info = yield* fs.stat(path);
     const physicalSize = ByteSize.toNumberUnsafe(info.size);
@@ -219,7 +219,7 @@ export const readTail: {
       // usable here — the caller widens.
       cursor = A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
         O.map((newline) => newline + 1),
-        O.getOrElse(() => bytes.length),
+        O.getOrElse(() => bytes.length)
       );
     }
 
@@ -230,7 +230,7 @@ export const readTail: {
       atFileStart: windowAtFileStart,
       size: logicalSize,
     });
-  }, Effect.scoped),
+  }, Effect.scoped)
 );
 
 /**
@@ -270,13 +270,13 @@ export const readTailUntil: {
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow?: number,
+    initialWindow?: number
   ): Effect.Effect<O.Option<A>, PlatformError.PlatformError>;
   <A>(
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow?: number,
+    initialWindow?: number
   ): (fs: FileSystem.FileSystem) => Effect.Effect<O.Option<A>, PlatformError.PlatformError>;
 } = dual(
   (args) => P.isObject(args[0]),
@@ -285,7 +285,7 @@ export const readTailUntil: {
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow = DEFAULT_WINDOW,
+    initialWindow = DEFAULT_WINDOW
   ): Effect.fn.Return<O.Option<A>, PlatformError.PlatformError> {
     let window = initialWindow;
     for (;;) {
@@ -300,7 +300,7 @@ export const readTailUntil: {
       }
       window *= 4;
     }
-  }),
+  })
 );
 
 /**
@@ -342,12 +342,12 @@ export const readRangeText: {
     fs: FileSystem.FileSystem,
     path: string,
     from: number,
-    length: number,
+    length: number
   ): Effect.Effect<string, PlatformError.PlatformError>;
   (
     path: string,
     from: number,
-    length: number,
+    length: number
   ): (fs: FileSystem.FileSystem) => Effect.Effect<string, PlatformError.PlatformError>;
 } = dual(
   4,
@@ -355,7 +355,7 @@ export const readRangeText: {
     fs: FileSystem.FileSystem,
     path: string,
     from: number,
-    length: number,
+    length: number
   ): Effect.fn.Return<string, PlatformError.PlatformError, Scope.Scope> {
     if (length <= 0) {
       return "";
@@ -376,7 +376,7 @@ export const readRangeText: {
       remaining -= chunk.value.length;
     }
     return text + decoder.decode();
-  }, Effect.scoped),
+  }, Effect.scoped)
 );
 
 /** Read granularity for incremental tail reads. */

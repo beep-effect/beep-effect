@@ -16,9 +16,9 @@ import * as S from "effect/Schema";
 // call. That is a contract, not a convenience: a hook that had to construct an
 // Effect runtime to read one line would not adopt this package.
 import * as Str from "effect/String";
-import { utf8Length } from "./internal/utf8.js";
-import { MalformedLine } from "./JsonlError.js";
-import { LineSlice } from "./LineSlice.js";
+import { utf8Length } from "./internal/utf8.ts";
+import { MalformedLine } from "./JsonlError.ts";
+import { LineSlice } from "./LineSlice.ts";
 
 const $I = $ScratchpadId.create("Line");
 
@@ -53,20 +53,20 @@ export class ParsedLine extends S.Class<ParsedLine>($I`ParsedLine`)(
     line: LineSlice.pipe(
       $I.annoteKey("ParsedLine.line", {
         description: "Where this line lives in the source.",
-      }),
+      })
     ),
     /** The parsed JSON value — any JSON value, not necessarily an object. */
     value: S.Unknown.pipe(
       $I.annoteKey("ParsedLine.value", {
         description: "The parsed JSON value — any JSON value, not necessarily an object.",
-      }),
+      })
     ),
   },
   $I.annote("ParsedLine", {
     description: "A line that parsed as JSON, paired with the slice it came from.",
     documentation:
       "`value` is deliberately `unknown`: this layer knows JSON, not envelopes.\nValidating `event`, `at`, `scope` and the registered payload schema is the\nenvelope layer's job, and keeping the split means a malformed *envelope* and\na malformed *line* stay distinguishable failures.",
-  }),
+  })
 ) {}
 
 /** Whether a line carries nothing but whitespace. */
@@ -194,7 +194,7 @@ export const Line = {
       Line.split(text),
       A.last,
       O.map((last) => (last.terminated ? last.end : last.offset)),
-      O.getOrElse(() => 0),
+      O.getOrElse(() => 0)
     );
   },
 
@@ -227,7 +227,7 @@ export const Line = {
   parseResult(line: LineSlice): Result.Result<ParsedLine, MalformedLine> {
     return decodeJson(line.text).pipe(
       Result.map((value) => ParsedLine.make({ line, value })),
-      Result.mapError(() => MalformedLine.make({ line })),
+      Result.mapError(() => MalformedLine.make({ line }))
     );
   },
 
@@ -264,7 +264,7 @@ export const Line = {
     return pipe(
       Line.split(text),
       A.filter((line) => !isBlank(line)),
-      A.map(Line.parseResult),
+      A.map(Line.parseResult)
     );
   },
 
@@ -307,7 +307,7 @@ export const Line = {
   lastValid(text: string): O.Option<ParsedLine> {
     return pipe(
       Line.split(text),
-      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(Line.parseResult(line)))),
+      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(Line.parseResult(line))))
     );
   },
 };

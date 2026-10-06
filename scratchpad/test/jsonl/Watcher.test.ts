@@ -12,7 +12,7 @@ import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { externalAppend, line, memory, open, path } from "./fixtures.js";
+import { externalAppend, line, memory, open, path } from "./fixtures.ts";
 
 const watched = Effect.fn("JsonlTest.watched")(function* (seed: O.Option<string>) {
   const fs = yield* memory();
@@ -26,7 +26,7 @@ const watched = Effect.fn("JsonlTest.watched")(function* (seed: O.Option<string>
           const events = yield* fs.watch(target, options).pipe(Stream.toQueue({ capacity: "unbounded" }));
           yield* Queue.offer(registrations, target);
           return Stream.fromQueue(events);
-        }),
+        })
       ),
   };
   const journal = yield* open(decorated);
@@ -45,11 +45,11 @@ it.effect("foreign and local appends arrive once in file order with contiguous o
     const rows = yield* Fiber.join(reader);
     assert.deepStrictEqual(
       A.map(rows, (row) => row.data.round),
-      [1, 2, 3],
+      [1, 2, 3]
     );
     assert.strictEqual(rows[1]?.line.offset, rows[0]?.line.end);
     assert.strictEqual(rows[2]?.line.offset, rows[1]?.line.end);
-  }),
+  })
 );
 it.effect("oversized Unicode external writes survive chunk boundaries", () =>
   Effect.gen(function* () {
@@ -61,10 +61,10 @@ it.effect("oversized Unicode external writes survive chunk boundaries", () =>
     yield* externalAppend(fs, line(7, label));
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data),
-      [{ round: 7, label }],
+      [{ round: 7, label }]
     );
     assertSome((yield* SubscriptionRef.get(journal.latest)).pipe(O.map((row) => row.line.offset)), 0);
-  }),
+  })
 );
 it.effect("a torn external tail is consumed only after completion", () =>
   Effect.gen(function* () {
@@ -78,14 +78,14 @@ it.effect("a torn external tail is consumed only after completion", () =>
     // is synchronized by the subscriber instead of guessing scheduler turns.
     assertFailure(
       (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
-      "MalformedLine",
+      "MalformedLine"
     );
     yield* externalAppend(fs, Str.slice(20)(whole));
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data.round),
-      [2],
+      [2]
     );
-  }),
+  })
 );
 for (const reason of ["truncated", "replaced"]) {
   it.effect(`reports ${reason} as a typed resync`, () =>
@@ -103,9 +103,9 @@ for (const reason of ["truncated", "replaced"]) {
       const result = yield* Fiber.join(reader);
       assertFailure(
         Result.mapError(result, (error) => (error._tag === "JournalResync" ? error.reason : error._tag)),
-        reason,
+        reason
       );
-    }),
+    })
   );
 }
 it.effect("creation activates a missing journal and hands off to the file watch", () =>
@@ -119,9 +119,9 @@ it.effect("creation activates a missing journal and hands off to the file watch"
     yield* externalAppend(fs, line(42));
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data.round),
-      [42],
+      [42]
     );
-  }),
+  })
 );
 it.effect("a write while the file watch arms is caught without a second write", () =>
   Effect.gen(function* () {
@@ -138,14 +138,14 @@ it.effect("a write while the file watch arms is caught without a second write", 
               yield* externalAppend(fs, line(2));
             }
             return fs.watch(target, options);
-          }),
+          })
         ),
     };
     const journal = yield* open(decorated);
     const observed = yield* SubscriptionRef.changes(journal.latest).pipe(
       Stream.filter((value) => O.exists(value, (row) => row.event === "noted" && row.data.round === 2)),
-      Stream.runHead,
+      Stream.runHead
     );
     assertSome(O.flatten(observed).pipe(O.map((row) => row.data)), { round: 2, label: "seed" });
-  }),
+  })
 );

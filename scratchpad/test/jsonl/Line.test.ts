@@ -14,7 +14,7 @@ const decoder = new TextDecoder();
 const first = (text: string) => O.getOrThrow(A.head(Line.split(text)));
 const json = S.decodeResult(S.fromJsonString(S.Unknown));
 const textArb = Arbitrary.schema(
-  S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 0xffff }))).check(S.isMaxLength(150)),
+  S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 0xffff }))).check(S.isMaxLength(150))
 ).pipe(Arbitrary.map((units) => String.fromCharCode(...units)));
 const payload = S.Literals([
   '{"n":1}',
@@ -29,18 +29,18 @@ const objectPayload = S.Literals(['{"n":1}', '{"emoji":"😀"}', '{"note":"x\\ny
 const journal = Arbitrary.schema(
   S.Tuple([
     S.Array(S.Tuple([S.Union([payload, S.Literals(["{", "bad", " ", ""])]), S.Literals(["\n", "\r\n"])])).check(
-      S.isMaxLength(12),
+      S.isMaxLength(12)
     ),
     S.Literals(["", "{", "4"]),
-  ]),
+  ])
 ).pipe(
   Arbitrary.map(
     ([lines, tail]) =>
       A.join(
         A.map(lines, ([value, end]) => value + end),
-        "",
-      ) + tail,
-  ),
+        ""
+      ) + tail
+  )
 );
 const anyText = Arbitrary.schema(S.Boolean).pipe(Arbitrary.flatMap((pick) => (pick ? textArb : journal)));
 
@@ -63,7 +63,7 @@ describe("Line boundaries", () => {
       assert.strictEqual(slice.offset, end);
       assert.strictEqual(
         decoder.decode(encoder.encode(text).subarray(slice.offset, slice.offset + slice.length)),
-        slice.text,
+        slice.text
       );
       end = slice.end;
     }
@@ -110,17 +110,17 @@ describe("Line boundaries", () => {
     assert.isDefined(tail);
     assertSuccess(
       Result.map(one, (parsed) => parsed.value),
-      42,
+      42
     );
     const badLine = LineSlice.make({ offset: 6, end: 15, length: 8, text: "not json", terminated: true });
     assertFailure(bad, MalformedLine.make({ line: badLine }));
     assertSuccess(
       Result.map(three, (parsed) => parsed.value),
-      true,
+      true
     );
     assertFailure(
       Result.mapError(tail, (error) => error.line.terminated),
-      false,
+      false
     );
   });
   it.each(["", "broken\n{\n", "  \n"])("has no valid tail for %j", (text) => assertNone(Line.lastValid(text)));
@@ -134,15 +134,15 @@ describe("Line boundaries", () => {
   ])("walks back from %j", (text, expected) =>
     assertSome(
       O.map(Line.lastValid(text), (row) => row.value),
-      expected,
-    ),
+      expected
+    )
   );
   it("walks back from every strict object prefix", () => {
     const tail = '{"event":"unlinked","data":null}';
     for (const keep of A.range(1, tail.length - 1)) {
       assertSome(
         O.map(Line.lastValid(`42\n${Str.slice(0, keep)(tail)}`), (row) => row.value),
-        42,
+        42
       );
     }
   });
@@ -150,7 +150,7 @@ describe("Line boundaries", () => {
     const text = Str.repeat(20000)("[") + "1" + Str.repeat(20000)("]");
     assertSuccess(
       Result.map(Line.parseResult(first(text)), (row) => row.line.length),
-      text.length,
+      text.length
     );
   });
 });
@@ -166,7 +166,7 @@ describe("Line properties", () => {
       assert.strictEqual(line.offset, end);
       assert.strictEqual(
         decoder.decode(bytes.subarray(line.offset, line.offset + line.length)),
-        decoder.decode(encoder.encode(line.text)),
+        decoder.decode(encoder.encode(line.text))
       );
       end = line.end;
     }
@@ -178,7 +178,7 @@ describe("Line properties", () => {
     const expected = O.map(A.last(lines), (line) => (line.terminated ? line.end : line.offset));
     assert.strictEqual(
       Line.consumedOffset(text),
-      O.getOrElse(expected, () => 0),
+      O.getOrElse(expected, () => 0)
     );
   });
   it.prop("lastValid is exactly the last successful parse", [anyText], ([text]) => {
@@ -191,7 +191,7 @@ describe("Line properties", () => {
   it.prop("a complete appended line becomes the last valid line", [anyText, payload], ([prefix, text]) => {
     assertSome(
       O.map(Line.lastValid(`${prefix}\n${text}\n`), (row) => row.value),
-      Result.getOrThrow(json(text)),
+      Result.getOrThrow(json(text))
     );
   });
   it.prop(
@@ -204,9 +204,9 @@ describe("Line properties", () => {
       const previous = O.getOrThrow(A.get(rows, rows.length - 2));
       assertSome(
         O.map(Line.lastValid(text), (row) => row.value),
-        Result.getOrThrow(json(previous)),
+        Result.getOrThrow(json(previous))
       );
-    },
+    }
   );
   it.prop("all pure read surfaces are total", [anyText], ([text]) => {
     assert.doesNotThrow(() => {

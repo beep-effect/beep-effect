@@ -14,8 +14,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { EnvelopeFrame } from "./Envelope.js";
-import type { JsonlEvent } from "./JsonlEvent.js";
+import type { EnvelopeFrame } from "./Envelope.ts";
+import type { JsonlEvent } from "./JsonlEvent.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/Slice");
 
@@ -27,16 +27,44 @@ const fields = <T extends string>(event: S.Codec<T>) => ({
   from: S.optionalKey(S.DateTimeUtc),
   to: S.optionalKey(S.DateTimeUtc),
 });
-const slice = <T extends string>(event: S.Codec<T>) =>
+/**
+ * Build selection options whose event filter retains the supplied tag domain.
+ *
+ * **Example** (Validate registered event filters)
+ * ```ts import.meta.vitest name="Validate registered event filters"
+ * import { Slice } from "@beep/scratchpad/effected/jsonl/Slice";
+ * import * as S from "effect/Schema";
+ * const selection = Slice(S.Literal("mail"));
+ * S.is(selection)({ events: ["mail"] }) // => true
+ * S.is(selection)({ events: ["foreign"] }) // => false
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Slice = <T extends string>(event: S.Codec<T>) =>
   event
     .pipe(fields, S.Struct)
     .annotate($I.annote("Slice", { description: "Frame selection with inclusive from and exclusive to bounds." }));
-const cursoredSlice = <T extends string>(event: S.Codec<T>) =>
+/**
+ * Build selection options with a non-negative integer resume cursor.
+ *
+ * **Example** (Validate logical byte cursors)
+ * ```ts import.meta.vitest name="Validate logical byte cursors"
+ * import { CursoredSlice } from "@beep/scratchpad/effected/jsonl/Slice";
+ * import * as S from "effect/Schema";
+ * const selection = CursoredSlice(S.Literal("mail"));
+ * S.is(selection)({ cursor: 0 }) // => true
+ * S.is(selection)({ cursor: -1 }) // => false
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CursoredSlice = <T extends string>(event: S.Codec<T>) =>
   S.Struct({
     ...fields(event),
     cursor: S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))),
   }).annotate(
-    $I.annote("CursoredSlice", { description: "Frame selection resumed at a logical post-BOM byte offset." }),
+    $I.annote("CursoredSlice", { description: "Frame selection resumed at a logical post-BOM byte offset." })
   );
 
 /**
@@ -47,7 +75,7 @@ const cursoredSlice = <T extends string>(event: S.Codec<T>) =>
  * @category type-level
  * @since 0.0.0
  */
-export type Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R>> = ReturnType<typeof slice<T>>["Type"];
+export type Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R>> = ReturnType<typeof Slice<T>>["Type"];
 
 /**
  * A slice with an inclusive resume cursor in logical bytes, excluding a BOM.
@@ -57,7 +85,7 @@ export type Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R>> = 
  * @since 0.0.0
  */
 export type CursoredSlice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R>> = ReturnType<
-  typeof cursoredSlice<T>
+  typeof CursoredSlice<T>
 >["Type"];
 
 /**

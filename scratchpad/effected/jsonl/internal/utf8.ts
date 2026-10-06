@@ -40,7 +40,8 @@ import * as Str from "effect/String";
 export const utf8Length = (text: string): number => {
   let bytes = 0;
   for (let index = 0; index < text.length; index++) {
-    const code = O.getOrElse(Str.charCodeAt(text, index), () => 0);
+    // The loop bounds guarantee an existing UTF-16 code unit.
+    const code = O.getOrThrow(Str.charCodeAt(text, index));
     if (code < 0x80) {
       bytes += 1;
     } else if (code < 0x800) {
@@ -48,8 +49,8 @@ export const utf8Length = (text: string): number => {
     } else if (code >= 0xd800 && code <= 0xdbff) {
       // High surrogate: a valid pair is one 4-byte code point; an unpaired
       // one is replaced with U+FFFD, which is 3 bytes.
-      const next = index + 1 < text.length ? O.getOrElse(Str.charCodeAt(text, index + 1), () => 0) : 0;
-      if (next >= 0xdc00 && next <= 0xdfff) {
+      const paired = Str.charCodeAt(text, index + 1).pipe(O.exists((next) => next >= 0xdc00 && next <= 0xdfff));
+      if (paired) {
         bytes += 4;
         index++;
       } else {

@@ -30,8 +30,9 @@ import * as S from "effect/Schema";
 const slice = LineSlice.make({ offset: 12, end: 20, length: 7, text: '{"a":1}', terminated: true });
 
 /** A real `SchemaError`, obtained the way the package obtains one. */
+const InvalidNumber = S.Struct({ n: S.Finite });
 const schemaError = (() => {
-  const decoded = S.decodeUnknownResult(S.Struct({ n: S.Finite }))({ n: "no" });
+  const decoded = S.decodeUnknownResult(InvalidNumber)({ n: "no" });
   const error = decoded.pipe(Result.getFailure, O.getOrThrow);
   assertFailure(decoded, error);
   return error;

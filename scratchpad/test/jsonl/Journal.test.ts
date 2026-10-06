@@ -1,5 +1,5 @@
 // Adapted from upstream Journal.test.ts and ReadSurfaces.test.ts (MIT).
-import { JournalClosed, JournalNotFound, TerminalViolation } from "../../effected/jsonl/index.ts";
+import { JournalClosed, JournalNotFound, TerminalViolation } from "@beep/scratchpad/effected/jsonl/index";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -18,7 +18,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import * as TestClock from "effect/testing/TestClock";
-import { line, memory, open, path, TestJournal } from "./fixtures.js";
+import { line, memory, open, path, TestJournal } from "./fixtures.ts";
 
 it.effect("constructs over a missing file, with explicit create/remove and typed append refusal", () =>
   Effect.gen(function* () {
@@ -27,7 +27,7 @@ it.effect("constructs over a missing file, with explicit create/remove and typed
     assertNone(yield* SubscriptionRef.get(journal.latest));
     assertFailure(
       yield* Effect.result(journal.append("noted", { round: 1, label: "a" })),
-      JournalNotFound.make({ path }),
+      JournalNotFound.make({ path })
     );
     assert.isFalse(yield* fs.exists(path));
     yield* journal.create;
@@ -36,7 +36,7 @@ it.effect("constructs over a missing file, with explicit create/remove and typed
     yield* journal.remove;
     yield* journal.remove;
     assert.isFalse(yield* fs.exists(path));
-  }),
+  })
 );
 it.effect("stamps the TestClock instant and writes exactly one terminated line", () =>
   Effect.gen(function* () {
@@ -48,7 +48,7 @@ it.effect("stamps the TestClock instant and writes exactly one terminated line",
     assert.strictEqual(DateTime.toEpochMillis(appended.at), 123456789);
     assert.strictEqual(yield* fs.readFileString(path), appended.line.text + "\n");
     assertSome(yield* SubscriptionRef.get(journal.latest), appended);
-  }),
+  })
 );
 it.effect("terminal refusal, quiescence and reopening follow the last event", () =>
   Effect.gen(function* () {
@@ -59,13 +59,13 @@ it.effect("terminal refusal, quiescence and reopening follow the last event", ()
     assert.isTrue(yield* journal.quiescent);
     assertFailure(
       yield* Effect.result(journal.append("noted", { round: 1, label: "a" })),
-      TerminalViolation.make({ event: "noted", terminal: "ended" }),
+      TerminalViolation.make({ event: "noted", terminal: "ended" })
     );
     yield* journal.append("reopened", null);
     assert.isFalse(yield* journal.quiescent);
     yield* journal.append("noted", { round: 2, label: "b" });
     assert.strictEqual((yield* Stream.runCollect(journal.query())).length, 3);
-  }),
+  })
 );
 it.effect("concurrent partial patches retain both changed and optional fields", () =>
   Effect.gen(function* () {
@@ -81,7 +81,7 @@ it.effect("concurrent partial patches retain both changed and optional fields", 
       label: "b",
       optional: "retained",
     });
-  }),
+  })
 );
 for (const [name, seed, expected] of [
   ["empty", "", O.none()],
@@ -96,7 +96,7 @@ for (const [name, seed, expected] of [
       const journal = yield* open(fs);
       const actual = (yield* SubscriptionRef.get(journal.latest)).pipe(O.map((row) => row.data));
       O.match(expected, { onNone: () => assertNone(actual), onSome: (value) => assertSome(actual, value) });
-    }),
+    })
   );
 }
 it.effect("BOM offsets are logical and later BOM characters remain payload content", () =>
@@ -107,19 +107,19 @@ it.effect("BOM offsets are logical and later BOM characters remain payload conte
     const seed = yield* SubscriptionRef.get(journal.latest);
     assertSome(
       O.map(seed, (row) => row.line.offset),
-      0,
+      0
     );
     const next = yield* journal.append("noted", { round: 2, label: "next" });
     assertSome(
       O.map(seed, (row) => row.line.end),
-      next.line.offset,
+      next.line.offset
     );
     const rows = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
     assert.deepStrictEqual(
       A.map(rows, (row) => row.data.label),
-      ["\ufeffinside", "next"],
+      ["\ufeffinside", "next"]
     );
-  }),
+  })
 );
 it.effect("closed journals reject late appends", () =>
   Effect.gen(function* () {
@@ -130,9 +130,9 @@ it.effect("closed journals reject late appends", () =>
     yield* Scope.close(scope, Exit.void);
     assertFailure(
       yield* Effect.result(journal.append("noted", { round: 1, label: "late" })),
-      JournalClosed.make({ event: "noted" }),
+      JournalClosed.make({ event: "noted" })
     );
-  }),
+  })
 );
 it.effect("layer instances are independent while one bound layer is memoized", () =>
   Effect.gen(function* () {
@@ -148,7 +148,7 @@ it.effect("layer instances are independent while one bound layer is memoized", (
     const [first, same, other] = A.map(contexts, (context) => Context.get(context, TestJournal));
     assert.strictEqual(first, same);
     assert.notStrictEqual(first, other);
-  }),
+  })
 );
 it.effect("an outer subscriber receives completed appends before scope end", () =>
   Effect.gen(function* () {
@@ -161,16 +161,16 @@ it.effect("an outer subscriber receives completed appends before scope end", () 
     yield* Scope.close(scope, Exit.void);
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data),
-      A.map(A.range(1, 4), (round) => ({ round, label: "a" })),
+      A.map(A.range(1, 4), (round) => ({ round, label: "a" }))
     );
-  }),
+  })
 );
 it.effect("full hub bounds shutdown with TestClock while preserving disk writes", () =>
   Effect.gen(function* () {
     const fs = yield* memory();
     const scope = yield* Scope.make();
     const journal = yield* open(fs, { path, capacity: 1, shutdownPublishTimeout: Duration.seconds(2) }).pipe(
-      Effect.provideService(Scope.Scope, scope),
+      Effect.provideService(Scope.Scope, scope)
     );
     yield* journal.create;
     yield* PubSub.subscribe(journal.hub);
@@ -183,5 +183,5 @@ it.effect("full hub bounds shutdown with TestClock while preserving disk writes"
     yield* Fiber.join(closing);
     assert.include(yield* fs.readFileString(path), '"round":2');
     yield* Fiber.interrupt(append);
-  }),
+  })
 );

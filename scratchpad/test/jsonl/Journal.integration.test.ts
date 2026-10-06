@@ -1,5 +1,5 @@
 // Adapted from upstream integration/Journal.int.test.ts (MIT).
-import { Envelope, Line } from "../../effected/jsonl/index.ts";
+import { Envelope, Line } from "@beep/scratchpad/effected/jsonl/index";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, it } from "@effect/vitest";
 import { assertSome, assertSuccess } from "@effect/vitest/utils";
@@ -14,7 +14,7 @@ import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
-import { events, line, open } from "./fixtures.js";
+import { events, line, open } from "./fixtures.ts";
 
 const temporary = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -40,12 +40,12 @@ it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
         Result.map(decoded, (rows) =>
           A.sort(
             A.map(rows, (row) => (row.event === "noted" ? row.data.round : -1)),
-            Order.Number,
-          ),
+            Order.Number
+          )
         ),
-        rounds,
+        rounds
       );
-    }),
+    })
   );
   it.effect("foreign writes between local appends preserve physical offsets", () =>
     Effect.gen(function* () {
@@ -59,13 +59,13 @@ it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
       const rows = yield* Stream.runCollect(journal.query({ events: ["noted"] }));
       assert.deepStrictEqual(
         A.map(rows, (row) => row.data.round),
-        [1, 2, 3],
+        [1, 2, 3]
       );
       assert.strictEqual(rows[0]?.line.end, one.line.end);
       assert.strictEqual(rows[2]?.line.offset, three.line.offset);
       assert.strictEqual(rows[1]?.line.offset, one.line.end);
       assert.strictEqual(rows[1]?.line.end, three.line.offset);
-    }),
+    })
   );
   it.effect("an independent layer reopens the written tail and BOM offsets are logical", () =>
     Effect.gen(function* () {
@@ -76,7 +76,7 @@ it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
       const appended = yield* first.append("noted", { round: 2, label: "second" });
       const second = yield* open(fs, { path });
       assertSome(yield* SubscriptionRef.get(second.latest), appended);
-    }),
+    })
   );
   // Native filesystem notifications require the live platform clock for a useful
   // timeout. No sleep or polling is used: the subscriber awaits the actual event.
@@ -94,9 +94,9 @@ it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
         yield* writer.append("noted", { round: 1, label: "writer" });
         assert.deepStrictEqual(
           A.map(yield* Fiber.join(observing), (row) => row.data),
-          [{ round: 1, label: "writer" }],
+          [{ round: 1, label: "writer" }]
         );
       }).pipe(Effect.scoped, Effect.timeout(Duration.seconds(10))),
-    15000,
+    15000
   );
 });

@@ -20,8 +20,9 @@ import * as S from "effect/Schema";
  */
 
 /** A patch carrying an OWN `__proto__` key, as `JSON.parse` produces. */
-const hostile = (json: string): Record<string, unknown> =>
-  Result.getOrThrow(S.decodeResult(S.fromJsonString(S.Record(S.String, S.Unknown)))(json));
+const JsonRecord = S.fromJsonString(S.Record(S.String, S.Unknown));
+const decodeRecord = S.decodeResult(JsonRecord);
+const hostile = (json: string): Record<string, unknown> => Result.getOrThrow(decodeRecord(json));
 
 describe("shallowMerge", () => {
   it("merges patch over base, patch winning", () => {

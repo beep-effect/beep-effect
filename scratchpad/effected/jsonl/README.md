@@ -20,7 +20,8 @@ Run these from the repository root:
 
 ```sh
 bunx --no-install tsgo -p scratchpad/effected/jsonl/tsconfig.json --noEmit
-bunx --no-install vitest run --config scratchpad/vitest.config.ts scratchpad/test/jsonl.test.ts scratchpad/test/jsonl/ scratchpad/effected/jsonl/
+bunx --no-install vitest run --config scratchpad/vitest.jsonl.config.ts
+bunx --no-install vitest run --config scratchpad/vitest.jsonl.config.ts scratchpad/test/jsonl --coverage
 bun run docgen:local -- --package @beep/scratchpad
 bun run beep quality package-verify @beep/scratchpad
 ```
@@ -79,8 +80,12 @@ The replacement test also pins a startup regression: identity must be initialize
 alongside the seeded cursor, before the watcher's first catch-up. Otherwise a
 same-size or larger replacement during startup can be mistaken for an append.
 
-The suite runs on both Node and Bun: 148 behavior/property/integration tests and
-50 runnable examples. Error messages initialize after schema fields, because Bun
+The focused suite includes behavior, property, integration, and runnable documentation
+tests. Its coverage command enforces 100% statements, branches, functions, and lines
+for every TypeScript module, including `internal/`. The coverage run selects behavior
+tests so documentation examples do not inflate the covered paths. The unfiltered
+command separately runs the documentation examples. Reports are written under
+`coverage/scratchpad-jsonl/`. Error messages initialize after schema fields, because Bun
 can inspect `Error.message` during base construction, before a derived getter's
 dependencies exist. The error-message and malformed-input cases cover this path.
 

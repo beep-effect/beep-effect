@@ -5,19 +5,19 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as O from "@beep/utils/Option";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.js";
-import type { JsonlEvent } from "./JsonlEvent.js";
-import { Line } from "./Line.js";
-import { LineSlice } from "./LineSlice.js";
+import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
+import type { JsonlEvent } from "./JsonlEvent.ts";
+import { Line } from "./Line.ts";
+import { LineSlice } from "./LineSlice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/Envelope");
 
@@ -60,8 +60,8 @@ const inputFields = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unk
 const input = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) => S.Struct(inputFields(tag, data));
 
 const schema = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) =>
-  S.Struct({ ...inputFields(tag, data), line: LineSlice }).annotate(
-    $I.annote("Envelope", { description: "A selected event with its decoded payload and source line." }),
+  S.Struct({ ...input(tag, data).fields, line: LineSlice }).annotate(
+    $I.annote("Envelope", { description: "A selected event with its decoded payload and source line." })
   );
 
 /**
@@ -129,7 +129,7 @@ const isBlank = (line: LineSlice): boolean => Str.isEmpty(Str.trim(line.text));
 const completeResult = <R extends JsonlEvent.Registry>(
   events: R,
   line: LineSlice,
-  frame: EnvelopeFrame,
+  frame: EnvelopeFrame
 ): Result.Result<EnvelopeUnion<R>, DecodeError> => {
   const found = definition(events, frame.event);
   if (O.isNone(found)) {
@@ -137,18 +137,18 @@ const completeResult = <R extends JsonlEvent.Registry>(
   }
   const codec: R[number]["envelope"] = found.value.envelope;
   return S.decodeResult(codec)({ ...frame, line }).pipe(
-    Result.mapError((error) => InvalidData.make({ line, event: O.some(frame.event), error })),
+    Result.mapError((error) => InvalidData.make({ line, event: O.some(frame.event), error }))
   );
 };
 
 const frameResult = (
-  line: LineSlice,
+  line: LineSlice
 ): Result.Result<EnvelopeFrame & { readonly line: LineSlice }, MalformedLine | InvalidData> =>
   Line.parseResult(line).pipe(
     Result.flatMap(({ value }) =>
-      decodeFrame(value).pipe(Result.mapError((error) => InvalidData.make({ line, event: O.none(), error }))),
+      decodeFrame(value).pipe(Result.mapError((error) => InvalidData.make({ line, event: O.none(), error })))
     ),
-    Result.map((frame) => ({ ...frame, line })),
+    Result.map((frame) => ({ ...frame, line }))
   );
 
 const decodeResult: {
@@ -157,51 +157,51 @@ const decodeResult: {
 } = dual(
   2,
   <R extends JsonlEvent.Registry>(line: LineSlice, events: R): Result.Result<EnvelopeUnion<R>, DecodeError> =>
-    frameResult(line).pipe(Result.flatMap((frame) => completeResult(events, line, frame))),
+    frameResult(line).pipe(Result.flatMap((frame) => completeResult(events, line, frame)))
 );
 
 const decodeSelectedResult: {
   <const R extends JsonlEvent.Registry>(
     line: LineSlice,
     events: R,
-    select: (frame: EnvelopeFrame) => boolean,
+    select: (frame: EnvelopeFrame) => boolean
   ): O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>>;
   <const R extends JsonlEvent.Registry>(
     events: R,
-    select: (frame: EnvelopeFrame) => boolean,
+    select: (frame: EnvelopeFrame) => boolean
   ): (line: LineSlice) => O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>>;
 } = dual(
   3,
   <R extends JsonlEvent.Registry>(
     line: LineSlice,
     events: R,
-    select: (frame: EnvelopeFrame) => boolean,
+    select: (frame: EnvelopeFrame) => boolean
   ): O.Option<Result.Result<EnvelopeUnion<R>, DecodeError>> => {
     const frame = frameResult(line);
     if (Result.isFailure(frame)) return frame.failure.pipe(Result.fail, O.some);
     return select(frame.success) ? O.some(completeResult(events, line, frame.success)) : O.none();
-  },
+  }
 );
 
 const decodeAllResult: {
   <const R extends JsonlEvent.Registry>(
     text: string,
-    events: R,
+    events: R
   ): ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>>;
   <const R extends JsonlEvent.Registry>(
-    events: R,
+    events: R
   ): (text: string) => ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>>;
 } = dual(
   2,
   <R extends JsonlEvent.Registry>(
     text: string,
-    events: R,
+    events: R
   ): ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>> =>
     pipe(
       Line.split(text),
       A.filter((line) => !isBlank(line)),
-      A.map(decodeResult(events)),
-    ),
+      A.map(decodeResult(events))
+    )
 );
 
 const lastValidResult: {
@@ -212,14 +212,14 @@ const lastValidResult: {
   <R extends JsonlEvent.Registry>(text: string, events: R): O.Option<EnvelopeUnion<R>> =>
     pipe(
       Line.split(text),
-      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, events)))),
-    ),
+      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, events))))
+    )
 );
 
 const encodeResult: {
   <const R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Result.Result<string, EncodeError>;
   <const R extends JsonlEvent.Registry>(
-    events: R,
+    events: R
   ): (envelope: Encoding<NoInfer<R>>) => Result.Result<string, EncodeError>;
 } = dual(
   2,
@@ -228,7 +228,7 @@ const encodeResult: {
     const found = definition(events, envelope.event);
     if (O.isNone(found)) {
       return Result.fail(
-        UnknownEvent.make({ line: empty, event: envelope.event, known: A.map(events, (event) => event.tag) }),
+        UnknownEvent.make({ line: empty, event: envelope.event, known: A.map(events, (event) => event.tag) })
       );
     }
     const data = S.encodeUnknownResult(found.value.data)(envelope.data);
@@ -240,13 +240,13 @@ const encodeResult: {
     return encodeJson({
       at: at.success,
       event: envelope.event,
-      ...(envelope.scope === undefined ? {} : { scope: envelope.scope }),
+      ...O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) }),
       data: data.success === undefined ? null : data.success,
     }).pipe(
       Result.map((text) => `${text}\n`),
-      Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause })),
+      Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause }))
     );
-  },
+  }
 );
 
 const decode: {
@@ -256,19 +256,19 @@ const decode: {
   2,
   Effect.fn("Envelope.decode")(function* <R extends JsonlEvent.Registry>(line: LineSlice, events: R) {
     return yield* Effect.fromResult(decodeResult(line, events));
-  }),
+  })
 );
 
 const encode: {
   <const R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Effect.Effect<string, EncodeError>;
   <const R extends JsonlEvent.Registry>(
-    events: R,
+    events: R
   ): (envelope: Encoding<NoInfer<R>>) => Effect.Effect<string, EncodeError>;
 } = dual(
   2,
   Effect.fn("Envelope.encode")(function* <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R) {
     return yield* Effect.fromResult(encodeResult(envelope, events));
-  }),
+  })
 );
 
 /**

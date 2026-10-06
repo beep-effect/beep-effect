@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Envelope, Journal, type JournalConfig, JsonlEvent } from "../../effected/jsonl/index.ts";
+import { Envelope, Journal, type JournalConfig, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { Effect } from "effect";
 import * as Context from "effect/Context";
@@ -25,14 +25,14 @@ export class TestJournal extends Journal.Service<TestJournal>()($I`TestJournal`,
 export const line: { (round: number, label?: string): string; (label?: string): (round: number) => string } = dual(
   (args) => P.isNumber(args[0]),
   (round: number, label = "seed") =>
-    Result.getOrThrow(Envelope.encodeResult({ at, event: "noted", data: { round, label } }, events)),
+    Result.getOrThrow(Envelope.encodeResult({ at, event: "noted", data: { round, label } }, events))
 );
 export const open = Effect.fn("JsonlTest.open")(function* (
   fs: FileSystem.FileSystem,
-  config: JournalConfig = { path },
+  config: JournalConfig = { path }
 ) {
   const context = yield* Layer.build(
-    TestJournal.layer(config).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs))),
+    TestJournal.layer(config).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, fs)))
   );
   return Context.get(context, TestJournal);
 });
@@ -43,7 +43,7 @@ export const memory = Effect.fn("JsonlTest.memory")(function* () {
 });
 export const externalAppend = Effect.fn("JsonlTest.externalAppend")(function* (
   fs: FileSystem.FileSystem,
-  text: string,
+  text: string
 ) {
   const handle = yield* fs.open(path, { flag: "a" });
   yield* handle.writeAll(new TextEncoder().encode(text));

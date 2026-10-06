@@ -10,7 +10,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
-import { externalAppend, line, memory, open, path } from "./fixtures.js";
+import { externalAppend, line, memory, open, path } from "./fixtures.ts";
 
 it.effect("query tiles history, resumes at boundaries and skips a partial cursor line", () =>
   Effect.gen(function* () {
@@ -27,17 +27,17 @@ it.effect("query tiles history, resumes at boundaries and skips a partial cursor
         { round: 1, label: "a" },
         { round: 2, label: "b" },
         { round: 3, label: "c" },
-      ],
+      ]
     );
     for (const cursor of [one.line.end, one.line.end - 1]) {
       const rows = yield* Stream.runCollect(journal.query({ events: ["noted"], cursor }));
       assert.deepStrictEqual(
         A.map(rows, (row) => row.data.round),
-        [2, 3],
+        [2, 3]
       );
     }
     assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ events: [] })), []);
-  }),
+  })
 );
 it.effect("time slices are inclusive at from and exclusive at to", () =>
   Effect.gen(function* () {
@@ -49,36 +49,36 @@ it.effect("time slices are inclusive at from and exclusive at to", () =>
       yield* journal.append("noted", { round, label: "a" });
     }
     const first = yield* Stream.runCollect(
-      journal.query({ events: ["noted"], from: DateTime.makeUnsafe(1000), to: DateTime.makeUnsafe(2000) }),
+      journal.query({ events: ["noted"], from: DateTime.makeUnsafe(1000), to: DateTime.makeUnsafe(2000) })
     );
     const second = yield* Stream.runCollect(
-      journal.query({ events: ["noted"], from: DateTime.makeUnsafe(2000), to: DateTime.makeUnsafe(4000) }),
+      journal.query({ events: ["noted"], from: DateTime.makeUnsafe(2000), to: DateTime.makeUnsafe(4000) })
     );
     assert.deepStrictEqual(
       A.map(first, (row) => row.data.round),
-      [1],
+      [1]
     );
     assert.deepStrictEqual(
       A.map(second, (row) => row.data.round),
-      [2, 3],
+      [2, 3]
     );
-  }),
+  })
 );
 it.effect("frame filters skip invalid payloads while an unfiltered read reports them", () =>
   Effect.gen(function* () {
     const fs = yield* memory();
     yield* fs.writeFileString(
       path,
-      line(1) + '{"at":"2026-01-01T00:00:00Z","event":"ended","scope":"bad","data":"not-null"}\n',
+      line(1) + '{"at":"2026-01-01T00:00:00Z","event":"ended","scope":"bad","data":"not-null"}\n'
     );
     const journal = yield* open(fs);
     assert.strictEqual((yield* Stream.runCollect(journal.query({ events: ["noted"] }))).length, 1);
     assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ scopes: ["absent"] })), []);
     assertFailure(
       (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
-      "InvalidData",
+      "InvalidData"
     );
-  }),
+  })
 );
 it.effect("live changes end on a terminal event excluded by the filter", () =>
   Effect.gen(function* () {
@@ -92,10 +92,10 @@ it.effect("live changes end on a terminal event excluded by the filter", () =>
     yield* journal.append("ended", null);
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data.round),
-      [1],
+      [1]
     );
     assert.deepStrictEqual(yield* Stream.runCollect(journal.changes()), []);
-  }),
+  })
 );
 it.effect("cursor replay and live appends form one projection", () =>
   Effect.gen(function* () {
@@ -110,7 +110,7 @@ it.effect("cursor replay and live appends form one projection", () =>
     yield* journal.append("noted", { round: 3, label: "a" });
     yield* journal.append("ended", null);
     assert.deepStrictEqual(yield* Fiber.join(reader), [0, 2, 5]);
-  }),
+  })
 );
 
 // One read barrier decorates the shared filesystem. It does not duplicate storage,
@@ -142,8 +142,8 @@ const gateRead = Effect.fn("JsonlTest.gateRead")(function* (fs: FileSystem.FileS
               }
               return yield* handle.readAlloc(size);
             }),
-          }),
-        ),
+          })
+        )
       ),
   };
   return {
@@ -170,13 +170,13 @@ it.effect("a query reads only the size it statted even if an append lands during
     yield* Deferred.succeed(gate.release, undefined);
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reading), (row) => row.data.round),
-      [1],
+      [1]
     );
     assert.deepStrictEqual(
       A.map(yield* Stream.runCollect(journal.query({ events: ["noted"] })), (row) => row.data.round),
-      [1, 2],
+      [1, 2]
     );
-  }),
+  })
 );
 it.effect("an append during replay is delivered exactly once at the live join", () =>
   Effect.gen(function* () {
@@ -194,7 +194,7 @@ it.effect("an append during replay is delivered exactly once at the live join", 
     yield* journal.append("ended", null);
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reading), (row) => row.data.round),
-      [1, 2],
+      [1, 2]
     );
-  }),
+  })
 );

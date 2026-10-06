@@ -45,7 +45,7 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
     offset: S.Finite.pipe(
       $I.annoteKey("LineSlice.offset", {
         description: "UTF-8 byte offset of this line's first content byte.",
-      }),
+      })
     ),
     /**
      * UTF-8 byte offset just past this line's terminator — the offset at which
@@ -60,19 +60,19 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
         description:
           "UTF-8 byte offset just past this line's terminator — the offset at which the next line begins, and the resume cursor for an incremental read.",
         documentation: "Equal to `offset + length` when the line is unterminated.",
-      }),
+      })
     ),
     /** UTF-8 byte length of `LineSlice.text`, excluding any terminator. */
     length: S.Finite.pipe(
       $I.annoteKey("LineSlice.length", {
         description: "UTF-8 byte length of `LineSlice.text`, excluding any terminator.",
-      }),
+      })
     ),
     /** The line's content, with its terminator and any paired `\r` removed. */
     text: S.String.pipe(
       $I.annoteKey("LineSlice.text", {
         description: "The line's content, with its terminator and any paired `\r` removed.",
-      }),
+      })
     ),
     /**
      * Whether a `\n` terminated this line in the source.
@@ -88,7 +88,7 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
         description: "Whether a `\n` terminated this line in the source.",
         documentation:
           "`false` can only occur on the final line, and means the line **may be a torn tail** — a writer caught mid-append. A reader walks back over it and leaves its bytes unconsumed so the next read sees the completed line.",
-      }),
+      })
     ),
   },
   $I.annote("LineSlice", {
@@ -104,5 +104,5 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
       "the trailing `\\n`, and exclude the `\\r` of a `\\r\\n` pair. `end` includes it,\n" +
       "which is why `end - offset` is not always `length`.\n" +
       "),",
-  }),
+  })
 ) {}

@@ -20,7 +20,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type * as PlatformError from "effect/PlatformError";
 import * as PubSub from "effect/PubSub";
 import * as Result from "effect/Result";
@@ -31,18 +31,18 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import type * as Take from "effect/Take";
-import type { EnvelopeUnion, EnvelopeWithTag } from "./Envelope.js";
-import { Envelope } from "./Envelope.js";
-import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.js";
-import type { TailWindow } from "./internal/tail.js";
-import { DEFAULT_WINDOW, probeBomBytes, readRangeText, readTail, readTailUntil } from "./internal/tail.js";
-import type { InvalidData, JsonlError, MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.js";
-import { JournalClosed, JournalNotFound, JournalResync, TerminalViolation } from "./JsonlError.js";
-import type { JsonlEvent } from "./JsonlEvent.js";
-import { Line } from "./Line.js";
-import { LineSlice } from "./LineSlice.js";
-import type { CursoredSlice } from "./Slice.js";
-import { matchesFrame } from "./Slice.js";
+import type { EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
+import { Envelope } from "./Envelope.ts";
+import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
+import type { TailWindow } from "./internal/tail.ts";
+import { DEFAULT_WINDOW, probeBomBytes, readRangeText, readTail, readTailUntil } from "./internal/tail.ts";
+import type { InvalidData, JsonlError, MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
+import { JournalClosed, JournalNotFound, JournalResync, TerminalViolation } from "./JsonlError.ts";
+import type { JsonlEvent } from "./JsonlEvent.ts";
+import { Line } from "./Line.ts";
+import { LineSlice } from "./LineSlice.ts";
+import type { CursoredSlice } from "./Slice.ts";
+import { matchesFrame } from "./Slice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/Journal");
 
@@ -94,7 +94,7 @@ export type JournalReadError = JournalNotFound | PlatformError.PlatformError;
  */
 // Structs keep configuration as plain data at the service-construction boundary.
 export const AppendOptions = S.Struct({ scope: S.optionalKey(S.String) }).annotate(
-  $I.annote("AppendOptions", { description: "Partition selection for one append." }),
+  $I.annote("AppendOptions", { description: "Partition selection for one append." })
 );
 
 /**
@@ -124,7 +124,7 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   readonly append: <T extends JsonlEvent.Tag<R>>(
     event: T,
     data: JsonlEvent.Data<R, NoInfer<T>>,
-    options?: AppendOptions | undefined,
+    options?: AppendOptions | undefined
   ) => Effect.Effect<EnvelopeWithTag<R, T>, JournalWriteError>;
 
   /**
@@ -140,7 +140,7 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   readonly appendPatch: <T extends JsonlEvent.Tag<R>>(
     event: T,
     patch: Partial<JsonlEvent.Data<R, NoInfer<T>>>,
-    options?: AppendOptions | undefined,
+    options?: AppendOptions | undefined
   ) => Effect.Effect<EnvelopeWithTag<R, T>, JournalWriteError>;
 
   /**
@@ -188,10 +188,10 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    */
   readonly query: {
     <T extends JsonlEvent.Tag<R>>(
-      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
     ): Stream.Stream<EnvelopeWithTag<R, T>, JournalReadError | JsonlError>;
     (
-      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined,
+      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
     ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError>;
   };
 
@@ -223,10 +223,10 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    */
   readonly changes: {
     <T extends JsonlEvent.Tag<R>>(
-      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
     ): Stream.Stream<EnvelopeWithTag<R, T>, JournalReadError | JsonlError>;
     (
-      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined,
+      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
     ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError>;
   };
 
@@ -242,12 +242,12 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
     <S, T extends JsonlEvent.Tag<R>>(
       initial: S,
       fold: (state: S, envelope: EnvelopeWithTag<R, NoInfer<T>>) => S,
-      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+      slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
     ): Stream.Stream<S, JournalReadError | JsonlError>;
     <S>(
       initial: S,
       fold: (state: S, envelope: EnvelopeUnion<R>) => S,
-      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined,
+      slice?: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
     ): Stream.Stream<S, JournalReadError | JsonlError>;
   };
 
@@ -355,7 +355,7 @@ const ARM_YIELDS = 3;
 const lastSeparator = (path: string): number =>
   Math.max(
     O.getOrElse(Str.lastIndexOf("/")(path), () => -1),
-    O.getOrElse(Str.lastIndexOf("\\")(path), () => -1),
+    O.getOrElse(Str.lastIndexOf("\\")(path), () => -1)
   );
 
 /**
@@ -417,19 +417,19 @@ const decodeWindow = <R extends JsonlEvent.Registry>(events: R, window: TailWind
 const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEvent.Registry>(
   events: R,
   config: JournalConfig,
-  fs: FileSystem.FileSystem,
+  fs: FileSystem.FileSystem
 ): Effect.fn.Return<JournalShape<R>, PlatformError.PlatformError, Scope.Scope> {
   const terminalTags = HashSet.fromIterable(
     A.map(
       A.filter(events, (event) => event.terminal),
-      (event) => event.tag,
-    ),
+      (event) => event.tag
+    )
   );
   const reopenTags = HashSet.fromIterable(
     A.map(
       A.filter(events, (event) => event.reopen),
-      (event) => event.tag,
-    ),
+      (event) => event.tag
+    )
   );
 
   /** Guards the WRITE critical section only: file write plus ref updates. */
@@ -515,7 +515,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    */
   const decodeRange = Effect.fn("Journal.decodeRange")(function* (
     from: number,
-    to: number,
+    to: number
   ): Effect.fn.Return<
     { readonly decoded: ReadonlyArray<EnvelopeUnion<R>>; readonly advanced: number },
     PlatformError.PlatformError
@@ -561,7 +561,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   const appendWith = Effect.fn("Journal.appendWith")(function* (
     event: string,
     build: (current: O.Option<EnvelopeUnion<R>>) => unknown,
-    scope: string | undefined,
+    scope: string | undefined
   ): Effect.fn.Return<EnvelopeUnion<R>, JournalWriteError> {
     // Refusal is checked BEFORE the permit: a late append must not queue
     // behind a draining flush only to be refused after waiting.
@@ -590,14 +590,29 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
             event,
             data,
             at,
-            ...(scope === undefined ? {} : { scope }),
+            ...O.getSomesStruct({ scope: O.fromUndefinedOr(scope) }),
           },
-          events,
+          events
         );
         if (Result.isFailure(encoded)) {
           return yield* encoded.failure;
         }
         const bytes = new TextEncoder().encode(encoded.success);
+        // JSON encoding can be lossy for a payload codec (for example a typed
+        // array). Validate the serialized envelope before mutating the file.
+        const decoded = Envelope.decodeResult(
+          LineSlice.make({
+            offset: 0,
+            end: bytes.length,
+            length: bytes.length - 1,
+            text: Str.slice(0, -1)(encoded.success),
+            terminated: true,
+          }),
+          events
+        );
+        if (Result.isFailure(decoded)) {
+          return yield* decoded.failure;
+        }
 
         // ONE `writeAll` of the complete line to an O_APPEND handle. This
         // is a write LOOP, not a single syscall — atomicity is an OS
@@ -620,7 +635,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
             // is the cheapest true answer.
             const info = yield* file.stat;
             return ByteSize.toNumberUnsafe(info.size) - bomBytes;
-          }),
+          })
         );
         const offset = end - bytes.length;
 
@@ -650,11 +665,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           text: Str.slice(0, -1)(encoded.success),
           terminated: true,
         });
-        const decoded = Envelope.decodeResult(line, events);
-        if (Result.isFailure(decoded)) {
-          return yield* decoded.failure;
-        }
-        yield* SubscriptionRef.set(latest, O.some(decoded.success));
+        const envelope = { ...decoded.success, line };
+        yield* SubscriptionRef.set(latest, O.some(envelope));
 
         // Link onto the publish chain while still holding the write
         // permit: that — and only that — is what fixes publish order to
@@ -662,8 +674,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         const previous = publishBaton;
         const mine = Deferred.makeUnsafe<void>();
         publishBaton = mine;
-        return { envelope: decoded.success, external, predecessor: previous, baton: mine };
-      }),
+        return { envelope, external, predecessor: previous, baton: mine };
+      })
     );
 
     // OUTSIDE the write permit. A full hub suspends here, which blocks this
@@ -686,13 +698,13 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
             yield* PubSub.publish(hub, [preceding]);
           }
           yield* PubSub.publish(hub, [envelope]);
-        }),
+        })
       ).pipe(
         // The baton MUST be passed even on failure or interruption, or
         // every later append waits forever on a predecessor that will
         // never finish.
-        Effect.ensuring(Deferred.done(baton, Exit.void)),
-      ),
+        Effect.ensuring(Deferred.done(baton, Exit.void))
+      )
     );
     return envelope;
   });
@@ -716,7 +728,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    * it.
    */
   const readFrom = (
-    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined,
+    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
     Stream.unwrap(
       Effect.gen(function* () {
@@ -761,7 +773,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           selected = Chunk.append(selected, decoded.value.success);
         }
         return Stream.fromIterable(selected);
-      }),
+      })
     );
 
   /**
@@ -778,22 +790,22 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    */
   const matchesEnvelope = <T extends JsonlEvent.Tag<R>>(
     envelope: EnvelopeUnion<R>,
-    slice: CursoredSlice<R, T> | undefined,
+    slice: CursoredSlice<R, T> | undefined
   ): envelope is EnvelopeWithTag<R, T> =>
     matchesFrame(
       {
         at: envelope.at,
         event: envelope.event,
-        ...(envelope.scope === undefined ? {} : { scope: envelope.scope }),
+        ...O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) }),
         data: envelope.data,
       },
-      slice,
+      slice
     );
 
   const isTerminalEnvelope = (envelope: EnvelopeUnion<R>): boolean => HashSet.has(terminalTags, envelope.event);
 
   const changesStream = (
-    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined,
+    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
     Stream.unwrap(
       Effect.gen(function* () {
@@ -826,8 +838,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           Stream.tap((envelope) =>
             Effect.sync(() => {
               replayedThrough = Math.max(replayedThrough, envelope.line.end);
-            }),
-          ),
+            })
+          )
         );
         const live = subscription.pipe(
           PubSub.take,
@@ -842,13 +854,13 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           // delivered still ends the stream rather than being dropped and
           // leaving the subscriber waiting on a journal that is over.
           Stream.takeUntil(isTerminalEnvelope),
-          Stream.filter((envelope) => envelope.line.offset >= replayedThrough),
+          Stream.filter((envelope) => envelope.line.offset >= replayedThrough)
         );
         // ONE seam: history and tail are the same stream, filtered the same
         // way downstream, so a consumer cannot see a gap or a duplicate at
         // the join.
         return Stream.concat(history, live);
-      }),
+      })
     );
 
   const identityOf = (info: FileSystem.File.Info): O.Option<string> => O.map(info.ino, (ino) => `${info.dev}:${ino}`);
@@ -931,7 +943,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           const mine = Deferred.makeUnsafe<void>();
           publishBaton = mine;
           return { envelopes: decoded, predecessor: previous, baton: mine };
-        }),
+        })
       );
 
       yield* Effect.uninterruptibleMask((restore) =>
@@ -941,21 +953,21 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
             for (const envelope of envelopes) {
               yield* PubSub.publish(hub, [envelope]);
             }
-          }),
-        ).pipe(Effect.ensuring(Deferred.done(baton, Exit.void))),
+          })
+        ).pipe(Effect.ensuring(Deferred.done(baton, Exit.void)))
       );
-    }),
+    })
   );
 
   function append<T extends JsonlEvent.Tag<R>>(
     event: T,
     data: JsonlEvent.Data<R, NoInfer<T>>,
-    options?: AppendOptions,
+    options?: AppendOptions
   ): Effect.Effect<EnvelopeWithTag<R, T>, JournalWriteError>;
   function append(
     event: JsonlEvent.Tag<R>,
     data: unknown,
-    options?: AppendOptions,
+    options?: AppendOptions
   ): Effect.Effect<EnvelopeUnion<R>, JournalWriteError> {
     return appendWith(event, () => data, options?.scope);
   }
@@ -963,12 +975,12 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   function appendPatch<T extends JsonlEvent.Tag<R>>(
     event: T,
     patch: Partial<JsonlEvent.Data<R, NoInfer<T>>>,
-    options?: AppendOptions,
+    options?: AppendOptions
   ): Effect.Effect<EnvelopeWithTag<R, T>, JournalWriteError>;
   function appendPatch(
     event: JsonlEvent.Tag<R>,
     patch: unknown,
-    options?: AppendOptions,
+    options?: AppendOptions
   ): Effect.Effect<EnvelopeUnion<R>, JournalWriteError> {
     return appendWith(
       event,
@@ -978,30 +990,30 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         // prototype compatibility of the patch. Encoding validates the result.
         return isRecordLike(base) && isRecordLike(patch) && canMerge(base, patch) ? shallowMerge(base, patch) : patch;
       },
-      options?.scope,
+      options?.scope
     );
   }
 
   function query<T extends JsonlEvent.Tag<R>>(
-    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
   ): Stream.Stream<EnvelopeWithTag<R, T>, JournalReadError | JsonlError>;
   function query(
-    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>,
+    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError>;
   function query(
-    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>,
+    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> {
     return readFrom(slice).pipe(Stream.filter((envelope) => matchesEnvelope(envelope, slice)));
   }
 
   function changes<T extends JsonlEvent.Tag<R>>(
-    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
   ): Stream.Stream<EnvelopeWithTag<R, T>, JournalReadError | JsonlError>;
   function changes(
-    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>,
+    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError>;
   function changes(
-    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>,
+    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> {
     return changesStream(slice).pipe(Stream.filter((envelope) => matchesEnvelope(envelope, slice)));
   }
@@ -1009,21 +1021,21 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   function projection<State, T extends JsonlEvent.Tag<R>>(
     initial: State,
     fold: (state: State, envelope: EnvelopeWithTag<R, NoInfer<T>>) => State,
-    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> },
+    slice: CursoredSlice<R, T> & { readonly events: ReadonlyArray<T> }
   ): Stream.Stream<State, JournalReadError | JsonlError>;
   function projection<State>(
     initial: State,
     fold: (state: State, envelope: EnvelopeUnion<R>) => State,
-    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>,
+    slice?: CursoredSlice<R, JsonlEvent.Tag<R>>
   ): Stream.Stream<State, JournalReadError | JsonlError>;
   function projection<State, T extends JsonlEvent.Tag<R>>(
     initial: State,
     fold: (state: State, envelope: EnvelopeWithTag<R, T>) => State,
-    slice?: CursoredSlice<R, T>,
+    slice?: CursoredSlice<R, T>
   ): Stream.Stream<State, JournalReadError | JsonlError> {
     return changesStream(slice).pipe(
       Stream.filter((envelope): envelope is EnvelopeWithTag<R, T> => matchesEnvelope(envelope, slice)),
-      Stream.scan(() => initial, fold),
+      Stream.scan(() => initial, fold)
     );
   }
 
@@ -1055,18 +1067,26 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   // never fail on one.
   const present = yield* exists();
   if (present) {
-    bomBytes = yield* probeBomBytes(fs, config.path);
-    // Narrowed to JournalNotFound only: a permissions error or a bad handle
-    // must NOT present as an empty journal. Anything other than "the file
-    // vanished between the check and the read" is a real failure.
-    yield* refresh.pipe(Effect.catchTag("JournalNotFound", () => Effect.succeedNone));
-    const info = yield* fs.stat(config.path);
-    // LOGICAL, post-BOM — the same space every offset this package emits
-    // lives in. Seeding it physically put every subsequent append's offset
-    // three bytes out on a BOM'd journal.
-    consumed = ByteSize.toNumberUnsafe(info.size) - bomBytes;
-    // Detect replacement even before the supervisor's first catch-up read.
-    identity = identityOf(info);
+    yield* Effect.gen(function* () {
+      bomBytes = yield* probeBomBytes(fs, config.path);
+      // Narrowed to JournalNotFound only: a permissions error or a bad handle
+      // must NOT present as an empty journal. Anything other than "the file
+      // vanished between the check and the read" is a real failure.
+      yield* refresh;
+      const info = yield* fs.stat(config.path);
+      // LOGICAL, post-BOM — the same space every offset this package emits
+      // lives in. Seeding it physically put every subsequent append's offset
+      // three bytes out on a BOM'd journal.
+      consumed = ByteSize.toNumberUnsafe(info.size) - bomBytes;
+      // Detect replacement even before the supervisor's first catch-up read.
+      identity = identityOf(info);
+    }).pipe(
+      Effect.catchTag("JournalNotFound", () =>
+        Effect.sync(() => {
+          bomBytes = 0;
+        })
+      )
+    );
   }
 
   /**
@@ -1106,7 +1126,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   const watchJournal = fs.watch(config.path).pipe(
     // The event is a poke, never a source of paths. Re-stat and ingest.
     Stream.runForEach(() => ingest),
-    Effect.ignore,
+    Effect.ignore
   );
 
   const watchForCreation = fs.watch(directory).pipe(
@@ -1120,7 +1140,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     // this watch is also the one that catches the journal up.
     Stream.takeUntilEffect(() => exists()),
     Stream.runForEach(() => ingest),
-    Effect.ignore,
+    Effect.ignore
   );
 
   const supervise = Effect.gen(function* () {
@@ -1201,8 +1221,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   // waits for the in-flight append to finish, and only then is the terminal
   // Exit published — so the last accepted append is on disk and visible to
   // subscribers before their streams end.
-  yield* Effect.addFinalizer(() =>
-    Effect.gen(function* () {
+  yield* Effect.addFinalizer(
+    Effect.fn("Journal.close")(function* () {
       closed = true;
       // Drain the write half AND capture the tail of the publish chain under
       // the same permit. Reading `publishBaton` here is a consistent
@@ -1227,9 +1247,9 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         Effect.gen(function* () {
           yield* Deferred.await(pending);
           yield* PubSub.publish(hub, Exit.void);
-        }),
+        })
       ).pipe(Effect.timeout(config.shutdownPublishTimeout ?? SHUTDOWN_PUBLISH_TIMEOUT), Effect.ignore);
-    }),
+    })
   );
 
   return shape;
@@ -1330,7 +1350,7 @@ export const Journal = {
     <Self>() =>
     <const Id extends string, const R extends JsonlEvent.Registry>(
       id: Id,
-      options: { readonly events: R },
+      options: { readonly events: R }
     ): JournalClass<Self, Id, R> => {
       const key = Context.Service<Self, JournalShape<R>>()(id);
       // Augment the constructor itself: a spread would lose Context's
@@ -1341,7 +1361,7 @@ export const Journal = {
         layer: (config: JournalConfig): Layer.Layer<Self, PlatformError.PlatformError, FileSystem.FileSystem> =>
           Layer.effect(
             key,
-            Effect.flatMap(FileSystem.FileSystem, (fs) => makeEngine(options.events, config, fs)),
+            Effect.flatMap(FileSystem.FileSystem, (fs) => makeEngine(options.events, config, fs))
           ),
       });
     },

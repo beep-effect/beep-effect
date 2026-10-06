@@ -27,15 +27,15 @@
 
 // `Envelope` and `JsonlEvent` each carry BOTH a value and a type declaration,
 // so one export name covers the factory and the type it produces.
-export type { EnvelopeInput, EnvelopeOf, EnvelopeUnion, EnvelopeWithTag } from "./Envelope.js";
-export { Envelope, EnvelopeFrame } from "./Envelope.js";
+export type { EnvelopeInput, EnvelopeOf, EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
+export { Envelope, EnvelopeFrame } from "./Envelope.ts";
 export type {
   JournalClass,
   JournalReadError,
   JournalShape,
   JournalWriteError,
-} from "./Journal.js";
-export { AppendOptions, Journal, JournalConfig } from "./Journal.js";
+} from "./Journal.ts";
+export { AppendOptions, Journal, JournalConfig } from "./Journal.ts";
 export {
   InvalidData,
   JournalClosed,
@@ -46,9 +46,9 @@ export {
   TerminalViolation,
   UnknownEvent,
   UnserializableData,
-} from "./JsonlError.js";
-export type { DataSchema } from "./JsonlEvent.js";
-export { JsonlEvent, JsonlEventTypeId } from "./JsonlEvent.js";
-export { Line, ParsedLine } from "./Line.js";
-export { LineSlice } from "./LineSlice.js";
-export type { CursoredSlice, Slice } from "./Slice.js";
+} from "./JsonlError.ts";
+export type { DataSchema } from "./JsonlEvent.ts";
+export { JsonlEvent, JsonlEventTypeId } from "./JsonlEvent.ts";
+export { Line, ParsedLine } from "./Line.ts";
+export { LineSlice } from "./LineSlice.ts";
+export { CursoredSlice, Slice } from "./Slice.ts";

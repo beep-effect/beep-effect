@@ -18,11 +18,12 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { LineSlice } from "./LineSlice.js";
+import { LineSlice } from "./LineSlice.ts";
 
 const $I = $ScratchpadId.create("JsonlError");
 const encodeString = S.encodeResult(S.fromJsonString(S.String));
-const quote = (value: string): string => Result.getOrElse(encodeString(value), () => value);
+// JSON encoding is total for strings, including isolated UTF-16 surrogates.
+const quote = (value: string): string => Result.getOrThrow(encodeString(value));
 
 /**
  * `S.SchemaError` as a schema of itself.
@@ -40,7 +41,7 @@ const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
     description: "`S.SchemaError` as a schema of itself.",
     documentation:
       "A schema issue tree is a live object graph, not something with a wire form,\nso it is declared by its type guard rather than given an encoding. That is\nwhat lets {@link InvalidData} be an ordinary schema-backed tagged error while\nstill carrying the failure **structurally** — `error.issue` keeps its paths\nand expected types — instead of flattening it to a string at the boundary.",
-  }),
+  })
 );
 
 /**
@@ -76,14 +77,14 @@ export class MalformedLine extends S.TaggedError<MalformedLine>($I`MalformedLine
     line: LineSlice.pipe(
       $I.annoteKey("MalformedLine.line", {
         description: "The offending line, with its byte offsets into the source.",
-      }),
+      })
     ),
   },
   $I.annote("MalformedLine", {
     description: "A journal line that is not valid JSON.",
     documentation:
       "**This is the expected steady state at the tail of a live journal**, not\nnecessarily corruption: a writer caught mid-`write` leaves a partial final\nline, and `LineSlice.terminated` is what distinguishes the two cases. An\nunterminated malformed line is a torn tail that the next append completes; a\n*terminated* malformed line is a hole in the history that will never heal.\nMalformed input always fails through this typed channel — never as a defect,\nand never by being silently dropped from a read.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -134,13 +135,13 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
     line: LineSlice.pipe(
       $I.annoteKey("UnknownEvent.line", {
         description: "The offending line, with its byte offsets into the source.",
-      }),
+      })
     ),
     /** The unrecognized tag as it appeared on the envelope. */
     event: S.String.pipe(
       $I.annoteKey("UnknownEvent.event", {
         description: "The unrecognized tag as it appeared on the envelope.",
-      }),
+      })
     ),
     /** The tags this journal's registry does define. */
     known: S.String.pipe(
@@ -149,14 +150,14 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
       S.withDecodingDefault(Effect.succeed(A.empty<string>())),
       $I.annoteKey("UnknownEvent.known", {
         description: "The tags this journal's registry does define.",
-      }),
+      })
     ),
   },
   $I.annote("UnknownEvent", {
     description: "A line whose `event` tag is not in the registry.",
     documentation:
       "Typed rather than a defect on purpose: a journal written by an older or newer\nversion of the same application is hostile input in the technical sense, and\na reader that crashed on an unrecognized tag would be unable to skip forward\npast one. The known tags travel with the error so a caller can report the\nmismatch without reaching back for the registry.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -214,7 +215,7 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
     line: LineSlice.pipe(
       $I.annoteKey("InvalidData.line", {
         description: "The offending line, with its byte offsets into the source.",
-      }),
+      })
     ),
     /**
      * The event tag whose payload schema rejected the data, or `none` when it
@@ -227,20 +228,20 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
       $I.annoteKey("InvalidData.event", {
         description:
           "The event tag whose payload schema rejected the data, or `none` when it was the envelope frame itself that failed.",
-      }),
+      })
     ),
     /** The schema failure, carried structurally — `issue` is the full tree. */
     error: SchemaErrorFromSelf.pipe(
       $I.annoteKey("InvalidData.error", {
         description: "The schema failure, carried structurally — `issue` is the full tree.",
-      }),
+      })
     ),
   },
   $I.annote("InvalidData", {
     description: "A line whose envelope or payload failed schema validation.",
     documentation:
       "Covers both stages of the two-stage decode, distinguished by `event`: the\nframe itself (`O.none()` — the line is JSON but not an envelope) and a\nregistered payload (`O.some(tag)` — the envelope is well-formed but its\n`data` does not match the schema registered for that tag).\nThe `SchemaError` is carried **whole**, so `error.issue` is the full issue\ntree with its paths and expected types intact. Nothing here is stringified;\n`message` renders lazily and only when something asks for it.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -292,18 +293,18 @@ export class TerminalViolation extends S.TaggedError<TerminalViolation>($I`Termi
     event: S.String.pipe(
       $I.annoteKey("TerminalViolation.event", {
         description: "The tag of the event whose append was refused.",
-      }),
+      })
     ),
     /** The terminal event currently at the tail of the journal. */
     terminal: S.String.pipe(
       $I.annoteKey("TerminalViolation.terminal", {
         description: "The terminal event currently at the tail of the journal.",
-      }),
+      })
     ),
   },
   $I.annote("TerminalViolation", {
     description: "An append operation was refused because the journal is terminal at the given event.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -350,12 +351,12 @@ export class JournalNotFound extends S.TaggedError<JournalNotFound>($I`JournalNo
     path: S.String.pipe(
       $I.annoteKey("JournalNotFound", {
         description: "The path that does not exist.",
-      }),
+      })
     ),
   },
   $I.annote("JournalNotFound", {
     description: "A journal path was queried but does not exist yet.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -406,20 +407,20 @@ export class UnserializableData extends S.TaggedError<UnserializableData>($I`Uns
     event: S.String.pipe(
       $I.annoteKey("UnserializableData.event", {
         description: "The event tag whose payload could not be serialized.",
-      }),
+      })
     ),
     /** The JSON codec failure, carried structurally. */
     cause: S.Defect({ includeStack: true }).pipe(
       $I.annoteKey("UnserializableData.cause", {
         description: "The JSON codec failure, carried structurally.",
-      }),
+      })
     ),
   },
   $I.annote("UnserializableData", {
     description: "A payload that validated against its schema but cannot be serialized to JSON.",
     documentation:
       "The registered payload codec succeeded, but the JSON codec rejected its encoded representation. The structured codec failure is retained in cause.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -475,14 +476,14 @@ export class JournalClosed extends S.TaggedError<JournalClosed>($I`JournalClosed
     event: S.String.pipe(
       $I.annoteKey("JournalClosed.event", {
         description: "The tag of the event whose append was refused.",
-      }),
+      })
     ),
   },
   $I.annote("JournalClosed", {
     description: "An append refused because the journal's scope has closed.",
     documentation:
       'Its own tag rather than a flavour of {@link TerminalViolation}, because the\nrecoveries have nothing in common: a terminal journal is a *state* the\nconsumer can reason about and reopen from with a `reopen` event, while a\nclosed one is a *lifecycle* fact — this service is gone, and the only moves\nare to build a new layer or stop.\nRefusal is deliberately a typed failure rather than a wait. A `Latch` would\nsuspend the late append with no failure channel, turning "the journal is\nclosing" into a hang; failing fast is what lets a caller react.',
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -544,32 +545,32 @@ export class JournalResync extends S.TaggedError<JournalResync>($I`JournalResync
     path: S.String.pipe(
       $I.annoteKey("JournalResync.path", {
         description: "The journal path whose file changed identity or shrank.",
-      }),
+      })
     ),
     /** Which contract breach was detected. Diagnostic; the recovery is the same. */
     reason: S.Literals(["truncated", "replaced"]).pipe(
       $I.annoteKey("JournalResync.reason", {
         description: "Which contract breach was detected. Diagnostic; the recovery is the same.",
-      }),
+      })
     ),
     /** The logical offset the reader had consumed to. */
     expected: S.Finite.pipe(
       $I.annoteKey("JournalResync.expected", {
         description: "The logical offset the reader had consumed to.",
-      }),
+      })
     ),
     /** The file's logical size when the breach was noticed. */
     actual: S.Finite.pipe(
       $I.annoteKey("JournalResync.actual", {
         description: "The file's logical size when the breach was noticed.",
-      }),
+      })
     ),
   },
   $I.annote("JournalResync", {
     description: "The journal file was truncated or replaced beneath a reader.",
     documentation:
       "The cooperative-writer contract is append-only: a journal only ever grows,\nand every cursor this package hands out depends on that. When the file shrinks\nbelow a tracked offset, or the path comes to name a different file entirely,\nthe contract has been broken by something outside the package and every\noffset-derived belief is now meaningless.\nSurfaced rather than repaired, deliberately. Silently re-reading from zero\nwould paper over a real operational fault — a rotating log shipper, a\n`>` where `>>` was meant — and leave projections quietly inconsistent with\nthe file. The recovery is the consumer's: discard cursor-derived state,\nre-read, and tell somebody.\nOne tag rather than two, though `reason` distinguishes the causes: truncation\nand replacement have the **same** recovery, and a tag per cause would split\none recovery across two tags.\n**Details**\nDetection is as complete as the platform allows and no more. Truncation is\ncaught by size; replacement is caught by inode identity, which\n`FileSystem.File.Info` exposes as an **`Option`** — on a platform that does\nnot report it, a replacement at equal or greater size is undetectable and\nonly truncation is caught.",
-  }),
+  })
 ) {
   /**
    * Human-readable context for this failure; structured fields retain its details.
@@ -619,7 +620,7 @@ export const JsonlError = S.Union([
   JournalResync,
 ]).pipe(
   S.toTaggedUnion("_tag"),
-  $I.annoteSchema("JsonlError", { description: "Recoverable JSONL format, payload and journal lifecycle failures." }),
+  $I.annoteSchema("JsonlError", { description: "Recoverable JSONL format, payload and journal lifecycle failures." })
 );
 
 /**
