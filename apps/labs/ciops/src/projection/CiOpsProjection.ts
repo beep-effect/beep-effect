@@ -6,19 +6,19 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
+import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { Context, Crypto, Effect, FileSystem, Layer, TxQueue, TxRef } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { projectSchedule } from "./Engine.ts";
-import { plannerNotImplemented } from "./Schemas.ts";
-import { emitScheduleAbox } from "./Turtle.ts";
+import { decodeHandoffView, planHandoffView } from "./LanePlan.ts";
+import { HandoffDigestMismatchError, HandoffReadError } from "./Schemas.ts";
+import { emitLanePlan, emitScheduleAbox } from "./Turtle.ts";
 import type {
   CyclicPlanError,
   HandoffDecodeError,
-  HandoffDigestMismatchError,
-  HandoffReadError,
   LanePlanProposal,
   PlanEpisodeInput,
-  PlannerNotImplementedError,
   PolicyDecodeError,
   ProjectionInput,
   ScheduleProposal,
@@ -33,18 +33,12 @@ const $I = $CiopsId.create("projection/CiOpsProjection");
  * **Details**
  *
  * Read, digest and decode failures cover the pinned handoff; `CyclicPlanError`
- * covers explicit precedence input. `PlannerNotImplementedError` remains only
- * while `planEpisode` is the stub and leaves the union with the body.
+ * covers explicit precedence input.
  *
  * @category errors
  * @since 0.0.0
  */
-export type PlanEpisodeError =
-  | HandoffReadError
-  | HandoffDigestMismatchError
-  | HandoffDecodeError
-  | CyclicPlanError
-  | PlannerNotImplementedError;
+type PlanEpisodeError = HandoffReadError | HandoffDigestMismatchError | HandoffDecodeError | CyclicPlanError;
 
 /**
  * Operations exposed by the S7 projection service and its in-process shell.
@@ -57,9 +51,10 @@ export type PlanEpisodeError =
  * `projectCurrent` is the explicit stateful boundary that records the latest
  * proposal and publishes it to the transactional change queue.
  * `planEpisode` is the S7-v2 lane planner (contract §8): it reads the pinned
- * gate-order handoff through the layer's captured file system and crypto, and
- * never touches the current-proposal shell. Until the body lands it fails
- * `PlannerNotImplementedError`.
+ * gate-order handoff through the layer's captured file system and crypto,
+ * checks the raw bytes' SHA-256 before decoding, and never touches the
+ * current-proposal shell. `emitLanePlan` serializes a lane plan in the
+ * provisional lane-plan vocabulary only.
  *
  * @category services
  * @since 0.0.0
@@ -68,6 +63,7 @@ export interface CiOpsProjectionShape {
   readonly awaitCurrentProposal: Effect.Effect<ScheduleProposal>;
   readonly currentProposal: Effect.Effect<O.Option<ScheduleProposal>>;
   readonly emitAbox: (proposal: ScheduleProposal) => Effect.Effect<TurtleDocument>;
+  readonly emitLanePlan: (plan: LanePlanProposal) => Effect.Effect<TurtleDocument>;
   readonly nextProposal: Effect.Effect<ScheduleProposal>;
   readonly planEpisode: (input: PlanEpisodeInput) => Effect.Effect<LanePlanProposal, PlanEpisodeError>;
   readonly project: (input: ProjectionInput) => Effect.Effect<ScheduleProposal, PolicyDecodeError>;
@@ -92,16 +88,50 @@ export interface CiOpsProjectionShape {
  */
 export class CiOpsProjection extends Context.Service<CiOpsProjection, CiOpsProjectionShape>()($I`CiOpsProjection`) {}
 
+const digestHandoffBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+
+// Contract §8.1: raw bytes at repoRoot/path; the schema already refuses absolute paths and `..` segments.
+const readHandoffBytes = (fs: FileSystem.FileSystem, input: PlanEpisodeInput) =>
+  fs
+    .readFile(`${input.repoRoot}/${input.handoff.path}`)
+    .pipe(Effect.mapError((error) => HandoffReadError.make({ path: input.handoff.path, message: error.message })));
+
+// The digest is over the raw bytes, never a re-encoded string. A Uint8Array always decodes, so the only failure is
+// the platform digest's (Sha256HexFromBytes wraps it as a schema issue); it stays typed inside the §8.1 union.
+const digestHandoff = (crypto: Crypto.Crypto, input: PlanEpisodeInput, bytes: Uint8Array) =>
+  digestHandoffBytes(bytes).pipe(
+    Effect.provideService(Crypto.Crypto, crypto),
+    Effect.mapError((error) =>
+      HandoffReadError.make({ path: input.handoff.path, message: `SHA-256 digest failed: ${error.message}` })
+    )
+  );
+
+const makePlanEpisode = (fs: FileSystem.FileSystem, crypto: Crypto.Crypto) =>
+  Effect.fn("CiOpsProjection.planEpisode")(function* (
+    input: PlanEpisodeInput
+  ): Effect.fn.Return<LanePlanProposal, PlanEpisodeError> {
+    const bytes = yield* readHandoffBytes(fs, input);
+    const actualSha256 = yield* digestHandoff(crypto, input, bytes);
+    if (actualSha256 !== input.handoff.sha256) {
+      return yield* HandoffDigestMismatchError.make({
+        path: input.handoff.path,
+        expectedSha256: input.handoff.sha256,
+        actualSha256,
+      });
+    }
+    const view = yield* decodeHandoffView(input.handoff.path, new TextDecoder().decode(bytes));
+    return yield* planHandoffView(input, view);
+  });
+
 const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
   CiOpsProjectionShape,
   never,
   FileSystem.FileSystem | Crypto.Crypto
 > {
   // Contract §8: the layer captures the platform services at construction so
-  // planEpisode keeps a requirement-free signature; the body commit reads and
-  // digests the handoff through them.
-  yield* FileSystem.FileSystem;
-  yield* Crypto.Crypto;
+  // planEpisode keeps a requirement-free signature.
+  const fs = yield* FileSystem.FileSystem;
+  const crypto = yield* Crypto.Crypto;
   const current = yield* TxRef.make<O.Option<ScheduleProposal>>(O.none());
   const proposals = yield* TxQueue.unbounded<ScheduleProposal>();
 
@@ -130,11 +160,12 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
     return proposal;
   });
 
-  const planEpisode = Effect.fn("CiOpsProjection.planEpisode")((_input: PlanEpisodeInput) => plannerNotImplemented);
+  const planEpisode = makePlanEpisode(fs, crypto);
 
   return CiOpsProjection.of({
     project: projectSchedule,
     emitAbox: emitScheduleAbox,
+    emitLanePlan,
     planEpisode,
     projectCurrent,
     currentProposal,

@@ -11,6 +11,7 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { Effect, HashMap, HashSet } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "./PosInt.ts";
@@ -638,31 +639,6 @@ export class HandoffDecodeError extends S.TaggedError<HandoffDecodeError>($I`Han
 ) {}
 
 /**
- * Honest v1 failure returned by the unimplemented lane-DAG planner seam.
- *
- * **Example** (Construct the planner seam failure)
- *
- * ```ts
- * import { PlannerNotImplementedError } from "@/projection/Schemas"
- *
- * const error = PlannerNotImplementedError.make({ message: "Lane-DAG planning is reserved for v2." })
- * console.log(error._tag) // "PlannerNotImplementedError"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class PlannerNotImplementedError extends S.TaggedError<PlannerNotImplementedError>(
-  $I`PlannerNotImplementedError`
-)(
-  "PlannerNotImplementedError",
-  { message: S.String },
-  $I.annoteError<PlannerNotImplementedError>("PlannerNotImplementedError", {
-    description: "The explicit v2 lane-DAG planning seam was invoked by a v1 implementation.",
-  })
-) {}
-
-/**
  * Gating error carrying every mismatch found by differential journal replay.
  *
  * **Example** (Construct a replay failure)
@@ -686,12 +662,171 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
 ) {}
 
 /**
+ * Owner-reference derivation variants recorded by run-3 Ruling 11 custody.
+ *
+ * **Details**
+ *
+ * A surrogate journal row drops the live `pid`/`procStart` pair and carries a
+ * salted 12-hex `ownerRef` instead; the variant names which process members
+ * fed that hash. The vocabulary is the `run4-fleet` manifest custody block.
+ *
+ * **Example** (Recognize the pid-pair variant)
+ *
+ * ```ts
+ * import { AdmissionOwnerRefVariant } from "@/projection/Schemas"
+ *
+ * console.log(AdmissionOwnerRefVariant.is.pid_pair("pid_pair")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AdmissionOwnerRefVariant = LiteralKit(["pid_pair", "ownerpid", "attachedpid", "weak"]).pipe(
+  $I.annoteSchema("AdmissionOwnerRefVariant", {
+    description: "Process members hashed into a surrogate admission owner reference (run-3 Ruling 11).",
+  })
+);
+
+/**
+ * Decoded owner-reference variant accepted by {@link AdmissionOwnerRefVariant}.
+ *
+ * @see {@link AdmissionOwnerRefVariant} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionOwnerRefVariant = typeof AdmissionOwnerRefVariant.Type;
+
+/**
+ * Custody reading of one decoded admission journal row.
+ *
+ * **Details**
+ *
+ * `live` rows carry the deployed `pid`; `surrogate` rows carry a run-3
+ * Ruling 11 `ownerRef` instead; `redacted` rows carry neither (the S6 golden
+ * strips owner members). The reading is derived by
+ * {@link admissionRowCustody}, never stored in the encoded row.
+ *
+ * **Example** (Recognize surrogate custody)
+ *
+ * ```ts
+ * import { AdmissionRowCustody } from "@/projection/Schemas"
+ *
+ * console.log(AdmissionRowCustody.is.surrogate("surrogate")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AdmissionRowCustody = LiteralKit(["live", "surrogate", "redacted"]).pipe(
+  $I.annoteSchema("AdmissionRowCustody", {
+    description: "Whether a journal row carries a live pid, a surrogate ownerRef, or neither.",
+  })
+);
+
+/**
+ * Decoded custody reading accepted by {@link AdmissionRowCustody}.
+ *
+ * @see {@link AdmissionRowCustody} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionRowCustody = typeof AdmissionRowCustody.Type;
+
+// Run-3 Ruling 11 surrogates (owner and checkout references) are salted 12-hex digests.
+const optionalSurrogateRef = S.String.check(S.isPattern(/^[0-9a-f]{12}$/)).pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
+
+const optionalOwnerRefVariant = AdmissionOwnerRefVariant.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
+
+interface OwnerCarrier {
+  readonly ownerRef: O.Option<string>;
+  readonly pid: O.Option<number>;
+}
+
+// P2 Ruling 8 custody invariants. Each filter reads only the members it names,
+// so one filter instance serves every journal class whose struct carries them.
+const hasOneOwner = (row: OwnerCarrier): boolean => O.isSome(row.pid) !== O.isSome(row.ownerRef);
+
+const hasAtMostOneOwner = (row: OwnerCarrier): boolean => !(O.isSome(row.pid) && O.isSome(row.ownerRef));
+
+const hasPairedOwnerVariant = (row: {
+  readonly ownerRef: O.Option<string>;
+  readonly ownerRefVariant: O.Option<AdmissionOwnerRefVariant>;
+}): boolean => O.isSome(row.ownerRef) === O.isSome(row.ownerRefVariant);
+
+const hasOneCheckout = (row: {
+  readonly checkoutRoot: O.Option<string>;
+  readonly checkoutRef: O.Option<string>;
+}): boolean => O.isSome(row.checkoutRoot) !== O.isSome(row.checkoutRef);
+
+const v3OneOwner = S.makeFilter(hasOneOwner, {
+  message: "A v3 admission row carries exactly one of pid (live) or ownerRef (surrogate)",
+});
+
+const legacyAtMostOneOwner = S.makeFilter(hasAtMostOneOwner, {
+  message: "A v1/v2 admission row carries at most one of pid or ownerRef",
+});
+
+const pairedOwnerVariant = S.makeFilter(hasPairedOwnerVariant, {
+  message: "ownerRefVariant is present exactly when ownerRef is present",
+});
+
+const v3OneCheckout = S.makeFilter(hasOneCheckout, {
+  message: "A v3 admission row carries exactly one of checkoutRoot or checkoutRef",
+});
+
+// A live queued row always carried its process start beside its pid; a surrogate never does.
+const hasPidPairedProcStart = (row: {
+  readonly pid: O.Option<number>;
+  readonly procStart: O.Option<string>;
+}): boolean => O.isSome(row.pid) === O.isSome(row.procStart);
+
+const v3PidPairedProcStart = S.makeFilter(hasPidPairedProcStart, {
+  message: "A v3 queued admission row carries procStart exactly when it carries pid",
+});
+
+/**
+ * Derives the custody reading of one decoded admission journal row.
+ *
+ * **Details**
+ *
+ * A row with `pid` is `live`, a row with `ownerRef` is `surrogate`, and a row
+ * with neither is `redacted`. Decoding already rejects a v3 row that carries
+ * both or neither, and a v1/v2 row that carries both, so the reading is total
+ * and never invents a pid.
+ *
+ * **Example** (Read surrogate custody)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { admissionRowCustody } from "@/projection/Schemas"
+ *
+ * console.log(admissionRowCustody({ pid: O.none(), ownerRef: O.some("01e0c0c6c4e1") })) // "surrogate"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const admissionRowCustody = (row: OwnerCarrier): AdmissionRowCustody =>
+  O.as(row.pid, AdmissionRowCustody.Enum.live).pipe(
+    O.orElse(() => O.as(row.ownerRef, AdmissionRowCustody.Enum.surrogate)),
+    O.getOrElse(() => AdmissionRowCustody.Enum.redacted)
+  );
+
+/**
  * Admitted event view accepted from live or S6-redacted journal records.
  *
  * **Details**
  *
  * Owner fields are optional because the committed golden snapshot redacts
- * `pid` and `procStart` while preserving all admission-order carriers.
+ * `pid` and `procStart` while preserving all admission-order carriers. Pinned
+ * corpus rows carry a surrogate `ownerRef`/`ownerRefVariant` pair instead of
+ * `pid` (run-3 Ruling 11); decode rejects a row that carries both.
  *
  * **Example** (Construct a redacted admitted event)
  *
@@ -721,19 +856,21 @@ export class ReplayMismatchError extends S.TaggedError<ReplayMismatchError>($I`R
  * @since 0.0.0
  */
 export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>($I`AdmissionJournalAdmitted`)(
-  {
+  S.Struct({
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
     _tag: S.tag("admission-admitted"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
     procStart: S.OptionFromOptionalKey(S.String),
+    ownerRef: optionalSurrogateRef,
+    ownerRefVariant: optionalOwnerRefVariant,
     kind: AdmissionWorkKind,
     weightTokens: PosInt,
     priority: AdmissionPriority,
     originKey: S.String,
     enqueuedAtMillis: S.Natural,
     admittedAtMillis: S.Natural,
-  },
+  }).check(legacyAtMostOneOwner, pairedOwnerVariant),
   $I.annote("AdmissionJournalAdmitted", {
     description: "Journal transition recording one pending request becoming an active grant.",
   })
@@ -746,14 +883,16 @@ export class AdmissionJournalAdmitted extends S.Class<AdmissionJournalAdmitted>(
  * @since 0.0.0
  */
 class AdmissionJournalReleased extends S.Class<AdmissionJournalReleased>($I`AdmissionJournalReleased`)(
-  {
+  S.Struct({
     schemaVersion: S.Literal("yeet-admission-journal/v1"),
     _tag: S.tag("admission-released"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
+    ownerRef: optionalSurrogateRef,
+    ownerRefVariant: optionalOwnerRefVariant,
     releasedAtMillis: S.Natural,
     memoryPeakBytes: S.OptionFromOptionalKey(S.Natural),
-  },
+  }).check(legacyAtMostOneOwner, pairedOwnerVariant),
   $I.annote("AdmissionJournalReleased", {
     description: "Journal transition releasing the active token charge identified by nonce.",
   })
@@ -780,14 +919,16 @@ const AdmissionTicketEvictionReason = LiteralKit(["queued-submitter-death"]).pip
  * @since 0.0.0
  */
 class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>($I`AdmissionJournalLeaseEvicted`)(
-  {
+  S.Struct({
     schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.tag("admission-lease-evicted"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
+    ownerRef: optionalSurrogateRef,
+    ownerRefVariant: optionalOwnerRefVariant,
     evictedAtMillis: S.Natural,
     reason: AdmissionLeaseEvictionReason,
-  },
+  }).check(legacyAtMostOneOwner, pairedOwnerVariant),
   $I.annote("AdmissionJournalLeaseEvicted", {
     description: "V2 journal transition releasing an active grant after its owner is verified dead.",
   })
@@ -795,48 +936,60 @@ class AdmissionJournalLeaseEvicted extends S.Class<AdmissionJournalLeaseEvicted>
 
 // Private schema retained in the public union so mixed v1/v2 journals decode.
 class AdmissionJournalTicketEvicted extends S.Class<AdmissionJournalTicketEvicted>($I`AdmissionJournalTicketEvicted`)(
-  {
+  S.Struct({
     schemaVersion: S.Literal("yeet-admission-journal/v2"),
     _tag: S.tag("admission-ticket-evicted"),
     nonce: S.NonEmptyString,
     pid: S.OptionFromOptionalKey(S.Natural),
+    ownerRef: optionalSurrogateRef,
+    ownerRefVariant: optionalOwnerRefVariant,
     evictedAtMillis: S.Natural,
     reason: AdmissionTicketEvictionReason,
-  },
+  }).check(legacyAtMostOneOwner, pairedOwnerVariant),
   $I.annote("AdmissionJournalTicketEvicted", {
     description: "V2 journal transition recording a verified dead queued submitter.",
   })
 ) {}
 
-// V3 rows retain live owner and checkout attribution. Legacy classes above
+// V3 rows carry either live owner and checkout attribution (`pid`, `checkoutRoot`)
+// or run-3 Ruling 11 surrogates (`ownerRef`, `checkoutRef`); legacy classes above
 // continue accepting the redacted S6 shape; no CLI internals cross this boundary.
+// `.extend` keeps these struct checks (effect 4.0.0 `makeClass.extend` re-applies
+// `struct.ast.checks`); spreading `.fields` does not, so the spread v3 classes
+// below re-apply the same filter instances (P2 Ruling 8).
 class AdmissionJournalV3Identity extends S.Class<AdmissionJournalV3Identity>($I`AdmissionJournalV3Identity`)(
-  {
+  S.Struct({
     schemaVersion: S.Literal("yeet-admission-journal/v3"),
     nonce: S.String,
-    pid: S.Finite,
+    pid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ownerRef: optionalSurrogateRef,
+    ownerRefVariant: optionalOwnerRefVariant,
     attemptId: S.Trim.check(S.isNonEmpty({ message: "String must not be empty" }), S.isUUID()).pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    checkoutRoot: S.String,
+    checkoutRoot: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    checkoutRef: optionalSurrogateRef,
     branch: S.String,
-  },
+  }).check(v3OneOwner, pairedOwnerVariant, v3OneCheckout),
   $I.annote("AdmissionJournalV3Identity", {
-    description: "Live v3 journal identity and direct checkout attribution shared by replay events.",
+    description: "V3 journal identity: exactly one live or surrogate owner and one checkout attribution.",
   })
 ) {}
 
+// The extension restates the inherited `pid` (same schema, same key position) so its
+// own struct check can pair `procStart` with it; `.extend` appends that check.
 class AdmissionJournalQueuedIdentity extends AdmissionJournalV3Identity.extend<AdmissionJournalQueuedIdentity>(
   $I`AdmissionJournalQueuedIdentity`
 )(
-  {
-    procStart: S.String,
+  S.Struct({
+    pid: AdmissionJournalV3Identity.fields.pid,
+    procStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     kind: AdmissionWorkKind,
     priority: AdmissionPriority,
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
-  },
+  }).check(v3PidPairedProcStart),
   $I.annote("AdmissionJournalQueuedIdentity", {
     description: "Queued request identity carried by ledger-neutral enqueue and withdrawal events.",
   })
@@ -857,18 +1010,22 @@ class AdmissionJournalWithdrawn extends AdmissionJournalQueuedIdentity.extend<Ad
 ) {}
 
 class AdmissionJournalReleasedV3 extends S.Class<AdmissionJournalReleasedV3>($I`AdmissionJournalReleasedV3`)(
-  { ...AdmissionJournalReleased.fields, ...AdmissionJournalV3Identity.fields },
+  S.Struct({ ...AdmissionJournalReleased.fields, ...AdmissionJournalV3Identity.fields }).check(
+    v3OneOwner,
+    pairedOwnerVariant,
+    v3OneCheckout
+  ),
   $I.annote("AdmissionJournalReleasedV3", { description: "V3 release with direct checkout attribution." })
 ) {}
 
 class AdmissionJournalLeaseEvictedV3 extends S.Class<AdmissionJournalLeaseEvictedV3>(
   $I`AdmissionJournalLeaseEvictedV3`
 )(
-  {
+  S.Struct({
     ...AdmissionJournalLeaseEvicted.fields,
     ...AdmissionJournalV3Identity.fields,
     lastHeartbeatAtMillis: S.Finite,
-  },
+  }).check(v3OneOwner, pairedOwnerVariant, v3OneCheckout),
   $I.annote("AdmissionJournalLeaseEvictedV3", {
     description: "V3 lease eviction with checkout attribution and the last observed heartbeat.",
   })
@@ -877,7 +1034,11 @@ class AdmissionJournalLeaseEvictedV3 extends S.Class<AdmissionJournalLeaseEvicte
 class AdmissionJournalTicketEvictedV3 extends S.Class<AdmissionJournalTicketEvictedV3>(
   $I`AdmissionJournalTicketEvictedV3`
 )(
-  { ...AdmissionJournalTicketEvicted.fields, ...AdmissionJournalV3Identity.fields },
+  S.Struct({ ...AdmissionJournalTicketEvicted.fields, ...AdmissionJournalV3Identity.fields }).check(
+    v3OneOwner,
+    pairedOwnerVariant,
+    v3OneCheckout
+  ),
   $I.annote("AdmissionJournalTicketEvictedV3", { description: "V3 queued ticket eviction with checkout attribution." })
 ) {}
 
@@ -1290,22 +1451,3 @@ export const emptyTokenLedger = TokenLedgerState.make({
   activeReviewFixNonces: HashSet.empty(),
   activeTokenTotal: S.Natural.make(0),
 });
-
-/**
- * Shared typed failure effect returned by the v1 planner seam.
- *
- * **Example** (Inspect the planner failure effect)
- *
- * ```ts
- * import { plannerNotImplemented } from "@/projection/Schemas"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(plannerNotImplemented)) // true
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export const plannerNotImplemented: Effect.Effect<never, PlannerNotImplementedError> = Effect.fail(
-  PlannerNotImplementedError.make({ message: "Lane-DAG episode planning is reserved for S7 v2." })
-);

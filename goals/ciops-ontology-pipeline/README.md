@@ -31,12 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Stage C capture — complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger` pinned, the
-first irreversible step; P0 complete 2026-10-05). P2 projection on live data opened 2026-10-06
-(W6 S7-v2 seam first, then W5 live replay and the `planEpisode` body; one projection PR).
+P2 Projection on live data — complete 2026-10-06 (W6 S7-v2 seam and `planEpisode` body, W5 live
+replay: 197 of 200 first-choice agreement on the `run4-fleet` pin beside the golden's 41 of 41; P1
+and P0 complete). Next: P3 auditor run 4 (W7), fed by the P1 pins and the P2 projection.
 
 ## Latest Evidence
 
+- 2026-10-06, W5+W6: `apps/labs/ciops` plans the 33-lane gate-order handoff by path and sha256
+  (`LanePlanProposal`, provisional `ciops-prov:` lane vocabulary, S7 contract §8) and replays the
+  pinned canonical journal with surrogate custody (`research/s7-live-replay-evidence.md`: 197/200
+  live, 41/41 golden, CQ-009 out of scope); P2 Rulings 1–10 and calls u–ee in
+  `research/decisions.md`; lane reports `research/run4-lanes/p2-{w5,w6}-report.md` in the exploration.
 - 2026-10-06, W3+W4: `corpus/run4-fleet/` (937 files, 260 checkouts, 11,179 events) and
   `corpus/run4-ledger/` (9 ledgers, 8,082 rows, gate holds: C4.1 checked, 3,628 post-cut pre-push
   facts, merged-preview dormant) pinned by the new sibling generators under P1 Rulings 1–8; lane

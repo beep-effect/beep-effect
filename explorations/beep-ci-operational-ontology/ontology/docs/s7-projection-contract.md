@@ -393,7 +393,9 @@ lands in a later commit of the same PR (Ruling 1). Admission v1 and emission
   It never touches the `TxRef` current-proposal shell or the change queue.
 - Transitional: in the seam commit the stub still fails
   `PlannerNotImplementedError`, so that member rides the error union until
-  the body commit retires it with `plannerNotImplemented`.
+  the body commit retires it with `plannerNotImplemented`. (2026-10-06 note:
+  the body commit landed in the same projection PR and retired both; the
+  error union is now exactly the four members named above.)
 
 ### 8.2 §6 first bullet (replaces "No lane-DAG planner implementation")
 

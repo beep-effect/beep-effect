@@ -4,7 +4,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
-import { assertExitFailure, assertInstanceOf, assertNone } from "@effect/vitest/utils";
+import { assertExitFailure, assertNone } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Fiber, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -32,7 +32,6 @@ import {
   emptyTokenLedger,
   PendingRequest,
   PlanEpisodeInput,
-  PlannerNotImplementedError,
   PolicyDecodeError,
   ProjectionInput,
   ScheduleProposal,
@@ -637,7 +636,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
   );
 
   it.layer(CiOpsProjectionLive, { timeout: "5 seconds" })((it) => {
-    it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
+    it.effect("keeps current proposal state transactionally and plans lanes without touching it", () =>
       Effect.gen(function* () {
         const policy = yield* TestPolicy;
         const service: CiOpsProjectionShape = yield* CiOpsProjection;
@@ -658,7 +657,11 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
             sha256: "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198",
           },
         });
-        assertInstanceOf(yield* Effect.flip(service.planEpisode(planInput)), PlannerNotImplementedError);
+        const plan = yield* service.planEpisode(planInput);
+        expect(plan.planId).toBe(`lane-plan-${planInput.handoff.sha256}`);
+        expect(plan.episodeId).toBe("episode-1");
+        expect(plan.laneSteps.length).toBeGreaterThan(0);
+        expect(Eq.equals(O.some(projected), yield* service.currentProposal)).toBe(true);
       })
     );
   });

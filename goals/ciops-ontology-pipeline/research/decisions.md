@@ -511,3 +511,26 @@ packages' staleness is inherited from main and left to its owners); (z) the body
 the tests CT §8 assigns it: episode-node disjointness between an admission and a lane-plan document,
 the `planLanes` self-check defect on a non-chain acyclic precedence list, the `cycleNodes` closing-
 repeat and self-loop shape, the pure-core permutation test, and `LanePlanProposal.make` enforcement.
+
+**P2 phase B landed (2026-10-06, orchestrator).** Both lanes finished under the round cap with 0
+majors left: W6 (the `planEpisode` body, `emitLanePlan`, the lane-plan golden and the CQ-020 sibling;
+33 lane steps, 32 precedence edges, admission emission byte-unchanged, CQ sibling PASS) and W5 (the
+decoder widening, the replay window and skip rule, `LiveReplayReport`, `evidence:s7-live`: live
+first-choice agreement 197 of 200, golden 41 of 41, three disagreements attributed to the #929
+same-checkout skip, one skipped terminal row, four ledger-censored verdicts, custody 689 surrogate
+rows, CQ-009 out of scope). The lab runs 73 tests in 5 files. Calls on the lanes' deviations, each
+reversible by a later entry: (aa) Ruling 8's widening also applies to the v1 and v2 journal classes
+with an at-most-one-owner check, because the pinned v1 `admission-admitted` rows carry `ownerRef`
+(every class is tested); (bb) no cached or hosted step re-proves the committed live evidence (the
+Labs context is not required and the lab's Turbo inputs do not name the pin): the orchestrator
+re-runs `evidence:s7-live` and `evidence:lane-plan` at each phase and the PR body carries their
+check-mode lines, the same accepted limit as Ruling 2's; (cc) in the W6 core, `decodeHandoffView`
+takes `(path, text)` because `HandoffDecodeError` names the path, an unknown-lane precedence passed
+to `planLanes` is a defect (not reachable from `planEpisode`), and the digest decode is `orDie`
+(a byte array always digests); (dd) the stale generated module docs under `apps/labs/ciops/docs/` (git-ignored local output that
+no gate regenerates: labs are docgen-exempt) are removed from the lane rather than left describing
+the retired stub; (ee) `replayAdmissionJournal` was over the 60-line unit law before P2 and stays so after the
+skip rule moved to helpers; a pure-reducer split is a tracked follow-up, as is the
+`released_only_chains` rename from P1. Phase P2 is complete; PLAN, README and the manifest say so.
+Next: P3 auditor run 4 (W7), fed by the P1 pins and the P2 projection, under the Ruling 1 gate as
+amended by P1 Ruling 1.

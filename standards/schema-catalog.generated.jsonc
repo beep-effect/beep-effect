@@ -76,12 +76,100 @@
       "description": "Mode and rendered Markdown of a replay-evidence run that passed the differential replay."
     },
     {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "LiveEvidencePaths",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LiveEvidencePaths",
+      "description": "Repo root, repo-relative pinned inputs and the evidence path of one live replay run."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "LiveEvidenceRun",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LiveEvidenceRun",
+      "description": "Mode, typed summary and rendered Markdown of one live replay-evidence run."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "LiveEvidenceSummary",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LiveEvidenceSummary",
+      "description": "Live replay report beside the golden agreement recomputed in the same run."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/LanePlan.ts",
+      "symbol": "LanePrecedence",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LanePrecedence",
+      "description": "Provisional precedence from one handoff lane to the next; never a dependency claim."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "AttributedMismatch",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "AttributedMismatch",
+      "description": "Live replay disagreement with the checkout join that explains it, if any."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "Cq009Reading",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "Cq009Reading",
+      "description": "Count of replayed rows that precede #929 and the resulting CQ-009 temporal scope."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "Cq009Scope",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "Cq009Scope",
+      "description": "Whether any replayed row precedes the #929 cut that bounds CQ-009's temporal scope."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "CustodyCensus",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "CustodyCensus",
+      "description": "Live, surrogate and redacted row counts of one decoded admission journal."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "FirstChoiceAgreement",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "FirstChoiceAgreement",
+      "description": "Passing verdicts out of all admitted-row verdicts; integers, never a ratio."
+    },
+    {
       "file": "apps/labs/ciops/src/projection/Replay.ts",
       "symbol": "InferredLeaseEviction",
       "kind": "schema-class",
       "owner": "@beep/ciops",
       "identity": "InferredLeaseEviction",
       "description": "A never-released active grant evicted when a recorded admission proves its lease had died."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "LiveReplayReport",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LiveReplayReport",
+      "description": "Replay report over a live pin with agreement, attributions, censorship and custody census."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "MismatchAttribution",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "MismatchAttribution",
+      "description": "Diagnostic cause class of one live replay first-choice disagreement."
     },
     {
       "file": "apps/labs/ciops/src/projection/Replay.ts",
@@ -101,11 +189,50 @@
     },
     {
       "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "ReplayOptions",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "ReplayOptions",
+      "description": "Optional retained window for replaying a ring-trimmed live journal."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
       "symbol": "ReplayReport",
       "kind": "schema-class",
       "owner": "@beep/ciops",
       "identity": "ReplayReport",
       "description": "Event counts and first-choice verdicts from deterministic differential replay."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "ReplaySkippedRow",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "ReplaySkippedRow",
+      "description": "Release or lease eviction whose admission lies before the retained journal window."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "ReplayTerminalTag",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "ReplayTerminalTag",
+      "description": "Journal tags that release an active admission charge during replay."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "ReplayWindow",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "ReplayWindow",
+      "description": "Retained instants, pre-v3 chain count and pinned digests of one ring-trimmed journal."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Replay.ts",
+      "symbol": "ReplayWindowError",
+      "kind": "tagged-error",
+      "owner": "@beep/ciops",
+      "identity": "ReplayWindowError"
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",
@@ -125,11 +252,27 @@
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "AdmissionOwnerRefVariant",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "AdmissionOwnerRefVariant",
+      "description": "Process members hashed into a surrogate admission owner reference (run-3 Ruling 11)."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
       "symbol": "AdmissionPolicyParams",
       "kind": "schema-class",
       "owner": "@beep/ciops",
       "identity": "AdmissionPolicyParams",
       "description": "Ratified weighted-admission parameters decoded from the S6 policy A-Box."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "AdmissionRowCustody",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "AdmissionRowCustody",
+      "description": "Whether a journal row carries a live pid, a surrogate ownerRef, or neither."
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",
@@ -246,13 +389,6 @@
       "owner": "@beep/ciops",
       "identity": "PlanEpisodeInput",
       "description": "Caller-owned episode key plus the repo root and pinned handoff the lane planner reads."
-    },
-    {
-      "file": "apps/labs/ciops/src/projection/Schemas.ts",
-      "symbol": "PlannerNotImplementedError",
-      "kind": "tagged-error",
-      "owner": "@beep/ciops",
-      "identity": "PlannerNotImplementedError"
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",
