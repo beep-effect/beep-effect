@@ -89,6 +89,12 @@ const decodeReconciliationRows = S.decodeUnknownEffect(S.Array(GraphReconciliati
  * included is skipped whole, so its copies of organized files do not change
  * those files' size, date, or origin chain. An included run adds each of its
  * unorganized files once, flagged `runFolded`.
+ *
+ * An organized file reports the run, size, and date of the organizer's copy.
+ * When an included run holds the same file, that copy is ranked after every
+ * copy from a run that is not included, so it never takes the row over; it is
+ * the reported copy only when no other exists. The origin chain still lists
+ * every run and path, and is the relation to read for "which runs hold this".
  */
 const catalogRowsSql = `
 WITH included_runs AS (
@@ -99,6 +105,20 @@ skipped_runs AS (
   FROM corpus_source_files f
   WHERE NOT EXISTS (SELECT 1 FROM corpus_organized o WHERE o.digest = f.digest)
     AND NOT EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label)
+),
+ranked_copies AS (
+  SELECT
+    f.digest,
+    f.size_bytes,
+    f.mtime_iso,
+    f.run_label,
+    f.source_label,
+    f.relative_path,
+    f.run_label || ':' || f.source_label || ':' || f.relative_path AS origin,
+    CASE WHEN EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label) THEN 1 ELSE 0 END
+      AS included_rank
+  FROM corpus_source_files f
+  WHERE NOT EXISTS (SELECT 1 FROM skipped_runs k WHERE k.run_label = f.run_label)
 )
 SELECT
   o.digest,
@@ -120,12 +140,11 @@ FROM corpus_organized o
 LEFT JOIN (
   SELECT
     digest,
-    ARG_MIN(size_bytes, run_label || ':' || source_label || ':' || relative_path) AS size_bytes,
-    ARG_MIN(mtime_iso, run_label || ':' || source_label || ':' || relative_path) AS mtime_iso,
-    ARG_MIN(run_label, run_label || ':' || source_label || ':' || relative_path) AS run_label
-    ,STRING_AGG(run_label || ':' || source_label || ':' || relative_path, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
-  FROM corpus_source_files f
-  WHERE NOT EXISTS (SELECT 1 FROM skipped_runs k WHERE k.run_label = f.run_label)
+    ARG_MIN(size_bytes, included_rank || ':' || origin) AS size_bytes,
+    ARG_MIN(mtime_iso, included_rank || ':' || origin) AS mtime_iso,
+    ARG_MIN(run_label, included_rank || ':' || origin) AS run_label
+    ,STRING_AGG(origin, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
+  FROM ranked_copies
   GROUP BY digest
 ) s USING (digest)
 UNION ALL

@@ -197,6 +197,11 @@ not change those files' size, date, or origin chain. An included run adds:
 - its `staging/extract-<label>/` tree (`sources.jsonl` + `text/`), same layout
   as `staging/extract/`, as a text source.
 
+For a file the organizer placed, `run_label` is the run the organizer's copy
+came from and stays so when a later included run holds the same file; size and
+date follow the same copy. `source_origin_chain` lists every run and path the
+file appears in: read that, not `run_label`, to ask which runs hold a file.
+
 Each added row's source path is read with `extractPracticeKgPathEvidence`.
 Exactly one docket in the path becomes the row's docket and family, and the row
 is filed as a `docket` document so the reference scans read its text. Exactly

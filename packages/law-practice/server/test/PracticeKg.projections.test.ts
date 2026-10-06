@@ -461,7 +461,7 @@ const workingFiles = [
   // no client in the path or the text, and no other document in its family: the register may speak
   [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
   [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
-  // a second copy of an organized file adds no document
+  // a second copy of an organized file adds no document and does not take over its run, size, or date
   [fixtureDigests.family, "Loose files/family-notes copy.txt"],
 ] as const;
 
@@ -1198,10 +1198,19 @@ describe("practice KG projections", () => {
           const db = yield* DuckDb;
           const lines = (statement: string) =>
             db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
+          // An organized file that the included run also holds still reports the organizer's
+          // copy; the origin chain is where both runs show.
+          expect(
+            yield* lines(
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, size_bytes, mtime_iso, source_origin_chain FROM documents WHERE digest = '${fixtureDigests.family}') x`
+            )
+          ).toStrictEqual([
+            `{"run_label":"base","size_bytes":11,"mtime_iso":"2026-01-02T03:04:05.000Z","source_origin_chain":"${workingRun}:source-b:Loose files/family-notes copy.txt <- base:fixture-source:family-notes.txt"}`,
+          ]);
           // One docket in the path files the row under it; two leave it unsorted.
           expect(
             yield* lines(
-              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' AND digest <> '${fixtureDigests.family}' ORDER BY digest) x`
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' ORDER BY digest) x`
             )
           ).toStrictEqual([
             '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
