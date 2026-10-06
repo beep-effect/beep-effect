@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "m365-agent-outbox",
+    "packetId": "goal-packet/v1:799c30b692f48938eb2b307e025e0c3fe2d7c4a74348048b9b101c8e7d5c9055",
+    "title": "M365 Agent Outbox",
+    "status": "active",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/m365-agent-outbox",
+  "lifecycle": "active",
+  "mission": "Give agent sessions a firm-owned Microsoft 365 route that drafts mail, sends it with attachments, and writes calendar events, with every send explicit and audited.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/m365-agent-outbox/README.md",
+    "goals/m365-agent-outbox/SPEC.md",
+    "goals/m365-agent-outbox/PLAN.md",
+    "goals/m365-agent-outbox/GOAL.md",
+    "goals/m365-agent-outbox/research/SOURCES.md",
+    "docs/runbooks/m365-agent-outbox-registration.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/m365-agent-outbox/GOAL.md"
+    }
+  ],
+  "provides": ["m365/agent-outbox"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/m365-agent-outbox/GOAL.md)\" -le 4000",
+    "jq . goals/m365-agent-outbox/ops/manifest.json",
+    "rg -n \"m365-agent-outbox|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/m365-agent-outbox",
+    "git diff --check -- goals/m365-agent-outbox",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "dependsOn": ["goals/m365-driver", "goals/m365-mcp"]
+}

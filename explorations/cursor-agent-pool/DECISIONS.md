@@ -296,3 +296,22 @@ Models is the reason the floor exists.
 Shape and map confirmed by Benjamin. Goals: `goals/agent-pool-doctrine` (active) and
 `goals/agent-pool-picker` (paused, gated on A). Dogfood (D15) ran the same day: see
 `history/2026-09-16-goal-a-slice-lane.md`.
+
+## 2026-10-06 — Post-graduation housekeeping
+
+### D22 — Archive the duplicate fallback-chains lane
+
+**Decision.** The unpublished lane `model-defaults-fallback-chains` (branch
+`chore/model-defaults-fallback-chains`, 11 uncommitted files) was archived and removed with
+`bun run beep worktree remove model-defaults-fallback-chains --archive --delete-branch`.
+
+**Rationale.** A parallel session wrote it as a second copy of the 2026-10-01 model defaults and
+delegation policy. PR #1396 and its follow-up PR #1438 landed that policy, so the lane was fully
+superseded. Its only unlanded content, the edits bringing `goals/agent-pool-doctrine` GOAL, README,
+and SPEC to the 2026-10-01 chains, landed with this entry. The operator chose the archive at the
+closeout prompt, and the orchestrator session ruled the same way under the autonomy charter.
+
+**Reverse.** Restore the archive ref `refs/archive/worktrees/model-defaults-fallback-chains/20261006-030521`
+with `git worktree add <restore-path> <ref>`, then apply `tracked.patch` and copy `untracked/` back
+from the lane's residue directory under `$HOME/.cache/beep/worktree-residue/` on the workstation
+that ran the removal (the ref and residue are local to that machine).

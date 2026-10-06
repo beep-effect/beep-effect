@@ -10,6 +10,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Config, Console, Context, DateTime, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import {
@@ -17,13 +18,13 @@ import {
   repositoryJsonLinesFileName,
   resolveWorkstationStateDir,
 } from "../../internal/state/WorkstationState.ts";
+import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { SessionLedgerError } from "./Session.errors.ts";
-import { SessionLedgerRow, SessionLedgerRowJson } from "./Session.schemas.ts";
+import { SessionLedgerRow, SessionLedgerRowJson, SessionLedgerState } from "./Session.schemas.ts";
 import type { PlatformError } from "effect";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
-import type { PrNumber, PrProvenanceHarness, PrRepository } from "../Yeet/internal/Provenance.ts";
-import type { SessionLedgerState } from "./Session.schemas.ts";
+import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/SessionLedger.service");
 
@@ -66,6 +67,11 @@ export interface SessionLedgerShape {
  */
 export class SessionLedger extends Context.Service<SessionLedger, SessionLedgerShape>()($I`SessionLedger`) {}
 
+class DecodedSessionLedger extends S.Class<DecodedSessionLedger>($I`DecodedSessionLedger`)(
+  { rows: S.Array(SessionLedgerRow), corruptLineCount: S.Finite },
+  $I.annote("DecodedSessionLedger", { description: "Decoded session rows and count of corrupt JSON Lines entries." })
+) {}
+
 /**
  * Parse JSON Lines ledger content, keeping the rows that decode and counting
  * the non-empty lines that do not.
@@ -83,9 +89,7 @@ export class SessionLedger extends Context.Service<SessionLedger, SessionLedgerS
  * @category parsing
  * @since 0.0.0
  */
-export const decodeSessionLedger = (
-  content: string
-): { readonly rows: ReadonlyArray<SessionLedgerRow>; readonly corruptLineCount: number } => {
+export const decodeSessionLedger = (content: string): DecodedSessionLedger => {
   let rows = A.empty<SessionLedgerRow>();
   let corruptLineCount = 0;
   for (const line of A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty)) {
@@ -96,7 +100,7 @@ export const decodeSessionLedger = (
       corruptLineCount += 1;
     }
   }
-  return { rows, corruptLineCount };
+  return DecodedSessionLedger.make({ rows, corruptLineCount });
 };
 
 const mapPlatformError = (cause: PlatformError.PlatformError): SessionLedgerError =>
@@ -267,13 +271,21 @@ const gitLine = Effect.fn("SessionLedger.gitLine")(function* (cwd: string, args:
  * @category models
  * @since 0.0.0
  */
-export interface SessionCheckoutFacts {
-  readonly branch: string;
-  readonly checkout: string;
-  readonly clone: string;
-  readonly lane: string;
-  readonly repository: PrRepository;
-}
+export const SessionCheckoutFacts = S.Struct({
+  branch: S.String,
+  checkout: S.String,
+  clone: S.String,
+  lane: S.String,
+  repository: PrRepository,
+}).pipe($I.annoteSchema("SessionCheckoutFacts", { description: "Repository and checkout facts probed from Git." }));
+
+/**
+ * Repository and checkout facts probed from Git.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionCheckoutFacts = typeof SessionCheckoutFacts.Type;
 
 /**
  * Read the repository, owning clone, checkout, lane name, and branch of a
@@ -357,14 +369,24 @@ export const sessionHarness: Effect.Effect<{
  * @category models
  * @since 0.0.0
  */
-export interface SessionNoteInput {
-  readonly checkoutOverride?: O.Option<string>;
-  readonly cwd: string;
-  readonly next: string;
-  readonly pr: O.Option<PrNumber>;
-  readonly state: SessionLedgerState;
-  readonly summary: O.Option<string>;
-}
+export const SessionNoteInput = S.Struct({
+  checkoutOverride: S.String.pipe(S.Option, S.optionalKey),
+  cwd: S.String,
+  next: S.String,
+  pr: S.Option(PrNumber),
+  state: SessionLedgerState,
+  summary: S.Option(S.String),
+}).pipe(
+  $I.annoteSchema("SessionNoteInput", { description: "Session note input before checkout provenance is stamped." })
+);
+
+/**
+ * Session note input before checkout provenance is stamped.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionNoteInput = typeof SessionNoteInput.Type;
 
 /**
  * Stamp a ledger row with the checkout's facts, the harness identity, and the
@@ -436,8 +458,8 @@ export const noteSession = Effect.fn("SessionLedger.note")(function* (input: Ses
 
 /**
  * Record that a sweep finished a checkout's work. `executeSweep` calls this
- * for every entrypoint (`sweep`, `sweep --retire`, `merge`, `monitor
- * --until-merged`) once it has observed the pull request MERGED. Best
+ * for `sweep`, `sweep --retire`, `merge`, and `monitor --until-merged`
+ * once it has observed the pull request MERGED. Best
  * effort: a missing ledger, a non-GitHub origin, or an unreadable checkout
  * never fails the sweep.
  *

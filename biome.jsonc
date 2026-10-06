@@ -70,6 +70,8 @@
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3-checkout-identity",
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-fleet",
       "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run3b-synthetic",
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet",
+      "!explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger",
       "!**/modeling/html/data"
     ]
   },
