@@ -21,23 +21,17 @@ const fixture = Effect.fn("CacheDependenciesTest.fixture")(function* () {
 });
 
 describe("installed cache dependency integrity", () => {
-  it("roundtrips materialization evidence through its schema", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.schema(CacheDependencyMaterialization),
-          (value) => {
-            const codec = S.fromJsonString(CacheDependencyMaterialization);
-            const encoded = Result.getOrThrow(S.encodeResult(codec)(value));
-            const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
-            expect(S.toEquivalence(CacheDependencyMaterialization)(value, decoded)).toBe(true);
-            return true;
-          },
-          fcRuns(20)
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "roundtrips materialization evidence through its schema",
+    { value: Arbitrary.schema(CacheDependencyMaterialization) },
+    ({ value }) => {
+      const codec = S.fromJsonString(CacheDependencyMaterialization);
+      const encoded = Result.getOrThrow(S.encodeResult(codec)(value));
+      const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
+      expect(S.toEquivalence(CacheDependencyMaterialization)(value, decoded)).toBe(true);
+    },
+    { arbitrary: fcRuns(20) }
+  );
 
   it.effect("normalizes location and timestamps while detecting bytes, modes and entries", () =>
     Effect.gen(function* () {

@@ -883,8 +883,10 @@ describe("runner bake planning and argv", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
+        const caller = yield* fs.readFileString(path.join(repoRoot, ".cursor", "install.sh"));
         const script = yield* fs.readFileString(path.join(repoRoot, "scripts", "cloud", "bootstrap.sh"));
 
+        expect(caller).toContain('BEEP_CLOUD_VENDOR=cursor exec bash "${REPO_ROOT}/scripts/cloud/bootstrap.sh"');
         expect(script).not.toContain("https://bun.sh/install");
         expect(script).toContain(
           "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"

@@ -36,6 +36,7 @@ import type { DriftKind } from "@beep/repo-cli/commands/Models";
 const decodeUpstream = S.decodeEffect(UpstreamCatalog);
 const decodeCodex = S.decodeEffect(CodexModelsCache);
 const encodeReportJson = S.encodeUnknownEffect(S.fromJsonString(ModelsCheckReport));
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
 const decodeReport = S.decodeUnknownEffect(ModelsCheckReport);
@@ -158,6 +159,65 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         ),
         "gpt-6-astra"
       );
+    })
+  );
+
+  it.effect("checks the Claude effort through the bound model, never a literal pointer key", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const check = yield* ModelsCheck;
+      const root = yield* fs.makeTempDirectoryScoped({ directory: process.cwd(), prefix: ".models-check-effort-" });
+      const manifestPath = path.join(root, "models.yaml");
+      const settingsPath = path.join(root, "settings.json");
+      yield* fs.writeFileString(
+        manifestPath,
+        [
+          "version: beep-models/v1",
+          "bindings:",
+          "  - role: orchestrator",
+          "    surface: claude-code",
+          "    modelId: claude-opus-5",
+          "    effort: medium",
+          "targets:",
+          "  - id: claude.settings",
+          "    root: repo",
+          "    path: settings.json",
+          "    optional: false",
+          "    locators:",
+          "      - _tag: json-key",
+          "        binding: { role: orchestrator, surface: claude-code, field: effort }",
+          "        render: { _tag: verbatim }",
+          '        pointer: [modelSettings, "{model}", effortLevel]',
+          "        fallbacks: [[effortLevel]]",
+          "superseded: []",
+          "",
+        ].join("\n")
+      );
+      const effortFindings = Effect.fnUntraced(function* (settings: unknown) {
+        yield* fs.writeFileString(settingsPath, yield* encodeJsonText(settings));
+        const report = yield* check.run(
+          ModelsCheckOptions.make({ home: root, repo: root, manifestPath, offline: false })
+        );
+        return A.filter(report.findings, (entry) => entry.targetId === "claude.settings");
+      });
+
+      // The bound model's own entry is medium while the top-level effort is
+      // high. Reading through the binding passes; a check that skipped the
+      // binding would miss the literal `{model}` key, fall back to the
+      // top-level `high`, and report drift.
+      expect(
+        yield* effortFindings({ effortLevel: "high", modelSettings: { "claude-opus-5": { effortLevel: "medium" } } })
+      ).toHaveLength(0);
+
+      // The reverse: the bound model's entry is low while the top-level effort
+      // is medium. Only a check that reads the bound entry reports the drift.
+      const drift = yield* effortFindings({
+        effortLevel: "medium",
+        modelSettings: { "claude-opus-5": { effortLevel: "low" } },
+      });
+      expect(A.map(drift, (entry) => entry.kind)).toEqual(["stale"]);
+      assertSome(drift[0]!.current, "low");
     })
   );
 
@@ -285,7 +345,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       expect(A.map(restored.findings, (entry): DriftKind => entry.kind)).toEqual(
         A.map(report.findings, (entry): DriftKind => entry.kind)
       );
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("flags a proxy-workflow binding the answered proxy overlay omits", () =>
@@ -296,7 +356,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       // binding names a model this box cannot route on that surface — even
       // though the file already holds the id the manifest asks for.
       expect(kindsOf(report)).toEqual(["proxy.env:unknown-model"]);
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("seeds a manifest once and refuses to overwrite it", () =>
@@ -319,7 +379,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
 
       const second = yield* Effect.result(store.init(target, seedModelsManifest));
       strictEqual(second._tag, "Failure");
-    }).pipe(Effect.scoped)
+    })
   );
 });
 
@@ -335,13 +395,13 @@ const modelsWithoutProxy = Layer.mergeAll(
   FixtureCatalogSourcesWithoutProxy
 ).pipe(Layer.provide(platform));
 
-layer(Layer.mergeAll(platform, modelsWithoutProxy))((it) => {
+layer(Layer.mergeAll(platform, modelsWithoutProxy), { timeout: "30 seconds" })((it) => {
   it.effect("stays silent on a proxy-workflow binding when the proxy overlay is absent", () =>
     Effect.gen(function* () {
       const report = yield* runCheck("manifest-proxy.yaml");
 
       strictEqual(report.hasDrift, false);
       expect(A.map(report.findings, (entry) => entry.targetId)).not.toContain("proxy.env");
-    }).pipe(Effect.scoped)
+    })
   );
 });

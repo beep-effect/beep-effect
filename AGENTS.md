@@ -162,6 +162,37 @@ Runbook: `docs/runbooks/agent-pools.md`.
   relatives only for local helpers, fixtures, snapshots, and other
   non-`src` test files.
 
+## Autonomy
+
+Operator charter (2026-10-06): agents decide and keep moving; the operator is
+needed only for the escalation list below.
+
+- Escalate only money: purchases, new paid services or endpoints, quota
+  top-ups, plan changes. Everything else is agent-decided: record the call,
+  its reason and how to reverse it in the packet's `SPEC.md` Decision Log,
+  then continue. The operator reviews asynchronously and never blocks
+  progress.
+- Irreversible changes still need a safety net, not a person: land the
+  reversal path (tested down-migration, backup of deleted state) before the
+  change merges, and ship a breaking public API or schema change with a major
+  changeset.
+- A started goal runs to `completed-retained`: finish a phase and start the
+  next, through closeout and the reflection. Do not stop at a phase boundary
+  to ask permission.
+- Agents merge their own PRs once mergeable (see Quality Operator). An
+  orchestrator session may merge any PR that meets the same gate, and merges a
+  draft only after its owner calls it final.
+- Review loops stop after round 2: fix every P0/P1 in any round; from round 3,
+  answer P2-and-below threads with a tracked follow-up and resolve them
+  instead of pushing again.
+- Inherited reds: attribute first, fix them once on `main` (one small PR) and
+  tell dependent lanes to merge `main` once; do not copy the fix into each
+  lane. Cancel queued CI on PRs that must re-run anyway so the unblocking PR
+  gets runners.
+- One orchestrator session coordinates the rest: it routes threads, reds and
+  conflicts to the owning session, merges at the gate, and relays the
+  operator's answers. Sessions report blockers to it, not to the operator.
+
 ## Discovery & Reuse
 
 - Before recreating a shared helper, schema, utility, model, or known symbol,
@@ -392,6 +423,14 @@ If you touch this, load or run this first. Do not hand-author around it.
   option shapes: the `closeout` skill.
 - Direction-setting decisions go through `/grill-with-docs` first; the
   closeout prompt then carries the frontier's remaining questions.
+- Before the prompt, write the ledger row:
+  `bun run beep session note --state <open|blocked|done> --next "<one line>"
+  [--summary "<one line>"] [--pr <n>]`. It appends to the workstation ledger
+  (`~/.local/state/beep/sessions/<repo>.jsonl`), shared by every clone and
+  lane; a later note for the same checkout supersedes, and `yeet sweep` /
+  `yeet sweep --retire` write the `done` row themselves. At session start,
+  read `bun run beep session open` (the Claude SessionStart hook prints it;
+  Codex runs it) and offer the live rows as resume options.
 
 <!-- graft:start -->
 ## Graft — repo context graph

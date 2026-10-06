@@ -60,7 +60,7 @@ Sources: [Codex cloud environment configuration](https://learn.chatgpt.com/docs/
   `CODEX_ENV_*` variables. Setup script runs once with internet; optional
   maintenance script runs when a cached container resumes; the two run in
   separate shells from the agent, so exported PATH must be persisted via
-  `~/.bashrc`. Container cache lasts up to 12 h and invalidates when scripts,
+  the user's Bash startup file. Container cache lasts up to 12 h and invalidates when scripts,
   variables, or secrets change.
 - Agent-phase internet is **off by default**; presets None / Common
   dependencies (80+ registry domains) / All, with optional method restriction

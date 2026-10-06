@@ -718,6 +718,10 @@ export const Locator = LiteralKit([
       binding: LocatorBinding,
       render: LocatorRender,
       pointer: S.Array(S.String),
+      // Pointers read in order when `pointer` resolves to nothing, so a locator
+      // can follow a client's own precedence (Claude Code reads the per-model
+      // effort entry, else the top-level one).
+      fallbacks: S.String.pipe(S.Array, S.Array, S.withDecodingDefaultKey(Effect.succeed([]))),
     },
     "env-key": {
       binding: LocatorBinding,
