@@ -1756,7 +1756,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
         succeededCount: 2,
       });
       expect(brokenMarker).toBe(false);
-      expect(A.length(recordedRoutingKey)).toBe(64);
+      expect(Str.length(recordedRoutingKey)).toBe(64);
 
       // The engine failure is retried; the unrouted source is reused as settled.
       expect(Struct.pick(resumed, summaryCountKeys)).toEqual({
