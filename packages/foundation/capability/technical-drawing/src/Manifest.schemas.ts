@@ -25,7 +25,7 @@ const $I = $TechnicalDrawingId.create("Manifest.schemas");
  * console.log(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"))
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export const Sha256Hex = S.String.check(
@@ -53,7 +53,7 @@ export const Sha256Hex = S.String.check(
  * console.log(digest)
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export type Sha256Hex = typeof Sha256Hex.Type;
@@ -69,7 +69,7 @@ export type Sha256Hex = typeof Sha256Hex.Type;
  * console.log(EngineInfo.make({ name: "replicad", version: "1.1.0", binarySha256: "00" }))
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export class EngineInfo extends S.Class<EngineInfo>($I`EngineInfo`)(
@@ -98,7 +98,7 @@ export class EngineInfo extends S.Class<EngineInfo>($I`EngineInfo`)(
  * console.log(record.figure)
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export class FigureRecord extends S.Class<FigureRecord>($I`FigureRecord`)(
@@ -131,7 +131,7 @@ export class FigureRecord extends S.Class<FigureRecord>($I`FigureRecord`)(
  * console.log(OmissionProof.make({ omitted: "rear", shown: "front", relation: "identical", proven: true }))
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export class OmissionProof extends S.Class<OmissionProof>($I`OmissionProof`)(
@@ -170,7 +170,7 @@ export class OmissionProof extends S.Class<OmissionProof>($I`OmissionProof`)(
  * console.log(manifest.title)
  * ```
  *
- * @category manifest
+ * @category models
  * @since 0.0.0
  */
 export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(

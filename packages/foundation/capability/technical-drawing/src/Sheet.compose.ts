@@ -194,7 +194,7 @@ const r3 = (value: number): string => {
  * console.log(labelWidthPt({ text: "FIG. 1", capHeightPt: 12.76 }))
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const labelWidthPt = (input: { readonly text: string; readonly capHeightPt: number }): number =>
@@ -217,7 +217,7 @@ export const labelWidthPt = (input: { readonly text: string; readonly capHeightP
  * console.log(strokeLabel({ text: "1/8", x: 100, y: 100, capHeightPt: 12.76 }).length)
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const strokeLabel = (input: {
@@ -257,7 +257,7 @@ const polylinePath = (line: Polyline): string =>
  * console.log(viewExtents([[0, 0, 10, 5]]))
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const viewExtents = (
@@ -297,7 +297,7 @@ export const viewExtents = (
  * console.log(g.sight.left, g.figure.top)
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const sheetGeometry = (options: SheetOptions) => {
@@ -332,7 +332,7 @@ export const sheetGeometry = (options: SheetOptions) => {
  * console.log(commonScale({ views: [[[0, 0, 40, 30]], [[0, 0, 20, 60]]], options: SheetOptions.make({}) }))
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const commonScale = (input: {
@@ -367,7 +367,7 @@ export const commonScale = (input: {
  * console.log(svg.startsWith("<svg"))
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const composeSheet = (input: {

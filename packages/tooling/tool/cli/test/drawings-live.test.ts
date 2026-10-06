@@ -1,4 +1,3 @@
-import { spawnSync } from "node:child_process";
 import { PdfTools, SvgToPdfRequest } from "@beep/pdf-tools";
 import { FigureSetLive } from "@beep/repo-cli/commands/Drawings";
 import { FigureSet, RenderRequest, ValidationOptions } from "@beep/technical-drawing";
@@ -9,13 +8,44 @@ import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as S from "effect/Schema";
 
 // Live lane: renders the synthetic fixture through the real kernel, rsvg-convert, and
-// pdftoppm. Hosted runners do not install librsvg or poppler, so the suite skips without them.
-const hasTool = (name: string, versionFlag: string): boolean =>
-  spawnSync(name, [versionFlag], { stdio: "ignore" }).status === 0;
-const toolsPresent = hasTool("rsvg-convert", "--version") && hasTool("pdftoppm", "-v");
+// pdftoppm. Hosted runners do not install librsvg or poppler, so each test skips
+// explicitly when a tool is missing; other spawn failures stay failures.
+const toolPresent = (command: string, versionFlag: string) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const handle = yield* spawner.spawn(
+        ChildProcess.make(command, [versionFlag], { stdin: "ignore", stderr: "ignore", stdout: "ignore" })
+      );
+      return (yield* handle.exitCode) === 0;
+    })
+  ).pipe(
+    Effect.catchTag("PlatformError", (error) =>
+      error.reason._tag === "NotFound" ? Effect.succeed(false) : Effect.fail(error)
+    )
+  );
+
+const missingTool = Effect.gen(function* () {
+  if (!(yield* toolPresent("rsvg-convert", "--version"))) return O.some("rsvg-convert");
+  return (yield* toolPresent("pdftoppm", "-v")) ? O.none<string>() : O.some("pdftoppm");
+});
+
+const skipWithoutTools = (context: { readonly skip: (note?: string) => void }) =>
+  missingTool.pipe(
+    Effect.map((missing) =>
+      O.match(missing, {
+        onNone: () => false,
+        onSome: (tool) => {
+          context.skip(`Missing native prerequisite: ${tool} on PATH`);
+          return true;
+        },
+      })
+    )
+  );
 
 const Golden = S.fromJsonString(
   S.Struct({
@@ -40,41 +70,43 @@ const goldenPath = new URL("./fixtures/drawings/synthetic-bracket.golden.json", 
 
 const LiveLayer = Layer.mergeAll(FigureSetLive, PdfTools.makeLayer()).pipe(Layer.provideMerge(NodeServices.layer));
 
-describe.skipIf(!toolsPresent)("beep drawings live", () => {
+describe("beep drawings live", () => {
   it.layer(LiveLayer, { timeout: "180 seconds" })((it) => {
     it.effect(
       "renders the synthetic bracket to the committed goldens, byte-stable across two runs, validator clean",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const figureSet = yield* FigureSet;
-        const golden = yield* fs.readFileString(goldenPath).pipe(Effect.flatMap(decodeGolden));
-        const specPath = path.join(repoRoot, golden.spec);
-        const dir = yield* fs.makeTempDirectoryScoped();
-        const first = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "a") }));
-        const second = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "b") }));
-        expect(first.scale).toBe(golden.scale);
-        expect(first.model).toEqual(golden.model);
-        expect(
-          A.map(first.figures, (f) => ({
-            figure: f.figure,
-            view: f.view,
-            svgSha256: f.svgSha256,
-            visibleSegments: f.visibleSegments,
-          }))
-        ).toEqual(golden.figures);
-        expect(second.figures).toEqual(first.figures);
-        expect(second.pdfSha256).toBe(first.pdfSha256);
-        assertSome(
-          O.map(first.validation, (v) => [v.pageCount, v.findings.length]),
-          [8, 0]
-        );
-      })
+      (context) =>
+        Effect.gen(function* () {
+          if (yield* skipWithoutTools(context)) return;
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const figureSet = yield* FigureSet;
+          const golden = yield* fs.readFileString(goldenPath).pipe(Effect.flatMap(decodeGolden));
+          const specPath = path.join(repoRoot, golden.spec);
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const first = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "a") }));
+          const second = yield* figureSet.render(RenderRequest.make({ specPath, outputDir: path.join(dir, "b") }));
+          expect(first.scale).toBe(golden.scale);
+          expect(first.model).toEqual(golden.model);
+          expect(
+            A.map(first.figures, (f) => ({
+              figure: f.figure,
+              view: f.view,
+              svgSha256: f.svgSha256,
+              visibleSegments: f.visibleSegments,
+            }))
+          ).toEqual(golden.figures);
+          expect(second.figures).toEqual(first.figures);
+          expect(second.pdfSha256).toBe(first.pdfSha256);
+          assertSome(
+            O.map(first.validation, (v) => [v.pageCount, v.findings.length]),
+            [8, 0]
+          );
+        })
     );
 
-    it.effect(
-      "shades the synthetic bracket deterministically, perspectives only, validator clean",
-      Effect.fnUntraced(function* () {
+    it.effect("shades the synthetic bracket deterministically, perspectives only, validator clean", (context) =>
+      Effect.gen(function* () {
+        if (yield* skipWithoutTools(context)) return;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const figureSet = yield* FigureSet;
@@ -100,9 +132,9 @@ describe.skipIf(!toolsPresent)("beep drawings live", () => {
       })
     );
 
-    it.effect(
-      "flags a margin violation, a gray stroke, and a PDF 1.7 header",
-      Effect.fnUntraced(function* () {
+    it.effect("flags a margin violation, a gray stroke, and a PDF 1.7 header", (context) =>
+      Effect.gen(function* () {
+        if (yield* skipWithoutTools(context)) return;
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const figureSet = yield* FigureSet;

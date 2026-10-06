@@ -33,7 +33,7 @@ const encoder = new TextEncoder();
  * console.log(ConfirmationSource.cases.email.make({ messageId: "AAMk" })._tag)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export const ConfirmationSource = S.Union([
@@ -66,7 +66,7 @@ export const ConfirmationSource = S.Union([
  * console.log(source._tag)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export type ConfirmationSource = typeof ConfirmationSource.Type;
@@ -88,7 +88,7 @@ export type ConfirmationSource = typeof ConfirmationSource.Type;
  * console.log(request.source._tag)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export class SignRequest extends S.Class<SignRequest>($I`SignRequest`)(
@@ -119,7 +119,7 @@ export class SignRequest extends S.Class<SignRequest>($I`SignRequest`)(
  * console.log(service)
  * ```
  *
- * @category approval
+ * @category services
  * @since 0.0.0
  */
 export interface SheetSetApprovalShape {
@@ -250,7 +250,7 @@ const makeService = Effect.fn("SheetSetApproval.makeService")(function* () {
  * console.log(SheetSetApproval)
  * ```
  *
- * @category approval
+ * @category services
  * @since 0.0.0
  */
 export class SheetSetApproval extends Context.Service<SheetSetApproval, SheetSetApprovalShape>()($I`SheetSetApproval`) {

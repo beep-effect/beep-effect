@@ -25,7 +25,7 @@ const SheetFormatBase = LiteralKit(["letter", "a4"]);
  * console.log(SheetFormat.literals)
  * ```
  *
- * @category sheets
+ * @category models
  * @since 0.0.0
  */
 export const SheetFormat = SheetFormatBase.pipe(
@@ -47,7 +47,7 @@ export const SheetFormat = SheetFormatBase.pipe(
  * console.log(format)
  * ```
  *
- * @category sheets
+ * @category models
  * @since 0.0.0
  */
 export type SheetFormat = typeof SheetFormat.Type;
@@ -72,7 +72,7 @@ const PositiveFinite = S.Finite.check(
  * console.log(PT_PER_CM * 2.5) // top margin in points
  * ```
  *
- * @category sheets
+ * @category constants
  * @since 0.0.0
  */
 export const PT_PER_CM = 72 / 2.54;
@@ -88,7 +88,7 @@ export const PT_PER_CM = 72 / 2.54;
  * console.log(PT_PER_MM * 0.35) // 0.35 mm line in points
  * ```
  *
- * @category sheets
+ * @category constants
  * @since 0.0.0
  */
 export const PT_PER_MM = PT_PER_CM / 10;
@@ -104,7 +104,7 @@ export const PT_PER_MM = PT_PER_CM / 10;
  * console.log(PagePoints.make({ width: 612, height: 792 }))
  * ```
  *
- * @category sheets
+ * @category models
  * @since 0.0.0
  */
 export class PagePoints extends S.Class<PagePoints>($I`PagePoints`)(
@@ -134,7 +134,7 @@ const PageSizePt = Fn({ input: SheetFormat, output: PagePoints }).pipe(
  * console.log(pageSizePt("letter"))
  * ```
  *
- * @category sheets
+ * @category utilities
  * @since 0.0.0
  */
 export const pageSizePt: (format: SheetFormat) => PagePoints = PageSizePt.implementSync((format) =>
@@ -155,7 +155,7 @@ export const pageSizePt: (format: SheetFormat) => PagePoints = PageSizePt.implem
  * console.log(MARGINS_CM.top, MARGINS_CM.bottom)
  * ```
  *
- * @category sheets
+ * @category constants
  * @since 0.0.0
  */
 export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as const;
@@ -171,7 +171,7 @@ export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as co
  * console.log(MIN_LETTER_HEIGHT_CM)
  * ```
  *
- * @category sheets
+ * @category constants
  * @since 0.0.0
  */
 export const MIN_LETTER_HEIGHT_CM = 0.32;
@@ -188,7 +188,7 @@ export const MIN_LETTER_HEIGHT_CM = 0.32;
  * console.log(options.format, options.lineWeightMm, options.letterHeightCm)
  * ```
  *
- * @category sheets
+ * @category models
  * @since 0.0.0
  */
 export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
@@ -254,9 +254,12 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
         message: "Expected a minimum shading pitch of at least 0.5 mm",
       })
     ).pipe(
-      S.withConstructorDefault(Effect.succeed(0.8)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(0.8)),
-      S.annotateKey({ description: "Line pitch on the darkest faces, in mm on the sheet. Defaults to 0.8." })
+      S.withConstructorDefault(Effect.succeed(1.2)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(1.2)),
+      S.annotateKey({
+        description:
+          "Line pitch on the darkest faces, in mm on the sheet. Defaults to 1.2, which stays open at two-thirds reduction (judge round 1, R1-02).",
+      })
     ),
     shadingMaxPitchMm: S.Finite.check(
       S.isGreaterThanOrEqualTo(0.5, {

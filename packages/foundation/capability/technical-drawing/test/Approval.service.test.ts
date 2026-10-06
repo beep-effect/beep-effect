@@ -161,8 +161,11 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         assertInstanceOf(record, ApprovalRecord);
         expect(record.confirmationLocator).toBe("<approved@example.com>");
         expect(record.matchedAddress).toBe("attorney@example.com");
+        // written and re-read: the stored event decodes back to the returned record
         const written = yield* fs.readFileString(path.join(dir, "approval.json"));
-        expect(written).toContain(pdfSha256);
+        const reread = yield* S.decodeEffect(S.fromJsonString(ApprovalRecord))(written);
+        expect(reread).toEqual(record);
+        expect(reread.sheetSetSha256).toBe(pdfSha256);
       })
     );
 

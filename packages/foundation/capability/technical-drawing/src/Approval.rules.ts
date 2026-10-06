@@ -43,7 +43,7 @@ const isBoundary = (line: string): boolean => A.some(BOUNDARY_PATTERNS, (pattern
  * console.log(textLines("a  \r\n  b\n")) // ["a", "  b", ""]
  * ```
  *
- * @category approval
+ * @category utilities
  * @since 0.0.0
  */
 export const textLines = (text: string): ReadonlyArray<string> =>
@@ -60,7 +60,7 @@ export const textLines = (text: string): ReadonlyArray<string> =>
  * console.log(authoredLines("Approved.\n\nOn Mon, A wrote:\n> request"))
  * ```
  *
- * @category approval
+ * @category utilities
  * @since 0.0.0
  */
 export const authoredLines = (text: string): ReadonlyArray<string> =>
@@ -69,7 +69,7 @@ export const authoredLines = (text: string): ReadonlyArray<string> =>
 /**
  * The outcome of verifying a confirmation.
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export type ConfirmationCheck = Result.Result<
@@ -111,7 +111,7 @@ const statementCheck = (text: string, statement: string, scoped: boolean): O.Opt
  * console.log(verifyConfirmation({ sheetSetSha256: hash, approver: EmailAddress.make("a@b.co"), confirmation: reply }))
  * ```
  *
- * @category approval
+ * @category utilities
  * @since 0.0.0
  */
 export const verifyConfirmation = (input: {

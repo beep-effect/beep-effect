@@ -75,3 +75,18 @@
   config-sync, cache baseline re-record against the current basis) that runs before any push
   touching a `package.json` or a basis changeset; or the cheap-gates preflight failing fast on
   the fingerprint before the push.
+
+## 2026-10-06 — replicad's typings pull DOM globals into every consumer's program
+
+- **Doing:** making Heavy / Check (`beep quality test-tsgo`) green on #1439.
+- **Evidence:** `tsgo -p test/tsconfig.json --explainFiles` in `packages/tooling/tool/cli`:
+  `lib.dom.d.ts — Library referenced via 'dom' from file node_modules/@types/opentype.js/index.d.ts`.
+  `replicad.d.ts` imports `opentype.js` types, and `@types/opentype.js` declares `/// <reference lib="dom" />`.
+  Compiling `@beep/occt` source in the CLI program therefore adds DOM, and an unrelated test
+  (`match-person-model-store.test.ts:65`) failed TS2345 on DOM's `BodyInit` vs `Uint8Array<ArrayBufferLike>`.
+  It was clean on `origin/main` (`2f2426b695`) with the same tool.
+- **Cost:** a clean-`main` probe worktree, a file-list diff, and a fix in a file the lane does not own (narrowed to
+  `Uint8Array<ArrayBuffer>`, which satisfies both Bun's and DOM's `BodyInit`).
+- **Would have prevented it:** keeping `replicad` types behind `@beep/occt`'s package boundary (a local
+  declaration of the small replicad surface the kernel uses), or a repo lint that flags any dependency whose
+  typings add `reference lib="dom"` to a `lib: ["ESNext"]` package.

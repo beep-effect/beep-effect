@@ -43,7 +43,7 @@ const ViewNameBase = LiteralKit([
  * console.log(ViewName.literals.length)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export const ViewName = ViewNameBase.pipe(
@@ -65,7 +65,7 @@ export const ViewName = ViewNameBase.pipe(
  * console.log(view)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export type ViewName = typeof ViewName.Type;
@@ -86,7 +86,7 @@ const orthographic = (eye: Vec3, up: Vec3) => Camera.make({ eye, up });
  * console.log(isPerspectiveView("top-perspective"), isPerspectiveView("front"))
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export const isPerspectiveView = S.is(ViewName.pick(["top-perspective", "bottom-perspective"]));
@@ -102,7 +102,7 @@ export const isPerspectiveView = S.is(ViewName.pick(["top-perspective", "bottom-
  * console.log(CameraForViewInput.make({ view: "front", box: BoundingBox.make({ min: [0, 0, 0], max: [1, 1, 1] }) }).view)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export class CameraForViewInput extends S.Class<CameraForViewInput>($I`CameraForViewInput`)(
@@ -139,7 +139,7 @@ const CameraForView = Fn({ input: CameraForViewInput, output: Camera }).pipe(
  * console.log(cameraForView({ view: "front", box }).focus, cameraForView({ view: "top-perspective", box }).focus)
  * ```
  *
- * @category views
+ * @category utilities
  * @since 0.0.0
  */
 export const cameraForView: (input: CameraForViewInput) => Camera = CameraForView.implementSync(({ view, box }) =>
@@ -178,7 +178,7 @@ const perspective = (box: BoundingBox, zSign: 1 | -1): Camera => {
  * console.log(fig.view)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export class FigureSpec extends S.Class<FigureSpec>($I`FigureSpec`)(
@@ -211,7 +211,7 @@ const OmissionRelationBase = LiteralKit(["identical", "mirror"]);
  * console.log(OmissionRelation.literals)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export const OmissionRelation = OmissionRelationBase.pipe(
@@ -233,7 +233,7 @@ export const OmissionRelation = OmissionRelationBase.pipe(
  * console.log(relation)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export type OmissionRelation = typeof OmissionRelation.Type;
@@ -250,7 +250,7 @@ export type OmissionRelation = typeof OmissionRelation.Type;
  * console.log(OmissionClaim.make({ omitted: "rear", shown: "front", relation: "identical" }))
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export class OmissionClaim extends S.Class<OmissionClaim>($I`OmissionClaim`)(
@@ -289,7 +289,7 @@ const viewsAreUnique = (figures: ReadonlyArray<FigureSpec>): boolean =>
  * console.log(spec.figures.length)
  * ```
  *
- * @category views
+ * @category models
  * @since 0.0.0
  */
 export class FigureSetSpec extends S.Class<FigureSetSpec>($I`FigureSetSpec`)(

@@ -1,0 +1,20 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        { "eventIds": [], "kind": "sheet", "path": "sheets/fig-1.png" }
+      ],
+      "fix": "Cylindrical-face shading in the generator, or the vendor shading pass for curved articles.",
+      "id": "R2-01",
+      "lens": "shading-legibility",
+      "repro": "Compare the peg in FIG. 1 with the hatched faces around it.",
+      "severity": "P2",
+      "title": "Peg cylinder wall is still unshaded in FIG. 1 (carried from R1-01); the planar-only generator cannot shade it"
+    }
+  ],
+  "judge": { "effort": "inherited", "model": "claude-opus-5-5" },
+  "requiredCount": 0,
+  "round": 2,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "../../manifest.json"
+}

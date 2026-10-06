@@ -11,21 +11,21 @@
  * Pure confirmation verification for sheet-set approval.
  *
  * @since 0.0.0
- * @category approval
+ * @category models
  */
 export * from "./Approval.rules.ts";
 /**
  * Sheet-set approval domain.
  *
  * @since 0.0.0
- * @category approval
+ * @category models
  */
 export * from "./Approval.schemas.ts";
 /**
  * Sheet-set approval service.
  *
  * @since 0.0.0
- * @category approval
+ * @category models
  */
 export * from "./Approval.service.ts";
 /**
@@ -39,35 +39,35 @@ export * from "./FigureSet.service.ts";
  * Geometry vocabulary: model, primitives, cameras, projected segments.
  *
  * @since 0.0.0
- * @category geometry
+ * @category models
  */
 export * from "./Geometry.schemas.ts";
 /**
  * Canonical segment forms for view comparison.
  *
  * @since 0.0.0
- * @category geometry
+ * @category models
  */
 export * from "./Geometry.segments.ts";
 /**
  * Render manifest schemas.
  *
  * @since 0.0.0
- * @category manifest
+ * @category models
  */
 export * from "./Manifest.schemas.ts";
 /**
  * Sheet composition.
  *
  * @since 0.0.0
- * @category sheets
+ * @category models
  */
 export * from "./Sheet.compose.ts";
 /**
  * Sheet rules and options.
  *
  * @since 0.0.0
- * @category sheets
+ * @category models
  */
 export * from "./Sheet.schemas.ts";
 /**
@@ -102,6 +102,6 @@ export * from "./Validation.schemas.ts";
  * View domain and figure-set spec.
  *
  * @since 0.0.0
- * @category views
+ * @category models
  */
 export * from "./View.schemas.ts";

@@ -105,6 +105,18 @@ product slice and the operator command lives in the tooling CLI.
 | --- | --- | --- | --- |
 | 2026-10-05 | Target Surfaces: pipeline schemas/services move from `packages/law-practice/*` to the new `@beep/technical-drawing` foundation capability; law-practice keeps only Matter-bound meaning | Operator (asked in session, answered "foundation/capability package") | `standards/ARCHITECTURE.md` (source 3) outranks this spec (source 4): tooling packages never depend on product slices, and no tooling package does today; a ledgered exception and a non-`beep` command were the rejected alternatives |
 
+## Decision Log
+
+Recorded under the operator autonomy charter (AGENTS.md "Autonomy", PR #1448; relayed by the
+orchestrator 2026-10-06): decide, record the reason and how to reverse, keep going.
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-06 | PR #1439 is final for the code of both slices and flips ready once its head is green apart from inherited reds. | Every code criterion is met on the synthetic fixture: eight sheets, byte-stable across two runs; validator negatives; shaded sheets clean; judge inventory schema-valid; sign-off written and re-read; all six refusal cases plus the recorded-reply positive. The live-matter render produces no repository diff beyond a validator-report hash, so holding the code back does not advance it. | `gh pr ready 1439 --undo` before merge; after merge, a follow-up PR. |
+| 2026-10-06 | The live matter's sheets stay the goal's open acceptance item, delivered later as an operational step: spec, renders, and sign-off under `BEEP_OPPOLD_CORPUS_ROOT`, plus one small PR adding the validator-report hash to `history/`. | The inputs are physical (caliper dimensions, photos saved under the corpus root) and cannot be produced by an agent. Inventing dimensions would make the figures wrong and the filing defective. | None needed; the item closes when the inputs arrive. |
+| 2026-10-06 | Shading covers planar faces only. Cylindrical-face shading is a tracked follow-up; drawing-judge round 2 finding R2-01 (P2) is carried rather than fixed. | The exploration decision scopes the generator to planar faces. The charter stops review loops after round 2, with P2 findings becoming follow-ups. The vendor shading-only pass remains the filing fallback for curved articles. | Implement cylinder hatching in `@beep/occt` `internal/shading.ts` and re-run the judge. |
+| 2026-10-06 | Default minimum shading pitch is 1.2 mm, not 0.8 mm. | Drawing-judge round 1 finding R1-02 (P2): at 0.8 mm the largest dark face approached a solid tone, and it would close up at two-thirds reduction. Round 2 confirmed the fix. | `SheetOptions.shadingMinPitchMm` default; the goldens' `shadedSegments` move with it. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

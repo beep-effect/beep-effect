@@ -1,5 +1,15 @@
-import { diffJudgeRubricLenses, JudgeRubricDrift, lintJudgeRubricCommand } from "@beep/repo-cli/commands/Lint";
-import { JUDGE_PROMPT_TEMPLATE, QaLens } from "@beep/repo-cli/commands/Qa";
+import {
+  diffJudgeRubricFamily,
+  diffJudgeRubricLenses,
+  JudgeRubricDrift,
+  lintJudgeRubricCommand,
+} from "@beep/repo-cli/commands/Lint";
+import {
+  BrowserQaLens,
+  DRAWING_JUDGE_PROMPT_TEMPLATE,
+  DrawingQaLens,
+  JUDGE_PROMPT_TEMPLATE,
+} from "@beep/repo-cli/commands/Qa";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -29,7 +39,7 @@ const syncedPrompt = [
   "## Lenses",
   "",
   `Use EXACTLY these \`lens\` slugs: ${A.join(
-    A.map(QaLens.literals, (lens) => `\`${lens}\``),
+    A.map(BrowserQaLens.literals, (lens) => `\`${lens}\``),
     ", "
   )}.`,
   "",
@@ -69,7 +79,18 @@ describe("commands/Lint JudgeRubric lens drift", () => {
 
   it("reports every schema lens missing when the Lenses heading is absent", () => {
     const drift = diffJudgeRubricLenses("# Judge\n\nNo lens section here.\n");
-    expect(drift.missingFromPrompt).toEqual([...QaLens.literals]);
+    expect(drift.missingFromPrompt).toEqual([...BrowserQaLens.literals]);
+  });
+
+  it("treats a lens from another rubric family as drift", () => {
+    const withDrawingLens = syncedPrompt.replace(
+      "## Output contract",
+      "Also grade `view-agreement`.\n\n## Output contract"
+    );
+    expect(diffJudgeRubricLenses(withDrawingLens).unknownInPrompt).toEqual(["view-agreement"]);
+    expect(diffJudgeRubricFamily({ prompt: syncedPrompt, family: DrawingQaLens.literals }).missingFromPrompt).toEqual([
+      ...DrawingQaLens.literals,
+    ]);
   });
 
   it.effect("rejects unknown values in the missing-lens domain", () =>
@@ -128,6 +149,19 @@ describe("commands/Lint JudgeRubric lens drift", () => {
       const root = yield* findRepoRoot();
       const prompt = yield* fs.readFileString(path.join(root, JUDGE_PROMPT_TEMPLATE));
       const drift = diffJudgeRubricLenses(prompt);
+      expect(drift.missingFromPrompt).toEqual([]);
+      expect(drift.unknownInPrompt).toEqual([]);
+    }, provideScopedLayer(PlatformLayer))
+  );
+
+  it.effect(
+    "the shipped drawing judge prompt and the DrawingQaLens family are in sync",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* findRepoRoot();
+      const prompt = yield* fs.readFileString(path.join(root, DRAWING_JUDGE_PROMPT_TEMPLATE));
+      const drift = diffJudgeRubricFamily({ prompt, family: DrawingQaLens.literals });
       expect(drift.missingFromPrompt).toEqual([]);
       expect(drift.unknownInPrompt).toEqual([]);
     }, provideScopedLayer(PlatformLayer))

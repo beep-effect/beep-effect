@@ -73,7 +73,12 @@ export * from "./internal/SchemaParityCodemodLiteralKitRule.ts";
  * @category cli-commands
  * @since 0.0.0
  */
-export { diffJudgeRubricLenses, JudgeRubricDrift, lintJudgeRubricCommand } from "./JudgeRubric.ts";
+export {
+  diffJudgeRubricFamily,
+  diffJudgeRubricLenses,
+  JudgeRubricDrift,
+  lintJudgeRubricCommand,
+} from "./JudgeRubric.ts";
 /**
  * Public lint command export.
  *

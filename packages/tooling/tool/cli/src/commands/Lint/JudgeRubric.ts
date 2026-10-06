@@ -23,7 +23,13 @@ import { Console, Effect, FileSystem, flow, HashSet, Order, Path, pipe } from "e
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { JUDGE_PROMPT_TEMPLATE, QaLens } from "../Qa/index.ts";
+import {
+  BrowserQaLens,
+  DRAWING_JUDGE_PROMPT_TEMPLATE,
+  DrawingQaLens,
+  JUDGE_PROMPT_TEMPLATE,
+  QaLens,
+} from "../Qa/index.ts";
 
 const $I = $RepoCliId.create("commands/Lint/JudgeRubric");
 
@@ -76,7 +82,7 @@ export class JudgeRubricDrift extends S.Class<JudgeRubricDrift>($I`JudgeRubricDr
 ) {}
 
 /**
- * Diff the judge prompt's Lenses section against the `QaLens` literal domain.
+ * Diff a judge prompt's Lenses section against one `QaLens` family.
  *
  * **Details**
  *
@@ -89,61 +95,98 @@ export class JudgeRubricDrift extends S.Class<JudgeRubricDrift>($I`JudgeRubricDr
  * **Example** (Detect a drifted lens)
  *
  * ```ts
+ * import { diffJudgeRubricFamily } from "@beep/repo-cli/commands/Lint"
+ * import { DrawingQaLens } from "@beep/repo-cli/commands/Qa"
+ *
+ * const drift = diffJudgeRubricFamily({ prompt: "## Lenses\n\nUse `drag-ghost`.\n", family: DrawingQaLens.literals })
+ * console.log(drift.unknownInPrompt) // [ "drag-ghost" ]
+ * ```
+ *
+ * @param input - The prompt text and the lens family it must name exactly.
+ * @returns The drift between the prompt's lens list and the family.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const diffJudgeRubricFamily = (input: {
+  readonly prompt: string;
+  readonly family: ReadonlyArray<QaLens>;
+}): JudgeRubricDrift => {
+  const promptTokens = promptLensTokens(input.prompt);
+  const familyLenses = HashSet.fromIterable(input.family);
+  return JudgeRubricDrift.make({
+    missingFromPrompt: A.filter(input.family, (lens) => !HashSet.has(promptTokens, lens)),
+    unknownInPrompt: pipe(
+      A.fromIterable(promptTokens),
+      A.filter((token) => !HashSet.has(familyLenses, token) && !HashSet.has(PROMPT_META_TOKENS, token)),
+      A.sort(Order.String)
+    ),
+  });
+};
+
+/**
+ * Diff the browser judge prompt's Lenses section against the browser lens family.
+ *
+ * **Example** (Detect a drifted lens)
+ *
+ * ```ts
  * import { diffJudgeRubricLenses } from "@beep/repo-cli/commands/Lint"
  *
  * const drift = diffJudgeRubricLenses("## Lenses\n\nUse `made-up-lens` only.\n\n## Output contract\n")
  * console.log(drift.unknownInPrompt) // [ "made-up-lens" ]
  * ```
  *
- * @param prompt - Full judge prompt template text.
- * @returns The drift between the prompt's lens list and the schema domain.
+ * @param prompt - Full browser judge prompt template text.
+ * @returns The drift between the prompt's lens list and `BrowserQaLens`.
  * @category utilities
  * @since 0.0.0
  */
-export const diffJudgeRubricLenses = (prompt: string): JudgeRubricDrift => {
-  const promptTokens = promptLensTokens(prompt);
-  const schemaLenses = HashSet.fromIterable(QaLens.literals);
-  return JudgeRubricDrift.make({
-    missingFromPrompt: A.filter(QaLens.literals, (lens) => !HashSet.has(promptTokens, lens)),
-    unknownInPrompt: pipe(
-      A.fromIterable(promptTokens),
-      A.filter((token) => !HashSet.has(schemaLenses, token) && !HashSet.has(PROMPT_META_TOKENS, token)),
-      A.sort(Order.String)
-    ),
-  });
-};
+export const diffJudgeRubricLenses = (prompt: string): JudgeRubricDrift =>
+  diffJudgeRubricFamily({ prompt, family: BrowserQaLens.literals });
 
-const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
+// Each rubric prompt is bound to its own lens family; a lens from another
+// family in a prompt is drift.
+const RUBRICS = [
+  { template: JUDGE_PROMPT_TEMPLATE, family: BrowserQaLens.literals },
+  { template: DRAWING_JUDGE_PROMPT_TEMPLATE, family: DrawingQaLens.literals },
+] as const;
+
+const lintOneRubric = Effect.fn("lintOneRubric")(function* (
+  repoRoot: string,
+  rubric: { readonly template: string; readonly family: ReadonlyArray<QaLens> }
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot();
-  const templatePath = path.join(repoRoot, JUDGE_PROMPT_TEMPLATE);
+  const templatePath = path.join(repoRoot, rubric.template);
   const prompt = yield* fs.readFileString(templatePath).pipe(
     Effect.catch((error) => {
       const message = `[lint:judge-rubric] failed to read ${templatePath}: ${error.message}`;
       return Console.error(message).pipe(Effect.andThen(failWithReportedExit(message, 2)));
     })
   );
-  const drift = diffJudgeRubricLenses(prompt);
-  const violationCount = A.length(drift.missingFromPrompt) + A.length(drift.unknownInPrompt);
+  const drift = diffJudgeRubricFamily({ prompt, family: rubric.family });
+  for (const lens of drift.missingFromPrompt) {
+    yield* Console.error(
+      `${rubric.template} [missing-from-prompt] QaLens "${lens}" is never named in the Lenses section.`
+    );
+  }
+  for (const token of drift.unknownInPrompt) {
+    yield* Console.error(
+      `${rubric.template} [unknown-in-prompt] "${token}" is not a lens of this rubric; inventories citing it fail.`
+    );
+  }
+  return A.length(drift.missingFromPrompt) + A.length(drift.unknownInPrompt);
+});
 
+const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
+  const repoRoot = yield* findRepoRoot();
+  const counts = yield* Effect.forEach(RUBRICS, (rubric) => lintOneRubric(repoRoot, rubric));
+  const violationCount = A.reduce(counts, 0, (sum, n) => sum + n);
   if (violationCount > 0) {
     yield* Console.error(`[lint:judge-rubric] found ${violationCount} lens drift violation(s).`);
-    for (const lens of drift.missingFromPrompt) {
-      yield* Console.error(
-        `${JUDGE_PROMPT_TEMPLATE} [missing-from-prompt] QaLens "${lens}" is never named in the Lenses section.`
-      );
-    }
-    for (const token of drift.unknownInPrompt) {
-      yield* Console.error(
-        `${JUDGE_PROMPT_TEMPLATE} [unknown-in-prompt] "${token}" is not a QaLens literal; inventories citing it fail decode.`
-      );
-    }
-    return yield* failWithReportedExit("lint judge-rubric: judge prompt and QaLens schema have drifted.");
+    return yield* failWithReportedExit("lint judge-rubric: a judge prompt and its QaLens family have drifted.");
   }
-
   yield* Console.log(
-    `[lint:judge-rubric] OK: all ${A.length(QaLens.literals)} QaLens lenses are named in ${JUDGE_PROMPT_TEMPLATE} and no unknown lens tokens appear.`
+    `[lint:judge-rubric] OK: every rubric prompt names exactly its QaLens family (${A.length(QaLens.literals)} lenses across ${A.length(RUBRICS)} rubrics).`
   );
 });
 
@@ -162,5 +205,5 @@ const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
  * @since 0.0.0
  */
 export const lintJudgeRubricCommand = Command.make("judge-rubric", {}, runLintJudgeRubric).pipe(
-  Command.withDescription("Check the browser-qa-loop judge prompt lens list against the QaLens schema")
+  Command.withDescription("Check each judge prompt's lens list against its QaLens family (browser and drawing rubrics)")
 );

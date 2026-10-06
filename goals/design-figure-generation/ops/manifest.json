@@ -66,12 +66,12 @@
     {
       "id": "P3",
       "name": "Slice 2: shading, judge rubric, sign-off",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P5",

@@ -207,6 +207,23 @@ const mailFromM365 = Effect.fn("DrawingsLayer.mailFromM365")(function* () {
 });
 
 /**
+ * Mail-reader port over any `@beep/m365` service: maps the plain-text
+ * authored portion of a reply into an `EmailConfirmation`.
+ *
+ * **Example** (Reference the layer)
+ *
+ * ```ts
+ * import { MailReaderFromM365 } from "@beep/repo-cli/commands/Drawings"
+ *
+ * console.log(MailReaderFromM365)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const MailReaderFromM365: Layer.Layer<MailReader, never, M365> = Layer.effect(MailReader, mailFromM365());
+
+/**
  * Mail-reader port served by `@beep/m365` (`M365_TENANT_ID`, `M365_CLIENT_ID`).
  *
  * **Example** (Reference the layer)
@@ -220,7 +237,7 @@ const mailFromM365 = Effect.fn("DrawingsLayer.mailFromM365")(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const MailReaderM365Live: Layer.Layer<MailReader, M365Error> = Layer.effect(MailReader, mailFromM365()).pipe(
+export const MailReaderM365Live: Layer.Layer<MailReader, M365Error> = MailReaderFromM365.pipe(
   Layer.provide(M365.layer)
 );
 

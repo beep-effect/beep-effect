@@ -80,6 +80,22 @@ export const JUDGE_PER_FILE_BUDGET_BYTES = 400 * 1024;
 export const JUDGE_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/resources/judge-prompt.md";
 
 /**
+ * Repo-relative path of the design-figure drawing judge prompt.
+ *
+ * **Example** (Read the template path)
+ *
+ * ```ts
+ * import { DRAWING_JUDGE_PROMPT_TEMPLATE } from "@beep/repo-cli/commands/Qa"
+ *
+ * console.log(DRAWING_JUDGE_PROMPT_TEMPLATE)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DRAWING_JUDGE_PROMPT_TEMPLATE = ".claude/skills/browser-qa-loop/resources/drawing-judge-prompt.md";
+
+/**
  * Evidence classes a judge bundle can list, in descending keep priority.
  *
  * **Example** (Usage)

@@ -31,7 +31,7 @@ const $I = $TechnicalDrawingId.create("Geometry.schemas");
  * console.log(v)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export const Vec3 = S.Tuple([S.Finite, S.Finite, S.Finite]).pipe(
@@ -52,7 +52,7 @@ export const Vec3 = S.Tuple([S.Finite, S.Finite, S.Finite]).pipe(
  * console.log(origin)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export type Vec3 = typeof Vec3.Type;
@@ -68,7 +68,7 @@ export type Vec3 = typeof Vec3.Type;
  * console.log(PositiveLength.make(12.5))
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export const PositiveLength = S.Finite.check(
@@ -96,7 +96,7 @@ export const PositiveLength = S.Finite.check(
  * console.log(r)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export type PositiveLength = typeof PositiveLength.Type;
@@ -113,7 +113,7 @@ export type PositiveLength = typeof PositiveLength.Type;
  * console.log(r.origin)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Rotation extends S.Class<Rotation>($I`Rotation`)(
@@ -156,7 +156,7 @@ const placementFields = {
  * console.log(box.kind)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Box extends S.Class<Box>($I`Box`)(
@@ -186,7 +186,7 @@ export class Box extends S.Class<Box>($I`Box`)(
  * console.log(wedge.profile.length)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Prism extends S.Class<Prism>($I`Prism`)(
@@ -222,7 +222,7 @@ export class Prism extends S.Class<Prism>($I`Prism`)(
  * console.log(peg.radius)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Cylinder extends S.Class<Cylinder>($I`Cylinder`)(
@@ -252,7 +252,7 @@ export class Cylinder extends S.Class<Cylinder>($I`Cylinder`)(
  * console.log(S.is(Primitive)(p))
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export const Primitive = S.Union([Box, Prism, Cylinder]).pipe(
@@ -275,7 +275,7 @@ export const Primitive = S.Union([Box, Prism, Cylinder]).pipe(
  * console.log(p.kind)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export type Primitive = typeof Primitive.Type;
@@ -301,7 +301,7 @@ export type Primitive = typeof Primitive.Type;
  * console.log(plate.name)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Part extends S.Class<Part>($I`Part`)(
@@ -341,7 +341,7 @@ const LengthUnitBase = LiteralKit(["mm", "in"]);
  * console.log(LengthUnit.literals)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export const LengthUnit = LengthUnitBase.pipe(
@@ -363,7 +363,7 @@ export const LengthUnit = LengthUnitBase.pipe(
  * console.log(unit)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export type LengthUnit = typeof LengthUnit.Type;
@@ -382,7 +382,7 @@ export type LengthUnit = typeof LengthUnit.Type;
  * console.log(spec.parts.length)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class ModelSpec extends S.Class<ModelSpec>($I`ModelSpec`)(
@@ -428,7 +428,7 @@ export class ModelSpec extends S.Class<ModelSpec>($I`ModelSpec`)(
  * console.log(front.focus, persp.focus)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class Camera extends S.Class<Camera>($I`Camera`)(
@@ -461,7 +461,7 @@ export class Camera extends S.Class<Camera>($I`Camera`)(
  * console.log(Segment2.make([0, 0, 10, 0]))
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export const Segment2 = S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite]).pipe(
@@ -482,7 +482,7 @@ export const Segment2 = S.Tuple([S.Finite, S.Finite, S.Finite, S.Finite]).pipe(
  * console.log(s)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export type Segment2 = typeof Segment2.Type;
@@ -505,7 +505,7 @@ export type Segment2 = typeof Segment2.Type;
  * console.log(EdgeSet.make({ visible: [], hidden: [] }).visible.length)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class EdgeSet extends S.Class<EdgeSet>($I`EdgeSet`)(
@@ -560,7 +560,7 @@ const ExposureThreshold = S.Finite.check(
  * console.log(plan.litThreshold)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class ShadingPlan extends S.Class<ShadingPlan>($I`ShadingPlan`)(
@@ -589,7 +589,7 @@ export class ShadingPlan extends S.Class<ShadingPlan>($I`ShadingPlan`)(
  * console.log(BoundingBox.make({ min: [0, 0, 0], max: [1, 2, 3] }).max)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class BoundingBox extends S.Class<BoundingBox>($I`BoundingBox`)(
@@ -619,7 +619,7 @@ export class BoundingBox extends S.Class<BoundingBox>($I`BoundingBox`)(
  * console.log(summary.volume)
  * ```
  *
- * @category geometry
+ * @category models
  * @since 0.0.0
  */
 export class ModelSummary extends S.Class<ModelSummary>($I`ModelSummary`)(

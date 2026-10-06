@@ -91,15 +91,21 @@ export const QaLens = LiteralKit([
   "cursor-affordance",
   "drag-ghost",
   "drop-preview",
+  "extraneous-detail",
+  "feature-presence",
   "floating-chrome",
   "focus-ring",
   "frame-discontinuity",
   "hover-latency",
   "legibility",
+  "orientation",
   "overflow",
   "proportions",
   "selection-smear",
+  "shading-legibility",
+  "sheet-compliance",
   "transition-timing",
+  "view-agreement",
   "visual-hierarchy",
 ]).pipe(
   $I.annoteSchema("QaLens", {
@@ -123,6 +129,63 @@ export const QaLens = LiteralKit([
  * @since 0.0.0
  */
 export type QaLens = typeof QaLens.Type;
+
+/**
+ * Lenses of the browser QA rubric (`.claude/skills/browser-qa-loop/resources/judge-prompt.md`).
+ *
+ * **Example** (Browser lenses)
+ *
+ * ```ts
+ * import { BrowserQaLens } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ *
+ * console.log(BrowserQaLens.literals.includes("drag-ghost")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const BrowserQaLens = QaLens.pick([
+  "affordance",
+  "cancel-reset",
+  "contrast",
+  "cursor-affordance",
+  "drag-ghost",
+  "drop-preview",
+  "floating-chrome",
+  "focus-ring",
+  "frame-discontinuity",
+  "hover-latency",
+  "legibility",
+  "overflow",
+  "proportions",
+  "selection-smear",
+  "transition-timing",
+  "visual-hierarchy",
+]);
+
+/**
+ * Lenses of the design-figure drawing rubric
+ * (`.claude/skills/browser-qa-loop/resources/drawing-judge-prompt.md`).
+ *
+ * **Example** (Drawing lenses)
+ *
+ * ```ts
+ * import { DrawingQaLens } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
+ *
+ * console.log(DrawingQaLens.literals.includes("view-agreement")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DrawingQaLens = QaLens.pick([
+  "extraneous-detail",
+  "feature-presence",
+  "orientation",
+  "shading-legibility",
+  "sheet-compliance",
+  "view-agreement",
+]);
 
 /**
  * Artifact kinds a finding can cite as evidence.

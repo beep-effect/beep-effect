@@ -1,0 +1,31 @@
+{
+  "findings": [
+    {
+      "evidence": [
+        { "eventIds": [], "kind": "sheet", "path": "sheets/fig-1.png" }
+      ],
+      "fix": "Extend the shading generator to cylindrical faces (lines parallel to the axis, pitch by exposure along the circumference), or shade the peg in the vendor pass.",
+      "id": "R1-01",
+      "lens": "shading-legibility",
+      "repro": "Compare the peg in FIG. 1 with the hatched front and side faces of the base and back wall.",
+      "severity": "P2",
+      "title": "Peg cylinder wall is unshaded in FIG. 1 while every adjacent flat face is hatched, so the peg reads flat"
+    },
+    {
+      "evidence": [
+        { "eventIds": [], "kind": "sheet", "path": "sheets/fig-2.png" }
+      ],
+      "fix": "Raise shadingMinPitchMm from 0.8 to about 1.2 mm, or cap the densest pitch for faces above a size threshold.",
+      "id": "R1-02",
+      "lens": "shading-legibility",
+      "repro": "View the large bottom face of FIG. 2 at reduced size.",
+      "severity": "P2",
+      "title": "Bottom face in FIG. 2 is hatched at the minimum pitch and approaches a solid tone; it will close up at two-thirds reduction"
+    }
+  ],
+  "judge": { "effort": "inherited", "model": "claude-opus-5-5" },
+  "requiredCount": 0,
+  "round": 1,
+  "schemaVersion": "qa-inventory/v1",
+  "sessionRef": "../../manifest.json"
+}

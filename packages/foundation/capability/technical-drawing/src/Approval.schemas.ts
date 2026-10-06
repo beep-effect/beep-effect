@@ -32,7 +32,7 @@ const $I = $TechnicalDrawingId.create("Approval.schemas");
  * console.log(approvalStatement(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")))
  * ```
  *
- * @category approval
+ * @category utilities
  * @since 0.0.0
  */
 export const approvalStatement = (sheetSetSha256: Sha256Hex): string =>
@@ -50,7 +50,7 @@ export const approvalStatement = (sheetSetSha256: Sha256Hex): string =>
  * console.log(S.decodeUnknownSync(EmailAddress)("Attorney@Example.com"))
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export const EmailAddress = EmailString;
@@ -68,7 +68,7 @@ export const EmailAddress = EmailString;
  * console.log(approver)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export type EmailAddress = typeof EmailAddress.Type;
@@ -96,7 +96,7 @@ export type EmailAddress = typeof EmailAddress.Type;
  * console.log(reply.kind)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export class EmailConfirmation extends S.Class<EmailConfirmation>($I`EmailConfirmation`)(
@@ -131,7 +131,7 @@ export class EmailConfirmation extends S.Class<EmailConfirmation>($I`EmailConfir
  * console.log(page.kind)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export class PdfConfirmation extends S.Class<PdfConfirmation>($I`PdfConfirmation`)(
@@ -168,7 +168,7 @@ export class PdfConfirmation extends S.Class<PdfConfirmation>($I`PdfConfirmation
  * console.log(S.is(Confirmation)(c))
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export const Confirmation = S.Union([EmailConfirmation, PdfConfirmation]).pipe(
@@ -191,7 +191,7 @@ export const Confirmation = S.Union([EmailConfirmation, PdfConfirmation]).pipe(
  * console.log(c.kind)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export type Confirmation = typeof Confirmation.Type;
@@ -214,7 +214,7 @@ const ApprovalRefusalReasonBase = LiteralKit([
  * console.log(ApprovalRefusalReason.literals)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export const ApprovalRefusalReason = ApprovalRefusalReasonBase.pipe(
@@ -237,7 +237,7 @@ export const ApprovalRefusalReason = ApprovalRefusalReasonBase.pipe(
  * console.log(reason)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export type ApprovalRefusalReason = typeof ApprovalRefusalReason.Type;
@@ -271,7 +271,7 @@ export type ApprovalRefusalReason = typeof ApprovalRefusalReason.Type;
  * console.log(record.confirmationKind)
  * ```
  *
- * @category approval
+ * @category models
  * @since 0.0.0
  */
 export class ApprovalRecord extends S.Class<ApprovalRecord>($I`ApprovalRecord`)(

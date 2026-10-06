@@ -8158,13 +8158,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:108:provideScopedLayer@6#1",
+      "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:129:provideScopedLayer@6#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
-      "line": 108,
-      "endLine": 119,
+      "line": 129,
+      "endLine": 140,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:a2ddeb37a186b832b1c4e4f946c36287073a699874d630e16ddce3a96b9ae212",
       "class": "unresolved-layer-provide",
@@ -8179,15 +8179,36 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:133:provideScopedLayer@7#1",
+      "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:154:provideScopedLayer@7#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
-      "line": 133,
-      "endLine": 133,
+      "line": 154,
+      "endLine": 154,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:f178df824d9b94894637f68a1de63e3360fe55931638d6da1070a59eb5b88f17",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(PlatformLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:167:provideScopedLayer@7#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
+      "line": 167,
+      "endLine": 167,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:48388ccbbf15107679d24a13b2a793020ba4f8dfd1c2e0972bdedaedd087bda5",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(PlatformLayer)",
       "replacement": {
@@ -22178,6 +22199,27 @@
       "reason": "Retained failure-variant assertion plus existing conditional typed harness driver/phase/cause assertions. Exact complete Cause is intentionally unspecified (native/provision failure); assertExitFailure needs expected Cause, so fabricating or self-extracting one would alter/tautologize oracle."
     },
     {
+      "id": "EV006:packages/tooling/tool/cli/test/drawings-sign-email.test.ts:67:expect@8#1",
+      "lens": "resource",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-sign-email.test.ts",
+      "line": 67,
+      "endLine": 67,
+      "symbol": "expect",
+      "occurrence": "v2:0cfcd9c86df360be8f955877211df1206ab101a63928398667cca5a31ec97b62",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(Result.isSuccess(checked)).toBe(true)",
+      "replacement": {
+        "primitive": "utils.assertTrue",
+        "sketch": "Preserve this Result.isSuccess Boolean branch check and its true polarity. A payload assertion requires an independently supplied expected value/error/Cause; do not invent one. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV006:packages/tooling/tool/cli/test/harness-ledger.test.ts:157:expect@6#1",
       "lens": "detector",
       "ruleId": "EV006",
@@ -28889,6 +28931,27 @@
       "status": "open"
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/drawings-judge.test.ts:3:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/drawings-judge.test.ts",
+      "line": 3,
+      "endLine": 3,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-live.test.ts:7:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -29688,13 +29751,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:7:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/lint-judge-rubric.test.ts",
-      "line": 7,
-      "endLine": 7,
+      "line": 17,
+      "endLine": 17,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",

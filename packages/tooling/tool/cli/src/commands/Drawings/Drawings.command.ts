@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { PdfTools } from "@beep/pdf-tools";
 import {
   ConfirmationSource,
   EmailAddress,
@@ -24,6 +25,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { DrawingsCommandError } from "./Drawings.errors.ts";
+import { buildDrawingJudgePack, ingestDrawingJudgeInventory } from "./Drawings.judge.ts";
 import { FigureSetLive, MailReaderM365Live, MailReaderUnavailable, sheetSetApprovalLive } from "./Drawings.layer.ts";
 import type { OcctError } from "@beep/occt";
 import type { DrawingError, RenderManifest, ValidationReport } from "@beep/technical-drawing";
@@ -253,7 +255,62 @@ const drawingsSignCommand = Command.make("sign", {}, () => printLines(["drawings
   Command.withSubcommands(A.make(drawingsSignEmailCommand, drawingsSignPdfCommand))
 );
 
-const printDrawingsIndex = () => printLines(["drawings commands: render, validate, statement, sign"]);
+const roundFlag = Flag.Int("round").pipe(Flag.withDefault(1), Flag.withDescription("Judge round number"));
+const photosFlag = Flag.Directory("photos", { mustExist: true }).pipe(
+  Flag.optional,
+  Flag.withDescription("Reference photos of the article (ground truth for the judge)")
+);
+const packFlag = Flag.Directory("pack", { mustExist: true }).pipe(Flag.withDescription("Judge pack directory"));
+const replyFlag = Flag.File("reply", { mustExist: true }).pipe(
+  Flag.withDescription("The judge's final message, or a bare qa-inventory/v1 JSON file")
+);
+
+const runJudge = Effect.fn("DrawingsCommand.judge")(function* (options: {
+  readonly manifest: string;
+  readonly round: number;
+  readonly photos: O.Option<string>;
+}) {
+  const pack = yield* buildDrawingJudgePack({
+    manifestPath: options.manifest,
+    round: options.round,
+    photosDir: options.photos,
+  });
+  yield* printLines([
+    `judge pack: ${pack.packDir}`,
+    `  ${pack.sheets} sheet(s), ${pack.photos} reference photo(s)`,
+    `  give the vision judge (claude-opus-5-5) ${pack.packDir}/prompt.md, then:`,
+    `  bun run beep drawings judge-ingest --pack ${pack.packDir} --reply <reply file>`,
+  ]);
+});
+
+const runJudgeIngest = Effect.fn("DrawingsCommand.judgeIngest")(function* (options: {
+  readonly pack: string;
+  readonly reply: string;
+}) {
+  const inventory = yield* ingestDrawingJudgeInventory({ packDir: options.pack, replyPath: options.reply });
+  yield* printLines([
+    `inventory: ${A.length(inventory.findings)} finding(s), REQUIRED FINDINGS: ${inventory.requiredCount}`,
+    ...A.map(inventory.findings, (f) => `  ${f.id} ${f.severity} [${f.lens}] ${f.title}`),
+  ]);
+});
+
+const drawingsJudgeCommand = Command.make(
+  "judge",
+  { manifest: manifestFlag, round: roundFlag, photos: photosFlag },
+  runJudge
+).pipe(
+  Command.withDescription("Build a vision-judge pack (sheet PNGs, photos, drawing-rubric prompt) for a sheet set"),
+  Command.provide(PdfTools.makeLayer())
+);
+
+const drawingsJudgeIngestCommand = Command.make(
+  "judge-ingest",
+  { pack: packFlag, reply: replyFlag },
+  runJudgeIngest
+).pipe(Command.withDescription("Validate a judge reply as a drawing-rubric qa-inventory/v1 and store it in the pack"));
+
+const printDrawingsIndex = () =>
+  printLines(["drawings commands: render, validate, judge, judge-ingest, statement, sign"]);
 
 /**
  * Design-figure drawings command group.
@@ -275,6 +332,13 @@ const printDrawingsIndex = () => printLines(["drawings commands: render, validat
 export const drawingsCommand = Command.make("drawings", {}, printDrawingsIndex).pipe(
   Command.withDescription("Design-figure sheet rendering and filing validation"),
   Command.withSubcommands(
-    A.make(drawingsRenderCommand, drawingsValidateCommand, drawingsStatementCommand, drawingsSignCommand)
+    A.make(
+      drawingsRenderCommand,
+      drawingsValidateCommand,
+      drawingsJudgeCommand,
+      drawingsJudgeIngestCommand,
+      drawingsStatementCommand,
+      drawingsSignCommand
+    )
   )
 );
