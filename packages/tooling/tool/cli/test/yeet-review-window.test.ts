@@ -25,6 +25,7 @@ import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ConfigProvider, DateTime, Duration, Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -121,10 +122,10 @@ describe("review window decision", () => {
     const elapsed = YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt: "x", windowMs: 1 });
     const open = YeetReviewWindowOpen.make({ anchor: "head-push", anchoredAt: "x", remainingMs: 1, windowMs: 1 });
     const unknown = YeetReviewWindowUnknown.make({ reason: "timeline unreadable" });
-    expect(yeetReviewWindowElapsed(O.some(elapsed))).toBe(true);
-    expect(yeetReviewWindowElapsed(O.some(open))).toBe(false);
-    expect(yeetReviewWindowElapsed(O.some(unknown))).toBe(false);
-    expect(yeetReviewWindowElapsed(O.none())).toBe(false);
+    assertTrue(yeetReviewWindowElapsed(O.some(elapsed)));
+    assertFalse(yeetReviewWindowElapsed(O.some(open)));
+    assertFalse(yeetReviewWindowElapsed(O.some(unknown)));
+    assertFalse(yeetReviewWindowElapsed(O.none()));
     expect(renderYeetReviewWindow(unknown)).toBe(
       "review window unknown: timeline unreadable; unknown never counts as elapsed"
     );
@@ -236,7 +237,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
       const { window } = yield* readWith(answers);
       expect(window._tag).toBe("unknown");
       expect(renderYeetReviewWindow(window)).toContain(reason);
-      expect(yeetReviewWindowElapsed(O.some(window))).toBe(false);
+      assertFalse(yeetReviewWindowElapsed(O.some(window)));
     }).pipe(noOverride)
   );
 
@@ -308,23 +309,24 @@ describe("merge readiness with the review window", () => {
     ["an unknown window", O.some<YeetReviewWindow>(YeetReviewWindowUnknown.make({ reason: "timeline unreadable" }))],
   ] as const)("is not ready on %s, even with green checks and no threads", (_name, reviewWindow) => {
     const ready = O.getOrThrow(deriveYeetMergeReady(boundCloseout, greenRemote({ reviewWindow })));
-    expect(ready.ready).toBe(false);
-    expect(ready.failing).toEqual(O.some("review-window-elapsed"));
+    assertFalse(ready.ready);
+    assertSome(ready.failing, "review-window-elapsed");
     // Everything else holds, so this is the read that must take the window.
-    expect(yeetReviewWindowDue(ready.criteria)).toBe(true);
+    assertTrue(yeetReviewWindowDue(ready.criteria));
   });
 
   it("is ready once the window has elapsed", () => {
     const ready = O.getOrThrow(deriveYeetMergeReady(boundCloseout, greenRemote({ reviewWindow: O.some(elapsed) })));
-    expect(ready).toMatchObject({ ready: true, failing: O.none() });
+    assertTrue(ready.ready);
+    assertNone(ready.failing);
   });
 
   it("asks a green draft for the flip, not for the review window", () => {
     const remote = YeetStatusRemote.make({ ...greenRemote({ isDraft: true }), mergeStateStatus: "DRAFT" });
     const ready = O.getOrThrow(deriveYeetMergeReady(boundCloseout, remote));
-    expect(ready.failing).toEqual(O.some("not-draft"));
-    expect(yeetReviewWindowDue(ready.criteria)).toBe(false);
-    expect(deriveYeetReadyPendingFlip(remote, ready)).toBe(true);
+    assertSome(ready.failing, "not-draft");
+    assertFalse(yeetReviewWindowDue(ready.criteria));
+    assertTrue(deriveYeetReadyPendingFlip(remote, ready));
   });
 });
 
@@ -414,17 +416,15 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
       const answers = { timeline: "2026-10-06T10:00:00Z", suites: "2026-10-06T09:30:00Z" };
       yield* TestClock.setTime(millis("2026-10-06T10:07:00Z"));
       const held = yield* statusWith(answers);
-      expect(O.getOrThrow(held.snapshot.mergeReady)).toMatchObject({
-        ready: false,
-        failing: O.some("review-window-elapsed"),
-      });
+      assertFalse(O.getOrThrow(held.snapshot.mergeReady).ready);
+      assertSome(O.getOrThrow(held.snapshot.mergeReady).failing, "review-window-elapsed");
       expect(renderYeetStatusSummary(held.snapshot)).toContain(
         "merge-ready: no, blocked on review-window-elapsed: review window open: 13 min left"
       );
       expect(held.snapshot.nextCommand).toContain("wait for the review window");
       yield* TestClock.adjust(Duration.minutes(13));
       const ready = yield* statusWith(answers);
-      expect(O.getOrThrow(ready.snapshot.mergeReady).ready).toBe(true);
+      assertTrue(O.getOrThrow(ready.snapshot.mergeReady).ready);
       expect(renderYeetStatusSummary(ready.snapshot)).toContain("merge-ready: yes");
       expect(ready.snapshot.nextCommand).toContain("re-read the review threads");
     }).pipe(noOverride)
@@ -435,11 +435,12 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
       yield* writeBoundCloseout;
       yield* TestClock.setTime(millis("2027-01-01T00:00:00Z"));
       const { snapshot } = yield* statusWith({ timeline: "fail", suites: "2026-10-06T09:30:00Z" });
-      expect(O.getOrThrow(snapshot.mergeReady)).toMatchObject({
-        ready: false,
-        failing: O.some("review-window-elapsed"),
-      });
-      expect(O.map(snapshot.remote.reviewWindow, (window) => window._tag)).toEqual(O.some("unknown"));
+      assertFalse(O.getOrThrow(snapshot.mergeReady).ready);
+      assertSome(O.getOrThrow(snapshot.mergeReady).failing, "review-window-elapsed");
+      assertSome(
+        O.map(snapshot.remote.reviewWindow, (window) => window._tag),
+        "unknown"
+      );
       expect(renderYeetStatusSummary(snapshot)).toContain("review window unknown: the timeline of pull request #42");
     }).pipe(noOverride)
   );
@@ -448,8 +449,8 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
     Effect.gen(function* () {
       yield* writeBoundCloseout;
       const { snapshot, restCalls } = yield* statusWith({ timeline: "2026-10-06T10:00:00Z" }, "pending");
-      expect(O.getOrThrow(snapshot.mergeReady).failing).toEqual(O.some("required-checks-green"));
-      expect(O.isNone(snapshot.remote.reviewWindow)).toBe(true);
+      assertSome(O.getOrThrow(snapshot.mergeReady).failing, "required-checks-green");
+      assertNone(snapshot.remote.reviewWindow);
       expect(restCalls).toEqual([]);
     }).pipe(noOverride)
   );

@@ -948,7 +948,10 @@ describe("closeout follow-up gate", () => {
     // acknowledgement never counted against the merge. The review window is
     // the one criterion left, read only now that nothing else blocks.
     const answered = deriveYeetMergeReady(closeoutWith(0), remoteWith(0));
-    expect(O.flatMap(answered, (value) => value.failing)).toStrictEqual(O.some("review-window-elapsed"));
+    assertSome(
+      O.flatMap(answered, (value) => value.failing),
+      "review-window-elapsed"
+    );
     const elapsed = deriveYeetMergeReady(
       closeoutWith(0),
       YeetStatusRemote.make({
@@ -958,7 +961,7 @@ describe("closeout follow-up gate", () => {
         ),
       })
     );
-    expect(O.flatMap(elapsed, (value) => value.failing)).toStrictEqual(O.none());
+    assertNone(O.flatMap(elapsed, (value) => value.failing));
   });
 });
 
