@@ -122,7 +122,7 @@ export type MatterContactsJson = typeof MatterContactsJson.Type;
 class MatterRow extends S.Class<MatterRow>($I`MatterRow`)(
   {
     familyKey: S.String,
-    client: S.NullOr(S.String),
+    client: S.String.pipe(S.NullOr, S.optionalKey),
     epistemicStatus: PracticeKgEpistemicStatus,
   },
   $I.annote("MatterRow", {
@@ -135,8 +135,8 @@ class MatterDocketRow extends S.Class<MatterDocketRow>($I`MatterDocketRow`)(
     familyKey: S.String,
     docket: S.String,
     docketKey: S.String,
-    applicationNumbers: S.String,
-    patentNumbers: S.String,
+    applicationNumbers: S.String.pipe(S.NullOr, S.optionalKey),
+    patentNumbers: S.String.pipe(S.NullOr, S.optionalKey),
   },
   $I.annote("MatterDocketRow", {
     description: "The columns of the bundle's matter_dockets table the directory reads.",
@@ -174,7 +174,9 @@ type Bundle = {
   readonly contacts: Record<string, MatterContacts>;
 };
 
-const splitList = (value: string): ReadonlyArray<string> => A.filter(Str.split(value, listSeparator), Str.isNonEmpty);
+// A row may carry a list column as null, or not at all, when the list is empty.
+const splitList = (value: string | null | undefined): ReadonlyArray<string> =>
+  A.filter(A.flatMap(O.toArray(O.fromNullishOr(value)), Str.split(listSeparator)), Str.isNonEmpty);
 
 // A value the domain schema rejects is dropped: one malformed number must not hide a matter.
 const decoded =
@@ -293,6 +295,10 @@ const makeMatterDirectory = Effect.gen(function* () {
  * also carries its family key, so a reference to it goes to the attorney.
  * A value the domain schemas reject, such as an application number that is
  * not eight digits, is dropped; the matter stays.
+ *
+ * The two queries name the columns they read, so a column the bundle adds,
+ * such as `client_name`, is never selected. A row whose `client` is null, or
+ * that arrives without the key, is an unattributed matter, not a failure.
  *
  * Contacts come from `matter-contacts.json` in the state directory, read once
  * when the layer is built: an array of {@link MatterContacts}. A missing file

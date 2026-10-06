@@ -27,6 +27,7 @@ import {
 import {
   DocumentStore,
   DocumentStoreShape,
+  DocumentUploaded,
   KnownDocuments,
   KnownDocumentsShape,
   MailAttachmentMeta,
@@ -109,7 +110,7 @@ const Providers = Layer.mergeAll(
         upload: (request) =>
           Effect.as(
             Ref.update(inbox.uploads, A.append(`${request.folderId}/${request.fileName}`)),
-            DocumentFileId.make("file-1")
+            DocumentUploaded.make({ fileId: DocumentFileId.make("file-1") })
           ),
       })
     )
@@ -192,7 +193,7 @@ describe("MailTagging live layers over file-backed state", () => {
         expect(message.categories).toStrictEqual(["Personal", "M: acme.10001", "P: USPTO"]);
         expect(yield* Ref.get(inbox.uploads)).toStrictEqual(["folder-uspto-incoming/2026-07-01 office-action.pdf"]);
         expect(yield* lines("tag-ledger.jsonl")).toHaveLength(1);
-        expect(yield* lines("filing-ledger.jsonl")).toHaveLength(1);
+        expect(yield* lines("filing-ledger.jsonl")).toHaveLength(2);
         expect(yield* lines("checkpoint.json")).toHaveLength(1);
 
         const again = yield* run("apply", "run-0003");

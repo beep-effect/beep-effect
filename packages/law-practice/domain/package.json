@@ -58,6 +58,7 @@
     "./values/ApplicationNumber": "./src/values/ApplicationNumber/index.ts",
     "./values/CitingApplicationIdentity": "./src/values/CitingApplicationIdentity/index.ts",
     "./values/CourtReporterVocabulary": "./src/values/CourtReporterVocabulary/index.ts",
+    "./values/DocketDeadline": "./src/values/DocketDeadline/index.ts",
     "./values/KindCode": "./src/values/KindCode/index.ts",
     "./values/MailTagging": "./src/values/MailTagging/index.ts",
     "./values/ObservationVersionRef": "./src/values/ObservationVersionRef/index.ts",

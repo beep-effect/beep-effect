@@ -30,6 +30,7 @@ import type { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values
 type MatterSeed = {
   readonly familyKey: string;
   readonly client: string | null;
+  readonly clientName?: string;
   readonly status?: PracticeKgEpistemicStatus;
 };
 
@@ -37,6 +38,7 @@ const matter = (seed: MatterSeed) =>
   PracticeKgMatterRow.make({
     attributionSource: "official-record",
     client: seed.client,
+    clientName: seed.clientName ?? null,
     docketCount: 1,
     documentCount: 1,
     epistemicStatus: seed.status ?? "derived-from-official-records",
@@ -62,10 +64,11 @@ const docket = (seed: DocketSeed) =>
     patentNumbers: seed.patentNumbers ?? [],
   });
 
+// Store format 3: `client_name` is set on the first matter and null on the rest.
 // Two taggable matters, one without a client number, one recycled, and one whose keys are not usable tokens.
 const tables = PracticeKgMatterTables.make({
   matters: [
-    matter({ familyKey: "1234.10001", client: "1234" }),
+    matter({ familyKey: "1234.10001", client: "1234", clientName: "Example Client" }),
     matter({ familyKey: "1234.20002", client: "1234", status: "candidate-unreviewed" }),
     matter({ familyKey: "30003", client: null }),
     matter({ familyKey: "5678.40004", client: "5678", status: "recycled-unverified" }),
@@ -193,6 +196,68 @@ describe("MailTagging practice-KG matter directory", () => {
           "matter-contacts.json",
           null,
         ]);
+      })
+    );
+
+    it.effect(
+      "reads a bundle whose matters table has no client_name column",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const directory = yield* temporaryDirectory;
+        const databasePath = path.join(directory, "format-2.duckdb");
+        yield* oneRun(
+          Effect.flatMap(
+            serviceOf(DuckDb)(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))),
+            (db) =>
+              db.runMany([
+                "CREATE TABLE matters (family_key VARCHAR, client VARCHAR, epistemic_status VARCHAR)",
+                "INSERT INTO matters VALUES ('1234.10001', '1234', 'derived-from-official-records'), ('30003', NULL, 'mention-derived')",
+                "CREATE TABLE matter_dockets (docket_key VARCHAR, docket VARCHAR, family_key VARCHAR, application_numbers VARCHAR[], patent_numbers VARCHAR[])",
+                "INSERT INTO matter_dockets VALUES ('1234.10001US01', '10001US01', '1234.10001', ['16123456'], [])",
+              ])
+          )
+        );
+        const index = yield* snapshotOf({ directory, databasePath });
+
+        expect(A.map(index.entries, (entry) => [entry.matterKey, entry.applicationNumbers])).toStrictEqual([
+          ["1234.10001", ["16123456"]],
+        ]);
+        expect(A.map(index.unattributed, (unattributed) => unattributed.familyKeys)).toStrictEqual([["30003"]]);
+      })
+    );
+
+    it.effect(
+      "treats a row that arrives without its null columns as unattributed and without numbers",
+      Effect.fnUntraced(function* () {
+        const directory = yield* temporaryDirectory;
+        const rows = (statement: string) =>
+          Str.includes("FROM matters")(statement)
+            ? [
+                { familyKey: "1234.10001", client: "1234", epistemicStatus: "derived-from-official-records" },
+                { familyKey: "30003", epistemicStatus: "mention-derived" },
+              ]
+            : [
+                { familyKey: "1234.10001", docket: "10001US01", docketKey: "1234.10001US01", patentNumbers: null },
+                { familyKey: "30003", docket: "30003US01", docketKey: "30003US01", applicationNumbers: "15000001" },
+              ];
+        const dropped = yield* serviceOf(MatterDirectory)(
+          MatterDirectoryPracticeKg.pipe(
+            Layer.provide(
+              Layer.merge(
+                Layer.mock(DuckDb)({ query: (statement) => Effect.succeed(rows(statement)) }),
+                Layer.succeed(MailTaggingStateLocation, MailTaggingStateConfig.make({ stateDirectory: directory }))
+              )
+            )
+          )
+        );
+        const index = yield* dropped.snapshot;
+
+        expect(
+          A.map(index.entries, (entry) => [entry.matterKey, entry.applicationNumbers, entry.patentNumbers])
+        ).toStrictEqual([["1234.10001", [], []]]);
+        expect(
+          A.map(index.unattributed, (unattributed) => [unattributed.familyKeys, unattributed.applicationNumbers])
+        ).toStrictEqual([[["30003"], ["15000001"]]]);
       })
     );
 

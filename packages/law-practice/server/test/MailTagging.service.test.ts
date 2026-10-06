@@ -48,6 +48,7 @@ import {
   oneRun,
   Platform,
   temporaryDirectory,
+  wellKnownFolders,
   writeText,
 } from "./MailTagging.adapters.fixture.ts";
 import type { TaggingMode } from "@beep/law-practice-domain/values/MailTagging";
@@ -59,6 +60,7 @@ const tables = PracticeKgMatterTables.make({
     PracticeKgMatterRow.make({
       attributionSource: "official-record",
       client: "1234",
+      clientName: null,
       docketCount: 1,
       documentCount: 1,
       epistemicStatus: "derived-from-official-records",
@@ -108,6 +110,7 @@ const makeProviders = Effect.gen(function* () {
     uploads,
     layer: Layer.merge(
       makeM365Stub({
+        getMailFolder: wellKnownFolders,
         listMessages: () => Effect.map(message, (current) => M365MessageCollection.make({ value: [current] })),
         getMessage: () => message,
         updateMessageCategories: (request) =>
@@ -226,7 +229,7 @@ describe("MailTagging assembled service", () => {
 
         expect([applied.matched, applied.attachmentsFiled, applied.wrote]).toStrictEqual([1, 1, true]);
         expect((yield* Ref.get(providers.outlook)).categories).toStrictEqual(["Personal", "M: 1234.10001", "P: USPTO"]);
-        expect(yield* lineCounts).toStrictEqual([1, 1, 1, 1]);
+        expect(yield* lineCounts).toStrictEqual([1, 2, 1, 1]);
         expect((yield* files).boxCalls).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":1,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
@@ -234,7 +237,7 @@ describe("MailTagging assembled service", () => {
         const again = yield* tag("apply", "run-0003");
 
         expect([again.alreadyTagged, again.attachmentsFiled, again.attachmentsDeduped]).toStrictEqual([1, 0, 0]);
-        expect(yield* lineCounts).toStrictEqual([1, 1, 1, 1]);
+        expect(yield* lineCounts).toStrictEqual([1, 2, 1, 1]);
         expect(providers.uploads).toStrictEqual(["9001/2026-07-02 office-action.pdf"]);
 
         const undone = yield* oneRun(
@@ -251,7 +254,7 @@ describe("MailTagging assembled service", () => {
 
         expect([undone.entries, undone.categoriesRemoved]).toStrictEqual([1, 2]);
         expect((yield* Ref.get(providers.outlook)).categories).toStrictEqual(["Personal"]);
-        expect(yield* lineCounts).toStrictEqual([2, 1, 1, 1]);
+        expect(yield* lineCounts).toStrictEqual([2, 2, 1, 1]);
       })
     );
   });

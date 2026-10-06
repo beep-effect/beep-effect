@@ -28,6 +28,7 @@ import {
   M365EnsureMasterCategoriesRequest,
   M365Error,
   M365ErrorReason,
+  M365GetMailFolderRequest,
   M365GetMessageRequest,
   M365ListMessageAttachmentsRequest,
   M365ListMessagesRequest,
@@ -53,6 +54,8 @@ import type { GraphAttachment, GraphMessage, GraphRecipient } from "@beep/m365";
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.mailbox");
 
 const defaultPageSize = 50;
+// Graph well-known folder names of the folders that are never tagged (D-12); drafts are filtered by `isDraft`.
+const outOfScopeFolders = ["deleteditems", "junkemail"];
 const fileAttachmentType = "#microsoft.graph.fileAttachment";
 const preconditionFailed = 412;
 const notFound = 404;
@@ -63,10 +66,11 @@ const notFound = 404;
  * **Details**
  *
  * `userId` is the mailbox address or object id; every driver request carries
- * it, because the app-only lane has no signed-in user. `excludedFolderIds`
- * lists the Graph ids of the folders out of scope (Deleted Items and Junk);
- * drafts are excluded by the listing filter itself. The adapter reads no
- * environment variable: the caller builds this value.
+ * it, because the app-only lane has no signed-in user. Deleted Items and Junk
+ * are excluded by the adapter itself, which resolves their ids from the
+ * mailbox; `excludedFolderIds` names extra folders to leave out, by Graph id.
+ * Drafts are excluded by the listing filter. The adapter reads no environment
+ * variable: the caller builds this value.
  *
  * **Example** (Configure a mailbox)
  *
@@ -94,7 +98,7 @@ export class MailboxM365Config extends S.Class<MailboxM365Config>($I`MailboxM365
     excludedFolderIds: S.Array(S.String)
       .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
       .annotateKey({
-        description: "Graph ids of the mail folders whose messages are never listed.",
+        description: "Graph ids of extra mail folders to leave out, besides Deleted Items and Junk.",
       }),
   },
   $I.annote("MailboxM365Config", {
@@ -124,6 +128,7 @@ export class MailboxM365Options extends Context.Service<MailboxM365Options, Mail
 
 const decodeListRequest = S.decodeUnknownEffect(M365ListMessagesRequest);
 const decodeGetRequest = S.decodeUnknownEffect(M365GetMessageRequest);
+const decodeFolderRequest = S.decodeUnknownEffect(M365GetMailFolderRequest);
 const decodeUpdateRequest = S.decodeUnknownEffect(M365UpdateMessageCategoriesRequest);
 const decodeEnsureRequest = S.decodeUnknownEffect(M365EnsureMasterCategoriesRequest);
 const decodeAttachmentsRequest = S.decodeUnknownEffect(M365ListMessageAttachmentsRequest);
@@ -239,7 +244,18 @@ const makeMailbox = Effect.gen(function* () {
   const m365 = yield* M365;
   const options = yield* MailboxM365Options;
   const userId = options.userId;
-  const inScope = isInScope(HashSet.fromIterable(options.excludedFolderIds));
+  // Resolved once per layer build; a failed lookup fails the build, so nothing is scanned with an unknown exclusion set.
+  const resolved = yield* Effect.forEach(outOfScopeFolders, (folder) =>
+    Effect.flatMap(encoded(decodeFolderRequest)({ userId, folder }), m365.getMailFolder)
+  ).pipe(Effect.mapError(portFailure("resolveExcludedFolders")));
+  const inScope = isInScope(
+    HashSet.fromIterable(
+      A.appendAll(
+        A.map(resolved, (folder) => folder.id),
+        options.excludedFolderIds
+      )
+    )
+  );
 
   const listRequest = (request: ListMessagesSinceRequest) =>
     O.match(request.cursor, {
@@ -336,9 +352,12 @@ const makeMailbox = Effect.gen(function* () {
  * `listMessagesSince` asks Graph for
  * `receivedDateTime ge <since> and isDraft eq false`, ordered by
  * `receivedDateTime asc`, `pageSize` at a time, with the plain-text body
- * format; a later page passes the cursor back as the driver's `nextLink`. A
- * message whose `parentFolderId` is one of `excludedFolderIds`, or that is a
- * draft, is dropped. A message Graph reports without a usable id or without a
+ * format; a later page passes the cursor back as the driver's `nextLink`.
+ * When the layer is built it asks the driver once for the ids of the
+ * well-known folders `deleteditems` and `junkemail`; a message whose
+ * `parentFolderId` is one of those or one of `excludedFolderIds`, or that is
+ * a draft, is dropped. If either lookup fails the layer fails with a
+ * `MailTaggingPortError` and no message is read. A message Graph reports without a usable id or without a
  * parseable `receivedDateTime` is skipped and counted nowhere: the job orders
  * and checkpoints by received instant, so it cannot place one.
  *
@@ -377,4 +396,7 @@ const makeMailbox = Effect.gen(function* () {
  * @category layers
  * @since 0.0.0
  */
-export const MailboxM365: Layer.Layer<Mailbox, never, M365 | MailboxM365Options> = Layer.effect(Mailbox, makeMailbox);
+export const MailboxM365: Layer.Layer<Mailbox, MailTaggingPortError, M365 | MailboxM365Options> = Layer.effect(
+  Mailbox,
+  makeMailbox
+);

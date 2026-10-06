@@ -134,10 +134,12 @@ const sumCounts = <K extends string>(
  *   matched: 1,
  *   unmatched: { "no-signal": 1, "below-threshold": 1, ambiguous: 0, "needs-attorney": 0 },
  *   alreadyTagged: 0,
+ *   undoneSkipped: 0,
  *   repaired: 0,
  *   categoryAdds: [{ category: "M: acme.10001", count: 1 }],
  *   attachmentsFiled: 0,
  *   attachmentsDeduped: 0,
+ *   attachmentsReconciled: 0,
  *   attachmentsSkipped: { inline: 0, "not-a-file": 0, empty: 0, "too-large": 0, "no-folder": 0, "sender-not-routable": 0 },
  *   wrote: false
  * })
@@ -168,6 +170,9 @@ export class TaggingRunReport extends S.Class<TaggingRunReport>($I`TaggingRunRep
     alreadyTagged: S.Natural.annotateKey({
       description: "Messages skipped because the tag ledger covers them and its categories are present.",
     }),
+    undoneSkipped: S.Natural.annotateKey({
+      description: "Messages skipped because an undo settled them; they are never re-decided automatically.",
+    }),
     repaired: S.Natural.annotateKey({
       description: "Messages whose ledgered categories were missing and were written again.",
     }),
@@ -179,6 +184,9 @@ export class TaggingRunReport extends S.Class<TaggingRunReport>($I`TaggingRunRep
     }),
     attachmentsDeduped: S.Natural.annotateKey({
       description: "Attachments skipped because the same content was already filed for the matter.",
+    }),
+    attachmentsReconciled: S.Natural.annotateKey({
+      description: "Attachments found already stored under an earlier filing intent and recorded as completed.",
     }),
     attachmentsSkipped: S.Record(AttachmentSkipReason, S.Natural).annotateKey({
       description: "Attachments not filed, per reason.",
@@ -241,10 +249,12 @@ export const emptyTaggingRunReport: {
       matched: 0,
       unmatched: zeroUnmatched,
       alreadyTagged: 0,
+      undoneSkipped: 0,
       repaired: 0,
       categoryAdds: [],
       attachmentsFiled: 0,
       attachmentsDeduped: 0,
+      attachmentsReconciled: 0,
       attachmentsSkipped: zeroAttachmentsSkipped,
       wrote: false,
     })
@@ -295,10 +305,12 @@ export const combineTaggingRunReports: {
       matched: self.matched + that.matched,
       unmatched: sumCounts(self.unmatched, that.unmatched),
       alreadyTagged: self.alreadyTagged + that.alreadyTagged,
+      undoneSkipped: self.undoneSkipped + that.undoneSkipped,
       repaired: self.repaired + that.repaired,
       categoryAdds: combineCategoryAdds(self.categoryAdds, that.categoryAdds),
       attachmentsFiled: self.attachmentsFiled + that.attachmentsFiled,
       attachmentsDeduped: self.attachmentsDeduped + that.attachmentsDeduped,
+      attachmentsReconciled: self.attachmentsReconciled + that.attachmentsReconciled,
       attachmentsSkipped: sumCounts(self.attachmentsSkipped, that.attachmentsSkipped),
       wrote: self.wrote || that.wrote,
     })

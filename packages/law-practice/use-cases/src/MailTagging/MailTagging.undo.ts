@@ -71,6 +71,14 @@ const counted = (report: TaggingUndoReport, restoration: Restoration): TaggingUn
  * ones, ones another run added, and ones a person added after the run. The
  * write carries the envelope's `changeKey`.
  *
+ * An undone message is settled. The tagging job skips it on later runs and
+ * counts it as `undoneSkipped`; re-tagging an undone run is a deliberate later
+ * operation, never an automatic one.
+ *
+ * Undo restores categories only. Filed attachments stay where they are: the
+ * document port has no delete verb by design. The filing ledger lists every
+ * stored file with its folder, name, id, and run id for manual reversal.
+ *
  * `apply` writes the reduced category list when something is removed and
  * always appends a `TagUndone` line, which retires the entry: a second undo of
  * the same run finds nothing. A message the mailbox no longer has is counted

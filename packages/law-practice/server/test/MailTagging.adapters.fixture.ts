@@ -6,7 +6,7 @@
  */
 
 import { Box } from "@beep/box";
-import { M365, M365Error } from "@beep/m365";
+import { GraphMailFolder, M365, M365Error } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
@@ -18,6 +18,10 @@ import type { Scope } from "effect";
 
 /** Real filesystem, path, and digest services for a scoped temporary directory. */
 export const Platform = Layer.mergeAll(BunFileSystem.layer, BunPath.layer, BunCrypto.layer);
+
+/** Answers the two well-known folders the mailbox adapter resolves when it is built. */
+export const wellKnownFolders: M365Shape["getMailFolder"] = (request) =>
+  Effect.succeed(GraphMailFolder.make({ id: `folder-${request.folder}` }));
 
 /** The mailbox every adapter test addresses. */
 export const mailboxUserId = "attorney@example.test";
@@ -42,6 +46,7 @@ export const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =
       findEventsByIdempotencyKey: unused,
       getEvent: unused,
       getListItem: unused,
+      getMailFolder: unused,
       getMessage: unused,
       getSite: unused,
       listDriveItemVersions: unused,
@@ -72,7 +77,11 @@ export const makeBoxStub = (uploadFile: (requestBody: BoxUploadBody) => Promise<
   Box.makeLayerFromClient({ uploads: { uploadFile } });
 
 /** A Box SDK rejection carrying an HTTP status and, optionally, an API error code. */
-export const boxRejection = (responseInfo: { readonly statusCode: number; readonly code?: string }) => ({
+export const boxRejection = (responseInfo: {
+  readonly statusCode: number;
+  readonly code?: string;
+  readonly contextInfo?: { readonly conflicts: unknown };
+}) => ({
   responseInfo,
 });
 

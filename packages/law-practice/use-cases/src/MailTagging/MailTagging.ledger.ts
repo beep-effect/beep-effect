@@ -1,17 +1,19 @@
 /**
- * Pure read models over the append-only tag ledger.
+ * Pure read models over the append-only tag and filing ledgers.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { TagLedgerRecord } from "@beep/law-practice-domain/values/MailTagging";
+import { FilingLedgerRecord, TagLedgerRecord } from "@beep/law-practice-domain/values/MailTagging";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import type {
+  FilingIntent,
+  FilingLedgerEntry,
   MailCategoryName,
   MailConversationId,
   MailMessageId,
@@ -158,3 +160,107 @@ export const activeTagEntriesOfRun: {
   (records: ReadonlyArray<TagLedgerRecord>, runId: TaggingRunId): ReadonlyArray<TagLedgerEntry> =>
     A.filter(activeTagEntries(records), (entry) => entry.runId === runId)
 );
+
+/**
+ * Collects the ids of the messages any undo line names.
+ *
+ * **Details**
+ *
+ * An undone message is settled: the tagging job never decides it again on
+ * its own, whether or not a later run tagged it deliberately.
+ *
+ * **Example** (Read an empty ledger)
+ *
+ * ```ts
+ * import { undoneMessageIds } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * console.log(HashSet.size(undoneMessageIds([]))) // 0
+ * ```
+ *
+ * @param records - Every tag-ledger line in append order.
+ * @returns The message ids with at least one `TagUndone` line.
+ * @category read-models
+ * @since 0.0.0
+ */
+export const undoneMessageIds = (records: ReadonlyArray<TagLedgerRecord>): HashSet.HashSet<MailMessageId> =>
+  HashSet.fromIterable(A.map(A.filter(records, TagLedgerRecord.guards.TagUndone), (undo) => undo.messageId));
+
+/**
+ * Lists the completion lines of the filing ledger, in append order.
+ *
+ * **Details**
+ *
+ * A completion is what makes content filed: the dedupe key
+ * `(contentSha256, matterKey)` is looked up among these lines only, never
+ * among intents.
+ *
+ * **Example** (Read an empty filing ledger)
+ *
+ * ```ts
+ * import { completedFilings } from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * console.log(completedFilings([]).length) // 0
+ * ```
+ *
+ * @param records - Every filing-ledger line in append order.
+ * @returns The `FilingCompleted` lines.
+ * @category read-models
+ * @since 0.0.0
+ */
+export const completedFilings = (records: ReadonlyArray<FilingLedgerRecord>): ReadonlyArray<FilingLedgerEntry> =>
+  A.filter(records, FilingLedgerRecord.guards.FilingCompleted);
+
+type FilingAttempt = Pick<FilingIntent, "contentSha256" | "matterKey" | "folderId" | "fileName">;
+
+const isSameAttempt = (line: FilingAttempt, intent: FilingIntent): boolean =>
+  A.every(
+    [
+      line.contentSha256 === intent.contentSha256,
+      line.matterKey === intent.matterKey,
+      line.folderId === intent.folderId,
+      line.fileName === intent.fileName,
+    ],
+    Boolean
+  );
+
+const settledBy = (pending: ReadonlyArray<FilingIntent>, line: FilingAttempt): ReadonlyArray<FilingIntent> =>
+  A.filter(pending, (intent) => !isSameAttempt(line, intent));
+
+const withFilingRecord: (
+  pending: ReadonlyArray<FilingIntent>,
+  record: FilingLedgerRecord
+) => ReadonlyArray<FilingIntent> = (pending, record) =>
+  FilingLedgerRecord.match(record, {
+    FilingIntended: (intent) => A.append(pending, intent),
+    FilingCompleted: (entry) => settledBy(pending, entry),
+    FilingAbandoned: (abandoned) => settledBy(pending, abandoned),
+  });
+
+/**
+ * Lists the filing intents no later completion or abandonment line settles,
+ * in append order.
+ *
+ * **Details**
+ *
+ * An intent is settled by a later completion or abandonment for the same
+ * content, matter, folder, and file name. A pending intent means an upload
+ * was started and its outcome was never recorded: either it never ran, or it
+ * ran and the process stopped before the completion line. An upload that
+ * found its name taken is abandoned, so it is never pending.
+ *
+ * **Example** (Read an empty filing ledger)
+ *
+ * ```ts
+ * import { pendingFilingIntents } from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * console.log(pendingFilingIntents([]).length) // 0
+ * ```
+ *
+ * @param records - Every filing-ledger line in append order.
+ * @returns The `FilingIntended` lines without a later matching completion or abandonment.
+ * @category read-models
+ * @since 0.0.0
+ */
+export const pendingFilingIntents = (records: ReadonlyArray<FilingLedgerRecord>): ReadonlyArray<FilingIntent> =>
+  A.reduce(records, A.empty<FilingIntent>(), withFilingRecord);

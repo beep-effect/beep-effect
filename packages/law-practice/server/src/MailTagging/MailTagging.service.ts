@@ -24,6 +24,7 @@ import type { DuckDb } from "@beep/duckdb";
 import type {
   AttachmentFiler,
   MailTaggingJob,
+  MailTaggingPortError,
   MailTaggingStateError,
   MailTaggingUndo,
 } from "@beep/law-practice-use-cases/MailTagging";
@@ -75,7 +76,7 @@ export class MailTaggingServiceConfig extends S.Class<MailTaggingServiceConfig>(
     excludedFolderIds: S.Array(S.String)
       .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
       .annotateKey({
-        description: "Graph ids of the mail folders out of scope, such as Deleted Items and Junk.",
+        description: "Graph ids of extra mail folders to leave out, besides Deleted Items and Junk.",
       }),
     folderMapPath: S.NonEmptyString.annotateKey({
       description: "Full path of the matter folder-id map JSON file.",
@@ -179,7 +180,9 @@ export const mailTaggingServiceConfigLayer = (
  * The folder-id map, the known-documents index, and the contacts overlay are
  * read when the layer is built, and the Box API-call ledger line is written
  * when its scope closes. Building fails with a `MailTaggingStateError` when
- * one of those files is unusable, before any message is read.
+ * one of those files is unusable, and with a `MailTaggingPortError` when the
+ * mailbox cannot resolve its Deleted Items and Junk folders, before any
+ * message is read.
  *
  * **Gotchas**
  *
@@ -202,7 +205,7 @@ export const mailTaggingServiceConfigLayer = (
  */
 export const MailTaggingServiceLive: Layer.Layer<
   AttachmentFiler | MailTaggingJob | MailTaggingUndo,
-  MailTaggingStateError,
+  MailTaggingStateError | MailTaggingPortError,
   M365 | Box | DuckDb | FileSystem.FileSystem | Path.Path | Crypto.Crypto | MailTaggingServiceSettings
 > = MailTaggingUseCasesLive.pipe(
   Layer.provide(

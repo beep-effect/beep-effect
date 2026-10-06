@@ -29,7 +29,7 @@ import * as DateTime from "effect/DateTime";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
-import { conversationMattersOf, ledgeredCategoriesOf } from "./MailTagging.ledger.ts";
+import { conversationMattersOf, ledgeredCategoriesOf, undoneMessageIds } from "./MailTagging.ledger.ts";
 import {
   AttachmentFiler,
   BackfillCheckpointStore,
@@ -65,7 +65,14 @@ type JobScope = {
   readonly taxonomy: MailTaxonomy;
   readonly resumeFrom: DateTime.Utc;
   readonly checkpointAt: O.Option<DateTime.Utc>;
+  readonly coveredAtBoundary: HashSet.HashSet<MailMessageId>;
+  readonly undone: HashSet.HashSet<MailMessageId>;
   readonly empty: TaggingRunReport;
+};
+
+type Boundary = {
+  readonly at: DateTime.Utc;
+  readonly ids: ReadonlyArray<MailMessageId>;
 };
 
 type JobState = {
@@ -73,6 +80,7 @@ type JobState = {
   readonly ledgered: HashMap.HashMap<MailMessageId, ReadonlyArray<MailCategoryName>>;
   readonly conversations: HashMap.HashMap<MailConversationId, MatterKey>;
   readonly ensured: HashSet.HashSet<MatterKey>;
+  readonly boundary: O.Option<Boundary>;
   readonly processed: number;
 };
 
@@ -115,18 +123,40 @@ const missingFrom = (
   categories: ReadonlyArray<MailCategoryName>
 ): ReadonlyArray<MailCategoryName> => A.filter(categories, (category) => !A.contains(envelope.categories, category));
 
-// Only a message no saved checkpoint covers can carry an interrupted write.
-const isRepairable = (scope: JobScope, envelope: MailEnvelope): boolean =>
-  O.match(scope.checkpointAt, {
-    onNone: () => true,
-    onSome: (checkpointAt) => DateTime.isGreaterThan(envelope.receivedAt, checkpointAt),
-  });
+// The starting checkpoint covers a message received before its instant, and one
+// received exactly at it only when the checkpoint lists the message's id.
+const isCovered = (scope: JobScope, envelope: MailEnvelope): boolean =>
+  O.exists(
+    scope.checkpointAt,
+    (checkpointAt) =>
+      DateTime.isLessThan(envelope.receivedAt, checkpointAt) ||
+      (DateTime.Equivalence(envelope.receivedAt, checkpointAt) &&
+        HashSet.has(scope.coveredAtBoundary, envelope.messageId))
+  );
+
+const tiedIds = (page: MailPage, last: MailEnvelope): ReadonlyArray<MailMessageId> =>
+  A.map(
+    A.filter(page.envelopes, (envelope) => DateTime.Equivalence(envelope.receivedAt, last.receivedAt)),
+    (envelope) => envelope.messageId
+  );
+
+// Ids at the page's last instant; an earlier save at that same instant keeps its ids.
+const boundaryAfter = (previous: O.Option<Boundary>, page: MailPage, last: MailEnvelope): Boundary => ({
+  at: last.receivedAt,
+  ids: A.union(
+    O.match(
+      O.filter(previous, (boundary) => DateTime.Equivalence(boundary.at, last.receivedAt)),
+      { onNone: (): ReadonlyArray<MailMessageId> => [], onSome: (boundary) => boundary.ids }
+    ),
+    tiedIds(page, last)
+  ),
+});
 
 const pendingRepair = (
   scope: JobScope,
   envelope: MailEnvelope,
   ledgered: ReadonlyArray<MailCategoryName>
-): ReadonlyArray<MailCategoryName> => (isRepairable(scope, envelope) ? missingFrom(envelope, ledgered) : []);
+): ReadonlyArray<MailCategoryName> => (isCovered(scope, envelope) ? [] : missingFrom(envelope, ledgered));
 
 const withConversation = (
   conversations: HashMap.HashMap<MailConversationId, MatterKey>,
@@ -199,18 +229,26 @@ const hasPagesLeft = (pagesLeft: O.Option<number>): boolean =>
  *
  * A message with an active tag-ledger entry is not decided again. When every
  * ledgered category is on the message it counts as `alreadyTagged`. When some
- * are missing and no saved checkpoint covers the message, a category write was
- * interrupted after its ledger line: the run writes the existing categories
- * followed by the missing ones, appends no second ledger line, and counts the
- * message as `repaired`.
+ * are missing and the starting checkpoint does not cover the message, a
+ * category write was interrupted after its ledger line: the run writes the
+ * existing categories followed by the missing ones, appends no second ledger
+ * line, and counts the message as `repaired`.
  *
- * A checkpoint is saved only after a whole page was written, so an interrupted
- * write can exist only on a message received strictly after the checkpoint the
- * run started from, or on any message when the run started without one. A
- * ledgered message at or before that instant is always `alreadyTagged` and is
- * never written, whatever categories it carries now: a category the attorney
- * removed by hand stays removed, even though every poll rescans the newest
- * processed messages.
+ * The starting checkpoint covers a message received before its
+ * `lastReceivedAt`, and a message received exactly at that instant only when
+ * `coveredAtBoundary` lists its id. A checkpoint is saved after a whole page
+ * was written and lists the ids it processed at its last instant, so a
+ * message that shares the instant but sat on a later page is not covered and
+ * its interrupted write is repaired. A covered message is always
+ * `alreadyTagged` and is never written, whatever categories it carries now: a
+ * category the attorney removed by hand stays removed, even though every poll
+ * rescans the newest processed messages.
+ *
+ * A message with no active entry that an undo has touched is settled: it is
+ * skipped with no decision, no write, and no filing, and counted as
+ * `undoneSkipped`. An operator undo is a human correction, so the next poll
+ * does not tag the message again; re-tagging an undone run is a deliberate
+ * later operation, never an automatic one.
  *
  * Any other message is decided; the categories to add are the decision's
  * categories the message does not carry yet. For a matched message with
@@ -336,6 +374,7 @@ export const makeMailTaggingJob: Effect.Effect<
       ledgered: withLedgered(state.ledgered, verdict, writes),
       conversations: withConversation(state.conversations, verdict),
       ensured,
+      boundary: state.boundary,
       processed: state.processed,
     };
   });
@@ -364,11 +403,20 @@ export const makeMailTaggingJob: Effect.Effect<
       onNonEmpty: (missing) => repair(scope, state, envelope, missing),
     });
 
+  const tagUnlessUndone = (
+    scope: JobScope,
+    state: JobState,
+    envelope: MailEnvelope
+  ): Effect.Effect<JobState, JobError> =>
+    HashSet.has(scope.undone, envelope.messageId)
+      ? Effect.succeed(counted(scope, state, { undoneSkipped: 1 }))
+      : tagEnvelope(scope, state, envelope);
+
   const processEnvelope =
     (scope: JobScope) =>
     (state: JobState, envelope: MailEnvelope): Effect.Effect<JobState, JobError> =>
       O.match(HashMap.get(state.ledgered, envelope.messageId), {
-        onNone: () => tagEnvelope(scope, state, envelope),
+        onNone: () => tagUnlessUndone(scope, state, envelope),
         onSome: (ledgered) => settleLedgered(scope, state, envelope, ledgered),
       });
 
@@ -377,18 +425,25 @@ export const makeMailTaggingJob: Effect.Effect<
       O.filter(A.last(page.envelopes), () => TaggingMode.is.apply(scope.request.mode)),
       {
         onNone: () => Effect.succeed(state),
-        onSome: (last) =>
-          Effect.as(
+        onSome: (last) => {
+          const boundary = boundaryAfter(state.boundary, page, last);
+          return Effect.as(
             checkpoints.save(
               BackfillCheckpoint.make({
                 since: scope.request.since,
                 lastReceivedAt: O.some(last.receivedAt),
                 lastMessageId: O.some(last.messageId),
+                coveredAtBoundary: boundary.ids,
                 processed: state.processed,
               })
             ),
-            { ...state, report: TaggingRunReport.make({ ...state.report, wrote: true }) }
-          ),
+            {
+              ...state,
+              boundary: O.some(boundary),
+              report: TaggingRunReport.make({ ...state.report, wrote: true }),
+            }
+          );
+        },
       }
     );
 
@@ -431,6 +486,10 @@ export const makeMailTaggingJob: Effect.Effect<
       const checkpoint = yield* checkpoints.load;
       const empty = emptyTaggingRunReport(request.mode, request.runId);
       const checkpointAt = O.flatMap(checkpoint, (saved) => saved.lastReceivedAt);
+      const covered = O.match(checkpoint, {
+        onNone: (): ReadonlyArray<MailMessageId> => [],
+        onSome: (saved) => saved.coveredAtBoundary,
+      });
       const state = yield* runPages(
         {
           request,
@@ -438,6 +497,8 @@ export const makeMailTaggingJob: Effect.Effect<
           taxonomy: defaultMailTaxonomy(A.map(index.entries, (entry) => entry.matterKey)),
           empty,
           checkpointAt,
+          coveredAtBoundary: HashSet.fromIterable(covered),
+          undone: undoneMessageIds(records),
           resumeFrom: O.getOrElse(checkpointAt, () => request.since),
         },
         {
@@ -445,6 +506,7 @@ export const makeMailTaggingJob: Effect.Effect<
           ledgered: ledgeredCategoriesOf(records),
           conversations: conversationMattersOf(records),
           ensured: HashSet.empty(),
+          boundary: O.map(checkpointAt, (at) => ({ at, ids: covered })),
           processed: O.match(checkpoint, { onNone: () => 0, onSome: (saved) => saved.processed }),
         },
         O.none(),

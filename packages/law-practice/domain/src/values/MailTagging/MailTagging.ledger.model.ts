@@ -430,13 +430,94 @@ export const ContentSha256 = Sha256Hex.pipe(
  */
 export type ContentSha256 = typeof ContentSha256.Type;
 
+const filingFields = {
+  runId: TaggingRunId.annotateKey({
+    description: "Run that recorded the line.",
+  }),
+  contentSha256: ContentSha256.annotateKey({
+    description: "SHA-256 of the attachment's bytes.",
+  }),
+  matterKey: MatterKey.annotateKey({
+    description: "Matter the attachment is filed under.",
+  }),
+  destination: FilingDestination.annotateKey({
+    description: "Subfolder of the matter the sender routed the attachment to.",
+  }),
+  folderId: DocumentFolderId.annotateKey({
+    description: "Document-store folder the file is uploaded into.",
+  }),
+  fileName: S.NonEmptyString.annotateKey({
+    description: "Name the file is stored under, including any collision suffix.",
+  }),
+  messageId: MailMessageId.annotateKey({
+    description: "Message the attachment came from.",
+  }),
+  attachmentId: MailAttachmentId.annotateKey({
+    description: "Provider id of the attachment.",
+  }),
+  byteLength: S.Natural.annotateKey({
+    description: "Size of the attachment's bytes.",
+  }),
+  recordedAt: S.DateTimeUtcFromString.annotateKey({
+    description: "UTC instant the line was recorded.",
+  }),
+};
+
 /**
- * Filing-ledger line: one attachment filed into a matter's folder.
+ * Filing-ledger line written before an upload: the folder and name one
+ * attachment is about to be stored under.
+ *
+ * **Details**
+ *
+ * The intent is the first phase of a two-phase filing. It is appended before
+ * the document store is called, so a process that dies between the upload and
+ * the completion line leaves a record of exactly where the file went. An
+ * intent is pending until a later {@link FilingLedgerEntry} or
+ * {@link FilingAbandoned} names the same content, matter, folder, and file
+ * name.
+ *
+ * **Example** (Decode a filing intent)
+ *
+ * ```ts
+ * import { FilingIntent } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const intent = S.decodeUnknownSync(FilingIntent)({
+ *   _tag: "FilingIntended",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   destination: "uspto-incoming",
+ *   folderId: "100001",
+ *   fileName: "2026-07-01 office-action.pdf",
+ *   messageId: "msg-0001",
+ *   attachmentId: "att-0001",
+ *   byteLength: 1024,
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * console.log(intent.fileName) // "2026-07-01 office-action.pdf"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilingIntent extends S.TaggedClass<FilingIntent>($I`FilingIntent`)(
+  "FilingIntended",
+  filingFields,
+  $I.annote("FilingIntent", {
+    description: "Filing-ledger line recording where one attachment is about to be uploaded.",
+  })
+) {}
+
+/**
+ * Filing-ledger completion line: one attachment filed into a matter's folder.
  *
  * **Details**
  *
  * The dedupe key is `(contentSha256, matterKey)`: the same bytes are filed at
- * most once per matter.
+ * most once per matter. `reconciled` is true when the file was found already
+ * stored under a pending {@link FilingIntent} instead of being uploaded by the
+ * run that wrote this line.
  *
  * **Example** (Decode a filing-ledger entry)
  *
@@ -445,6 +526,8 @@ export type ContentSha256 = typeof ContentSha256.Type;
  * import * as S from "effect/Schema"
  *
  * const entry = S.decodeUnknownSync(FilingLedgerEntry)({
+ *   _tag: "FilingCompleted",
+ *   runId: "run-0001",
  *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   matterKey: "acme.10001",
  *   destination: "uspto-incoming",
@@ -457,80 +540,191 @@ export type ContentSha256 = typeof ContentSha256.Type;
  *   recordedAt: "2026-07-01T12:00:00.000Z"
  * })
  * console.log(entry.fileName) // "office-action.pdf"
+ * console.log(entry.reconciled) // false
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class FilingLedgerEntry extends S.Class<FilingLedgerEntry>($I`FilingLedgerEntry`)(
+export class FilingLedgerEntry extends S.TaggedClass<FilingLedgerEntry>($I`FilingLedgerEntry`)(
+  "FilingCompleted",
   {
-    contentSha256: ContentSha256.annotateKey({
-      description: "SHA-256 of the filed bytes.",
-    }),
-    matterKey: MatterKey.annotateKey({
-      description: "Matter the attachment was filed under.",
-    }),
-    destination: FilingDestination.annotateKey({
-      description: "Subfolder of the matter the sender routed the attachment to.",
-    }),
-    folderId: DocumentFolderId.annotateKey({
-      description: "Document-store folder the file was uploaded into.",
-    }),
+    ...filingFields,
     fileId: DocumentFileId.annotateKey({
-      description: "Document-store id of the uploaded file.",
+      description: "Document-store id of the stored file.",
     }),
-    fileName: S.NonEmptyString.annotateKey({
-      description: "Name the file was stored under, including any collision suffix.",
-    }),
-    messageId: MailMessageId.annotateKey({
-      description: "Message the attachment came from.",
-    }),
-    attachmentId: MailAttachmentId.annotateKey({
-      description: "Provider id of the attachment.",
-    }),
-    byteLength: S.Natural.annotateKey({
-      description: "Size of the filed bytes.",
-    }),
-    recordedAt: S.DateTimeUtcFromString.annotateKey({
-      description: "UTC instant the line was recorded.",
+    reconciled: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
+    ).annotateKey({
+      description: "Whether the file was recovered from an earlier intent rather than uploaded by this run.",
     }),
   },
   $I.annote("FilingLedgerEntry", {
-    description: "Filing-ledger line recording one attachment filed into a matter's folder.",
+    description: "Filing-ledger line recording one attachment stored in a matter's folder.",
   })
 ) {}
 
 /**
- * Codec between one JSONL line and a {@link FilingLedgerEntry}.
+ * Why a filing intent was given up without storing a file.
+ *
+ * **Example** (Guard an abandon reason)
+ *
+ * ```ts
+ * import { FilingAbandonReason } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(FilingAbandonReason)("name-taken")) // true
+ * console.log(S.is(FilingAbandonReason)("timeout")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingAbandonReason = LiteralKit(["name-taken"]).pipe(
+  $I.annoteSchema("FilingAbandonReason", {
+    description: "Why a filing intent was given up without storing a file.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingAbandonReason}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingAbandonReason = typeof FilingAbandonReason.Type;
+
+/**
+ * Filing-ledger line retiring an intent whose upload stored nothing.
+ *
+ * **Details**
+ *
+ * A first upload that finds its name taken proves the name belongs to a file
+ * the ledger never stored. The abandonment settles that {@link FilingIntent},
+ * so a later run does not mistake the foreign file for an interrupted upload
+ * of its own.
+ *
+ * **Example** (Decode a filing abandonment)
+ *
+ * ```ts
+ * import { FilingAbandoned } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const abandoned = S.decodeUnknownSync(FilingAbandoned)({
+ *   _tag: "FilingAbandoned",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   folderId: "100001",
+ *   fileName: "2026-07-01 office-action.pdf",
+ *   reason: "name-taken",
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * console.log(abandoned.reason) // "name-taken"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilingAbandoned extends S.TaggedClass<FilingAbandoned>($I`FilingAbandoned`)(
+  "FilingAbandoned",
+  {
+    runId: filingFields.runId,
+    contentSha256: filingFields.contentSha256,
+    matterKey: filingFields.matterKey,
+    folderId: filingFields.folderId,
+    fileName: filingFields.fileName,
+    reason: FilingAbandonReason.annotateKey({
+      description: "Why the intent was given up.",
+    }),
+    recordedAt: filingFields.recordedAt,
+  },
+  $I.annote("FilingAbandoned", {
+    description: "Filing-ledger line retiring an intent whose upload stored nothing.",
+  })
+) {}
+
+/**
+ * Any line of the append-only filing ledger: an intent, a completion, or an
+ * abandonment.
+ *
+ * **Example** (Match a filing-ledger record)
+ *
+ * ```ts
+ * import { FilingLedgerRecord } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const record = S.decodeUnknownSync(FilingLedgerRecord)({
+ *   _tag: "FilingIntended",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   destination: "from-client",
+ *   folderId: "100002",
+ *   fileName: "2026-07-01 declaration.pdf",
+ *   messageId: "msg-0003",
+ *   attachmentId: "att-0003",
+ *   byteLength: 512,
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * const phase = FilingLedgerRecord.match(record, {
+ *   FilingIntended: () => "intended",
+ *   FilingCompleted: () => "completed",
+ *   FilingAbandoned: () => "abandoned"
+ * })
+ * console.log(phase) // "intended"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingLedgerRecord = S.Union([FilingIntent, FilingLedgerEntry, FilingAbandoned]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("FilingLedgerRecord", {
+    description: "Any line of the append-only filing ledger: intended, completed, or abandoned.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingLedgerRecord}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingLedgerRecord = typeof FilingLedgerRecord.Type;
+
+/**
+ * Codec between one JSONL line and a {@link FilingLedgerRecord}.
  *
  * **Example** (Decode one filing-ledger line)
  *
  * ```ts
- * import { FilingLedgerEntryJsonLine } from "@beep/law-practice-domain/values"
+ * import { FilingLedgerRecordJsonLine } from "@beep/law-practice-domain/values"
  * import * as S from "effect/Schema"
  *
  * const line =
- *   '{"contentSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","matterKey":"acme.10001","folderId":"100001","fileId":"200002","fileName":"response.pdf","messageId":"msg-0002","attachmentId":"att-0002","byteLength":2048,"recordedAt":"2026-07-01T12:00:00.000Z"}'
- * const entry = S.decodeUnknownSync(FilingLedgerEntryJsonLine)(line)
- * console.log(entry.byteLength) // 2048
+ *   '{"_tag":"FilingCompleted","runId":"run-0001","contentSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","matterKey":"acme.10001","destination":"uspto-incoming","folderId":"100001","fileId":"200002","fileName":"response.pdf","messageId":"msg-0002","attachmentId":"att-0002","byteLength":2048,"reconciled":true,"recordedAt":"2026-07-01T12:00:00.000Z"}'
+ * const record = S.decodeUnknownSync(FilingLedgerRecordJsonLine)(line)
+ * console.log(record._tag) // "FilingCompleted"
  * ```
  *
  * @category codecs
  * @since 0.0.0
  */
-export const FilingLedgerEntryJsonLine = S.fromJsonString(FilingLedgerEntry).pipe(
-  $I.annoteSchema("FilingLedgerEntryJsonLine", {
+export const FilingLedgerRecordJsonLine = S.fromJsonString(FilingLedgerRecord).pipe(
+  $I.annoteSchema("FilingLedgerRecordJsonLine", {
     description: "One JSONL line of the filing ledger.",
   })
 );
 
 /**
- * Runtime type for {@link FilingLedgerEntryJsonLine}.
+ * Runtime type for {@link FilingLedgerRecordJsonLine}.
  *
  * @category models
  * @since 0.0.0
  */
-export type FilingLedgerEntryJsonLine = typeof FilingLedgerEntryJsonLine.Type;
+export type FilingLedgerRecordJsonLine = typeof FilingLedgerRecordJsonLine.Type;
 
 /**
  * Why an attachment was not filed.
@@ -601,6 +795,12 @@ export class BackfillCheckpoint extends S.Class<BackfillCheckpoint>($I`BackfillC
       .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
         description: "Id of the last processed message; none before the first page.",
+      }),
+    coveredAtBoundary: S.Array(MailMessageId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description:
+          "Ids of the processed messages received exactly at lastReceivedAt; ties not listed are not covered.",
       }),
     processed: S.Natural.pipe(
       S.withDecodingDefaultKey(Effect.succeed(0)),

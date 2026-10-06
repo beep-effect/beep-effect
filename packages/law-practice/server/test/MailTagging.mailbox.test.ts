@@ -39,7 +39,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
-import { mailboxUserId, makeM365Stub, serviceOf } from "./MailTagging.adapters.fixture.ts";
+import { mailboxUserId, makeM365Stub, serviceOf, wellKnownFolders } from "./MailTagging.adapters.fixture.ts";
 import type { MailEnvelope } from "@beep/law-practice-domain/values/MailTagging";
 import type { M365Shape } from "@beep/m365";
 
@@ -49,11 +49,15 @@ const nextLink = "https://graph.example.test/v1.0/users/attorney/messages?$skipt
 
 const Options = Layer.succeed(
   MailboxM365Options,
-  MailboxM365Config.make({ userId: mailboxUserId, pageSize: 2, excludedFolderIds: ["folder-deleted", "folder-junk"] })
+  MailboxM365Config.make({ userId: mailboxUserId, pageSize: 2, excludedFolderIds: ["folder-archive"] })
 );
 
 const mailboxOver = (overrides: Partial<M365Shape>) =>
-  serviceOf(Mailbox)(MailboxM365.pipe(Layer.provide(Layer.merge(makeM365Stub(overrides), Options))));
+  serviceOf(Mailbox)(
+    MailboxM365.pipe(
+      Layer.provide(Layer.merge(makeM365Stub({ getMailFolder: wellKnownFolders, ...overrides }), Options))
+    )
+  );
 
 const recipient = (address: string) =>
   GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) });
@@ -88,7 +92,9 @@ const bare = GraphMessage.make({
 
 const outOfScope = [
   GraphMessage.make({ ...received("msg-draft", 3), isDraft: O.some(true) }),
-  GraphMessage.make({ ...received("msg-deleted", 4), parentFolderId: O.some("folder-deleted") }),
+  GraphMessage.make({ ...received("msg-deleted", 4), parentFolderId: O.some("folder-deleteditems") }),
+  GraphMessage.make({ ...received("msg-junk", 4), parentFolderId: O.some("folder-junkemail") }),
+  GraphMessage.make({ ...received("msg-archived", 4), parentFolderId: O.some("folder-archive") }),
   GraphMessage.make({ id: "msg-undated" }),
   GraphMessage.make({ id: "msg-misdated", receivedDateTime: O.some("the day before yesterday") }),
   GraphMessage.make({ ...received("two words", 5) }),
@@ -131,6 +137,51 @@ const portError = (error: unknown) => {
 };
 
 describe("MailTagging M365 mailbox", () => {
+  it.effect(
+    "resolves Deleted Items and Junk once when it is built, for the configured mailbox",
+    Effect.fnUntraced(function* () {
+      const lookups = yield* Ref.make<ReadonlyArray<readonly [string, string | null]>>([]);
+      const mailbox = yield* mailboxOver({
+        getMailFolder: (request) =>
+          Effect.andThen(
+            Ref.update(lookups, A.append([request.folder, O.getOrNull(request.userId)] as const)),
+            wellKnownFolders(request)
+          ),
+        listMessages: () => Effect.succeed(M365MessageCollection.make({ value: outOfScope })),
+      });
+      const page = yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since }));
+      yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since }));
+
+      expect(page.envelopes).toStrictEqual([]);
+      expect(yield* Ref.get(lookups)).toStrictEqual([
+        ["deleteditems", mailboxUserId],
+        ["junkemail", mailboxUserId],
+      ]);
+    })
+  );
+
+  it.effect(
+    "fails to build with the typed port error when a folder lookup fails, before any message is read",
+    Effect.fnUntraced(function* () {
+      const listed = yield* Ref.make(0);
+      const error = yield* Effect.flip(
+        mailboxOver({
+          getMailFolder: (request) =>
+            request.folder === "junkemail" ? Effect.fail(status(403)) : wellKnownFolders(request),
+          listMessages: () => Effect.as(Ref.update(listed, N.increment), M365MessageCollection.make({ value: [] })),
+        })
+      );
+
+      expect(portError(error)).toStrictEqual([
+        "Mailbox",
+        "resolveExcludedFolders",
+        "unavailable",
+        "response status 403",
+      ]);
+      expect(yield* Ref.get(listed)).toBe(0);
+    })
+  );
+
   it.effect(
     "pages ascending from the since instant, then follows the next link, and maps messages totally",
     Effect.fnUntraced(function* () {

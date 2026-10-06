@@ -8,7 +8,7 @@
 
 import {
   BackfillCheckpointJson,
-  FilingLedgerEntryJsonLine,
+  FilingLedgerRecordJsonLine,
   TagLedgerRecordJsonLine,
 } from "@beep/law-practice-domain/values/MailTagging";
 import {
@@ -142,10 +142,10 @@ export const FilingLedgerFile: Layer.Layer<FilingLedger, never, StateRequirement
   FilingLedger,
   Effect.map(
     makeJsonlLedger("filing-ledger", "filing-ledger.jsonl", {
-      encode: S.encodeEffect(FilingLedgerEntryJsonLine),
-      decode: S.decodeEffect(FilingLedgerEntryJsonLine),
+      encode: S.encodeEffect(FilingLedgerRecordJsonLine),
+      decode: S.decodeEffect(FilingLedgerRecordJsonLine),
     }),
-    (ledger) => FilingLedgerShape.make({ append: ledger.append, entries: ledger.read })
+    (ledger) => FilingLedgerShape.make({ append: ledger.append, records: ledger.read })
   )
 );
 
