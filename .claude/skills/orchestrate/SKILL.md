@@ -93,8 +93,8 @@ Poll `gate.sh` every ~4 minutes from a detached job, not a foreground loop:
 `beep-heavy --detach orchestrator-gate bash -c 'while true; do bash
 .claude/skills/orchestrate/gate.sh; sleep 240; done'` and register it as a
 `systemd-unit` row. A `GATE-MET` row is a merge candidate, never a merge:
-`merge-gate` decides. Never poll GraphQL in a tight loop; `threads=?` is
-never zero.
+`merge-gate` decides. Never poll GraphQL in a tight loop (see "REST first"
+below); `threads=?` is never zero.
 
 Rulings in force since 2026-10-06 (verbatim sources in
 `~/.claude/memory/beep-effect/feedback-review-window-before-merge.md` and
@@ -102,6 +102,22 @@ Rulings in force since 2026-10-06 (verbatim sources in
 inside 20 minutes of ready or the last push; only money escalates; review
 loops stop after round 2; non-required Heavy/Coverage reds merge over only
 with a written attribution.
+
+Two more operator rulings from 2026-10-06, relayed by the orchestrator
+session (paraphrased; no verbatim text was relayed):
+
+- **Codex delegation.** Any session may delegate work to Codex
+  (`gpt-6.1-sol`, `medium` effort; pins in AGENTS.md "Volume pools"). Codex
+  cannot stage or commit in a linked worktree, so the rule is "Codex edits,
+  owner commits": the delegating session reviews the diff, stages by name and
+  commits. Register a running Codex delegation as a `background-job` row with
+  the owning session in `owns`.
+- **REST first.** Read PR, check and timeline state over REST (core quota).
+  GraphQL is for what REST cannot do: review-thread state, thread replies and
+  resolution, ready-for-review flips. Those calls go through a budget guard,
+  never a loop. The planned home is `bun run beep yeet gh ...` on
+  `@effected/github`, which a sibling lane is adding; until it lands, keep
+  GraphQL calls one-shot and treat a refused or rate-limited read as unknown.
 
 ## Hand-off
 
