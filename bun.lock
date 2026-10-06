@@ -1483,7 +1483,6 @@
       },
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
-        "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1633,7 +1632,6 @@
       },
       "devDependencies": {
         "@beep/test-runner": "workspace:^",
-        "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
