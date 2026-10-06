@@ -155,3 +155,11 @@ skills + cost-tiered routing + ethical-wall identity", route `mixed`, wave P1).
   cost-tiered tool routing, the not-legal-advice disclaimer gate, and
   ethical-wall `CurrentUser` identity); provenance ledger at
   research/SOURCES.md.
+
+## Research corpus intake (2026-10-06)
+
+[Ready, paused OA consumer conformance child](../../goals/oa-evidence-consumer-conformance/README.md) was independently admitted through
+[research-corpus-synthesis](../../explorations/research-corpus-synthesis/README.md). This is asynchronous owner intake, not
+owner consent or a lifecycle reset. The current parent frontier and first-consumer
+ordering remain authoritative; adopt the child only through its explicit resume
+conditions. No child implementation or host experiment has run.

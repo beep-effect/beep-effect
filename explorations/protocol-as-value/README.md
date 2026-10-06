@@ -51,3 +51,11 @@ his confirmation, then decompose into MAP.md.)
   session — the One Mechanism artifact (assets copy), the 7-area mining audit
   digest (assets copy), the @beep/identity fibration pointer, and the live
   Discord context (business invitation, pending call).
+
+## Research corpus intake (2026-10-06)
+
+[Remote-skill identity coordination evidence](../remote-skill-activation-conformance/README.md) was independently admitted through
+[research-corpus-synthesis](../research-corpus-synthesis/README.md). This is asynchronous owner intake, not
+owner consent or a lifecycle reset. The current parent frontier and first-consumer
+ordering remain authoritative; adopt the child only through its explicit resume
+conditions. No child implementation or host experiment has run.

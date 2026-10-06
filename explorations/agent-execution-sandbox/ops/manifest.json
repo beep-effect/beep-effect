@@ -6,13 +6,13 @@
     "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
-    "sources": ["research/SOURCES.md"],
+    "sources": ["research/SOURCES.md", "research/RESEARCH-CORPUS-2026-10.md"],
     "links": {
       "goals": ["goals/agent-execution-authority"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-25",
-    "updated": "2026-07-25"
+    "updated": "2026-10-06"
   }
 }

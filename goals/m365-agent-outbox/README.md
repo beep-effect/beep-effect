@@ -32,8 +32,10 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement. Slices 1 and 2 (driver mail verbs, the `beep-m365-outbox`
-server) are in PR #1471, and the live smoke passed on the firm tenant.
-Slice 3 (reply and forward drafts) follows the merge.
+server) landed in [PR #1471](https://github.com/beep-effect/beep-effect/pull/1471)
+on 2026-10-06; its live smoke passed on the firm tenant. Slice 3 (reply and
+forward drafts) remains future work. The research D-28 reconciliation and
+versioned audit follow-up also remain unimplemented.
 
 ## Latest Evidence
 
@@ -50,3 +52,7 @@ Slice 3 (reply and forward drafts) follows the merge.
   through the orchestrator session in one sitting with workstream A's.
 - The claude.ai Microsoft 365 connector cannot attach files even with its
   write scopes; do not plan around it for attachments.
+
+Research intake: [unknown send-outcome correction](research/RESEARCH-CORPUS-2026-10.md)
+from [research-corpus-synthesis](../../explorations/research-corpus-synthesis/README.md),
+with SPEC D-28 and a fixture-phase checkpoint. Lifecycle is unchanged.

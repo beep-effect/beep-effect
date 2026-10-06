@@ -5,7 +5,7 @@
     "title": "Effect v4 Workflow Engine Spike",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-v4-workflow-engine-spike",
@@ -36,9 +36,13 @@
     "explorations/effect-orchestration-patterns/BRIEF.md",
     "explorations/effect-orchestration-patterns/MAP.md",
     "explorations/effect-orchestration-patterns/DECISIONS.md",
-    "explorations/effect-orchestration-patterns/RESEARCH.md"
+    "explorations/effect-orchestration-patterns/RESEARCH.md",
+    "goals/effect-v4-workflow-engine-spike/research/RESEARCH-CORPUS-2026-10.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/RESEARCH-CORPUS-2026-10.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

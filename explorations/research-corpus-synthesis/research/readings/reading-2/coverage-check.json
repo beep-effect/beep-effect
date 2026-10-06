@@ -1,0 +1,18 @@
+{
+  "schema": "reading-coverage-check/v1",
+  "documents": 47,
+  "inputBytes": 499321,
+  "exactClaimRoutes": 152,
+  "exactSectionRoutes": 397,
+  "responsibilitySources": 382,
+  "supplementarySources": 4,
+  "findings": 86,
+  "inspectedPrimaryArtifactHashesVerified": 12,
+  "readingDispositions": {
+    "background-not-deep-read": 308,
+    "deep-read": 12,
+    "non-evidence": 59,
+    "unread-gap": 7
+  },
+  "limitations": "Mechanical closure checks authenticate records and local artifacts; actual bounded reading ranges and primary scope remain those recorded by the reader."
+}

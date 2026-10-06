@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "oa-evidence-consumer-conformance",
+    "title": "OA Evidence Consumer Conformance",
+    "status": "paused",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/oa-evidence-consumer-conformance",
+  "lifecycle": "paused",
+  "mission": "Prove distinct source, support and human-promotion outcomes at the existing OA consumer using public fixtures.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/research-corpus-synthesis",
+    "graduated": "2026-10-06"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/oa-evidence-consumer-conformance/README.md",
+    "goals/oa-evidence-consumer-conformance/SPEC.md",
+    "goals/oa-evidence-consumer-conformance/PLAN.md",
+    "goals/oa-evidence-consumer-conformance/GOAL.md",
+    "goals/oa-evidence-consumer-conformance/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/oa-evidence-consumer-conformance/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pin consumer mapping and public fixture",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/oa-evidence-consumer-conformance/GOAL.md)\" -le 4000",
+    "jq . goals/oa-evidence-consumer-conformance/ops/manifest.json",
+    "rg -n \"oa-evidence-consumer-conformance|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/oa-evidence-consumer-conformance",
+    "git diff --check -- goals/oa-evidence-consumer-conformance",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
