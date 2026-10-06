@@ -200,6 +200,7 @@ const generatedComposers = $I.compose(
   "tesseract",
   "poppler",
   "docket-intake",
+  "practice-mail-tagging",
   "occt",
   "pdf-tools",
   "technical-drawing"
@@ -2737,6 +2738,24 @@ export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.
  * @since 0.0.0
  */
 export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> = composers.$DocketIntakeId;
+
+/**
+ * Identity composer for `@beep/practice-mail-tagging`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PracticeMailTaggingId } from "@beep/identity/packages"
+ *
+ * const id = $PracticeMailTaggingId.make("PracticeMailTagging")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PracticeMailTaggingId: Identity.IdentityComposer<"@beep/practice-mail-tagging"> =
+  composers.$PracticeMailTaggingId;
 
 /**
  * Identity composer for `@beep/occt`.
