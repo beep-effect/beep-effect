@@ -39348,7 +39348,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "fixed",
+      "fixSha": "484a90e7d72dff63ad36b8c73603f9ff252f640e"
     },
     {
       "id": "EV014:packages/tooling/tool/cli/test/native-runtime.test.ts:29:it.layer@0#1",
@@ -42181,6 +42182,182 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The audit-timestamp regression is the only test in its independent fresh Cuid layer block. It owns its deterministic TestClock and advances one minute between creation and rename. All exact createdAt/updatedAt assertions remain; no other test or forked task shares this block clock."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1008:provideScopedLayer@28#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1008,
+      "endLine": 1008,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:dc5a7d552d778ea8cac05e5ff7d38e5ec437c6a64542ed3750e0ab3997852eef",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1141:provideScopedLayer@10#1",
+      "lens": "detector",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1141,
+      "endLine": 1141,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:cff37e46bc2fc6208c2e612f5cf620a3e36c2f7561ce4416f26d08d50e6d995f",
+      "class": "per-test-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:943:provideScopedLayer@15#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 943,
+      "endLine": 943,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:1dcbc53db572f97c1a38a92046fc14109fcc39ee9535a6723482db50b34f626f",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:990:provideScopedLayer@10#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 990,
+      "endLine": 990,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:32af788ea28dfafc38161d3d2574f7735d808bedf70521956b841e72c5edacbe",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:114:provideScopedLayer@11#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
+      "line": 114,
+      "endLine": 114,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:da8d9e77e792a0ad56fc465dd739b98cc40a866b5747f2dc48eb9b7a3f4a62c9",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(commandTestLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "This planner dispatch block invokes the real CLI against the checkout under its existing scoped platform fixture. Added status and sweep calls use plan mode only; the scope closes after all dispatch assertions and introduces no longer-lived resource."
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:113:provideScopedLayer@8#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
+      "line": 113,
+      "endLine": 117,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:5d5f83e0d96b9a26d6c135ea063cb127753c7393a4f8bbcf6610ce0e1847e923",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer( Layer.fresh(ModelsManifestStoreLive).pipe( Layer.provide(Layer.mergeAll(Layer.succeed(FileSystem.FileSystem, failingFs), Path.layer)) ) )",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The atomic-replacement test creates its filesystem override from the body-owned temporary directory. A fresh manifest layer must capture the failing rename service rather than reuse the outer live store; the shorter scope closes before independent filesystem cleanup assertions."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:955:provideScopedLayer@15#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 955,
+      "endLine": 955,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:4243d8e40501686f209e6d0702bac1296576d1bc129f5cd5bff6a285556b4b88",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before a second validation or independent SQL read-back; the public outer fixture owns the temporary directories. Preserve this shorter scope and the exact claims/evidence assertions."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1102:provideScopedLayer@15#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1102,
+      "endLine": 1102,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:4b71edfeb3ebe5e47c6b5521c9760c85ef5f8ba5ff6fdb72cfb3ff8c5c9a46be",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before validation or independent SQL read-back; the public outer fixture owns temporary directories. This occurrence includes the explicitly supplied source digest and preserves exact claims/evidence assertions."
     }
   ]
 }

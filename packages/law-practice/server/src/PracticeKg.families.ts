@@ -179,7 +179,7 @@ const recycleStubPattern = /^\$R/u;
 
 const directoryPrefixPattern = /^.*[\\/]/u;
 
-const basenameOf = (relativePath: string): string => relativePath.replace(directoryPrefixPattern, "");
+const basenameOf = (relativePath: string): string => pipe(relativePath, Str.replace(directoryPrefixPattern, ""));
 
 /**
  * Whether a catalogued path names a recycle-bin restore stub (`$R…`).

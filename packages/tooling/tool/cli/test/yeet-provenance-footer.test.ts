@@ -1,5 +1,6 @@
 import {
   BuildYeetVerdictInput,
+  buildPrBody,
   buildYeetVerdictForTesting,
   detectPrRepository,
   ensureProvenanceFooter,
@@ -13,8 +14,10 @@ import {
   persistPrSessionRecord,
   RepoPlanStep,
   RepoRunContext,
+  RepoStepRunResult,
   recordCurrentPrSession,
   recordMonitoredPrSession,
+  recordPrCreateLane,
   recordPrProvenanceStampLane,
   renderPrProvenance,
   runYeetMergeLoop,
@@ -766,6 +769,79 @@ describe("Yeet provenance footer splice", () => {
         const rows = yield* registry.lookup(repository, 42);
         expect(rows[0]?.role).toBe("pushed");
         expect(yield* Ref.get(runner.body)).toContain("yeet-provenance:start");
+      })
+    );
+  });
+
+  it.layer(PlatformLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("reports create failures and retains recorded lane results in the PR body", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* configureRepo(root);
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([
+          {
+            step: prCreateStep,
+            result: RepoStepRunResult.make({ stepId: prCreateStep.id, commandText: "gh pr create", exitCode: 0 }),
+          },
+          {
+            step: provenanceStampStep,
+            result: RepoStepRunResult.make({ stepId: provenanceStampStep.id, commandText: "gh pr edit", exitCode: 1 }),
+          },
+        ]);
+        const body = yield* buildPrBody(context(root), recorder);
+        expect(body).toContain("publish:pr-create: passed");
+        expect(body).toContain("publish:pr-provenance-stamp: failed");
+        yield* recordPrCreateLane(recorder, O.none(), "nothing recorded");
+        yield* recordPrProvenanceStampLane(
+          recorder,
+          O.none(),
+          O.none(),
+          ProvenanceStampOutcome.make({ status: "current", message: "current" })
+        );
+        expect(yield* Ref.get(recorder)).toHaveLength(2);
+        const failure = yield* ensurePullRequest(context(root), recorder, O.some(prCreateStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+          capture: () => Effect.succeed({ exitCode: 1, output: "creation denied", truncated: false }),
+        }).pipe(Effect.flip);
+        expect(failure).toMatchObject({ exitCode: 1, message: "gh pr create failed:\ncreation denied" });
+      })
+    );
+
+    it.effect("creates a draft when requested and falls back to the URL in the decoded view", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* configureRepo(root);
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
+        const argsSeen = yield* Ref.make<ReadonlyArray<string>>([]);
+        const result = yield* ensurePullRequest(
+          context(root),
+          recorder,
+          O.some(RepoPlanStep.make({ ...prCreateStep, args: ["pr", "create", "--draft"] })),
+          O.none(),
+          {
+            findOpen: () => Effect.succeedNone,
+            capture: (_command, args) =>
+              (args[1] === "create" ? Ref.set(argsSeen, args) : Effect.void).pipe(
+                Effect.as({ exitCode: 0, output: "", truncated: false })
+              ),
+            view: () =>
+              Effect.succeed(
+                GhPrView.make({
+                  number: 42,
+                  headRefName: context(root).branch,
+                  state: "OPEN",
+                  url: "https://github.com/beep-effect/beep-effect/pull/42",
+                })
+              ),
+          }
+        ).pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ HOME: root, PWD: root }))
+        );
+        expect(yield* Ref.get(argsSeen)).toContain("--draft");
+        expect(result.created).toBe(true);
+        assertSome(result.url, "https://github.com/beep-effect/beep-effect/pull/42");
       })
     );
   });

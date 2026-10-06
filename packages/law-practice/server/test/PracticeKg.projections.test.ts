@@ -7,15 +7,19 @@ import {
   PatentApplicationDocument,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import {
+  attributeDocuments,
   buildPracticeKgBundle,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
+  PracticeKgAttributeDocumentsInput,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
+  PracticeKgCatalogRow,
   PracticeKgClaimsCarry,
   PracticeKgClaimsCarryWrite,
   PracticeKgClaimsOptions,
+  PracticeKgDocketReferenceRow,
   PracticeKgMatterLookup,
   PracticeKgMatterLookupLive,
   PracticeKgOptions,
@@ -56,6 +60,7 @@ import * as McpServer from "effect/ai/McpServer";
 import * as Response from "effect/ai/Response";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -1090,6 +1095,7 @@ describe("practice KG projections", () => {
                 docket: "20001US06",
                 document,
                 sourceFile: "20001US06-patent.md",
+                sourceDocumentDigest: ContentDigest.make(`sha256:${Str.repeat(64)("a")}`),
               }),
             ],
           })
@@ -1147,7 +1153,7 @@ describe("practice KG projections", () => {
           A.dedupe(A.map(rows, ({ docket, sourceDocumentDigest }) => [docket, sourceDocumentDigest]))
         ).toStrictEqual([
           ["20001US05", fixtureDigests.beta],
-          ["20001US06", null],
+          ["20001US06", fixtureDigests.docket],
         ]);
         expect(A.map(rows, ({ claimText }) => claimText)).toStrictEqual(
           A.appendAll(
@@ -1176,6 +1182,36 @@ describe("practice KG projections", () => {
           A.every(rows, ({ startChar }) => startChar > claimsSectionStart),
           assertTrue
         );
+
+        // A missing catalog remains a supported batch input even when the filesystem probe fails.
+        const unavailableCatalog = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: () => Effect.fail(PlatformError.badArgument({ module: "FileSystem", method: "exists" })),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: 9 });
+
+        // An existing corrupt catalog must report source resolution failure instead of losing provenance.
+        yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
+        const catalogFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({
+            bundleOut,
+            inputs,
+            patentDocuments: [
+              PracticeKgPatentDocumentInput.make({
+                docket: "20001US09",
+                document,
+                sourceFile: "20001US09-patent.md",
+              }),
+            ],
+          })
+        ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+        expect(catalogFailure.message).toContain("Failed resolving the source document");
+        yield* fs.remove(path.join(bundleOut, "practice.duckdb"));
 
         const oversizedDocument = PatentApplicationDocument.make({
           claims: document.claims,
@@ -1350,6 +1386,22 @@ describe("practice KG projections", () => {
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
         expect(oversizedClaimsFailure.message).toContain("not a bounded regular file");
+        yield* fs.remove(oversizedClaimsPath);
+
+        // The file can grow between stat and read; the byte guard must reject the actual payload.
+        yield* fs.writeFileString(oversizedClaimsPath, "bounded at stat time");
+        const grownClaimsFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.flip,
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFile: (file) =>
+              file === oversizedClaimsPath ? Effect.succeed(new Uint8Array(2 * 1024 * 1024 + 1)) : fs.readFile(file),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(grownClaimsFailure.message).toContain("Claims input exceeds 2097152 bytes");
         yield* fs.remove(oversizedClaimsPath);
 
         const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");
@@ -1625,5 +1677,54 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
       arguments: { query: "alpha" },
       invalidArguments: { query: 1 },
     },
+  });
+});
+
+describe("family attribution fallback contracts", () => {
+  const row = (digest: string, fields: Partial<PracticeKgCatalogRow> = {}) =>
+    PracticeKgCatalogRow.make({
+      category: "docket",
+      client: null,
+      digest,
+      docket: "20001US01",
+      docketFamily: "20001",
+      effectiveName: "fixture.txt",
+      mtimeIso: "2026-10-01T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "fixture.txt",
+      ...fields,
+    });
+  const reference = (digest: string, docket: string) =>
+    PracticeKgDocketReferenceRow.make({ digest, docket, client: "12345", family: "20001" });
+
+  it("inherits a unanimous client for an unreferenced family document", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a"), row("b", { docket: null })],
+        docketReferences: [reference("a", "20001US01")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "12345", attributionSource: "family-consensus" },
+    ]);
+  });
+
+  it("accepts all family-level references and isolates other-docket citations", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a", { docket: null }), row("b", { client: "67890" })],
+        docketReferences: [reference("a", "20001US02"), reference("b", "20001US010")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "67890", attributionSource: "client-map" },
+    ]);
   });
 });
