@@ -27,7 +27,7 @@ This is deliberate. Generating the full SDK surface cost ~4.8M TypeScript type
 instantiations in `Box.models.gen.ts` alone (~7.5M package-wide) for a repo that
 calls a small subset — mass that kept exposing the no-location TS2589
 native-compiler flake in full proofs. The current 19-manager provisioning
-surface measures 2,914,305 package-wide instantiations and 623,119 marginal
+surface measures 2,653,892 package-wide instantiations and 605,246 marginal
 instantiations in `Box.models.gen.ts`. See
 `goals/box-typecheck-cost/` for the decision record and measurements.
 
@@ -48,7 +48,7 @@ is a **compile error**, never a runtime failure.
 
 3. **Re-measure and record the numbers in the PR.** Budget is ≤750K *marginal*
    instantiations for any single generated file (total minus the schema-import
-   floor, currently 1,667,162 under tsgo 7.0.2+effect-tsgo.0.39.1) and ≤3M
+   floor, currently 1,269,541 under tsgo 7.0.2+effect-tsgo.0.47.2) and ≤3M
    absolute package-wide. The exact recipe,
    the floor probe, and every prior measurement live in
    `goals/box-typecheck-cost/research/measurements.md`.
