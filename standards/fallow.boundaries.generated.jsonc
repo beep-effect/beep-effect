@@ -2318,6 +2318,7 @@
       {
         "from": "@beep/law-practice-server",
         "allow": [
+          "@beep/box",
           "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -2346,6 +2347,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/box",
           "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",

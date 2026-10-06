@@ -607,27 +607,6 @@
     "openModules": []
   },
   {
-    "id": "semver",
-    "files": [
-      "semver/Comparator.ts",
-      "semver/Range.ts",
-      "semver/SemVer.ts",
-      "semver/VersionCache.ts",
-      "semver/VersionDiff.ts",
-      "semver/index.ts",
-      "semver/internal/desugar.ts",
-      "semver/internal/grammar.ts",
-      "semver/internal/normalize.ts",
-      "semver/internal/order.ts"
-    ],
-    "moduleCount": 10,
-    "exportCount": 39,
-    "owningExportCount": 34,
-    "openModuleCount": 0,
-    "openOwningExportCount": 0,
-    "openModules": []
-  },
-  {
     "id": "memfs",
     "files": [
       "memfs/MemoryFileSystem.ts",

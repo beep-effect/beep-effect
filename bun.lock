@@ -2598,6 +2598,7 @@
       "name": "@beep/law-practice-server",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/box": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",

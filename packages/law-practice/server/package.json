@@ -40,6 +40,7 @@
     "./CandorRecord": "./src/CandorRecord/index.ts",
     "./DocketIntake": "./src/DocketIntake/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
+    "./MailTagging": "./src/MailTagging/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -52,6 +53,7 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/box": "workspace:^",
     "@beep/duckdb": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-server": "workspace:^",
