@@ -6778,3 +6778,14 @@ entry and no missing or enforced candidates. Regenerating the inventory
 removed only that stale exception, and `lint schema-first` returned to zero
 drift. An owning PR check for schema-first inventory freshness would have
 caught the mismatch before another branch tried to publish.
+
+### Merged goal PR retained two red Heavy jobs (2026-10-06)
+
+PR #1445 merged at `64c0696b2d` while its exact head had failed `Heavy / Lint
+Policy` and `Heavy / Coverage Regression`. The lint log named a missing
+`@beep/schema/PatternOntology` Vitest alias from main; the coverage log named
+losses in law-practice-server and repo-cli source plus one uncovered new schema
+branch. The goal branch's local fixes were not pushed before the merge. A
+server-side required-check gate that holds the exact head until all Heavy jobs
+settle green would prevent this closeout gap; the next goal PR must carry and
+prove the repairs rather than treating the merge as proof.
