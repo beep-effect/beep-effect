@@ -210,7 +210,7 @@ Example imports must be `from "@beep/scratchpad/schemastore"` (see `scratchpad/d
 - `symbol`: CatalogEntry, CatalogLintFinding
 - `kind`: value
 - `evidence`: Finding lead says a warned entry is still valid, but the class has no **Gotchas**. `versions` field comment: inserted ascending but key order is not a contract — derive ordering from labels via `SchemaVersioning`. `lint` is pure glob-shape analysis, not a glob engine. No described `@see` to `SchemaVersioning.catalogUrls` (assemble delegates there) or `CatalogLintFinding`.
-- `impact`: Callers may treat `lint()` as a typed error channel or trust `Object.keys(versions)` as SemVer order after JSON round-trip.
+- `impact`: Callers may treat `lint()` as a typed error channel or trust `Object.keys(versions)` as semantic version order after JSON round-trip.
 - `suggestedFix`: **Gotchas** on `CatalogEntry`: findings are values not errors; `versions` key order is not a contract. Described `@see` `{@link SchemaVersioning.catalogUrls}` and `{@link CatalogLintFinding}`. On `CatalogLintFinding`, `@see` `{@link CatalogEntry.lint}`.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
 - `fixerGroup`: schemastore
@@ -648,7 +648,7 @@ Example imports must be `from "@beep/scratchpad/schemastore"` (see `scratchpad/d
 - `kind`: module
 - `evidence`: Census confirmed module header misses. `InvalidSchemaVersionError` (value/class:40) missing `@category` `@since` titled Example. `SchemaVersion` const (value:67) missing `@category` `@since` titled Example. `SchemaVersion` type (type:76) missing `@category` `@since` (Example optional; same-name alias already exists). `CatalogUrls` (interface:112) missing `@category` `@since`. `SchemaVersioning` (value/class:134) missing `@category` `@since` titled Example. Leads useful; no legacy carriers.
 - `impact`: Version labels are the catalog-mode switch and currently have no Example showing `1.2` rejected or `catalogUrls` versioned vs unversioned.
-- `suggestedFix`: Module lead: both catalog modes; three-component SemVer labels. Categories: errors, schemas, type-level, type-level, constructors. `SchemaVersion` Example: `S.decodeUnknownSync`/`SchemaVersioning.parseResult` on `"1.2.3"` vs `"1.2"` vs `"1.2.3+build"`. `SchemaVersioning` Example: `catalogUrls` unversioned and versioned (latest URL). Type alias: described `@see` to the const, no Example. `@since 0.0.0`.
+- `suggestedFix`: Module lead: both catalog modes; three-component version labels. Categories: errors, schemas, type-level, type-level, constructors. `SchemaVersion` Example: `S.decodeUnknownSync`/`SchemaVersioning.parseResult` on `"1.2.3"` vs `"1.2"` vs `"1.2.3+build"`. `SchemaVersioning` Example: `catalogUrls` unversioned and versioned (latest URL). Type alias: described `@see` to the const, no Example. `@since 0.0.0`.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
 - `fixerGroup`: schemastore
 - `acceptanceCommands`: bun scratchpad/.jsdoc-loop/census.ts
@@ -692,7 +692,7 @@ Example imports must be `from "@beep/scratchpad/schemastore"` (see `scratchpad/d
 - `affectedFiles`: scratchpad/schemastore/SchemaVersioning.ts:52
 - `symbol`: SchemaVersion, SchemaVersioning
 - `kind`: value
-- `evidence`: File comments (4–20, 22–26, 89–93, 202–204) never become Gotchas/`@throws`: SchemaStore corpus two-part labels (`1.2`, `1`) are rejected on purpose; build metadata rejected (URL-hostile, SemVer-ignored); `SemVer.parseResult` trims but `isValid` restores no-padding so `" 1.2.3 "` fails; `fileName` throws on empty/separator/whitespace names; `catalogUrls` throws on an empty `versions` array (pass `undefined` for unversioned). Examples in JSDoc must import `@beep/scratchpad/semver` if they mention SemVer, not `@effected/semver`.
+- `evidence`: File comments (4–20, 22–26, 89–93, 202–204) never become Gotchas/`@throws`: SchemaStore corpus two-part labels (`1.2`, `1`) are rejected on purpose; build metadata rejected (URL-hostile, ignored for version precedence); the parser trims but validation rejects padding so `" 1.2.3 "` fails; `fileName` throws on empty/separator/whitespace names; `catalogUrls` throws on an empty `versions` array (pass `undefined` for unversioned).
 - `impact`: Contributors copying SchemaStore's two-part filenames will see parse failures they think are bugs. Empty `versions: []` throws outside the tagged channel.
 - `suggestedFix`: **Gotchas** on `SchemaVersion` and `SchemaVersioning` covering two-part rejection, build metadata, padding, empty-versions throw, simple file base name. `@throws` on `fileName` / `catalogUrls`. Described `@see` `{@link SchemaVersioning.parse}`, `{@link CatalogEntry.assemble}`, `{@link CatalogUrls}`.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
