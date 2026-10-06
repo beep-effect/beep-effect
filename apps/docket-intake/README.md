@@ -34,11 +34,16 @@ bun run src/bin.ts smoke                       # read-only connection check
 bun run src/bin.ts smoke --write               # also create, find and delete one test event
 ```
 
-- `poll` reads new mail, processes it, and writes yesterday's digest if it has
-  not been written. The digest is a calendar entry (when there was anything to
-  report) and a file under `digests/` in the state directory.
+- `poll` reads new mail, processes it, and writes every digest that is owed:
+  one for each day that is over and not digested yet, earliest first. After
+  an outage the missed days each get their own digest (at most 62 per cycle;
+  the next cycles write the rest). A digest is a calendar entry (when there
+  was anything to report) and a file under `digests/` in the state directory.
 - `run` repeats `poll` on a fixed interval. A cycle that fails is logged with
-  the stage that failed, and the loop goes on to the next cycle.
+  the stage that failed and the number of failures in a row, and the loop goes
+  on to the next cycle. A cycle that succeeds resets that number. When
+  `DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES` cycles in a row have failed, the
+  command exits non-zero so its supervisor can restart it and raise an alert.
 - `smoke` lists one page of messages and the master categories and prints
   counts. With `--write` it also creates one all-day event tomorrow with the
   subject `[beep live smoke] safe to delete`, finds it by its key and deletes
@@ -61,6 +66,7 @@ All settings come from the environment.
 | `DOCKET_INTAKE_TIME_ZONE` | yes | IANA time zone of the practice, for example `America/Chicago`. There is no default. |
 | `DOCKET_INTAKE_START_AT` | no | UTC ISO-8601 time to start reading from on a first run. Defaults to the time of the first run. |
 | `DOCKET_INTAKE_STATE_DIR` | no | State directory. Defaults to `$XDG_STATE_HOME/beep/docket-intake`, else `~/.local/state/beep/docket-intake`. |
+| `DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES` | no | Poll cycles that may fail in a row before `run` exits non-zero. A positive whole number. Defaults to `6`, which is thirty minutes at the default interval. |
 | `DOCKET_INTAKE_REVIEW_NEGATIVES` | no | Whether the secretary also reviews messages the paralegal found nothing in. Defaults to `true`. |
 | `AI_ANTHROPIC_API_KEY` | yes for `poll` and `run` | Key for the model both agents use. |
 | `AI_ANTHROPIC_MODEL` | no | Model id; the Anthropic driver's default applies when unset. |
@@ -121,6 +127,20 @@ WantedBy=default.target
 ```
 
 `journalctl --user -u docket-intake.service` shows the cycle counts.
+
+`Restart=on-failure` brings the service back after it exits, including when it
+gives up after too many failed cycles in a row. A restart alone tells nobody,
+so pair it with `OnFailure=` in the `[Unit]` section, naming a unit of your own
+that sends the alert you want, for example
+`OnFailure=docket-intake-alert.service`. systemd starts that unit each time the
+service enters the failed state. Add `StartLimitIntervalSec=` and
+`StartLimitBurst=` there too if a service that keeps failing should stop
+restarting and stay failed until someone looks.
+
+Only one process may use a state directory. The service holds `state.lock`
+there while it runs and a second copy refuses to start. A lock left behind by
+a process that was killed is taken over on the next start, so no cleanup is
+needed after a crash or a reboot.
 
 ## Matter lookup
 

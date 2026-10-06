@@ -60,6 +60,8 @@ type GraphTestHttpShape = {
   readonly handle: (
     request: HttpClientRequest.HttpClientRequest
   ) => Effect.Effect<Response, HttpClientError.HttpClientError>;
+  /** Make every folder lookup answer 503 from now on. */
+  readonly failFolderLookups: Effect.Effect<void>;
   readonly respondWith: (respond: TestRespond) => Effect.Effect<void>;
   readonly setup: Effect.Effect<ReadonlyArray<CapturedRequest>>;
 };
@@ -83,7 +85,22 @@ const requestUrl = (request: HttpClientRequest.HttpClientRequest): string =>
 const jsonResponse = (body: unknown, status = 200): Response =>
   Response.json(body, { headers: { "content-type": "application/json" }, status });
 
-const isSetup = (capture: CapturedRequest): boolean => Str.includes("/outlook/masterCategories")(capture.url);
+const isCategorySetup = (capture: CapturedRequest): boolean => Str.includes("/outlook/masterCategories")(capture.url);
+const isFolderSetup = (capture: CapturedRequest): boolean => Str.includes("/mailFolders/")(capture.url);
+const isSetup = (capture: CapturedRequest): boolean => isCategorySetup(capture) || isFolderSetup(capture);
+
+// A well-known folder name resolves to a synthetic id: `sentitems` is `folder-sentitems`.
+const folderResponse = (capture: CapturedRequest, down: boolean): Response =>
+  down
+    ? jsonResponse({}, 503)
+    : jsonResponse({
+        id: `folder-${pipe(
+          new URL(capture.url).pathname,
+          Str.split("/"),
+          A.last,
+          O.getOrElse(() => "")
+        )}`,
+      });
 
 const DisplayName = S.Struct({ displayName: S.String });
 const displayNameOf = (capture: CapturedRequest): string =>
@@ -95,20 +112,25 @@ const displayNameOf = (capture: CapturedRequest): string =>
   );
 
 // The mailbox starts with no docket categories, so building the layer creates all six.
-const respondToSetup = (capture: CapturedRequest): Response =>
+const categoryResponse = (capture: CapturedRequest): Response =>
   capture.method === "GET"
     ? jsonResponse({ value: [] })
     : jsonResponse({ color: "none", displayName: displayNameOf(capture), id: "category-id" }, 201);
+
+const respondToSetup = (capture: CapturedRequest, foldersDown: boolean): Response =>
+  isFolderSetup(capture) ? folderResponse(capture, foldersDown) : categoryResponse(capture);
 
 const GraphTestHttpLayer = Layer.effect(
   GraphTestHttp,
   Effect.gen(function* () {
     const capturesRef = yield* Ref.make<ReadonlyArray<CapturedRequest>>([]);
     const respondRef = yield* Ref.make<TestRespond>(() => Effect.succeed(jsonResponse({ value: [] })));
+    const foldersDownRef = yield* Ref.make(false);
     const calls = Ref.get(capturesRef).pipe(Effect.map(A.filter((capture) => !isSetup(capture))));
 
     return GraphTestHttp.of({
       calls,
+      failFolderLookups: Ref.set(foldersDownRef, true),
       handle: Effect.fn("GraphTestHttp.handle")(function* (request) {
         const capture: CapturedRequest = {
           body: requestBody(request),
@@ -119,7 +141,7 @@ const GraphTestHttpLayer = Layer.effect(
         const index = A.length(yield* calls);
         yield* Ref.update(capturesRef, A.append(capture));
         if (isSetup(capture)) {
-          return respondToSetup(capture);
+          return respondToSetup(capture, yield* Ref.get(foldersDownRef));
         }
         const respond = yield* Ref.get(respondRef);
         return yield* respond(capture, index);
@@ -247,6 +269,39 @@ const attachments = {
   ],
 };
 
+const MAILBOX_ID = "00000000-0000-4000-8000-000000000001";
+
+// One listing page for a mailbox addressed by id: only where a message sits can tell that the
+// mailbox's own sent mail is not inbound.
+const folderPage = {
+  value: [
+    { from: fromSelf, id: "sent-by-id", parentFolderId: "folder-sentitems", receivedDateTime: "2030-01-10T12:00:00Z" },
+    { from: fromOther, id: "junk-1", parentFolderId: "folder-junkemail", receivedDateTime: "2030-01-10T12:01:00Z" },
+    {
+      from: fromOther,
+      id: "deleted-1",
+      parentFolderId: "folder-deleteditems",
+      receivedDateTime: "2030-01-10T12:02:00Z",
+    },
+    {
+      from: fromOther,
+      id: "subfolder-1",
+      parentFolderId: "folder-inbox-child",
+      receivedDateTime: "2030-01-10T12:03:00Z",
+    },
+    { from: fromOther, id: "unfiled-1", receivedDateTime: "2030-01-10T12:04:00Z" },
+  ],
+};
+
+const budgetAttachments = {
+  value: [
+    attachment("pdf-a", { size: 100 }),
+    attachment("pdf-b", { size: 100 }),
+    attachment("pdf-c", { size: 100 }),
+    attachment("pdf-d", { size: 40 }),
+  ],
+};
+
 const calendarEntry = (tentative: boolean) =>
   DocketCalendarEntry.make({
     bodyText: "Synthetic fixture entry body.",
@@ -286,7 +341,8 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
       "creates the six docket master categories, each with its own color, when the layer is built",
       Effect.fnUntraced(function* () {
         const testHttp = yield* GraphTestHttp;
-        const setup = yield* testHttp.setup;
+        const everySetup = yield* testHttp.setup;
+        const setup = A.filter(everySetup, isCategorySetup);
         const created = A.filter(setup, (capture) => capture.method === "POST");
         const colors = A.getSomes(
           A.map(created, (capture) => O.map(O.flatMap(capture.body, decodeColorBody), (body) => body.color))
@@ -295,6 +351,12 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         expect(A.map(setup, (capture) => capture.method)).toStrictEqual(["GET", ...A.replicate("POST", 6)]);
         expect(A.map(created, displayNameOf)).toStrictEqual([...DocketCategory.literals]);
         expect(A.dedupe(colors)).toHaveLength(6);
+        expect(A.map(A.filter(everySetup, isFolderSetup), (capture) => new URL(capture.url).pathname)).toStrictEqual(
+          A.map(
+            ["sentitems", "drafts", "outbox", "junkemail", "deleteditems"],
+            (folder) => `/v1.0/users/${MAILBOX}/mailFolders/${folder}`
+          )
+        );
       })
     );
   });
@@ -357,6 +419,65 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         expect(A.map(calls, (capture) => capture.headers.prefer)).toStrictEqual(
           A.replicate('outlook.body-content-type="text"', 4)
         );
+      })
+    );
+  });
+
+  it.layer(graphLayer({ mailbox: MAILBOX_ID }), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "drops mail in Sent Items, Junk Email and Deleted Items by folder, and keeps mail in an inbox subfolder",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GraphTestHttp;
+        const mailbox = yield* DocketMailbox;
+        yield* testHttp.respondWith(() => succeed(jsonResponse(folderPage)));
+
+        const messages = yield* mailbox.receivedSince(O.none());
+
+        expect(A.map(messages, (received) => received.messageId)).toStrictEqual(["subfolder-1", "unfiled-1"]);
+      })
+    );
+  });
+
+  it.layer(M365TestLayer, { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "fails to build at the mailbox stage when a folder cannot be resolved",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GraphTestHttp;
+        yield* testHttp.failFolderLookups;
+
+        const failure = yield* failureOf(Layer.launch(makeDocketGraphLayer(graphConfig())));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["mailbox", "throttled"]
+        );
+      })
+    );
+  });
+
+  it.layer(graphLayer({ maxDocumentBytes: 120, maxTotalDocumentBytes: 250 }), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "keeps source documents within the total budget and drops a download larger than it claimed",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GraphTestHttp;
+        const mailbox = yield* DocketMailbox;
+        // pdf-a, pdf-b and pdf-d fit 250 bytes by their listed sizes; pdf-c does not. pdf-b then
+        // downloads at 130 bytes, over the 120-byte cap, and is dropped.
+        yield* testHttp.respondWith((capture, index) =>
+          succeed(
+            index === 0
+              ? jsonResponse(budgetAttachments)
+              : new Response(new Uint8Array(Str.includes("/pdf-b/")(capture.url) ? 130 : 40), { status: 200 })
+          )
+        );
+
+        const documents = yield* mailbox.sourceDocuments(message("m1"));
+        const calls = yield* testHttp.calls;
+
+        expect(A.map(A.drop(calls, 1), (capture) => capture.url)).toStrictEqual(
+          A.map(["pdf-a", "pdf-b", "pdf-d"], (id) => `${MAILBOX_URL}/messages/m1/attachments/${id}/$value`)
+        );
+        expect(A.map(documents, (document) => document.bytes.length)).toStrictEqual([40, 40]);
       })
     );
   });

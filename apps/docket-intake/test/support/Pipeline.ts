@@ -21,7 +21,7 @@ import {
 import { LocalDate } from "@beep/schema/LocalDate";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { Context, Deferred, Effect, HashMap, Layer, Path, Ref } from "effect";
+import { Context, Deferred, Effect, FileSystem, HashMap, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -32,8 +32,8 @@ export const MAILBOX = "docket@fixture.invalid";
 type PipelineHarnessShape = {
   /** Calendar entries the pipeline created, by idempotency key. */
   readonly entries: Ref.Ref<HashMap.HashMap<string, DocketCalendarEntry>>;
-  /** How many of the next mailbox listings fail before one succeeds. */
-  readonly failingListings: Ref.Ref<number>;
+  /** Whether each of the next mailbox listings fails, in order; listings past the end succeed. */
+  readonly listingFailures: Ref.Ref<ReadonlyArray<boolean>>;
   /** How many times the mailbox was listed. */
   readonly listings: Ref.Ref<number>;
   /** Completed the first time the mailbox is listed. */
@@ -50,7 +50,7 @@ const HarnessLayer = Layer.effect(
   Effect.gen(function* () {
     return PipelineHarness.of({
       entries: yield* Ref.make(HashMap.empty<string, DocketCalendarEntry>()),
-      failingListings: yield* Ref.make(0),
+      listingFailures: yield* Ref.make<ReadonlyArray<boolean>>([]),
       listed: yield* Deferred.make<void>(),
       listings: yield* Ref.make(0),
       state: yield* Ref.make(DocketIntakeState.make({})),
@@ -80,8 +80,8 @@ const PortsLayer = Layer.mergeAll(
         receivedSince: Effect.fn("FakeMailbox.receivedSince")(function* () {
           yield* Ref.update(harness.listings, (count) => count + 1);
           yield* Deferred.succeed(harness.listed, undefined);
-          const failing = yield* Ref.getAndUpdate(harness.failingListings, (count) => Math.max(0, count - 1));
-          if (failing > 0) {
+          const pending = yield* Ref.getAndUpdate(harness.listingFailures, A.drop(1));
+          if (A.contains(A.take(pending, 1), true)) {
             return yield* DocketIntakeError.make({ cause: "transport", stage: "mailbox" });
           }
           return [message];
@@ -152,5 +152,16 @@ export const PipelineLayer = makeDocketIntakeLayer(DocketIntakeConfig.make({ mai
   Layer.provideMerge(HarnessLayer)
 );
 
-/** An in-memory file system and POSIX paths for the digest archive. */
-export const FilesLayer = Layer.merge(MemoryFileSystem.layer, Path.layer);
+// The store names its temporary files after the process, which it reads from `/proc/self`.
+const LinuxFileSystemLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const memory = yield* MemoryFileSystem.make;
+    yield* memory.makeDirectory("/proc", { recursive: true });
+    yield* memory.symlink("4242", "/proc/self");
+    return memory;
+  }).pipe(Effect.orDie)
+);
+
+/** An in-memory file system that looks like Linux, and POSIX paths, for the digest archive. */
+export const FilesLayer = Layer.merge(LinuxFileSystemLayer, Path.layer);

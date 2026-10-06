@@ -24,6 +24,7 @@ export const fixtureConfig = DocketIntakeAppConfig.make({
   certThumbprintSha256: "AB12",
   clientId: "client-id",
   mailbox: MAILBOX,
+  maxConsecutiveFailures: 2,
   reviewNegatives: true,
   startAt: O.none(),
   stateDirectory: STATE_DIRECTORY,

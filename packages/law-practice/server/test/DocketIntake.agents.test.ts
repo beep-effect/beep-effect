@@ -19,6 +19,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as O from "effect/Option";
@@ -28,10 +29,14 @@ import * as Str from "effect/String";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 import type * as Prompt from "effect/ai/Prompt";
 
+type ScriptedResponse = Effect.Effect<string, AiError.AiError>;
+
 type ScriptedModelShape = {
   readonly prompts: Effect.Effect<ReadonlyArray<Prompt.Prompt>>;
-  readonly respondWith: (response: Effect.Effect<string>) => Effect.Effect<void>;
-  readonly responseRef: Ref.Ref<Effect.Effect<string>>;
+  /** Answer the next calls with these responses in turn; the last one repeats. */
+  readonly respondInTurn: (responses: A.NonEmptyReadonlyArray<ScriptedResponse>) => Effect.Effect<void>;
+  readonly respondWith: (response: ScriptedResponse) => Effect.Effect<void>;
+  readonly responsesRef: Ref.Ref<A.NonEmptyReadonlyArray<ScriptedResponse>>;
   /** Property names of the answer schema each call handed to the provider. */
   readonly answerFields: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
   readonly seen: Ref.Ref<ReadonlyArray<Prompt.Prompt>>;
@@ -65,15 +70,18 @@ const answerFieldsOf = (format: LanguageModel.ProviderOptions["responseFormat"])
 const ScriptedModelLayer = Layer.effect(
   ScriptedModel,
   Effect.gen(function* () {
-    const responseRef = yield* Ref.make<Effect.Effect<string>>(Effect.succeed("{}"));
+    const responsesRef = yield* Ref.make<A.NonEmptyReadonlyArray<ScriptedResponse>>([Effect.succeed("{}")]);
     const seen = yield* Ref.make<ReadonlyArray<Prompt.Prompt>>([]);
     return ScriptedModel.of({
       answerFields: yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]),
       prompts: Ref.get(seen),
-      respondWith: Effect.fn("ScriptedModel.respondWith")(function* (response) {
-        yield* Ref.set(responseRef, response);
+      respondInTurn: Effect.fn("ScriptedModel.respondInTurn")(function* (responses) {
+        yield* Ref.set(responsesRef, responses);
       }),
-      responseRef,
+      respondWith: Effect.fn("ScriptedModel.respondWith")(function* (response) {
+        yield* Ref.set(responsesRef, [response]);
+      }),
+      responsesRef,
       seen,
     });
   })
@@ -87,7 +95,10 @@ const LanguageModelLayer = Layer.effect(
       generateText: Effect.fnUntraced(function* (options) {
         yield* Ref.update(scripted.seen, A.append(options.prompt));
         yield* Ref.update(scripted.answerFields, A.append(answerFieldsOf(options.responseFormat)));
-        const text = yield* yield* Ref.get(scripted.responseRef);
+        const text = yield* yield* Ref.modify(scripted.responsesRef, (responses) => [
+          A.headNonEmpty(responses),
+          A.match(A.tailNonEmpty(responses), { onEmpty: () => responses, onNonEmpty: (rest) => rest }),
+        ]);
         return [
           Response.makePart("text", { text }),
           Response.makePart("finish", { reason: "stop", response: undefined, usage: TestUsage }),
@@ -98,10 +109,17 @@ const LanguageModelLayer = Layer.effect(
   })
 );
 
+const aiFailure = (reason: AiError.AiErrorReason): ScriptedResponse =>
+  Effect.fail(AiError.make({ method: "generateText", module: "ScriptedModel", reason }));
+
+const rateLimited = aiFailure(AiError.RateLimitError.make({}));
+const rejected = aiFailure(AiError.InvalidRequestError.make({}));
+
 const makeAgentsLayer = (options: DocketAgentsOptions) =>
   makeDocketAgentsLayer(options).pipe(Layer.provide(LanguageModelLayer), Layer.provideMerge(ScriptedModelLayer));
 
 const agentsLayer = makeAgentsLayer(DocketAgentsOptions.make({}));
+const fastRetryLayer = makeAgentsLayer(DocketAgentsOptions.make({ retryBaseDelay: Duration.millis(1) }));
 
 const failureOf = <A>(effect: Effect.Effect<A, DocketIntakeError>): Effect.Effect<O.Option<DocketIntakeError>> =>
   Effect.exit(effect).pipe(Effect.map(Exit.match({ onFailure: Cause.findErrorOption, onSuccess: O.none })));
@@ -261,7 +279,8 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+  // Unusable output counts as retryable, so this block runs on the real clock with a tiny delay.
+  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
     it.effect(
       "maps provider failures and unusable output to the stage that called the model",
       Effect.fnUntraced(function* () {
@@ -287,13 +306,14 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
     );
   });
 
-  it("limits the paralegal to 60 seconds and the secretary to 120 by default", () => {
+  it("limits the paralegal to 60 seconds and the secretary to 120, and waits half a second before a retry, by default", () => {
     const defaults = DocketAgentsOptions.make({});
 
     expect([
       Duration.toSeconds(defaults.paralegalTimeout),
       Duration.toSeconds(defaults.secretaryTimeout),
-    ]).toStrictEqual([60, 120]);
+      Duration.toMillis(defaults.retryBaseDelay),
+    ]).toStrictEqual([60, 120, 500]);
   });
 
   // Real clock, tiny limits: the scripted model never answers, so each call can only end by timing out.
@@ -432,6 +452,64 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
             ["review", "wire-decode"]
           );
         }
+      })
+    );
+  });
+
+  // Real clock and a one-millisecond base, so the retry delays elapse on their own.
+  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect(
+      "tries a retryable model failure again and returns the entry from the second call",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const paralegal = yield* DocketParalegal;
+        yield* scripted.respondInTurn([rateLimited, json(paralegalWire())]);
+
+        const entry = yield* paralegal.enter(message);
+
+        assertSome(
+          O.map(asDocketEntry(entry), (entered) => entered.title),
+          "Fixture response due"
+        );
+        expect(yield* scripted.prompts).toHaveLength(2);
+      })
+    );
+  });
+
+  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect(
+      "gives up after three retries of a failure that keeps coming back",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const paralegal = yield* DocketParalegal;
+        yield* scripted.respondWith(rateLimited);
+
+        const failure = yield* failureOf(paralegal.enter(message));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["enter", "model:RateLimitError"]
+        );
+        expect(yield* scripted.prompts).toHaveLength(4);
+      })
+    );
+  });
+
+  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails at once on a failure that is not retryable",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+
+        const failure = yield* failureOf(secretary.review({ documents: [], entry: paralegalEntry, message }));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["review", "model:InvalidRequestError"]
+        );
+        expect(yield* scripted.prompts).toHaveLength(1);
       })
     );
   });

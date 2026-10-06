@@ -30,6 +30,7 @@ import {
   M365EventBody,
   M365EventDraft,
   M365FindEventsByIdempotencyKeyRequest,
+  M365GetMailFolderRequest,
   M365GetMessageRequest,
   M365ListMessageAttachmentsRequest,
   M365ListMessagesRequest,
@@ -38,7 +39,7 @@ import {
   m365AllDayWindow,
 } from "@beep/m365";
 import { LocalDate } from "@beep/schema/LocalDate";
-import { DateTime, Effect, Layer, pipe } from "effect";
+import { DateTime, Effect, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -54,6 +55,7 @@ const PositiveCount = S.Int.check(S.isGreaterThan(0));
 const docketGraphConfigPageSizeDefault = 50;
 const docketGraphConfigMaxDocumentsDefault = 3;
 const docketGraphConfigMaxDocumentBytesDefault = 15_000_000;
+const docketGraphConfigMaxTotalDocumentBytesDefault = 20_000_000;
 
 /**
  * Settings of the Graph mailbox and calendar adapters.
@@ -97,6 +99,13 @@ export class DocketGraphConfig extends S.Class<DocketGraphConfig>($I`DocketGraph
       S.withConstructorDefault(Effect.succeed(docketGraphConfigMaxDocumentsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigMaxDocumentsDefault))
     ).annotateKey({ description: "Most source documents handed to the reviewer for one message." }),
+    maxTotalDocumentBytes: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(docketGraphConfigMaxTotalDocumentBytesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigMaxTotalDocumentBytesDefault))
+    ).annotateKey({
+      description:
+        "Most raw bytes of source documents handed to the reviewer for one message. The default of 20,000,000 stays under a 32 MB request once base64 encoding inflates the bytes by four thirds.",
+    }),
     pageSize: PositiveCount.pipe(
       S.withConstructorDefault(Effect.succeed(docketGraphConfigPageSizeDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketGraphConfigPageSizeDefault))
@@ -111,6 +120,10 @@ const FILE_ATTACHMENT_TYPE = "#microsoft.graph.fileAttachment";
 const PDF_CONTENT_TYPE = "application/pdf";
 const PDF_EXTENSION = ".pdf";
 const PRECONDITION_FAILED = 412;
+
+// Well-known folders whose mail is never inbound: what the mailbox wrote itself, and what it or
+// its filters threw away. Their ids are resolved once, when the layer is built.
+const EXCLUDED_FOLDERS = ["sentitems", "drafts", "outbox", "junkemail", "deleteditems"] as const;
 
 const categoryColor = DocketCategory.$match({
   "Docket - digest": (): GraphCategoryColor => "preset12",
@@ -176,7 +189,15 @@ const senderAddress = (message: GraphMessage): O.Option<string> =>
     O.flatMap((emailAddress) => emailAddress.address)
   );
 
-// The listing spans every folder, so drafts and the mailbox's own sent mail are dropped here.
+// The listing spans every folder. The folder a message sits in decides whether it is inbound;
+// that holds however the mailbox is addressed (by address or by id).
+const isInExcludedFolder =
+  (excludedFolderIds: HashSet.HashSet<string>) =>
+  (message: GraphMessage): boolean =>
+    O.exists(message.parentFolderId, (folderId) => HashSet.has(excludedFolderIds, folderId));
+
+// Secondary guards for mail outside those folders: drafts, and mail the mailbox sent to itself
+// when it is configured by address.
 const isInbound =
   (mailbox: string) =>
   (message: GraphMessage): boolean =>
@@ -255,6 +276,37 @@ const isReadableDocument =
     isPdf(attachment) &&
     O.exists(attachment.size, (size) => size <= maxDocumentBytes);
 
+type DocumentBudget<Document> = {
+  readonly kept: ReadonlyArray<Document>;
+  readonly remainingBytes: number;
+};
+
+// Keep a document when it fits what is left of the budget; one that does not fit is passed over
+// and later, smaller ones are still considered.
+const withinBudget = <Document>(
+  budget: DocumentBudget<Document>,
+  document: Document,
+  bytes: number
+): DocumentBudget<Document> =>
+  bytes <= budget.remainingBytes
+    ? { kept: A.append(budget.kept, document), remainingBytes: budget.remainingBytes - bytes }
+    : budget;
+
+type SizedAttachment = { readonly attachment: GraphAttachment; readonly bytes: number };
+
+const sized = (attachment: GraphAttachment): O.Option<SizedAttachment> =>
+  O.map(attachment.size, (bytes) => ({ attachment, bytes }));
+
+const selectWithinBudget = (
+  attachments: ReadonlyArray<GraphAttachment>,
+  totalBytes: number
+): ReadonlyArray<GraphAttachment> =>
+  A.reduce(
+    A.getSomes(A.map(attachments, sized)),
+    { kept: A.empty<GraphAttachment>(), remainingBytes: totalBytes },
+    (budget: DocumentBudget<GraphAttachment>, candidate) => withinBudget(budget, candidate.attachment, candidate.bytes)
+  ).kept;
+
 const toWrittenEntry = (event: GraphEvent): O.Option<DocketWrittenEntry> =>
   pipe(
     O.liftPredicate(event.id, Str.isNonEmpty),
@@ -276,9 +328,29 @@ const toEventDraft = (entry: DocketCalendarEntry, timeZone: string): M365EventDr
     subject: entry.subject,
   });
 
-const makeMailbox = (m365: M365Shape, config: DocketGraphConfig) => {
+const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, excludedFolderIds: HashSet.HashSet<string>) => {
   const userId = O.some(config.mailbox);
   const zone = config.timeZone;
+
+  // Download one selected document and keep it only when its real size fits both the
+  // per-document cap and what is left of the total: metadata sizes are not always exact.
+  const downloadWithinBudget = Effect.fnUntraced(function* (
+    messageId: string,
+    budget: DocumentBudget<DocketSourceDocument>,
+    attachment: GraphAttachment
+  ) {
+    const content = yield* m365.downloadMessageAttachment(
+      M365DownloadMessageAttachmentRequest.make({ attachmentId: attachment.id, messageId, userId })
+    );
+    const bytes = content.bytes.length;
+    return bytes <= config.maxDocumentBytes
+      ? withinBudget(
+          budget,
+          DocketSourceDocument.make({ bytes: content.bytes, contentType: PDF_CONTENT_TYPE, name: attachment.name }),
+          bytes
+        )
+      : budget;
+  });
 
   const listPages: (request: M365ListMessagesRequest) => Effect.Effect<ReadonlyArray<GraphMessage>, M365Error> =
     Effect.fnUntraced(function* (request) {
@@ -333,9 +405,12 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig) => {
           userId,
         })
       ).pipe(Effect.mapError(mailboxError));
-      const inbound = A.filter(listed, isInbound(config.mailbox));
+      const inExcludedFolder = isInExcludedFolder(excludedFolderIds);
+      const elsewhere = A.filter(listed, (received) => !inExcludedFolder(received));
+      const inbound = A.filter(elsewhere, isInbound(config.mailbox));
       const messages = A.getSomes(A.map(inbound, toDocketMessage(zone)));
       yield* Effect.annotateCurrentSpan({
+        docket_dropped_excluded_folder: A.length(listed) - A.length(elsewhere),
         docket_listed: A.length(listed),
         docket_returned: A.length(messages),
         docket_skipped_undated: A.length(inbound) - A.length(messages),
@@ -346,36 +421,23 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig) => {
       const attachments = yield* m365
         .listMessageAttachments(M365ListMessageAttachmentsRequest.make({ messageId: message.messageId, userId }))
         .pipe(Effect.mapError(mailboxError));
-      const readable = A.take(
-        A.filter(attachments.value, isReadableDocument(config.maxDocumentBytes)),
-        config.maxDocuments
-      );
+      const readable = A.filter(attachments.value, isReadableDocument(config.maxDocumentBytes));
+      const selected = A.take(selectWithinBudget(readable, config.maxTotalDocumentBytes), config.maxDocuments);
+      const downloaded = yield* Effect.reduce(
+        selected,
+        (): DocumentBudget<DocketSourceDocument> => ({
+          kept: A.empty<DocketSourceDocument>(),
+          remainingBytes: config.maxTotalDocumentBytes,
+        }),
+        (budget: DocumentBudget<DocketSourceDocument>, attachment) =>
+          downloadWithinBudget(message.messageId, budget, attachment)
+      ).pipe(Effect.mapError(mailboxError));
       yield* Effect.annotateCurrentSpan({
         docket_attachments: A.length(attachments.value),
-        docket_documents: A.length(readable),
+        docket_documents: A.length(downloaded.kept),
+        docket_documents_dropped_oversize: A.length(selected) - A.length(downloaded.kept),
       });
-      return yield* Effect.forEach(
-        readable,
-        (attachment) =>
-          m365
-            .downloadMessageAttachment(
-              M365DownloadMessageAttachmentRequest.make({
-                attachmentId: attachment.id,
-                messageId: message.messageId,
-                userId,
-              })
-            )
-            .pipe(
-              Effect.map((content) =>
-                DocketSourceDocument.make({
-                  bytes: content.bytes,
-                  contentType: PDF_CONTENT_TYPE,
-                  name: attachment.name,
-                })
-              )
-            ),
-        { concurrency: 1 }
-      ).pipe(Effect.mapError(mailboxError));
+      return downloaded.kept;
     }),
   });
 };
@@ -416,7 +478,10 @@ const makeCalendar = (m365: M365Shape, config: DocketGraphConfig) => {
  * **Details**
  *
  * Building the layer makes sure the six `Docket - *` master categories exist
- * in the mailbox; existing categories are never changed. On a message the
+ * in the mailbox; existing categories are never changed. It also resolves the
+ * ids of the Sent Items, Drafts, Outbox, Junk Email and Deleted Items folders
+ * once; mail in those folders is never handed to the pipeline. A failed
+ * folder lookup fails the build at stage `mailbox`. On a message the
  * adapter only ever adds `Docket - entered`, and it writes the category list
  * back with every other category in place.
  *
@@ -452,9 +517,17 @@ export const makeDocketGraphLayer = (
           M365EnsureMasterCategoriesRequest.make({ categories: masterCategories, userId: O.some(config.mailbox) })
         )
         .pipe(Effect.mapError(mailboxError));
+      const excludedFolders = yield* Effect.forEach(
+        EXCLUDED_FOLDERS,
+        (folder) => m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })),
+        { concurrency: 1 }
+      ).pipe(Effect.mapError(mailboxError));
       yield* Effect.annotateCurrentSpan({ docket_categories_created: A.length(ensured.created) });
       return Layer.merge(
-        Layer.succeed(DocketMailbox, makeMailbox(m365, config)),
+        Layer.succeed(
+          DocketMailbox,
+          makeMailbox(m365, config, HashSet.fromIterable(A.map(excludedFolders, (folder) => folder.id)))
+        ),
         Layer.succeed(DocketCalendar, makeCalendar(m365, config))
       );
     }).pipe(Effect.withSpan("DocketGraph.make"))

@@ -21,7 +21,7 @@ import {
   SecretaryReview,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { O } from "@beep/utils";
-import { Duration, Effect, Layer } from "effect";
+import { Duration, Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as S from "effect/Schema";
@@ -37,6 +37,9 @@ const PositiveCount = S.Int.check(S.isGreaterThan(0));
 const docketAgentsOptionsParalegalTimeoutDefault = Duration.seconds(60);
 const docketAgentsOptionsSecretaryTimeoutDefault = Duration.seconds(120);
 const docketAgentsOptionsMaxBodyCharsDefault = 60_000;
+const docketAgentsOptionsRetryBaseDelayDefault = Duration.millis(500);
+const MAX_RETRIES = 3;
+const RETRY_FACTOR = 2;
 
 /**
  * Settings of the docket intake agents.
@@ -63,6 +66,13 @@ export class DocketAgentsOptions extends S.Class<DocketAgentsOptions>($I`DocketA
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsParalegalTimeoutDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsParalegalTimeoutDefault))
     ).annotateKey({ description: "Time limit of one paralegal call; 60 seconds by default." }),
+    retryBaseDelay: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(docketAgentsOptionsRetryBaseDelayDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsRetryBaseDelayDefault))
+    ).annotateKey({
+      description:
+        "First delay before a retryable model failure is tried again; it doubles on each of at most three retries. 500 milliseconds by default.",
+    }),
     secretaryTimeout: S.Duration.pipe(
       S.withConstructorDefault(Effect.succeed(docketAgentsOptionsSecretaryTimeoutDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketAgentsOptionsSecretaryTimeoutDefault))
@@ -266,10 +276,13 @@ const reviewEncoded = (wire: SecretaryWire, hasDocuments: boolean): unknown => (
 type AgentCall<Wire extends Record<string, unknown>> = {
   readonly name: string;
   readonly prompt: ReadonlyArray<Prompt.MessageEncoded>;
+  readonly retryBaseDelay: Duration.Duration;
   readonly schema: S.Codec<Wire, Wire>;
   readonly stage: DocketIntakeStage;
   readonly timeout: Duration.Duration;
 };
+
+const isRetryable = (error: AiError.AiError): boolean => error.isRetryable;
 
 const callAgent = <Wire extends Record<string, unknown>>(
   languageModel: LanguageModel.LanguageModel,
@@ -277,6 +290,13 @@ const callAgent = <Wire extends Record<string, unknown>>(
 ): Effect.Effect<Wire, DocketIntakeError> =>
   languageModel.generateObject({ objectName: call.name, prompt: call.prompt, schema: call.schema }).pipe(
     Effect.map((response) => response.value),
+    // A rate limit, an overloaded provider or a dropped connection is worth another try; a
+    // rejected request or unusable output is not. The retries run inside the call's time limit.
+    Effect.retry({
+      schedule: Schedule.exponential(call.retryBaseDelay, RETRY_FACTOR),
+      times: MAX_RETRIES,
+      while: isRetryable,
+    }),
     Effect.mapError(modelFailure(call.stage)),
     Effect.catchDefect(() => Effect.fail(failure(call.stage, "model-defect"))),
     Effect.timeoutOrElse({
@@ -290,6 +310,9 @@ const callAgent = <Wire extends Record<string, unknown>>(
  *
  * **Details**
  *
+ * A retryable provider failure (rate limit, overload, dropped connection) is
+ * retried up to three times with a doubling delay, inside the call's time
+ * limit; any other failure fails at once.
  * Every failure of a call (provider error, timeout, an answer the use-case
  * models reject) becomes a `DocketIntakeError` at stage `enter` or `review`
  * with a short technical label. Source documents are sent to the secretary as
@@ -325,6 +348,7 @@ export const makeDocketAgentsLayer = (
           const wire = yield* callAgent(languageModel, {
             name: "docket_entry",
             prompt: promptOf(PARALEGAL_SYSTEM, messageBlock(message, options.maxBodyChars), A.empty()),
+            retryBaseDelay: options.retryBaseDelay,
             schema: ParalegalWire,
             stage: "enter",
             timeout: options.paralegalTimeout,
@@ -357,6 +381,7 @@ export const makeDocketAgentsLayer = (
           const wire = yield* callAgent(languageModel, {
             name: "docket_review",
             prompt: promptOf(SECRETARY_SYSTEM, text, input.documents),
+            retryBaseDelay: options.retryBaseDelay,
             schema: SecretaryWire,
             stage: "review",
             timeout: options.secretaryTimeout,

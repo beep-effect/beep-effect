@@ -20,13 +20,13 @@ import {
 import { addDays, LocalDate, equals as sameDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Context, Effect, Exit, FileSystem, HashMap, Layer, Path, Ref } from "effect";
+import { Cause, Context, Effect, Exit, FileSystem, Layer, Path, Ref, Scope } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -34,71 +34,90 @@ import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntak
 
 // A nested directory that does not exist yet: building the store has to create it.
 const DIRECTORY = "/fixture/state/docket-intake";
+const STATE_PATH = `${DIRECTORY}/state.json`;
+const LOCK_PATH = `${DIRECTORY}/state.lock`;
+const OWN_PID = "4242";
+const BOOT_ID = "boot-a";
 
-type MemoryFilesShape = {
-  readonly files: Ref.Ref<HashMap.HashMap<string, string>>;
-  /** Every write and rename, in order. */
-  readonly operations: Ref.Ref<ReadonlyArray<string>>;
+type OpenedFilesShape = {
+  /** Every path the store opened for writing, in order. */
+  readonly opened: Ref.Ref<ReadonlyArray<string>>;
 };
 
-class MemoryFiles extends Context.Service<MemoryFiles, MemoryFilesShape>()(
-  "@beep/law-practice-server/test/DocketIntake.store.test/MemoryFiles"
+class OpenedFiles extends Context.Service<OpenedFiles, OpenedFilesShape>()(
+  "@beep/law-practice-server/test/DocketIntake.store.test/OpenedFiles"
 ) {}
 
-const MemoryFilesLayer = Layer.effect(
-  MemoryFiles,
+const OpenedFilesLayer = Layer.effect(
+  OpenedFiles,
   Effect.gen(function* () {
-    return MemoryFiles.of({
-      files: yield* Ref.make(HashMap.empty<string, string>()),
-      operations: yield* Ref.make<ReadonlyArray<string>>([]),
-    });
+    return OpenedFiles.of({ opened: yield* Ref.make<ReadonlyArray<string>>([]) });
   })
 );
 
-const notFound = (method: string, path: string) =>
-  PlatformError.systemError({ _tag: "NotFound", method, module: "FileSystem", pathOrDescriptor: path });
+// An in-memory file system that looks like Linux to the store: `/proc/self` names this process,
+// `/proc/<pid>` exists for a running process, and the kernel reports a boot id. It also records
+// which files are opened, so the temporary file names are visible.
+const fileSystemLayer = (bootId: O.Option<string>) =>
+  Layer.effect(
+    FileSystem.FileSystem,
+    Effect.gen(function* () {
+      const memory = yield* MemoryFileSystem.make;
+      const record = yield* OpenedFiles;
+      yield* memory.makeDirectory(`/proc/${OWN_PID}`, { recursive: true });
+      yield* memory.symlink(OWN_PID, "/proc/self");
+      yield* memory.makeDirectory("/proc/sys/kernel/random", { recursive: true });
+      yield* Effect.forEach(O.toArray(bootId), (id) =>
+        memory.writeFileString("/proc/sys/kernel/random/boot_id", `${id}\n`)
+      );
+      return {
+        ...memory,
+        open: (path, options) =>
+          Ref.update(record.opened, A.append(path)).pipe(Effect.andThen(memory.open(path, options))),
+      } satisfies FileSystem.FileSystem;
+    }).pipe(Effect.orDie)
+  );
 
-// The store's own behavior is the subject, so the file system is an in-memory one that records
-// the order of writes and renames.
-const MemoryFileSystemLayer = Layer.effect(
-  FileSystem.FileSystem,
-  Effect.gen(function* () {
-    const memory = yield* MemoryFiles;
-    const read = Effect.fnUntraced(function* (method: string, path: string) {
-      return yield* Effect.fromOption(HashMap.get(yield* Ref.get(memory.files), path), () => notFound(method, path));
-    });
-
-    return FileSystem.makeNoop({
-      exists: (path) => Ref.get(memory.files).pipe(Effect.map(HashMap.has(path))),
-      makeDirectory: () => Effect.void,
-      readDirectory: (path) =>
-        Ref.get(memory.files).pipe(
-          Effect.map((files) =>
-            A.map(
-              A.filter(A.fromIterable(HashMap.keys(files)), Str.startsWith(`${path}/`)),
-              Str.slice(Str.length(path) + 1)
-            )
-          )
-        ),
-      readFileString: (path) => read("readFileString", path),
-      rename: Effect.fnUntraced(function* (oldPath, newPath) {
-        const contents = yield* read("rename", oldPath);
-        yield* Ref.update(memory.files, (files) => HashMap.set(HashMap.remove(files, oldPath), newPath, contents));
-        yield* Ref.update(memory.operations, A.append(`rename ${oldPath} -> ${newPath}`));
-      }),
-      writeFileString: Effect.fnUntraced(function* (path, contents) {
-        yield* Ref.update(memory.files, HashMap.set(path, contents));
-        yield* Ref.update(memory.operations, A.append(`write ${path}`));
-      }),
-    });
-  })
+const FilesLayer = fileSystemLayer(O.some(BOOT_ID)).pipe(
+  Layer.provideMerge(OpenedFilesLayer),
+  Layer.provideMerge(Path.layer)
 );
 
-const storeLayer = makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: DIRECTORY })).pipe(
-  Layer.provideMerge(MemoryFileSystemLayer),
-  Layer.provideMerge(Path.layer),
-  Layer.provideMerge(MemoryFilesLayer)
-);
+const storeOptions = DocketFileStoreOptions.make({ directory: DIRECTORY });
+
+const storeLayer = makeDocketFileStoreLayer(storeOptions).pipe(Layer.provideMerge(FilesLayer));
+
+const LockFile = S.fromJsonString(S.Struct({ bootId: S.String, pid: S.String, startedAt: S.String }));
+const decodeLockFile = S.decodeUnknownOption(LockFile);
+const encodeLockFile = S.encodeUnknownEffect(LockFile);
+
+// Put a lock in place as another process would have left it.
+const leaveLock = Effect.fnUntraced(function* (holder: { readonly bootId: string; readonly pid: string }) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(DIRECTORY, { recursive: true });
+  yield* fs.remove(LOCK_PATH, { force: true });
+  yield* fs.writeFileString(
+    LOCK_PATH,
+    yield* Effect.orDie(encodeLockFile({ ...holder, startedAt: "2030-01-09T10:00:00.000Z" }))
+  );
+});
+
+const lockHolder = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  return O.map(decodeLockFile(yield* fs.readFileString(LOCK_PATH)), (lock) => [lock.pid, lock.bootId]);
+});
+
+// Open the store in a scope of its own, hand back who holds the lock while it is open, and close
+// the scope again.
+const openAndClose = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const scope = yield* Scope.make();
+  const context = yield* Layer.buildWithScope(makeDocketFileStoreLayer(storeOptions), scope);
+  const empty = yield* Context.get(context, DocketIntakeStore).load;
+  const holder = yield* lockHolder;
+  yield* Scope.close(scope, Exit.void);
+  return { empty, holder, lockedAfterClose: yield* fs.exists(LOCK_PATH) };
+});
 
 const failureOf = <A, R>(
   effect: Effect.Effect<A, DocketIntakeError, R>
@@ -142,7 +161,7 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
       Effect.fnUntraced(function* () {
         const store = yield* DocketIntakeStore;
         const fs = yield* FileSystem.FileSystem;
-        const memory = yield* MemoryFiles;
+        const record = yield* OpenedFiles;
 
         const initial = yield* store.load;
         yield* store.save(state);
@@ -158,11 +177,9 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           "NotDocketItem",
           "IntakeFailed",
         ]);
-        expect(files).toStrictEqual(["state.json"]);
-        expect(yield* Ref.get(memory.operations)).toStrictEqual([
-          `write ${DIRECTORY}/state.json.tmp`,
-          `rename ${DIRECTORY}/state.json.tmp -> ${DIRECTORY}/state.json`,
-        ]);
+        expect(A.sort(files, Str.Order)).toStrictEqual(["state.json", "state.lock"]);
+        assertSome(yield* lockHolder, [OWN_PID, BOOT_ID]);
+        expect(yield* Ref.get(record.opened)).toHaveLength(1);
       })
     );
   });
@@ -231,6 +248,89 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
           ["store", "decode"]
         );
         expect(yield* fs.readFileString(statePath)).toBe('{"ledger":{"m1":{"attempts":"many"}}');
+      })
+    );
+  });
+
+  it.layer(storeLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "writes each save to its own temporary file and leaves none behind",
+      Effect.fnUntraced(function* () {
+        const store = yield* DocketIntakeStore;
+        const fs = yield* FileSystem.FileSystem;
+        const record = yield* OpenedFiles;
+
+        yield* store.save(state);
+        yield* store.save(DocketIntakeState.make({}));
+        const opened = yield* Ref.get(record.opened);
+
+        expect(opened).toHaveLength(2);
+        expect(A.dedupe(opened)).toHaveLength(2);
+        assertTrue(
+          A.every(opened, (name) => Str.startsWith(`${STATE_PATH}.${OWN_PID}.`)(name) && Str.endsWith(".tmp")(name))
+        );
+        expect(A.filter(yield* fs.readDirectory(DIRECTORY), Str.endsWith(".tmp"))).toStrictEqual([]);
+        assertNone((yield* store.load).cursor);
+      })
+    );
+  });
+
+  it.layer(FilesLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "refuses to open while a live process of this boot holds the lock, and leaves that lock alone",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory("/proc/777", { recursive: true });
+        yield* leaveLock({ bootId: BOOT_ID, pid: "777" });
+
+        const failure = yield* failureOf(Layer.launch(makeDocketFileStoreLayer(storeOptions)));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["store", "state-locked"]
+        );
+        assertSome(yield* lockHolder, ["777", BOOT_ID]);
+      })
+    );
+  });
+
+  it.layer(FilesLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "takes over a lock whose holder is gone, and releases its own lock when the scope closes",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+
+        // The holder's process no longer exists.
+        yield* leaveLock({ bootId: BOOT_ID, pid: "888" });
+        const afterDeadProcess = yield* openAndClose;
+        // The holder's process id exists, but the lock is from before the last boot.
+        yield* fs.makeDirectory("/proc/999", { recursive: true });
+        yield* leaveLock({ bootId: "boot-before", pid: "999" });
+        const afterReboot = yield* openAndClose;
+        // The lock file is not a lock at all.
+        yield* fs.remove(LOCK_PATH, { force: true });
+        yield* fs.writeFileString(LOCK_PATH, "not a lock");
+        const afterGarbage = yield* openAndClose;
+
+        for (const opened of [afterDeadProcess, afterReboot, afterGarbage]) {
+          assertSome(opened.holder, [OWN_PID, BOOT_ID]);
+          assertNone(opened.empty.cursor);
+          expect(opened.lockedAfterClose).toBe(false);
+        }
+      })
+    );
+  });
+
+  it.layer(fileSystemLayer(O.none()).pipe(Layer.provideMerge(OpenedFilesLayer), Layer.provideMerge(Path.layer)), {
+    timeout: "10 seconds",
+  })((it) => {
+    it.effect(
+      "still locks on a system that reports no boot id",
+      Effect.fnUntraced(function* () {
+        const opened = yield* openAndClose;
+
+        assertSome(opened.holder, [OWN_PID, ""]);
+        expect(opened.lockedAfterClose).toBe(false);
       })
     );
   });

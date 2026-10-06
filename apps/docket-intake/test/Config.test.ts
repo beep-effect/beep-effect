@@ -28,6 +28,7 @@ describe("@beep/docket-intake configuration", () => {
       const config = yield* load(required);
 
       expect(config.reviewNegatives).toBe(true);
+      expect(config.maxConsecutiveFailures).toBe(6);
       assertNone(config.startAt);
       expect(config.stateDirectory).toBe("/home/fixture/.local/state/beep/docket-intake");
       expect(DateTime.zoneToString(config.timeZone)).toBe("America/Chicago");
@@ -42,6 +43,7 @@ describe("@beep/docket-intake configuration", () => {
       const xdg = yield* load({ ...required, XDG_STATE_HOME: "/var/fixture/state" });
       const explicit = yield* load({
         ...required,
+        DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2",
         DOCKET_INTAKE_REVIEW_NEGATIVES: "false",
         DOCKET_INTAKE_START_AT: "2030-01-01T06:00:00Z",
         DOCKET_INTAKE_STATE_DIR: "/srv/fixture/docket",
@@ -51,6 +53,7 @@ describe("@beep/docket-intake configuration", () => {
       expect(xdg.stateDirectory).toBe("/var/fixture/state/beep/docket-intake");
       expect(explicit.stateDirectory).toBe("/srv/fixture/docket");
       expect(explicit.reviewNegatives).toBe(false);
+      expect(explicit.maxConsecutiveFailures).toBe(2);
       assertSome(O.map(explicit.startAt, DateTime.formatIso), "2030-01-01T06:00:00.000Z");
     })
   );
@@ -66,6 +69,9 @@ describe("@beep/docket-intake configuration", () => {
         Effect.exit(load(withoutMailbox)),
         Effect.exit(load({ ...required, DOCKET_INTAKE_TIME_ZONE: "Fixture/Nowhere" })),
         Effect.exit(load({ ...required, DOCKET_INTAKE_START_AT: "next Tuesday" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "0" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2.5" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "often" })),
       ]);
 
       for (const result of results) {

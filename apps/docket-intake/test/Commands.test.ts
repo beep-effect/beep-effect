@@ -8,10 +8,10 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, Context, Deferred, Effect, Exit, Fiber, FileSystem, Layer, Ref } from "effect";
+import { ConfigProvider, Context, Deferred, Effect, Exit, Fiber, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import { makeCommand, makeHandlers } from "@/Commands";
-import { fixtureEnv, STATE_DIRECTORY } from "./support/Config.ts";
+import { fixtureEnv } from "./support/Config.ts";
 import { FakeM365, FakeM365Layer } from "./support/FakeM365.ts";
 import { FilesLayer, PipelineHarness, PipelineLayer } from "./support/Pipeline.ts";
 import type { DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
@@ -77,12 +77,13 @@ describe("@beep/docket-intake commands", () => {
       Effect.fnUntraced(function* () {
         const handlers = yield* makeTestHandlers;
         const log = yield* WiringLog;
-        const fs = yield* FileSystem.FileSystem;
+        const harness = yield* PipelineHarness;
 
         yield* handlers.poll();
 
         expect(yield* Ref.get(log.initialSince)).toStrictEqual(["2030-01-01T06:00:00.000Z"]);
-        expect(yield* fs.exists(`${STATE_DIRECTORY}/digests/1969-12-30.md`)).toBe(true);
+        expect(yield* Ref.get(harness.listings)).toBe(1);
+        assertSome((yield* Ref.get(harness.state)).cursor, "2030-01-09T10:00:00.000Z");
       })
     );
   });
@@ -95,7 +96,7 @@ describe("@beep/docket-intake commands", () => {
         const log = yield* WiringLog;
         const harness = yield* PipelineHarness;
         // No mail on this run, so the saved cursor is exactly the seeded one.
-        yield* Ref.set(harness.failingListings, 1);
+        yield* Ref.set(harness.listingFailures, [true]);
 
         yield* Effect.exit(handlers.poll());
         const state = yield* Ref.get(harness.state);

@@ -11,6 +11,9 @@ import * as S from "effect/Schema";
 
 const $I = $DocketIntakeId.create("Config");
 
+const PositiveCount = S.Int.check(S.isGreaterThan(0));
+const PositiveCountFromString = S.FiniteFromString.pipe(S.decodeTo(PositiveCount));
+
 /**
  * Resolved settings of the docket intake service.
  *
@@ -35,6 +38,9 @@ export class DocketIntakeAppConfig extends S.Class<DocketIntakeAppConfig>($I`Doc
     }),
     clientId: S.NonEmptyString.annotateKey({ description: "Entra application id." }),
     mailbox: S.NonEmptyString.annotateKey({ description: "Watched mailbox user id or address; never logged." }),
+    maxConsecutiveFailures: PositiveCount.annotateKey({
+      description: "Poll cycles that may fail in a row before the service exits non-zero.",
+    }),
     reviewNegatives: S.Boolean.annotateKey({
       description: "Whether the secretary also reviews messages the paralegal found nothing to docket in.",
     }),
@@ -47,6 +53,8 @@ export class DocketIntakeAppConfig extends S.Class<DocketIntakeAppConfig>($I`Doc
   },
   $I.annote("DocketIntakeAppConfig", { description: "Resolved settings of the docket intake service." })
 ) {}
+
+const DEFAULT_MAX_CONSECUTIVE_FAILURES = 6;
 
 const STATE_SUFFIX = "beep/docket-intake";
 
@@ -76,6 +84,9 @@ export const DocketIntakeAppConfigFromEnv: Config.Config<DocketIntakeAppConfig> 
   certThumbprintSha256: Config.NonEmptyString("DOCKET_INTAKE_CERT_THUMBPRINT_SHA256"),
   clientId: Config.NonEmptyString("DOCKET_INTAKE_CLIENT_ID"),
   mailbox: Config.NonEmptyString("DOCKET_INTAKE_MAILBOX"),
+  maxConsecutiveFailures: Config.schema(PositiveCountFromString, "DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES").pipe(
+    Config.withDefault(DEFAULT_MAX_CONSECUTIVE_FAILURES)
+  ),
   reviewNegatives: Config.Boolean("DOCKET_INTAKE_REVIEW_NEGATIVES").pipe(Config.withDefault(true)),
   startAt: Config.option(Config.schema(S.DateTimeUtcFromString, "DOCKET_INTAKE_START_AT")),
   stateDirectory,
