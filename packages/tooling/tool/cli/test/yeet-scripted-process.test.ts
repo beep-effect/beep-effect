@@ -243,8 +243,18 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         [defaultYeetRunOptions({ mode: "monitor" }), defaultYeetRunOptions({ monitor: true, pr: false })],
         (options) => validateMonitorGuards(context, options),
         { discard: true }
-      ).pipe(withProcesses([["gh pr view", 0, prView()]], commands));
-      expect(A.length(yield* Ref.get(commands))).toBe(2);
+      ).pipe(
+        withProcesses(
+          [
+            ["remote get-url --push origin", 0, "https://github.com/beep-effect/beep-effect.git"],
+            ["gh api repos/{owner}/{repo}/pulls?head=", 0, `[${prView()}]`],
+          ],
+          commands
+        )
+      );
+      // Two REST-side reads per guard (origin owner, pulls?head=), never `gh pr view`.
+      expect(A.length(yield* Ref.get(commands))).toBe(4);
+      expect(A.some(yield* Ref.get(commands), Str.includes("gh pr view"))).toBe(false);
 
       const blocked = yield* validateMonitorGuards(
         contextAt("/repo", "main"),
@@ -919,7 +929,8 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
   describe("applyHeavyAdmissionLabel", () => {
     const created = YeetEnsuredPullRequest.make({ number: 7, url: O.some(PR_URL), created: true });
     const existing = YeetEnsuredPullRequest.make({ number: 7, url: O.some(PR_URL), created: false });
-    const labelCommand = "gh pr edit 7 --add-label ready-for-heavy";
+    const labelCommand =
+      'gh api -X POST repos/{owner}/{repo}/issues/7/labels -f labels[]=ready-for-heavy --jq map(.name) | join(",")';
 
     it.effect("skips the edit without a planned step, for an existing pull request, and for a docs-only diff", () =>
       Effect.gen(function* () {
@@ -1181,7 +1192,6 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
     const count = yield* Ref.make(0);
     return () => Ref.getAndUpdate(count, (n) => n + 1).pipe(Effect.map((n) => (n === 0 ? first : later)));
   });
-  const flipped = { exitCode: 0, output: "", truncated: false };
 
   it("names what the read could not show in a blocker", () => {
     const numberless = remoteOf({ state: "CLOSED" });
@@ -1216,18 +1226,19 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
     });
   });
 
-  it.effect("flips the draft through gh when its own status read holds the gate, twice", () =>
+  it.effect("flips the draft when its own status read holds the gate, twice", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-flip-" });
       const commands = yield* makeCommands;
-      const decision = yield* runYeetReadyGate(contextAt(root)).pipe(
-        withProcesses([["gh pr ready 7", 0, ""], ...greenDraft], commands)
-      );
+      const flips = yield* Ref.make<ReadonlyArray<number>>([]);
+      const decision = yield* runYeetReadyGate(contextAt(root), {
+        markReady: (prNumber) => Ref.update(flips, A.append(prNumber)),
+      }).pipe(withProcesses(greenDraft, commands));
       expect(decision).toMatchObject({ _tag: "flip", prNumber: 7 });
       const ran = yield* Ref.get(commands);
       expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(2);
-      assertSome(A.findFirst(ran, Str.startsWith("gh pr ready")), "gh pr ready 7");
+      expect(yield* Ref.get(flips)).toEqual([7]);
     })
   );
 
@@ -1241,7 +1252,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       yield* fs.writeFileString(path.join(root, ".beep", "yeet", "jobs"), "not a directory");
       const commands = yield* makeCommands;
       const decision = yield* runYeetReadyGate(contextAt(root), {
-        capture: () => Effect.succeed(flipped),
+        markReady: () => Effect.void,
         read: () => Effect.succeed(readOf(remoteOf())),
       }).pipe(withProcesses([], commands));
       expect(decision._tag).toBe("flip");
@@ -1284,7 +1295,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       });
       const asked = yield* Ref.make<ReadonlyArray<number>>([]);
       const decision = yield* runYeetReadyGate(contextAt("/repo"), {
-        capture: () => Effect.succeed(flipped),
+        markReady: () => Effect.void,
         findMonitor: (_context, prNumber) => Ref.update(asked, A.append(prNumber)).pipe(Effect.as(O.some(monitor))),
         read: () => Effect.succeed(readOf(remoteOf())),
       });
@@ -1298,7 +1309,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       const headless = readOf(remoteOf({ headSha: O.none() }));
       const refusal = Effect.fnUntraced(function* (first: YeetReadyPullRequestRead, later: YeetReadyPullRequestRead) {
         const error = yield* runYeetReadyGate(contextAt("/repo"), {
-          capture: () => Effect.die("gh must not run"),
+          markReady: () => Effect.die("the flip must not run"),
           read: yield* readTwice(first, later),
         }).pipe(Effect.flip);
         return error.message;

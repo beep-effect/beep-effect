@@ -8,11 +8,12 @@
  * as soon as the content is final, without waiting for hosted heavy CI, so the
  * CI run doubles as the review window (review-window ruling, 2026-10-06, which
  * amends D10). The flip reads the pull request through the same status read
- * the readiness monitor uses and runs `gh pr ready` when, on the current head,
- * no required check is known to be failing and every review thread is
- * answered. Pending checks and optional lanes do not hold it. Anything else
- * refuses with the first blocker named. There is no `--force`. The merge gate,
- * not this flip, waits for green checks and for the review window.
+ * the readiness monitor uses and flips it (the GraphQL-only mutation, through
+ * the budget guard) when, on the current head, no required check is known to
+ * be failing and every review thread is answered. Pending checks and optional
+ * lanes do not hold it. Anything else refuses with the first blocker named.
+ * There is no `--force`. The merge gate, not this flip, waits for green checks
+ * and for the review window.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -26,8 +27,8 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { flipPullRequestReady } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
@@ -371,9 +372,22 @@ const findLiveMonitorForReady = (
     Effect.catch(() => Effect.succeedNone)
   );
 
+const markReadyThroughBudget = (prNumber: number) =>
+  flipPullRequestReady(prNumber).pipe(
+    Effect.mapError((cause) =>
+      YeetCommandError.make({
+        message: `could not mark pull request #${prNumber} ready for review: ${cause.message}`,
+        command: `bun run beep yeet gh pr ready ${prNumber}`,
+        exitCode: cause._tag === "GraphqlBudgetExhausted" ? 75 : 1,
+      })
+    )
+  );
+
 interface YeetReadyGateDependencies {
-  readonly capture?: typeof runRepoCommandCapture;
   readonly findMonitor?: typeof findLiveMonitorForReady;
+  readonly markReady?: (
+    prNumber: number
+  ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
   readonly read?: (
     context: RepoRunContext
   ) => Effect.Effect<
@@ -391,7 +405,8 @@ interface YeetReadyGateDependencies {
  * The read is the status snapshot `monitor --until-ready` takes on every poll,
  * so the flip and the monitor never disagree about the current head, its
  * checks, or its threads. A blocked decision fails with
- * {@link YeetReadyGateRefused}; a failed `gh pr ready` fails with
+ * {@link YeetReadyGateRefused}; a failed flip (the GraphQL-only
+ * `markPullRequestReadyForReview`, spent through the budget guard) fails with
  * `YeetCommandError`.
  *
  * **Example** (Build the gate effect)
@@ -403,7 +418,7 @@ interface YeetReadyGateDependencies {
  * ```
  *
  * @param context - Repo context of the branch whose pull request is flipped.
- * @param dependencies - Injectable pull request read and GitHub runner for tests.
+ * @param dependencies - Injectable pull request read and ready flip for tests.
  * @returns The decision the gate acted on.
  * @category workflows
  * @since 0.0.0
@@ -429,7 +444,6 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
     "already-ready": ({ prNumber }) =>
       Console.log(`[yeet] pull request #${prNumber} is already ready for review; nothing to flip`),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
-      const capture = dependencies.capture ?? runRepoCommandCapture;
       // The gate decided on a read taken moments ago. A push, a check rerun,
       // or a new thread can land in between, even on the same head, so take
       // the whole gate read again immediately before the flip and require the
@@ -448,17 +462,10 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
           exitCode: 1,
         });
       }
-      const args = ["pr", "ready", `${prNumber}`];
-      const result = yield* capture("gh", args, context.repoRoot).pipe(
-        Effect.mapError(YeetCommandError.new("Failed to run gh pr ready."))
-      );
-      if (result.exitCode !== 0) {
-        return yield* YeetCommandError.make({
-          message: `gh pr ready failed:\n${Str.trim(result.output)}`,
-          command: `gh ${A.join(args, " ")}`,
-          exitCode: result.exitCode,
-        });
-      }
+      // markPullRequestReadyForReview is GraphQL-only; the default flip spends it
+      // through the GraphQL budget guard, waiting for the hourly reset when the
+      // shared budget is spent instead of failing the way `gh pr ready` did.
+      yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
       yield* Console.log(
         `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this flip or the last push, whichever is later; do not merge in this step`
