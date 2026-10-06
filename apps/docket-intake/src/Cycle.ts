@@ -5,18 +5,56 @@
  * @since 0.0.0
  */
 
-import { docketDayInZone, writeDigestFile } from "@beep/law-practice-server/DocketIntake";
-import { DocketIntake, DocketIntakeState, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
+import { $DocketIntakeId } from "@beep/identity/packages";
+import {
+  DocketIntakeJournal,
+  DocketRunId,
+  docketDayInZone,
+  writeDigestFile,
+} from "@beep/law-practice-server/DocketIntake";
+import {
+  DocketIntake,
+  DocketIntakeState,
+  DocketIntakeStore,
+  DocketPollOptions,
+  DocketPollReport,
+} from "@beep/law-practice-use-cases/DocketIntake";
 import { Order as LocalDateOrder } from "@beep/schema/LocalDate";
 import { DateTime, Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { DigestProgress, digestDayDue } from "./Digest.ts";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type { FileSystem, Path, Schedule } from "effect";
 import type { DocketIntakeAppConfig } from "./Config.ts";
+
+const $I = $DocketIntakeId.create("Cycle");
+
+/**
+ * What one poll cycle did: its run id and the pipeline's counts. It carries
+ * ids and counts only.
+ *
+ * **Example** (Read the report fields)
+ *
+ * ```ts
+ * import { DocketCycleReport } from "../../src/Cycle.ts"
+ *
+ * console.log(Object.keys(DocketCycleReport.fields))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocketCycleReport extends S.Class<DocketCycleReport>($I`DocketCycleReport`)(
+  {
+    runId: DocketRunId.annotateKey({ description: "Id of the run; `undo --run` takes it back." }),
+    ...DocketPollReport.fields,
+  },
+  $I.annote("DocketCycleReport", { description: "Run id and counts of one docket intake poll cycle." })
+) {}
 
 /**
  * Give a first run its starting point: when no cursor has been saved yet, save
@@ -102,14 +140,17 @@ const writeOwedDigests: (
   });
 
 /**
- * One cycle: poll the mailbox for today's practice day, then write every
- * digest that is owed. Logs counts only.
+ * One cycle: start a run in the journal, poll the mailbox for today's
+ * practice day, then write every digest that is owed. Logs ids and counts
+ * only.
  *
  * **Details**
  *
- * A digest is owed for each day that is over and not digested yet, so after an
- * outage the missed days are digested one by one, earliest first. One cycle
- * writes at most 62 digests; a longer gap is closed by the cycles after it.
+ * Every write of the cycle is journaled under the run id it starts with.
+ * The options may bound the cycle to the oldest pending messages. A digest is
+ * owed for each day that is over and not digested yet, so after an outage the
+ * missed days are digested one by one, earliest first. One cycle writes at
+ * most 62 digests; a longer gap is closed by the cycles after it.
  *
  * **Example** (Reference one poll cycle)
  *
@@ -122,22 +163,27 @@ const writeOwedDigests: (
  * @category utilities
  * @since 0.0.0
  */
-export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (config: DocketIntakeAppConfig) {
+export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
+  config: DocketIntakeAppConfig,
+  options: DocketPollOptions = DocketPollOptions.make({})
+) {
   const intake = yield* DocketIntake;
+  const runId = yield* (yield* DocketIntakeJournal).beginRun;
   const today = docketDayInZone(yield* DateTime.now, config.timeZone);
 
-  const report = yield* intake.pollOnce(today);
+  const report = yield* intake.pollOnce(today, options);
   yield* Effect.logInfo("docket intake poll finished", {
     entered: report.entered,
     failed: report.failed,
     needsReview: report.needsReview,
     notDocket: report.notDocket,
     processed: report.processed,
+    runId,
     seen: report.seen,
   });
 
   yield* writeOwedDigests(config, today, MAX_DIGESTS_PER_CYCLE);
-  return report;
+  return DocketCycleReport.make({ ...report, runId });
 });
 
 /**

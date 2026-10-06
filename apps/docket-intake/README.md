@@ -31,27 +31,116 @@ configuration, wires the layers and runs the commands.
 
 ## Commands
 
-```bash
-bun run src/bin.ts poll                        # one cycle, then exit
-bun run src/bin.ts run --interval-minutes 5    # repeat forever
-bun run src/bin.ts smoke                       # read-only connection check
-bun run src/bin.ts smoke --write               # also create, find and delete one test event
-```
+Run from the repository root with `bun run apps/docket-intake/src/bin.ts <command>`.
+
+| Command | What it does |
+| --- | --- |
+| `poll [--since <instant>] [--max-messages <n>]` | One cycle: reads new mail, processes it, writes every digest that is owed, and prints its run id and counts. |
+| `run [--interval-minutes <n>] [--since <instant>]` | Repeats `poll` on a fixed interval until it is stopped. Prints nothing; it logs. |
+| `dry-run [--since <instant>] [--max-messages <n>]` | One full pass that writes nothing, and prints what it would have written. |
+| `runs` | Prints one line per run in the write journal, newest first. Calls no provider. |
+| `undo --run <runId> [--dry-run] [--yes]` | Takes back one run's writes. Needs `--yes` unless `--dry-run`. `--run latest` picks the newest run. |
+| `smoke [--write]` | Read-only connection check; with `--write` it also creates, finds and deletes one test event. |
 
 - `poll` reads new mail, processes it, and writes every digest that is owed:
   one for each day that is over and not digested yet, earliest first. After
   an outage the missed days each get their own digest (at most 62 per cycle;
   the next cycles write the rest). A digest is a calendar entry (when there
   was anything to report) and a file under `digests/` in the state directory.
+  `--max-messages <n>` processes at most `n` pending messages, oldest first.
+  The rest stay pending, and the cursor stops before the first one left, so
+  the next `poll` picks them up.
+- `--since <instant>` (UTC ISO-8601) is where a first run starts reading. It
+  overrides `DOCKET_INTAKE_START_AT`, and like it, it only seeds the cursor
+  when none is saved; once a cursor exists the flag is ignored.
 - `run` repeats `poll` on a fixed interval. A cycle that fails is logged with
   the stage that failed and the number of failures in a row, and the loop goes
   on to the next cycle. A cycle that succeeds resets that number. When
   `DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES` cycles in a row have failed, the
   command exits non-zero so its supervisor can restart it and raise an alert.
+- `dry-run` runs both agents and the review loop, so it costs model calls.
+  The calendar and the mailbox only read: building it creates no master
+  category, a create is recorded instead of written, and no message is
+  marked. It works in its own throwaway state directory, `dry-run/` under the
+  state directory, which is emptied at the start. The real `state.json` is
+  copied into it first, so the pass previews exactly what the next `poll`
+  would do, but the real cursor, ledger, journal and `state.lock` are never
+  touched, and it runs while the service runs. No digest is written.
+- `undo --run <runId>` reads the run's lines from the journal. Each calendar
+  entry the run created is deleted if it still carries one of the service's
+  provisional categories (`Docket - unverified`, `Docket - needs review`,
+  `Docket - reminder`, `Docket - digest`); an entry the attorney moved to
+  `Docket - verified`, or to a category of their own, is kept and counted as
+  kept; an entry already deleted counts as gone. `Docket - entered` is taken
+  off each message the run marked, and every other category stays; the write
+  is conditional on the message's change key and is retried once when the
+  message changed in between. The run's messages are removed from the ledger
+  and the cursor moves back to the earliest of them, so a later `poll`
+  processes them again. Each event and message gets an `undo-` line in the
+  journal, so an undo that stopped halfway can be run again. Undo needs the
+  Graph settings only, not the model key. It holds `state.lock` while it
+  writes, so stop the service first; `undo --dry-run` reports the same counts,
+  writes nothing and takes no lock.
 - `smoke` lists one page of messages and the master categories and prints
   counts. With `--write` it also creates one all-day event tomorrow with the
   subject `[beep live smoke] safe to delete`, finds it by its key and deletes
   it. Each step prints `PASS` or `FAIL` with ids and counts only.
+
+A first run on a real mailbox:
+
+```bash
+docket-intake smoke                                   # the connection works
+docket-intake dry-run --since 2030-01-06T00:00:00Z --max-messages 5
+docket-intake poll --since 2030-01-06T00:00:00Z --max-messages 5
+docket-intake runs                                    # note the run id
+docket-intake undo --run latest --dry-run
+docket-intake undo --run latest --yes                 # the way back works
+```
+
+`docket-intake` there stands for `bun run apps/docket-intake/src/bin.ts`.
+
+## The write journal
+
+Every calendar entry the service creates and every message it marks
+`Docket - entered` is appended to `journal.jsonl` in the state directory, one
+line per write, after the write succeeded:
+
+```json
+{"runId":"run-20300109T100000123Z","kind":"event-created","at":"2030-01-09T10:00:01.234Z","eventId":"AAMk…","idempotencyKey":"docket:0f3a…","category":"Docket - unverified"}
+{"runId":"run-20300109T100000123Z","kind":"message-marked","at":"2030-01-09T10:00:02.345Z","messageId":"AAMk…","receivedAt":"2030-01-09T09:58:00.000Z"}
+```
+
+A run id is minted at the start of every poll cycle, `poll` or each cycle of
+`run`: `run-` and the UTC start time to the millisecond. An entry the service
+finds already on the calendar by its key is not a write and gets no line. A
+create that timed out but did land is found by its key and recorded. Lines are
+only appended, under `state.lock`, and each append is synced to disk. If a
+line cannot be written the cycle stops with an error rather than leave a
+write that `undo` could not find. An undo adds `undo-event-deleted`,
+`undo-event-kept`, `undo-event-gone`, `undo-message-unmarked` and
+`undo-message-gone` lines under the undone run's id.
+
+## Output and exit codes
+
+`poll`, `dry-run`, `runs` and `undo` print JSON lines on standard output;
+logs go to standard error, so `… | head -n 1 | jq .` reads a report. Output is
+ids, dates, categories and counts. It never carries the text, sender or
+subject of a mail message. A `dry-run` entry carries the subject the service
+would write on the calendar entry.
+
+| Command | Line |
+| --- | --- |
+| `poll` | `runId`, `seen`, `processed`, `entered`, `needsReview`, `notDocket`, `failed`. |
+| `dry-run` | The same counts, `dryRun: true`, and `entries`: one `{ messageId, kind, category, date, flags, subject }` per entry it would create. |
+| `runs` | One line per run: `runId`, `startedAt`, `eventsCreated`, `messagesMarked`, and what undos did: `eventsDeleted`, `eventsKept`, `eventsGone`, `messagesUnmarked`, `messagesGone`. |
+| `undo` | `runId`, `dryRun`, `deleted`, `kept`, `gone`, `unmarked`, `messagesGone`, `ledgerCleared`. |
+
+| Code | Meaning |
+| --- | --- |
+| 0 | The command finished. |
+| 1 | It failed: a missing or invalid setting, a state or journal error, a run id the journal does not have, a Graph or model error. |
+| 2 | Refused: `undo` ran without `--yes` or `--dry-run`. Nothing was read or written. |
+| 3 | Microsoft Graph throttled the command. |
 
 Logs carry ids, counts and stage names. They never carry subjects, senders,
 bodies or attachment names.
@@ -74,7 +163,7 @@ All settings come from the environment.
 | `DOCKET_INTAKE_REVIEW_NEGATIVES` | no | Whether the secretary also reviews messages the paralegal found nothing in. Defaults to `true`. |
 | `DOCKET_INTAKE_REVIEW_MAX_ROUNDS` | no | Rounds of review, from `1` to `10`, after which an item that was not accepted is flagged. A whole number. Defaults to `3`. |
 | `DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD` | no | Confidence score, from `0` to `1`, a review round must reach for an item to be accepted. Defaults to `0.85`. |
-| `AI_ANTHROPIC_API_KEY` | yes for `poll` and `run` | Key for the model both agents use. |
+| `AI_ANTHROPIC_API_KEY` | yes for `poll`, `run` and `dry-run` | Key for the model both agents use. |
 | `AI_ANTHROPIC_MODEL` | no | Model id; the Anthropic driver's default applies when unset. |
 
 A missing or invalid required setting stops the command before it touches the
@@ -144,7 +233,8 @@ service enters the failed state. Add `StartLimitIntervalSec=` and
 restarting and stay failed until someone looks.
 
 Only one process may use a state directory. The service holds `state.lock`
-there while it runs and a second copy refuses to start. A lock left behind by
+there while it runs and a second copy refuses to start; so does `undo --yes`,
+so stop the unit before an undo and start it again afterwards. A lock left behind by
 a process that was killed is taken over on the next start, so no cleanup is
 needed after a crash or a reboot.
 
