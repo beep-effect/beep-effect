@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-mail-tagging",
+    "packetId": "goal-packet/v1:bdd49d5638127fb3da90de9d3c01237a4914c892249367185c01ba136fa765e8",
+    "title": "Practice Mail Tagging",
+    "status": "active",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-mail-tagging",
+  "lifecycle": "active",
+  "mission": "Tag the solo attorney Outlook mailbox by matter through the practice KG and auto-file attachments into the Box matter tree, reversibly.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-mail-tagging/README.md",
+    "goals/practice-mail-tagging/SPEC.md",
+    "goals/practice-mail-tagging/PLAN.md",
+    "goals/practice-mail-tagging/GOAL.md",
+    "goals/practice-mail-tagging/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-mail-tagging/GOAL.md"
+    }
+  ],
+  "provides": [
+    "law-practice/mail-matter-tagging",
+    "law-practice/attachment-auto-filing"
+  ],
+  "requires": [
+    "m365/message-category-write",
+    "law-practice/practice-kg-matter-lookup",
+    "box/driver"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-mail-tagging/GOAL.md)\" -le 4000",
+    "jq . goals/practice-mail-tagging/ops/manifest.json",
+    "rg -n \"practice-mail-tagging|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-mail-tagging",
+    "git diff --check -- goals/practice-mail-tagging",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
