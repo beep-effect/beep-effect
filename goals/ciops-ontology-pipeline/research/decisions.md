@@ -966,3 +966,59 @@ withdrawal chains and all 3 eviction chains, with a later same-checkout enqueue 
 chain for 20 of the withdrawals), so no further version is ordered: the withdrawn readings turn on a
 demand referent and consumers the journal does not carry. The run manifest is written from the pin's
 blobs and the prose set is emitted in the pin worktree, never from lane scratch.
+
+## 2026-10-06 — run-4 launch record (orchestrator under the autonomy charter)
+
+The pin is commit `71c7357adc`, retained by the pushed lightweight tag
+`evidence/beep-ci-ops/orun-2026-10-06T15-51-01Z-pin`; the run is `orun-2026-10-06T15:51:01Z`. Gates on
+the pin tree before the push: gitleaks under main's configuration over every commit of the branch
+and every changed path (no leaks), the residue scan over the added lines (clean), the packet
+validators base, `--s5` and `--s6` (0 blockers, 0 warns), the CQ suite (0 failures across 25 seed
+tests and 22 fixtures), the run-3 citation replay (0 failing) and the repository knowledge, goals,
+atlas and markdown-law checks (all clean). The pin worktree is a detached worktree at the tag in the
+sibling worktrees root. The run manifest records the pinned digests (CQ suite `e1ed9c0f65f5`, 26 CQs;
+scope `750657e0c5b7`; adapter-journal 1.3.0 `0e6d17963817`; the engine freeze), five seats on
+`claude-opus-5-5` at effort `medium`, and the prior chain. Observed at the pin inside the pin
+worktree: 109 source observations from the sandboxed adapter and 95 prose observations from the
+transcriber, each set byte-identical on a second pass; the repository-fidelity scan shows exactly
+the 138 expected lines and nothing else. Fifty-four source observations quote the one native 12-hex
+`originKey` the pins carry verbatim (goal P1 Ruling 7); attempt ids in the ledger and attempt
+projections are pin bytes already on main.
+
+**Call (aa) — the denotation batches.** Five batches, every observation in exactly one, each
+shared-span pair inside one batch: `chg` (45: the 44 change-event ledger rows with KPI law section 2;
+Queue G), `tier` (41: KPI law section 6, the literal-domains rows and rulings, the `ProofStage` line,
+both pin manifests' census blocks and the 16 attempt observations; Queue H), `prf` (32: the
+proof-ledger observations; Queue B issuance and custody), `adm` (61: the 60 admission-journal
+observations with the live-state record; Queue D), and `lpl` (25: S7 contract section 8 with the
+lane-plan Turtle; the Queue E lane-plan terms). Call (w) placed the stage-bearing ledger observations
+with Queue H; they stay in `prf` instead, because the tier batch already reads the ledger's stage
+census through the manifest prose and one batch of 73 records would crowd a single context. If the
+tier and proof-ledger seats denote the same kind under two prefixes, the conditional consolidation
+pass of call (w) reconciles them. Reversal: a re-batched denotation pass before foundational
+analysis starts.
+
+**Call (ab) — seat repair rows, the round-3 exception, and three seat details (amends calls (v),
+(w) and (y)).** The seat briefs' skeptic showed four gaps; each is closed here. (1) `REPAIR`'s second
+arm is a list of bare rows the orchestrator writes, one per line, never sitting text, its mirror or
+review text: `landed <rule> <target>: <sentence>`, `struck <ruling n> <target> <failed digest
+12-hex> <rule>`, `withdraw <ruling n> <target>: <sentence>`, `upstream <target> <repaired dh, ic or
+fa id> <rule>`, `ruling <ruling n> <target>: <sentence>`. The adversary receives struck rows only;
+denotation and foundational seats receive landed rows only; a withdrawal receipt's authority is the
+row's ruling number with its sentence. The blinded seat's `REPAIR` may also carry `residue <file>
+<class>` rows for a residue-scan or gitleaks hit on its own records. (2) Call (y)'s round-3 exception
+runs on changed bytes: when struck rows cover every rule a round-3 FAIL landed, the synthesis seat
+appends the revision-log entry and one open-issues line per struck rule and changes nothing else,
+and the adversary reviews once more at the target's next review number; the engine can only re-FAIL
+unchanged FAILed bytes, so "unchanged bytes" in call (y) is superseded. Partial strike coverage does
+not open the exception. (3) Call (w) is read strictly for the lane-plan terms: they are denoted and
+parked null-standing and `unresolved` at denotation with the missing lane-order CQ named, receive no
+analysis pair and no proposal, and the index-close lane carries their rows; a warrant named at
+denotation is the only route to analysis. (4) The Queue H "prior refutation to answer"
+(`fa-pb-yeet-proof-tier-001` in the run-2 shelter) is answered by the orchestrator in the sitting
+that rules the tier proposal, not by a seat, because the shelters are closed to seats. (5) Before the
+first blinded launch, the memory canary of the blinded brief's checklist runs and its result is
+logged; the earlier canary already showed no memory path and no ontology skill under the final shape.
+The six seat briefs are installed as `research/run4-lanes/p3-seat-{common,denotation,foundational,
+blinded,synthesis,adversary}-brief.md`; every input manifest lists the seat-common brief and the
+seat's own brief, and the blinded seat receives Part A of its brief only, as the root's brief file.
