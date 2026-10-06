@@ -168,6 +168,13 @@ export * from "./Markdown.ts";
  */
 export * from "./MimeType.ts";
 /**
+ * Pattern Ontology content-model classification carried as schema annotations.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * as PatternOntology from "./PatternOntology/index.ts";
+/**
  * Transport-layer port number schemas and codecs.
  *
  * **Example** (Decode port from string)

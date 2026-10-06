@@ -735,6 +735,7 @@ export class Str extends S.TaggedClass<Str>($I`Str`)(
     }),
   },
   $I.annote("Str", {
+    po: "atom",
     description: "Plain text inline.",
   })
 ) {}
@@ -788,6 +789,7 @@ export class Space extends S.TaggedClass<Space>($I`Space`)(
   "space",
   {},
   $I.annote("Space", {
+    po: "milestone",
     description: "Pandoc space inline.",
   })
 ) {}
@@ -840,6 +842,7 @@ export class SoftBreak extends S.TaggedClass<SoftBreak>($I`SoftBreak`)(
   "softbreak",
   {},
   $I.annote("SoftBreak", {
+    po: "milestone",
     description: "Pandoc soft line break inline.",
   })
 ) {}
@@ -892,6 +895,7 @@ export class LineBreak extends S.TaggedClass<LineBreak>($I`LineBreak`)(
   "linebreak",
   {},
   $I.annote("LineBreak", {
+    po: "milestone",
     description: "Pandoc hard line break inline.",
   })
 ) {}
@@ -948,6 +952,7 @@ export class Emph extends S.TaggedClass<Emph>($I`Emph`)(
     }),
   },
   $I.annote("Emph", {
+    po: "inline",
     description: "Pandoc emphasis inline.",
   })
 ) {}
@@ -1008,6 +1013,7 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
     }),
   },
   $I.annote("Strong", {
+    po: "inline",
     description: "Pandoc strong inline.",
   })
 ) {}
@@ -1068,6 +1074,7 @@ export class Strikeout extends S.TaggedClass<Strikeout>($I`Strikeout`)(
     }),
   },
   $I.annote("Strikeout", {
+    po: "inline",
     description: "Pandoc strikeout inline.",
   })
 ) {}
@@ -1130,6 +1137,7 @@ export class Underline extends S.TaggedClass<Underline>($I`Underline`)(
     }),
   },
   $I.annote("Underline", {
+    po: "inline",
     description: "Pandoc underlined inline content.",
   })
 ) {}
@@ -1179,6 +1187,7 @@ export class Superscript extends S.TaggedClass<Superscript>($I`Superscript`)(
     }),
   },
   $I.annote("Superscript", {
+    po: "inline",
     description: "Pandoc superscript inline content.",
   })
 ) {}
@@ -1228,6 +1237,7 @@ export class Subscript extends S.TaggedClass<Subscript>($I`Subscript`)(
     }),
   },
   $I.annote("Subscript", {
+    po: "inline",
     description: "Pandoc subscript inline content.",
   })
 ) {}
@@ -1277,6 +1287,7 @@ export class SmallCaps extends S.TaggedClass<SmallCaps>($I`SmallCaps`)(
     }),
   },
   $I.annote("SmallCaps", {
+    po: "inline",
     description: "Pandoc small-capital inline content.",
   })
 ) {}
@@ -1329,6 +1340,7 @@ export class Quoted extends S.TaggedClass<Quoted>($I`Quoted`)(
     }),
   },
   $I.annote("Quoted", {
+    po: "inline",
     description: "Pandoc quoted inline content with an explicit quotation style.",
   })
 ) {}
@@ -1453,6 +1465,7 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
     citations: S.Array(Citation).annotateKey({ description: "Structured Pandoc citations." }),
   },
   $I.annote("Cite", {
+    po: "inline",
     description: "Pandoc citation inline with structured citations and rendered fallback content.",
   })
 ) {}
@@ -1503,6 +1516,7 @@ export class RawInline extends S.TaggedClass<RawInline>($I`RawInline`)(
     text: S.String.annotateKey({ description: "Raw inline source text." }),
   },
   $I.annote("RawInline", {
+    po: "atom",
     description: "Pandoc raw inline content with an explicit source format.",
   })
 ) {}
@@ -1551,6 +1565,7 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
     }),
   },
   $I.annote("Code", {
+    po: "atom",
     description: "Pandoc code inline.",
   })
 ) {}
@@ -1623,6 +1638,7 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
     }),
   },
   $I.annote("Link", {
+    po: "inline",
     description: "Pandoc link inline.",
   })
 ) {}
@@ -1701,6 +1717,7 @@ export class Image extends S.TaggedClass<Image>($I`Image`)(
     }),
   },
   $I.annote("Image", {
+    po: "inline",
     description: "Pandoc image inline.",
   })
 ) {}
@@ -1772,6 +1789,7 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
     }),
   },
   $I.annote("Span", {
+    po: "inline",
     description: "Pandoc span inline.",
   })
 ) {}
@@ -1834,6 +1852,7 @@ export class Note extends S.TaggedClass<Note>($I`Note`)(
     }),
   },
   $I.annote("Note", {
+    po: "popup",
     description: "Pandoc footnote or endnote inline.",
   })
 ) {}
@@ -1897,6 +1916,7 @@ export class Math extends S.TaggedClass<Math>($I`Math`)(
     }),
   },
   $I.annote("Math", {
+    po: "atom",
     description: "Pandoc math inline.",
   })
 ) {}
@@ -1955,6 +1975,7 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
     }),
   },
   $I.annote("UnknownInline", {
+    po: "milestone",
     description: "Future Pandoc inline constructor outside the pinned 1.23.1 registry.",
   })
 ) {
@@ -2169,6 +2190,7 @@ export class Plain extends S.TaggedClass<Plain>($I`Plain`)(
     }),
   },
   $I.annote("Plain", {
+    po: "block",
     description: "Pandoc plain block.",
   })
 ) {}
@@ -2229,6 +2251,7 @@ export class Para extends S.TaggedClass<Para>($I`Para`)(
     }),
   },
   $I.annote("Para", {
+    po: "block",
     description: "Pandoc paragraph block.",
   })
 ) {}
@@ -2295,6 +2318,7 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
     }),
   },
   $I.annote("Header", {
+    po: "block",
     description: "Pandoc header block.",
   })
 ) {}
@@ -2359,6 +2383,7 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
     }),
   },
   $I.annote("BlockQuote", {
+    po: "container",
     description: "Pandoc block quote.",
   })
 ) {}
@@ -2422,6 +2447,7 @@ export class CodeBlock extends S.TaggedClass<CodeBlock>($I`CodeBlock`)(
     }),
   },
   $I.annote("CodeBlock", {
+    po: "field",
     description: "Pandoc fenced code block.",
   })
 ) {}
@@ -2484,6 +2510,7 @@ export class BulletList extends S.TaggedClass<BulletList>($I`BulletList`)(
     }),
   },
   $I.annote("BulletList", {
+    po: "table",
     description: "Pandoc bullet list block.",
   })
 ) {}
@@ -2558,6 +2585,7 @@ export class OrderedList extends S.TaggedClass<OrderedList>($I`OrderedList`)(
     }),
   },
   $I.annote("OrderedList", {
+    po: "table",
     description: "Pandoc ordered list block.",
   })
 ) {}
@@ -2625,6 +2653,7 @@ export class HorizontalRule extends S.TaggedClass<HorizontalRule>($I`HorizontalR
   "horizontalrule",
   {},
   $I.annote("HorizontalRule", {
+    po: "meta",
     description: "Pandoc horizontal rule block.",
   })
 ) {}
@@ -2687,6 +2716,7 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
     }),
   },
   $I.annote("Div", {
+    po: "container",
     description: "Pandoc div block, including DOCX custom-style wrappers.",
   })
 ) {}
@@ -2754,6 +2784,7 @@ export class LineBlock extends S.TaggedClass<LineBlock>($I`LineBlock`)(
     }),
   },
   $I.annote("LineBlock", {
+    po: "table",
     description: "Pandoc line block containing multiple non-breaking inline lines.",
   })
 ) {}
@@ -2802,6 +2833,7 @@ export class RawBlock extends S.TaggedClass<RawBlock>($I`RawBlock`)(
     text: S.String.annotateKey({ description: "Raw block source text." }),
   },
   $I.annote("RawBlock", {
+    po: "field",
     description: "Pandoc raw block content with an explicit source format.",
   })
 ) {}
@@ -2885,6 +2917,7 @@ export class DefinitionList extends S.TaggedClass<DefinitionList>($I`DefinitionL
     }),
   },
   $I.annote("DefinitionList", {
+    po: "table",
     description: "Pandoc definition list with structurally typed term/definition pairs.",
   })
 ) {}
@@ -2990,6 +3023,7 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
     children: PandocBlockChildren.annotateKey({ description: "Figure block content." }),
   },
   $I.annote("Figure", {
+    po: "container",
     description: "Pandoc figure block with attributes, caption, and block content.",
   })
 ) {}
@@ -3373,6 +3407,7 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
     }),
   },
   $I.annote("Table", {
+    po: "table",
     toCodecArbitrary: (): SchemaAST.Link =>
       S.link<Table>()(
         S.Struct({}),
@@ -3475,6 +3510,7 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
     }),
   },
   $I.annote("UnknownBlock", {
+    po: "meta",
     description: "Future Pandoc block constructor outside the pinned 1.23.1 registry.",
   })
 ) {
@@ -3814,7 +3850,10 @@ const DeferredPandocMetaValue: S.Codec<PandocMetaValue.Type, PandocMetaValue.Enc
  * @since 0.0.0
  */
 export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
-  $I.annoteSchema("MetaBool", { description: "Boolean Pandoc metadata value." })
+  $I.annoteSchema("MetaBool", {
+    po: "field",
+    description: "Boolean Pandoc metadata value.",
+  })
 );
 
 /**
@@ -3832,7 +3871,10 @@ export const MetaBool = S.TaggedStruct("metaBool", { value: S.Boolean }).pipe(
  * @since 0.0.0
  */
 export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe(
-  $I.annoteSchema("MetaString", { description: "String Pandoc metadata value." })
+  $I.annoteSchema("MetaString", {
+    po: "field",
+    description: "String Pandoc metadata value.",
+  })
 );
 
 /**
@@ -3850,7 +3892,10 @@ export const MetaString = S.TaggedStruct("metaString", { value: S.String }).pipe
  * @since 0.0.0
  */
 export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlineChildren }).pipe(
-  $I.annoteSchema("MetaInlines", { description: "Inline-list Pandoc metadata value." })
+  $I.annoteSchema("MetaInlines", {
+    po: "block",
+    description: "Inline-list Pandoc metadata value.",
+  })
 );
 
 /**
@@ -3868,7 +3913,10 @@ export const MetaInlines = S.TaggedStruct("metaInlines", { children: PandocInlin
  * @since 0.0.0
  */
 export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockChildren }).pipe(
-  $I.annoteSchema("MetaBlocks", { description: "Block-list Pandoc metadata value." })
+  $I.annoteSchema("MetaBlocks", {
+    po: "container",
+    description: "Block-list Pandoc metadata value.",
+  })
 );
 
 /**
@@ -3886,7 +3934,10 @@ export const MetaBlocks = S.TaggedStruct("metaBlocks", { children: PandocBlockCh
  * @since 0.0.0
  */
 export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaValue.pipe(S.Array) }).pipe(
-  $I.annoteSchema("MetaList", { description: "Recursive list Pandoc metadata value." })
+  $I.annoteSchema("MetaList", {
+    po: "table",
+    description: "Recursive list Pandoc metadata value.",
+  })
 );
 
 /**
@@ -3905,7 +3956,12 @@ export const MetaList = S.TaggedStruct("metaList", { values: DeferredPandocMetaV
  */
 export const MetaMap = S.TaggedStruct("metaMap", {
   entries: S.Record(S.String, DeferredPandocMetaValue),
-}).pipe($I.annoteSchema("MetaMap", { description: "Recursive mapping Pandoc metadata value." }));
+}).pipe(
+  $I.annoteSchema("MetaMap", {
+    po: "record",
+    description: "Recursive mapping Pandoc metadata value.",
+  })
+);
 
 /**
  * Future Pandoc metadata constructor outside the supported surface.
@@ -3929,6 +3985,7 @@ export class UnknownMeta extends S.TaggedClass<UnknownMeta>($I`UnknownMeta`)(
     }),
   },
   $I.annote("UnknownMeta", {
+    po: "meta",
     description: "Future Pandoc metadata constructor outside the supported surface.",
   })
 ) {
@@ -4280,6 +4337,7 @@ export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocum
     }),
   },
   $I.annote("PandocDocument", {
+    po: "container",
     description: "Root Pandoc JSON document.",
   })
 ) {}
