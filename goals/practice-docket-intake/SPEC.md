@@ -305,8 +305,11 @@ rounds are read back, not run again.
   document; it is checked against the message text only.
 - The extractor's per-field citations in a revision are recorded and shown
   to the critic but not checked by code; only the entry's citation is.
-- Nothing has run against the live mailbox or a live model until the
-  registration is done.
+- Only the connection smoke tests have run against the live mailbox (read and
+  write passed on 2026-10-06); the pipeline itself has not processed live mail
+  yet. The first run is operator-attended (D-41).
+- No live model call has been made yet; the first one is in the attended
+  first run.
 
 ## Decision Log
 
@@ -356,6 +359,9 @@ autonomy charter.
 | D-38 | In-progress rounds are kept in the ledger under a placeholder outcome and dropped when the message settles; resumption does not consume the retry budget. | The loop must resume after a kill without repeating model calls, and an interruption is not a failed step. Settled records stay free of message text. |
 | D-39 | Review round 3 findings on slice 3 (#1496) are fixed in slice 3b: a lock that cannot be written reports `store` / `lock`, and reminder entries carry the Junk or Deleted folder line. | Round rule: after round 2, P2 findings get a tracked follow-up instead of another push. |
 | D-40 | The text the extractor quotes for each revised or defended field is checked in code (the field's value must appear in it and it must be in the source; a failure is a dispute on that field) and is never shown to the critic, which re-reads from its own earlier findings and the revised/defended actions only. The real-calendar-day check is removed from the gate: decoding the model's answer already rejects an impossible date. | Showing the extractor's quotes to the critic would let it copy them, the mirror of D-35. A gate check that decoding makes unreachable only looks like protection. |
+| D-41 | The first live run is operator-attended and bounded: a dry run first, then mail since a fixed start (2026-10-01) and at most ten messages, in a state directory of its own. Runbook: `docs/runbooks/docket-intake-first-run.md`. | The first writes to a real attorney calendar must be small enough to check entry by entry, and the whole run must be disposable. |
+| D-42 | Every calendar event created and every message marked is journaled per run. `undo --run` deletes only events that still carry a provisional `Docket - *` category, keeps anything the attorney verified or recategorised, removes the `Docket - entered` mark, clears those messages from the ledger and moves the cursor back. | A first run must be reversible without touching the attorney's own decisions, and a cleared message must be read again by the next run. |
+| D-43 | Commands print one JSON line on standard output; logs go to standard error. Exit codes: 0 ok, 1 failure, 2 a write refused without `--yes`, 3 Graph throttled. | Same contract as the mail-tagging tool, so the operator and the orchestrator read both the same way. |
 
 ## Exception Ledger
 

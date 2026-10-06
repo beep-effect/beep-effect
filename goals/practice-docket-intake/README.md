@@ -39,17 +39,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. Slices 0-2 are merged (#1455, #1456, #1458); slice 3 (adapters
-and the service app) is in review as #1475; slice 3b (the adversarial review
-loop, SPEC D-31 to D-39) is built on top of it. Slice 4 (the docket-sheet
-cross-check and the live practice-KG matter lookup) follows. The live smoke
-waits on the operator-attended registration.
+P1 Implement and P2 Verify. Slices 0 to 3b are merged (#1455, #1456, #1458,
+#1475, #1502, plus driver follow-ups #1473 and #1501). The first-run safety
+net (slice 3c) is in review as #1517; slice 4 (the live practice-KG matter
+lookup and the docket-sheet cross-check) is being built. The Entra and
+Exchange registration is complete and the live read and write smoke tests
+passed on 2026-10-06; the operator-attended first run waits for its slot.
 
 ## Latest Evidence
 
 Package handoffs pass for `@beep/m365`, `@beep/m365-mcp`,
 `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
-`@beep/law-practice-server` and `@beep/docket-intake`. No live run yet.
+`@beep/law-practice-server` and `@beep/docket-intake`. Live smoke against the
+attorney mailbox: read and write passed on 2026-10-06 (ids and counts only).
 
 ## Notes
 
