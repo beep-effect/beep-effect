@@ -47,6 +47,7 @@ skeptic after each: 8 findings in, 0 blockers or majors left in W6 after round 2
 ## Follow-ups (tracked, minor)
 
 - `check-lane-plan-cq.py` §4 (ordering terms/types) has no planted-violation self-test.
-- `generate-lane-plan-golden.ts` parses its mode with `A.contains(process.argv, "--write")` rather than the
-  lab's `decodeEvidenceMode`.
+- Closed in review round 1: `generate-lane-plan-golden.ts` now decodes its mode with the lab's
+  `decodeEvidenceMode`, fails golden drift typed (`EvidenceDriftError`) and plans the live handoff
+  through contract §8.1 in both modes.
 - CT §8.1's "Transitional" bullet carries a dated note that the body landed in the same PR.

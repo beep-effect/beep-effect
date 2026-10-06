@@ -53,6 +53,13 @@
     },
     {
       "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "EvidenceDriftError",
+      "kind": "tagged-error",
+      "owner": "@beep/ciops",
+      "identity": "EvidenceDriftError"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
       "symbol": "EvidenceMode",
       "kind": "literal-kit",
       "owner": "@beep/ciops",

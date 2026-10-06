@@ -71,6 +71,38 @@ export const EvidenceMode = LiteralKit(["check", "write"]).pipe(
 export type EvidenceMode = typeof EvidenceMode.Type;
 
 /**
+ * A committed evidence record no longer equals the bytes a check-mode run recomputed.
+ *
+ * **Details**
+ *
+ * Check mode never writes, so drift is reported as this typed failure naming
+ * the committed path; the `:write` sibling script is the only path that
+ * regenerates the record.
+ *
+ * **Example** (Construct a golden drift failure)
+ *
+ * ```ts
+ * import { EvidenceDriftError } from "@/projection/Evidence"
+ *
+ * const error = EvidenceDriftError.make({
+ *   path: "test/fixtures/lane-plan-v1.ttl",
+ *   message: "drifted from the emitted lane plan"
+ * })
+ * console.log(error._tag) // "EvidenceDriftError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EvidenceDriftError extends S.TaggedError<EvidenceDriftError>($I`EvidenceDriftError`)(
+  "EvidenceDriftError",
+  { path: S.String, message: S.String },
+  $I.annoteError<EvidenceDriftError>("EvidenceDriftError", {
+    description: "A committed evidence record differs from the bytes a check-mode run recomputed.",
+  })
+) {}
+
+/**
  * Repo-relative inputs and output of one replay-evidence run.
  *
  * **Example** (Describe the frozen S6 packet)

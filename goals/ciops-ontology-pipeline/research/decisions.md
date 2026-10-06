@@ -390,8 +390,12 @@ count the decoded document carries. A byte copy of the document lives in the lab
 roots) for hermetic tests, and one test reads the live path and requires its sha256 to equal the
 pinned constant, so handoff drift turns the lab red on the next uncached run. Known limit, accepted:
 the lab's Turbo inputs do not name the handoff, so a cached green can hide drift until the lab's own
-files change; the live-evidence script re-reads the path on every run. Rejected: a Turbo input (it
-moves the cache-qualification baseline); the superseded 32-lane bytes.
+files change; `evidence:lane-plan` plans the live path through contract §8.1 on every run, in check
+and write mode alike, and fails typed (`HandoffDigestMismatchError`, naming the path) when its
+sha256 drifts, so the orchestrator's per-phase run and the PR body's check-mode line are the
+uncached fallback (review round 1 correction: the first text credited a live-evidence script that
+read only the fixture copy). Rejected: a Turbo input (it moves the cache-qualification baseline);
+the superseded 32-lane bytes.
 
 **Ruling 3 — the lane plan is its own proposal type, with a fully disjoint provisional
 vocabulary.** `planEpisode` succeeds with a `LanePlanProposal` (episode id, plan id, handoff path
@@ -526,11 +530,26 @@ Labs context is not required and the lab's Turbo inputs do not name the pin): th
 re-runs `evidence:s7-live` and `evidence:lane-plan` at each phase and the PR body carries their
 check-mode lines, the same accepted limit as Ruling 2's; (cc) in the W6 core, `decodeHandoffView`
 takes `(path, text)` because `HandoffDecodeError` names the path, an unknown-lane precedence passed
-to `planLanes` is a defect (not reachable from `planEpisode`), and the digest decode is `orDie`
-(a byte array always digests); (dd) the stale generated module docs under `apps/labs/ciops/docs/` (git-ignored local output that
+to `planLanes` is a defect (not reachable from `planEpisode`), and a platform digest failure is a
+typed `HandoffReadError` (a `Uint8Array` always decodes, so the digest is its only failure source;
+corrected in review round 1, the first text said `orDie`); (dd) the stale generated module docs under `apps/labs/ciops/docs/` (git-ignored local output that
 no gate regenerates: labs are docgen-exempt) are removed from the lane rather than left describing
 the retired stub; (ee) `replayAdmissionJournal` was over the 60-line unit law before P2 and stays so after the
 skip rule moved to helpers; a pure-reducer split is a tracked follow-up, as is the
 `released_only_chains` rename from P1. Phase P2 is complete; PLAN, README and the manifest say so.
 Next: P3 auditor run 4 (W7), fed by the P1 pins and the P2 projection, under the Ruling 1 gate as
 amended by P1 Ruling 1.
+
+## 2026-10-06 — P2 review round 1 (orchestrator under the autonomy charter)
+
+Three P2 threads on the projection PR, all fixed in round 1 (the charter's round cap starts at
+round 3): (ff) `generate-lane-plan-golden.ts` decodes its mode with `decodeEvidenceMode`, so
+`evidence:lane-plan --write` (argv `--check --write`) is the same typed refusal as `evidence:s7`,
+and golden drift fails typed as `EvidenceDriftError` naming the committed path instead of a defect;
+(gg) the same script plans the live `gate-order-handoff.json` through contract §8.1 before it reads
+the fixture, in both modes, so handoff drift fails typed on every run and a golden is never
+rewritten from a stale fixture; Ruling 2's limit text is corrected in place (the PR had not merged,
+so the entry is amended rather than superseded); (hh) call (cc) is corrected in place: the platform
+digest failure is a typed `HandoffReadError`, as the code, contract §8.1 and the test assert.
+Reversal: a later entry here; the script's live check is one `planEpisode` call and can be removed
+if a Turbo input or a hosted step ever names the live handoff.
