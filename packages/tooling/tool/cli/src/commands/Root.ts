@@ -20,6 +20,7 @@ import { createPackageCommand } from "./CreatePackage/index.ts";
 import { deletePackageCommand } from "./DeletePackage/index.ts";
 import { docgenCommand } from "./Docgen/index.ts";
 import { docsCommand } from "./Docs/index.ts";
+import { drawingsCommand } from "./Drawings/index.ts";
 import { exploreCommand } from "./Explore/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
@@ -84,6 +85,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     corpusCommand,
     docgenCommand,
     docsCommand,
+    drawingsCommand,
     exploreCommand,
     fallowCommand,
     filesCommand,

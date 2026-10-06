@@ -1070,11 +1070,12 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       ).not.toContain("full:pre-push");
       expect(findStep(plan.steps, "publish:pr-create").args).toContain("--draft");
       expect(findStep(plan.steps, "publish:pr-ready-for-heavy-label").args).toEqual([
-        "pr",
-        "edit",
-        "<number>",
-        "--add-label",
-        "ready-for-heavy",
+        "api",
+        "-X",
+        "POST",
+        "repos/{owner}/{repo}/issues/<number>/labels",
+        "-f",
+        "labels[]=ready-for-heavy",
       ]);
       expect(findStep(plan.steps, "monitor:until-ready:submit").args).toEqual([
         "run",

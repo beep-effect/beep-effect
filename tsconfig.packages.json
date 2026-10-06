@@ -10,10 +10,16 @@
       "path": "apps/architecture-lab-proof"
     },
     {
+      "path": "apps/docket-intake"
+    },
+    {
       "path": "apps/oip-web"
     },
     {
       "path": "apps/practice-kg-mcp"
+    },
+    {
+      "path": "apps/practice-mail-tagging"
     },
     {
       "path": "apps/professional-desktop"
@@ -157,6 +163,9 @@
       "path": "packages/drivers/obs"
     },
     {
+      "path": "packages/drivers/occt"
+    },
+    {
       "path": "packages/drivers/onepassword-cli"
     },
     {
@@ -175,10 +184,16 @@
       "path": "packages/drivers/pacer"
     },
     {
+      "path": "packages/drivers/pdf-tools"
+    },
+    {
       "path": "packages/drivers/pglite"
     },
     {
       "path": "packages/drivers/phoenix"
+    },
+    {
+      "path": "packages/drivers/poppler"
     },
     {
       "path": "packages/drivers/postgres"
@@ -200,6 +215,9 @@
     },
     {
       "path": "packages/drivers/tailscale"
+    },
+    {
+      "path": "packages/drivers/tesseract"
     },
     {
       "path": "packages/drivers/tika"
@@ -272,6 +290,9 @@
     },
     {
       "path": "packages/foundation/capability/semantic-web"
+    },
+    {
+      "path": "packages/foundation/capability/technical-drawing"
     },
     {
       "path": "packages/foundation/modeling/html"

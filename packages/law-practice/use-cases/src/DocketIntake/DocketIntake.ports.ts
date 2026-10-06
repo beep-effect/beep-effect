@@ -20,8 +20,10 @@ import type {
   DocketWrittenEntry,
   MatterLookupResult,
   ParalegalEntry,
+  ParalegalRevision,
   SecretaryReview,
 } from "./DocketIntake.schemas.ts";
+import type { ExtractorFieldResponse, ReviewDispute, ReviewField, ReviewFinding } from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.ports");
 
@@ -118,10 +120,20 @@ export class DocketMailbox extends Context.Service<DocketMailbox, DocketMailboxS
  */
 export interface DocketParalegalShape {
   readonly enter: (message: DocketMessage) => Effect.Effect<ParalegalEntry, DocketIntakeError>;
+  /**
+   * Revise or defend the disputed fields of an earlier entry. The disputes carry the fields and
+   * the critic's reasons, never the values the critic read.
+   */
+  readonly revise: (input: {
+    readonly disputes: ReadonlyArray<ReviewDispute>;
+    readonly message: DocketMessage;
+    readonly previous: ParalegalEntry;
+  }) => Effect.Effect<ParalegalRevision, DocketIntakeError>;
 }
 
 /**
- * Port: agent 1, the paralegal who classifies a message and enters it.
+ * Port: agent 1, the paralegal who classifies a message and enters it, and
+ * who revises or defends its entry when the review disputes it.
  *
  * **Example** (Reference the paralegal port)
  *
@@ -152,6 +164,24 @@ export class DocketParalegal extends Context.Service<DocketParalegal, DocketPara
  * @since 0.0.0
  */
 export interface DocketSecretaryShape {
+  /** Findings on what the critic is shown of the entry: classification, title, rationale and matter references. */
+  readonly critique: (input: {
+    readonly documents: ReadonlyArray<DocketSourceDocument>;
+    readonly entry: ParalegalEntry;
+    readonly message: DocketMessage;
+  }) => Effect.Effect<ReadonlyArray<ReviewFinding>, DocketIntakeError>;
+  /**
+   * Read the disputed fields again. The critic is told its own earlier findings on them and whether
+   * the extractor revised or defended each, never the text the extractor quoted. Other fields are ignored.
+   */
+  readonly reread: (input: {
+    readonly documents: ReadonlyArray<DocketSourceDocument>;
+    readonly extractorResponses: ReadonlyArray<ExtractorFieldResponse>;
+    readonly fields: ReadonlyArray<ReviewField>;
+    readonly findings: ReadonlyArray<ReviewFinding>;
+    readonly message: DocketMessage;
+  }) => Effect.Effect<SecretaryReview, DocketIntakeError>;
+  /** The independent first reading of the message and its source documents. */
   readonly review: (input: {
     readonly documents: ReadonlyArray<DocketSourceDocument>;
     readonly entry: ParalegalEntry;
@@ -162,6 +192,12 @@ export interface DocketSecretaryShape {
 /**
  * Port: agent 2, the secretary who reviews agent 1's entry adversarially and
  * reads the mail date and response period from the source document itself.
+ *
+ * **Details**
+ *
+ * `review` is the independent first reading. `critique` lists problems with
+ * what the secretary is shown of the entry, and `reread` reads disputed fields
+ * again in the later rounds of the review loop.
  *
  * **Example** (Reference the secretary port)
  *

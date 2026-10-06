@@ -318,7 +318,7 @@ describe("MailTagging assembled service", () => {
                 boxRejection({
                   statusCode: 409,
                   code: "item_name_in_use",
-                  contextInfo: { conflicts: [{ id: "7001", type: "file", sha1: "never retained", size: 3 }] },
+                  contextInfo: { conflicts: [{ id: "7001", type: "file", name: "never retained" }] },
                 })
               )
             : Promise.resolve(boxFiles("7002"))
@@ -348,6 +348,48 @@ describe("MailTagging assembled service", () => {
         ]);
         expect(yield* linesOf(workspace.boxCallLedgerPath)).toStrictEqual([
           '{"workstream":"email-tagging","runLabel":"run-0002","calls":2,"at":"1970-01-01T00:00:00.000Z","exact":true}',
+        ]);
+      })
+    );
+    it.effect(
+      "reconciles the held name when Box reports the holder's size and SHA-1 and they match, in one metered call",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* makeWorkspace;
+        // The earlier upload landed: Box holds the intended name and reports the holder's id, size, and SHA-1.
+        const providers = yield* makeProviders((requestBody) =>
+          requestBody.attributes.name === intendedName
+            ? Promise.reject(
+                boxRejection({
+                  statusCode: 409,
+                  code: "item_name_in_use",
+                  contextInfo: {
+                    // The upload conflict shape: one object, with the SHA-1 of the three attachment bytes.
+                    conflicts: { id: "7001", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
+                  },
+                })
+              )
+            : Promise.resolve(boxFiles("7002"))
+        );
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
+        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
+
+        const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
+        const records = yield* Effect.forEach(yield* linesOf(workspace.filingLedgerPath), (line) =>
+          decodeFilingRecord(line)
+        );
+
+        expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
+          0, 1, 0,
+        ]);
+        expect(A.map(records, filingLine)).toStrictEqual([
+          ["FilingIntended", intendedName],
+          ["FilingCompleted", intendedName, "7001", true],
+        ]);
+        expect(providers.uploads).toStrictEqual([`9001/${intendedName}`]);
+        expect(yield* linesOf(workspace.boxCallLedgerPath)).toStrictEqual([
+          '{"workstream":"email-tagging","runLabel":"run-0002","calls":1,"at":"1970-01-01T00:00:00.000Z","exact":true}',
         ]);
       })
     );

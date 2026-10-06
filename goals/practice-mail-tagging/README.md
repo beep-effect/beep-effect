@@ -37,6 +37,9 @@ and `@beep/m365` adapters once workstream A's message-category verbs merge.
 
 ## Latest Evidence
 
+- 2026-10-06: PR 3 adds the `apps/practice-mail-tagging` entrypoint, a sample
+  user unit, and `docs/runbooks/practice-mail-tagging.md`; PR 1 (#1464) and
+  PR 2 (#1480) are merged. Next: the live dry-run over mail since 2026-07-01.
 - 2026-10-06: PR 2 adds the Outlook, practice-KG, and Box adapters, tested
   against driver fakes only (no live calls); decisions D-17..D-25 recorded.
 - 2026-10-06: packet opened from the operator-ratified solo-practice

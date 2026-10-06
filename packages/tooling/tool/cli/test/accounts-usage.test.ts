@@ -17,8 +17,8 @@ import {
   dedupeAccountUsages,
   grokUsageOutcome,
   grokUsageWindows,
+  layerAccountsUsageLive,
   MuseKeyBodyJson,
-  makeAccountsUsageLive,
   museUsageOutcome,
   museUsageWindows,
   pollAccounts,
@@ -32,14 +32,13 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, Console, DateTime, Effect, FileSystem, Path, Ref } from "effect";
+import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");
@@ -319,9 +318,7 @@ describe("account report rendering", () => {
 const respond = (request: HttpClientRequest.HttpClientRequest, body: string, status = 200) =>
   HttpClientResponse.fromWeb(request, new Response(body, { status }));
 
-// Runs inside `it.layer(NodeServices.layer)`, which supplies the filesystem,
-// Path, and the per-test scope that owns the temporary directory.
-const runLive = Effect.fn("AccountsUsageTest.runLive")(function* <A, E>(
+const runLive = Effect.fn("runLive")(function* <A, E>(
   files: Readonly<Record<string, string>>,
   client: HttpClient.HttpClient,
   program: Effect.Effect<A, E, AccountsUsage>
@@ -333,9 +330,12 @@ const runLive = Effect.fn("AccountsUsageTest.runLive")(function* <A, E>(
   yield* Effect.forEach(
     Object.entries(files),
     ([name, content]) => fs.writeFileString(path.join(root, name), content),
-    { discard: true }
+    {
+      discard: true,
+    }
   );
-  const usage = yield* makeAccountsUsageLive().pipe(
+  return yield* Layer.build(layerAccountsUsageLive).pipe(
+    Effect.flatMap((context) => Effect.provideContext(program, context)),
     Effect.provideService(HttpClient.HttpClient, client),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
@@ -344,7 +344,6 @@ const runLive = Effect.fn("AccountsUsageTest.runLive")(function* <A, E>(
       })
     )
   );
-  return yield* Effect.provideService(program, AccountsUsage, usage);
 });
 
 const authFiles = {
@@ -358,130 +357,124 @@ const authFiles = {
   "broken.json": "{",
 };
 
-describe("live account poller", () => {
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
-    it.effect("lists every supported login and polls each with its own token", () =>
-      Effect.gen(function* () {
-        const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
-        const answer = (request: HttpClientRequest.HttpClientRequest) => {
-          if (request.url.includes("anthropic")) return respond(request, claudeBody);
-          if (request.url.includes("chatgpt")) return respond(request, codexBody);
-          if (request.url.includes("meta.ai")) return respond(request, `{"subs_tier_name":"Tier"}`);
-          return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
-        };
-        const client = HttpClient.make((request) =>
-          Ref.update(
-            seen,
-            A.append([
-              request.method,
-              request.url,
-              request.headers.authorization,
-              request.headers["anthropic-beta"] ??
-                request.headers["chatgpt-account-id"] ??
-                request.headers["x-grpc-web"],
-            ])
-          ).pipe(Effect.as(answer(request)))
-        );
-        const usages = yield* runLive(authFiles, client, pollAccounts);
-        expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
-          ["claude", "me@example.com", "Ok"],
-          ["codex", "work@example.com", "Ok"],
-          ["grok", "me@example.com", "Ok"],
-          ["muse", "me@example.com", "Ok"],
-        ]);
-        expect(
-          A.sort(
-            yield* Ref.get(seen),
-            Order.mapInput(Order.String, (row: ReadonlyArray<string | undefined>) => row[1] ?? "")
-          )
-        ).toEqual([
-          ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
-          ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
-          ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
-          ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
-        ]);
-      })
-    );
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("live account poller", (it) => {
+  it.effect("lists every supported login and polls each with its own token", () =>
+    Effect.gen(function* () {
+      const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
+      const answer = (request: HttpClientRequest.HttpClientRequest) => {
+        if (request.url.includes("anthropic")) return respond(request, claudeBody);
+        if (request.url.includes("chatgpt")) return respond(request, codexBody);
+        if (request.url.includes("meta.ai")) return respond(request, `{"subs_tier_name":"Tier"}`);
+        return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
+      };
+      const client = HttpClient.make((request) =>
+        Ref.update(
+          seen,
+          A.append([
+            request.method,
+            request.url,
+            request.headers.authorization,
+            request.headers["anthropic-beta"] ?? request.headers["chatgpt-account-id"] ?? request.headers["x-grpc-web"],
+          ])
+        ).pipe(Effect.as(answer(request)))
+      );
+      const usages = yield* runLive(authFiles, client, pollAccounts);
+      expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+        ["claude", "me@example.com", "Ok"],
+        ["codex", "work@example.com", "Ok"],
+        ["grok", "me@example.com", "Ok"],
+        ["muse", "me@example.com", "Ok"],
+      ]);
+      expect(
+        A.sort(
+          yield* Ref.get(seen),
+          Order.mapInput(Order.String, (entry: ReadonlyArray<string | undefined>) => String(entry[1]))
+        )
+      ).toEqual([
+        ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
+        ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
+        ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
+        ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
+      ]);
+    })
+  );
 
-    it.effect("turns a transport failure into that account's outcome", () =>
-      Effect.gen(function* () {
-        const client = HttpClient.make((request) =>
-          Effect.fail(
-            new HttpClientError.HttpClientError({
-              reason: new HttpClientError.TransportError({ request, description: "offline" }),
-            })
-          )
-        );
-        const usages = yield* runLive({ "claude-me.json": authFiles["claude-me.json"] }, client, pollAccounts);
-        expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Failed"]);
-      })
-    );
-
-    it.effect("treats a missing auth directory as no accounts and a vanished login as a re-login", () =>
-      Effect.gen(function* () {
-        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-        const outcome = yield* runLive(
-          {},
-          client,
-          Effect.gen(function* () {
-            const usage = yield* AccountsUsage;
-            const listed = yield* usage.accounts;
-            const polled = yield* usage.poll(account("gone"));
-            return [A.length(listed), polled.outcome._tag];
+  it.effect("turns a transport failure into that account's outcome", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) =>
+        Effect.fail(
+          new HttpClientError.HttpClientError({
+            reason: new HttpClientError.TransportError({ request, description: "offline" }),
           })
-        );
-        expect(outcome).toEqual([0, "NeedsLogin"]);
-      })
-    );
-  });
+        )
+      );
+      const usages = yield* runLive({ "claude-me.json": authFiles["claude-me.json"] }, client, pollAccounts);
+      expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Failed"]);
+    })
+  );
+
+  it.effect("treats a missing auth directory as no accounts and a vanished login as a re-login", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const outcome = yield* runLive(
+        {},
+        client,
+        Effect.gen(function* () {
+          const usage = yield* AccountsUsage;
+          const listed = yield* usage.accounts;
+          const polled = yield* usage.poll(account("gone"));
+          return [A.length(listed), polled.outcome._tag];
+        })
+      );
+      expect(outcome).toEqual([0, "NeedsLogin"]);
+    })
+  );
 });
 
-describe("local snapshots", () => {
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
-    const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("local snapshots", (it) => {
+  const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
 
-    it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
-      Effect.gen(function* () {
-        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-        const usages = yield* runLive(
-          { "snapshots/cursor.json": snapshot, "snapshots/broken.json": "{", "snapshots/notes.txt": "x" },
-          client,
-          pollAccounts
-        );
-        expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
-          ["cursor", "me@example.com", "Ok"],
-        ]);
-        expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
-          A.join(
-            [
-              "[accounts] use first: cursor me@example.com",
-              "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
-            ],
-            "\n"
-          )
-        );
-      })
-    );
+  it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const usages = yield* runLive(
+        { "snapshots/cursor.json": snapshot, "snapshots/broken.json": "{", "snapshots/notes.txt": "x" },
+        client,
+        pollAccounts
+      );
+      expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+        ["cursor", "me@example.com", "Ok"],
+      ]);
+      expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
+        A.join(
+          [
+            "[accounts] use first: cursor me@example.com",
+            "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
+          ],
+          "\n"
+        )
+      );
+    })
+  );
 
-    it.effect("does not poll a provider that only exists as a snapshot", () =>
-      Effect.gen(function* () {
-        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-        const outcome = yield* runLive(
-          { "claude-me.json": authFiles["claude-me.json"] },
-          client,
-          Effect.gen(function* () {
-            const usage = yield* AccountsUsage;
-            const listed = yield* usage.accounts;
-            const polled = yield* Effect.forEach(listed, (ref) =>
-              usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
-            );
-            return A.map(polled, (row) => row.outcome._tag);
-          })
-        );
-        expect(outcome).toEqual(["Failed"]);
-      })
-    );
-  });
+  it.effect("does not poll a provider that only exists as a snapshot", () =>
+    Effect.gen(function* () {
+      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+      const outcome = yield* runLive(
+        { "claude-me.json": authFiles["claude-me.json"] },
+        client,
+        Effect.gen(function* () {
+          const usage = yield* AccountsUsage;
+          const listed = yield* usage.accounts;
+          const polled = yield* Effect.forEach(listed, (ref) =>
+            usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
+          );
+          return A.map(polled, (row) => row.outcome._tag);
+        })
+      );
+      expect(outcome).toEqual(["Failed"]);
+    })
+  );
 });
 
 describe("credit and reset rendering", () => {

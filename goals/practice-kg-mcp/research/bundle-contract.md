@@ -181,6 +181,7 @@ bun run apps/practice-kg-mcp/src/build.ts
   --bundle-out <dir>           # default <corpus-root>/staging/practice-kg-bundle
   --include-refresh            # same as --include-run 2026-07-refresh (default: false, recorded either way)
   --include-run <label>        # fold one later source run in; repeatable
+  --bundle-version <version>   # stamp the bundle, e.g. 2026-10-06-03 (default: the build's own version)
   --docket-register <file>     # the attorney's docket register as JSONL
   --skip-emails                # spine+text only (fast iteration)
   --max-text-bytes <n>         # per-document inline cap, default 2097152
@@ -195,6 +196,11 @@ not change those files' size, date, or origin chain. An included run adds:
 - each of its unorganized files once, as a catalog row;
 - its `staging/extract-<label>/` tree (`sources.jsonl` + `text/`), same layout
   as `staging/extract/`, as a text source.
+
+For a file the organizer placed, `run_label` is the run the organizer's copy
+came from and stays so when a later included run holds the same file; size and
+date follow the same copy. `source_origin_chain` lists every run and path the
+file appears in: read that, not `run_label`, to ask which runs hold a file.
 
 Each added row's source path is read with `extractPracticeKgPathEvidence`.
 Exactly one docket in the path becomes the row's docket and family, and the row

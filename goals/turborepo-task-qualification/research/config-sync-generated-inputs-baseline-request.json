@@ -1,0 +1,20 @@
+{
+  "previous": "57098aa849f30497ab36d5c07727c61bfdcfbff6aa3e845eef0dcc30e862ed7e",
+  "subjects": ["//"],
+  "review": {
+    "reviewer": "Claude Fable 5.1 (create-package CI-ready, fix/create-package-ci-ready)",
+    "reason": "Accept the two generated-file inputs (vitest.aliases.generated.json, standards/fallow.boundaries.generated.jsonc) added to the cached //#config-sync:check root task so the check re-runs when only a file it regenerates changes; one node moves by two input entries, no command text, output, environment key, dependency edge or cache flag changed, and no qualification is granted.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/config-sync-generated-inputs-baseline-review.md",
+      "sha256": "7da05d0ee10310ba4b9329c12ef36519c540c127ff91ef8018f54aae4e065e59"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
