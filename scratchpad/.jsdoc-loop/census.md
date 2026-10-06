@@ -6,11 +6,11 @@ Generated: 2026-08-27T06:18:22.553Z
 
 | Metric | Count |
 | --- | ---: |
-| scanned files | 476 |
-| exporting modules | 468 |
-| all export declarations | 4113 |
-| owning exports | 3739 |
-| re-exports | 374 |
+| scanned files | 466 |
+| exporting modules | 458 |
+| all export declarations | 4074 |
+| owning exports | 3705 |
+| re-exports | 369 |
 | open modules (mechanical) | 2 |
 | open owning exports (mechanical) | 6 |
 
@@ -33,7 +33,6 @@ Generated: 2026-08-27T06:18:22.553Z
 | `jsonl` | 11 | 46 | 0 | 0 |
 | `glob` | 13 | 40 | 0 | 3 |
 | `schemastore` | 14 | 47 | 0 | 0 |
-| `semver` | 10 | 34 | 0 | 0 |
 | `memfs` | 3 | 18 | 0 | 0 |
 | `beep-docs` | 9 | 95 | 0 | 0 |
 | `codemode` | 34 | 359 | 0 | 0 |

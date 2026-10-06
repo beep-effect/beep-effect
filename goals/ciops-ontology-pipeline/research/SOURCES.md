@@ -44,7 +44,7 @@ Refreshed against main `8b7392fe00` (2026-10-05, P0 W1 SOURCES carry; the gradua
 | --- | --- | --- |
 | S7 projection engine | `apps/labs/ciops` (`@beep/ciops`): `CiOpsProjection` service and `CiOpsProjectionShape` (`project`, `emitAbox`, `planEpisode`) in `src/projection/CiOpsProjection.ts`; `projectSchedule` in `src/projection/Engine.ts`; `emitScheduleAbox` in `src/projection/Turtle.ts` | reuse and extend (W5, W6) |
 | Differential replay | `decodeAdmissionJournal`, `replayAdmissionJournal`, `requireReplayMatch` in `apps/labs/ciops/src/projection/Replay.ts`; `generateReplayEvidence` in `apps/labs/ciops/src/projection/Evidence.ts`, run by `apps/labs/ciops/scripts/generate-replay-evidence.ts` (`evidence:s7` checks, `evidence:s7:write` writes; #1394) | reuse; agreement report NET-NEW (W5) |
-| Planner seam | `PlanEpisodeInput` (`{ episodeId }` at HEAD) and `plannerNotImplemented` in `apps/labs/ciops/src/projection/Schemas.ts`; contract `ontology/docs/s7-projection-contract.md` §3.2 and §6 | widened first, then given a body (W6, graduation Ruling 11) |
+| Planner seam | `PlanEpisodeInput` (`{ episodeId, repoRoot, handoff }` since P2), the lane-plan schemas and `Handoff*Error`s in `apps/labs/ciops/src/projection/Schemas.ts`, the pure core in `src/projection/LanePlan.ts`, `planEpisode` and `emitLanePlan` in `src/projection/CiOpsProjection.ts`/`Turtle.ts`; contract `ontology/docs/s7-projection-contract.md` §8 (supersedes the §3.2 bullet and §6 first bullet) | widened, then given a body (W6, graduation Ruling 11; P2 Rulings 1–7) |
 | Gate-order handoff | `GateOrderHandoff` in `commands/Quality/Quality.schemas.ts:1821`; `DEFAULT_GATE_ORDER_SEED` (:225), `GATE_ORDER_SOURCE` (:435) and `orderWaveLanes` (:663) in `commands/Yeet/internal/WaveOrder.ts`; document `goals/time-to-certainty/research/gate-order-handoff.json` | read as a document by path and sha256, never imported (W6) |
 | Admission journal | `internal/repo-run/AdmissionJournal.ts`: v3 `admission-lease-evicted` (`AdmissionJournalLeaseEvictedV3` :512), `admission-enqueued` (:438), `admission-withdrawn` (:462); 200-admission retention (`RETAINED_ADMISSIONS` :51) | capture input (W3); seat-request clock (W8) |
 | Scheduler invariant | `internal/repo-run/QualityScheduler.ts:1599` (`activeTokenTotal(state) + ticket.weightTokens <= capacityTokens`); `isTicketSkippable` (:1556); `ProofStage` in `internal/repo-run/QualityScheduler.schemas.ts:194` | replay oracle and tier vocabulary (W5, W8) |
@@ -66,9 +66,9 @@ Corrections carried from frozen exploration files, which are never edited:
   `<checkout>/.beep/yeet/proof-ledger.ndjson`. Since time-to-certainty ruling 71 (#1321) it
   lives in the owning clone, resolved by `proofLedgerPathForCheckout`.
 - `goals/time-to-certainty/research/d1-ordering-handoff.md:103-108` cites
-  `Schemas.ts:885-887` and `:843-848`; read them as `plannerNotImplemented` and
-  `PlanEpisodeInput` in `apps/labs/ciops/src/projection/Schemas.ts` (the ttc file stays
-  unedited under its ruling 79).
+  `Schemas.ts:885-887` and `:843-848`; read them as the former `plannerNotImplemented` stub
+  (retired by the P2 body) and `PlanEpisodeInput` in `apps/labs/ciops/src/projection/Schemas.ts`
+  (the ttc file stays unedited under its ruling 79).
 - `goals/time-to-certainty/research/d1-ordering-handoff.md:110` cites
   `apps/labs/ciops/scripts/generate-replay-evidence.ts:17-20` and `:41-54`. Since #1394 the script
   is a 33-line entry: read the paths as `EvidencePaths.make` (script :8-12) and the read and digest
