@@ -51,6 +51,7 @@ export const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =
       getListItem: unused,
       getMailFolder: unused,
       getMessage: unused,
+      getMessageAuthoredText: unused,
       getSite: unused,
       listDriveItemVersions: unused,
       listDrives: unused,

@@ -47,6 +47,7 @@ import {
   GraphListItem,
   GraphMailFolder,
   GraphMessage,
+  GraphMessageAuthoredText,
   GraphOutlookCategory,
   GraphSite,
 } from "./M365.schemas.ts";
@@ -1959,6 +1960,9 @@ export type M365Shape = {
   readonly getListItem: (request: M365GetListItemRequest) => Effect.Effect<GraphListItem, M365Error>;
   readonly getMailFolder: (request: M365GetMailFolderRequest) => Effect.Effect<GraphMailFolder, M365Error>;
   readonly getMessage: (request: M365GetMessageRequest) => Effect.Effect<GraphMessage, M365Error>;
+  readonly getMessageAuthoredText: (
+    request: M365GetMessageRequest
+  ) => Effect.Effect<GraphMessageAuthoredText, M365Error>;
   readonly getSite: (request: M365GetSiteRequest) => Effect.Effect<GraphSite, M365Error>;
   readonly listDriveItemVersions: (
     request: M365ListDriveItemVersionsRequest
@@ -2082,6 +2086,11 @@ const signedWrite = Effect.fnUntraced(function* (
     })
   );
 });
+
+// Graph returns `uniqueBody` only when `$select`ed, and as HTML unless the
+// caller prefers text.
+const AUTHORED_TEXT_SELECT = "id,internetMessageId,receivedDateTime,from,sender,uniqueBody";
+const PREFER_TEXT_BODY = { Prefer: 'outlook.body-content-type="text"' };
 
 const unsignedGet = (url: string): Effect.Effect<HttpClientRequest.HttpClientRequest, M365Error> =>
   Effect.succeed(HttpClientRequest.get(url));
@@ -2816,6 +2825,13 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
     const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
     const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages");
     return yield* executeJson(runtime, url, GraphMessage, "messages", bodyContentTypeHeaders(request.bodyContentType));
+  }),
+  getMessageAuthoredText: Effect.fn("M365.getMessageAuthoredText")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages", [
+      ["$select", O.some(AUTHORED_TEXT_SELECT)],
+    ]);
+    return yield* executeJson(runtime, url, GraphMessageAuthoredText, "messages", PREFER_TEXT_BODY);
   }),
   getSite: Effect.fn("M365.getSite")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetSiteRequest, "sites")(rawRequest);

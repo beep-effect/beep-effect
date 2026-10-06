@@ -226,6 +226,8 @@
     "serwist": "^9.5.13",
     "shacl-engine": "^1.1.2",
     "shadcn": "^4.21.1",
+    "replicad": "^1.1.0",
+    "replicad-opencascadejs": "^1.1.0",
     "sharp": "^0.35.5",
     "sigma": "3.0.3",
     "sonner": "^2.0.8",
@@ -590,6 +592,8 @@
     "packages/drivers/xstate",
     "packages/drivers/tesseract",
     "packages/drivers/poppler",
-    "apps/docket-intake"
+    "apps/docket-intake",
+    "packages/drivers/occt",
+    "packages/drivers/pdf-tools"
   ]
 }

@@ -49,7 +49,7 @@ const makeRecordingClient = Effect.fnUntraced(function* (respond: TestResponder)
 
 const makeResponse = (
   request: HttpClientRequest.HttpClientRequest,
-  body: Uint8Array | ReadableStream<Uint8Array>,
+  body: Uint8Array<ArrayBuffer> | ReadableStream<Uint8Array<ArrayBuffer>>,
   status: number,
   contentRange: string,
   contentLength?: string,
@@ -89,11 +89,11 @@ class FixtureDecodeFailure extends Data.TaggedError("FixtureDecodeFailure") {}
 
 const makeMidBodyFailureResponse = (
   request: HttpClientRequest.HttpClientRequest,
-  firstChunk: Uint8Array,
+  firstChunk: Uint8Array<ArrayBuffer>,
   totalSize: number
 ): HttpClientResponse.HttpClientResponse => {
   let emitted = false;
-  const body = new ReadableStream<Uint8Array>({
+  const body = new ReadableStream<Uint8Array<ArrayBuffer>>({
     pull(controller) {
       Match.value(emitted).pipe(
         Match.when(false, () => {

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "design-figure-generation",
     "title": "Design Figure Generation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/design-figure-generation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Spec-as-code to one parametric solid to eight USPTO design-patent figures (hidden-line views, 37 CFR 1.84 sheets, validator, judge, attorney sign-off) as a beep drawings CLI.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -33,7 +33,11 @@
     "goals/design-figure-generation/GOAL.md",
     "goals/design-figure-generation/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p1-perspective-hlr-spike.md",
+    "research/p3-shading-spike.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -44,24 +48,36 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Research", "status": "complete" },
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
     {
       "id": "P1",
       "name": "Spike: perspective HLR via replicad",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Slice 1: unshaded sheets for the live matter",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Slice 2: shading, judge rubric, sign-off",
-      "status": "pending"
+      "status": "complete"
     },
-    { "id": "P4", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P5", "name": "Close", "status": "pending" }
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "complete"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/design-figure-generation/GOAL.md)\" -le 4000",
