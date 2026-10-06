@@ -1,17 +1,22 @@
 import {
   applyHeavyAdmissionLabel,
   buildYeetRunPlan,
+  defaultYeetRunOptions,
   findOpenPullRequest,
   RepoPlanStep,
   RepoRunContext,
   runGhPullRequestView,
+  validateCommitMessage,
+  validateMonitorBranch,
+  validateMonitorGuards,
   validateOpenPullRequest,
   YeetEnsuredPullRequest,
 } from "@beep/repo-cli/test/Yeet";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { Effect, Ref, Sink, Stream } from "effect";
+import { Effect, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -74,7 +79,50 @@ const encodeView = S.encodeEffect(
 );
 
 describe("Yeet pull request lifecycle boundaries", () => {
-  it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
+  it.layer(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, Path.layer), { timeout: "10 seconds" })((it) => {
+    it.effect("rejects protected monitoring branches and incompatible publication flags", () =>
+      Effect.gen(function* () {
+        for (const branch of ["main", "master", "HEAD"]) {
+          const failure = yield* validateMonitorBranch(RepoRunContext.make({ ...context, branch })).pipe(Effect.flip);
+          expect(failure.message).toContain(`refusing to monitor branch "${branch}"`);
+        }
+        for (const options of [
+          defaultYeetRunOptions({ mode: "publish", tier: "review-fix" }),
+          defaultYeetRunOptions({ noEdit: true }),
+          defaultYeetRunOptions({ mode: "verify", pushOnly: true }),
+          defaultYeetRunOptions({ pushOnly: true }),
+          defaultYeetRunOptions({ pushOnly: true, reuseVerified: true, amend: true }),
+          defaultYeetRunOptions({ pushOnly: true, reuseVerified: true, noEdit: true, amend: true }),
+          defaultYeetRunOptions({ pushOnly: true, reuseVerified: true, message: "fix(repo): repair" }),
+          defaultYeetRunOptions({ mode: "verify", stagedOnly: true }),
+          defaultYeetRunOptions({ stagedOnly: true, pushOnly: true, reuseVerified: true }),
+          defaultYeetRunOptions({ stagedOnly: true, reuseVerified: true }),
+          defaultYeetRunOptions({ stagedOnly: true, amend: true }),
+        ]) {
+          const failure = yield* validateMonitorGuards(context, options).pipe(Effect.flip);
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(failure.exitCode).toBe(1);
+        }
+        yield* validateMonitorGuards(context, defaultYeetRunOptions({ mode: "verify" }));
+        yield* validateMonitorGuards(context, defaultYeetRunOptions({ mode: "monitor", plan: true }));
+        yield* validateMonitorGuards(context, defaultYeetRunOptions({ monitor: true, pr: true }));
+        const output = yield* encodeView({ number: 42, state: "OPEN", headRefName: context.branch });
+        yield* validateMonitorGuards(context, defaultYeetRunOptions({ mode: "closeout" })).pipe(withGh(output));
+      }).pipe(withGh(""))
+    );
+
+    it.effect("accepts commitlint success and preserves rejection output and status", () =>
+      Effect.gen(function* () {
+        yield* validateCommitMessage(context, "fix(repo): repair").pipe(withGh(""));
+        const failure = yield* validateCommitMessage(context, "invalid message").pipe(
+          Effect.flip,
+          withGh("subject must be conventional", 1)
+        );
+        expect(failure.message).toBe("commit message failed commitlint:\nsubject must be conventional");
+        expect(failure.exitCode).toBe(1);
+      })
+    );
+
     it.effect("reports nonzero, truncated, and spawn failures when a PR is required", () =>
       Effect.gen(function* () {
         const nonzero = yield* runGhPullRequestView(context).pipe(Effect.flip, withGh("no PR", 1));

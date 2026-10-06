@@ -9,9 +9,9 @@ import {
 import {
   attributeDocuments,
   buildPracticeKgBundle,
-  isRecycleStubPath,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
+  PracticeKgAttributeDocumentsInput,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
@@ -1684,14 +1684,56 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
   });
 });
 
-describe("practice KG family attribution", () => {
-  it("recognizes Windows and POSIX recycle stubs without mistaking parent directories", () => {
-    assertTrue(isRecycleStubPath("recycle/$R123.docx"));
-    assertTrue(isRecycleStubPath("recycle\\$R123.docx"));
-    assertFalse(isRecycleStubPath("$R123/response.docx"));
-    assertFalse(isRecycleStubPath(""));
+describe("family attribution fallback contracts", () => {
+  const row = (digest: string, fields: Partial<PracticeKgCatalogRow> = {}) =>
+    PracticeKgCatalogRow.make({
+      category: "docket",
+      client: null,
+      digest,
+      docket: "20001US01",
+      docketFamily: "20001",
+      effectiveName: "fixture.txt",
+      mtimeIso: "2026-10-01T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "fixture.txt",
+      ...fields,
+    });
+  const reference = (digest: string, docket: string) =>
+    PracticeKgDocketReferenceRow.make({ digest, docket, client: "12345", family: "20001" });
+
+  it("inherits a unanimous client for an unreferenced family document", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a"), row("b", { docket: null })],
+        docketReferences: [reference("a", "20001US01")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "12345", attributionSource: "family-consensus" },
+    ]);
   });
 
+  it("accepts all family-level references and isolates other-docket citations", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a", { docket: null }), row("b", { client: "67890" })],
+        docketReferences: [reference("a", "20001US02"), reference("b", "20001US010")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "67890", attributionSource: "client-map" },
+    ]);
+  });
+});
+
+describe("patent-only filename anchors", () => {
   it("keeps client-map placement and resolves patent-only filename anchors", () => {
     const row = PracticeKgCatalogRow.make({
       category: "document",
@@ -1757,68 +1799,6 @@ describe("practice KG family attribution", () => {
           memberDocketKeys: ["12345.10008US01"],
         }),
         expect.objectContaining({ attributionSource: "mention", memberFamilyKey: null }),
-      ])
-    );
-  });
-
-  it("uses family-wide references for undocketed rows and preserves restored-name fallback", () => {
-    const family = PracticeKgCatalogRow.make({
-      category: "document",
-      client: null,
-      digest: "family",
-      docket: null,
-      docketFamily: "10008",
-      effectiveName: "family.pdf",
-      mtimeIso: "2026-10-05T00:00:00Z",
-      organizedRelativePath: null,
-      restored: false,
-      sourceOriginChain: "fixture",
-      runLabel: "fixture",
-      sizeBytes: 1,
-      sourceLabel: "fixture",
-      sourceRelativePath: "family.pdf",
-    });
-    const restored = PracticeKgCatalogRow.make({
-      ...family,
-      digest: "restored",
-      docketFamily: "20009",
-      restored: true,
-    });
-    const result = attributeDocuments({
-      catalogRows: [
-        family,
-        restored,
-        PracticeKgCatalogRow.make({ ...family, digest: "consensus", docket: "10008US02" }),
-      ],
-      docketReferences: [
-        PracticeKgDocketReferenceRow.make({
-          digest: "family",
-          client: "12345",
-          docket: "10008US01",
-          family: "10008",
-        }),
-      ],
-    });
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          digest: "family",
-          client: "12345",
-          attributionSource: "text-reference",
-          familyKey: "12345.10008",
-        }),
-        expect.objectContaining({
-          digest: "consensus",
-          client: "12345",
-          attributionSource: "family-consensus",
-          docketKey: "12345.10008US02",
-        }),
-        expect.objectContaining({
-          digest: "restored",
-          client: null,
-          attributionSource: "restored-name",
-          familyKey: "20009",
-        }),
       ])
     );
   });

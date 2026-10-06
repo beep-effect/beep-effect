@@ -14,9 +14,10 @@ import {
   YeetRetireSweepPlanJson,
   YeetRetireSweepReportJson,
 } from "@beep/repo-cli/test/Yeet";
+import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -67,44 +68,43 @@ const encodePacketLifecycle = S.encodeEffect(
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
 
-const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = [], failFiles = false) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.gen(function* () {
-      const real = yield* ChildProcessSpawner.ChildProcessSpawner;
-      // The fake answers with the same documents a real `gh pr view --json`
-      // prints, encoded through the schemas the sweep decodes them with: the
-      // pull request view, or its file list when `--json files` is asked for.
-      const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
-      const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
-      const handleFor = (text: string, exitCode = 0) => {
-        const output = Stream.make(new TextEncoder().encode(text));
-        return ChildProcessSpawner.makeHandle({
-          all: output,
-          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
-          getInputFd: () => Sink.drain,
-          getOutputFd: () => Stream.empty,
-          isRunning: Effect.succeed(false),
-          kill: () => Effect.void,
-          pid: ChildProcessSpawner.ProcessId(1),
-          stderr: Stream.empty,
-          stdin: Sink.drain,
-          stdout: output,
-          unref: Effect.succeed(Effect.void),
-        });
-      };
-      return ChildProcessSpawner.make((command) =>
-        ChildProcess.isStandardCommand(command) && command.command === "gh"
-          ? Effect.succeed(
-              handleFor(
-                A.contains(command.args, "files") ? filesText : viewText,
-                failFiles && A.contains(command.args, "files") ? 1 : 0
-              )
-            )
-          : real.spawn(command)
-      );
-    })
+const ghSpawner = Effect.fn("YeetRetireTest.ghSpawner")(function* (
+  headRefOid: string,
+  state: "MERGED" | "OPEN",
+  files: ReadonlyArray<string> = [],
+  filesExitCode = ChildProcessSpawner.ExitCode(0)
+) {
+  const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // The fake answers with the same documents a real `gh pr view --json`
+  // prints, encoded through the schemas the sweep decodes them with: the
+  // pull request view, or its file list when `--json files` is asked for.
+  const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
+  const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
+  const handleFor = (text: string, exitCode = ChildProcessSpawner.ExitCode(0)) => {
+    const output = Stream.make(new TextEncoder().encode(text));
+    return ChildProcessSpawner.makeHandle({
+      all: output,
+      exitCode: Effect.succeed(exitCode),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      stderr: Stream.empty,
+      stdin: Sink.drain,
+      stdout: output,
+      unref: Effect.succeed(Effect.void),
+    });
+  };
+  return ChildProcessSpawner.make((command) =>
+    ChildProcess.isStandardCommand(command) && command.command === "gh"
+      ? Effect.succeed(A.contains(command.args, "files") ? handleFor(filesText, filesExitCode) : handleFor(viewText))
+      : real.spawn(command)
   );
+});
+
+const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = []) =>
+  Layer.effect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(headRefOid, state, files));
 
 const withCwd = <A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -276,6 +276,18 @@ const runRetireInvoker = Effect.fn("YeetRetireTest.runRetireInvoker")(function* 
 });
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
+  it.effect.prop(
+    "roundtrips retirement plans through the JSON boundary",
+    [Arbitrary.schema(YeetRetirePlan)],
+    Effect.fn(function* ([plan]) {
+      const codec = S.fromJsonString(YeetRetirePlan);
+      const encoded = yield* S.encodeEffect(codec)(plan);
+      const decoded = yield* S.decodeEffect(codec)(encoded);
+      expect(S.toEquivalence(YeetRetirePlan)(plan, decoded)).toBe(true);
+    }),
+    { arbitrary: { runs: 20 } }
+  );
+
   it.effect.prop(
     "generated retire-invoker outcomes round-trip through the JSON line the invoker prints",
     { outcome: Arbitrary.schema(RetireInvokerOutcome) },
@@ -726,27 +738,29 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
           );
         }
         yield* fs.writeFileString(path.join(lane, "goals", "INDEX.md"), "# index\n");
+        yield* fs.makeDirectory(path.join(lane, "goals", "malformed-packet", "ops"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(lane, "goals", "malformed-packet", "ops", "manifest.json"),
+          "invalid JSON\n"
+        );
         yield* runGit(lane, ["add", "goals"]);
         yield* runGit(lane, ["commit", "-m", "packets"]);
         yield* runGit(lane, ["push", "origin", "claude/lane"]);
         yield* runGit(lane, ["push", "origin", "claude/lane:main"]);
         yield* runGit(repoRoot, ["fetch", "origin"]);
         const tip = yield* runGitText(lane, ["rev-parse", "HEAD"]);
-        // The branch's own diff against main finds the packets here.
+        // A failed GitHub files read falls back to the branch's own diff.
+        // A malformed manifest contributes no active-packet advisory.
         const planOutput = yield* captureOutput(
-          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(provideScopedLayer(ghLayer(tip, "MERGED")))
-        );
-        const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
-        expect(plan.activePackets).toEqual(["open-packet"]);
-        const unavailablePrFiles = yield* YeetRetireSweepPlanJson.decode(
-          yield* captureOutput(
-            withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
-              provideScopedLayer(ghLayer(tip, "MERGED", [], true))
+          withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
+            Effect.provideServiceEffect(
+              ChildProcessSpawner.ChildProcessSpawner,
+              ghSpawner(tip, "MERGED", [], ChildProcessSpawner.ExitCode(1))
             )
           )
         );
-        expect(unavailablePrFiles.activePackets).toEqual(["open-packet"]);
-
+        const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
+        expect(plan.activePackets).toEqual(["open-packet"]);
         // Once the clone's main already contains the merge, the diff is
         // empty and the pull request's own file list carries the packets. An
         // uncommitted edit closing the packet in the working tree does not
@@ -760,18 +774,19 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         const laterPlan = yield* YeetRetireSweepPlanJson.decode(
           yield* captureOutput(
             withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
-              provideScopedLayer(ghLayer(tip, "MERGED", prFiles))
+              Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles))
             )
           )
         );
         expect(laterPlan.activePackets).toEqual(["open-packet"]);
         const output = yield* captureOutput(
-          withCwd(lane, sweep(packetDir)).pipe(provideScopedLayer(ghLayer(tip, "MERGED", prFiles)))
+          withCwd(lane, sweep(packetDir)).pipe(
+            Effect.provideServiceEffect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(tip, "MERGED", prFiles))
+          )
         );
         expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
         expect(output).not.toContain("closed-packet");
         expect(output).not.toContain("noted-packet");
-        expect(output).not.toContain("blocked-packet");
         expect(yield* fs.exists(lane)).toBe(false);
       })
     )

@@ -177,7 +177,9 @@ export class PracticeKgAnchorResolution extends S.Class<PracticeKgAnchorResoluti
 
 const recycleStubPattern = /^\$R/u;
 
-const basenameOf = (relativePath: string): string => pipe(Str.split(relativePath, /[\\/]/u), A.lastNonEmpty);
+const directoryPrefixPattern = /^.*[\\/]/u;
+
+const basenameOf = (relativePath: string): string => pipe(relativePath, Str.replace(directoryPrefixPattern, ""));
 
 /**
  * Whether a catalogued path names a recycle-bin restore stub (`$R…`).

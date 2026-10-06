@@ -1,4 +1,3 @@
-import { YeetReadyOptions } from "@beep/repo-cli/commands/Yeet";
 import {
   decideYeetReadyGate,
   deriveYeetMergeReady,
@@ -9,22 +8,24 @@ import {
   RepoRunContext,
   runYeetReady,
   runYeetReadyGate,
+  YeetReadyOptions,
   YeetReadyPullRequestRead,
   YeetStatusArtifact,
   YeetStatusRemote,
 } from "@beep/repo-cli/test/Yeet";
 import { DomainError } from "@beep/repo-utils";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Match, Ref, Sink, Stream } from "effect";
+import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
-import { ChildProcessSpawner } from "effect/process";
-import * as S from "effect/Schema";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as Struct from "effect/Struct";
 
 const headSha = "abc1234def";
-const encodeStatusFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const context = RepoRunContext.make({
   base: "origin/main",
@@ -105,48 +106,6 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
     expect(decideYeetReadyGate(read)).toMatchObject({ _tag: "blocked", blocker });
   });
 
-  it("explains unknown head and absent check counters when the check verdict is blocked", () => {
-    const incomplete = YeetStatusRemote.make({
-      available: true,
-      checked: true,
-      detail: "incomplete checks",
-      state: "OPEN",
-      number: 42,
-      isDraft: true,
-      headSha: O.none(),
-    });
-    const decision = decideYeetReadyGate(
-      YeetReadyPullRequestRead.make({
-        remote: incomplete,
-        mergeReady: prView({ pendingRequiredCheckCount: 1 }).mergeReady,
-      })
-    );
-    expect(decision).toMatchObject({
-      _tag: "blocked",
-      blocker: "required-checks-green",
-      detail: expect.stringContaining("head unknown: 0 failing, 0 pending of 0 required"),
-    });
-  });
-
-  it("identifies a closed PR without its number", () => {
-    const remote = YeetStatusRemote.make({ available: true, checked: true, state: "CLOSED", detail: "closed" });
-    expect(decideYeetReadyGate(YeetReadyPullRequestRead.make({ remote, mergeReady: O.none() }))).toMatchObject({
-      _tag: "blocked",
-      detail: "pull request #? is CLOSED",
-    });
-  });
-
-  it("refuses a ready verdict whose PR summary omitted its number", () => {
-    const ready = prView();
-    const { number: _number, ...fields } = ready.remote;
-    expect(
-      decideYeetReadyGate(YeetReadyPullRequestRead.make({ ...ready, remote: YeetStatusRemote.make(fields) }))
-    ).toMatchObject({
-      _tag: "blocked",
-      blocker: "pr-open",
-    });
-  });
-
   it("names the first blocker in gate order when several fail", () => {
     expect(decideYeetReadyGate(prView({ failingRequiredCheckCount: 1, unresolvedReviewThreadCount: 3 }))).toMatchObject(
       { _tag: "blocked", blocker: "required-checks-green" }
@@ -169,234 +128,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       Ref.make(0),
       (count) => () => Ref.getAndUpdate(count, (n) => n + 1).pipe(Effect.map((n) => (n === 0 ? first : later)))
     );
-
-  it.effect("uses the default status reader and refuses a missing PR", () =>
-    Effect.gen(function* () {
-      const handle = ChildProcessSpawner.makeHandle({
-        all: Stream.empty,
-        stdout: Stream.empty,
-        stderr: Stream.empty,
-        stdin: Sink.drain,
-        exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        pid: ChildProcessSpawner.ProcessId(1),
-        unref: Effect.succeed(Effect.void),
-      });
-      const error = yield* runYeetReadyGate(context).pipe(
-        Effect.flip,
-        Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
-          ChildProcessSpawner.make((command) =>
-            Effect.succeed({
-              ...handle,
-              exitCode: Effect.succeed(
-                ChildProcessSpawner.ExitCode(command._tag === "StandardCommand" && command.command === "gh" ? 1 : 0)
-              ),
-            })
-          )
-        )
-      );
-      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
-    })
-  );
-
-  it.effect("hydrates the ready command and runs its gate without a PR", () =>
-    Effect.gen(function* () {
-      const spawner = ChildProcessSpawner.make((command) => {
-        const args = command._tag === "StandardCommand" ? command.args : [];
-        const output = A.contains(args, "--show-toplevel")
-          ? "/repo"
-          : A.contains(args, "--show-current")
-            ? context.branch
-            : "";
-        const stdout = Stream.make(new TextEncoder().encode(output));
-        return Effect.succeed(
-          ChildProcessSpawner.makeHandle({
-            all: stdout,
-            stdout,
-            stderr: Stream.empty,
-            stdin: Sink.drain,
-            exitCode: Effect.succeed(
-              ChildProcessSpawner.ExitCode(command._tag === "StandardCommand" && command.command === "gh" ? 1 : 0)
-            ),
-            getInputFd: () => Sink.drain,
-            getOutputFd: () => Stream.empty,
-            isRunning: Effect.succeed(false),
-            kill: () => Effect.void,
-            pid: ChildProcessSpawner.ProcessId(1),
-            unref: Effect.succeed(Effect.void),
-          })
-        );
-      });
-      const error = yield* runYeetReady(
-        YeetReadyOptions.make({ base: context.base, head: context.head, packetDir: context.packetDir })
-      ).pipe(Effect.flip, Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
-      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
-    })
-  );
-
-  it.effect("refuses to flip even when both reads claim readiness without a head identity", () =>
-    Effect.gen(function* () {
-      const ready = prView();
-      const headless = YeetReadyPullRequestRead.make({
-        ...ready,
-        remote: YeetStatusRemote.make({ ...ready.remote, headSha: O.none() }),
-      });
-      const error = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(headless),
-        capture: () => Effect.die("gh must not run"),
-      }).pipe(Effect.flip);
-      expect(error.message).toContain("gate unknown, live unknown");
-    })
-  );
-
-  it.effect("uses the default status reads and command runner for a green draft", () =>
-    Effect.gen(function* () {
-      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-      const spawner = ChildProcessSpawner.make((command) =>
-        Effect.gen(function* () {
-          const args = command._tag === "StandardCommand" ? command.args : [];
-          yield* Ref.update(calls, (all) => [...all, args]);
-          const output = yield* Match.value(`${args[0]}:${args[1]}`).pipe(
-            Match.when("pr:view", () =>
-              encodeStatusFixture({
-                id: "PR_fixture",
-                number: 42,
-                url: "https://example.com/pr/42",
-                state: "OPEN",
-                isDraft: true,
-                headRefOid: headSha,
-                mergeable: "MERGEABLE",
-                mergeStateStatus: "DRAFT",
-                reviewDecision: null,
-              })
-            ),
-            Match.when("pr:checks", () =>
-              encodeStatusFixture([{ name: "required", bucket: "pass", state: "SUCCESS" }])
-            ),
-            Match.when("api:graphql", () =>
-              encodeStatusFixture({
-                data: {
-                  node: {
-                    reviewThreads: {
-                      nodes: [],
-                      pageInfo: { hasNextPage: false, endCursor: null },
-                    },
-                  },
-                },
-              })
-            ),
-            Match.when("run:list", () => Effect.succeed("[]")),
-            Match.orElse(() => Effect.succeed("")),
-            Effect.orDie
-          );
-          const stdout = Stream.make(new TextEncoder().encode(output));
-          return ChildProcessSpawner.makeHandle({
-            all: stdout,
-            stdout,
-            stderr: Stream.empty,
-            stdin: Sink.drain,
-            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
-            getInputFd: () => Sink.drain,
-            getOutputFd: () => Stream.empty,
-            isRunning: Effect.succeed(false),
-            kill: () => Effect.void,
-            pid: ChildProcessSpawner.ProcessId(1),
-            unref: Effect.succeed(Effect.void),
-          });
-        })
-      );
-      const decision = yield* runYeetReadyGate(context, { findMonitor: () => Effect.succeedNone }).pipe(
-        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-      );
-      expect(decision._tag).toBe("flip");
-      expect(A.filter(yield* Ref.get(calls), (args) => args[0] === "pr" && args[1] === "ready")).toEqual([
-        ["pr", "ready", "42"],
-      ]);
-    })
-  );
-
-  it.effect("keeps the successful flip when the default monitor registry read fails", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
-      const decision = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        capture: recordingCapture(calls),
-      }).pipe(
-        Effect.provideService(FileSystem.FileSystem, {
-          ...fs,
-          stat: () => Effect.fail(PlatformError.badArgument({ module: "FileSystem", method: "stat" })),
-        })
-      );
-      expect(decision._tag).toBe("flip");
-      expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
-    })
-  );
-
-  it.effect("reports a live monitor after flipping and wraps runner failures", () =>
-    Effect.gen(function* () {
-      const jobId = "aaaaaaaa-1111-4aaa-8bbb-000000000001";
-      const record = ProofJobRecord.make({
-        schemaVersion: "yeet-proof-job/v1",
-        jobId,
-        phase: "running",
-        submittedAt: "2026-10-05T00:00:00Z",
-        request: ProofJobRequest.make({
-          mode: "monitor",
-          argv: ["monitor", "--until-ready"],
-          checkout: "/repo",
-          branch: context.branch,
-          base: context.base,
-          head: context.head,
-          forwardedEnvNames: [],
-        }),
-        submitter: ProofJobSubmitter.make({ pid: 1, cwd: "/repo", procStart: O.none(), harness: O.none() }),
-        unit: ProofJobUnit.make({
-          unitName: `beep-proof-${jobId}.service`,
-          slice: "agent-runs.slice",
-          description: "fixture",
-          logPath: "/repo/monitor.log",
-          execStart: ["bun"],
-          execStopPost: [],
-          maxRuntimeSeconds: O.none(),
-          invocationId: O.none(),
-        }),
-        runner: O.none(),
-        outcome: O.none(),
-        systemd: O.none(),
-        terminationReason: O.none(),
-        cancelRequestedAt: O.none(),
-        prNumber: O.some(42),
-      });
-      const decision = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
-        findMonitor: () => Effect.succeedSome(record),
-      });
-      expect(decision._tag).toBe("flip");
-      const error = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView()),
-        capture: () => Effect.fail(DomainError.make({ message: "spawn failed" })),
-      }).pipe(Effect.flip);
-      expect(error.message).toContain("Failed to run gh pr ready");
-    })
-  );
-
-  it.effect("refuses a confirmation that has already flipped or has no head", () =>
-    Effect.gen(function* () {
-      for (const later of [prView({ isDraft: false }), prView({ headSha: O.none() })]) {
-        const error = yield* runYeetReadyGate(context, {
-          read: yield* readTwice(prView(), later),
-          capture: () => Effect.die("gh must not run"),
-        }).pipe(Effect.flip);
-        expect(error.message).toContain("changed between the gate read and the flip");
-      }
-    })
-  );
 
   it.effect("runs gh pr ready on the read pull request when the gate holds", () =>
     Effect.gen(function* () {
@@ -507,4 +238,211 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       expect(error.message).toContain("gh: not permitted");
     })
   );
+});
+
+const fakeHandle = (output: string, exitCode = 0) =>
+  ChildProcessSpawner.makeHandle({
+    all: Stream.make(new TextEncoder().encode(output)),
+    stdout: Stream.make(new TextEncoder().encode(output)),
+    stderr: Stream.empty,
+    stdin: Sink.drain,
+    exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+    getInputFd: () => Sink.drain,
+    getOutputFd: () => Stream.empty,
+    isRunning: Effect.succeed(false),
+    kill: () => Effect.void,
+    pid: ChildProcessSpawner.ProcessId(1),
+    unref: Effect.succeed(Effect.void),
+  });
+const mockSpawner = ChildProcessSpawner.make((command) =>
+  Effect.succeed(fakeHandle("[]", ChildProcess.isStandardCommand(command) && command.command === "gh" ? 1 : 0))
+);
+const readyPlatform = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  Path.layer,
+  BunCrypto.layer,
+  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
+);
+it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundaries", (it) => {
+  it.effect("confirms and flips through the default remote reader and capture", () =>
+    Effect.gen(function* () {
+      const runner = ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+        const route = A.join(A.take(command.args, 2), " ");
+        const answers: Readonly<Record<string, string>> = {
+          "pr view":
+            '{"headRefOid":"abc1234def","id":"PR_ready","isDraft":true,"labels":[],"mergeable":"MERGEABLE","mergeStateStatus":"DRAFT","number":42,"reviewDecision":null,"state":"OPEN","url":"https://github.com/beep/beep/pull/42"}',
+          "pr checks":
+            '[{"bucket":"pass","completedAt":"2026-10-01T00:00:00Z","link":"","name":"Check","startedAt":"2026-10-01T00:00:00Z","state":"SUCCESS","workflow":"Check"}]',
+          "api graphql":
+            '{"data":{"node":{"author":{"login":"author"},"reviewThreads":{"nodes":[],"pageInfo":{"endCursor":null,"hasNextPage":false}}}}}',
+          "run list": "[]",
+        };
+        return Effect.succeed(fakeHandle(command.command === "gh" ? (answers[route] ?? "") : ""));
+      });
+      expect(
+        (yield* runYeetReadyGate(context).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)))
+          ._tag
+      ).toBe("flip");
+    })
+  );
+  it.effect("reads remote status through the default reader", () =>
+    Effect.gen(function* () {
+      expect((yield* runYeetReadyGate(context).pipe(Effect.flip))._tag).toBe("YeetReadyGateRefused");
+    })
+  );
+  it.effect("hydrates the command context before its default remote read", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(`${process.cwd()}/.git`, { recursive: true });
+      const error = yield* runYeetReady(
+        YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" })
+      ).pipe(Effect.flip);
+      expect(error._tag).toBe("YeetReadyGateRefused");
+    })
+  );
+  it.effect("loses only the hint when the monitor registry is unreadable", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const failingFs = FileSystem.FileSystem.of({
+        ...fs,
+        exists: Effect.fn("ReadyTest.exists")(() =>
+          Effect.fail(PlatformError.systemError({ _tag: "PermissionDenied", module: "ReadyTest", method: "exists" }))
+        ),
+      });
+      expect(
+        (yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView()),
+          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+        }).pipe(Effect.provideService(FileSystem.FileSystem, failingFs)))._tag
+      ).toBe("flip");
+    })
+  );
+  it.effect("reads an empty monitor registry after the flip", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory("/repo/.beep/yeet/jobs", { recursive: true });
+      yield* fs.remove("/repo/.beep/yeet/jobs/.guard", { recursive: true, force: true });
+      yield* fs.writeFileString("/repo/.beep/yeet/jobs/.guard", "");
+      expect(
+        (yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView()),
+          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+        }))._tag
+      ).toBe("flip");
+    })
+  );
+});
+it.layer(NodeServices.layer, { timeout: "10 seconds" })("ready confirmation races", (it) => {
+  it.effect("refuses another flip after an actor already marked the PR ready", () =>
+    Effect.gen(function* () {
+      const count = yield* Ref.make(0);
+      const error = yield* runYeetReadyGate(context, {
+        read: () => Ref.getAndUpdate(count, (n) => n + 1).pipe(Effect.map((n) => prView({ isDraft: n === 0 }))),
+      }).pipe(Effect.flip);
+      expect(error.message).toContain("already ready for review");
+    })
+  );
+  it.effect("refuses a flip without a head identity", () =>
+    Effect.gen(function* () {
+      const error = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView({ headSha: O.none() })),
+      }).pipe(Effect.flip);
+      expect(error.message).toContain("gate unknown, live unknown");
+    })
+  );
+  it.effect("maps a spawn failure to the command error", () =>
+    Effect.gen(function* () {
+      const error = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView()),
+        capture: () => Effect.fail(DomainError.make({ message: "spawn failed" })),
+      }).pipe(Effect.flip);
+      expect(error.message).toContain("Failed to run gh pr ready");
+    })
+  );
+  it.effect("reports the existing monitor after a successful flip", () =>
+    Effect.gen(function* () {
+      const record = ProofJobRecord.make({
+        jobId: "cc5d6bd3-1111-4aaa-8bbb-000000000001",
+        phase: "running",
+        submittedAt: "2026-10-05T10:00:00.000Z",
+        request: ProofJobRequest.make({
+          mode: "monitor",
+          argv: ["monitor", "--until-ready"],
+          checkout: "/repo",
+          branch: context.branch,
+          base: "origin/main",
+          head: headSha,
+          forwardedEnvNames: [],
+        }),
+        submitter: ProofJobSubmitter.make({ pid: 4242, procStart: O.none(), cwd: "/repo", harness: O.none() }),
+        unit: ProofJobUnit.make({
+          unitName: "beep-proof-test.service",
+          slice: "agent-runs.slice",
+          description: "test",
+          logPath: "/repo/test.log",
+          execStart: ["bun"],
+          execStopPost: ["bun"],
+          maxRuntimeSeconds: O.none(),
+          invocationId: O.none(),
+        }),
+        runner: O.none(),
+        outcome: O.none(),
+        systemd: O.none(),
+        terminationReason: O.none(),
+        cancelRequestedAt: O.none(),
+        prNumber: O.some(42),
+      });
+      expect(
+        (yield* runYeetReadyGate(context, {
+          read: () => Effect.succeed(prView()),
+          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+          findMonitor: () => Effect.succeedSome(record),
+        }))._tag
+      ).toBe("flip");
+    })
+  );
+});
+
+describe("ready gate incomplete remote identities", () => {
+  it("reports a closed remote whose number is absent", () => {
+    const read = prView({ state: "CLOSED" });
+    const decision = decideYeetReadyGate(
+      YeetReadyPullRequestRead.make({
+        ...read,
+        remote: YeetStatusRemote.make(Struct.omit(read.remote, ["number"])),
+      })
+    );
+    expect(decision).toMatchObject({ _tag: "blocked", detail: "pull request #? is CLOSED" });
+  });
+  it("fails closed if a successful verdict lacks a PR number", () => {
+    const read = prView();
+    expect(
+      decideYeetReadyGate(
+        YeetReadyPullRequestRead.make({
+          ...read,
+          remote: YeetStatusRemote.make(Struct.omit(read.remote, ["number"])),
+        })
+      )._tag
+    ).toBe("blocked");
+  });
+  it("reports an unknown head for checks that cannot be proven green", () => {
+    expect(decideYeetReadyGate(prView({ headSha: O.none(), failingRequiredCheckCount: 1 }))).toMatchObject({
+      _tag: "blocked",
+      detail: expect.stringContaining("on head unknown"),
+    });
+  });
+  it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
+    it.effect("refuses a successful verdict with no head identity before capture", () =>
+      Effect.gen(function* () {
+        const read = prView();
+        const withoutHead = YeetReadyPullRequestRead.make({
+          ...read,
+          remote: YeetStatusRemote.make({ ...read.remote, headSha: O.none() }),
+        });
+        const error = yield* runYeetReadyGate(context, { read: () => Effect.succeed(withoutHead) }).pipe(Effect.flip);
+        expect(error.message).toContain("gate unknown, live unknown");
+      })
+    );
+  });
 });
