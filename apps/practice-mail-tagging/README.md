@@ -76,9 +76,11 @@ mail. `kg` adds the addresses the practice knowledge graph resolves `unique`
 to one matter (the attorney's own records link the address's single contact
 to that matter alone; role mailboxes and the practice's own addresses never
 count), then the optional `matter-contacts.json` overlay in the state
-directory. `kg` needs a bundle of store format 4 or later; an older bundle
-stops the pass. Turn it on only after the attorney has spot-checked a `kg`
-dry run.
+directory. `kg` needs a bundle of store format 4 or later (bundle
+`2026-10-07-01` on); an older bundle stops the pass, so the switch to `kg`
+and the move of `PRACTICE_MAIL_TAGGING_KG_BUNDLE_DIRECTORY` to that bundle
+happen in the same edit. Turn it on only after the attorney has spot-checked
+a `kg` dry run.
 
 ## Development
 

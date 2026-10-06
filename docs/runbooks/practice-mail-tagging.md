@@ -116,7 +116,15 @@ the address is not the practice's own, and every one of the attorney's own
 links for that contact names that matter. A `candidate` (a matter the address
 only writes about) never counts. `kg` needs a bundle of store format 4 or later
 (`2026-10-07-01` on); against an older bundle the pass stops with
-`correspondent tables unreadable`.
+`correspondent tables unreadable`. The flip to `kg` therefore ships together
+with the bundle path: in the same environment-file edit point
+`PRACTICE_MAIL_TAGGING_KG_BUNDLE_DIRECTORY` at the `-04` bundle
+(`<corpus>/staging/practice-kg-bundle-2026-10-07-01`); the `-03` bundle can
+be released once the job runs on `-04`. Across the coming `-05` bundle the
+`unique` set changes only if the Box contacts export
+(`ops/box-onboarding/pass2/contacts-kg.jsonl`) changes; the PST header index
+feeds the `matter_correspondents` table, not the `unique` rule (Practice KG
+contract check, 2026-10-06).
 
 Optional, with `kg` only: `matter-contacts.json` in the state directory, an
 attorney-curated addition for a confirmed address the graph lacks and for
@@ -175,8 +183,10 @@ Do these in order. Do not enable the unit before step 6.
      no client attachment is filed: in the first live dry-run every attachment
      on a matched message was skipped as `sender-not-routable`. Run one dry run
      with `kg` (one shell, `PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE=kg
+     PRACTICE_MAIL_TAGGING_KG_BUNDLE_DIRECTORY=<-04 bundle>
      practice-mail-tagging dry-run`) and go through the matched and filed
-     counts with him. Switch the environment file to `kg` only after he agrees.
+     counts with him. Switch the environment file to `kg` only after he
+     agrees, and move the bundle directory to `-04` in the same edit.
      A confirmed client address the graph lacks goes into
      `matter-contacts.json`; leave out shared addresses (a foreign associate or
      an in-house counsel who writes about several matters), the job would not
