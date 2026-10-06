@@ -702,9 +702,14 @@ const cacheBaselineCommand = Command.make("baseline", { request: requestFlag }, 
         Effect.flatMap(JsonStringCodec(CacheBaselineRequest).decode),
         CacheCommandError.mapError("Cannot decode baseline review request.")
       );
-    const baseline = yield* cache.baseline(process.cwd(), input);
+    const record = yield* cache.baseline(process.cwd(), input);
+    const list = (subjects: ReadonlyArray<string>) =>
+      A.isReadonlyArrayNonEmpty(subjects) ? A.join(subjects, ", ") : "none";
     yield* Console.log(
-      `Reviewed baseline written for ${A.length(baseline.projection.nodes)} executable computations; scope ${A.join(baseline.scope, ", ")}.`
+      `Reviewed baseline written for ${A.length(record.baseline.projection.nodes)} executable computations; scope ${A.join(record.baseline.scope, ", ")}.`
+    );
+    yield* Console.log(
+      `Review stamped on ${A.length(record.stamped)} subject(s): ${list(record.stamped)}. Carried ${A.length(record.carried)} prior review(s). Dropped: ${list(record.dropped)}.`
     );
   }).pipe(renderCacheFailure)
 ).pipe(Command.withDescription("Record reviewed legacy settings without granting qualification"));

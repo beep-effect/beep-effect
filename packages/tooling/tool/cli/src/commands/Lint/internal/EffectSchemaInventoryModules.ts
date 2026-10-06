@@ -3,9 +3,9 @@
  *
  * **Details**
  *
- * The pin is the repo's own catalog commit (`inventoryPin`): the 40-character sha after
- * `effect@` in the root `package.json` catalog entry for `effect`. The reference clone's HEAD is
- * never consulted, and every source byte is read with `git show <pin>:<file>`.
+ * Snapshot catalogs carry the commit in their URL. Stable catalogs pair their exact version
+ * with `config.effectSource.version` and `config.effectSource.commit` in the root manifest. The reference
+ * clone's HEAD is never consulted; every source byte is read with `git show <pin>:<file>`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,9 +15,8 @@ import { A, Str } from "@beep/utils";
 import { Effect, flow, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { EffectSchemaInventoryModule } from "../EffectSchemaInventory.schemas.ts";
+import { EffectSchemaInventoryModule, EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 import { EffectSchemaInventoryCatalogPinError } from "../Lint.errors.ts";
-import type { EffectSchemaInventoryPin } from "../EffectSchemaInventory.schemas.ts";
 
 /**
  * Effect import path of an upstream source file: `effect/` plus the path without
@@ -143,6 +142,16 @@ const isWorkspacesWithCatalog = S.is(WorkspacesWithCatalog);
 const RootManifest = S.Struct({
   catalog: S.optionalKey(EffectCatalog),
   workspaces: S.optionalKey(S.Union([S.Array(S.String), WorkspacesWithCatalog])),
+  config: S.OptionFromOptionalKey(
+    S.Struct({
+      effectSource: S.OptionFromOptionalKey(
+        S.Struct({
+          version: S.String.check(S.isPattern(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/u)),
+          commit: EffectSchemaInventoryPin,
+        })
+      ),
+    })
+  ),
 });
 
 const decodeRootManifest = S.decodeUnknownEffect(S.fromJsonString(RootManifest));
@@ -166,9 +175,11 @@ const catalogEffectSpecifier = (manifest: typeof RootManifest.Type): O.Option<st
  *
  * **Details**
  *
- * Reads the top-level `catalog.effect` entry, falling back to `workspaces.catalog.effect`. The
- * value must end in `effect@<40-character sha>`, the shape of a pkg.pr.new snapshot URL;
- * anything else fails with {@link EffectSchemaInventoryCatalogPinError} rather than guessing.
+ * Reads the top-level `catalog.effect` entry, falling back to `workspaces.catalog.effect`.
+ * Snapshot values end in `effect@<40-character sha>`. Stable versions require matching
+ * `config.effectSource.version` and a full `config.effectSource.commit` in the manifest, keeping source
+ * provenance available offline. Missing or mismatched provenance fails with
+ * {@link EffectSchemaInventoryCatalogPinError} rather than guessing.
  *
  * **Example** (Parse a snapshot catalog)
  *
@@ -196,12 +207,20 @@ export const parseEffectSchemaInventoryPin = Effect.fn("EffectSchemaInventoryMod
     pipe(
       specifier,
       O.flatMap(Str.match(SNAPSHOT_PIN)),
-      O.flatMap((match) => O.fromUndefinedOr(match[1]))
+      O.flatMap((match) => O.fromUndefinedOr(match[1])),
+      O.orElse(() =>
+        pipe(
+          manifest.config,
+          O.flatMap((config) => config.effectSource),
+          O.filter((source) => O.contains(source.version)(specifier)),
+          O.map((source) => source.commit)
+        )
+      )
     ),
     () =>
       EffectSchemaInventoryCatalogPinError.new(
         O.getOrElse(specifier, () => "<missing>"),
-        'Root package.json catalog "effect" is not an effect@<40-character sha> snapshot URL.'
+        'Root package.json catalog "effect" needs a full snapshot SHA or matching config.effectSource version and commit.'
       )
   );
 });

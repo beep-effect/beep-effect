@@ -13,6 +13,36 @@
       "name": "effect-tsgo",
       "url": "git@github.com:Effect-TS/tsgo.git",
       "tier": "deep"
+    },
+    {
+      "name": "ai-plugin-marketplace-manager",
+      "url": "git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git",
+      "tier": "deep"
+    },
+    {
+      "name": "okfit",
+      "url": "git@github.com:spencerbeggs/okfit.git",
+      "tier": "deep"
+    },
+    {
+      "name": "tsdoctor",
+      "url": "git@github.com:spencerbeggs/tsdoctor.git",
+      "tier": "deep"
+    },
+    {
+      "name": "effected",
+      "url": "git@github.com:spencerbeggs/effected.git",
+      "tier": "deep"
+    },
+    {
+      "name": "pluginfinity",
+      "url": "git@github.com:spencerbeggs/pluginfinity.git",
+      "tier": "deep"
+    },
+    {
+      "name": "vitest-agent",
+      "url": "git@github.com:spencerbeggs/vitest-agent.git",
+      "tier": "deep"
     }
   ]
 }

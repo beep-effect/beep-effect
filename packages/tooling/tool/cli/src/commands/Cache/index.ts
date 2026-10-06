@@ -247,4 +247,5 @@ export {
   CacheQualificationLive,
   CacheQualificationService,
   type CacheQualificationServiceShape,
+  encodeCachePolicyBaselineText,
 } from "./Cache.service.ts";

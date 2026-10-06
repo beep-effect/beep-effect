@@ -63,7 +63,7 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
     basis: CacheEvidenceReference.make({ path: "review.md", sha256 }),
   });
   const baseline = CachePolicyBaseline.make({
-    review,
+    reviews: { "//": review },
     scope: [key.computation],
     profile: key.profile,
     epoch: key.epoch,
