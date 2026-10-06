@@ -4,7 +4,7 @@
 
 Status: `in-progress`. Graduated 2026-10-01; P0 complete 2026-10-05 (W1 landed, W2 declined; P0 Rulings 1–7 in
 [`research/decisions.md`](./research/decisions.md)); P1 complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger`
-pinned under P1 Rulings 1–8); P2 complete 2026-10-06 (W6 seam, `planEpisode` body and W5 live replay, one projection PR; P2 Rulings 1–10); P3 opened 2026-10-06 (auditor run 4, W7; launch sitting Rulings 1–17 and calls a–r). Workstreams W1–W9 come from the
+pinned under P1 Rulings 1–8); P2 complete 2026-10-06 (W6 seam, `planEpisode` body and W5 live replay, one projection PR; P2 Rulings 1–10); P3 opened 2026-10-06 (auditor run 4, W7; launch sitting Rulings 1–17 and calls a–r); run 4 ratified 2026-10-06 (gate PASSED at the pin before and after the scribe; `rat-071..078`, eight flagged accepts; six withdrawals; sittings W1–W3 and 1–3, Rulings 18–32), and P3 closes with the lab's CQ-009 lift (Ruling 15). Workstreams W1–W9 come from the
 exploration's [`MAP.md`](../../explorations/beep-ci-operational-ontology/MAP.md), and each
 row's capability cites are in its Capability Check. "Graduation Ruling n" is Ruling n of the
 exploration's 2026-10-01 graduation sitting.
@@ -117,6 +117,11 @@ exploration's 2026-10-01 graduation sitting.
       is re-scoped with a new must-fail fixture (graduation Ruling 9), which lifts W5's
       CQ-009 exclusion over post-#929 rows; a fourth
       `AssuranceTier` member for merged preview is proposed (graduation Ruling 10).
+      Progress 2026-10-06 (#1490): run 4 is ratified and rotated. `OperationalChangeEvent` is
+      accepted (rat-071) and `landedAt` is not proposed (its chain did not survive), so CQ-016 is
+      answered for its subject only; no tier chain survived, so no fourth `AssuranceTier` member was
+      proposed and Queue H stays open (Ruling 32); Queue F is carried (Ruling 7); the CQ-009 re-scope
+      landed at the pin. Remaining: the lab's CQ-009 lift (Ruling 15), which flips P3.
 
 ### P4 — KPI reading and verdict
 
