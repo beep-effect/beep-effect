@@ -12,6 +12,11 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
+import {
+  emptyWhenNotFound,
+  repositoryJsonLinesFileName,
+  resolveWorkstationStateDir,
+} from "../../internal/state/WorkstationState.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { SessionLedgerError } from "./Session.errors.ts";
 import { SessionLedgerRow, SessionLedgerRowJson } from "./Session.schemas.ts";
@@ -101,15 +106,6 @@ const mapPlatformError = (cause: PlatformError.PlatformError): SessionLedgerErro
     cause,
   });
 
-const resolveRoot = Effect.fn("SessionLedger.resolveRoot")(function* () {
-  const configured = yield* Config.option(Config.String("BEEP_SESSION_STATE_ROOT"));
-  if (O.isSome(configured) && Str.isNonEmpty(Str.trim(configured.value))) return configured.value;
-  const xdg = yield* Config.option(Config.String("XDG_STATE_HOME"));
-  if (O.isSome(xdg) && Str.isNonEmpty(Str.trim(xdg.value))) return `${xdg.value}/beep/sessions`;
-  const home = yield* Config.String("HOME");
-  return `${home}/.local/state/beep/sessions`;
-});
-
 /**
  * The ledger file name for a repository.
  *
@@ -127,8 +123,7 @@ const resolveRoot = Effect.fn("SessionLedger.resolveRoot")(function* () {
  * @category formatting
  * @since 0.0.0
  */
-export const sessionLedgerFileName = (repository: PrRepository): string =>
-  `${repository.host}__${repository.owner}__${repository.name}.jsonl`;
+export const sessionLedgerFileName: (repository: PrRepository) => string = repositoryJsonLinesFileName;
 
 /**
  * Build the filesystem-backed ledger.
@@ -148,7 +143,7 @@ export const sessionLedgerFileName = (repository: PrRepository): string =>
 export const makeSessionLedgerLive = Effect.fn("SessionLedger.makeLive")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const directory = yield* resolveRoot();
+  const directory = yield* resolveWorkstationStateDir({ override: "BEEP_SESSION_STATE_ROOT", store: "sessions" });
   const fileFor = (repository: PrRepository): string => path.join(directory, sessionLedgerFileName(repository));
   return SessionLedger.of({
     append: Effect.fn("SessionLedger.append")((row) =>
@@ -175,11 +170,7 @@ export const makeSessionLedgerLive = Effect.fn("SessionLedger.makeLive")(functio
             : Effect.void
         ),
         Effect.map((result) => result.rows),
-        Effect.catchTag("PlatformError", (error) =>
-          error.reason._tag === "NotFound"
-            ? Effect.succeed(A.empty<SessionLedgerRow>())
-            : Effect.fail(mapPlatformError(error))
-        )
+        emptyWhenNotFound(mapPlatformError)
       )
     ),
   });
