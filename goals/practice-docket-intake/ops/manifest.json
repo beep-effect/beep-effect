@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-docket-intake",
+    "title": "Practice Docket Intake",
+    "status": "active",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-docket-intake",
+  "lifecycle": "active",
+  "mission": "Watch the attorney Outlook mailbox from the operator workstation and write tentative, two-agent-reviewed docket calendar entries with a reminder ladder; Outlook stays the system of record.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-docket-intake/README.md",
+    "goals/practice-docket-intake/SPEC.md",
+    "goals/practice-docket-intake/PLAN.md",
+    "goals/practice-docket-intake/GOAL.md",
+    "goals/practice-docket-intake/research/SOURCES.md",
+    "docs/runbooks/docket-intake-entra-registration.md",
+    "goals/practice-m365-contacts/SPEC.md",
+    "explorations/solo-firm-docketing/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-docket-intake/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-docket-intake/GOAL.md)\" -le 4000",
+    "jq . goals/practice-docket-intake/ops/manifest.json",
+    "rg -n \"practice-docket-intake|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-docket-intake",
+    "git diff --check -- goals/practice-docket-intake",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "A step would cost money beyond existing subscriptions and already authorized API billing.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "dependsOn": ["goals/m365-driver"],
+  "provides": ["practice/docket-intake", "drivers/m365-calendar-write"]
+}

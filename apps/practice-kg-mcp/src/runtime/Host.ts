@@ -22,8 +22,8 @@ import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
 import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
-// Mirrors `PracticeKgSchemaVersions.pglite`; bumped with every breaking kg_node/kg_edge layout change.
-const supportedStoreVersions = { duckdb: "2", pglite: "2" } as const;
+// Mirrors `PracticeKgSchemaVersions`; bumped with every breaking kg_node/kg_edge or DuckDB table layout change.
+const supportedStoreVersions = { duckdb: "3", pglite: "3" } as const;
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
   S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
@@ -69,9 +69,10 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
       })
     )
   );
-  // A pre-P6 bundle keys families on the bare docket number and lacks the
-  // attribution columns the tools read, so it is refused by store version
-  // before the strict decode can report it as merely "invalid".
+  // An older bundle lacks columns the tools read (format 1 keys families on
+  // the bare docket number; format 2 has no `matters.client_name`), so it is
+  // refused by store version before the strict decode can report it as merely
+  // "invalid".
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
   if (
     O.isSome(storeVersion) &&

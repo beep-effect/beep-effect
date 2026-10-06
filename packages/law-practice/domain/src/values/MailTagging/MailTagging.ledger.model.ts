@@ -1,0 +1,857 @@
+/**
+ * Mail-tagging ledgers and job state: the append-only tag ledger, the filing
+ * ledger, and the backfill checkpoint.
+ *
+ * @packageDocumentation
+ * @category value-objects
+ * @since 0.0.0
+ */
+
+import { $LawPracticeDomainId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema/Sha256";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Effect } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import {
+  DocumentFileId,
+  DocumentFolderId,
+  InternetMessageId,
+  MailAttachmentId,
+  MailConversationId,
+  MailMessageId,
+  TaggingRunId,
+} from "./MailTagging.ids.model.ts";
+import { TaggingDecision, UnmatchedReason } from "./MailTagging.matching.model.ts";
+import { MailCategoryName, MatterKey } from "./MailTagging.taxonomy.model.ts";
+import type { MatterMatched, MatterUnmatched } from "./MailTagging.matching.model.ts";
+
+const $I = $LawPracticeDomainId.create("values/MailTagging/MailTagging.ledger.model");
+
+/**
+ * Whether a run only reports (`dry-run`) or also writes (`apply`).
+ *
+ * **Example** (Guard a tagging mode)
+ *
+ * ```ts
+ * import { TaggingMode } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(TaggingMode)("dry-run")) // true
+ * console.log(S.is(TaggingMode)("force")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TaggingMode = LiteralKit(["dry-run", "apply"]).pipe(
+  $I.annoteSchema("TaggingMode", {
+    description: "Whether a tagging run only reports or also writes.",
+  })
+);
+
+/**
+ * Runtime type for {@link TaggingMode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TaggingMode = typeof TaggingMode.Type;
+
+/**
+ * Outcome tag of a tagging decision, as recorded in the tag ledger.
+ *
+ * **Example** (Guard a tagging outcome)
+ *
+ * ```ts
+ * import { TaggingOutcome } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(TaggingOutcome)("MatterMatched")) // true
+ * console.log(S.is(TaggingOutcome)("MatterGuessed")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TaggingOutcome = LiteralKit(["MatterMatched", "MatterUnmatched"]).pipe(
+  $I.annoteSchema("TaggingOutcome", {
+    description: "Outcome tag of a tagging decision.",
+  })
+);
+
+/**
+ * Runtime type for {@link TaggingOutcome}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TaggingOutcome = typeof TaggingOutcome.Type;
+
+/**
+ * Ledger-sized summary of a tagging decision: ids and numbers only.
+ *
+ * **Details**
+ *
+ * `matterKey` and `confidence` are present for a matched outcome; `reason` is
+ * present for an unmatched one. Evidence and candidates are not recorded.
+ *
+ * **Example** (Decode an unmatched summary)
+ *
+ * ```ts
+ * import { TagDecisionSummary } from "@beep/law-practice-domain/values"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = S.decodeUnknownSync(TagDecisionSummary)({ outcome: "MatterUnmatched", reason: "ambiguous" })
+ * console.log(O.getOrNull(summary.reason)) // "ambiguous"
+ * console.log(O.isNone(summary.matterKey)) // true
+ * ```
+ *
+ * @see {@link summarizeDecision} for the constructor from a full decision.
+ * @category models
+ * @since 0.0.0
+ */
+export class TagDecisionSummary extends S.Class<TagDecisionSummary>($I`TagDecisionSummary`)(
+  {
+    outcome: TaggingOutcome.annotateKey({
+      description: "Outcome tag of the decision.",
+    }),
+    matterKey: S.OptionFromNullOr(MatterKey)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Matched matter; none when unmatched.",
+      }),
+    confidence: S.OptionFromNullOr(UnitInterval)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Confidence of the match; none when unmatched.",
+      }),
+    reason: S.OptionFromNullOr(UnmatchedReason)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Why no matter was assigned; none when matched.",
+      }),
+  },
+  $I.annote("TagDecisionSummary", {
+    description: "Ledger-sized summary of a tagging decision: outcome, matter, confidence, and reason.",
+  })
+) {}
+
+const summarizeMatched = (decision: MatterMatched): TagDecisionSummary =>
+  TagDecisionSummary.make({
+    outcome: TaggingOutcome.Enum.MatterMatched,
+    matterKey: O.some(decision.matterKey),
+    confidence: O.some(decision.confidence),
+  });
+
+const summarizeUnmatched = (decision: MatterUnmatched): TagDecisionSummary =>
+  TagDecisionSummary.make({
+    outcome: TaggingOutcome.Enum.MatterUnmatched,
+    reason: O.some(decision.reason),
+  });
+
+/**
+ * Reduces a tagging decision to its ledger summary.
+ *
+ * **Example** (Summarize an unmatched decision)
+ *
+ * ```ts
+ * import { MatterUnmatched, summarizeDecision } from "@beep/law-practice-domain/values"
+ *
+ * const summary = summarizeDecision(MatterUnmatched.make({ reason: "below-threshold" }))
+ * console.log(summary.outcome) // "MatterUnmatched"
+ * ```
+ *
+ * @param decision - Tagging decision for one message.
+ * @returns The outcome tag with the matter and confidence, or the reason.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const summarizeDecision: (decision: TaggingDecision) => TagDecisionSummary = TaggingDecision.match({
+  MatterMatched: summarizeMatched,
+  MatterUnmatched: summarizeUnmatched,
+});
+
+/**
+ * Tag-ledger line: categories one run added to one message.
+ *
+ * **Gotchas**
+ *
+ * `addedCategories` lists only what this run added. Undo may remove exactly
+ * these, and only the ones still present on the message.
+ *
+ * **Example** (Record applied categories)
+ *
+ * ```ts
+ * import {
+ *   MailMessageId,
+ *   MatterUnmatched,
+ *   TaggingRunId,
+ *   TagLedgerEntry,
+ *   summarizeDecision
+ * } from "@beep/law-practice-domain/values"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const entry = TagLedgerEntry.make({
+ *   runId: TaggingRunId.make("run-0001"),
+ *   messageId: MailMessageId.make("msg-0001"),
+ *   addedCategories: ["P: USPTO"],
+ *   decision: summarizeDecision(MatterUnmatched.make({ reason: "no-signal", practiceCategories: ["P: USPTO"] })),
+ *   recordedAt: DateTime.makeUnsafe("2026-07-01T12:00:00.000Z")
+ * })
+ * console.log(entry._tag) // "TagApplied"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TagLedgerEntry extends S.TaggedClass<TagLedgerEntry>($I`TagLedgerEntry`)(
+  "TagApplied",
+  {
+    runId: TaggingRunId.annotateKey({
+      description: "Run that added the categories.",
+    }),
+    messageId: MailMessageId.annotateKey({
+      description: "Provider id of the tagged message.",
+    }),
+    internetMessageId: S.OptionFromNullOr(InternetMessageId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "RFC 5322 Message-ID of the tagged message, when known.",
+      }),
+    conversationId: S.OptionFromNullOr(MailConversationId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Conversation the tagged message belongs to, when known; later replies carry the matter over.",
+      }),
+    addedCategories: S.Array(MailCategoryName).annotateKey({
+      description: "Owned categories this run added to the message.",
+    }),
+    decision: TagDecisionSummary.annotateKey({
+      description: "Summary of the decision behind the write.",
+    }),
+    recordedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant the line was recorded.",
+    }),
+  },
+  $I.annote("TagLedgerEntry", {
+    description: "Tag-ledger line recording the categories one run added to one message.",
+  })
+) {}
+
+/**
+ * Tag-ledger line: categories an undo run removed from one message.
+ *
+ * **Example** (Record removed categories)
+ *
+ * ```ts
+ * import { MailMessageId, TaggingRunId, TagUndoEntry } from "@beep/law-practice-domain/values"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const entry = TagUndoEntry.make({
+ *   runId: TaggingRunId.make("undo-0001"),
+ *   originalRunId: TaggingRunId.make("run-0001"),
+ *   messageId: MailMessageId.make("msg-0001"),
+ *   removedCategories: ["P: USPTO"],
+ *   recordedAt: DateTime.makeUnsafe("2026-07-02T12:00:00.000Z")
+ * })
+ * console.log(entry._tag) // "TagUndone"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TagUndoEntry extends S.TaggedClass<TagUndoEntry>($I`TagUndoEntry`)(
+  "TagUndone",
+  {
+    runId: TaggingRunId.annotateKey({
+      description: "Undo run that removed the categories.",
+    }),
+    originalRunId: TaggingRunId.annotateKey({
+      description: "Run whose additions were undone.",
+    }),
+    messageId: MailMessageId.annotateKey({
+      description: "Provider id of the message.",
+    }),
+    removedCategories: S.Array(MailCategoryName).annotateKey({
+      description: "Owned categories the undo run removed from the message.",
+    }),
+    recordedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant the line was recorded.",
+    }),
+  },
+  $I.annote("TagUndoEntry", {
+    description: "Tag-ledger line recording the categories an undo run removed from one message.",
+  })
+) {}
+
+/**
+ * Any line of the append-only tag ledger.
+ *
+ * **Example** (Branch on a ledger record)
+ *
+ * ```ts
+ * import { MailMessageId, TaggingRunId, TagLedgerRecord, TagUndoEntry } from "@beep/law-practice-domain/values"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const record = TagUndoEntry.make({
+ *   runId: TaggingRunId.make("undo-0002"),
+ *   originalRunId: TaggingRunId.make("run-0002"),
+ *   messageId: MailMessageId.make("msg-0002"),
+ *   removedCategories: [],
+ *   recordedAt: DateTime.makeUnsafe("2026-07-02T12:00:00.000Z")
+ * })
+ * const count = TagLedgerRecord.match(record, {
+ *   TagApplied: ({ addedCategories }) => addedCategories.length,
+ *   TagUndone: ({ removedCategories }) => removedCategories.length
+ * })
+ * console.log(count) // 0
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TagLedgerRecord = S.Union([TagLedgerEntry, TagUndoEntry]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("TagLedgerRecord", {
+    description: "Any line of the append-only tag ledger: applied or undone.",
+  })
+);
+
+/**
+ * Runtime type for {@link TagLedgerRecord}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TagLedgerRecord = typeof TagLedgerRecord.Type;
+
+/**
+ * Codec between one JSONL line and a {@link TagLedgerRecord}.
+ *
+ * **Example** (Decode one tag-ledger line)
+ *
+ * ```ts
+ * import { TagLedgerRecordJsonLine } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const line =
+ *   '{"_tag":"TagUndone","runId":"undo-0003","originalRunId":"run-0003","messageId":"msg-0003","removedCategories":["P: Admin"],"recordedAt":"2026-07-02T12:00:00.000Z"}'
+ * const record = S.decodeUnknownSync(TagLedgerRecordJsonLine)(line)
+ * console.log(record._tag) // "TagUndone"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const TagLedgerRecordJsonLine = S.fromJsonString(TagLedgerRecord).pipe(
+  $I.annoteSchema("TagLedgerRecordJsonLine", {
+    description: "One JSONL line of the tag ledger.",
+  })
+);
+
+/**
+ * Runtime type for {@link TagLedgerRecordJsonLine}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TagLedgerRecordJsonLine = typeof TagLedgerRecordJsonLine.Type;
+
+/**
+ * Subfolder of a matter's document folder an attachment is filed into.
+ *
+ * **Details**
+ *
+ * `uspto-incoming` is `05 USPTO Correspondence/01 Incoming` and `from-client`
+ * is `90 Client Exchange/01 From Client`. The sender picks the destination; a
+ * sender that is neither the USPTO nor a known contact of the matter has none.
+ *
+ * **Example** (Guard a filing destination)
+ *
+ * ```ts
+ * import { FilingDestination } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(FilingDestination)("from-client")) // true
+ * console.log(S.is(FilingDestination)("from-opposing-counsel")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingDestination = LiteralKit(["uspto-incoming", "from-client"]).pipe(
+  $I.annoteSchema("FilingDestination", {
+    description: "Subfolder of a matter's document folder an attachment is filed into.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingDestination}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingDestination = typeof FilingDestination.Type;
+
+/**
+ * SHA-256 of an attachment's bytes: 64 lowercase hex characters.
+ *
+ * **Example** (Reject a malformed content hash)
+ *
+ * ```ts
+ * import { ContentSha256 } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const digest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * console.log(S.is(ContentSha256)(digest)) // true
+ * console.log(S.is(ContentSha256)(digest.toUpperCase())) // false
+ * console.log(S.is(ContentSha256)("e3b0c442")) // false
+ * ```
+ *
+ * @see {@link Sha256Hex} for the underlying digest schema.
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const ContentSha256 = Sha256Hex.pipe(
+  S.brand("ContentSha256"),
+  $I.annoteSchema("ContentSha256", {
+    description: "SHA-256 of an attachment's bytes as 64 lowercase hex characters.",
+  })
+);
+
+/**
+ * Type-level brand produced by {@link ContentSha256}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ContentSha256 = typeof ContentSha256.Type;
+
+const filingFields = {
+  runId: TaggingRunId.annotateKey({
+    description: "Run that recorded the line.",
+  }),
+  contentSha256: ContentSha256.annotateKey({
+    description: "SHA-256 of the attachment's bytes.",
+  }),
+  matterKey: MatterKey.annotateKey({
+    description: "Matter the attachment is filed under.",
+  }),
+  destination: FilingDestination.annotateKey({
+    description: "Subfolder of the matter the sender routed the attachment to.",
+  }),
+  folderId: DocumentFolderId.annotateKey({
+    description: "Document-store folder the file is uploaded into.",
+  }),
+  fileName: S.NonEmptyString.annotateKey({
+    description: "Name the file is stored under, including any collision suffix.",
+  }),
+  messageId: MailMessageId.annotateKey({
+    description: "Message the attachment came from.",
+  }),
+  attachmentId: MailAttachmentId.annotateKey({
+    description: "Provider id of the attachment.",
+  }),
+  byteLength: S.Natural.annotateKey({
+    description: "Size of the attachment's bytes.",
+  }),
+  recordedAt: S.DateTimeUtcFromString.annotateKey({
+    description: "UTC instant the line was recorded.",
+  }),
+};
+
+/**
+ * Filing-ledger line written before an upload: the folder and name one
+ * attachment is about to be stored under.
+ *
+ * **Details**
+ *
+ * The intent is the first phase of a two-phase filing. It is appended before
+ * the document store is called, so a process that dies between the upload and
+ * the completion line leaves a record of exactly where the file went. An
+ * intent is pending until a later {@link FilingLedgerEntry} or
+ * {@link FilingAbandoned} names the same content, matter, folder, and file
+ * name.
+ *
+ * **Example** (Decode a filing intent)
+ *
+ * ```ts
+ * import { FilingIntent } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const intent = S.decodeUnknownSync(FilingIntent)({
+ *   _tag: "FilingIntended",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   destination: "uspto-incoming",
+ *   folderId: "100001",
+ *   fileName: "2026-07-01 office-action.pdf",
+ *   messageId: "msg-0001",
+ *   attachmentId: "att-0001",
+ *   byteLength: 1024,
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * console.log(intent.fileName) // "2026-07-01 office-action.pdf"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilingIntent extends S.TaggedClass<FilingIntent>($I`FilingIntent`)(
+  "FilingIntended",
+  filingFields,
+  $I.annote("FilingIntent", {
+    description: "Filing-ledger line recording where one attachment is about to be uploaded.",
+  })
+) {}
+
+/**
+ * Filing-ledger completion line: one attachment filed into a matter's folder.
+ *
+ * **Details**
+ *
+ * The dedupe key is `(contentSha256, matterKey)`: the same bytes are filed at
+ * most once per matter. `reconciled` is true when the file was found already
+ * stored under a pending {@link FilingIntent} instead of being uploaded by the
+ * run that wrote this line.
+ *
+ * **Example** (Decode a filing-ledger entry)
+ *
+ * ```ts
+ * import { FilingLedgerEntry } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const entry = S.decodeUnknownSync(FilingLedgerEntry)({
+ *   _tag: "FilingCompleted",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   destination: "uspto-incoming",
+ *   folderId: "100001",
+ *   fileId: "200001",
+ *   fileName: "office-action.pdf",
+ *   messageId: "msg-0001",
+ *   attachmentId: "att-0001",
+ *   byteLength: 1024,
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * console.log(entry.fileName) // "office-action.pdf"
+ * console.log(entry.reconciled) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilingLedgerEntry extends S.TaggedClass<FilingLedgerEntry>($I`FilingLedgerEntry`)(
+  "FilingCompleted",
+  {
+    ...filingFields,
+    fileId: DocumentFileId.annotateKey({
+      description: "Document-store id of the stored file.",
+    }),
+    reconciled: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
+    ).annotateKey({
+      description: "Whether the file was recovered from an earlier intent rather than uploaded by this run.",
+    }),
+  },
+  $I.annote("FilingLedgerEntry", {
+    description: "Filing-ledger line recording one attachment stored in a matter's folder.",
+  })
+) {}
+
+/**
+ * Why a filing intent was given up without storing a file.
+ *
+ * **Details**
+ *
+ * `name-taken`: a first upload found its name held, so the holder is a file
+ * the ledger never stored. `holder-mismatch`: a retried upload found its name
+ * held by a file whose reported hash or size is not the attachment's, or
+ * whose content the store did not describe at all.
+ *
+ * **Example** (Guard an abandon reason)
+ *
+ * ```ts
+ * import { FilingAbandonReason } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(FilingAbandonReason)("name-taken")) // true
+ * console.log(S.is(FilingAbandonReason)("holder-mismatch")) // true
+ * console.log(S.is(FilingAbandonReason)("timeout")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingAbandonReason = LiteralKit(["name-taken", "holder-mismatch"]).pipe(
+  $I.annoteSchema("FilingAbandonReason", {
+    description: "Why a filing intent was given up without storing a file.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingAbandonReason}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingAbandonReason = typeof FilingAbandonReason.Type;
+
+/**
+ * Filing-ledger line retiring an intent whose upload stored nothing.
+ *
+ * **Details**
+ *
+ * A first upload that finds its name taken proves the name belongs to a file
+ * the ledger never stored, and a retried upload can find its name held by a
+ * file that is not the attachment. Either abandonment settles that
+ * {@link FilingIntent}, so a later run does not mistake the foreign file for
+ * an interrupted upload of its own.
+ *
+ * **Example** (Decode a filing abandonment)
+ *
+ * ```ts
+ * import { FilingAbandoned } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const abandoned = S.decodeUnknownSync(FilingAbandoned)({
+ *   _tag: "FilingAbandoned",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   folderId: "100001",
+ *   fileName: "2026-07-01 office-action.pdf",
+ *   reason: "name-taken",
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * console.log(abandoned.reason) // "name-taken"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FilingAbandoned extends S.TaggedClass<FilingAbandoned>($I`FilingAbandoned`)(
+  "FilingAbandoned",
+  {
+    runId: filingFields.runId,
+    contentSha256: filingFields.contentSha256,
+    matterKey: filingFields.matterKey,
+    folderId: filingFields.folderId,
+    fileName: filingFields.fileName,
+    reason: FilingAbandonReason.annotateKey({
+      description: "Why the intent was given up.",
+    }),
+    recordedAt: filingFields.recordedAt,
+  },
+  $I.annote("FilingAbandoned", {
+    description: "Filing-ledger line retiring an intent whose upload stored nothing.",
+  })
+) {}
+
+/**
+ * Any line of the append-only filing ledger: an intent, a completion, or an
+ * abandonment.
+ *
+ * **Example** (Match a filing-ledger record)
+ *
+ * ```ts
+ * import { FilingLedgerRecord } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const record = S.decodeUnknownSync(FilingLedgerRecord)({
+ *   _tag: "FilingIntended",
+ *   runId: "run-0001",
+ *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   matterKey: "acme.10001",
+ *   destination: "from-client",
+ *   folderId: "100002",
+ *   fileName: "2026-07-01 declaration.pdf",
+ *   messageId: "msg-0003",
+ *   attachmentId: "att-0003",
+ *   byteLength: 512,
+ *   recordedAt: "2026-07-01T12:00:00.000Z"
+ * })
+ * const phase = FilingLedgerRecord.match(record, {
+ *   FilingIntended: () => "intended",
+ *   FilingCompleted: () => "completed",
+ *   FilingAbandoned: () => "abandoned"
+ * })
+ * console.log(phase) // "intended"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingLedgerRecord = S.Union([FilingIntent, FilingLedgerEntry, FilingAbandoned]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("FilingLedgerRecord", {
+    description: "Any line of the append-only filing ledger: intended, completed, or abandoned.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingLedgerRecord}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingLedgerRecord = typeof FilingLedgerRecord.Type;
+
+/**
+ * Codec between one JSONL line and a {@link FilingLedgerRecord}.
+ *
+ * **Example** (Decode one filing-ledger line)
+ *
+ * ```ts
+ * import { FilingLedgerRecordJsonLine } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const line =
+ *   '{"_tag":"FilingCompleted","runId":"run-0001","contentSha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","matterKey":"acme.10001","destination":"uspto-incoming","folderId":"100001","fileId":"200002","fileName":"response.pdf","messageId":"msg-0002","attachmentId":"att-0002","byteLength":2048,"reconciled":true,"recordedAt":"2026-07-01T12:00:00.000Z"}'
+ * const record = S.decodeUnknownSync(FilingLedgerRecordJsonLine)(line)
+ * console.log(record._tag) // "FilingCompleted"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const FilingLedgerRecordJsonLine = S.fromJsonString(FilingLedgerRecord).pipe(
+  $I.annoteSchema("FilingLedgerRecordJsonLine", {
+    description: "One JSONL line of the filing ledger.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingLedgerRecordJsonLine}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingLedgerRecordJsonLine = typeof FilingLedgerRecordJsonLine.Type;
+
+/**
+ * Why an attachment was not filed.
+ *
+ * **Example** (Guard a skip reason)
+ *
+ * ```ts
+ * import { AttachmentSkipReason } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AttachmentSkipReason)("inline")) // true
+ * console.log(S.is(AttachmentSkipReason)("duplicate")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AttachmentSkipReason = LiteralKit([
+  "inline",
+  "not-a-file",
+  "empty",
+  "too-large",
+  "no-folder",
+  "sender-not-routable",
+]).pipe(
+  $I.annoteSchema("AttachmentSkipReason", {
+    description: "Why an attachment was not filed.",
+  })
+);
+
+/**
+ * Runtime type for {@link AttachmentSkipReason}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AttachmentSkipReason = typeof AttachmentSkipReason.Type;
+
+/**
+ * Resume point of the backfill: where the ascending received-time scan stands.
+ *
+ * **Example** (Decode a fresh checkpoint)
+ *
+ * ```ts
+ * import { BackfillCheckpoint } from "@beep/law-practice-domain/values"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const checkpoint = S.decodeUnknownSync(BackfillCheckpoint)({ since: "2026-07-01T00:00:00.000Z" })
+ * console.log(checkpoint.processed) // 0
+ * console.log(O.isNone(checkpoint.lastMessageId)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BackfillCheckpoint extends S.Class<BackfillCheckpoint>($I`BackfillCheckpoint`)(
+  {
+    since: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant the backfill starts from.",
+    }),
+    lastReceivedAt: S.OptionFromNullOr(S.DateTimeUtcFromString)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Received instant of the last processed message; none before the first page.",
+      }),
+    lastMessageId: S.OptionFromNullOr(MailMessageId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Id of the last processed message; none before the first page.",
+      }),
+    coveredAtBoundary: S.Array(MailMessageId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description:
+          "Ids of the processed messages received exactly at lastReceivedAt; ties not listed are not covered.",
+      }),
+    processed: S.Natural.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(0)),
+      S.withConstructorDefault(Effect.succeed(0))
+    ).annotateKey({
+      description: "Messages processed so far.",
+    }),
+  },
+  $I.annote("BackfillCheckpoint", {
+    description: "Resume point of the mail-tagging backfill.",
+  })
+) {}
+
+/**
+ * Codec between the checkpoint file's JSON text and a
+ * {@link BackfillCheckpoint}.
+ *
+ * **Example** (Decode checkpoint JSON)
+ *
+ * ```ts
+ * import { BackfillCheckpointJson } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const checkpoint = S.decodeUnknownSync(BackfillCheckpointJson)(
+ *   '{"since":"2026-07-01T00:00:00.000Z","lastReceivedAt":null,"lastMessageId":null,"processed":12}'
+ * )
+ * console.log(checkpoint.processed) // 12
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const BackfillCheckpointJson = S.fromJsonString(BackfillCheckpoint).pipe(
+  $I.annoteSchema("BackfillCheckpointJson", {
+    description: "JSON text of the backfill checkpoint.",
+  })
+);
+
+/**
+ * Runtime type for {@link BackfillCheckpointJson}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BackfillCheckpointJson = typeof BackfillCheckpointJson.Type;

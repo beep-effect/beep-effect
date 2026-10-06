@@ -52,7 +52,7 @@ const candidateStatus = PracticeKgEpistemicStatus.Enum["candidate-unreviewed"];
 const emailLinkageNote =
   "Matter linkage is archive-level confidence only; a matching message header is not message-level matter proof.";
 const nodeProvenanceNote =
-  "A node's provenance names the catalog row or USPTO record it was projected from. attributionSource says why it sits in its family: filename and restored-name come from file names alone, text-reference and family-consensus from the documents' own client references, mention means the number is only cited there. recycled-unverified rows rest on recycle-bin restore stubs.";
+  "A node's provenance names the catalog row or USPTO record it was projected from. attributionSource says why it sits in its family: filename and restored-name come from file names alone, docket-register from the attorney's docket register, folder-path from his own folder names, text-reference and family-consensus from the documents' own client references, mention means the number is only cited there. recycled-unverified rows rest on recycle-bin restore stubs.";
 const provenanceNotFoundNote =
   "No graph node or document in this bundle has that identity. Check the key with kg_find or kg_matter_lookup; application and patent numbers are stored as digits only.";
 const matterLookupNote =
@@ -316,6 +316,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             const shared = {
               attributionSource: matter.attributionSource,
               client: matter.client,
+              clientName: matter.clientName,
               family: matter.family,
               familyKey: matter.familyKey,
               matchedOn: matter.matchedOn,

@@ -6,36 +6,57 @@ description: Capture Codex Cloud security findings into a goal packet. Use when 
 # Codex Security Findings
 
 The full loop is: **export → ingest → `/goal` → remediate → Yeet → close**.
-Only the export and the final closure happen in a browser. Everything between
-them is `bun run beep codex findings ingest` plus the normal packet workflow.
+Capture/export, detail enrichment, and final closure use supported cloud tools
+or the authenticated in-app UI. Packet creation is `bun run beep codex findings
+ingest`; remediation follows the normal packet workflow. See
+`docs/runbooks/codex-security-cloud.md` for the verified access findings.
 
 Never hand-build the packet. Five batches were transcribed by hand before this
 command existed; the boilerplate is exactly what it eliminates.
 
-## 1. Export (browser, signed in)
+## 1. Export (authenticated Security Cloud)
 
-Open the findings view and use its own **Export findings as CSV** control:
+Open the current findings view:
 
 ```
-https://chatgpt.com/codex/cloud/security/findings/
+https://chatgpt.com/mcp-app/connector_openai_defense_factory/open_defense_factory#/findings
 ```
 
-Scope the view to the repository and the statuses you intend to capture before
-exporting — the export reflects the current filter.
+Prefer an exposed, supported connector tool for cloud list/get/export when its
+schema actually covers the operation and pagination. A URL containing
+`mcp-app` does not establish that those tools are available to the agent. Check
+session tools and the authenticated page's WebMCP inventory first; do not invent
+connector names or endpoints. The local Security CLI findings commands are not
+established substitutes for cloud retrieval or closure.
 
-**The CLI never authenticates.** It reads a file you already downloaded. Do not
-extract cookies, tokens, or authorization headers, do not pass credentials as
-flags, and do not script a fetch against the findings API — a same-origin fetch
-returns 401 and the "fix" for that is exactly the credential handling this
-design exists to avoid.
+The signed-in **in-app browser** is the verified Chrome-extension-free fallback.
+Scope the view to one repository and the intended statuses; use **More finding
+actions → Export CSV**. An export can require confirming an external download
+link. Do not record its signed URL. Chrome is optional when an authenticated
+in-app session is available.
+
+**The CLI never authenticates.** It reads a downloaded file. Do not extract
+cookies, tokens, or authorization headers, pass credentials as flags, or build an
+undocumented authenticated API client. No cloud connector was exposed in the
+2026-10-05 session; the authenticated page exposed no WebMCP tools. This is a
+session observation, not a claim that programmatic access can never exist.
+
+The current export has 10 columns, source-qualified `commit:` IDs, a GitHub
+repository URL, and **Summary only**. Finding details separately contain
+Validation, Evidence, and Attack-path analysis. Preserve complete identities and
+obtain that detail evidence before P2 verdicts; record unavailable evidence and
+hold unsupported decisions. Never treat Summary as the complete report.
 
 ## 2. Ingest
 
 ```sh
-bun run beep codex findings ingest --from <download-dir>/codex-security-findings-<timestamp>.csv
+bun run beep codex findings ingest --from <download-dir>/security-findings.csv --date YYYY-MM-DD --expected-count N
 ```
 
 `<download-dir>` is the browser download directory (conventionally `~/Downloads`).
+The current filename contains no date, so pass `--date` explicitly. Both the
+legacy 17-column export and current 10-column export are detected by exact header.
+`--source security-cloud-csv` explicitly requires the current format.
 
 Useful flags:
 
@@ -51,7 +72,9 @@ Useful flags:
 `--refresh` and `--force` are mutually exclusive. A refresh requires an
 existing decodable packet and an exact full-snapshot superset: missing prior
 IDs, changed prior metadata, duplicate bindings, count drift, or packet
-provenance drift all fail closed.
+provenance drift all fail closed. Cross-format identity migration is unsupported;
+never strip `commit:` to make a refresh pass. Keep historical packet identities
+until an authoritative mapping and deliberate migration are available.
 
 The capture date comes from the export filename, or `--date`. It never comes
 from the clock, so re-ingesting the same export is byte-identical.
@@ -77,13 +100,22 @@ The packet arrives at the **P1 capture → P2 validate** boundary. Every finding
 is `untriaged` with no verdict, owner, or lane, and every CSF body carries
 `_pending P2_` markers. That is deliberate: the capture knows metadata, not
 judgment. Writing the public summary and the current-HEAD verdict is the
-agent's job, from the raw report in `raw/`.
+agent's job, from the ignored evidence in `raw/` and the separately obtained
+current Security Cloud detail evidence.
 
 ## 4. Close (browser, after merge)
 
-Close only the exact captured Codex IDs, as `Already fixed` (or an
-evidence-backed `False positive`). Accepted risk is not available. Direct
-`/findings/<id>` URLs render blank — navigate from the list view.
+Close only the exact captured cloud IDs after merge and merged-revision
+verification, as **Fixed** or an evidence-backed **False positive**. Use supported
+connector actions if exposed; otherwise use the signed-in in-app browser.
+Current UI also offers Won't fix and Duplicate, but these do not satisfy this
+packet's remediation gate. Record each full identity, decision, proof revision,
+and observed final state. Verify zero packet-applicable open findings separately
+from repository merge readiness. Do not mutate statuses during capture.
+
+Current details use `#/findings/commit%3A<32-hex-id>` on the MCP-app URL; list
+navigation is the fallback if a direct link does not load. Legacy bare IDs and
+local IDs must never be silently converted into this namespace.
 
 ## Invariants worth knowing
 
@@ -98,8 +130,8 @@ evidence-backed `False positive`). Accepted risk is not available. Direct
   silently rewritten. Missed redaction in a public repo is irreversible; a
   false rejection costs one hand-edit.
 - **`raw/` is gitignored and holds the normalized capture only.** The CSV is
-  never copied into the repository — it carries report bodies and an email
-  address in every row.
+  never copied into the repository. Legacy exports carry personal-data columns;
+  the current export carries summaries and paths that still require review.
 - **Writes are staged and recoverable.** The complete packet is scanned and
   staged before promotion. Refresh moves the prior packet to a recovery backup,
   verifies its bytes again, restores it on a failed promotion, and removes the
@@ -137,4 +169,4 @@ fingerprint, scope, and coverage evidence. Partial coverage never proves a clean
 repository. Follow the generated local GOAL.md: targeted fix verification and
 merged-revision receipts replace dashboard closure. Local IDs must never be
 submitted to cloud finding actions. Bundle imports do not support `--refresh`,
-`--force`, or `--date`; cloud CSV behavior above remains unchanged.
+`--force`, or `--date`; cloud imports retain their separate evidence and closure requirements.

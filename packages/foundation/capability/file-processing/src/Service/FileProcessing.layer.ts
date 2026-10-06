@@ -41,6 +41,7 @@ const selectEngine = (
     Effect.fromOption(() =>
       FileProcessingOperationError.fromReason("engine-unavailable", {
         message: `No file-processing engine is available for preference "${preferredEngine}".`,
+        ...O.getSomesStruct({ format: O.fromUndefinedOr(format) }),
       })
     )
   );

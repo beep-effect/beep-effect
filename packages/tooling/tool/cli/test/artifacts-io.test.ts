@@ -7,25 +7,21 @@ import {
   writeArtifact,
   writeGeneratedFile,
 } from "@beep/repo-cli/test/Artifacts";
-import { provideScopedLayer } from "@beep/test-utils";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
-import { Cause, Data, Effect, Exit, FileSystem, Layer, Option, Path } from "effect";
+import { Data, Effect, FileSystem, Layer, Path, Ref } from "effect";
 import * as S from "effect/Schema";
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const testLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
 class ArtifactTestError extends Data.TaggedError("ArtifactTestError")<{ readonly message: string }> {}
 const toArtifactError = (cause: unknown): ArtifactTestError => new ArtifactTestError({ message: String(cause) });
 
-const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),
-    use,
-    (dir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(dir, { recursive: true }).pipe(Effect.orDie))
-  ).pipe(provideScopedLayer(PlatformLayer));
+const withTempDir = Effect.fn("withTempDir")(function* <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) {
+  const fs = yield* FileSystem.FileSystem;
+  const dir = yield* fs.makeTempDirectoryScoped();
+  return yield* use(dir);
+});
 
 const ExampleDocument = S.Struct({ schema_version: S.Literal(1), total: S.Finite });
 
@@ -40,8 +36,8 @@ describe("internal/artifacts/ArtifactIo formatJsonc", () => {
 });
 
 describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
-  it("writes header + body verbatim and reads the document back", () =>
-    Effect.runPromise(
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("writes header + body verbatim and reads the document back", () =>
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const path = yield* Path.Path;
@@ -68,75 +64,69 @@ describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
           expect(decoded.total).toBe(7);
         })
       )
-    ));
+    );
 
-  it("maps the read failure with the caller's factory when the file is absent", () =>
-    Effect.runPromise(
+    it.effect("maps the read failure with the caller's factory when the file is absent", () =>
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const path = yield* Path.Path;
-          const exit = yield* readArtifact({
+          const failure = yield* readArtifact({
             path: path.join(dir, "missing.jsonc"),
             schema: ExampleDocument,
             onReadError: toArtifactError,
             onDecodeError: toArtifactError,
-          }).pipe(Effect.exit);
+          }).pipe(Effect.flip);
 
-          assertTrue(Exit.isFailure(exit));
-          if (Exit.isFailure(exit)) {
-            const failure = Cause.findErrorOption(exit.cause);
-            if (Option.isSome(failure)) {
-              expect(failure.value).toBeInstanceOf(ArtifactTestError);
-            }
-          }
+          expect(failure).toBeInstanceOf(ArtifactTestError);
         })
       )
-    ));
+    );
+  });
 });
 
 describe("internal/artifacts/GeneratedFileDrift", () => {
-  it.effect(
-    "rejects the mutually-exclusive --write/--check combination",
-    Effect.fnUntraced(function* () {
-      const conflict = Effect.fail(new ArtifactTestError({ message: "conflict" }));
-      const bothExit = yield* assertExclusiveModeFlags({
-        write: true,
-        check: true,
-        onConflict: conflict,
-      }).pipe(Effect.exit);
-      assertTrue(Exit.isFailure(bothExit));
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "rejects the mutually-exclusive --write/--check combination",
+      Effect.fnUntraced(function* () {
+        const conflict = Effect.fail(new ArtifactTestError({ message: "conflict" }));
+        const failure = yield* assertExclusiveModeFlags({
+          write: true,
+          check: true,
+          onConflict: conflict,
+        }).pipe(Effect.flip);
+        expect(failure.message).toBe("conflict");
 
-      const okExit = yield* assertExclusiveModeFlags({
-        write: true,
-        check: false,
-        onConflict: conflict,
-      }).pipe(Effect.exit);
-      assertTrue(Exit.isSuccess(okExit));
-    })
-  );
+        yield* assertExclusiveModeFlags({
+          write: true,
+          check: false,
+          onConflict: conflict,
+        });
+      })
+    );
 
-  it("writes rendered content and runs the post-write effect", () =>
-    Effect.runPromise(
+    it.effect("writes rendered content and runs the post-write effect", () =>
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const path = yield* Path.Path;
           const fs = yield* FileSystem.FileSystem;
           const filePath = path.join(dir, "generated", "catalog.jsonc");
+          const wrote = yield* Ref.make(false);
 
           yield* writeGeneratedFile({
             path: filePath,
             content: "// generated\n{}\n",
-            onWrote: Effect.void,
+            onWrote: Ref.set(wrote, true),
             onError: toArtifactError,
           });
 
           expect(yield* fs.readFileString(filePath)).toBe("// generated\n{}\n");
+          expect(yield* Ref.get(wrote)).toBe(true);
         })
       )
-    ));
+    );
 
-  it("routes the current, stale, and missing branches of the check", () =>
-    Effect.runPromise(
+    it.effect("routes the current, stale, and missing branches of the check", () =>
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const path = yield* Path.Path;
@@ -177,10 +167,9 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           expect(current).toBe("current");
         })
       )
-    ));
+    );
 
-  it("dispatches syncGeneratedFile to write mode when write is set", () =>
-    Effect.runPromise(
+    it.effect("dispatches syncGeneratedFile to write mode when write is set", () =>
       withTempDir(
         Effect.fnUntraced(function* (dir) {
           const path = yield* Path.Path;
@@ -201,5 +190,6 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           expect(yield* fs.exists(filePath)).toBe(true);
         })
       )
-    ));
+    );
+  });
 });

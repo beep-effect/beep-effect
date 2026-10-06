@@ -52,6 +52,8 @@ const serverExtractionFormats: ReadonlyArray<FileFormatFamily> = [
   "html",
   "xhtml",
   "pdf-text-layer",
+  "eml",
+  "msg",
   "plain-text",
   "markdown",
   "image-metadata",

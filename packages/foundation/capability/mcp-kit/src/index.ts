@@ -89,4 +89,4 @@ export * from "./ToolkitComposition.ts";
  * @category constants
  * @since 0.0.0
  */
-export { MCP_PROTOCOL_VERSION, statelessMcpProtocols, VERSION } from "./Version.ts";
+export { handshakeMcpProtocols, MCP_PROTOCOL_VERSION, statelessMcpProtocols, VERSION } from "./Version.ts";

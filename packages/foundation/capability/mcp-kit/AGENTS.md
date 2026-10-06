@@ -1,7 +1,7 @@
 # @beep/mcp-kit Agent Guide
 
 ## Purpose & Fit
-- Reusable MCP host-construction kit: credential-keyed toolkit composition, api_key_required envelope, tier-gate dispatch, progressive field-tier projection, span hygiene, and the in-repo MCP `2026-07-28` client. Kit hosts serve `statelessMcpProtocols` (`[McpProtocol.v2026_07_28]`) only.
+- Reusable MCP host-construction kit: credential-keyed toolkit composition, api_key_required envelope, tier-gate dispatch, progressive field-tier projection, span hygiene, and the in-repo MCP `2026-07-28` client. Kit hosts serve `statelessMcpProtocols` (`[McpProtocol.v2026_07_28]`) when only stateless clients reach them, and `handshakeMcpProtocols` (stateless first, then the handshake-era adapters) when a handshake client such as Claude Desktop launches them.
 
 ## Surface Map
 | Surface | Key exports | Notes |
@@ -14,8 +14,8 @@
 | `SanitizedSpan.ts` | `defaultSanitizedSpanKeys`, `sanitizeTracerAttributes`, `withSanitizedToolSpan`, `sanitizedToolkit` | suppresses raw tool `parameters` from reaching span attributes; `sanitizedToolkit` mirrors rc.117 `registerToolkit` (strict decode, `inputSchema`/`outputSchema`, upstream failure classification) with dispatch wrapped in `withSanitizedToolSpan`, the caller dual-read, the no-argument `inputSchema` root patch, and the `api_key_required` translation; the differences are listed in one comment block on `sanitizedToolkit` |
 | `McpCaller.ts` | `McpCallerIdentity`, `CurrentMcpCaller`, `McpDispatchAnchor`, `CurrentMcpDispatchAnchor` | request-local caller identity (transport facts only) dual-read from `McpRequestContext` or `McpServerClient`; `clientId` identifies one **protocol exchange**, `sessionId` is the optional `mcp-session-id` a stateful transport echoes and is `None` on every stateless and stdio dispatch; the dispatch anchor is an opaque branded string app composition may provide, absent by default, never interpreted by the kit |
 | `ToolAnnotations.ts` | `FourHintAnnotations`, `annotateFourHints`, `readOnlyToolHints`, `destructiveWriteToolHints` | applies the four MCP tool-behavior hints in one call |
-| `Version.ts` | `VERSION`, `MCP_PROTOCOL_VERSION`, `statelessMcpProtocols` | kit pins: package version, the `2026-07-28` protocol revision, and the one protocol list hosts pass to `McpServer.layerStdio` / `layerHttp` |
+| `Version.ts` | `VERSION`, `MCP_PROTOCOL_VERSION`, `statelessMcpProtocols`, `handshakeMcpProtocols` | kit pins: package version, the `2026-07-28` protocol revision, and the two protocol lists hosts pass to `McpServer.layerStdio` / `layerHttp` (stateless-only, or stateless first plus the handshake-era adapters) |
 | `client.ts` (`@beep/mcp-kit/client`) | `McpClientRpcs`, `McpClientOptions`, `JsonRpcMessage`, `McpDiscoverResult`, `requestMetadata`, `withRequestMetadata`, `routingHeaders`, `postJsonRpc`, `layerProtocolHttp`, `layerProtocolNdjson`, `connect` | kit-owned `2026-07-28` client: `_meta` keys, routing headers, SSE unwrap, NDJSON framing; `connect` sends `server/discover` first |
 | `client.node.ts` (`@beep/mcp-kit/client.node`) | `layerProtocolStdioCommand` | NDJSON protocol over a spawned host process; caller supplies the `ChildProcessSpawner` |
-| `src/test/Conformance.test-kit.ts` (`@beep/mcp-kit/test/Conformance`) | `conformance2026`, `ConformanceHttp`, `connectHttp`, `withStdioHost`, `connectStdio` | test-only port of the `2026-07-28` conformance arms a host answers for, over HTTP and stdio |
+| `src/test/Conformance.test-kit.ts` (`@beep/mcp-kit/test/Conformance`) | `conformance2026`, `ConformanceHttp`, `connectHttp`, `withStdioHost`, `withStdioServer`, `connectStdio` | test-only port of the `2026-07-28` conformance arms a host answers for, over HTTP and stdio |
 | `index.ts` | curated barrel | re-exports all of the above except the `client*` and `test/*` subpaths |

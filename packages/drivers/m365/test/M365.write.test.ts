@@ -13,6 +13,7 @@ import {
   M365EventDraft,
   M365EventPatch,
   M365FindEventsByIdempotencyKeyRequest,
+  M365GetMailFolderRequest,
   M365ListDrivesRequest,
   M365ListMessageAttachmentsRequest,
   M365ListMessagesRequest,
@@ -673,6 +674,44 @@ describe("@beep/m365 app-only lane and write verbs", () => {
         assertSome(
           O.map(A.get(captures, 1), (capture) => capture.headers.authorization),
           `Bearer ${TOKEN}`
+        );
+      })
+    );
+  });
+
+  it.layer(appOnlyLayer(), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "reads a mail folder by well-known name and refuses a name that could change the path",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* WriteTestHttp;
+        const m365 = yield* M365;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(jsonResponse({ childFolderCount: 0, displayName: "Fixture folder", id: "folder-id" }))
+        );
+
+        const folder = yield* m365.getMailFolder(
+          M365GetMailFolderRequest.make({ folder: "deleteditems", userId: O.some(MAILBOX) })
+        );
+        const rejected = yield* failureOf(
+          m365.getMailFolder({ folder: "inbox/childFolders", userId: O.some(MAILBOX) } as M365GetMailFolderRequest)
+        );
+        const withoutMailbox = yield* failureOf(
+          m365.getMailFolder(M365GetMailFolderRequest.make({ folder: "junkemail" }))
+        );
+        const captures = yield* testHttp.captures;
+
+        expect(folder.id).toBe("folder-id");
+        assertSome(folder.displayName, "Fixture folder");
+        expect(A.map(captures, (capture) => `${capture.method} ${capture.url}`)).toStrictEqual([
+          `GET ${MAILBOX_URL}/mailFolders/deleteditems`,
+        ]);
+        assertSome(
+          O.map(rejected, (error) => error.reason),
+          "request encoding"
+        );
+        assertSome(
+          O.map(withoutMailbox, (error) => error.reason),
+          "request encoding"
         );
       })
     );

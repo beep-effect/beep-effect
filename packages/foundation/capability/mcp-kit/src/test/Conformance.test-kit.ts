@@ -197,14 +197,20 @@ const decodeLineOrDie = (line: string) => Effect.orDie(decodeLine(line));
 const defaultRequestMetadata = Effect.orDie(requestMetadata(McpClientOptions.make({})));
 
 /**
- * Runs `use` against a fresh stdio instance of the host built on
- * `Stdio.layerTest`, mirroring upstream `McpStdioHarness`.
+ * Runs `use` against a fresh stdio instance of a complete server layer built
+ * on `Stdio.layerTest`, mirroring upstream `McpStdioHarness`.
+ *
+ * **Details**
+ * The layer keeps whatever protocol list it was built with, so a host's own
+ * production layer (`makeServerLayer(...)`) can be driven here to prove the
+ * versions it really answers. {@link withStdioHost} wraps a host's
+ * registrations in the runner's stateless transport instead.
  *
  * @internal
  * @since 0.0.0
  */
-export const withStdioHost =
-  <E>(host: ConformanceHost<E>) =>
+export const withStdioServer =
+  <E>(server: Layer.Layer<never, E, Stdio.Stdio>) =>
   <A, E2, R>(use: (io: StdioHost) => Effect.Effect<A, E2, R>): Effect.Effect<A, E2, R> =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -216,19 +222,7 @@ export const withStdioHost =
           stdout: () => Sink.forEach((chunk) => Queue.offer(stdout, chunk)),
           stderr: () => Sink.drain,
         });
-        // The stdio protocol interrupts the fiber that built it when stdin ends
-        // (rc.117 `RpcServer.makeProtocolStdio`), so the transport must build in
-        // the harness fiber itself: registrations depend on it, never the reverse.
-        const serverLayer = host.registrations.pipe(
-          Layer.provideMerge(
-            McpServer.layerStdio({
-              name: host.name,
-              version: host.version,
-              instructions: host.instructions,
-              protocols: statelessMcpProtocols,
-            }).pipe(Layer.provide(stdioLayer))
-          )
-        );
+        const serverLayer = Layer.provide(server, stdioLayer);
         // The transport answers as soon as it is up, but a host's registrations
         // may open databases or read bundles while they build. Hand `io` to the
         // caller only once the whole server layer is built, or fail with the
@@ -262,6 +256,30 @@ export const withStdioHost =
         });
       })
     );
+
+/**
+ * Runs `use` against a fresh stdio instance of the host's registrations on the
+ * runner's own stateless transport.
+ *
+ * @internal
+ * @since 0.0.0
+ */
+export const withStdioHost = <E>(host: ConformanceHost<E>) =>
+  // The stdio protocol interrupts the fiber that built it when stdin ends
+  // (rc.117 `RpcServer.makeProtocolStdio`), so the transport must build in
+  // the harness fiber itself: registrations depend on it, never the reverse.
+  withStdioServer(
+    host.registrations.pipe(
+      Layer.provideMerge(
+        McpServer.layerStdio({
+          name: host.name,
+          version: host.version,
+          instructions: host.instructions,
+          protocols: statelessMcpProtocols,
+        })
+      )
+    )
+  );
 
 /**
  * Connects the kit client to a stdio instance of the host through

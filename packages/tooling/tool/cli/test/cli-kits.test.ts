@@ -6,6 +6,7 @@ import {
   csvValues,
   errorMessage,
   firstLine,
+  hashFileChunkBytes,
   hashFileSha256,
   isUnknownRecord,
   normalizedTokens,
@@ -25,13 +26,19 @@ import {
   validatePathSegment,
   variadicStrings,
 } from "@beep/repo-cli/test/Cli";
+import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Data, Effect, FileSystem, HashSet, Layer, Path } from "effect";
+import { Data, Effect, FileSystem, HashSet, Layer, MutableList, Path, Ref, Stream } from "effect";
+import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
+import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeRunModeEffect = S.decodeEffect(RunMode);
 
@@ -42,6 +49,30 @@ class InvalidPathSegment extends Data.TaggedError("InvalidPathSegment")<{
 }> {}
 
 class FsGuardTestError extends Data.TaggedError("FsGuardTestError")<{ readonly message: string }> {}
+
+const hashTestError = (_cause: unknown, filePath: string) => new FsGuardTestError({ message: `hash: ${filePath}` });
+
+// The digest the previous whole-file implementation produced.
+const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
+
+// FIPS 180-4 / NIST CAVP SHA-256 example vectors.
+const sha256Vectors = [
+  { digest: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", text: "" },
+  { digest: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", text: "abc" },
+  {
+    digest: "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1",
+    text: "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+  },
+  { digest: "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0", text: Str.repeat(1_000_000)("a") },
+];
+
+const patternedBytes = (size: number, seed: number): Uint8Array => {
+  const bytes = new Uint8Array(size);
+  for (let index = 0; index < size; index += 1) {
+    bytes[index] = (index * 31 + seed * 17 + (index >>> 8)) & 0xff;
+  }
+  return bytes;
+};
 
 describe("internal/cli/FailureRendering", () => {
   it("stays quiet by default so causes do not leak transcript paths", () => {
@@ -259,6 +290,125 @@ describe("internal/cli/FsGuards", () => {
     const renameOptions = { onError: toError };
     expect(Effect.isEffect(renameOrFail("/a", "/b", renameOptions))).toBe(true);
     expect(Effect.isEffect(renameOrFail("/b", renameOptions)("/a"))).toBe(true);
+  });
+
+  it.layer(NodeServices.layer, { timeout: "120 seconds" })("hashFileSha256", (it) => {
+    it.effect(
+      "produces the published SHA-256 test vectors",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-vectors-" });
+        const digests = yield* Effect.forEach(sha256Vectors, ({ text }, index) => {
+          const filePath = path.join(root, `vector-${index}.bin`);
+          return fs.writeFileString(filePath, text).pipe(Effect.andThen(hashFileSha256(filePath, hashTestError)));
+        });
+
+        expect(digests).toEqual(A.map(sha256Vectors, ({ digest }) => digest));
+      })
+    );
+
+    it.effect(
+      "matches the whole-buffer schema digest across chunk boundaries",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-parity-" });
+        const sizes = [
+          0,
+          1,
+          55,
+          56,
+          64,
+          hashFileChunkBytes - 1,
+          hashFileChunkBytes,
+          hashFileChunkBytes + 1,
+          3 * hashFileChunkBytes + 17,
+        ];
+        const pairs = yield* Effect.forEach(
+          sizes,
+          Effect.fnUntraced(function* (size) {
+            const bytes = patternedBytes(size, size);
+            const filePath = path.join(root, `parity-${size}.bin`);
+            yield* fs.writeFile(filePath, bytes);
+            return {
+              streamed: yield* hashFileSha256(filePath, hashTestError),
+              wholeBuffer: yield* decodeSha256FromBytes(bytes),
+            };
+          })
+        );
+
+        expect(A.map(pairs, ({ streamed }) => streamed)).toEqual(A.map(pairs, ({ wholeBuffer }) => wholeBuffer));
+      })
+    );
+
+    it.effect(
+      "hashes a file far larger than one chunk without reading it whole",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const crypto = yield* Crypto.Crypto;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-large-" });
+        const filePath = path.join(root, "large.bin");
+        const chunkCount = 64;
+        const totalBytes = chunkCount * hashFileChunkBytes;
+
+        // Independent oracle: the platform digest over the same bytes, built
+        // here once so the code under test never sees a whole-file buffer.
+        const whole = new Uint8Array(totalBytes);
+        yield* Effect.forEach(
+          A.range(0, chunkCount - 1),
+          (index) => {
+            const chunk = patternedBytes(hashFileChunkBytes, index);
+            whole.set(chunk, index * hashFileChunkBytes);
+            return fs.writeFile(filePath, chunk, { flag: "a" });
+          },
+          { discard: true }
+        );
+        const expected = Hex.encode(yield* crypto.digest("SHA-256", whole));
+
+        const chunkSizes = MutableList.make<number>();
+        const requestedChunkSizes = MutableList.make<number | undefined>();
+        const wholeFileReads = yield* Ref.make(0);
+        const observedFs: FileSystem.FileSystem = {
+          ...fs,
+          readFile: (target) =>
+            Ref.update(wholeFileReads, (count) => count + 1).pipe(Effect.andThen(fs.readFile(target))),
+          stream: (target, options) => {
+            MutableList.append(requestedChunkSizes, Number(options?.chunkSize));
+            return fs
+              .stream(target, options)
+              .pipe(Stream.tap((chunk) => Effect.sync(() => MutableList.append(chunkSizes, chunk.byteLength))));
+          },
+        };
+
+        const digest = yield* hashFileSha256(filePath, hashTestError).pipe(
+          Effect.provideService(FileSystem.FileSystem, observedFs)
+        );
+        const observedSizes = MutableList.toArray(chunkSizes);
+
+        expect(digest).toBe(expected);
+        expect(yield* Ref.get(wholeFileReads)).toBe(0);
+        expect(MutableList.toArray(requestedChunkSizes)).toEqual([hashFileChunkBytes]);
+        expect(A.length(observedSizes)).toBeGreaterThanOrEqual(chunkCount);
+        expect(Math.max(...observedSizes)).toBeLessThanOrEqual(hashFileChunkBytes);
+        expect(A.reduce(observedSizes, 0, (total, size) => total + size)).toBe(totalBytes);
+      })
+    );
+
+    it.effect(
+      "maps a missing file through the caller's error adapter",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-missing-" });
+        const missing = path.join(root, "missing.bin");
+
+        const error = yield* hashFileSha256(missing, hashTestError).pipe(Effect.flip);
+
+        expect(error).toEqual(new FsGuardTestError({ message: `hash: ${missing}` }));
+      })
+    );
   });
 });
 

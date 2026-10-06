@@ -63,7 +63,10 @@ calls in `goals/ciops-ontology-pipeline/research/decisions.md`. Queue D's organi
 manifest: 22 nonces in both, 0 conflicts); Queue B's issuance and custody legs read `run4-ledger`
 (4,041 pairs, 125 hypothetical would-reuse hits, merged-preview dormant); Queue F's tree-pinned
 convention is the one both manifests carry. Lane reports:
-`research/run4-lanes/stage-c-{w3,w4}-report.md`.
+`research/run4-lanes/stage-c-{w3,w4}-report.md`. Queue B rat-049 (plan-identity contract): the goal's
+P2 lane plan (`ciops-prov:LanePlan`, provisional, S7 contract §8.3) is listed beside
+`VerificationPlanSpecification` as an observed plan whose content, contextual-copy, replacement and
+revision identity the contract must decide; no `subClassOf`, `rdf:type` or equivalence is emitted.
 
 ## Prior-run chain (validator-enforced)
 

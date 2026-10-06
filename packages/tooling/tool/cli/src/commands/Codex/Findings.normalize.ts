@@ -13,12 +13,17 @@ import { A, O, Str } from "@beep/utils";
 import { Effect, HashMap, Order } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { CodexCaptureSource, CodexFindingId, CodexFindingSeverity as Severity } from "./Findings.capture.schemas.ts";
+import {
+  CodexFindingId,
+  SecurityCloudFindingId,
+  CodexFindingSeverity as Severity,
+} from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
 import { CodexFindingRecord, CodexPacketPlan, CodexSeverityCounts } from "./Findings.schemas.ts";
 import type { Ordering } from "effect/Ordering";
 
 const isCloudFindingId = S.is(CodexFindingId);
+const isSecurityCloudFindingId = S.is(SecurityCloudFindingId);
 
 import type { CodexFindingSeverity, CodexFindingsCapturePayload } from "./Findings.capture.schemas.ts";
 
@@ -309,8 +314,12 @@ export const planPacket = Effect.fnUntraced(function* (
   }
 ) {
   // Cloud captures carry only cloud IDs; sealed bundles carry only `local:` IDs.
-  const expectsCloudIds = CodexCaptureSource.is["cloud-csv"](payload.capture.source);
-  if (A.some(payload.findings, (finding) => isCloudFindingId(finding.codexId) !== expectsCloudIds)) {
+  const identityMatchesSource = {
+    "cloud-csv": isCloudFindingId,
+    "security-cloud-csv": isSecurityCloudFindingId,
+    "security-bundle": (id: string) => !isCloudFindingId(id) && !isSecurityCloudFindingId(id),
+  }[payload.capture.source];
+  if (A.some(payload.findings, (finding) => !identityMatchesSource(finding.codexId))) {
     return yield* CodexFindingsIngestError.make({
       reason: "payload-invalid",
       message: "Finding identities do not match the declared capture source.",

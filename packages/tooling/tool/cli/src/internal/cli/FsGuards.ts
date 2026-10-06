@@ -9,8 +9,9 @@
  * deduplication, unique-name, and SHA-256 helpers, each raising its own tagged
  * error. These reproductions accept the failing error as a constructor
  * argument so a command keeps its own error type, and consolidate hashing onto
- * the {@link https://en.wikipedia.org/wiki/SHA-2 SHA-256} `Sha256HexFromBytes`
- * schema from `@beep/schema` (adapters add any `sha256:` prefix themselves).
+ * one bounded-memory streamed {@link https://en.wikipedia.org/wiki/SHA-2 SHA-256}
+ * whose digests match the `Sha256HexFromBytes` schema from `@beep/schema`
+ * (adapters add any `sha256:` prefix themselves).
  * Multi-argument helpers expose dual data-first / data-last call signatures.
  *
  * @packageDocumentation
@@ -19,20 +20,18 @@
 
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
-import { Effect, FileSystem, HashSet, MutableHashSet, Path } from "effect";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { Effect, FileSystem, HashSet, MutableHashSet, Path, Stream } from "effect";
 import * as Eq from "effect/Equal";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { OpaqueDefect } from "../schema/OpaqueDefect.ts";
-import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoCliId.create("internal/cli/FsGuards");
-
-const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 
 const FsGuardFailureReason = LiteralKit([
   "outside-root",
@@ -993,13 +992,33 @@ export const allocateUniqueName: {
 });
 
 /**
+ * Bytes read per chunk while hashing a file: the memory bound of
+ * {@link hashFileSha256}.
+ *
+ * **Example** (Read the hashing chunk size)
+ *
+ * ```ts
+ * import { hashFileChunkBytes } from "@beep/repo-cli/internal/cli/FsGuards"
+ *
+ * console.log(hashFileChunkBytes) // 1048576
+ * ```
+ *
+ * @category hashing
+ * @since 0.0.0
+ */
+export const hashFileChunkBytes = 1024 * 1024;
+
+/**
  * Hash a file's bytes into a canonical lowercase SHA-256 hex digest.
  *
  * **Details**
  *
- * Reads the whole file and decodes through the `Sha256HexFromBytes` schema,
- * so it requires `Crypto.Crypto`. The returned digest is the bare hex string;
- * callers that persist a `sha256:` prefix add it themselves.
+ * Streams the file in {@link hashFileChunkBytes}-sized chunks through an
+ * incremental SHA-256 state, so memory stays bounded by one chunk whatever
+ * the file size and no `Crypto.Crypto` service is needed. The digest equals
+ * the one the `Sha256HexFromBytes` schema derives from the whole byte array.
+ * The returned digest is the bare hex string; callers that persist a
+ * `sha256:` prefix add it themselves.
  *
  * **Example** (Dual hashing call signatures)
  *
@@ -1022,20 +1041,26 @@ export const hashFileSha256: {
   <E>(
     filePath: string,
     onError: (cause: unknown, filePath: string) => E
-  ): Effect.Effect<Sha256Hex, E, FileSystem.FileSystem | Crypto.Crypto>;
+  ): Effect.Effect<Sha256Hex, E, FileSystem.FileSystem>;
   <E>(
     onError: (cause: unknown, filePath: string) => E
-  ): (filePath: string) => Effect.Effect<Sha256Hex, E, FileSystem.FileSystem | Crypto.Crypto>;
+  ): (filePath: string) => Effect.Effect<Sha256Hex, E, FileSystem.FileSystem>;
 } = dual(
   2,
   <E>(
     filePath: string,
     onError: (cause: unknown, filePath: string) => E
-  ): Effect.Effect<Sha256Hex, E, FileSystem.FileSystem | Crypto.Crypto> =>
+  ): Effect.Effect<Sha256Hex, E, FileSystem.FileSystem> =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const bytes = yield* fs.readFile(filePath).pipe(Effect.mapError((cause) => onError(cause, filePath)));
-      return yield* decodeSha256FromBytes(bytes).pipe(Effect.mapError((cause) => onError(cause, filePath)));
+      const hasher = sha256.create();
+      yield* Stream.runForEach(fs.stream(filePath, { chunkSize: hashFileChunkBytes }), (chunk) =>
+        Effect.sync(() => {
+          hasher.update(chunk);
+        })
+      ).pipe(Effect.mapError((cause) => onError(cause, filePath)));
+      // A SHA-256 digest always encodes to 64 lowercase hex characters.
+      return Sha256Hex.make(Hex.encode(hasher.digest()));
     }).pipe(Effect.withSpan("RepoCli.FsGuards.hashFileSha256"))
 );
 

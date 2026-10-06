@@ -9,14 +9,22 @@
  * @since 0.0.0
  */
 
-import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
-import { conformance2026, connectHttp, layerConformanceHttp } from "@beep/mcp-kit/test/Conformance";
+import { composeGatedLayers, FetchableHandle, gatedLayer, MCP_PROTOCOL_VERSION, sanitizedToolkit } from "@beep/mcp-kit";
+import { JsonRpcMessage } from "@beep/mcp-kit/client";
+import {
+  conformance2026,
+  connectHttp,
+  connectStdio,
+  layerConformanceHttp,
+  withStdioServer,
+} from "@beep/mcp-kit/test/Conformance";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
 import {
   DocumentsProjectionOutput,
   MintFetchableHandle,
+  makeServerLayer,
   ProjectDocumentsWithinBudgetOptions,
   projectDocumentsWithinBudget,
   USPTO_MCP_INSTRUCTIONS,
@@ -582,4 +590,78 @@ describe("uspto-mcp through the kit client", () => {
       })
     );
   });
+});
+
+// The production stdio host, protocol list included: `makeServerLayer` is the
+// layer `bin` launches, so these arms fail if the host is narrowed back to
+// the stateless-only list. The conformance runner above cannot see that, as
+// it mounts the registrations on its own stateless transport.
+const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
+const HandshakeResult = S.Struct({
+  protocolVersion: S.String,
+  serverInfo: S.Struct({ name: S.String }),
+  instructions: S.String,
+});
+const HandshakeToolList = S.Struct({ tools: S.Array(S.Struct({ name: S.String })) });
+const decodeHandshakeResult = S.decodeUnknownEffect(HandshakeResult);
+const decodeHandshakeToolList = S.decodeUnknownEffect(HandshakeToolList);
+
+const withProductionStdioHost = withStdioServer(
+  makeServerLayer(UsptoMcpServerConfig.make({ name: "beep-uspto-handshake", version: "0.0.0" })).pipe(
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
+  )
+);
+
+describe("uspto-mcp production stdio host", () => {
+  it.effect("answers the initialize handshake Claude Desktop opens with", () =>
+    withProductionStdioHost((io) =>
+      Effect.gen(function* () {
+        // Regression: a stateless-only list made Claude Desktop fail with
+        // "initialize is not supported by the configured MCP protocols".
+        yield* io.sendMessage(
+          JsonRpcMessage.make({
+            id: 1,
+            method: "initialize",
+            params: {
+              protocolVersion: HANDSHAKE_PROTOCOL_VERSION,
+              capabilities: {},
+              clientInfo: stubClientInfo,
+            },
+          })
+        );
+        const response = yield* io.nextMessage;
+        assert.strictEqual(response.id, 1);
+        assert.isUndefined(response.error);
+        const handshake = yield* decodeHandshakeResult(response.result);
+        assert.strictEqual(handshake.protocolVersion, HANDSHAKE_PROTOCOL_VERSION);
+        assert.strictEqual(handshake.serverInfo.name, "beep-uspto-handshake");
+        assert.strictEqual(handshake.instructions, USPTO_MCP_INSTRUCTIONS);
+        yield* io.sendMessage(JsonRpcMessage.make({ method: "notifications/initialized" }));
+        yield* io.sendMessage(JsonRpcMessage.make({ id: 2, method: "tools/list", params: {} }));
+        const listed = yield* io.nextMessage;
+        assert.strictEqual(listed.id, 2);
+        assert.isUndefined(listed.error);
+        const { tools } = yield* decodeHandshakeToolList(listed.result);
+        assert.include(
+          tools.map((tool) => tool.name),
+          "uspto_search_applications"
+        );
+      })
+    )
+  );
+
+  it.effect("still answers the stateless server/discover path", () =>
+    withProductionStdioHost((io) =>
+      Effect.gen(function* () {
+        const { discovery, rpc } = yield* connectStdio(io);
+        assert.include(discovery.supportedVersions, MCP_PROTOCOL_VERSION);
+        assert.strictEqual(discovery.instructions, USPTO_MCP_INSTRUCTIONS);
+        const { tools } = yield* rpc["tools/list"]({});
+        assert.include(
+          tools.map((tool) => tool.name),
+          "uspto_search_applications"
+        );
+      })
+    )
+  );
 });

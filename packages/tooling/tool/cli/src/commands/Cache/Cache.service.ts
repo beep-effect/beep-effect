@@ -11,6 +11,8 @@ import {
   CacheEvidenceReference,
   CachePolicyAuditRequest,
   CachePolicyBaseline,
+  CachePolicyBaselineRecordRequest,
+  CachePolicyBaselineReview,
   CachePolicyNode,
   CachePolicyProjection,
   CacheQualificationEvent,
@@ -20,12 +22,16 @@ import {
   CacheTaskConfiguration,
   CacheTaskContract,
   cacheLedgerFailures,
+  cachePolicyBaselineFailures,
   isCacheTransitionAllowed,
+  recordCachePolicyBaseline,
 } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Rec from "effect/Record";
+import * as R from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "../../internal/cli/FsGuards.ts";
@@ -42,7 +48,7 @@ import {
   projectCacheSignedActivation,
 } from "./Cache.fingerprint.ts";
 import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
-import type { CachePolicyAuditReport } from "@beep/repo-configs/cache";
+import type { CachePolicyAuditReport, CachePolicyBaselineRecord } from "@beep/repo-configs/cache";
 import type {
   CacheActivationRequest,
   CacheBaselineRequest,
@@ -62,6 +68,46 @@ const StoreJson = JsonStringCodec(CacheQualificationStore);
 const sameKey = S.toEquivalence(CacheQualificationKey);
 const sameContract = S.toEquivalence(CacheTaskContract);
 const sameOptionalDigest = S.toEquivalence(S.Option(CacheEvidenceReference.fields.sha256));
+const sameReference = S.toEquivalence(CacheEvidenceReference);
+const encodePrettyBaseline = S.encodeEffect(S.fromJsonString(CachePolicyBaseline, { space: 2 }));
+
+/**
+ * Encode a reviewed baseline as the pretty-printed JSON text the repository commits.
+ *
+ * **Details**
+ *
+ * The file is indented so each node, review and source occupies its own
+ * lines. Git merges line regions, so two re-records that stamp different
+ * subjects change disjoint regions and merge without conflict; a single
+ * minified line conflicts on every concurrent edit.
+ *
+ * **Example** (Encode a root-only baseline)
+ *
+ * ```ts
+ * import { encodeCachePolicyBaselineText } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * console.assert(Effect.runSync(encodeCachePolicyBaselineText(baseline)).includes("\n  \"reviews\": {\n"))
+ * ```
+ *
+ * @param baseline - The reviewed baseline to serialise.
+ * @returns Indented JSON text ending in a newline.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeCachePolicyBaselineText = Effect.fn("CacheQualification.encodeBaselineText")(function* (
+  baseline: CachePolicyBaseline
+) {
+  const encoded = yield* encodePrettyBaseline(baseline);
+  return `${encoded}\n`;
+});
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 
 const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
@@ -106,9 +152,23 @@ const readStore = Effect.fn("CacheQualification.readStore")(function* (root: str
   return store;
 }, CacheCommandError.mapError("Cannot load qualification ledger."));
 
+const verifyReviewBases = Effect.fn("CacheQualification.verifyReviewBases")(function* (
+  root: string,
+  baseline: CachePolicyBaseline
+) {
+  const bases = A.dedupeWith(
+    A.map(Rec.values(baseline.reviews), (review) => review.basis),
+    sameReference
+  );
+  yield* Effect.forEach(bases, (basis) => verifyReference(root, basis), { discard: true });
+});
+
 const readBaseline = Effect.fn("CacheQualification.readBaseline")(function* (root: string) {
   const baseline = yield* readRequired(root, baselinePath).pipe(Effect.flatMap(BaselineJson.decode));
-  yield* verifyReference(root, baseline.review.basis);
+  const failures = cachePolicyBaselineFailures(baseline);
+  if (A.isReadonlyArrayNonEmpty(failures))
+    return yield* CacheCommandError.new(`Reviewed baseline is incomplete: ${A.join(failures, ", ")}.`);
+  yield* verifyReviewBases(root, baseline);
   return baseline;
 }, CacheCommandError.mapError("Cannot load reviewed cache baseline."));
 
@@ -363,6 +423,16 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
       if (!sameOptionalDigest(expected, request.previous)) {
         return yield* CacheCommandError.new("Reviewed baseline changed; refresh its digest before replacing it.");
       }
+      const previous = yield* O.match(prior, {
+        onNone: () => Effect.succeedNone,
+        onSome: (text) =>
+          BaselineJson.decode(text).pipe(
+            Effect.asSome,
+            CacheCommandError.mapError(
+              "The committed baseline does not decode; remove it and re-record without a previous digest."
+            )
+          ),
+      });
       yield* verifyReference(root, request.review.basis);
       const census = yield* collectCacheCensus(root);
       const projection = projectCensus(census);
@@ -371,13 +441,28 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
           return yield* CacheCommandError.new("Baseline scope contains a missing or graph-only computation.");
         }
       }
-      const baseline = CachePolicyBaseline.make({
-        review: request.review,
-        scope: request.scope,
-        profile: request.profile,
-        epoch: request.epoch,
-        projection,
-      });
+      const record = yield* R.match(
+        recordCachePolicyBaseline(
+          CachePolicyBaselineRecordRequest.make({
+            prior: previous,
+            projection,
+            review: CachePolicyBaselineReview.make({
+              review: request.review,
+              scope: request.scope,
+              profile: request.profile,
+              epoch: request.epoch,
+              subjects: request.subjects,
+            }),
+          })
+        ),
+        {
+          onFailure: (rejection) =>
+            CacheCommandError.new(
+              `Baseline review does not cover the changed subjects. Unreviewed: ${A.join(rejection.unreviewed, ", ")}. Unknown: ${A.join(rejection.unknown, ", ")}.`
+            ),
+          onSuccess: Effect.succeed,
+        }
+      );
       const existingStore = yield* readOptional(root, storePath);
       if (O.isNone(existingStore)) {
         if (O.isSome(prior))
@@ -391,9 +476,9 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
       } else {
         yield* readStore(root);
       }
-      const encoded = yield* BaselineJson.encode(baseline);
-      yield* writeContainedFileString(root, baselinePath, `${encoded}\n`);
-      return baseline;
+      const encoded = yield* encodeCachePolicyBaselineText(record.baseline);
+      yield* writeContainedFileString(root, baselinePath, encoded);
+      return record;
     })
   );
 }, CacheCommandError.mapError("Cannot write reviewed cache baseline."));
@@ -545,11 +630,11 @@ export interface CacheQualificationServiceShape {
   ) => Effect.Effect<CacheActivationPreview, CacheCommandError>;
   /** Read-only effective configuration audit. */
   readonly audit: (root: string) => Effect.Effect<CachePolicyAuditReport, CacheCommandError>;
-  /** Replace a reviewed baseline after its digest precondition matches. */
+  /** Re-record the reviewed baseline after its digest precondition matches, stamping the review on changed subjects. */
   readonly baseline: (
     root: string,
     request: CacheBaselineRequest
-  ) => Effect.Effect<CachePolicyBaseline, CacheCommandError>;
+  ) => Effect.Effect<CachePolicyBaselineRecord, CacheCommandError>;
   /** Observe current configuration, dependency closure and supported runtime pins. */
   readonly fingerprint: (root: string, computation: string) => Effect.Effect<CacheLiveIdentity, CacheCommandError>;
   /** Read the current validated tuple ledger. */

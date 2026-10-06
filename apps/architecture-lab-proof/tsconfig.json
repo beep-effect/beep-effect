@@ -24,6 +24,9 @@
       "path": "../../packages/architecture-lab/use-cases/tsconfig.json"
     },
     {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../packages/tooling/test-kit/test-runner/tsconfig.json"
     },
     {

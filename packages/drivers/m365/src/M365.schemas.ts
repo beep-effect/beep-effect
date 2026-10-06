@@ -752,6 +752,33 @@ export class GraphAttachment extends S.Class<GraphAttachment>($I`GraphAttachment
 ) {}
 
 /**
+ * An Outlook mail folder (read subset).
+ *
+ * **Example** (Make mail folder with id)
+ *
+ * ```ts
+ * import { GraphMailFolder } from "@beep/m365"
+ *
+ * const folder = GraphMailFolder.make({ id: "AAMk" })
+ * console.log(folder.id) // "AAMk"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphMailFolder extends S.Class<GraphMailFolder>($I`GraphMailFolder`)(
+  {
+    id: S.String.annotateKey({ description: "Mail folder id." }),
+    childFolderCount: opt(GraphNonNegativeInt, "Number of immediate child folders."),
+    displayName: opt(S.String, "Folder display name."),
+    parentFolderId: opt(S.String, "Id of the parent mail folder."),
+    totalItemCount: opt(GraphNonNegativeInt, "Number of items in the folder."),
+    unreadItemCount: opt(GraphNonNegativeInt, "Number of unread items in the folder."),
+  },
+  $I.annote("GraphMailFolder", { description: "An Outlook mail folder (read subset)." })
+) {}
+
+/**
  * An Outlook mail message (read subset). Body/preview are decoded but spans
  * never record their content.
  *

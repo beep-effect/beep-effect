@@ -10,7 +10,7 @@ import { HttpsUrl, LiteralKit } from "@beep/schema";
 import { Effect, HashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -146,6 +146,29 @@ export const BoxFolderName = S.String.check(BoxFolderNameChecks).pipe(
 export type BoxFolderName = typeof BoxFolderName.Type;
 
 /**
+ * Normalizes one Box item name into its provider-equivalent sibling-name key.
+ *
+ * **Details**
+ *
+ * Trailing whitespace is trimmed and the remainder is lowercased, so two names
+ * Box treats as the same sibling produce one key suitable for hashing, set
+ * membership, and digesting.
+ *
+ * **Example** (Normalize a sibling name)
+ *
+ * ```ts
+ * import { boxNameEquivalenceKey } from "@beep/box-provisioning/BoxProvisioningIntent"
+ *
+ * console.log(boxNameEquivalenceKey("Workspace ")) // "workspace"
+ * ```
+ *
+ * @see {@link https://developer.box.com/reference/post-folders} for case-insensitive sibling uniqueness.
+ * @category normalization
+ * @since 0.0.0
+ */
+export const boxNameEquivalenceKey: (name: string) => string = flow(Str.trimEnd, Str.toLowerCase);
+
+/**
  * Compares folder names using Box's provider-equivalent sibling-name rules.
  *
  * **Details**
@@ -171,7 +194,7 @@ export const boxFolderNamesEquivalent: {
   (right: string): (left: string) => boolean;
   (left: string, right: string): boolean;
 } = dual(2, (left: string, right: string): boolean =>
-  Eq.equals(pipe(left, Str.trimEnd, Str.toLowerCase), pipe(right, Str.trimEnd, Str.toLowerCase))
+  Eq.equals(boxNameEquivalenceKey(left), boxNameEquivalenceKey(right))
 );
 
 /**

@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { buildPracticeKgBundle, PracticeKgOptions } from "@beep/law-practice-server";
+import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgRunLabel } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -23,14 +23,28 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 
 const corpusRoot = Flag.Directory("corpus-root", { mustExist: true });
 const bundleOut = Flag.Directory("bundle-out").pipe(Flag.optional);
-const includeRefresh = Flag.Boolean("include-refresh").pipe(Flag.withDefault(false));
+const includeRefresh = Flag.Boolean("include-refresh").pipe(
+  Flag.withDescription("Fold in source run 2026-07-refresh; the same as --include-run 2026-07-refresh."),
+  Flag.withDefault(false)
+);
+const includeRun = Flag.String("include-run").pipe(
+  Flag.withDescription(
+    "Fold in one source run by label: its unorganized files and staging/extract-<label> text. Repeatable."
+  ),
+  Flag.withSchema(PracticeKgRunLabel),
+  Flag.atLeast(0)
+);
+const docketRegister = Flag.File("docket-register", { mustExist: true }).pipe(
+  Flag.withDescription("Docket register as JSONL, one {client, docket, clientName} object per line."),
+  Flag.optional
+);
 const skipEmails = Flag.Boolean("skip-emails").pipe(Flag.withDefault(false));
 const maxTextBytes = Flag.Int("max-text-bytes").pipe(Flag.optional);
 const overwrite = Flag.Boolean("overwrite").pipe(Flag.withDefault(false));
 
 const buildCommand = Command.make(
   "build",
-  { bundleOut, corpusRoot, includeRefresh, maxTextBytes, overwrite, skipEmails },
+  { bundleOut, corpusRoot, docketRegister, includeRefresh, includeRun, maxTextBytes, overwrite, skipEmails },
   Effect.fnUntraced(function* (flags) {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
@@ -48,9 +62,13 @@ const buildCommand = Command.make(
         bundleOut: resolvedBundleOut,
         corpusRoot: flags.corpusRoot,
         includeRefresh: flags.includeRefresh,
+        includeRuns: flags.includeRun,
         overwrite: flags.overwrite,
         skipEmails: flags.skipEmails,
-        ...OptionUtils.getSomesStruct({ maxTextBytes: O.map(flags.maxTextBytes, PosInt.make) }),
+        ...OptionUtils.getSomesStruct({
+          docketRegisterPath: flags.docketRegister,
+          maxTextBytes: O.map(flags.maxTextBytes, PosInt.make),
+        }),
       })
     );
     yield* Effect.scoped(

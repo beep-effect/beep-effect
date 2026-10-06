@@ -48,7 +48,7 @@ const RefreshManifestCompletionGate = S.Struct({ statement: S.String }).pipe(
     description: "Existing completion statement whose captured count is reconciled.",
   })
 );
-const RefreshManifestSource = S.Struct({ repository: S.String, capturedAt: S.String }).pipe(
+const RefreshManifestSource = S.Struct({ repository: S.String, capturedAt: S.String, url: S.String }).pipe(
   $I.annoteSchema("RefreshManifestSource", {
     description: "Existing packet capture provenance checked against the incoming snapshot.",
   })
@@ -606,7 +606,8 @@ const validateManifestProvenance = Effect.fnUntraced(function* (
     !Str.equivalence(manifest.initiative.id, plan.slug) ||
     !Str.equivalence(manifest.branch, plan.branch) ||
     !Str.equivalence(manifest.source.repository, plan.repository) ||
-    !Str.equivalence(manifest.source.capturedAt, plan.capturedAt)
+    !Str.equivalence(manifest.source.capturedAt, plan.capturedAt) ||
+    !Str.equivalence(manifest.source.url, plan.sourceUrl)
   ) {
     return yield* ingestFailure(
       "refresh-metadata-drift",
@@ -637,13 +638,8 @@ const reopenManifestPhases = Effect.fnUntraced(function* (
   return merged;
 });
 
-const mergeManifest = Effect.fnUntraced(function* (
-  text: string,
-  plan: CodexPacketPlan,
-  ledger: CodexTriageLedger,
-  appendedCount: number
-) {
-  const parsed = yield* parseJsonText(text).pipe(
+const decodeRefreshManifestText = (text: string) =>
+  parseJsonText(text).pipe(
     Effect.flatMap(decodeRefreshManifest),
     Effect.mapError((cause) =>
       ingestFailure(
@@ -653,8 +649,14 @@ const mergeManifest = Effect.fnUntraced(function* (
       )
     )
   );
-  yield* validateManifestCatalog(parsed, ledger);
-  yield* validateManifestProvenance(parsed, plan);
+
+const mergeManifest = Effect.fnUntraced(function* (
+  text: string,
+  plan: CodexPacketPlan,
+  ledger: CodexTriageLedger,
+  appendedCount: number
+) {
+  const parsed = yield* decodeRefreshManifestText(text);
   const priorCount = ledger.findings.length;
   const priorDispositionCounts = dispositionCountsOf(ledger.findings);
   const capturedCount = plan.records.length;
@@ -1251,6 +1253,12 @@ export const refreshCodexFindingsPacket = Effect.fnUntraced(function* (options: 
     );
   }
   const appended = yield* validateReconciliation(options.plan, options.source);
+  // Validate even a no-new-findings refresh: raw evidence must not silently
+  // switch provider contracts while the authored manifest remains unchanged.
+  const manifestFile = yield* requireSnapshotFile(original, "ops/manifest.json");
+  const manifest = yield* decodeRefreshManifestText(manifestFile.contents);
+  yield* validateManifestCatalog(manifest, options.source.ledger);
+  yield* validateManifestProvenance(manifest, options.plan);
   const priorCount = options.source.ledger.findings.length;
   const capturedCount = options.plan.records.length;
   const mergedFiles = yield* mergeRefreshPacketFiles(

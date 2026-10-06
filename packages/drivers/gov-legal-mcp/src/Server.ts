@@ -12,7 +12,7 @@
 import { Ecfr } from "@beep/ecfr";
 import { Govinfo } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
-import { composeGatedLayers, gatedLayer, sanitizedToolkit, statelessMcpProtocols } from "@beep/mcp-kit";
+import { composeGatedLayers, gatedLayer, handshakeMcpProtocols, sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
@@ -57,7 +57,7 @@ export class GovLegalMcpServerConfig extends S.Class<GovLegalMcpServerConfig>($I
 ) {}
 
 /**
- * Instructions the host advertises through `server/discover`.
+ * Instructions the host advertises on `initialize` and through `server/discover`.
  *
  * **Example** (Reading the advertised instructions)
  *
@@ -72,7 +72,7 @@ export class GovLegalMcpServerConfig extends S.Class<GovLegalMcpServerConfig>($I
  * @since 0.0.0
  */
 export const GOV_LEGAL_MCP_INSTRUCTIONS =
-  "US federal legal sources: the keyless eCFR tools list titles, search regulations and read a title's structure; the GovInfo search tool mounts only when GOVINFO_API_KEY is set. Call tools directly; the host is stateless and needs no initialize handshake.";
+  "US federal legal sources: the keyless eCFR tools list titles, search regulations and read a title's structure; the GovInfo search tool mounts only when GOVINFO_API_KEY is set. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Registrations only: both source toolkits behind their source-auth gates,
@@ -115,10 +115,16 @@ export const GovLegalMcpRegistrationsLive: Layer.Layer<
  *
  * **Details**
  *
- * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
- * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
- * and call tools with request metadata; a legacy `initialize` is answered
- * with `-32022` and the supported list. There is no session.
+ * The host serves the kit's `handshakeMcpProtocols`: the stateless
+ * `2026-07-28` adapter first, then the handshake-era adapters. Stateless
+ * clients open with `server/discover` and call tools with request metadata;
+ * a client that opens with a classic `initialize`, as Claude Desktop does,
+ * gets a negotiated result instead of `-32022`.
+ *
+ * **Gotchas**
+ *
+ * Do not narrow the list to `statelessMcpProtocols`: a stateless-only host
+ * refuses the handshake and never starts under Claude Desktop.
  *
  * **Example** (Building stdio MCP layer)
  *
@@ -145,7 +151,7 @@ export const makeServerLayer = (config: GovLegalMcpServerConfig): Layer.Layer<ne
         name: config.name,
         version: config.version,
         instructions: GOV_LEGAL_MCP_INSTRUCTIONS,
-        protocols: statelessMcpProtocols,
+        protocols: handshakeMcpProtocols,
       })
     ),
     Layer.orDie

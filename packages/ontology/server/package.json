@@ -73,6 +73,7 @@
     "@beep/mcp-kit": "workspace:^",
     "@beep/n3": "workspace:^",
     "@beep/ontology-config": "workspace:^",
+    "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
     "@beep/oxigraph": "workspace:^",
     "@beep/rdf-canonize": "workspace:^",
@@ -81,6 +82,8 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/identity": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",

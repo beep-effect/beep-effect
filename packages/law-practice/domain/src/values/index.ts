@@ -224,6 +224,19 @@ export * from "./CourtInference/index.ts";
  */
 export * from "./DocketCitation/index.ts";
 /**
+ * Docket deadline value-object and date-policy exports.
+ *
+ * **Example** (Import the docket deadline values)
+ *
+ * ```ts
+ * import { DocketResponsePeriod } from "@beep/law-practice-domain/values";
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./DocketDeadline/index.ts";
+/**
  * Durable-locator value-object exports.
  *
  * **Example** (Import the durable-locator value objects)
@@ -489,6 +502,13 @@ export * from "./LegislativeMaterialCitation/index.ts";
  * @since 0.0.0
  */
 export * from "./LocalOrdinanceCitation/index.ts";
+/**
+ * Mail-tagging taxonomy, matching, ledger, and report value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./MailTagging/index.ts";
 /**
  * Neutral-citation value-object exports.
  *

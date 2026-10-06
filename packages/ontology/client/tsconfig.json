@@ -19,7 +19,13 @@
       "path": "../../foundation/capability/observability/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/semantic-web/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"

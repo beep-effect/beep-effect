@@ -6,6 +6,7 @@ import { expect, layer } from "@effect/vitest";
 import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import { FetchHttpClient } from "effect/http";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -54,7 +55,9 @@ layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
       const siblings = yield* fs.readDirectory(path.dirname(manifestPath));
       const backups = A.filter(siblings, Str.startsWith("models.yaml.bak-"));
       expect(backups).toHaveLength(1);
-      expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), backups[0]!))).toContain("bindings: []");
+      expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), O.getOrThrow(A.head(backups))))).toContain(
+        "bindings: []"
+      );
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: adopted the seed into"))).toBe(true);
     }).pipe(withFreshConsole)

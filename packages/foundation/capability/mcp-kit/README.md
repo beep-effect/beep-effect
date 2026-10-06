@@ -4,8 +4,11 @@ Reusable MCP host-construction kit: credential-keyed toolkit composition, the
 `api_key_required` envelope, tier-gate dispatch, progressive field-tier
 projection, span hygiene, and the in-repo MCP `2026-07-28` client — built
 natively on `effect/ai` (`Tool`, `Toolkit`, `McpServer`, `McpSchema`)
-at `effect@4.0.0-rc.117`. The kit pins one protocol revision, the stateless
-`2026-07-28` adapter (`statelessMcpProtocols`); hosts move to it one at a time
+at `effect@4.0.0-rc.117`. The kit targets one protocol revision, the stateless
+`2026-07-28` adapter, and owns the two protocol lists a host chooses from:
+`statelessMcpProtocols` for a host only stateless clients reach, and
+`handshakeMcpProtocols` (stateless first, then the handshake-era adapters) for
+a host that a handshake client such as Claude Desktop launches
 (`goals/mcp-stateless-kit-and-drivers`).
 
 ## Consumers (`foundation/capability` ≥2-consumer gate)
@@ -17,9 +20,9 @@ protocol its host serves (`rg -n '"@beep/mcp-kit' --glob package.json`):
 | Consumer | Uses it for | Protocol state |
 | --- | --- | --- |
 | `packages/drivers/m365-mcp` | `statelessMcpProtocols` + `sanitizedToolkit` (`Server.ts`), `annotateFourHints` (`M365Tools.ts`); `conformance2026` and a kit-client-framed stdio test | `v2026_07_28` only (PR 2 of the goal) |
-| `packages/drivers/uspto-mcp` | `statelessMcpProtocols`, `SourceAuth` registry, `composeGatedLayers`, `api_key_required` envelope, `FieldTier` document tiers, `sanitizedToolkit`; `conformance2026` plus an array `structuredContent` proof through the kit client | `v2026_07_28` only (PR 2) |
-| `packages/drivers/gov-legal-mcp` | `statelessMcpProtocols`, `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit`; `conformance2026` | `v2026_07_28` only (PR 3) |
-| `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `statelessMcpProtocols`, `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers; `conformance2026` over a fixture bundle, compiled `.mcpb` smoke speaks `server/discover` | `v2026_07_28` only (PR 3) |
+| `packages/drivers/uspto-mcp` | `handshakeMcpProtocols`, `SourceAuth` registry, `composeGatedLayers`, `api_key_required` envelope, `FieldTier` document tiers, `sanitizedToolkit`; `conformance2026`, an array `structuredContent` proof through the kit client, and an `initialize` proof against the production stdio layer | `v2026_07_28` first, plus the handshake-era adapters |
+| `packages/drivers/gov-legal-mcp` | `handshakeMcpProtocols`, `SourceAuth`, `composeGatedLayers`, `annotateFourHints`, `sanitizedToolkit`; `conformance2026` and an `initialize` proof against the production stdio layer | `v2026_07_28` first, plus the handshake-era adapters |
+| `packages/law-practice/server` (+ `apps/practice-kg-mcp`) | `handshakeMcpProtocols` (as `practiceKgMcpProtocols`), `composeGatedLayers`, `SourceAuthRegistration`, `sanitizedToolkit`, `CurrentMcpCaller` in tool handlers; `conformance2026` over a fixture bundle, compiled `.mcpb` smoke speaks `server/discover` and `initialize` | `v2026_07_28` first, plus the handshake-era adapters |
 | `packages/law-practice/use-cases` | `annotateFourHints` on the practice-kg toolkit | n/a (toolkit definitions) |
 | `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held: the 2026-09-22 capture in the goal's `history/nlp-mcp-capture.md` shows Claude Code defaults stdio to `initialize`; re-entry gate in the exploration MAP) |
 | `packages/ontology/use-cases` | `annotateFourHints` on the ontology toolkit | n/a (toolkit definitions) |
@@ -73,9 +76,11 @@ kit never interprets it.
    absent-by-default dispatch anchor app composition may provide.
 8. **`ToolAnnotations`** — the four-hint (`readOnly`/`destructive`/
    `idempotent`/`openWorld`) annotation helper.
-9. **`Version`** — `VERSION`, `MCP_PROTOCOL_VERSION` (`2026-07-28`) and
-   `statelessMcpProtocols`, the one protocol list every kit host passes to
-   `McpServer.layerStdio` / `McpServer.layerHttp`.
+9. **`Version`** — `VERSION`, `MCP_PROTOCOL_VERSION` (`2026-07-28`) and the
+   two protocol lists a kit host passes to `McpServer.layerStdio` /
+   `McpServer.layerHttp`: `statelessMcpProtocols` (stateless clients only) and
+   `handshakeMcpProtocols` (also answers the classic `initialize` a client
+   such as Claude Desktop opens with).
 10. **`@beep/mcp-kit/client`** — the kit-owned `2026-07-28` client:
     `McpClientRpcs` (`server/discover`, `tools/list`, `tools/call`,
     `prompts/list`, `prompts/get`, `resources/read`), the `_meta` keys and

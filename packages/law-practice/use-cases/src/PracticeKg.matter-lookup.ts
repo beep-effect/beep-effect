@@ -199,7 +199,9 @@ export class PracticeKgMatterDocket extends S.Class<PracticeKgMatterDocket>($I`P
  * unattributed remainder of a family number, whose documents carry no client
  * evidence. Such a matter, and any matter whose `epistemicStatus` is
  * `recycled-unverified`, must be confirmed by a person before anything is filed
- * or tagged under it.
+ * or tagged under it. `clientName` comes from the attorney's docket register by
+ * client number and is null when the register does not list the client or
+ * lists it under more than one name.
  *
  * **Example** (Make a matter)
  *
@@ -209,6 +211,7 @@ export class PracticeKgMatterDocket extends S.Class<PracticeKgMatterDocket>($I`P
  * const matter = PracticeKgMatter.make({
  *   attributionSource: "text-reference",
  *   client: "12345",
+ *   clientName: "Example Client",
  *   docketCount: 1,
  *   dockets: [],
  *   documentCount: 4,
@@ -227,6 +230,9 @@ export class PracticeKgMatter extends S.Class<PracticeKgMatter>($I`PracticeKgMat
   {
     attributionSource: KgAttributionSource,
     client: S.NullOr(S.String),
+    clientName: S.NullOr(S.String).annotateKey({
+      description: "Client name from the attorney's docket register; null when it does not name the client.",
+    }),
     docketCount: S.Finite,
     dockets: S.Array(PracticeKgMatterDocket),
     documentCount: S.Finite,
@@ -249,7 +255,7 @@ export class PracticeKgMatter extends S.Class<PracticeKgMatter>($I`PracticeKgMat
  * import { PracticeKgMatterLookupResult } from "@beep/law-practice-use-cases/server"
  *
  * const result = PracticeKgMatterLookupResult.make({
- *   bundleVersion: "2026-10-06-01",
+ *   bundleVersion: "2026-10-06-02",
  *   matters: [],
  *   reference: "99999US01",
  *   resolution: "none"
@@ -302,7 +308,28 @@ export class PracticeKgMatterLookupError extends S.TaggedError<PracticeKgMatterL
   })
 ) {}
 
-const docketCountryCodes = [
+/**
+ * Country stages a practice docket can carry, in the order the patterns try them.
+ *
+ * **Details**
+ *
+ * One list serves every place that recognises a docket: the reference
+ * extractor in this module and the bundle build's text scan. Adding a stage
+ * here widens both together.
+ *
+ * **Example** (Check a country stage)
+ *
+ * ```ts
+ * import { practiceKgDocketCountryCodes } from "@beep/law-practice-use-cases/server"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.contains(practiceKgDocketCountryCodes, "BR")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const practiceKgDocketCountryCodes: ReadonlyArray<string> = [
   "US",
   "WO",
   "EP",
@@ -326,7 +353,7 @@ const docketCountryCodes = [
   "NZ",
   "MX",
 ];
-const docketBody = `[0-9]{5,6}(?:${A.join(docketCountryCodes, "|")})[0-9]{0,3}(?:-[A-Z]{2}[0-9]+)?(?![0-9A-Z])`;
+const docketBody = `[0-9]{5,6}(?:${A.join(practiceKgDocketCountryCodes, "|")})[0-9]{0,3}(?:-[A-Z]{2}[0-9]+)?(?![0-9A-Z])`;
 const docketReferencePattern = new RegExp(`(?<![0-9.A-Z])(?:[0-9]{4,6}\\.)?${docketBody}`, "giu");
 const keyedDocketPattern = new RegExp(`(?<![0-9.A-Z])([0-9]{4,6})\\.(${docketBody})`, "giu");
 const clientPrefixPattern = /^[0-9]{4,6}\./u;

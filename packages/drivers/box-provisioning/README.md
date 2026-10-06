@@ -84,6 +84,107 @@ entries so the remaining work can resume. Dependency revalidation compares the
 parent's provider id, parent id, and canonical name, not its etag, because Box
 does not document whether child membership changes a folder's etag.
 
+## Content migration
+
+`BoxContentMigration` moves local files into a Box folder tree that already
+exists under a root folder owned by the service identity. It is a separate
+service from `BoxProvisioning` and follows the same rule: plan read-only, then
+apply only a plan that a fresh run reproduces.
+
+```ts
+import { Box } from "@beep/box"
+import { BoxContentMigration, encodeBoxContentMigrationPlan } from "@beep/box-provisioning"
+import { Effect, Layer } from "effect"
+
+const makeMigrationLive = (boxLive: Layer.Layer<Box>) =>
+  BoxContentMigration.liveLayer.pipe(Layer.provide(boxLive))
+
+// 1. Dry run: reads sources and Box, writes nothing.
+const dryRun = (mapInput: unknown) =>
+  Effect.gen(function* () {
+    const migration = yield* BoxContentMigration
+    return yield* encodeBoxContentMigrationPlan(yield* migration.plan(mapInput))
+  })
+
+// 2. Review the plan JSON and its `planDigest`, then 3. apply that exact JSON.
+const apply = (mapInput: unknown, reviewedPlanJson: string) =>
+  Effect.gen(function* () {
+    const migration = yield* BoxContentMigration
+    return yield* migration.applyReviewedPlan(mapInput, reviewedPlanJson)
+  })
+```
+
+The migration map (`box-content-migration-map/v1`) lists source files by
+relative path, SHA-256, and size, each with a destination folder path and file
+name, plus folders that must exist even when empty. It pins
+`expectedEnterpriseId` and `expectedSubjectId`; `plan` and `applyReviewedPlan`
+check both through `users.getUserMe` before they read a source or list a
+folder. The map holds names and paths and stays in the secure runner. The plan,
+receipt, and journal identify folders and files only by SHA-256 digests,
+provider ids, sizes, and counts.
+
+**Dry run.** `plan` hashes every source in one streaming pass (SHA-256 to
+verify the map, SHA-1 to compare with Box), walks the required folders top-down
+from the root, lists only folders that exist, and classifies each file:
+
+| Action | Meaning |
+| --- | --- |
+| `FolderExists` / `FolderCreate` | Required folder is present, or will be created |
+| `Upload` | Name is free; `transport` is `single` or `chunked` |
+| `SkipIdentical` | Same name already in Box with the local SHA-1 |
+| `BlockedNameConflict` | Same name in Box with other content |
+| `BlockedSourceMissing` / `BlockedSourceChanged` | Source absent, or its size or SHA-256 differs from the map |
+
+Names compare the way Box compares siblings: case-insensitively, ignoring
+trailing whitespace. The plan carries no timestamp, so an unchanged tenant and
+unchanged sources produce a byte-identical plan.
+
+**Apply.** `applyReviewedPlan` plans again and fails with
+`BoxProvisioningDriftError` before any write if the digest differs from the
+reviewed one. It then creates missing folders in depth order and uploads the
+`Upload` actions with bounded concurrency (`uploadConcurrency`, default 4).
+Files at or above `chunkedThresholdBytes` (default 50 MiB, minimum 20 MiB) use
+Box's chunked upload; smaller files use one request carrying the SHA-1 as the
+`Content-MD5` header. After each upload the returned `sha1` must equal the
+local SHA-1, otherwise the action is `Failed`. The result holds the receipt, a
+fresh `postPlan`, and a `verdict` that is `complete` only when the post-apply
+plan contains nothing but `FolderExists` and `SkipIdentical`.
+
+**Never overwrite.** The engine creates folders and uploads new files. It never
+overwrites, versions, renames, moves, or deletes a Box item, and it opens
+sources read-only. A name taken by different content stays
+`BlockedNameConflict` on every run. An upload that Box stores with an
+unexpected `sha1` is reported and left in place; the next plan shows it as a
+name conflict for an operator to resolve.
+
+**Resumability.** One failed upload does not stop the others, and a failed
+folder create skips only its dependents. To resume after a partial run or a
+crash, run `plan` again: finished uploads appear as `SkipIdentical`, created
+folders as `FolderExists`, and applying that new plan sends only what is
+missing. If a folder create meets a 409 because another writer created it
+first, the engine re-lists the parent and adopts the folder with the
+equivalent name; the journal records it as `AdoptedExistingFolder`. Provide
+`BoxContentMigrationJournal` through `liveLayerWithJournal` to persist
+`Started`, `Applied`, `Failed`, `Skipped`, and `AdoptedExistingFolder` entries
+as the run proceeds. An append failure stops the run.
+
+**API budget.** `maxProviderCalls` is a hard cap on Box calls for one run. Each
+listing page, the identity check, each folder create, and each single upload
+count as one call; a chunked upload counts as `3 + ceil(size / 8 MiB)`. The
+plan's `summary.estimatedProviderCalls` is the budget a full apply of that plan
+needs, including its own fresh plan and the post-apply plan. Writes are
+admitted in plan order while the remaining budget still covers the post-apply
+plan; the first write that does not fit, and every write after it, is reported
+`NotAttempted` with reason `budget-exhausted`. A run whose budget cannot cover
+its required reads fails with `BoxContentMigrationBudgetError` before writing.
+The count covers the calls the engine issues: a request the Box SDK retries
+internally after a 429 or 5xx is counted once, and the chunked figure assumes
+Box's 8 MiB minimum part size, so it never undercounts parts.
+
+**Memory.** Sources are hashed as a stream. The Box SDK buffers a
+single-request upload whole and a chunked upload one part at a time, so peak
+upload memory is about `uploadConcurrency` times `chunkedThresholdBytes`.
+
 ## Development checks
 
 ```bash

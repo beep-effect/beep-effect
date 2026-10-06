@@ -65,6 +65,7 @@
     "@beep/architecture-lab-server": "workspace:^",
     "@beep/architecture-lab-ui": "workspace:^",
     "@beep/architecture-lab-use-cases": "workspace:^",
+    "@beep/identity": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

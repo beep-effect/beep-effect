@@ -13,11 +13,7 @@ import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import {
-  BoxProvisioningSchemaError,
-  BoxProvisioningSubjectMismatchError,
-  BoxProvisioningTenantMismatchError,
-} from "./BoxProvisioningErrors.ts";
+import { BoxProvisioningSchemaError } from "./BoxProvisioningErrors.ts";
 import {
   BoxCollaborationIntent,
   BoxDesiredState,
@@ -55,8 +51,13 @@ import {
   encodedDigest,
   sealBoxProvisioningPlan,
 } from "./internal/canonical.ts";
+import { assertExpectedBoxIdentity } from "./internal/live.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as S from "effect/Schema";
+import type {
+  BoxProvisioningSubjectMismatchError,
+  BoxProvisioningTenantMismatchError,
+} from "./BoxProvisioningErrors.ts";
 import type { BoxAdoption, BoxEntitlementAvailability, BoxLogicalKey, BoxPlanName } from "./BoxProvisioningIntent.ts";
 import type { BoxDiscovery, BoxProviderRevision } from "./BoxProvisioningObserved.ts";
 import type { BoxPlanAction, BoxResourceKind } from "./BoxProvisioningPlan.ts";
@@ -470,20 +471,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   observed: BoxObservedState,
   additionalAdoptions: ReadonlyArray<BoxAdoption> = A.empty()
 ) {
-  const expectedEnterpriseId = desired.expectedEnterpriseId;
-  if (!Equal.equals(expectedEnterpriseId, observed.enterpriseId)) {
-    return yield* BoxProvisioningTenantMismatchError.make({
-      expectedEnterpriseId,
-      actualEnterpriseId: observed.enterpriseId,
-    });
-  }
-  const expectedSubjectId = desired.expectedSubjectId;
-  if (!Equal.equals(expectedSubjectId, observed.subjectId)) {
-    return yield* BoxProvisioningSubjectMismatchError.make({
-      expectedSubjectId,
-      actualSubjectId: observed.subjectId,
-    });
-  }
+  yield* assertExpectedBoxIdentity(desired, observed);
 
   const canonicalDesired = canonicalBoxDesiredState(desired);
   const canonicalObserved = canonicalBoxObservedState(observed);
@@ -672,7 +660,7 @@ const planBoxProvisioningRaw = Effect.fn("BoxProvisioningPlanner.plan")(function
   );
   const draft = BoxProvisioningPlan.make({
     sourceRevision: canonicalDesired.sourceRevision,
-    expectedEnterpriseId,
+    expectedEnterpriseId: desired.expectedEnterpriseId,
     subjectId: canonicalObserved.subjectId,
     rootFolderId: canonicalObserved.rootFolderId,
     desiredStateDigest: yield* encodedDigest(BoxDesiredState, canonicalDesired),

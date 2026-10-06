@@ -345,6 +345,21 @@ describe("codex findings source identity consistency", () => {
     })
   );
 
+  it.effect("preserves Security Cloud identities and rejects cross-source aliases", () =>
+    Effect.gen(function* () {
+      const finding = captureFinding({ codexId: `commit:${hex("aa", 32)}` });
+      const payload = payloadOf([finding]);
+      const cloud = { ...payload, capture: { ...payload.capture, source: "security-cloud-csv" } };
+      const plan = yield* planFrom(cloud);
+      expect(plan.records[0]?.codexId).toBe(finding.codexId);
+      expect(yield* reasonOf(payload)).toBe("payload-invalid");
+      expect(yield* reasonOf(sealedPayloadOf([finding]))).toBe("payload-invalid");
+      expect(yield* reasonOf({ ...cloud, findings: [captureFinding({ codexId: hex("aa", 32) })] })).toBe(
+        "payload-invalid"
+      );
+    })
+  );
+
   it.effect("reserves no ordinal for a prior binding that is not a CSF identity", () =>
     Effect.gen(function* () {
       const plan = yield* decodePayload(payloadOf([captureFinding({ codexId: hex("aa", 32) })])).pipe(

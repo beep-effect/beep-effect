@@ -10,13 +10,15 @@ import {
   SessionLedger,
   SessionLedgerError,
   SessionLedgerRow,
+  SessionOpenReport,
+  SessionOpenReportJson,
   sessionCheckoutFacts,
   sessionHarness,
   sessionLedgerFileName,
 } from "@beep/repo-cli/test/Session";
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it, vi } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -24,6 +26,7 @@ import { Command } from "effect/cli";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
@@ -130,6 +133,25 @@ const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effec
     })
   );
   return A.join(A.map(output, String), "\n");
+});
+
+describe("session report encoding", () => {
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("reports a failed JSON report encode through the CLI error boundary", () =>
+      withScratchCheckout(({ clone }) =>
+        Effect.gen(function* () {
+          const cause = yield* S.encodeUnknownEffect(SessionOpenReport)(undefined).pipe(Effect.flip);
+          const encoder = vi.spyOn(SessionOpenReportJson, "encode").mockReturnValue(Effect.fail(cause));
+          const error = yield* withCwd(clone, runSession(["open", "--json"])).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => encoder.mockRestore()))
+          );
+          expect(error._tag).toBe("CliReportedExit");
+          expect(error.message).toBe("[session] Failed to encode the session report.");
+        })
+      )
+    );
+  });
 });
 
 const runSession = Command.runWith(sessionCommand, { version: "0.0.0" });
@@ -401,6 +423,7 @@ describe("session ledger memory layer", () => {
         yield* ledger.append(elsewhere({ owner: "someone" }, "other owner"));
         yield* ledger.append(elsewhere({ name: "other" }, "other name"));
         expect(A.map(yield* ledger.list(repository), (item) => item.next)).toStrictEqual(["ours"]);
+        expect(yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }))).toStrictEqual([]);
       })
     );
   });

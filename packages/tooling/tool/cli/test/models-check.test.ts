@@ -217,7 +217,10 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         modelSettings: { "claude-opus-5": { effortLevel: "low" } },
       });
       expect(A.map(drift, (entry) => entry.kind)).toEqual(["stale"]);
-      assertSome(drift[0]!.current, "low");
+      assertSome(
+        O.flatMap(A.head(drift), (finding) => finding.current),
+        "low"
+      );
     })
   );
 
