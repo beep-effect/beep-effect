@@ -269,3 +269,12 @@ fleet-root clone, whose ledger holds pre-cut rows only. The pairing rule of the 
 likewise amended (brief addendum W4-A6): pairing is computed over decoded rows, an orphan adjacent
 to a torn line or the unterminated tail is counted and kept but never paired, and only an orphan
 with intact neighbours fails the capture.
+
+**Operating note — autonomy charter adopted (2026-10-06).** The operator's autonomy charter
+(PR #1448, `AGENTS.md` "Autonomy"), relayed by the "Merge open PRs" orchestrator session and
+confirmed by Benjamin directly in the P1 session, applies to this goal from here on: steward-style
+calls (gate amendments, "the PR is final", phase starts) are made by the pin lane's orchestrator
+and recorded here with their reason and reversal; the goal runs phase to phase to
+`completed-retained` without a steward go at each boundary; review loops stop after round 2
+(P0/P1 always fixed, lower priorities from round 3 become tracked follow-ups); only money goes to
+the operator. Reversal: a later entry here, or the operator withdrawing the charter.
