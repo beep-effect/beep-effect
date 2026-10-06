@@ -1,11 +1,14 @@
 /**
  * Conservative janitor for known temporary artifacts on Linux tmpfs roots.
  *
- * Discovery is closed over six explicit artifact families across `/tmp` and
- * a distinct absolute `TMPDIR`. Reaping requires
- * classification, an old-enough idleness clock, zero live `/proc` cwd or file
- * descriptor references, and no matching kernel lock. Linked Git worktrees go
- * through `git worktree remove`; arbitrary directories are never touched.
+ * Discovery is closed over six explicit artifact families across `/tmp`, a
+ * distinct absolute `TMPDIR`, and the disk-backed beep cache root (head
+ * installs under `beep/head-install`, Fallow audit base snapshots under
+ * `beep/fallow`). Reaping requires classification, an old-enough idleness
+ * clock, zero live `/proc` cwd or file descriptor references, and no matching
+ * kernel lock. A Fallow snapshot whose recorded owner root no longer exists is
+ * abandoned and needs no idle age at all. Linked Git worktrees go through
+ * `git worktree remove`; arbitrary directories are never touched.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -14,11 +17,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { ByteSize, Clock, Config, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
+import { ByteSize, Clock, DateTime, Duration, Effect, FileSystem, Number as N, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { WORKTREES_ROOT_SUFFIX } from "../../commands/Worktree/Worktree.constants.ts";
+import { configuredPath, resolveBeepCacheRoot } from "./BeepCacheRoot.ts";
+import { FALLOW_AUDIT_CACHE_SEGMENTS } from "./FallowAuditCache.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
 import type * as Crypto from "effect/Crypto";
@@ -67,6 +72,10 @@ type DiscoveredCandidate = {
   readonly classified: boolean;
   readonly shapeSkipReason: O.Option<TmpfsReapSkipReason>;
   readonly parentRepo: O.Option<string>;
+  /** Project root recorded in a Fallow `.last-used` sidecar, when readable. */
+  readonly ownerRoot: O.Option<string>;
+  /** `Some(true)` when the recorded owner root is gone, so the snapshot is abandoned. */
+  readonly ownerRootMissing: O.Option<boolean>;
 };
 
 type ProcessReferences = {
@@ -294,6 +303,8 @@ const discoverGitWorktree = Effect.fnUntraced(function* (
         classified: O.isSome(parentRepo),
         shapeSkipReason: O.none(),
         parentRepo,
+        ownerRoot: O.none(),
+        ownerRootMissing: O.none(),
       };
     })
   );
@@ -324,6 +335,26 @@ const fallowIdleSinceMillis = Effect.fnUntraced(function* (
   const lastUsedPaths = yield* fallowLastUsedPaths(candidatePath, siblingNames);
   const readings = A.getSomes(yield* Effect.forEach(lastUsedPaths, statMtimeMillis, { concurrency: 16 }));
   return newestMillis(readings, candidateMtimeMillis);
+});
+
+const fallowOwnerRoot = Effect.fnUntraced(function* (
+  candidatePath: string,
+  siblingNames: ReadonlyArray<string>
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  const lastUsedPaths = yield* fallowLastUsedPaths(candidatePath, siblingNames);
+  const contents = A.getSomes(
+    yield* Effect.forEach(lastUsedPaths, (lastUsed) => fs.readFileString(lastUsed).pipe(Effect.option), {
+      concurrency: 4,
+    })
+  );
+  return pipe(
+    A.flatMap(contents, (content) => Str.split(content, "\n")),
+    A.map(Str.trim),
+    A.findFirst((line) => Str.isNonEmpty(line) && pathService.isAbsolute(line)),
+    O.map(pathService.normalize)
+  );
 });
 
 const isScopedTempName = (name: string): boolean =>
@@ -368,6 +399,8 @@ const discoverVitestForksTmp = Effect.fnUntraced(function* (
     classified: true,
     shapeSkipReason: O.none(),
     parentRepo: O.none(),
+    ownerRoot: O.none(),
+    ownerRootMissing: O.none(),
   });
 });
 
@@ -394,6 +427,8 @@ const discoverDanglingWorktreeStub = Effect.fnUntraced(function* (
     classified: shape.classified && contentsAreExact,
     shapeSkipReason: shape.classified && !contentsAreExact ? O.some("contents-present") : shape.shapeSkipReason,
     parentRepo,
+    ownerRoot: O.none(),
+    ownerRootMissing: O.none(),
   };
 });
 
@@ -425,6 +460,8 @@ const discoverWorktreeStubs = Effect.fnUntraced(function* (
             classified: false,
             shapeSkipReason: O.some("wrong-shape"),
             parentRepo: O.none(),
+            ownerRoot: O.none(),
+            ownerRootMissing: O.none(),
           });
         }
         const worktreesRoot = canonicalWorktreesRoot.value;
@@ -458,6 +495,8 @@ const discoverWorktreeStubs = Effect.fnUntraced(function* (
                 classified: false,
                 shapeSkipReason: O.some("wrong-shape"),
                 parentRepo: O.none(),
+                ownerRoot: O.none(),
+                ownerRootMissing: O.none(),
               });
             }
             return O.some(yield* discoverDanglingWorktreeStub(root, candidatePath, idleSinceMillis));
@@ -513,9 +552,12 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
       classified: true,
       shapeSkipReason: O.none(),
       parentRepo: O.none(),
+      ownerRoot: O.none(),
+      ownerRootMissing: O.none(),
     });
   }
   if (Str.startsWith(FALLOW_CACHE_PREFIX)(name)) {
+    const ownerRoot = yield* fallowOwnerRoot(candidatePath, siblingNames);
     return O.some({
       root,
       path: candidatePath,
@@ -524,6 +566,8 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
       classified: true,
       shapeSkipReason: O.none(),
       parentRepo: O.none(),
+      ownerRoot,
+      ownerRootMissing: yield* optionalStatIsMissing(ownerRoot),
     });
   }
   if (isScopedTempName(name)) {
@@ -535,6 +579,8 @@ const classifyTopLevelDirectory = Effect.fnUntraced(function* (
       classified: true,
       shapeSkipReason: O.none(),
       parentRepo: O.none(),
+      ownerRoot: O.none(),
+      ownerRootMissing: O.none(),
     });
   }
   const vitest = yield* discoverVitestForksTmp(root, candidatePath, name, candidateMtime);
@@ -551,23 +597,33 @@ const discoverTopLevel = Effect.fnUntraced(function* (
   return A.appendAll(topLevel, yield* discoverWorktreeStubs(root, names));
 });
 
-const discoverCacheHeadInstalls = Effect.fnUntraced(function* (
-  cacheRoot: string
+// Both disk-backed families live under the beep cache root: head installs
+// under `beep/head-install`, Fallow audit snapshots under `beep/fallow`.
+const discoverCacheFamily = Effect.fnUntraced(function* (
+  cacheRoot: string,
+  segments: ReadonlyArray<string>,
+  prefix: string
 ): Effect.fn.Return<ReadonlyArray<DiscoveredCandidate>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
   const canonicalCacheRoot = yield* fs.realPath(cacheRoot).pipe(Effect.orElseSucceed(() => cacheRoot));
-  const configuredBase = pathService.join(canonicalCacheRoot, "beep", "head-install");
+  const configuredBase = pathService.join(canonicalCacheRoot, ...segments);
   const base = yield* fs.realPath(configuredBase).pipe(Effect.orElseSucceed(() => configuredBase));
   if (!pathIsWithin(pathService, canonicalCacheRoot, base)) {
     return A.empty();
   }
   const names = yield* directoryNames(base);
-  const headNames = A.filter(names, Str.startsWith(HEAD_INSTALL_PREFIX));
+  const familyNames = A.filter(names, Str.startsWith(prefix));
   return A.getSomes(
-    yield* Effect.forEach(headNames, (name) => classifyTopLevelDirectory(base, name, names), { concurrency: 16 })
+    yield* Effect.forEach(familyNames, (name) => classifyTopLevelDirectory(base, name, names), { concurrency: 16 })
   );
 });
+
+const discoverCacheHeadInstalls = (cacheRoot: string) =>
+  discoverCacheFamily(cacheRoot, ["beep", "head-install"], HEAD_INSTALL_PREFIX);
+
+const discoverCacheFallowCaches = (cacheRoot: string) =>
+  discoverCacheFamily(cacheRoot, FALLOW_AUDIT_CACHE_SEGMENTS, FALLOW_CACHE_PREFIX);
 
 const discoverExplicitGitWorktrees = Effect.fnUntraced(function* (
   tmpRoot: string,
@@ -731,11 +787,16 @@ const worktreeIsDirty = Effect.fnUntraced(function* (
   });
 });
 
-const thresholdFor = (reapClass: TmpfsReapClass): Duration.Duration =>
-  TmpfsReapClass.$match(reapClass, {
+// A Fallow snapshot only reaches the age gate once no process holds it, so a
+// held-by-nobody snapshot waits one hour for its lane to come back; one whose
+// recorded owner root is gone can never be reused and waits for nothing.
+const FALLOW_CACHE_IDLE_THRESHOLD = Duration.hours(1);
+
+const thresholdFor = (candidate: DiscoveredCandidate): Duration.Duration =>
+  TmpfsReapClass.$match(candidate.reapClass, {
     "git-worktree": () => Duration.hours(2),
     "head-install": () => Duration.hours(1),
-    "fallow-cache": () => Duration.hours(6),
+    "fallow-cache": () => (O.contains(candidate.ownerRootMissing, true) ? Duration.zero : FALLOW_CACHE_IDLE_THRESHOLD),
     "scoped-temp": () => Duration.hours(2),
     "vitest-forks-tmp": () => Duration.hours(24),
     "dangling-worktree-stub": () => Duration.hours(2),
@@ -776,7 +837,7 @@ const stateSkipReason = (
   if (dirtyWorktree) {
     return O.some("dirty-worktree");
   }
-  return ageHours < Duration.toHours(thresholdFor(candidate.reapClass)) ? O.some("too-young") : O.none();
+  return ageHours < Duration.toHours(thresholdFor(candidate)) ? O.some("too-young") : O.none();
 };
 
 const skipReasonFor = (
@@ -1049,55 +1110,10 @@ const candidateModel = (candidate: MeasuredCandidate): TmpfsReapCandidate =>
     ...O.getSomesStruct({
       skipReason: candidate.skipReason,
       parentRepo: candidate.discovered.parentRepo,
+      ownerRoot: candidate.discovered.ownerRoot,
       bytes: candidate.bytes,
     }),
   });
-
-/**
- * Resolve the cache root used for persistent beep temporary installations.
- *
- * `XDG_CACHE_HOME` wins when non-empty; otherwise the root is `$HOME/.cache`.
- * An explicit override bypasses ambient configuration for tests and callers
- * that already resolved policy.
- *
- * **Example** (Build the resolution effect)
- *
- * ```ts
- * import { resolveBeepCacheRoot } from "@beep/repo-cli/test/RepoRun"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(resolveBeepCacheRoot())) // true
- * ```
- *
- * @param override - Explicit cache root, primarily for fixture isolation.
- * @returns The absolute cache root.
- * @category configuration
- * @since 0.0.0
- */
-export const resolveBeepCacheRoot = Effect.fn("TmpfsReap.resolveBeepCacheRoot")(function* (override?: string) {
-  const pathService = yield* Path.Path;
-  const explicit = O.fromUndefinedOr(override);
-  if (O.isSome(explicit)) {
-    return pathService.resolve(explicit.value);
-  }
-  const configured = yield* Config.option(Config.String("XDG_CACHE_HOME"));
-  const cacheRoot = O.filter(configured, Str.isNonEmpty);
-  if (O.isSome(cacheRoot)) {
-    return pathService.resolve(cacheRoot.value);
-  }
-  const home = O.filter(yield* Config.option(Config.String("HOME")), Str.isNonEmpty);
-  if (O.isSome(home)) {
-    return pathService.join(pathService.resolve(home.value), ".cache");
-  }
-  const tmpFallback = yield* Config.String("TMPDIR").pipe(Config.withDefault("/tmp"));
-  return pathService.resolve(tmpFallback);
-});
-
-const configuredPath = (name: string) =>
-  Config.option(Config.String(name)).pipe(
-    Effect.orElseSucceed(() => O.none()),
-    Effect.map(O.filter(Str.isNonEmpty))
-  );
 
 const canonicalRoot = Effect.fnUntraced(function* (
   root: string
@@ -1180,8 +1196,9 @@ const resolveTmpfsRoots = Effect.fnUntraced(function* (
 /**
  * Discover known temporary artifacts, prove conjunctive idleness, and optionally reap them.
  *
- * Dry-run is the default. Production scans `/tmp` and a distinct absolute
- * `TMPDIR`. Tests may supply an isolated `tmpRoot`, which deliberately disables
+ * Dry-run is the default. Production scans `/tmp`, a distinct absolute
+ * `TMPDIR`, and the beep cache root's `beep/head-install` and `beep/fallow`
+ * families. Tests may supply an isolated `tmpRoot`, which deliberately disables
  * ambient multi-root discovery, plus `cacheRoot`, `nowMillis`, and the
  * `systemTmpRoot` seam values. Sweep
  * may additionally pass the current repository's
@@ -1234,9 +1251,14 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
       { concurrency: 2 }
     )
   );
-  const cacheCandidates = includeClass("head-install")
-    ? yield* discoverCacheHeadInstalls(yield* resolveBeepCacheRoot(options.cacheRoot))
+  const cacheRoot = yield* resolveBeepCacheRoot(options.cacheRoot);
+  const cacheHeadInstalls = includeClass("head-install")
+    ? yield* discoverCacheHeadInstalls(cacheRoot)
     : A.empty<DiscoveredCandidate>();
+  const cacheFallowCaches = includeClass("fallow-cache")
+    ? yield* discoverCacheFallowCaches(cacheRoot)
+    : A.empty<DiscoveredCandidate>();
+  const cacheCandidates = A.appendAll(cacheHeadInstalls, cacheFallowCaches);
   const discovered = A.filter(
     A.dedupeWith(A.appendAll(tmpCandidates, cacheCandidates), sameCandidatePath),
     (candidate) => includeClass(candidate.reapClass)

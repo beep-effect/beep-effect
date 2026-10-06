@@ -23,7 +23,15 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
-import { ProcessPid, RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runCapturedStreams } from "../../../internal/process/index.ts";
+import {
+  fallowAuditCacheEnv,
+  fallowAuditCacheRemoveArgs,
+  ProcessPid,
+  RepoRunContext,
+  resolveFallowAuditCacheSettings,
+  runRepoCommandCapture,
+} from "../../../internal/repo-run/index.ts";
 import {
   WorktreeInvokerExemption,
   WorktreeRemovalRequest,
@@ -191,6 +199,20 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
   );
 });
 
+// A retired lane never audits again, so its ~600 MB Fallow base snapshot is
+// deleted before the checkout goes: `audit-cache remove --root` only touches
+// snapshots this root owns, and the janitor still reaps it if this fails.
+const discardLaneFallowBaseCache = Effect.fn("Yeet.discardLaneFallowBaseCache")(function* (worktreePath: string) {
+  const settings = yield* resolveFallowAuditCacheSettings();
+  yield* runCapturedStreams({
+    command: "bun",
+    args: fallowAuditCacheRemoveArgs(worktreePath),
+    cwd: worktreePath,
+    env: fallowAuditCacheEnv(settings),
+    extendEnv: true,
+  }).pipe(Effect.ignore);
+});
+
 /**
  * Archive-retire the planned worktree and delete its branch once its pull request is MERGED.
  *
@@ -247,6 +269,7 @@ export const retireInvokingWorktree = Effect.fn("Yeet.retireInvokingWorktree")(f
     yield* Effect.sync(() => process.chdir(plan.owningClone));
   }
   const sessionMarker = yield* invokerSessionMarker;
+  yield* discardLaneFallowBaseCache(plan.worktreePath);
   return yield* service
     .remove(
       WorktreeRemovalRequest.make({
