@@ -111,16 +111,16 @@ they graduate onward with the packets that own those records.
 
 - [x] P0 spike NOTES with pass/fail per gate assertion, archived under
       `history/p0/`.
-- [ ] Candidate storage is bitemporal, immutable, and additive; detection
+- [x] Candidate storage is bitemporal, immutable, and additive; detection
       writes never appear in the core's authority tables.
-- [ ] Approval transition executes candidate → atomic supersession + durable
+- [x] Approval transition executes candidate → atomic supersession + durable
       disposition in one transaction, reusing the core's typed-conflict
       mapping; claim-admission disposition remains unchanged.
-- [ ] Unresolved candidates and resolved outcomes are queryable two-axis;
+- [x] Unresolved candidates and resolved outcomes are queryable two-axis;
       restart/migration proof repeats the P0 queries identically.
-- [ ] Reflection passes `bun run beep lint reflection-artifacts`; packet state
+- [x] Reflection passes `bun run beep lint reflection-artifacts`; packet state
       flips in the same PR as the final work.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

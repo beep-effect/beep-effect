@@ -4207,6 +4207,50 @@
       "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
     },
     {
+      "id": "EV002:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:1573:provideScopedLayer@18#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "line": 1573,
+      "endLine": 1573,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:78809ef99ff5bace45b8a9acc48d240874a488a13d560232086663184deb8d16",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(persistent)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
+    },
+    {
+      "id": "EV002:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:1597:provideScopedLayer@12#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "line": 1597,
+      "endLine": 1597,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:6653b46f9d60639cb835d3ebc5f5e35ebe020a47880bfa2ac68b584191d570bd",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(persistent)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
+    },
+    {
       "id": "EV002:packages/epistemic/server/test/integration/EdgeAuthority.restart.pglite.test.ts:220:provideScopedLayer@53#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -26471,6 +26515,28 @@
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
       "line": 15,
       "endLine": 15,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Actual native filesystem storage is the persistent PGlite close/reopen subject. The public outer TempDirServices layer owns the directory; MemoryFileSystem cannot replace database storage. This is not a crash or fsync claim."
+    },
+    {
+      "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:68:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/epistemic-server",
+      "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
+      "line": 68,
+      "endLine": 68,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",

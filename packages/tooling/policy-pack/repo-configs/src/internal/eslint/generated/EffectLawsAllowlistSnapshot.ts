@@ -6,38 +6,6 @@ export const ALLOWLIST_SNAPSHOT = {
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "scratchpad/bun-test/internal/internal.ts",
-      "kind": "new-map-set",
-      "reason": "The experimental Bun adapter keys per-test completion state by host-owned TestContext identity. WeakMap keeps completed contexts collectible; Effect mutable and immutable maps retain keys and cannot preserve that lifecycle contract.",
-      "owner": "@beep/scratchpad",
-      "issue": "https://github.com/beep-effect/beep-effect/pull/1145"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "scratchpad/bun-test/internal/internal.ts",
-      "kind": "object-method",
-      "reason": "The experimental Bun adapter attaches test variants and registration methods to callable functions. Object.assign preserves the target function identity, callability, and own enumerable methods; Effect Struct.assign and object spreads return plain objects and break this foreign runtime protocol.",
-      "owner": "@beep/scratchpad",
-      "issue": "https://github.com/beep-effect/beep-effect/pull/1145"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "scratchpad/codemode/Codemode.values.ts",
-      "kind": "object-method",
-      "reason": "CodeMode guest data objects require a null prototype so inherited host members and the Object.prototype __proto__ setter cannot become observable guest state. Effect Record.empty returns a plain object, so the schema-owned makeEmptySafeObject constructor intentionally centralizes Object.create(null) for object literals, destructuring, JSON, RegExp groups, Promise outcomes, and guest errors.",
-      "owner": "@beep/scratchpad",
-      "issue": "CODEMODE-NULL-PROTOTYPE-GUEST-DATA"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "scratchpad/codemode/Codemode.values.ts",
-      "kind": "new-map-set",
-      "reason": "CodeModeMap and CodeModeSet are explicit guest-language adapters that must preserve JavaScript object identity, SameValueZero key equality, insertion order, and live in-place mutation. Effect HashMap and HashSet use Effect equality and immutable updates, so substituting them would change observable guest JavaScript semantics.",
-      "owner": "@beep/scratchpad",
-      "issue": "CODEMODE-NATIVE-MAP-SET-GUEST-SEMANTICS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/utils/src/Schema.ts",
       "kind": "native-error",
       "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",
