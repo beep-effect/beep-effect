@@ -12,7 +12,7 @@ import { PracticeKgQueries, PracticeKgSchemaVersions, PracticeKgToolkit } from "
 import * as OptionUtils from "@beep/utils/Option";
 import { Console, Effect, FileSystem, flow, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import { constFalse } from "effect/Function";
+import * as ByteSize from "effect/ByteSize";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -108,27 +108,30 @@ const firstCount = (rows: A.NonEmptyReadonlyArray<CountRow>) => A.headNonEmpty(r
 const encodeReport = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const encodeRefusal = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 
-const hasMessage = (value: unknown): value is { readonly message: string } =>
-  P.hasProperty(value, "message") && P.isString(value.message);
+const isString = S.is(S.String);
 const lineBreaks = /\s*[\r\n]+\s*/g;
 const MAX_CAUSE_DEPTH = 5;
 
-// The messages down an error's cause chain as one line: the driver's own words
-// ("Could not set lock on file", "not a valid DuckDB database file") without a
-// stack trace. Depth-bounded so a cyclic chain cannot spin.
-// Driver errors carry their cause either bare or as an `Option` (`DuckDbError`).
-const causeOf = (error: object): unknown => {
-  const cause = P.hasProperty(error, "cause") ? error.cause : undefined;
-  return O.isOption(cause) ? O.getOrUndefined(cause) : cause;
+// Driver errors carry `message` and `cause` either bare or as an `Option`
+// (`PgliteError` holds both as options, `DuckDbError` its cause).
+const fieldOf = (error: unknown, key: "cause" | "message"): unknown => {
+  const value = P.hasProperty(error, key) ? error[key] : undefined;
+  return O.isOption(value) ? O.getOrUndefined(value) : value;
 };
 
+// The messages down an error's cause chain as one line: the driver's own words
+// ("Could not set lock on file", "not a valid DuckDB database file") without a
+// stack trace. A link without a message is passed through, and the walk is
+// depth-bounded so a cyclic chain cannot spin.
 type CauseStep = readonly [cause: unknown, depth: number];
-const nextMessage = ([current, depth]: CauseStep): O.Option<readonly [string, CauseStep]> =>
-  depth < MAX_CAUSE_DEPTH && hasMessage(current) ? O.some([current.message, [causeOf(current), depth + 1]]) : O.none();
+const nextLink = ([current, depth]: CauseStep): O.Option<readonly [O.Option<string>, CauseStep]> =>
+  depth < MAX_CAUSE_DEPTH && P.isObject(current)
+    ? O.some([O.liftPredicate(fieldOf(current, "message"), isString), [fieldOf(current, "cause"), depth + 1]])
+    : O.none();
 
 const causeLine = (cause: unknown): O.Option<string> =>
   pipe(
-    A.unfold<CauseStep, string>([cause, 0], nextMessage),
+    A.getSomes(A.unfold<CauseStep, O.Option<string>>([cause, 0], nextLink)),
     A.map(flow(Str.replace(lineBreaks, " "), Str.trim)),
     A.filter(Str.isNonEmpty),
     A.dedupe,
@@ -216,15 +219,39 @@ const readStoreCounts = Effect.fn("PracticeKgSelfCheck.readStoreCounts")(functio
   return { matters, nodes };
 });
 
-// PGlite and DuckDB both create a missing store on open, so a mistyped bundle
-// folder would gain two empty stores and then fail on the first query.
-const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bundleDir: string, name: string) {
+// PGlite initialises a fresh cluster in a folder without `PG_VERSION` (the marker
+// it checks itself), and DuckDB treats a zero-byte file as a new database. Either
+// would put an empty store inside the bundle, so both are refused before opening;
+// a store that cannot even be inspected is reported as one that will not open.
+const STORE_MARKERS = {
+  graph: { store: GRAPH_STORE, name: "kg.pglite", marker: O.some("PG_VERSION") },
+  matter: { store: MATTER_STORE, name: "practice.duckdb", marker: O.none<string>() },
+} as const;
+
+type StoreMarker = (typeof STORE_MARKERS)[keyof typeof STORE_MARKERS];
+
+const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bundleDir: string, spec: StoreMarker) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const storePath = path.join(bundleDir, name);
-  const present = yield* fs.exists(storePath).pipe(Effect.orElseSucceed(constFalse));
-  if (!present) {
-    return yield* PracticeKgHostError.make({ message: `Practice KG bundle store is missing at "${storePath}".` });
+  const storePath = path.join(bundleDir, spec.name);
+  const uninitialised = PracticeKgHostError.make({
+    message: `Practice KG ${spec.store} at "${bundleDir}" is missing or not an initialised store; install the bundle that matches this server.`,
+  });
+  const initialised = yield* Effect.gen(function* () {
+    const info = yield* fs.stat(storePath);
+    return yield* O.match(spec.marker, {
+      onNone: () => Effect.succeed(info.type === "File" && ByteSize.toBigInt(info.size) > BigInt(0)),
+      onSome: (marker) => (info.type === "Directory" ? fs.exists(path.join(storePath, marker)) : Effect.succeed(false)),
+    });
+  }).pipe(
+    Effect.catchIf(
+      (error) => P.isTagged(error.reason, "NotFound"),
+      () => Effect.succeed(false)
+    ),
+    Effect.mapError(openFailure(spec.store, bundleDir))
+  );
+  if (!initialised) {
+    return yield* uninitialised;
   }
 });
 
@@ -233,7 +260,9 @@ const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bu
  *
  * **Details**
  *
- * Each store is opened with a trivial statement, then probed for the columns
+ * Each store is first checked to be an initialised store (`kg.pglite` holds
+ * `PG_VERSION`, `practice.duckdb` is a non-empty file), so the check never
+ * creates one. Each is then opened with a trivial statement, then probed for the columns
  * the tools read, then counted. A store that will not open (held by another
  * process, unreadable or corrupt) and a store whose tables are older than the
  * manifest claims are refused with different messages, each naming the store.
@@ -261,10 +290,11 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
   corpusRoot?: string | undefined
 ) {
   const context = yield* loadPracticeKgBundleContext(bundleDir, corpusRoot);
-  yield* requireStore(bundleDir, "kg.pglite");
-  yield* requireStore(bundleDir, "practice.duckdb");
+  yield* requireStore(bundleDir, STORE_MARKERS.graph);
+  yield* requireStore(bundleDir, STORE_MARKERS.matter);
   const counts = yield* Layer.build(makePracticeKgHostResourcesLayer(context)).pipe(
-    Effect.mapError(openFailure("bundle stores", bundleDir)),
+    // PGlite opens `kg.pglite` while the layer builds; DuckDB opens on its first statement.
+    Effect.mapError(openFailure(GRAPH_STORE, bundleDir)),
     Effect.flatMap((resources) => readStoreCounts(bundleDir).pipe(Effect.provide(resources))),
     Effect.scoped
   );
