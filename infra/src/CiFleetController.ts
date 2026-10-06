@@ -31,18 +31,20 @@ const githubAppWebhookSecretSsmParameterName = "/github-action-runners/app/githu
  * professional-desktop and 24.77 GiB for epistemic-server fit with headroom.
  * See `goals/ci-fleet-endgame/research/build-mode-typecheck-census.md`.
  *
- * Eight interchangeable shapes (all x86_64, ENA and NVMe, 64 GiB, 8 or 16
- * vCPU) across five subnets give the Spot fleet 40 capacity pools. On
+ * Seven interchangeable shapes (all x86_64, ENA and NVMe, 64 GiB, 8 or 16
+ * vCPU) across five subnets give the Spot fleet 35 capacity pools. On
  * 2026-09-30 every lost heavy job was a Spot reclaim, concentrated in the
  * one cheap r7i.2xlarge pool in us-east-1a, so breadth here is the
- * reliability lever. Order carries no priority: `capacity-optimized` ignores
- * it, and only the `-prioritized` strategies read override priorities.
+ * reliability lever. On 2026-10-05 the reclaims moved to r6a.2xlarge: 20 of
+ * its 69 launches ended `instance-terminated-no-capacity` across three AZs
+ * while the other seven shapes lost 6 of 86, so that shape is dropped. Order
+ * carries no priority: `capacity-optimized` ignores it, and only the
+ * `-prioritized` strategies read override priorities.
  */
 const runnerInstanceTypes = [
   "r7a.2xlarge",
   "r7i.2xlarge",
   "r6i.2xlarge",
-  "r6a.2xlarge",
   "m7a.4xlarge",
   "m7i.4xlarge",
   "m6a.4xlarge",

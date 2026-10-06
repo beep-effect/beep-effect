@@ -437,12 +437,14 @@ as a pair, also behind `law-doc-structure-oa-slice`; and
 [`thread-virtualization`](../goals/thread-virtualization/README.md),
 [`epistemic-memory-retention-projections`](../goals/epistemic-memory-retention-projections/README.md),
 [`agentic-governance-laws`](../goals/agentic-governance-laws/README.md),
-[`epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md),
-[`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
+[`epistemic-contradiction-detection`](../goals/epistemic-contradiction-detection/README.md)
 and [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md),
 which carry their own status notes and resume when a Lane 1 or Lane 2 slot
 pulls them. Machinery-first no longer holds them back; none starts until a
 Lane 1 or Lane 2 slot pulls it.
+[`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
+left this list on 2026-10-05 (completed-retained): #520 shipped it on
+2026-08-02 and the closing PR re-proved P2 and flipped the packet state.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:

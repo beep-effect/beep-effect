@@ -18,6 +18,11 @@ const $I = $LawPracticeDomainId.create("values/KgEdgePredicate");
  * The set is closed: an edge whose predicate is absent here cannot be projected,
  * which is what keeps the graph spine reconcilable against the corpus catalog.
  *
+ * `mentioned_in_family` is the one predicate that is not a membership claim: it
+ * records that a family's documents mention an application or patent number
+ * (prior-art citations included). Membership of an application in a family is
+ * expressed only through `files_as` from one of that family's dockets.
+ *
  * **Example** (Decode and guard predicates)
  *
  * ```ts
@@ -44,7 +49,7 @@ export const KgEdgePredicate = LiteralKit([
   "family_document",
   "archived_in",
   "continuation_of",
-  "enriched_family",
+  "mentioned_in_family",
 ]).pipe(
   $I.annoteSchema("KgEdgePredicate", {
     description: "Closed predicate domain for practice knowledge-graph projections.",

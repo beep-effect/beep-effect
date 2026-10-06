@@ -39,6 +39,7 @@ export * from "./PracticeKg.claims.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKg.errors.ts";
+export * from "./PracticeKg.families.ts";
 /**
  * @category services
  * @since 0.0.0
@@ -54,6 +55,7 @@ export * from "./PracticeKg.projections.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKg.queries.ts";
+export * from "./PracticeKg.references.ts";
 /**
  * @category schemas
  * @since 0.0.0

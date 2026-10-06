@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-fleet-layout",
+    "title": "Agent Fleet Layout",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/fleet-root-registry",
+        "goals/lane-bootstrap",
+        "goals/ops-seat-timers",
+        "goals/legacy-drain",
+        "goals/ai-metrics-raw-retention"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-05",
+    "updated": "2026-10-05"
+  }
+}

@@ -296,6 +296,17 @@ If you touch this, load or run this first. Do not hand-author around it.
   `storybook dev` or test numeric localhost ports; `PORTLESS=0` is
   diagnostic-only.
 
+## Cloud Environments
+
+- Vendor cloud VMs (Claude cloud sessions, Codex cloud, Cursor Cloud Agents)
+  bootstrap only through `scripts/cloud/bootstrap.sh`; `.cursor/install.sh`
+  and every per-account dashboard setup script are one-line callers of it.
+  Never hand-build a toolchain in a vendor dashboard. Per-vendor paste text,
+  allowlists, and gotchas: `docs/runbooks/cloud-environments.md`.
+- Claude and Codex environments are per account with no API: anything a cloud
+  lane needs must be committed under `.claude/` or `.codex/`; user-level
+  settings, `enabledPlugins`, and user MCP never reach the VM.
+
 ## Browser QA
 
 - Gesture-bearing UI milestones run the `browser-qa-loop` skill with recorded

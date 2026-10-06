@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import * as CandidateClaimTable from "@beep/epistemic-tables/entities/CandidateClaim";
@@ -33,6 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PosInt } from "./internal/PosInt.ts";
+import { withDuckDb } from "./PracticeKg.rows.ts";
 import type * as SqlClient from "effect/sql/SqlClient";
 
 const isUnionInlineSchema = S.is(S.Union([IrToLawExtractionError, LangExtractError]));
@@ -77,6 +79,9 @@ export class PracticeKgPatentDocumentInput extends S.Class<PracticeKgPatentDocum
     }),
     document: PatentApplicationDocument.annotateKey({
       description: "Domain-normalized patent application document consumed without reparsing.",
+    }),
+    sourceDocumentDigest: S.optionalKey(ContentDigest).annotateKey({
+      description: "Catalogued corpus document digest for the source file, when the caller already resolved it.",
     }),
     sourceFile: S.NonEmptyString.annotateKey({
       description: "Traceable source filename retained in candidate snapshots.",
@@ -224,6 +229,55 @@ export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>(
 ) {}
 const isPracticeKgClaimsError = S.is(PracticeKgClaimsError);
 
+class SourceDocumentDigestRow extends S.Class<SourceDocumentDigestRow>($I`SourceDocumentDigestRow`)({
+  digest: S.String,
+}) {}
+const decodeSourceDocumentDigestRows = S.decodeUnknownEffect(S.Array(SourceDocumentDigestRow));
+const batchOrdinalPrefix = /^\d+_/u;
+const extensionSuffix = /\.[^.]+$/u;
+
+/*
+ * Claims inputs are extraction copies named after the catalogued document with
+ * an optional `<n>_` batch ordinal in front; their bytes never match the
+ * corpus extraction, so the join is by file-name stem. Only a unique stem
+ * match resolves — an ambiguous or absent one leaves the digest null rather
+ * than guessing.
+ */
+const sourceDocumentStem = (filename: string): string =>
+  Str.toLowerCase(filename.replace(batchOrdinalPrefix, "").replace(extensionSuffix, ""));
+
+const sourceDocumentDigestsSql = `
+SELECT digest
+FROM documents
+WHERE lower(regexp_replace(effective_name, '\\.[^.]+$', '')) = $1
+ORDER BY digest`;
+
+const resolveSourceDocumentDigest = Effect.fn("PracticeKgClaims.resolveSourceDocumentDigest")(function* (
+  bundleDuckDbPath: string,
+  filename: string
+) {
+  return yield* Effect.gen(function* () {
+    const db = yield* DuckDb;
+    const rows = yield* db
+      .query(sourceDocumentDigestsSql, [sourceDocumentStem(filename)])
+      .pipe(Effect.flatMap(decodeSourceDocumentDigestRows));
+    return A.length(rows) === 1 ? A.head(rows).pipe(O.map((row) => row.digest)) : O.none<string>();
+  }).pipe(
+    withDuckDb(
+      DuckDbConnectionOptions.make({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath: bundleDuckDbPath })
+    ),
+    Effect.flatMap((digest) =>
+      O.match(digest, {
+        onNone: () => Effect.succeed(O.none<ContentDigest>()),
+        onSome: (value) => Effect.asSome(decodeContentDigest(value)),
+      })
+    ),
+    Effect.mapError((cause) =>
+      PracticeKgClaimsError.make({ cause, message: `Failed resolving the source document for "${filename}".` })
+    )
+  );
+});
+
 const docketFromFilename = (filename: string): O.Option<string> =>
   Str.match(docketPattern)(filename).pipe(
     O.orElse(() => Str.match(leadingDocketPattern)(filename)),
@@ -303,6 +357,12 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const sql = (yield* SqlClientService).withoutTransforms();
     yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
     const canonicalInputs = yield* fs.realPath(options.inputs);
+    const bundleDuckDbPath = path.join(options.bundleOut, "practice.duckdb");
+    const bundleDuckDbExists = yield* fs.exists(bundleDuckDbPath).pipe(Effect.orElseSucceed(() => false));
+    const sourceDocumentDigestFor = (filename: string) =>
+      bundleDuckDbExists
+        ? resolveSourceDocumentDigest(bundleDuckDbPath, filename)
+        : Effect.succeed(O.none<ContentDigest>());
     const entries = A.sort(yield* fs.readDirectory(canonicalInputs), Order.String);
     const [docketedFiles, skippedFiles] = A.partition(entries, (filename) =>
       O.match(docketFromFilename(filename), {
@@ -378,6 +438,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
           }),
         })
       );
+      const sourceDocumentDigest = yield* sourceDocumentDigestFor(filename);
       const evidenceFixtureKey = `evidence:${digest}`;
       const evidence = Evidence.make({
         ...extracted.evidence,
@@ -395,6 +456,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
           docket,
           evidenceFixtureKey,
           family: Str.slice(0, 5)(docket),
+          sourceDocumentDigest: O.getOrNull(sourceDocumentDigest),
           sourceFile: filename,
         },
       });
@@ -438,6 +500,8 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
         A.findFirstIndex(input.document.sections, ({ role }) => Eq.equals(role, "claims"))
       );
       const claimsHeading = O.getOrThrow(A.get(input.document.sections, claimsSectionIndex));
+      const sourceDocumentDigest =
+        input.sourceDocumentDigest ?? O.getOrUndefined(yield* sourceDocumentDigestFor(input.sourceFile));
       yield* Effect.forEach(
         input.document.claims,
         (claim, index) =>
@@ -454,6 +518,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
               operationId,
               sourceFile: input.sourceFile,
               sourceText: input.document.sourceText,
+              ...(sourceDocumentDigest === undefined ? {} : { sourceDocumentDigest }),
             })
           ).pipe(Effect.flatMap(({ candidate, evidence }) => persistCandidate(sql, candidate, evidence))),
         { concurrency: 1, discard: true }

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lane-bootstrap",
+    "title": "Lane Bootstrap",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lane-bootstrap",
+  "lifecycle": "active",
+  "mission": "`beep worktree add` creates, registers and wires a lane under the fleet lanes dir with shared caches; desktop-app and Codex lanes are adopted on sight.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-fleet-layout",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lane-bootstrap/README.md",
+    "goals/lane-bootstrap/SPEC.md",
+    "goals/lane-bootstrap/PLAN.md",
+    "goals/lane-bootstrap/GOAL.md",
+    "goals/lane-bootstrap/research/SOURCES.md",
+    "explorations/agent-fleet-layout/BRIEF.md",
+    "explorations/agent-fleet-layout/DECISIONS.md",
+    "explorations/agent-fleet-layout/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lane-bootstrap/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lane-bootstrap/GOAL.md)\" -le 4000",
+    "jq . goals/lane-bootstrap/ops/manifest.json",
+    "rg -n \"lane-bootstrap|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lane-bootstrap",
+    "git diff --check -- goals/lane-bootstrap",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "dependsOn": ["goals/fleet-root-registry"],
+  "provides": ["fleet/lane-bootstrap"],
+  "requires": ["fleet/root-config", "fleet/registry"]
+}

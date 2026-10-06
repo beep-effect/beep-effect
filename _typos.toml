@@ -10,6 +10,8 @@ Eff = "Eff"
 Somes = "Somes"
 annote = "annote"
 bimap = "bimap"
+# GnuPG --with-colons record tag for a key fingerprint line (scripts/cloud/bootstrap.sh)
+fpr = "fpr"
 retriev = "retriev"
 Uncommited = "Uncommited"
 Overrideable = "Overrideable"
