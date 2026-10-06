@@ -96,6 +96,23 @@ export const PracticeKgContactOrigin = LiteralKit(["csv", "vcf"]).pipe(
 );
 
 /**
+ * Runtime type of {@link PracticeKgContactOrigin}.
+ *
+ * **Example** (Type a contact origin)
+ *
+ * ```ts
+ * import type { PracticeKgContactOrigin } from "@beep/law-practice-server"
+ *
+ * const origin: PracticeKgContactOrigin = "vcf"
+ * console.log(origin) // "vcf"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgContactOrigin = typeof PracticeKgContactOrigin.Type;
+
+/**
  * One row of the contacts table the Box workstream produces.
  *
  * **Details**

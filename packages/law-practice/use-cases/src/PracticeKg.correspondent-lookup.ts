@@ -102,6 +102,23 @@ export const PracticeKgAttorneyLinkSource = LiteralKit(
 );
 
 /**
+ * Runtime type of {@link PracticeKgAttorneyLinkSource}.
+ *
+ * **Example** (Type an attorney link source)
+ *
+ * ```ts
+ * import type { PracticeKgAttorneyLinkSource } from "@beep/law-practice-use-cases/server"
+ *
+ * const source: PracticeKgAttorneyLinkSource = "attorney-pc-folder"
+ * console.log(source) // "attorney-pc-folder"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgAttorneyLinkSource = typeof PracticeKgAttorneyLinkSource.Type;
+
+/**
  * Link sources inferred by the contacts producer; they rank a candidate like
  * message counts do and never make a lookup `unique`.
  *
@@ -124,6 +141,23 @@ export const PracticeKgInferredLinkSource = LiteralKit(
     description: "Contact link sources inferred from organization names or mail subjects.",
   })
 );
+
+/**
+ * Runtime type of {@link PracticeKgInferredLinkSource}.
+ *
+ * **Example** (Type an inferred link source)
+ *
+ * ```ts
+ * import type { PracticeKgInferredLinkSource } from "@beep/law-practice-use-cases/server"
+ *
+ * const source: PracticeKgInferredLinkSource = "org-name-match"
+ * console.log(source) // "org-name-match"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgInferredLinkSource = typeof PracticeKgInferredLinkSource.Type;
 
 const isAttorneyLinkSource = S.is(PracticeKgAttorneyLinkSource);
 
