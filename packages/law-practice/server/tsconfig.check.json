@@ -45,6 +45,9 @@
       "path": "../../foundation/modeling/md/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/nlp/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
@@ -58,6 +61,9 @@
     },
     {
       "path": "../use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../shared/domain/tsconfig.json"
     },
     {
       "path": "../../shared/use-cases/tsconfig.json"

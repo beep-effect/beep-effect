@@ -68,6 +68,7 @@
   "dependencies": {
     "@beep/architecture-lab-domain": "workspace:^",
     "@beep/effect-drizzle": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
