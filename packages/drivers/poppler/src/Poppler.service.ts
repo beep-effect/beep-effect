@@ -25,6 +25,41 @@ const tiffBigEndian = 0x4d4d;
 const tiffMagic = 42;
 const tiffEntryBytes = 12;
 
+// Byte order, magic number and first directory offset of a classic TIFF.
+const tiffHeader = (
+  bytes: Uint8Array
+): O.Option<{ readonly firstDirectory: number; readonly littleEndian: boolean; readonly view: DataView }> => {
+  if (bytes.byteLength < 8) {
+    return O.none();
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const order = view.getUint16(0, false);
+  const littleEndian = order === tiffLittleEndian;
+  return (littleEndian || order === tiffBigEndian) && view.getUint16(2, littleEndian) === tiffMagic
+    ? O.some({ firstDirectory: view.getUint32(4, littleEndian), littleEndian, view })
+    : O.none();
+};
+
+// Length of the directory chain, or none when it runs off the end or loops.
+const tiffDirectoryChain = (view: DataView, littleEndian: boolean, firstDirectory: number): O.Option<number> => {
+  const seen = MutableHashSet.empty<number>();
+  let offset = firstDirectory;
+  let frames = 0;
+  while (offset !== 0) {
+    const next =
+      offset + 2 > view.byteLength
+        ? view.byteLength
+        : offset + 2 + view.getUint16(offset, littleEndian) * tiffEntryBytes;
+    if (next + 4 > view.byteLength || MutableHashSet.has(seen, offset)) {
+      return O.none();
+    }
+    MutableHashSet.add(seen, offset);
+    frames += 1;
+    offset = view.getUint32(next, littleEndian);
+  }
+  return O.some(frames);
+};
+
 /**
  * Count the frames (image file directories) of a TIFF from its bytes, without decoding any image.
  *
@@ -49,37 +84,12 @@ const tiffEntryBytes = 12;
  * @category utilities
  * @since 0.0.0
  */
-export const tiffFrameCount = (bytes: Uint8Array): O.Option<number> => {
-  if (bytes.byteLength < 8) {
-    return O.none();
-  }
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const order = view.getUint16(0, false);
-  if (order !== tiffLittleEndian && order !== tiffBigEndian) {
-    return O.none();
-  }
-  const littleEndian = order === tiffLittleEndian;
-  if (view.getUint16(2, littleEndian) !== tiffMagic) {
-    return O.none();
-  }
-  const seen = MutableHashSet.empty<number>();
-  let offset = view.getUint32(4, littleEndian);
-  let frames = 0;
-  while (offset !== 0) {
-    if (offset + 2 > bytes.byteLength || MutableHashSet.has(seen, offset)) {
-      return O.none();
-    }
-    MutableHashSet.add(seen, offset);
-    const entries = view.getUint16(offset, littleEndian);
-    const next = offset + 2 + entries * tiffEntryBytes;
-    if (next + 4 > bytes.byteLength) {
-      return O.none();
-    }
-    frames += 1;
-    offset = view.getUint32(next, littleEndian);
-  }
-  return frames === 0 ? O.none() : O.some(frames);
-};
+export const tiffFrameCount = (bytes: Uint8Array): O.Option<number> =>
+  pipe(
+    tiffHeader(bytes),
+    O.flatMap(({ firstDirectory, littleEndian, view }) => tiffDirectoryChain(view, littleEndian, firstDirectory)),
+    O.filter((frames) => frames > 0)
+  );
 
 /**
  * Rasterizer contract: count the pages of a PDF and render one page to a grayscale PNG.
