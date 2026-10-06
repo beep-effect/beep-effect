@@ -6,6 +6,7 @@ import {
   AccountUsageOutcome,
   ClaudeUsageBodyJson,
   CodexUsageBodyJson,
+  CreditBalance,
   claudeCreditBalances,
   claudeUsageOutcome,
   claudeUsageWindows,
@@ -16,12 +17,14 @@ import {
   dedupeAccountUsages,
   grokUsageOutcome,
   grokUsageWindows,
-  layerAccountsUsageLive,
   MuseKeyBodyJson,
+  makeAccountsUsageLive,
   museUsageOutcome,
   museUsageWindows,
   pollAccounts,
+  rankAccount,
   rankAccounts,
+  renderAccountRanking,
   renderAccountsStatus,
   renderHours,
   UsageWindow,
@@ -29,12 +32,14 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, DateTime, Effect, FileSystem, Path, Ref } from "effect";
+import { ConfigProvider, Console, DateTime, Effect, FileSystem, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
 
 const now = DateTime.makeUnsafe("2026-01-05T00:00:00.000Z");
@@ -314,34 +319,33 @@ describe("account report rendering", () => {
 const respond = (request: HttpClientRequest.HttpClientRequest, body: string, status = 200) =>
   HttpClientResponse.fromWeb(request, new Response(body, { status }));
 
-const runLive = <A, E>(
+// Runs inside `it.layer(NodeServices.layer)`, which supplies the filesystem,
+// Path, and the per-test scope that owns the temporary directory.
+const runLive = Effect.fn("AccountsUsageTest.runLive")(function* <A, E>(
   files: Readonly<Record<string, string>>,
   client: HttpClient.HttpClient,
   program: Effect.Effect<A, E, AccountsUsage>
-) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
-    yield* fs.makeDirectory(path.join(root, "snapshots"));
-    yield* Effect.forEach(
-      Object.entries(files),
-      ([name, content]) => fs.writeFileString(path.join(root, name), content),
-      {
-        discard: true,
-      }
-    );
-    return yield* program.pipe(
-      Effect.provide(layerAccountsUsageLive),
-      Effect.provideService(HttpClient.HttpClient, client),
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnv({
-          env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
-        })
-      )
-    );
-  }).pipe(Effect.provide(NodeServices.layer));
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
+  yield* fs.makeDirectory(path.join(root, "snapshots"));
+  yield* Effect.forEach(
+    Object.entries(files),
+    ([name, content]) => fs.writeFileString(path.join(root, name), content),
+    { discard: true }
+  );
+  const usage = yield* makeAccountsUsageLive().pipe(
+    Effect.provideService(HttpClient.HttpClient, client),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnv({
+        env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
+      })
+    )
+  );
+  return yield* Effect.provideService(program, AccountsUsage, usage);
+});
 
 const authFiles = {
   "claude-me.json": `{"type":"claude","email":"me@example.com","access_token":"claude-token","disabled":false}`,
@@ -355,118 +359,238 @@ const authFiles = {
 };
 
 describe("live account poller", () => {
-  it.effect("lists every supported login and polls each with its own token", () =>
-    Effect.gen(function* () {
-      const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
-      const answer = (request: HttpClientRequest.HttpClientRequest) => {
-        if (request.url.includes("anthropic")) return respond(request, claudeBody);
-        if (request.url.includes("chatgpt")) return respond(request, codexBody);
-        if (request.url.includes("meta.ai")) return respond(request, `{"subs_tier_name":"Tier"}`);
-        return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
-      };
-      const client = HttpClient.make((request) =>
-        Ref.update(
-          seen,
-          A.append([
-            request.method,
-            request.url,
-            request.headers.authorization,
-            request.headers["anthropic-beta"] ?? request.headers["chatgpt-account-id"] ?? request.headers["x-grpc-web"],
-          ])
-        ).pipe(Effect.as(answer(request)))
-      );
-      const usages = yield* runLive(authFiles, client, pollAccounts);
-      expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
-        ["claude", "me@example.com", "Ok"],
-        ["codex", "work@example.com", "Ok"],
-        ["grok", "me@example.com", "Ok"],
-        ["muse", "me@example.com", "Ok"],
-      ]);
-      expect(A.sort(yield* Ref.get(seen), (left, right) => (String(left[1]) < String(right[1]) ? -1 : 1))).toEqual([
-        ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
-        ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
-        ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
-        ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
-      ]);
-    })
-  );
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("lists every supported login and polls each with its own token", () =>
+      Effect.gen(function* () {
+        const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
+        const answer = (request: HttpClientRequest.HttpClientRequest) => {
+          if (request.url.includes("anthropic")) return respond(request, claudeBody);
+          if (request.url.includes("chatgpt")) return respond(request, codexBody);
+          if (request.url.includes("meta.ai")) return respond(request, `{"subs_tier_name":"Tier"}`);
+          return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
+        };
+        const client = HttpClient.make((request) =>
+          Ref.update(
+            seen,
+            A.append([
+              request.method,
+              request.url,
+              request.headers.authorization,
+              request.headers["anthropic-beta"] ??
+                request.headers["chatgpt-account-id"] ??
+                request.headers["x-grpc-web"],
+            ])
+          ).pipe(Effect.as(answer(request)))
+        );
+        const usages = yield* runLive(authFiles, client, pollAccounts);
+        expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+          ["claude", "me@example.com", "Ok"],
+          ["codex", "work@example.com", "Ok"],
+          ["grok", "me@example.com", "Ok"],
+          ["muse", "me@example.com", "Ok"],
+        ]);
+        expect(
+          A.sort(
+            yield* Ref.get(seen),
+            Order.mapInput(Order.String, (row: ReadonlyArray<string | undefined>) => row[1] ?? "")
+          )
+        ).toEqual([
+          ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
+          ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
+          ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
+          ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
+        ]);
+      })
+    );
 
-  it.effect("turns a transport failure into that account's outcome", () =>
-    Effect.gen(function* () {
-      const client = HttpClient.make((request) =>
-        Effect.fail(
-          new HttpClientError.HttpClientError({
-            reason: new HttpClientError.TransportError({ request, description: "offline" }),
+    it.effect("turns a transport failure into that account's outcome", () =>
+      Effect.gen(function* () {
+        const client = HttpClient.make((request) =>
+          Effect.fail(
+            new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request, description: "offline" }),
+            })
+          )
+        );
+        const usages = yield* runLive({ "claude-me.json": authFiles["claude-me.json"] }, client, pollAccounts);
+        expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Failed"]);
+      })
+    );
+
+    it.effect("treats a missing auth directory as no accounts and a vanished login as a re-login", () =>
+      Effect.gen(function* () {
+        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+        const outcome = yield* runLive(
+          {},
+          client,
+          Effect.gen(function* () {
+            const usage = yield* AccountsUsage;
+            const listed = yield* usage.accounts;
+            const polled = yield* usage.poll(account("gone"));
+            return [A.length(listed), polled.outcome._tag];
           })
-        )
-      );
-      const usages = yield* runLive({ "claude-me.json": authFiles["claude-me.json"] }, client, pollAccounts);
-      expect(A.map(usages, (usage) => usage.outcome._tag)).toEqual(["Failed"]);
-    })
-  );
-
-  it.effect("treats a missing auth directory as no accounts and a vanished login as a re-login", () =>
-    Effect.gen(function* () {
-      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-      const outcome = yield* runLive(
-        {},
-        client,
-        Effect.gen(function* () {
-          const usage = yield* AccountsUsage;
-          const listed = yield* usage.accounts;
-          const polled = yield* usage.poll(account("gone"));
-          return [A.length(listed), polled.outcome._tag];
-        })
-      );
-      expect(outcome).toEqual([0, "NeedsLogin"]);
-    })
-  );
+        );
+        expect(outcome).toEqual([0, "NeedsLogin"]);
+      })
+    );
+  });
 });
 
 describe("local snapshots", () => {
-  const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+    const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
 
-  it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
-    Effect.gen(function* () {
-      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-      const usages = yield* runLive(
-        { "snapshots/cursor.json": snapshot, "snapshots/broken.json": "{", "snapshots/notes.txt": "x" },
-        client,
-        pollAccounts
-      );
-      expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
-        ["cursor", "me@example.com", "Ok"],
-      ]);
-      expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
-        A.join(
-          [
-            "[accounts] use first: cursor me@example.com",
-            "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
-          ],
-          "\n"
-        )
-      );
+    it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
+      Effect.gen(function* () {
+        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+        const usages = yield* runLive(
+          { "snapshots/cursor.json": snapshot, "snapshots/broken.json": "{", "snapshots/notes.txt": "x" },
+          client,
+          pollAccounts
+        );
+        expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
+          ["cursor", "me@example.com", "Ok"],
+        ]);
+        expect(renderAccountsStatus(rankAccounts(usages, now))).toBe(
+          A.join(
+            [
+              "[accounts] use first: cursor me@example.com",
+              "  1. cursor me@example.com: ready · cycle 86% left, resets in 10h 0m · Auto 11% · plan Ultra · snapshot 3h 0m old",
+            ],
+            "\n"
+          )
+        );
+      })
+    );
+
+    it.effect("does not poll a provider that only exists as a snapshot", () =>
+      Effect.gen(function* () {
+        const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
+        const outcome = yield* runLive(
+          { "claude-me.json": authFiles["claude-me.json"] },
+          client,
+          Effect.gen(function* () {
+            const usage = yield* AccountsUsage;
+            const listed = yield* usage.accounts;
+            const polled = yield* Effect.forEach(listed, (ref) =>
+              usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
+            );
+            return A.map(polled, (row) => row.outcome._tag);
+          })
+        );
+        expect(outcome).toEqual(["Failed"]);
+      })
+    );
+  });
+});
+
+describe("credit and reset rendering", () => {
+  it("renders dollar pools with a limit and expiry, credit points, and unused resets", () => {
+    const usage = AccountUsage.make({
+      account: account("me@example.com", "codex"),
+      outcome: AccountUsageOutcome.cases.Ok.make({
+        identity: O.some("me@example.com"),
+        plan: O.some("pro"),
+        windows: [weekly(40, inHours(10))],
+        credits: [
+          CreditBalance.make({
+            label: "cloud session credits",
+            unit: "usd",
+            remaining: 246.5,
+            limit: O.some(250),
+            expiresAt: O.some(DateTime.makeUnsafe("2026-11-05T07:59:00.000Z")),
+          }),
+          CreditBalance.make({
+            label: "credits",
+            unit: "credits",
+            remaining: 62286.98,
+            limit: O.none(),
+            expiresAt: O.none(),
+          }),
+        ],
+        limitResets: O.some(1),
+        asOf: O.none(),
+      }),
+    });
+    expect(renderAccountRanking(rankAccount(usage, now))).toBe(
+      "codex me@example.com: ready · weekly 60% left, resets in 10h 0m · cloud session credits $247 of $250 left until 2026-11-05 · credits 62287 left · 1 limit reset(s) unused · plan pro"
+    );
+  });
+
+  it("leaves out a reset count of zero", () => {
+    const usage = AccountUsage.make({
+      account: account("me@example.com", "codex"),
+      outcome: AccountUsageOutcome.cases.Ok.make({
+        identity: O.none(),
+        plan: O.none(),
+        windows: [],
+        credits: [],
+        limitResets: O.some(0),
+        asOf: O.none(),
+      }),
+    });
+    expect(renderAccountRanking(rankAccount(usage, now))).toBe("codex me@example.com: ready");
+  });
+});
+
+const runAccounts = Command.runWith(accountsCommand, { version: "0.0.0" });
+
+const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const current = yield* Console.Console;
+  let output = A.empty<string>();
+  yield* effect.pipe(
+    Effect.provideService(Console.Console, {
+      ...current,
+      log: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(
+          output,
+          A.map(values, (value) => `${value}`)
+        );
+      },
     })
   );
+  return A.join(output, "\n");
+});
 
-  it.effect("does not poll a provider that only exists as a snapshot", () =>
-    Effect.gen(function* () {
-      const client = HttpClient.make((request) => Effect.succeed(respond(request, "{}")));
-      const outcome = yield* runLive(
-        { "claude-me.json": authFiles["claude-me.json"] },
-        client,
-        Effect.gen(function* () {
-          const usage = yield* AccountsUsage;
-          const listed = yield* usage.accounts;
-          const polled = yield* Effect.forEach(listed, (ref) =>
-            usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
+describe("accounts status command", () => {
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("prints the ranked report as text and as one JSON document", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-command-test-" });
+        const snapshots = path.join(root, "snapshots");
+        yield* fs.makeDirectory(snapshots);
+        yield* fs.writeFileString(
+          path.join(snapshots, "cursor.json"),
+          `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":null,"windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":null}]}`
+        );
+        const run = (args: ReadonlyArray<string>) =>
+          captureOutput(runAccounts(args)).pipe(
+            Effect.provideService(
+              HttpClient.HttpClient,
+              HttpClient.make((request) => Effect.succeed(respond(request, "{}")))
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({
+                env: {
+                  BEEP_ACCOUNTS_AUTH_DIR: path.join(root, "auth"),
+                  BEEP_ACCOUNTS_SNAPSHOT_DIR: snapshots,
+                  HOME: root,
+                },
+              })
+            )
           );
-          return A.map(polled, (row) => row.outcome._tag);
-        })
-      );
-      expect(outcome).toEqual(["Failed"]);
-    })
-  );
+        const text = yield* run(["status"]);
+        expect(text).toContain("[accounts] use first: cursor me@example.com");
+        const json = yield* run(["status", "--json"]);
+        expect(json).toContain('"schemaVersion":"accounts-status/v1"');
+        expect(json).toContain('"provider":"cursor"');
+        expect(yield* run([])).toContain("bun run beep accounts status [--json]");
+      })
+    );
+  });
 });
 
 describe("accounts command", () => {
