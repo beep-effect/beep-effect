@@ -30,9 +30,9 @@ import {
   YeetVerdictJson,
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { expect } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Exit, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -41,20 +41,6 @@ import * as Str from "effect/String";
 import type { YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
-
-const itEffect = <E>(name: string, program: () => Effect.Effect<unknown, E>): void =>
-  it(name, () => Effect.runPromise(program()));
-
-const PlatformLayer = NodeServices.layer;
-
-const withTempDirectory = <Result, Error, Requirements>(
-  use: (tmpDir: string) => Effect.Effect<Result, Error, Requirements>
-) =>
-  Effect.acquireUseRelease(
-    Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()),
-    use,
-    (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true }).pipe(Effect.orDie))
-  ).pipe(provideScopedLayer(PlatformLayer));
 
 const attemptId = UUID.make("550e8400-e29b-41d4-a716-446655440000");
 
@@ -122,157 +108,157 @@ const readVerdictArtifact = Effect.fnUntraced(function* (context: RepoRunContext
 // writer to a generic JSON render left every test green while `yeet status`
 // could no longer decode what the writer had emitted. These assert the bytes
 // that actually landed on disk.
-describe("writeRunVerdict", () => {
-  itEffect("writes a verdict file that decodes back through YeetVerdictJson", () =>
-    withTempDirectory((tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const context = contextForRoot(tmpDir);
-        const plan = RepoRunPlan.make({ context, steps: A.empty() });
-        const wrapper = RepoPlanStep.make({
-          id: "full:02-ci-parity",
-          label: "full:ci-parity",
-          phase: "full",
-          command: "bun",
-          args: ["run", "beep", "ci", "local"],
-          cwd: tmpDir,
-          scope: "repo",
-          mutability: "readonly",
-          resume: "never",
-        });
-        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([
-          YeetExecutedStep.make({
-            step: wrapper,
-            result: RepoStepRunResult.make({
-              stepId: wrapper.id,
-              commandText: "bun run beep ci local",
-              exitCode: 0,
-              output: "[beep-quality-task-lane-run] {truncated",
-            }),
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
+  it.effect("writes a verdict file that decodes back through YeetVerdictJson", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const context = contextForRoot(tmpDir);
+      const plan = RepoRunPlan.make({ context, steps: A.empty() });
+      const wrapper = RepoPlanStep.make({
+        id: "full:02-ci-parity",
+        label: "full:ci-parity",
+        phase: "full",
+        command: "bun",
+        args: ["run", "beep", "ci", "local"],
+        cwd: tmpDir,
+        scope: "repo",
+        mutability: "readonly",
+        resume: "never",
+      });
+      const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([
+        YeetExecutedStep.make({
+          step: wrapper,
+          result: RepoStepRunResult.make({
+            stepId: wrapper.id,
+            commandText: "bun run beep ci local",
+            exitCode: 0,
+            output: "[beep-quality-task-lane-run] {truncated",
           }),
-        ]);
-        const report = QualityTaskLaneRunReport.make({
-          schemaVersion: "quality-task-lane-run/v1",
-          parentLaneId: O.some(wrapper.id),
-          lanes: [
-            QualityTaskLaneRun.make({
-              id: "check",
-              label: "ci:check",
-              status: "passed",
-              inputDigest: O.none(),
-            }),
-          ],
-        });
-        const reportPath = yield* runArtifactPathForContext(context, "inner-lanes.ndjson");
-        yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
-        yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
-        const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.some(blockedMergeReady)));
+        }),
+      ]);
+      const report = QualityTaskLaneRunReport.make({
+        schemaVersion: "quality-task-lane-run/v1",
+        parentLaneId: O.some(wrapper.id),
+        lanes: [
+          QualityTaskLaneRun.make({
+            id: "check",
+            label: "ci:check",
+            status: "passed",
+            inputDigest: O.none(),
+          }),
+        ],
+      });
+      const reportPath = yield* runArtifactPathForContext(context, "inner-lanes.ndjson");
+      yield* fs.makeDirectory(path.dirname(reportPath), { recursive: true });
+      yield* fs.writeFileString(reportPath, `${yield* encodeQualityTaskLaneRunReportJson(report)}\n`);
+      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.some(blockedMergeReady)));
 
-        yield* writeRunVerdictForTesting(
-          plan,
-          defaultYeetRunOptions({ mode: "publish" }),
-          attemptFor(context),
-          0,
-          recorder,
-          extras,
-          "success",
-          "yeet publish succeeded.",
-          O.none()
-        );
+      yield* writeRunVerdictForTesting(
+        plan,
+        defaultYeetRunOptions({ mode: "publish" }),
+        attemptFor(context),
+        0,
+        recorder,
+        extras,
+        "success",
+        "yeet publish succeeded.",
+        O.none()
+      );
 
-        const { text } = yield* readVerdictArtifact(context);
-        expect(text).not.toContain('"_id":"Option"');
+      const { text } = yield* readVerdictArtifact(context);
+      expect(text).not.toContain('"_id":"Option"');
 
-        const decoded = yield* YeetVerdictJson.decode(text);
-        expect(decoded.outcome).toBe("success");
-        expect(decoded.mode).toBe("publish");
-        expect(decoded.attemptId).toStrictEqual(O.some(attemptId));
-        expect(decoded.resolvedHeadSha).toStrictEqual(O.some("0123456789abcdef0123456789abcdef01234567"));
-        expect(decoded.diffFingerprint).toStrictEqual(
-          O.some("abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd")
-        );
-        expect(decoded.proofTier).toStrictEqual(O.some("full"));
-        expect(decoded.lanes[1]).toMatchObject({ id: "check", label: "ci:check", phase: "full", status: "passed" });
-        // Threaded from the status snapshot the publish/monitor path read.
-        expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
+      const decoded = yield* YeetVerdictJson.decode(text);
+      expect(decoded.outcome).toBe("success");
+      expect(decoded.mode).toBe("publish");
+      assertSome(decoded.attemptId, attemptId);
+      assertSome(decoded.resolvedHeadSha, "0123456789abcdef0123456789abcdef01234567");
+      assertSome(decoded.diffFingerprint, "abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd");
+      assertSome(decoded.proofTier, "full");
+      expect(decoded.lanes[1]).toMatchObject({ id: "check", label: "ci:check", phase: "full", status: "passed" });
+      // Threaded from the status snapshot the publish/monitor path read.
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
 
-        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
-        const journalEvents = yield* Effect.forEach(
-          pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
-        );
-        const terminal = pipe(
-          journalEvents,
-          A.findFirst(YeetAttemptJournalEvent.guards["attempt-finished"]),
-          O.getOrThrow
-        );
-        expect(terminal.verdict.outcome).toBe("success");
-        expect(terminal.envProfile).toStrictEqual(O.some("local"));
-        expect(terminal.stage).toStrictEqual(O.some("pre-push"));
-      })
-    )
+      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const journalEvents = yield* Effect.forEach(
+        pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+        (line) => decodeYeetAttemptJournalEvent(line)
+      );
+      const terminal = pipe(
+        journalEvents,
+        A.findFirst(YeetAttemptJournalEvent.guards["attempt-finished"]),
+        O.getOrThrow
+      );
+      expect(terminal.verdict.outcome).toBe("success");
+      assertSome(terminal.envProfile, "local");
+      assertSome(terminal.stage, "pre-push");
+    })
   );
 
-  itEffect("omits merge readiness from the artifact when no status snapshot was read", () =>
-    withTempDirectory((tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const context = contextForRoot(tmpDir);
-        const plan = RepoRunPlan.make({ context, steps: A.empty() });
-        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
-        const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.none()));
+  it.effect("omits merge readiness from the artifact when no status snapshot was read", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const context = contextForRoot(tmpDir);
+      const plan = RepoRunPlan.make({ context, steps: A.empty() });
+      const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
+      const extras = yield* Ref.make<YeetVerdictExtrasForTesting>(extrasWith(O.none()));
 
-        yield* writeRunVerdictForTesting(
-          plan,
-          defaultYeetRunOptions({ mode: "verify" }),
-          attemptFor(context),
-          0,
-          recorder,
-          extras,
-          "failure",
-          "yeet verify failed.",
-          O.none()
-        );
+      yield* writeRunVerdictForTesting(
+        plan,
+        defaultYeetRunOptions({ mode: "verify" }),
+        attemptFor(context),
+        0,
+        recorder,
+        extras,
+        "failure",
+        "yeet verify failed.",
+        O.none()
+      );
 
-        const { text } = yield* readVerdictArtifact(context);
-        expect(text).not.toContain("mergeReady");
+      const { text } = yield* readVerdictArtifact(context);
+      expect(text).not.toContain("mergeReady");
 
-        const decoded = yield* YeetVerdictJson.decode(text);
-        expect(decoded.mergeReady).toStrictEqual(O.none());
-        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
-        const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
-        );
-        expect(
-          pipe(events, A.findFirst(YeetAttemptJournalEvent.guards["attempt-finished"]), O.getOrThrow).verdict.outcome
-        ).toBe("failure");
-      })
-    )
+      const decoded = yield* YeetVerdictJson.decode(text);
+      assertNone(decoded.mergeReady);
+      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+        decodeYeetAttemptJournalEvent(line)
+      );
+      expect(
+        pipe(events, A.findFirst(YeetAttemptJournalEvent.guards["attempt-finished"]), O.getOrThrow).verdict.outcome
+      ).toBe("failure");
+    })
   );
 
-  itEffect("writes one interruption terminal when execution exits before a verdict", () =>
-    withTempDirectory((tmpDir) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const context = contextForRoot(tmpDir);
-        const attempt = attemptFor(context);
-        const terminalWritten = yield* Ref.make(false);
+  it.effect("writes one interruption terminal when execution exits before a verdict", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const context = contextForRoot(tmpDir);
+      const attempt = attemptFor(context);
+      const terminalWritten = yield* Ref.make(false);
 
-        yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
-        yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
+      yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
+      yield* ensureAttemptTerminatedForTesting(context, attempt, terminalWritten, Exit.interrupt());
 
-        const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
-        const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
-        );
-        const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
-        expect(terminals).toHaveLength(1);
-        expect(terminals[0]?.reason).toBe("interrupted");
-        expect(terminals[0]?.verdict).toStrictEqual(O.none());
-        expect(terminals[0]?.proofTier).toStrictEqual(O.some("full"));
-      })
-    )
+      const journalText = yield* fs.readFileString(yield* attemptJournalPath(context));
+      const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
+        decodeYeetAttemptJournalEvent(line)
+      );
+      const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
+      expect(terminals).toHaveLength(1);
+      const terminal = terminals[0];
+      assertDefined(terminal);
+      expect(terminal.reason).toBe("interrupted");
+      assertNone(terminal.verdict);
+      assertSome(terminal.proofTier, "full");
+    })
   );
 });
 
@@ -292,93 +278,96 @@ const closeoutReportWith = (reviewedHeadSha: O.Option<string>): PrCloseoutReport
     schemaVersion: "yeet-pr-closeout/v1",
   });
 
-describe("writePrCloseoutReport", () => {
-  itEffect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const context = contextForRoot(tmpDir);
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("writePrCloseoutReport", (it) => {
+  it.effect("writes a closeout file whose reviewedHeadSha decodes back as a plain string", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const context = contextForRoot(tmpDir);
 
-        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
-        expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
+      const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.some(reviewedSha)));
+      expect(reportPath).toBe(yield* runArtifactPathForContext(context, "pr-closeout.json"));
 
-        const text = yield* fs.readFileString(reportPath);
-        expect(text).not.toContain('"_id":"Option"');
-        expect(text).toContain(`"reviewedHeadSha":"${reviewedSha}"`);
+      const text = yield* fs.readFileString(reportPath);
+      expect(text).not.toContain('"_id":"Option"');
+      expect(text).toContain(`"reviewedHeadSha":"${reviewedSha}"`);
 
-        const decoded = yield* PrCloseoutReportJson.decode(text);
-        expect(decoded.reviewedHeadSha).toStrictEqual(O.some(reviewedSha));
-        expect(decoded.greptile.score).toBe("5/5");
-      })
-    )
+      const decoded = yield* PrCloseoutReportJson.decode(text);
+      assertSome(decoded.reviewedHeadSha, reviewedSha);
+      expect(decoded.greptile.score).toBe("5/5");
+    })
   );
 
-  itEffect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const context = contextForRoot(tmpDir);
+  it.effect("omits reviewedHeadSha from the artifact when no head was recorded", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const context = contextForRoot(tmpDir);
 
-        const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.none()));
+      const reportPath = yield* writePrCloseoutReportForTesting(context, closeoutReportWith(O.none()));
 
-        const text = yield* fs.readFileString(reportPath);
-        expect(text).not.toContain("reviewedHeadSha");
+      const text = yield* fs.readFileString(reportPath);
+      expect(text).not.toContain("reviewedHeadSha");
 
-        const decoded = yield* PrCloseoutReportJson.decode(text);
-        expect(decoded.reviewedHeadSha).toStrictEqual(O.none());
-      })
-    )
+      const decoded = yield* PrCloseoutReportJson.decode(text);
+      assertNone(decoded.reviewedHeadSha);
+    })
   );
 });
 
-describe("writeYeetStatusSnapshot", () => {
-  itEffect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
-    withTempDirectory(
-      Effect.fnUntraced(function* (tmpDir) {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const statusPath = path.join(tmpDir, ".beep", "yeet", "runs", "feat_merge-loop", "status.json");
-        const closeout = YeetStatusArtifact.make({
-          detail: "PR #560",
-          issueCount: 0,
-          path: "pr-closeout.json",
-          state: "present",
-          greptileScore: O.some("5/5"),
-        });
-        const snapshot = YeetStatusSnapshot.make({
-          base: "origin/main",
-          branch: "feat/merge-loop",
-          closeout,
-          createdAt: "2026-08-04T00:00:00.000Z",
-          head: "HEAD",
-          nextCommand: "bun run beep yeet closeout --summary",
-          remote: YeetStatusRemote.make({
-            available: true,
-            checked: true,
-            detail: "PR #560 OPEN",
-            checkCount: 24,
-            failingCheckCount: 0,
-            pendingCheckCount: 0,
-            unresolvedReviewThreadCount: 1,
-          }),
-          runId: "feat_merge-loop",
-          schemaVersion: "yeet-status/v1",
-          statusPath,
-          verdict: YeetStatusArtifact.make({ detail: "publish success", path: "verdict.json", state: "present" }),
-          worktree: YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
-          mergeReady: O.some(blockedMergeReady),
-        });
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("writeYeetStatusSnapshot", (it) => {
+  it.effect("writes a status file that decodes back through YeetStatusSnapshotJson", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const statusPath = path.join(tmpDir, ".beep", "yeet", "runs", "feat_merge-loop", "status.json");
+      const closeout = YeetStatusArtifact.make({
+        detail: "PR #560",
+        issueCount: 0,
+        path: "pr-closeout.json",
+        state: "present",
+        greptileScore: O.some("5/5"),
+      });
+      const snapshot = YeetStatusSnapshot.make({
+        base: "origin/main",
+        branch: "feat/merge-loop",
+        closeout,
+        createdAt: "2026-08-04T00:00:00.000Z",
+        head: "HEAD",
+        nextCommand: "bun run beep yeet closeout --summary",
+        remote: YeetStatusRemote.make({
+          available: true,
+          checked: true,
+          detail: "PR #560 OPEN",
+          checkCount: 24,
+          failingCheckCount: 0,
+          pendingCheckCount: 0,
+          unresolvedReviewThreadCount: 1,
+        }),
+        runId: "feat_merge-loop",
+        schemaVersion: "yeet-status/v1",
+        statusPath,
+        verdict: YeetStatusArtifact.make({ detail: "publish success", path: "verdict.json", state: "present" }),
+        worktree: YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
+        mergeReady: O.some(blockedMergeReady),
+      });
 
-        yield* writeYeetStatusSnapshot(snapshot);
+      yield* writeYeetStatusSnapshot(snapshot);
 
-        const text = yield* fs.readFileString(statusPath);
-        expect(text).not.toContain('"_id":"Option"');
+      const text = yield* fs.readFileString(statusPath);
+      expect(text).not.toContain('"_id":"Option"');
 
-        const decoded = yield* YeetStatusSnapshotJson.decode(text);
-        expect(decoded.statusPath).toBe(statusPath);
-        expect(O.flatMap(decoded.mergeReady, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
-        expect(O.flatMap(decoded.mergeReady, (value) => value.criteria.greptileScore)).toStrictEqual(O.some("5/5"));
-      })
-    )
+      const decoded = yield* YeetStatusSnapshotJson.decode(text);
+      expect(decoded.statusPath).toBe(statusPath);
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.failing),
+        "threads-resolved"
+      );
+      assertSome(
+        O.flatMap(decoded.mergeReady, (value) => value.criteria.greptileScore),
+        "5/5"
+      );
+    })
   );
 });
