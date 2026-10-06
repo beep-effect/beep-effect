@@ -22,7 +22,12 @@ import {
 import { ExtractFileOperation, ProcessFileOperation } from "@beep/file-processing/Operation";
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service";
-import { classifyFormatFromExtension, FileFormatFamily } from "@beep/file-processing/Strategy";
+import {
+  classifyFormatFromExtension,
+  classifyFormatFromMediaType,
+  classifySourceFormat,
+  FileFormatFamily,
+} from "@beep/file-processing/Strategy";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
@@ -249,6 +254,8 @@ describe("@beep/file-processing", () => {
       ["xhtml", "xhtml"],
       ["pdf", "pdf-text-layer"],
       ["pst", "pst"],
+      ["eml", "eml"],
+      ["msg", "msg"],
       ["txt", "plain-text"],
       ["markdown", "markdown"],
       ["png", "image-metadata"],
@@ -263,6 +270,21 @@ describe("@beep/file-processing", () => {
     }
     expect(FileFormatFamily.processCapability("image-metadata")).toBe("extract-metadata");
     expect(FileFormatFamily.processCapability("pdf-text-layer")).toBe("extract-text");
+  });
+
+  it("classifies saved mail by media type when the extension says nothing", () => {
+    expect(classifyFormatFromMediaType("message/rfc822")).toBe("eml");
+    expect(classifyFormatFromMediaType("application/vnd.ms-outlook")).toBe("msg");
+    expect(classifyFormatFromMediaType("application/zip")).toBe("unknown");
+    expect(classifyFormatFromMediaType(undefined)).toBe("unknown");
+
+    expect(classifySourceFormat("eml", undefined)).toBe("eml");
+    expect(classifySourceFormat("bin", "message/rfc822")).toBe("eml");
+    expect(classifySourceFormat(undefined, "application/vnd.ms-outlook")).toBe("msg");
+    // A recognized extension wins over the media type.
+    expect(classifySourceFormat("txt", "message/rfc822")).toBe("plain-text");
+    expect(classifySourceFormat(undefined, undefined)).toBe("unknown");
+    expect(FileFormatFamily.processCapability("eml")).toBe("extract-text");
   });
 
   it.layer(serviceLayer)("extracts synthetic text through the service contract", (it) => {

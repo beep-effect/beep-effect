@@ -6,16 +6,28 @@
       "path": "../../architecture-lab/tables/tsconfig.json"
     },
     {
+      "path": "../../documents/domain/tsconfig.json"
+    },
+    {
       "path": "../../documents/tables/tsconfig.json"
     },
     {
       "path": "../../drivers/postgres/tsconfig.json"
     },
     {
+      "path": "../../epistemic/domain/tsconfig.json"
+    },
+    {
       "path": "../../epistemic/tables/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../law-practice/domain/tsconfig.json"
     },
     {
       "path": "../../law-practice/tables/tsconfig.json"

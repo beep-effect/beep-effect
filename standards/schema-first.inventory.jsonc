@@ -360,6 +360,22 @@
       "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
     },
     {
+      "file": "packages/foundation/capability/file-processing/src/PageOcr/PageOcr.service.ts",
+      "symbol": "PageOcrEngineShape",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/file-processing",
+      "reason": "Mixed driver contract: PageOcrEngineIdentity is already schema-backed, while recognizePage is an Effectful driver operation."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/PageOcr/PageOcr.service.ts",
+      "symbol": "PageOcrServiceShape",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/file-processing",
+      "reason": "Mixed service contract: the engine identities are already schema-backed, while recognizePage is an Effectful service operation."
+    },
+    {
       "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
       "symbol": "ToolCallRequest",
       "kind": "exported-interface",

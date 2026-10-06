@@ -26,10 +26,12 @@ import {
   AttachmentFiler,
   BackfillCheckpointStore,
   BackfillCheckpointStoreShape,
+  ContentSha1,
   DocumentNameTaken,
   DocumentStore,
   DocumentStoreShape,
   DocumentUploaded,
+  ExistingDocument,
   FilingLedger,
   FilingLedgerShape,
   KnownDocuments,
@@ -58,6 +60,7 @@ import { Context, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as DateTime from "effect/DateTime";
+import * as Hex from "effect/encoding/Hex";
 import * as HashMap from "effect/HashMap";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -173,6 +176,14 @@ export const attachment = (options: AttachmentOptions): FakeAttachment => ({
   }),
 });
 
+type StoredFile = {
+  readonly fileId: DocumentFileId;
+  readonly bytes: Uint8Array;
+};
+
+/** How much the store fake says about the file holding a taken name. */
+type HolderDetail = "hash-and-size" | "size-only" | "id-only" | "nothing";
+
 type WorldOptions = {
   readonly envelopes: ReadonlyArray<MailEnvelope>;
   readonly attachments?: ReadonlyArray<readonly [MailMessageId, ReadonlyArray<FakeAttachment>]>;
@@ -180,7 +191,7 @@ type WorldOptions = {
   /** Matter index the directory answers; the two-matter `index` when absent. */
   readonly index?: MatterIndex;
   /** Makes every SHA-256 digest fail, as an unavailable platform would. */
-  readonly digestFails?: boolean;
+  readonly failingDigests?: ReadonlyArray<Crypto.DigestAlgorithm>;
 };
 
 type WorldShape = {
@@ -192,7 +203,9 @@ type WorldShape = {
   /** Every `upload` call, including the ones the store refused. */
   readonly uploadCalls: Ref.Ref<number>;
   /** Files the store holds, keyed `<folderId>/<fileName>`. */
-  readonly storedFiles: Ref.Ref<HashMap.HashMap<string, DocumentFileId>>;
+  readonly storedFiles: Ref.Ref<HashMap.HashMap<string, StoredFile>>;
+  /** Puts a file the ledger never stored under `<folderId>/<fileName>`. */
+  readonly holdName: (held: { readonly key: string; readonly bytes: ReadonlyArray<number> }) => Effect.Effect<void>;
   /** 1-based `upload` call that fails before storing anything, when set. */
   readonly failingUpload: Ref.Ref<O.Option<number>>;
   /** 1-based `upload` call that stores the file and then reports failure, when set. */
@@ -202,7 +215,7 @@ type WorldShape = {
   /** 1-based filing-ledger `append` call that fails, when set. */
   readonly failingFilingAppend: Ref.Ref<O.Option<number>>;
   /** Makes the store report a taken name without identifying the file. */
-  readonly anonymousStore: Ref.Ref<boolean>;
+  readonly holderDetail: Ref.Ref<HolderDetail>;
   readonly checkpoint: Ref.Ref<O.Option<BackfillCheckpoint>>;
   readonly categoryWrites: Ref.Ref<ReadonlyArray<SetCategoriesRequest>>;
   readonly folderRequests: Ref.Ref<ReadonlyArray<string>>;
@@ -237,12 +250,17 @@ const digestUnavailable = PlatformError.systemError({
   description: "digest unavailable",
 });
 
-const testCrypto = (digestFails: boolean) =>
+const sha1Of = (bytes: Uint8Array) =>
+  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-1", Uint8Array.from(bytes))).pipe(
+    Effect.map((buffer) => ContentSha1.make(Hex.encode(new Uint8Array(buffer))))
+  );
+
+const testCrypto = (failingDigests: ReadonlyArray<Crypto.DigestAlgorithm>) =>
   Layer.succeed(
     Crypto.Crypto,
     Crypto.make({
       digest: (algorithm, data) =>
-        digestFails
+        A.contains(failingDigests, algorithm)
           ? Effect.fail(digestUnavailable)
           : Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, Uint8Array.from(data))).pipe(
               Effect.map((buffer) => new Uint8Array(buffer))
@@ -260,7 +278,8 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
   const tagRecords = yield* Ref.make<ReadonlyArray<TagLedgerRecord>>([]);
   const filingRecords = yield* Ref.make<ReadonlyArray<FilingLedgerRecord>>([]);
   const uploadCalls = yield* Ref.make(0);
-  const storedFiles = yield* Ref.make(HashMap.empty<string, DocumentFileId>());
+  const storedFiles = yield* Ref.make(HashMap.empty<string, StoredFile>());
+  const foreignFiles = yield* Ref.make(0);
   const failingUpload = yield* Ref.make<O.Option<number>>(O.none());
   const lyingUpload = yield* Ref.make<O.Option<number>>(O.none());
   const categoriesById = Effect.fn("World.categoriesById")(function* (id: string) {
@@ -268,7 +287,7 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     return A.flatMap(current, (message) => (message.messageId === id ? message.categories : []));
   });
   const failingFilingAppend = yield* Ref.make<O.Option<number>>(O.none());
-  const anonymousStore = yield* Ref.make(false);
+  const holderDetail = yield* Ref.make<HolderDetail>("hash-and-size");
   const filingAppendCalls = yield* Ref.make(0);
   const checkpoint = yield* Ref.make<O.Option<BackfillCheckpoint>>(O.none());
   const failingListCall = yield* Ref.make<O.Option<number>>(O.none());
@@ -285,10 +304,21 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
   const attachmentsOf = (messageId: MailMessageId): ReadonlyArray<FakeAttachment> =>
     O.getOrElse(HashMap.get(attachments, messageId), () => []);
 
-  const refuseTakenName = (existing: DocumentFileId) =>
-    Effect.map(Ref.get(anonymousStore), (anonymous) =>
-      DocumentNameTaken.make({ existingFileId: anonymous ? O.none() : O.some(existing) })
-    );
+  const refuseTakenName = Effect.fn("FakeDocumentStore.refuseTakenName")(function* (stored: StoredFile) {
+    const detail = yield* Ref.get(holderDetail);
+    const sha1 = yield* sha1Of(stored.bytes);
+    return DocumentNameTaken.make({
+      existing: O.map(
+        O.liftPredicate(stored, () => detail !== "nothing"),
+        (holder) =>
+          ExistingDocument.make({
+            fileId: holder.fileId,
+            byteLength: O.liftPredicate(holder.bytes.byteLength, () => detail !== "id-only"),
+            contentSha1: O.liftPredicate(sha1, () => detail === "hash-and-size"),
+          })
+      ),
+    });
+  });
 
   const createFile = Effect.fn("FakeDocumentStore.createFile")(function* (
     request: UploadDocumentRequest,
@@ -298,7 +328,7 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     yield* wrote(`upload:${request.fileName}`);
     const created = yield* Ref.updateAndGet(uploads, A.append(request));
     const fileId = DocumentFileId.make(`file-${created.length}`);
-    yield* Ref.update(storedFiles, HashMap.set(key, fileId));
+    yield* Ref.update(storedFiles, HashMap.set(key, { fileId, bytes: request.bytes }));
     if (O.contains(yield* Ref.get(lyingUpload), call)) {
       return yield* MailTaggingPortError.during("DocumentStore", "upload", "connection reset after the write");
     }
@@ -377,7 +407,15 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     lyingUpload,
     categoriesById,
     failingFilingAppend,
-    anonymousStore,
+    holderDetail,
+    holdName: Effect.fn("World.holdName")(function* (held) {
+      const count = yield* Ref.updateAndGet(foreignFiles, N.increment);
+      const foreign: StoredFile = {
+        fileId: DocumentFileId.make(`foreign-${count}`),
+        bytes: Uint8Array.from(held.bytes),
+      };
+      yield* Ref.update(storedFiles, HashMap.set(held.key, foreign));
+    }),
     checkpoint,
     failingListCall,
     failingCategoryWrite,
@@ -492,7 +530,7 @@ const UseCases = Layer.merge(
 export const scenario = (options: WorldOptions) =>
   Layer.fresh(
     UseCases.pipe(
-      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.digestFails === true))),
+      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.failingDigests ?? []))),
       Layer.provideMerge(Layer.effect(World, makeWorld(options)))
     )
   );

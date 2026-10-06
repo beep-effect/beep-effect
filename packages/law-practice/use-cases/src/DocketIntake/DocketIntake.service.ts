@@ -2,6 +2,8 @@
  * The docket intake pipeline: classify, enter, review, resolve the date, look
  * the matter up, and make sure the tentative calendar entries exist.
  *
+ * **Details**
+ *
  * The pipeline never guesses a date, puts an entry on the earlier of two
  * differing dates, and prefers a needs-review entry to silence. Re-processing
  * a message is harmless: every entry is looked up by its idempotency key
