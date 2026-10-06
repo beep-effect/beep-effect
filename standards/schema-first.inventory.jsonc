@@ -952,6 +952,16 @@
       "line": 30,
       "owner": "@beep/repo-cli",
       "reason": "Hook adapter regression encodes and decodes fixed hook payload JSON through S.fromJsonString codecs to prove adapter wiring; the payloads are fixed fixtures, not a schema law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/yeet-sweep-retire.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 56,
+      "owner": "@beep/repo-cli",
+      "reason": "Sweep-retire regression encodes fixed gh pr view, PR file list and packet lifecycle documents through S.fromJsonString codecs to drive a fake gh process, and decodes the retire invoker outcome; the schemas are fixture plumbing for sweep behavior, not a schema law."
     }
   ],
   "backlog": []

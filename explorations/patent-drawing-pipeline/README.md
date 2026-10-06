@@ -37,7 +37,7 @@ Gated candidates (`design-figure-intake`, `design-figure-desktop`) stay in
 
 - 2026-10-05: packet opened from a live drawing request; deep-research sweep
   (5 researchers + writer, Opus 5.5) landed; full report + notes kept
-  out-of-repo (`~/data-home/oppold-corpus/ops/patent-drawing-pipeline/`)
+  out-of-repo (`$HOME/data-home/oppold-corpus/ops/patent-drawing-pipeline/`)
   because they describe the client's article; RESEARCH.md carries the
   generic findings. Align grilled in two rounds (8 decisions in
   `DECISIONS.md`, topology resolved by doctrine); BRIEF.md drafted; stopped

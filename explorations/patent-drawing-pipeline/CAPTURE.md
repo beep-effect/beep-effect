@@ -17,7 +17,7 @@ dated heading at the bottom.
   was read through the Microsoft 365 connector; the binary attachments could
   not be pulled through it ("Binary attachment — content cannot be returned
   inline"), only the .docx text. Attachments + notes live out-of-repo under
-  `~/data-home/oppold-corpus/ops/patent-drawing-pipeline/`.
+  `$HOME/data-home/oppold-corpus/ops/patent-drawing-pipeline/`.
 - The ask, verbatim from the user: "see if using the attached resources in
   that email … we could have claude generate patent drawings whether through
   native tools we can install or through some yet to be installed or bought
