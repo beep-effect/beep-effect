@@ -1,0 +1,360 @@
+import * as I from "@beep/law-practice-use-cases/DocumentIdentification";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { describe, expect, it } from "vitest";
+
+const client = I.ClientNumber.make("90001");
+const other = I.ClientNumber.make("90002");
+const docket = I.DocketId.make("10001US01");
+const hash = I.ContentHash.make("a".repeat(64));
+const card = (name: string, emails: ReadonlyArray<string>, source: I.ContactSource = "outlook-csv") =>
+  I.RawContactCard.make({
+    displayName: name,
+    organization: O.some("Acme Widgets LLC"),
+    titles: [],
+    emails,
+    phones: ["(212) 555-0100"],
+    addresses: [],
+    source,
+  });
+const context = (overrides: Partial<I.ResolverContext> = {}) =>
+  I.ResolverContext.make({
+    clients: [],
+    pairs: [],
+    contacts: [],
+    aliases: [],
+    pseudoClients: [],
+    excludedDomains: [],
+    ...overrides,
+  });
+const document = (text = "", overrides: Partial<I.IdentificationDocument> = {}) =>
+  I.IdentificationDocument.make({
+    documentId: "doc-1",
+    contentHash: hash,
+    text,
+    sourcePath: "",
+    extraction: O.none(),
+    uspto: [],
+    copies: [],
+    ...overrides,
+  });
+const truth = (doc: I.IdentificationDocument, clientNumber = client) =>
+  I.TrainingDocument.make({ document: doc, clientNumber, docket: O.none() });
+const row = (clientNumber: I.ClientNumber, references: ReadonlyArray<string>) =>
+  I.IndexEvidence.make({
+    clientNumber: O.some(clientNumber),
+    names: ["Acme Widgets LLC"],
+    references,
+    folders: [],
+    emails: [],
+    contactIds: [],
+    source: "attorney-docket-sheet",
+  });
+const linked = (name = "Alex Example") =>
+  I.Contact.make({
+    ...normalised(name),
+    links: [
+      I.ContactLink.make({
+        clientNumber: client,
+        familyKey: O.none(),
+        source: "attorney-filed-email",
+        evidence: "one filed message",
+      }),
+    ],
+  });
+const normalised = (name: string) => I.normaliseContacts([card(name, ["alex@acme.example"])])[0]!;
+const clientEntry = I.ClientIndexEntry.make({
+  clientNumber: client,
+  names: [I.ClientName.make({ name: "Acme Widgets LLC", source: "attorney-answer" })],
+  folders: [],
+});
+const resolve = (doc: I.IdentificationDocument, c = context(), training: ReadonlyArray<I.TrainingDocument> = []) =>
+  I.resolve(doc, c, I.fitTokenFilter(training, c));
+const extracted = (name: string, text: string, kept = true) =>
+  I.ConfirmedExtraction.make({
+    extraction: I.DocumentExtraction.make({
+      docType: "agreement",
+      title: O.none(),
+      parties: [I.ExtractedParty.make({ name, kind: "organization", role: "client", quote: text })],
+      dockets: [],
+      applicationNumbers: [],
+      patentNumbers: [],
+      emails: [],
+      dates: [],
+    }),
+    verdict: I.CriticVerdict.make({
+      keepParties: kept ? [0] : [],
+      keepDockets: [],
+      docType: "agreement",
+      problems: [],
+    }),
+  });
+
+describe("contacts and indexes", () => {
+  it("deduplicates transitively across sources and normalised names, never by a role address", () => {
+    const cards = [
+      card("Alex Example", [" ALEX@acme.example "]),
+      card("Alex Example", ["alex@acme.example", "second@acme.example"], "vcard"),
+      card("Different Display", ["second@acme.example"]),
+      card("One Person", ["info@acme.example"]),
+      card("Other Person", ["info@acme.example"]),
+    ];
+    const contacts = I.normaliseContacts(cards);
+    expect(contacts).toHaveLength(3);
+    expect(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources))).toEqual(
+      O.some(["outlook-csv", "vcard"])
+    );
+    expect(contacts[0]?.phones[0]?.e164).toBe("+12125550100");
+    expect(I.normaliseContacts([...cards].reverse())).toEqual(contacts);
+    expect(I.projectContacts(contacts)[0]).not.toHaveProperty("phones");
+    expect(
+      I.normaliseContacts([card("Same Name", ["one@acme.example"]), card(" same name ", ["two@acme.example"], "vcard")])
+    ).toHaveLength(1);
+  });
+  it("aggregates exact pair source counts and keeps repeating dockets under both clients", () => {
+    const pairs = I.buildClientDocketPairs([
+      row(client, ["90001.10001US01"]),
+      row(client, ["10001US01"]),
+      row(other, ["90002.10001US01"]),
+    ]);
+    expect(pairs).toHaveLength(2);
+    expect(pairs[0]?.sources[0]?.count).toBe(2);
+    expect(
+      I.buildClientDocketPairs([
+        I.IndexEvidence.make({
+          ...row(client, []),
+          clientNumber: O.none(),
+          folders: ["Clients/Acme Widgets LLC 90001/10001US01"],
+        }),
+      ])[0]?.clientNumber
+    ).toBe(client);
+  });
+  it("links non-role email evidence and retains strength-ladder provenance", () => {
+    const contacts = I.normaliseContacts([
+      card("Alex Example", ["alex@acme.example"]),
+      card("Shared Office", ["info@acme.example"]),
+    ]);
+    const rows = [
+      I.IndexEvidence.make({
+        ...row(client, ["90001.10001US01"]),
+        emails: ["alex@acme.example", "info@acme.example"],
+        source: "attorney-filed-email",
+      }),
+    ];
+    const linked = I.linkContacts(contacts, rows, []);
+    expect(
+      A.findFirst(linked, (c) => c.displayName === "Alex Example").pipe(O.map((c) => c.links[0]?.familyKey))
+    ).toEqual(O.some(O.some("90001.10001")));
+    expect(A.findFirst(linked, (c) => c.displayName === "Shared Office").pipe(O.map((c) => c.links.length))).toEqual(
+      O.some(0)
+    );
+  });
+});
+
+describe("resolver", () => {
+  it("uses full references and rejects conflicting strong clients", () => {
+    expect(resolve(document("Docket 90001.10001US01")).clientNumber).toEqual(O.some(client));
+    expect(resolve(document("90001.10001US01 and 90002.10001US01")).tier).toBe("ambiguous");
+    const r = resolve(document("90001.10001US01 and 90001.10002US01"));
+    expect(r.tier).toBe("identified");
+    expect(r.docket).toEqual(O.none());
+  });
+  it("uses identical copies only when their content hash matches", () => {
+    const copies = [I.IdenticalCopy.make({ contentHash: hash, clientNumber: client, docket: O.some(docket) })];
+    expect(resolve(document("", { copies })).tier).toBe("identified");
+    expect(resolve(document("", { copies, contentHash: I.ContentHash.make("b".repeat(64)) })).tier).toBe("unknown");
+  });
+  it("uses cited USPTO docket facts, and ignores unrelated records", () => {
+    const uspto = [
+      I.UsptoEvidence.make({
+        query: I.UsptoQuery.make({ kind: "application", number: "18900001" }),
+        facts: I.UsptoRecordFacts.make({ docketNumber: O.some("90001.10001US01"), firstApplicant: O.none() }),
+      }),
+    ];
+    expect(resolve(document("Application 18/900,001", { uspto })).tier).toBe("identified");
+    expect(resolve(document("Application 18/900,002", { uspto })).tier).toBe("unknown");
+  });
+  it("requires critic-confirmed content for identified-content; text alone stays a candidate", () => {
+    const c = context({ clients: [clientEntry], contacts: [linked("Acme Widgets LLC")] });
+    const text = "Client Acme Widgets LLC, alex@acme.example";
+    expect(resolve(document(text, { extraction: O.some(extracted("Acme Widgets LLC", text)) }), c).tier).toBe(
+      "identified-content"
+    );
+    expect(resolve(document(text, { extraction: O.some(extracted("Acme Widgets LLC", text, false)) }), c).tier).toBe(
+      "candidate"
+    );
+    // Text signals are capped at three, below the content threshold of five.
+    expect(resolve(document("alex@acme.example +12125550100"), context({ contacts: [linked()] })).tier).toBe(
+      "candidate"
+    );
+    expect(resolve(document("nothing here"), context({ contacts: [linked()] })).tier).toBe("unknown");
+  });
+  it("learns party names only from train files with independent hashes", () => {
+    const name = "Acme Widgets LLC";
+    const train = [truth(document(name)), truth(document(name, { contentHash: I.ContentHash.make("b".repeat(64)) }))];
+    // No client index: the learned name is the only signal, worth the party's role weight.
+    const c = context();
+    expect(resolve(document(name, { extraction: O.some(extracted(name, name)) }), c, train).tier).toBe("candidate");
+    expect(resolve(document(name, { extraction: O.some(extracted(name, name)) }), c, [train[0]!, train[0]!]).tier).toBe(
+      "unknown"
+    );
+  });
+  it("drops a training token appearing under two different clients", () => {
+    const c = context({ contacts: [linked()] });
+    const train = [
+      truth(document("alex@acme.example"), client),
+      truth(document("alex@acme.example", { contentHash: I.ContentHash.make("b".repeat(64)) }), other),
+    ];
+    const filter = I.fitTokenFilter(train, c);
+    expect(filter.ownership.find((t) => t.token === "contact-address:alex@acme.example")?.clients).toEqual([
+      client,
+      other,
+    ]);
+    expect(I.resolve(document("alex@acme.example"), c, filter).evidence).toEqual([]);
+  });
+  it("keeps a bare docket ambiguous when two clients own it", () => {
+    const c = context({ pairs: I.buildClientDocketPairs([row(client, ["10001US01"]), row(other, ["10001US01"])]) });
+    const r = resolve(document("10001US01"), c);
+    expect(r.tier).toBe("ambiguous");
+    expect(r.clientNumber).toEqual(O.none());
+  });
+  it("validates critic quotes and supports input aliases and pseudo-clients", () => {
+    const c = context({ aliases: [I.ClientAlias.make({ from: other, to: client })] });
+    expect(resolve(document("90001.10001US01 90002.10001US01"), c).tier).toBe("identified");
+    const text = "90001.10001US01";
+    const bad = I.ConfirmedExtraction.make({
+      ...extracted("Acme Widgets LLC", "invented"),
+      extraction: I.DocumentExtraction.make({
+        ...extracted("Acme Widgets LLC", "invented").extraction,
+        parties: [],
+        dockets: [I.ExtractedDocket.make({ text, quote: "invented" })],
+      }),
+      verdict: I.CriticVerdict.make({ keepParties: [], keepDockets: [0], docType: "other", problems: [] }),
+    });
+    expect(resolve(document("nothing", { extraction: O.some(bad) })).tier).toBe("unknown");
+    const pseudoContext = context({
+      pseudoClients: [I.PseudoClient.make({ key: "new:acme", names: ["Acme Widgets LLC"] })],
+      aliases: [I.ClientAlias.make({ from: client, to: "new:acme" })],
+      contacts: [linked("Acme Widgets LLC")],
+    });
+    const partyText = "Client Acme Widgets LLC";
+    const result = resolve(
+      document(partyText, { extraction: O.some(extracted("Acme Widgets LLC", partyText)) }),
+      pseudoContext
+    );
+    expect(result.tier).toBe("identified-content");
+    expect(result.clientNumber).toEqual(O.some("new:acme"));
+  });
+  it("requires a threefold content margin and a twofold candidate margin", () => {
+    const contact = (suffix: string, owner: I.ClientNumber) =>
+      I.Contact.make({
+        ...normalised("Acme Widgets LLC"),
+        contactId: I.ContentHash.make(suffix.repeat(64)),
+        links: [
+          I.ContactLink.make({
+            clientNumber: owner,
+            familyKey: O.none(),
+            source: "attorney-answer",
+            evidence: "input answer",
+          }),
+        ],
+      });
+    const text = "Client Acme Widgets LLC";
+    const doc = document(text, { extraction: O.some(extracted("Acme Widgets LLC", text)) });
+    // Client name and contact each add the client role weight (6), text adds its cap (3): 9 against nothing.
+    const single = context({ clients: [clientEntry], contacts: [contact("a", client)] });
+    expect(resolve(doc, single).tier).toBe("identified-content");
+    // A contact of the same name under another client scores 4: 9 clears twice that but not three times.
+    const shared = context({ clients: [clientEntry], contacts: [contact("a", client), contact("c", other)] });
+    expect(resolve(doc, shared).tier).toBe("candidate");
+    const tie = context({ clients: [], contacts: [contact("a", client), contact("c", other)] });
+    expect(resolve(doc, tie).tier).toBe("ambiguous");
+  });
+  it("recognises public applicant organisation names despite legal suffix differences", () => {
+    const uspto = [
+      I.UsptoEvidence.make({
+        query: I.UsptoQuery.make({ kind: "application", number: "18900001" }),
+        facts: I.UsptoRecordFacts.make({ docketNumber: O.none(), firstApplicant: O.some("Acme Widgets, Inc.") }),
+      }),
+    ];
+    const r = resolve(
+      document("Application 18/900,001 Acme Widgets LLC", { uspto }),
+      context({ clients: [clientEntry] })
+    );
+    expect(r.tier).toBe("candidate");
+    expect(r.clientNumber).toEqual(O.some(client));
+  });
+  it("organises blank forms and explicit firm folders without attributing clients", () => {
+    const rules = I.OrganisationRules.make({ firmFolders: ["Firm"], formFolders: ["Forms"] });
+    expect(I.organiseDocument("Forms/a", "[NAME]", "agreement", false, rules).kind).toBe("form");
+    expect(I.organiseDocument("Forms/a", "[NAME]", "agreement", true, rules).kind).toBe("unresolved");
+    expect(I.organiseDocument("Firm/a", "", "other", false, rules).kind).toBe("firm");
+  });
+});
+
+describe("evaluation and codecs", () => {
+  it("partitions by hash deterministically without duplicate leakage", () => {
+    const docs = A.makeBy(100, (i) =>
+      truth(document("", { contentHash: I.ContentHash.make(i.toString(16).padStart(8, "0") + "a".repeat(56)) }))
+    );
+    const split = I.holdOutSplit(docs, "fixture");
+    expect(split.train.length + split.test.length).toBe(100);
+    expect(split.test.length).toBeGreaterThan(5);
+    expect(split.test.length).toBeLessThan(40);
+    expect(
+      I.holdOutSplit([...docs].reverse(), "fixture")
+        .test.map((d) => d.document.contentHash)
+        .sort()
+    ).toEqual(split.test.map((d) => d.document.contentHash).sort());
+    expect(I.holdOutSplit(docs, "other").test.map((d) => d.document.contentHash)).not.toEqual(
+      split.test.map((d) => d.document.contentHash)
+    );
+    const held = split.test[0]!;
+    const duplicates = I.holdOutSplit([held, held], "fixture");
+    expect(duplicates.test).toHaveLength(2);
+    expect(duplicates.train).toHaveLength(0);
+  });
+  it("computes arithmetic including absent precision and docket mistakes", () => {
+    const right = I.Resolution.make({
+      clientNumber: O.some(client),
+      docket: O.none(),
+      tier: "candidate",
+      evidence: [],
+    });
+    const wrong = I.Resolution.make({ ...right, clientNumber: O.some(other) });
+    const cases = [
+      I.EvaluationCase.make({ truth: truth(document()), resolution: right }),
+      I.EvaluationCase.make({ truth: truth(document()), resolution: wrong }),
+    ];
+    const report = I.evaluate(cases, 8);
+    const tier = report.tiers.find((t) => t.tier === "candidate")!;
+    expect(tier).toMatchObject({ resolved: 2, right: 1, wrong: 1, precision: O.some(0.5), coverage: 1 });
+    expect(report.tiers.find((t) => t.tier === "identified")?.precision).toEqual(O.none());
+    expect(I.evaluate([], 0).tiers[0]?.coverage).toBe(0);
+  });
+  it("turns identical-copy ground truth off during evaluation", () => {
+    const doc = document("", {
+      contentHash: I.ContentHash.make("0".repeat(64)),
+      copies: [
+        I.IdenticalCopy.make({
+          contentHash: I.ContentHash.make("0".repeat(64)),
+          clientNumber: client,
+          docket: O.none(),
+        }),
+      ],
+    });
+    // "fixture-6" holds the all-zero fixture hash out, so the copy would have scored without the switch.
+    const report = I.evaluateHoldOut([truth(doc)], context(), "fixture-6");
+    expect(report.testSize).toBe(1);
+    expect(report.tiers.find((t) => t.tier === "identified")?.resolved).toBe(0);
+  });
+  it("roundtrips the private document and resolution codecs", () => {
+    const codec = S.fromJsonString(I.IdentificationDocument);
+    const encoded = Effect.runSync(S.encodeEffect(codec)(document()));
+    expect(Effect.runSync(S.decodeEffect(codec)(encoded))).toEqual(document());
+    expect(S.is(I.ClientNumber)("short")).toBe(false);
+    expect(S.is(I.DocketId)("10001XX01")).toBe(false);
+  });
+});

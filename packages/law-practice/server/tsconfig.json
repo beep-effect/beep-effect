@@ -30,6 +30,9 @@
       "path": "../../drivers/tika/tsconfig.json"
     },
     {
+      "path": "../../drivers/uspto/tsconfig.json"
+    },
+    {
       "path": "../../epistemic/domain/tsconfig.json"
     },
     {

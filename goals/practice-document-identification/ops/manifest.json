@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-document-identification",
+    "packetId": "goal-packet/v1:3f8a3ab0aedafbcaf7a47f6949b01dc23ef9e3e5fd090fa9e378775e10f978ee",
+    "title": "Practice Document Identification",
+    "status": "active",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-document-identification",
+  "lifecycle": "active",
+  "mission": "Identify the client and docket of unplaced practice documents from the attorney own filing, contacts, public USPTO records and extracted content, with measured precision per evidence tier and no guessing",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-document-identification/README.md",
+    "goals/practice-document-identification/SPEC.md",
+    "goals/practice-document-identification/PLAN.md",
+    "goals/practice-document-identification/GOAL.md",
+    "goals/practice-document-identification/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-document-identification/GOAL.md"
+    }
+  ],
+  "provides": ["practice/document-identification"],
+  "requires": ["practice/box-tree"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "done"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "done"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "done"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-document-identification/GOAL.md)\" -le 4000",
+    "jq . goals/practice-document-identification/ops/manifest.json",
+    "rg -n \"practice-document-identification|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-document-identification",
+    "git diff --check -- goals/practice-document-identification",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

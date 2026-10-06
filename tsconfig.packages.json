@@ -16,6 +16,9 @@
       "path": "apps/oip-web"
     },
     {
+      "path": "apps/practice-identify"
+    },
+    {
       "path": "apps/practice-kg-mcp"
     },
     {
