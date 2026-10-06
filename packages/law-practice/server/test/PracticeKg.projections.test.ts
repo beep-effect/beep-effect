@@ -1,6 +1,7 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { Table as CandidateClaimTable } from "@beep/epistemic-tables/entities/CandidateClaim";
 import { Table as EvidenceTable } from "@beep/epistemic-tables/entities/Evidence";
+import { ContentDigest } from "@beep/file-processing/Artifact";
 import {
   normalizePatentApplicationDocument,
   PatentApplicationDocument,
@@ -46,6 +47,7 @@ import * as McpServer from "effect/ai/McpServer";
 import * as Response from "effect/ai/Response";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -934,6 +936,7 @@ describe("practice KG projections", () => {
                 docket: "20001US06",
                 document,
                 sourceFile: "20001US06-patent.md",
+                sourceDocumentDigest: ContentDigest.make(`sha256:${Str.repeat(64)("a")}`),
               }),
             ],
           })
@@ -975,6 +978,36 @@ describe("practice KG projections", () => {
           A.every(rows, ({ startChar }) => startChar > claimsSectionStart),
           assertTrue
         );
+
+        // A missing catalog remains a supported batch input even when the filesystem probe fails.
+        const unavailableCatalog = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: () => Effect.fail(PlatformError.badArgument({ module: "FileSystem", method: "exists" })),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: 6 });
+
+        // An existing corrupt catalog must report source resolution failure instead of losing provenance.
+        yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
+        const catalogFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({
+            bundleOut,
+            inputs,
+            patentDocuments: [
+              PracticeKgPatentDocumentInput.make({
+                docket: "20001US09",
+                document,
+                sourceFile: "20001US09-patent.md",
+              }),
+            ],
+          })
+        ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+        expect(catalogFailure.message).toContain("Failed resolving the source document");
+        yield* fs.remove(path.join(bundleOut, "practice.duckdb"));
 
         const oversizedDocument = PatentApplicationDocument.make({
           claims: document.claims,
@@ -1092,6 +1125,22 @@ describe("practice KG projections", () => {
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
         expect(oversizedClaimsFailure.message).toContain("not a bounded regular file");
+        yield* fs.remove(oversizedClaimsPath);
+
+        // The file can grow between stat and read; the byte guard must reject the actual payload.
+        yield* fs.writeFileString(oversizedClaimsPath, "bounded at stat time");
+        const grownClaimsFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.flip,
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFile: (file) =>
+              file === oversizedClaimsPath ? Effect.succeed(new Uint8Array(2 * 1024 * 1024 + 1)) : fs.readFile(file),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(grownClaimsFailure.message).toContain("Claims input exceeds 2097152 bytes");
         yield* fs.remove(oversizedClaimsPath);
 
         const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");

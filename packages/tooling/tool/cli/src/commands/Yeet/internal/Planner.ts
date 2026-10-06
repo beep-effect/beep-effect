@@ -559,23 +559,14 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
     verification: "detached-clean-temp-worktree-of-HEAD",
   });
 
-// Every publish path opens the pull request as a draft (push-first-publish
-// D4); the flag stays so a plan can still describe a ready create.
-const prCreateStep = (context: RepoRunContext, draft: boolean): RepoPlanStep =>
+// Every publish path opens the pull request as a draft (push-first-publish D4).
+const prCreateStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
     label: "publish:pr-create",
     phase: "publish",
     command: "gh",
-    args: [
-      "pr",
-      "create",
-      ...(draft ? ["--draft"] : []),
-      "--title",
-      "<head-commit-subject>",
-      "--body-file",
-      "<run-artifacts>/pr-body.md",
-    ],
+    args: ["pr", "create", "--draft", "--title", "<head-commit-subject>", "--body-file", "<run-artifacts>/pr-body.md"],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "publish",
@@ -830,9 +821,7 @@ const pullRequestTailSteps = (
   context: RepoRunContext,
   options: YeetRunPlanModeOptions
 ): ReadonlyArray<RepoPlanStep> => [
-  ...(options.pr
-    ? [prCreateStep(context, true), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)]
-    : []),
+  ...(options.pr ? [prCreateStep(context), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)] : []),
   ...(options.monitor ? monitorSteps(context) : options.pr ? [monitorReadySubmitStep(context)] : []),
 ];
 

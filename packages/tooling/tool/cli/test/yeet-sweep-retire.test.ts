@@ -57,7 +57,13 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
 
 const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
 const encodePacketLifecycle = S.encodeEffect(
-  S.fromJsonString(S.Struct({ lifecycle: S.String, statusNote: S.optionalKey(S.String) }))
+  S.fromJsonString(
+    S.Struct({
+      lifecycle: S.String,
+      statusNote: S.optionalKey(S.String),
+      blockedBy: S.String.pipe(S.Array, S.optionalKey),
+    })
+  )
 );
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
@@ -720,7 +726,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         // left active with a statusNote saying why: only the unexplained open
         // one is an advisory, and a non-packet path under goals/ is ignored.
         for (const [slug, manifest] of [
-          ["open-packet", { lifecycle: "active" }],
+          ["open-packet", { lifecycle: "active", blockedBy: [] }],
+          ["blocked-packet", { lifecycle: "active", blockedBy: ["operator"] }],
           ["closed-packet", { lifecycle: "completed-retained" }],
           ["noted-packet", { lifecycle: "active", statusNote: "P8 is an operator gate." }],
         ] as const) {

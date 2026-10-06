@@ -42,6 +42,17 @@ describe("@beep/schema PatternOntology", () => {
     expect(A.map(rows, (row) => O.getOrNull(row.identifier))).toEqual(["Leaf", "Bare", null]);
   });
 
+  it("deduplicates type projections while retaining conflicting pattern annotations", () => {
+    const projected = S.toType(Leaf);
+    const conflicting = Leaf.annotate({ po: "block" });
+    const rows = collectPoTaggedConstructors(S.Union([Leaf, projected, conflicting]), "_tag");
+
+    expect(A.map(rows, (row) => [row.tag, O.getOrNull(row.pattern)])).toEqual([
+      ["leaf", "atom"],
+      ["leaf", "block"],
+    ]);
+  });
+
   it("classifies conservation by pattern identity", () => {
     expect(poConservation("block", "block")).toBe("preserved");
     expect(poConservation("container", "block")).toBe("demoted");
