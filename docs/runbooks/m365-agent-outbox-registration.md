@@ -182,6 +182,17 @@ audit ids.
 
 ## 7. Optional: the claude.ai connector's write tools
 
+State on 2026-10-06: the consent in item 1 below is already done for the firm
+tenant. The write permission set was added to the enterprise application's
+existing all-principals grant with the Azure CLI, signed in as the tenant
+administrator, in place of the portal. One enterprise application serves every
+Claude account in the tenant, so the grant covers all of them. The scope
+string and grant id from before the change are saved on the workstation at
+`~/.cache/beep/orchestrator/m365-connector-consent-before-2026-10-06.txt`;
+patching the grant back to that string undoes it. **Item 2 is still open, and
+until it is done the connector's own send tools work in every claude.ai
+session.**
+
 This step is independent of steps 1 to 6 and can be skipped. It gives
 claude.ai chat, desktop and mobile sessions text-only drafts and calendar
 writes. It does not give them attachments: the connector's write tools reject

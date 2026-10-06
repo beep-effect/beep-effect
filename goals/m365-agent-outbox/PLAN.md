@@ -9,14 +9,16 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Compare the connector route with a firm-owned route and ground the design in workstream A's lane. | `SPEC.md` recommendation, relation table and Decision Log are written. |
-| P1 Implement | pending | Build the slices below. | Acceptance criteria are met. |
+| P1 Implement | in progress | Build the slices below. | Acceptance criteria are met. |
 | P2 Verify | pending | Package handoffs, property tests, live smoke after registration. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish each slice through yeet and drive it to mergeable. | Each PR is merge-ready; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
-One PR per slice.
+Slices 1 and 2 ship as one PR: slice 2 is the only caller of slice 1, both
+wait on the same upstream merge, and one PR costs one hosted run instead of
+two. Slice 0 and slice 3 are their own PRs.
 
 | Slice | Content | Surfaces | Depends on |
 | --- | --- | --- | --- |

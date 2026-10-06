@@ -31,13 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete. P1 Implement waits on workstream A's `@beep/m365`
-write lane (`feat/m365-write-lane`) reaching `main`; slice 1 is cut from it.
+P1 Implement. Slices 1 and 2 (driver mail verbs, the `beep-m365-outbox`
+server) are written and package-verified. The live smoke waits on the
+operator-attended registration; slice 3 (reply and forward drafts) follows it.
 
 ## Latest Evidence
 
-2026-10-06: packet and registration runbook written (slice 0). Recommendation
-and eleven implementing decisions are in `SPEC.md`.
+- 2026-10-06: packet and registration runbook (slice 0).
+- 2026-10-06: slices 1 and 2. `bun run beep quality package-verify` passes for
+  `@beep/m365` and `@beep/m365-mcp`. The live smoke has not run.
 
 ## Notes
 
