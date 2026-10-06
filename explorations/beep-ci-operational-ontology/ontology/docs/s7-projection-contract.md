@@ -270,7 +270,7 @@ and episode binding in memory; they do not certify vocabulary ratification.
   changes (S8).
 - No live-journal tailing daemon — v1 projects from explicit inputs; the Tx
   wrapper holds state in-process only.
-- No KPI ETL (separate incubation lane per the incubation-home decision).
+- No KPI ETL (separate incubation lane per the incubation-home decision). (superseded by §9)
 
 ## 7. 2026-10-01 amendment — deployed deltas since the baseline
 
@@ -555,3 +555,31 @@ pair in which a grant records `legacy-origin-lock/v1` by value is drain-window s
 names what the replay cannot see. CQ-009's same-checkout branch is scoped to current-protocol grants, with
 a `rows_eq_0` drain-window fixture. The engine and admission `s7-emission/v2` bytes are unchanged, and the
 frozen `research/s7-replay-evidence.md` is not re-rendered.
+
+## 9. 2026-10-06 amendment — the W8 KPI ETL
+
+Authority: `goals/ciops-ontology-pipeline/research/decisions.md`,
+"2026-10-06 — P4 opened; launch sitting" (Ruling 1), and DECISIONS.md,
+"2026-08-27 — incubation-home", which puts the KPI ETL in a labs app and says
+the durable ETL is born there.
+This section supersedes only the last §6 bullet ("No KPI ETL"). Every other
+§6 bullet stands, including the `QualityScheduler` sole-writer bullet, the
+no-T-Box-change bullet and the no-tailing-daemon bullet.
+
+1. **Its own service.** The KPI ETL lives in this lab at
+   `apps/labs/ciops/src/kpi/` behind its own `Context.Service`, `CiOpsKpi`.
+   `CiOpsProjection` (§3.2, §8.1) is unchanged, and the KPI never feeds
+   `project`, `emitAbox` or `planEpisode`.
+2. **Pinned inputs only.** It reads pinned corpora and committed tables by
+   repo-relative path and SHA-256 only, checking each digest over the raw
+   bytes before any decode. It makes no live fleet read and spawns no
+   process (no `git`); an input whose bytes do not hash to the pinned digest
+   fails typed.
+3. **No A-Box emission.** It emits nothing to the A-Box: KPI figures are not
+   ontology individuals, no vocabulary is minted, and CQ-012/CQ-021
+   materialization stays deferred.
+4. **Bytes unchanged.** Admission v1 and emission `s7-emission/v2` bytes,
+   both goldens and the replay engine are unchanged.
+5. **Check-by-default evidence.** Its evidence script follows `evidence:s7`
+   and `evidence:s7-live`: the default run checks the committed reading and
+   fails on drift, and only `--write` renders.
