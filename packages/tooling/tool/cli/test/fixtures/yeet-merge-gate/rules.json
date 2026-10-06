@@ -1,0 +1,58 @@
+[
+  {
+    "type": "required_status_checks",
+    "ruleset_id": 10240248,
+    "parameters": {
+      "required_status_checks": [
+        {
+          "context": "Lint"
+        },
+        {
+          "context": "Heavy / Check"
+        },
+        {
+          "context": "Test Unit"
+        },
+        {
+          "context": "Heavy / Test Integration"
+        },
+        {
+          "context": "Heavy / Docgen"
+        },
+        {
+          "context": "Codegen Drift"
+        },
+        {
+          "context": "Repo Sanity"
+        },
+        {
+          "context": "Knip"
+        },
+        {
+          "context": "Commitlint"
+        },
+        {
+          "context": "Secret Scanning"
+        },
+        {
+          "context": "Security"
+        },
+        {
+          "context": "SAST"
+        },
+        {
+          "context": "Nix Shell"
+        },
+        {
+          "context": "Professional Desktop IPC Stdio"
+        },
+        {
+          "context": "Heavy / Doctest"
+        },
+        {
+          "context": "JSDoc Ratchet"
+        }
+      ]
+    }
+  }
+]

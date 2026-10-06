@@ -1,0 +1,18 @@
+{
+  "number": 1459,
+  "title": "feat(ciops-ontology-pipeline): P2 projection on live data (W6 S7-v2 seam + planEpisode body, W5 live replay)",
+  "draft": false,
+  "state": "closed",
+  "mergeable_state": "unknown",
+  "head": {
+    "sha": "212fe39b4f3ef7c0488606be26cfd30db5248809",
+    "ref": "feat/ciops-p2-projection"
+  },
+  "base": {
+    "ref": "main"
+  },
+  "created_at": "2026-10-06T04:11:46Z",
+  "user": {
+    "login": "kriegcloud"
+  }
+}
