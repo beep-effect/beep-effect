@@ -77,6 +77,7 @@ export {
   diffJudgeRubricFamily,
   diffJudgeRubricLenses,
   JudgeRubricDrift,
+  JudgeRubricFamilyInput,
   lintJudgeRubricCommand,
 } from "./JudgeRubric.ts";
 /**

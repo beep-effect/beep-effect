@@ -108,3 +108,9 @@
 - **Doing:** reading the first live render; walls seen at a shallow angle were hatched almost solid.
 - **Evidence:** `hatchFace` stepped section planes at the plan pitch along the face, so a face at 73° to the picture plane printed its lines at 0.29 of the pitch. The synthetic bracket has no steeply foreshortened shaded face, so its goldens and both synthetic judge rounds never showed it.
 - **Would have prevented it:** a synthetic fixture with a tall oblique wall, or a validator check on minimum line-to-line distance in the shading layer of each sheet.
+
+## 2026-10-06 — an inherited lint red blocks the push-first publish
+
+- **Doing:** publishing the closeout commit after merging `main`.
+- **Evidence:** `bun run beep yeet publish` stopped at cheap-gates on `lint:effect-vitest`: "2 new finding(s)" in `packages/foundation/modeling/schema/test/PatternOntology.test.ts`, a file this branch does not touch and that is red on `main` itself. The publish command has no way to proceed past a red the branch did not introduce, so the commit was pushed with `git push` and hosted CI left to prove it.
+- **Would have prevented it:** cheap-gates attributing each red against the merge-base (introduced or inherited) and blocking only on introduced ones, or `main` being held green for the lanes the push gate runs.

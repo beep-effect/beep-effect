@@ -2,6 +2,7 @@ import {
   diffJudgeRubricFamily,
   diffJudgeRubricLenses,
   JudgeRubricDrift,
+  JudgeRubricFamilyInput,
   lintJudgeRubricCommand,
 } from "@beep/repo-cli/commands/Lint";
 import {
@@ -88,9 +89,10 @@ describe("commands/Lint JudgeRubric lens drift", () => {
       "Also grade `view-agreement`.\n\n## Output contract"
     );
     expect(diffJudgeRubricLenses(withDrawingLens).unknownInPrompt).toEqual(["view-agreement"]);
-    expect(diffJudgeRubricFamily({ prompt: syncedPrompt, family: DrawingQaLens.literals }).missingFromPrompt).toEqual([
-      ...DrawingQaLens.literals,
-    ]);
+    expect(
+      diffJudgeRubricFamily(JudgeRubricFamilyInput.make({ prompt: syncedPrompt, family: DrawingQaLens.literals }))
+        .missingFromPrompt
+    ).toEqual([...DrawingQaLens.literals]);
   });
 
   it.effect("rejects unknown values in the missing-lens domain", () =>
@@ -161,7 +163,7 @@ describe("commands/Lint JudgeRubric lens drift", () => {
       const path = yield* Path.Path;
       const root = yield* findRepoRoot();
       const prompt = yield* fs.readFileString(path.join(root, DRAWING_JUDGE_PROMPT_TEMPLATE));
-      const drift = diffJudgeRubricFamily({ prompt, family: DrawingQaLens.literals });
+      const drift = diffJudgeRubricFamily(JudgeRubricFamilyInput.make({ prompt, family: DrawingQaLens.literals }));
       expect(drift.missingFromPrompt).toEqual([]);
       expect(drift.unknownInPrompt).toEqual([]);
     }, provideScopedLayer(PlatformLayer))
