@@ -287,3 +287,25 @@ Final strict public-schema/identity validation again passes all 15,503 rows
 with zero errors; its narrower scope remains explicit.
 
 `final-strict-ledger.json` SHA-256 `248e7d3a8c837b585d3c5dace624522e123b20fb1dcc3ee791c7afda5f51e405`.
+
+
+## Hosted inherited dependency repair
+
+The first pushed head `923223bb0f4862c0819896a6dc0068579c5adb27`
+opened PR #1506. Its Security and Repo Sanity jobs both failed the unchanged
+lockfile's transitive `@modelcontextprotocol/sdk` 1.30.0 advisory
+`GHSA-6qxp-vccf-f47h`. Repo Sanity's actual first red was `repo-sanity:bun-audit`;
+the later stale-runner-image warning was advisory. No source in this batch
+introduced that dependency. The fleet's dedicated PR #1500 subsequently merged
+at `3f9d7a4a1d7b168a154b174b8184d9c1b5933731`, changing only the SDK
+lock entry to 1.31.0. Merge `3b235fa58564572320592d2b24e07b82ae9eee35`
+incorporates that shared fix; all nine test files remain byte-identical to
+the first pushed head. The obsolete Check and Heavy Admit runs on that head
+were canceled so their queued work does not consume runners before the rerun.
+Their red/canceled outcomes remain evidence; they are not passed proof.
+
+GraphQL quota exhaustion also prevented the initial provenance footer/label
+steps. The PR and `ready-for-heavy` label were created/applied through REST.
+The detached monitor was successfully submitted after providing the existing
+user-session runtime and D-Bus environment. Neither submission nor the label
+establishes ready state, hosted acceptance or merge.

@@ -6927,3 +6927,16 @@ merge and current ownership subtrees while retaining original source attribution
 A source receipt should record both its tested source SHA and the landed merge
 SHA with exact correspondence; ancestry alone cannot recognize squash history.
 This does not waive source inspection or justify replacing historical fix SHAs.
+
+
+### 2026-10-06 — Publication transport and inherited audit attribution
+
+PR #1506 published successfully, but GraphQL quota exhaustion blocked its
+provenance footer and label step; REST applied the label. Detached monitor
+submission initially lacked the existing user-session environment and succeeded
+with its runtime/D-Bus variables. The monitor still reports unknown readiness
+until quota allows the full PR read. The two completed red jobs were read
+immediately: Security and Repo Sanity both identified SDK 1.30.0, already owned
+and fixed by fleet PR #1500. Merging that shared repair avoids duplicate fixes.
+The later runner-image warning was not Repo Sanity's first red. Transport
+fallback and explicit session-environment discovery would prevent this friction.
