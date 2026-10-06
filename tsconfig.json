@@ -2045,6 +2045,9 @@
       ],
       "@beep/law-practice-use-cases/MailTagging": [
         "./packages/law-practice/use-cases/src/MailTagging/index.ts"
+      ],
+      "@beep/law-practice-server/DocketIntake": [
+        "./packages/law-practice/server/src/DocketIntake/index.ts"
       ]
     }
   }

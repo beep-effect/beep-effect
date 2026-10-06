@@ -25,7 +25,7 @@ make the fleet root per repository; the private clone then moves to
 
 1. `fleet-root-registry` first. Everything else reads the setting and writes
    the registry; nothing moves until discovery sees both the new root and the
-   legacy roots.
+   legacy checkouts.
 2. `lane-bootstrap` and `ops-seat-timers` in parallel. Bootstrap makes new
    work land in `lanes/`; timers make the three infra clones retirable.
 3. `legacy-drain` once both land. It is the only goal that deletes anything
@@ -44,8 +44,11 @@ enumerated; a fired gate reopens this packet at `decompose`.
 `fleet-root-registry` lands when, on this workstation:
 
 - `BEEP_FLEET_ROOT` (or its config-file equivalent) is set to
-  a new `beep` directory under the configured projects root, with that
-  projects root listed as a legacy root;
+  a new `beep` directory under the configured projects directory, with that
+  projects directory listed as the discovery root; discovery selects only
+  matching `beep-effect*` child checkout roots and excludes unrelated project
+  directories; the sibling `beep-effect*` checkout directories are the legacy
+  checkouts;
 - creation of `seats/` and `lanes/` under `BEEP_FLEET_ROOT`, plus a fresh
   clone at
   `seats/main` is discovered by `beep worktree fleet` alongside the 223
@@ -55,6 +58,12 @@ enumerated; a fired gate reopens this packet at `decompose`.
   authored role `legacy-lane`, slug `agent-fleet-layout`, and the PR number;
 - the 35-directory `beep-effect0-worktrees` count matches `git worktree
   list` or the discrepancy has a named cause in the goal's reflection.
+
+Example directory creation:
+
+```sh
+mkdir -p "$HOME/YeeBois/projects/beep/seats" "$HOME/YeeBois/projects/beep/lanes"
+```
 
 Verification: `bun run beep worktree fleet --json` before and after, diffed;
 the registry file decodes against its schema; package-verify on
