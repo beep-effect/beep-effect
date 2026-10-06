@@ -11,6 +11,7 @@ import { assertSome } from "@effect/vitest/utils";
 import { Console, Effect, FileSystem, flow, Layer, Order, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import * as jsonc from "jsonc-parser";
@@ -37,6 +38,14 @@ const TsconfigPaths = S.Struct({
     paths: S.Record(S.String, S.Array(S.String)),
   }),
 });
+const FallowBoundaries = S.Struct({
+  boundaries: S.Struct({
+    zones: S.Array(S.Struct({ name: S.String, patterns: S.Array(S.String) })),
+    rules: S.Array(S.Struct({ from: S.String, allow: S.Array(S.String) })),
+  }),
+});
+const decodeFallowBoundaries = S.decodeUnknownEffect(FallowBoundaries);
+const decodeUnknownRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const decodeTsconfigReferences = S.decodeUnknownEffect(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownEffect(TsconfigPaths);
 
@@ -1268,6 +1277,112 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               return;
             }
             expect(drift.fileCount).toBe(1);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
+
+    it.effect(
+      "repairs the Vitest alias data and the Fallow boundary config for a hand-made package and a new dependency edge",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+            const aliasesPath = path.join(rootDir, "vitest.aliases.generated.json");
+            const boundariesPath = path.join(rootDir, "standards", "fallow.boundaries.generated.jsonc");
+            const runMode = (mode: "check" | "dry-run" | "sync") =>
+              syncTsconfigAtRoot(rootDir, { mode, filter: undefined, verbose: false });
+            const driftSections = Effect.map(runMode("dry-run"), (result) =>
+              A.map(result.changes, (change) => change.section)
+            );
+            const boundaryRuleFor = Effect.fnUntraced(function* (packageName: string) {
+              const boundaries = yield* decodeFallowBoundaries(yield* readJsoncFile(boundariesPath));
+              return A.findFirst(boundaries.boundaries.rules, (rule) => rule.from === packageName);
+            });
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/core", "packages/app"],
+              references: [],
+              paths: {},
+              syncpackSources: ["package.json", "packages/app/package.json", "packages/core/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, { relativeDir: "packages/core", packageName: "@beep/core" });
+            yield* bootstrapWorkspace(rootDir, { relativeDir: "packages/app", packageName: "@beep/app" });
+            // Both generated files are committed but predate the two hand-made packages.
+            yield* writeTextFile(aliasesPath, "{}\n");
+            yield* writeTextFile(boundariesPath, "{}\n");
+
+            const drift = yield* runMode("check").pipe(Effect.flip);
+            expect(drift._tag).toBe("TsconfigSyncDriftError");
+            expect(drift._tag === "TsconfigSyncDriftError" ? drift.summary : "").toContain(`Run "beep tsconfig-sync"`);
+            const initialSections = yield* driftSections;
+            expect(initialSections).toContain("root-vitest-aliases");
+            expect(initialSections).toContain("root-fallow-boundaries");
+
+            yield* runMode("sync");
+
+            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            expect(yield* readJsonFile(aliasesPath)).toEqual(rootPaths.compilerOptions.paths);
+            expect(R.keys(rootPaths.compilerOptions.paths)).toContain("@beep/app");
+            const boundaries = yield* decodeFallowBoundaries(yield* readJsoncFile(boundariesPath));
+            expect(A.map(boundaries.boundaries.zones, (zone) => zone.name)).toEqual(["@beep/app", "@beep/core"]);
+            assertSome(
+              O.map(yield* boundaryRuleFor("@beep/app"), (rule) => rule.allow),
+              ["@beep/app"]
+            );
+            expect((yield* runMode("check")).changedFiles).toBe(0);
+            expect((yield* runMode("sync")).changedFiles).toBe(0);
+
+            // A new workspace dependency edge leaves tsconfig aliases alone but stales the boundary rules.
+            const appManifestPath = path.join(rootDir, "packages", "app", "package.json");
+            const appManifest = yield* decodeUnknownRecord(yield* readJsonFile(appManifestPath));
+            yield* writeJsonFile(appManifestPath, { ...appManifest, dependencies: { "@beep/core": "workspace:^" } });
+
+            expect(yield* driftSections).toContain("root-fallow-boundaries");
+            expect((yield* runMode("check").pipe(Effect.flip))._tag).toBe("TsconfigSyncDriftError");
+
+            yield* runMode("sync");
+
+            assertSome(
+              O.map(yield* boundaryRuleFor("@beep/app"), (rule) => rule.allow),
+              ["@beep/app", "@beep/core"]
+            );
+            expect((yield* runMode("check")).changedFiles).toBe(0);
+            const boundariesAfterRepair = yield* fs.readFileString(boundariesPath);
+            expect((yield* runMode("sync")).changedFiles).toBe(0);
+            expect(yield* fs.readFileString(boundariesPath)).toBe(boundariesAfterRepair);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
+
+    it.effect(
+      "leaves a repository that commits neither generated file untouched",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/core"],
+              references: [],
+              paths: {},
+              syncpackSources: ["package.json", "packages/core/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, { relativeDir: "packages/core", packageName: "@beep/core" });
+
+            const result = yield* syncTsconfigAtRoot(rootDir, { mode: "sync", filter: undefined, verbose: false });
+
+            expect(A.map(result.changes, (change) => change.section)).not.toContain("root-vitest-aliases");
+            expect(A.map(result.changes, (change) => change.section)).not.toContain("root-fallow-boundaries");
+            expect(yield* fs.exists(path.join(rootDir, "vitest.aliases.generated.json"))).toBe(false);
+            expect(yield* fs.exists(path.join(rootDir, "standards", "fallow.boundaries.generated.jsonc"))).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       20_000

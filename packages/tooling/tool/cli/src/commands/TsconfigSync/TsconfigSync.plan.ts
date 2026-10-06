@@ -37,6 +37,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
+import { FALLOW_BOUNDARY_CONFIG_PATH, renderFallowBoundaryConfig } from "../Fallow/Fallow.command.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
   byPlannedChangeAscending,
@@ -675,6 +676,136 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
   );
 });
 
+const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
+
+const aliasPathEntriesEqual = (
+  current: Readonly<Record<string, unknown>>,
+  expected: Readonly<Record<string, unknown>>
+): boolean => {
+  const expectedKeys = R.keys(expected);
+
+  return (
+    arraysEqual(R.keys(current), expectedKeys) &&
+    A.every(expectedKeys, (key) => {
+      const expectedValue = expected[key];
+      return (
+        A.isArray(expectedValue) && A.every(expectedValue, P.isString) && pathValuesEqual(current[key], expectedValue)
+      );
+    })
+  );
+};
+
+/**
+ * Plan the generated root Vitest alias data so it mirrors root tsconfig paths.
+ *
+ * **Details**
+ *
+ * `vitest.shared.ts` imports `vitest.aliases.generated.json`, and
+ * `beep quality tsgo-rules` fails when it differs from the root
+ * `compilerOptions.paths`. The plan compares against the root tsconfig content
+ * this same run is about to write, so one sync never leaves the mirror a run
+ * behind. A repository that does not commit the file is left alone.
+ *
+ * **Example** (Plan tsconfig synchronization)
+ *
+ * ```ts
+ * import { planRootVitestAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = planRootVitestAliasSync("/repo", O.none())
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param rootDir - Absolute repository root directory.
+ * @param plannedRootTsconfig - Root tsconfig content planned by the alias sync, when it changes.
+ * @returns The planned alias-data rewrite, or none when the mirror is current or absent.
+ * @category utilities
+ * @since 0.0.0
+ */
+const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRootTsconfig: O.Option<string>) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const filePath = path.join(rootDir, VITEST_ALIASES_FILENAME);
+
+  if (!(yield* fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse)))) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const tsconfigPath = path.join(rootDir, "tsconfig.json");
+  const tsconfigContent = yield* O.match(plannedRootTsconfig, {
+    onNone: () => readFileString(tsconfigPath),
+    onSome: Effect.succeed,
+  });
+  const expectedPaths =
+    (yield* parseJsonc(tsconfigContent, tsconfigPath, TsconfigWithPaths)).compilerOptions?.paths ?? {};
+  const currentPaths = yield* parseJsonObject(yield* readFileString(filePath), filePath);
+
+  if (aliasPathEntriesEqual(currentPaths, expectedPaths)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  return O.some(
+    PlannedFileChange.cases["root-vitest-aliases"].make({
+      filePath,
+      summary: summaryCounts(R.keys(currentPaths), R.keys(expectedPaths), "aliases"),
+      content: yield* renderBiomeJson(filePath, expectedPaths),
+    })
+  );
+});
+
+/**
+ * Plan the generated Fallow boundary config from the current workspace dependency edges.
+ *
+ * **Details**
+ *
+ * `fallow:boundaries:config-check` fails when a new workspace or a new
+ * workspace dependency edge is missing from
+ * `standards/fallow.boundaries.generated.jsonc`. The expected text comes from
+ * the renderer behind `beep fallow boundaries --write`. A repository that does
+ * not commit the file is left alone.
+ *
+ * **Example** (Plan tsconfig synchronization)
+ *
+ * ```ts
+ * import { planRootFallowBoundarySync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
+ *
+ * const program = planRootFallowBoundarySync("/repo")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param rootDir - Absolute repository root directory.
+ * @returns The planned boundary-config rewrite, or none when it is current or absent.
+ * @category utilities
+ * @since 0.0.0
+ */
+const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const filePath = path.join(rootDir, FALLOW_BOUNDARY_CONFIG_PATH);
+
+  if (!(yield* fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse)))) {
+    return O.none<PlannedFileChange>();
+  }
+
+  const { content } = yield* renderFallowBoundaryConfig(rootDir).pipe(
+    Effect.mapError(DomainError.newCause(`Failed to render the Fallow boundary config for "${filePath}"`))
+  );
+
+  if (Str.equivalence(yield* readFileString(filePath), content)) {
+    return O.none<PlannedFileChange>();
+  }
+
+  return O.some(
+    PlannedFileChange.cases["root-fallow-boundaries"].make({
+      filePath,
+      summary: "boundaries: regenerate zones and rules from workspace dependency edges",
+      content,
+    })
+  );
+});
+
 /**
  * Plan root syncpack source-array edits.
  *
@@ -1197,6 +1328,10 @@ const toReportedChange = (change: PlannedFileChange): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-check-references"].make({ filePath, summary }),
     "package-docgen": ({ filePath, summary }): TsconfigSyncChange =>
       TsconfigSyncChange.cases["package-docgen"].make({ filePath, summary }),
+    "root-vitest-aliases": ({ filePath, summary }): TsconfigSyncChange =>
+      TsconfigSyncChange.cases["root-vitest-aliases"].make({ filePath, summary }),
+    "root-fallow-boundaries": ({ filePath, summary }): TsconfigSyncChange =>
+      TsconfigSyncChange.cases["root-fallow-boundaries"].make({ filePath, summary }),
   });
 
 /**
@@ -1220,8 +1355,10 @@ export const TsconfigSyncPlan = {
   planPackageDocgenSync,
   planPackageReferenceSync,
   planRootAliasSync,
+  planRootFallowBoundarySync,
   planRootReferenceSync,
   planRootSyncpackSync,
+  planRootVitestAliasSync,
   relativeFromRoot,
   sortChanges,
   toReportedChange,

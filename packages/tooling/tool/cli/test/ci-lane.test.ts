@@ -7,6 +7,7 @@ import {
   CiLanePartitionShard,
   CiLaneRunOptions,
   CiLocalStepPlan,
+  ciLaneDefaultPlacements,
   ciLanePartitionArgsForTesting,
   ciLaneStepsForTesting,
   ciLocalLaneInputsForTesting,
@@ -14,6 +15,7 @@ import {
   docgenLaneModeForChangedPaths,
   proveCiLanePartition,
   runCiLane,
+  withCiLaneDefaultPlacements,
 } from "@beep/repo-cli/commands/Ci";
 import {
   isLabsWorkspaceDir,
@@ -274,12 +276,37 @@ const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, 
 const partitionPackages = (partitionId: string): ReadonlyArray<string> =>
   O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === partitionId)).packages;
 
-const lanePackages = (laneId: "lint" | "test-unit"): ReadonlyArray<string> =>
-  pipe(
-    CI_LANE_PARTITIONS,
-    A.filter((partition) => partition.lane === laneId),
-    A.flatMap((partition) => partition.packages),
+// Executable non-labs packages of the live workspace, the inventory the lane
+// proves against. Deriving expectations from it keeps these tests green when a
+// workspace package is created without a partition-table edit.
+const liveTaskPackages = Effect.fn(function* (task: "lint" | "test") {
+  const repoRoot = yield* findRepoRoot();
+  const path = yield* Path.Path;
+  const workspaces = yield* resolveWorkspacePackages(repoRoot);
+  return pipe(
+    A.fromIterable(HashMap.entries(workspaces)),
+    A.filter(([, workspace]) => {
+      const relativeDir = Str.replace(/\\/g, "/")(path.relative(repoRoot, workspace.dir));
+      return !isLabsWorkspaceDir(relativeDir) && R.has(workspace.scripts, task);
+    }),
+    A.map(([name]) => name),
     A.sort(Order.String)
+  );
+});
+
+const effectivePartitionSize = (
+  laneId: "lint" | "test-unit",
+  partitionId: string,
+  taskPackages: ReadonlyArray<string>
+): number =>
+  pipe(
+    withCiLaneDefaultPlacements(
+      A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === laneId),
+      taskPackages
+    ),
+    A.findFirst((partition) => partition.id === partitionId),
+    O.map((partition) => A.length(partition.packages)),
+    O.getOrElse(() => 0)
   );
 
 const turboDryRunOutput = (task: string, packages: ReadonlyArray<string>): string =>
@@ -502,18 +529,82 @@ describe("CI lane partitions", () => {
     })
   );
 
-  it.effect("fails closed for a missing placement and a duplicate assignment", () =>
+  it("places an unlisted package by name without moving any listed or earlier-placed package", () => {
+    const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
+    const listed = A.flatMap(lintPartitions, (partition) => partition.packages);
+    const first = ciLaneDefaultPlacements(lintPartitions, [...listed, "@beep/new-one"]);
+    const second = ciLaneDefaultPlacements(lintPartitions, [...listed, "@beep/new-two", "@beep/new-one", "@beep/a"]);
+
+    expect(A.map(first, (placement) => placement.packageName)).toEqual(["@beep/new-one"]);
+    expect(A.map(second, (placement) => placement.packageName)).toEqual(["@beep/a", "@beep/new-one", "@beep/new-two"]);
+    expect(A.findFirst(second, (placement) => placement.packageName === "@beep/new-one")).toEqual(A.head(first));
+    expect(A.every(second, (placement) => placement.partition === "lint-a" || placement.partition === "lint-b")).toBe(
+      true
+    );
+
+    const effective = withCiLaneDefaultPlacements(lintPartitions, [...listed, "@beep/new-one"]);
+    expect(
+      A.zipWith(effective, lintPartitions, (after, before) => A.take(after.packages, A.length(before.packages)))
+    ).toEqual(A.map(lintPartitions, (partition) => partition.packages));
+    expect(A.length(A.flatMap(effective, (partition) => partition.packages))).toBe(A.length(listed) + 1);
+    expect(withCiLaneDefaultPlacements(lintPartitions, listed)).toBe(lintPartitions);
+  });
+
+  it("never defaults a package into a sharded bin", () => {
+    const unitPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit");
+    const names = A.makeBy(64, (index) => `@beep/generated-${index}`);
+    const partitions = A.dedupe(
+      A.map(ciLaneDefaultPlacements(unitPartitions, names), (placement) => placement.partition)
+    );
+
+    expect(A.sort(partitions, Order.String)).toEqual(["unit-a", "unit-b"]);
+    expect(
+      ciLaneDefaultPlacements(
+        A.filter(unitPartitions, (partition) => partition.shard !== undefined),
+        names
+      )
+    ).toEqual([]);
+  });
+
+  it.effect("proves a workspace package the table does not name in exactly one partition", () =>
+    Effect.gen(function* () {
+      const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
+      const taskPackages = [...A.flatMap(lintPartitions, (partition) => partition.packages), "@beep/fresh-package"];
+      const proofs = yield* Effect.forEach(["lint-a", "lint-b"] as const, (partition) =>
+        proveCiLanePartition("lint", partition, taskPackages, taskPackages, taskPackages, false)
+      );
+      const holders = A.filter(proofs, (proof) => A.contains(proof.packages, "@beep/fresh-package"));
+
+      expect(A.length(holders)).toBe(1);
+      expect(A.length(A.flatMap(proofs, (proof) => proof.packages))).toBe(A.length(taskPackages));
+    })
+  );
+
+  it.effect("fails closed for an unplaceable package and a duplicate assignment", () =>
     Effect.gen(function* () {
       const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
       const allLintPackages = A.flatMap(lintPartitions, (partition) => partition.packages);
       const lintA = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-a"));
       const lintB = O.getOrThrow(A.findFirst(lintPartitions, (partition) => partition.id === "lint-b"));
       const firstLintA = O.getOrThrow(A.head(lintA.packages));
-      const missingTable = A.map(CI_LANE_PARTITIONS, (partition) =>
-        partition.id === "lint-a"
-          ? CiLanePartition.make({ ...partition, packages: A.drop(partition.packages, 1) })
-          : partition
-      );
+      // A lane whose every bin is sharded has no default bin, so an unlisted
+      // package stays unplaced and the coverage proof still fails closed.
+      const missingTable = [
+        CiLanePartition.make({
+          id: "lint-a",
+          lane: "lint",
+          packages: ["@beep/repo-cli"],
+          weightSeconds: 1,
+          shard: CiLanePartitionShard.make({ index: 1, total: 2 }),
+        }),
+        CiLanePartition.make({
+          id: "lint-b",
+          lane: "lint",
+          packages: ["@beep/repo-cli"],
+          weightSeconds: 1,
+          shard: CiLanePartitionShard.make({ index: 2, total: 2 }),
+        }),
+      ];
       const duplicateTable = A.map(CI_LANE_PARTITIONS, (partition) =>
         partition.id === "lint-b"
           ? CiLanePartition.make({ ...partition, packages: A.prepend(partition.packages, firstLintA) })
@@ -523,14 +614,14 @@ describe("CI lane partitions", () => {
       const missing = yield* proveCiLanePartition(
         "lint",
         "lint-a",
-        allLintPackages,
-        allLintPackages,
-        allLintPackages,
+        ["@beep/repo-cli", "@beep/unplaced"],
+        ["@beep/repo-cli", "@beep/unplaced"],
+        ["@beep/repo-cli", "@beep/unplaced"],
         false,
         missingTable
       ).pipe(Effect.flip);
       expect(missing.reason).toBe("missing-package");
-      expect(missing.message).toContain(firstLintA);
+      expect(missing.message).toContain("@beep/unplaced");
 
       const duplicate = yield* proveCiLanePartition(
         "lint",
@@ -715,7 +806,12 @@ describe("CI lane partitions", () => {
             taskPackageNames,
             false
           );
-          const lanePartitions = A.filter(CI_LANE_PARTITIONS, (entry) => entry.lane === laneId);
+          // Default placements cover any workspace the curated table does not
+          // name yet, so this union needs no edit when a package is created.
+          const lanePartitions = withCiLaneDefaultPlacements(
+            A.filter(CI_LANE_PARTITIONS, (entry) => entry.lane === laneId),
+            taskPackageNames
+          );
           const unshardedAssignments = pipe(
             lanePartitions,
             A.filter((entry) => entry.shard === undefined),
@@ -731,7 +827,7 @@ describe("CI lane partitions", () => {
 
           expect(A.length(A.dedupe(assignments))).toBe(A.length(assignments));
           expect(A.sort(assignments, Order.String)).toEqual(taskPackageNames);
-          expect(proof.selectedTaskCount).toBe(137);
+          expect(proof.selectedTaskCount).toBe(A.length(taskPackageNames));
         }
       })
     );
@@ -764,7 +860,7 @@ describe("partitioned CI lane execution", () => {
   it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
     it.effect("proves and executes a full lint partition with exact package tasks", () =>
       Effect.gen(function* () {
-        const selectedPackages = lanePackages("lint");
+        const selectedPackages = yield* liveTaskPackages("lint");
         const firstPackage = firstOf(partitionPackages("lint-a"));
         const nonexistentPackage = firstPackage;
         const dryRunOutput = encodeJson({
@@ -824,7 +920,10 @@ describe("partitioned CI lane execution", () => {
             expect(execution).not.toContain("--affected");
 
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-            expect(output).toContain("lint partition union proved: 137 executable tasks, 137 selected, 69 in lint-a");
+            const taskCount = A.length(selectedPackages);
+            expect(output).toContain(
+              `lint partition union proved: ${taskCount} executable tasks, ${taskCount} selected, ${effectivePartitionSize("lint", "lint-a", selectedPackages)} in lint-a`
+            );
           })
         );
       })
@@ -878,7 +977,7 @@ describe("partitioned CI lane execution", () => {
 
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
             expect(output).toContain(
-              "test-unit partition union proved: 137 executable tasks, 1 selected, 0 in repo-cli-1"
+              `test-unit partition union proved: ${A.length(yield* liveTaskPackages("test"))} executable tasks, 1 selected, 0 in repo-cli-1`
             );
             expect(output).toContain("test-unit repo-cli-1: partition has no selected tasks (skipped)");
           })
@@ -889,21 +988,23 @@ describe("partitioned CI lane execution", () => {
 
   it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
     it.effect("completes a successful partition dry run without execution", () =>
-      withPartitionShim({ dryRunOutput: turboDryRunOutput("test", lanePackages("test-unit")) }, ({ commandLogPath }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          yield* runCiLane(
-            "test-unit",
-            CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli-1" })
-          );
+      Effect.flatMap(liveTaskPackages("test"), (testPackages) =>
+        withPartitionShim({ dryRunOutput: turboDryRunOutput("test", testPackages) }, ({ commandLogPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* runCiLane(
+              "test-unit",
+              CiLaneRunOptions.make({ ...baseOptions, dryRun: true, partition: "repo-cli-1" })
+            );
 
-          const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
-          expect(commands).toHaveLength(1);
-          const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
-          expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
-          expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/2");
-          expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
-        })
+            const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split("\n"), A.filter(Str.isNonEmpty));
+            expect(commands).toHaveLength(1);
+            const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
+            expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
+            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/2");
+            expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
+          })
+        )
       )
     );
   });

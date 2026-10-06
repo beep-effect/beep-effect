@@ -1,3 +1,10 @@
+/**
+ * Runtime layers for {{scopedName}}.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { HttpApiBuilder } from "effect/http-api";
@@ -7,4 +14,19 @@ const handlers = HttpApiBuilder.group(Api, "{{name}}", (group) =>
   group.handle("health", () => Effect.succeed(Health.make({ status: "ok" })))
 );
 
+/**
+ * Live HTTP API layer with every {{scopedName}} handler provided.
+ *
+ * **Example** (Check the layer value)
+ *
+ * ```ts
+ * import * as Layer from "effect/Layer"
+ * import { ApiLive } from "@/runtime/Layer"
+ *
+ * console.log(Layer.isLayer(ApiLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ApiLive = HttpApiBuilder.layer(Api).pipe(Layer.provide(handlers));

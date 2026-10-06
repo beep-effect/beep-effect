@@ -7,6 +7,11 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { A, Str } from "@beep/utils";
+import { HashSet, Order, pipe } from "effect";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Ci/CiLanePartitions");
@@ -194,6 +199,8 @@ export class CiLanePartition extends S.Class<CiLanePartition>($I`CiLanePartition
  * tasks are assigned to two bins. The extracted `@beep/test-runner` stays
  * beside `@beep/test-utils` in each lane so the moved workload retains its
  * existing placement. The weights are evidence, not runtime scheduling inputs.
+ * A package the table does not name is placed by `ciLaneDefaultPlacements`, so
+ * a new workspace needs no edit here; add it explicitly only when rebalancing.
  *
  * **Example** (List the hosted partitions)
  *
@@ -524,3 +531,161 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     ],
   }),
 ];
+
+/**
+ * Default placement for one executable package the curated table does not name.
+ *
+ * **Example** (Describe a default placement)
+ *
+ * ```ts
+ * import { CiLaneDefaultPlacement } from "@beep/repo-cli/commands/Ci"
+ *
+ * const placement = CiLaneDefaultPlacement.make({ packageName: "@beep/new-package", partition: "lint-a" })
+ * console.log(placement.partition)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLaneDefaultPlacement extends S.Class<CiLaneDefaultPlacement>($I`CiLaneDefaultPlacement`)(
+  {
+    packageName: S.String,
+    partition: CiLanePartitionId,
+  },
+  $I.annote("CiLaneDefaultPlacement", {
+    description: "Name-derived partition assigned to an executable package absent from the curated table.",
+  })
+) {}
+
+const FNV_OFFSET_BASIS = 0x811c9dc5;
+const FNV_PRIME = 0x01000193;
+
+// FNV-1a over UTF-16 code units, spelled out here so a placement never moves
+// when a runtime or library changes its own string hash.
+const stablePackageNameHash = (packageName: string): number =>
+  A.reduce(
+    A.makeBy(Str.length(packageName), (index) => packageName.charCodeAt(index)),
+    FNV_OFFSET_BASIS,
+    (hash, codeUnit) => Math.imul(hash ^ codeUnit, FNV_PRIME) >>> 0
+  );
+
+const partitionIdOrder: Order.Order<CiLanePartition> = Order.mapInput(Order.String, (partition) => partition.id);
+
+/**
+ * Derive the default partition of every executable package the lane's curated bins do not name.
+ *
+ * **Details**
+ *
+ * The curated table stays the measured LPT placement. A package it does not
+ * name (a freshly created workspace) lands in one of the lane's unsharded bins,
+ * chosen by an FNV-1a hash of its name over the bins in id order. The choice
+ * depends only on the package name and the lane's bin ids, so adding another
+ * package never moves an existing one. A lane without an unsharded bin yields
+ * no placement, and the coverage proof then fails closed.
+ *
+ * **Example** (Place an unlisted package)
+ *
+ * ```ts
+ * import { CI_LANE_PARTITIONS, ciLaneDefaultPlacements } from "@beep/repo-cli/commands/Ci"
+ * import * as A from "effect/Array"
+ *
+ * const lintBins = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint")
+ * console.log(ciLaneDefaultPlacements(lintBins, ["@beep/new-package"]))
+ * ```
+ *
+ * @param lanePartitions - Curated partitions of one lane.
+ * @param taskPackageNames - Every package with an executable task in that lane.
+ * @returns One placement per unlisted package, ordered by package name.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLaneDefaultPlacements: {
+  (
+    lanePartitions: ReadonlyArray<CiLanePartition>,
+    taskPackageNames: ReadonlyArray<string>
+  ): ReadonlyArray<CiLaneDefaultPlacement>;
+  (
+    taskPackageNames: ReadonlyArray<string>
+  ): (lanePartitions: ReadonlyArray<CiLanePartition>) => ReadonlyArray<CiLaneDefaultPlacement>;
+} = dual(
+  2,
+  (
+    lanePartitions: ReadonlyArray<CiLanePartition>,
+    taskPackageNames: ReadonlyArray<string>
+  ): ReadonlyArray<CiLaneDefaultPlacement> => {
+    const assigned = HashSet.fromIterable(A.flatMap(lanePartitions, (partition) => partition.packages));
+    const bins = pipe(
+      lanePartitions,
+      A.filter((partition) => P.isUndefined(partition.shard)),
+      A.sort(partitionIdOrder)
+    );
+
+    return pipe(
+      taskPackageNames,
+      A.dedupe,
+      A.filter((packageName) => !HashSet.has(assigned, packageName)),
+      A.sort(Order.String),
+      A.map((packageName) =>
+        pipe(
+          A.get(bins, stablePackageNameHash(packageName) % Math.max(A.length(bins), 1)),
+          O.map((bin) => CiLaneDefaultPlacement.make({ packageName, partition: bin.id }))
+        )
+      ),
+      A.getSomes
+    );
+  }
+);
+
+/**
+ * Extend a lane's curated partitions with the default placement of every unlisted executable package.
+ *
+ * **Example** (Resolve the effective lint bins)
+ *
+ * ```ts
+ * import { CI_LANE_PARTITIONS, withCiLaneDefaultPlacements } from "@beep/repo-cli/commands/Ci"
+ * import * as A from "effect/Array"
+ *
+ * const lintBins = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint")
+ * const effective = withCiLaneDefaultPlacements(lintBins, ["@beep/new-package"])
+ * console.log(A.some(effective, (partition) => A.contains(partition.packages, "@beep/new-package")))
+ * ```
+ *
+ * @param lanePartitions - Curated partitions of one lane.
+ * @param taskPackageNames - Every package with an executable task in that lane.
+ * @returns The same partitions, with default-placed packages appended to their bins.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withCiLaneDefaultPlacements: {
+  (
+    lanePartitions: ReadonlyArray<CiLanePartition>,
+    taskPackageNames: ReadonlyArray<string>
+  ): ReadonlyArray<CiLanePartition>;
+  (
+    taskPackageNames: ReadonlyArray<string>
+  ): (lanePartitions: ReadonlyArray<CiLanePartition>) => ReadonlyArray<CiLanePartition>;
+} = dual(
+  2,
+  (
+    lanePartitions: ReadonlyArray<CiLanePartition>,
+    taskPackageNames: ReadonlyArray<string>
+  ): ReadonlyArray<CiLanePartition> => {
+    const placements = ciLaneDefaultPlacements(lanePartitions, taskPackageNames);
+
+    return A.isReadonlyArrayEmpty(placements)
+      ? lanePartitions
+      : A.map(lanePartitions, (partition) =>
+          CiLanePartition.make({
+            ...partition,
+            packages: A.appendAll(
+              partition.packages,
+              pipe(
+                placements,
+                A.filter((placement) => placement.partition === partition.id),
+                A.map((placement) => placement.packageName)
+              )
+            ),
+          })
+        );
+  }
+);

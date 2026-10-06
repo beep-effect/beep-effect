@@ -316,6 +316,9 @@ const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
   })
 );
 
+const PACKAGE_TEST_FILE = "test/index.test.ts";
+const PACKAGE_TEST_PLACEHOLDER_FILE = "test/.gitkeep";
+
 /**
  * Mapping from template source to output path.
  *
@@ -490,6 +493,15 @@ const packageTemplateSpecsFor = (withStoriesTsconfig: boolean): ReadonlyArray<Te
     ? pipe(A.make(PACKAGE_TEMPLATE_SPECS, STORIES_TEMPLATE_SPECS), A.flatten)
     : PACKAGE_TEMPLATE_SPECS;
 
+// A library ships one real test so the declared `effect` and `@effect/vitest`
+// dependencies are used from the first commit (Knip) and the alias path is
+// exercised. The runtime-proof app reuses the package shape without a root
+// `@beep/*` alias, so it keeps the empty `test/` placeholder instead.
+const PACKAGE_TEST_TEMPLATE_SPEC = TemplateSpec.make({
+  templateName: "test-index.test.ts.hbs",
+  outputPath: PACKAGE_TEST_FILE,
+});
+
 const appTemplateSpecsFor = (shape: ScaffoldShape, kind: AppKind): ReadonlyArray<TemplateSpec> => {
   if (appKindEquivalence(kind, "nextjs")) return shape.lab ? NEXTJS_LAB_APP_TEMPLATE_SPECS : NEXTJS_APP_TEMPLATE_SPECS;
   if (appKindEquivalence(kind, "vite"))
@@ -503,7 +515,7 @@ const templateSpecsFor = (shape: ScaffoldShape): ReadonlyArray<TemplateSpec> =>
   pipe(
     shape.appKind,
     O.match({
-      onNone: () => packageTemplateSpecsFor(shape.withStoriesTsconfig),
+      onNone: () => A.append(packageTemplateSpecsFor(shape.withStoriesTsconfig), PACKAGE_TEST_TEMPLATE_SPEC),
       onSome: (kind) => appTemplateSpecsFor(shape, kind),
     })
   );
@@ -653,7 +665,10 @@ const filesFor = (shape: ScaffoldShape): ReadonlyArray<string> =>
   pipe(
     shape.appKind,
     O.match({
-      onNone: () => packageFilesFor(shape.withStoriesTsconfig),
+      onNone: () =>
+        A.map(packageFilesFor(shape.withStoriesTsconfig), (file) =>
+          file === PACKAGE_TEST_PLACEHOLDER_FILE ? PACKAGE_TEST_FILE : file
+        ),
       onSome: (kind) => appFilesFor(shape, kind),
     }),
     (files) => (shape.lab ? pipe(A.make(files, LAB_EXTRA_FILES), A.flatten) : files)
@@ -699,9 +714,9 @@ const directoriesFor = (shape: ScaffoldShape): ReadonlyArray<string> =>
   );
 
 const gitkeepFilesFor = (appKind: O.Option<AppKind>): ReadonlyArray<PlannedFile> =>
-  O.isSome(appKind) && !appKindEquivalence(appKind.value, "runtime-proof")
-    ? A.empty<PlannedFile>()
-    : [PlannedFile.make({ relativePath: "test/.gitkeep", content: "" })];
+  O.isSome(appKind) && appKindEquivalence(appKind.value, "runtime-proof")
+    ? [PlannedFile.make({ relativePath: PACKAGE_TEST_PLACEHOLDER_FILE, content: "" })]
+    : A.empty<PlannedFile>();
 
 const appKindIs = (appKind: O.Option<AppKind>, kind: AppKind): boolean =>
   O.isSome(appKind) && appKindEquivalence(appKind.value, kind);
@@ -1721,6 +1736,9 @@ const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemP
     devDependencies: {
       "@types/node": "catalog:",
       "@effect/vitest": "catalog:",
+      // tsconfig.test.json lists `bun-types`; Knip reports it unresolved
+      // unless the package declares it.
+      "bun-types": "catalog:",
       effect: "catalog:",
     },
   };
@@ -1875,9 +1893,8 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
     effect: "catalog:",
   },
   devDependencies: {
-    // test/health.test.ts uses `provideScopedLayer` to satisfy the effect-LSP's
-    // strictEffectProvide rule.
-    "@beep/test-utils": "workspace:^",
+    // test/health.test.ts provides its server and client through `it.layer`,
+    // so no test-utils layer helper is imported (declaring one fails Knip).
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     typescript: "catalog:",
@@ -2061,6 +2078,9 @@ const generatePackageJson: (
       devDependencies: {
         "@types/node": "catalog:",
         "@effect/vitest": "catalog:",
+        // tsconfig.test.json lists `bun-types`; Knip reports it unresolved
+        // unless the package declares it.
+        "bun-types": "catalog:",
       },
     });
   }

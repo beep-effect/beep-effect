@@ -609,7 +609,6 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(runtimeLayer).not.toContain('from "effect"');
 
             const healthTest = yield* fs.readFileString(path.join(packageDir, "test", "health.test.ts"));
-            expect(healthTest).toContain('import * as Context from "effect/Context";');
             expect(healthTest).toContain('import * as Effect from "effect/Effect";');
             expect(healthTest).toContain('import * as Layer from "effect/Layer";');
             expect(healthTest).toContain('import * as Match from "effect/Match";');
