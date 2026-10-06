@@ -113,6 +113,7 @@ const config = {
     "packages/drivers/xstate/package.json",
     "packages/drivers/tesseract/package.json",
     "packages/drivers/poppler/package.json",
+    "apps/docket-intake/package.json",
   ],
   customTypes: {
     catalog: {

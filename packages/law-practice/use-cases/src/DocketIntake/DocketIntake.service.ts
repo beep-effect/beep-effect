@@ -47,6 +47,7 @@ import {
   DocketIntakeState,
   DocketLedgerRecord,
   DocketNeedsReview,
+  DocketSourceFolder,
   IntakeFailed,
   MatterLookupResult,
   NotDocketItem,
@@ -355,6 +356,20 @@ const sourceLine = (message: DocketMessage): string =>
     onSome: (link) => `Source email: ${link}`,
   });
 
+// Mail found in Junk Email or Deleted Items is docketed like any other, and every entry written
+// for it says where it was found.
+const folderFlags: (folder: DocketSourceFolder) => ReadonlyArray<DocketEntryFlag> = DocketSourceFolder.$match({
+  deleted: (): ReadonlyArray<DocketEntryFlag> => ["deleted-folder"],
+  junk: (): ReadonlyArray<DocketEntryFlag> => ["junk-folder"],
+  mailbox: (): ReadonlyArray<DocketEntryFlag> => [],
+});
+
+const folderLines: (folder: DocketSourceFolder) => ReadonlyArray<string> = DocketSourceFolder.$match({
+  deleted: () => ["Found in the Deleted Items folder."],
+  junk: () => ["Found in the Junk Email folder."],
+  mailbox: () => A.empty<string>(),
+});
+
 const NOMINAL_NOTE = "Dates are nominal: not adjusted for weekends, holidays, closures or extensions.";
 const TENTATIVE_NOTE =
   "Tentative docket entry created automatically. Confirm or correct it here; this calendar is the record.";
@@ -398,6 +413,7 @@ const writeNeedsReview = Effect.fnUntraced(function* (
   }
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
   const key = yield* entryKey(ports, messageIdentity(message), "needs-review", "0");
+  const flags = A.appendAll(input.flags, folderFlags(message.sourceFolder));
   const entry = yield* ensureEntry(
     ports,
     DocketCalendarEntry.make({
@@ -405,7 +421,8 @@ const writeNeedsReview = Effect.fnUntraced(function* (
         "A message looks like a docket item but no dated entry could be made. Please read it.",
         `Reason: ${input.reason}`,
         ...input.lines,
-        flagsLine(input.flags),
+        flagsLine(flags),
+        ...folderLines(message.sourceFolder),
         sourceLine(message),
       ]),
       category: "Docket - needs review",
@@ -417,7 +434,7 @@ const writeNeedsReview = Effect.fnUntraced(function* (
     })
   );
   yield* Effect.ignore(ports.mailbox.markEntered(message));
-  return DocketNeedsReview.make({ entry, flags: input.flags, messageId: message.messageId, reason: input.reason });
+  return DocketNeedsReview.make({ entry, flags, messageId: message.messageId, reason: input.reason });
 });
 
 const reminderEntry = Effect.fnUntraced(function* (
@@ -486,6 +503,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
     ...sourceFlags,
     ...whenFlag(ladder.truncated, "ladder-truncated"),
     ...whenFlag(isBefore(dueDate.date, today), "due-date-past"),
+    ...folderFlags(message.sourceFolder),
   ]);
   const key = yield* entryKey(ports, messageIdentity(message), "due", "0");
   const written = yield* ensureEntry(
@@ -509,6 +527,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
           A.map(DOCKET_REMINDER_OFFSETS, (offset) => `${offset}d`),
           "/"
         )}`,
+        ...folderLines(message.sourceFolder),
         sourceLine(message),
         ...noteLines,
       ]),

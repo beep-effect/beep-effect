@@ -588,6 +588,7 @@
     "packages/drivers/freshbooks",
     "packages/drivers/xstate",
     "packages/drivers/tesseract",
-    "packages/drivers/poppler"
+    "packages/drivers/poppler",
+    "apps/docket-intake"
   ]
 }
