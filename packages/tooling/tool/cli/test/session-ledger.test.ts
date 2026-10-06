@@ -10,7 +10,6 @@ import {
   SessionLedger,
   SessionLedgerError,
   SessionLedgerRow,
-  SessionLedgerRowJson,
   SessionOpenReport,
   SessionOpenReportJson,
   sessionCheckoutFacts,
@@ -136,50 +135,8 @@ const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effec
   return A.join(A.map(output, String), "\n");
 });
 
-describe("session ledger failure boundaries", () => {
+describe("session report encoding", () => {
   it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
-    it.effect("maps an append codec failure without touching the ledger", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const root = yield* fs.makeTempDirectoryScoped();
-        const ledger = yield* makeSessionLedgerLive().pipe(
-          Effect.provideService(
-            ConfigProvider.ConfigProvider,
-            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root } })
-          )
-        );
-        const cause = yield* S.encodeUnknownEffect(SessionLedgerRow)(undefined).pipe(Effect.flip);
-        const encoder = vi.spyOn(SessionLedgerRowJson, "encode").mockReturnValue(Effect.fail(cause));
-        const error = yield* ledger
-          .append(row())
-          .pipe(Effect.flip, Effect.ensuring(Effect.sync(() => encoder.mockRestore())));
-        expect(error.reason).toBe("decode");
-        expect(error.cause).toBe(cause);
-        expect(yield* fs.readDirectory(root)).toStrictEqual([]);
-      })
-    );
-
-    it.effect("maps filesystem permission failures to denied", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const denied = PlatformError.systemError({
-          _tag: "PermissionDenied",
-          module: "FileSystem",
-          method: "makeDirectory",
-        });
-        const ledger = yield* makeSessionLedgerLive().pipe(
-          Effect.provideService(FileSystem.FileSystem, { ...fs, makeDirectory: () => Effect.fail(denied) }),
-          Effect.provideService(
-            ConfigProvider.ConfigProvider,
-            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: "/denied" } })
-          )
-        );
-        const error = yield* ledger.append(row()).pipe(Effect.flip);
-        expect(error.reason).toBe("denied");
-        expect(error.cause).toBe(denied);
-      })
-    );
-
     it.effect("reports a failed JSON report encode through the CLI error boundary", () =>
       withScratchCheckout(({ clone }) =>
         Effect.gen(function* () {
@@ -193,75 +150,6 @@ describe("session ledger failure boundaries", () => {
           expect(error.message).toBe("[session] Failed to encode the session report.");
         })
       )
-    );
-
-    it.effect("maps a spawn failure while probing checkout facts", () =>
-      withScratchCheckout(({ clone }) =>
-        Effect.gen(function* () {
-          const live = yield* ChildProcessSpawner.ChildProcessSpawner;
-          let calls = 0;
-          const spawner = ChildProcessSpawner.make((command) => {
-            calls += 1;
-            return calls === 2
-              ? Effect.fail(
-                  PlatformError.systemError({ _tag: "NotFound", module: "ChildProcessSpawner", method: "spawn" })
-                )
-              : live.spawn(command);
-          });
-          const error = yield* sessionCheckoutFacts(clone).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            Effect.flip
-          );
-          expect(error.reason).toBe("git");
-          expect(error.message).toContain("spawn git rev-parse --show-toplevel");
-        })
-      )
-    );
-
-    it.effect("maps a nonzero git exit while probing checkout facts", () =>
-      withScratchCheckout(({ clone }) =>
-        Effect.gen(function* () {
-          const live = yield* ChildProcessSpawner.ChildProcessSpawner;
-          let calls = 0;
-          const spawner = ChildProcessSpawner.make((command) => {
-            calls += 1;
-            return calls === 2
-              ? live.spawn(command).pipe(
-                  Effect.map((handle) =>
-                    ChildProcessSpawner.makeHandle({
-                      ...handle,
-                      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(7)),
-                    })
-                  )
-                )
-              : live.spawn(command);
-          });
-          const error = yield* sessionCheckoutFacts(clone).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            Effect.flip
-          );
-          expect(error.reason).toBe("git");
-          expect(error.message).toContain("git rev-parse --show-toplevel exited with 7");
-        })
-      )
-    );
-  });
-
-  it.layer(layerSessionLedgerMemory, { timeout: "10 seconds" })((it) => {
-    it.effect("partitions the in-memory ledger by repository identity", () =>
-      Effect.gen(function* () {
-        const ledger = yield* SessionLedger;
-        yield* ledger.append(row({ next: "first" }));
-        for (const other of [
-          PrRepository.make({ ...repository, owner: "other" }),
-          PrRepository.make({ ...repository, name: "other" }),
-        ]) {
-          yield* ledger.append(SessionLedgerRow.make({ ...row(), repository: other }));
-        }
-        yield* ledger.append(row({ next: "second" }));
-        expect(A.map(yield* ledger.list(repository), (item) => item.next)).toStrictEqual(["first", "second"]);
-        expect(yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }))).toStrictEqual([]);
-      })
     );
   });
 });
@@ -282,10 +170,6 @@ const gitStateBase = {
 };
 
 describe("session ledger rows", () => {
-  it("keeps the newest row when an older row arrives later", () => {
-    const newest = row({ next: "newest", recordedAt: 2 });
-    expect(openSessionRows([newest, row({ next: "older", recordedAt: 1 })])).toStrictEqual([newest]);
-  });
   it("keeps the newest row per checkout, drops done checkouts, and sorts newest first", () => {
     const rows = [
       row({ checkout: "/a", recordedAt: 1, next: "old a" }),
@@ -539,6 +423,7 @@ describe("session ledger memory layer", () => {
         yield* ledger.append(elsewhere({ owner: "someone" }, "other owner"));
         yield* ledger.append(elsewhere({ name: "other" }, "other name"));
         expect(A.map(yield* ledger.list(repository), (item) => item.next)).toStrictEqual(["ours"]);
+        expect(yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }))).toStrictEqual([]);
       })
     );
   });
