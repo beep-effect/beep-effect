@@ -1,4 +1,6 @@
 import {
+  BOUND_MODEL_SEGMENT,
+  bindLocatorModel,
   expectedLocatorValue,
   extractGeneratedBlock,
   generatedBlockBegin,
@@ -367,4 +369,30 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
     expect(body).toContain("| codex.heavy | codex-cli | `gpt-6-astra` | `medium` |");
     strictEqual(body.includes("superseded:"), false);
   });
+
+  it.effect("a bound-model pointer follows the binding, not a stale literal entry", () =>
+    Effect.gen(function* () {
+      const reader = yield* ModelsLocatorReader;
+      // The reviewer's probe: the binding moved to claude-opus-5-6 while a
+      // stale claude-opus-5-5 entry still says medium.
+      const settings = file(
+        JSON.stringify({
+          model: "claude-opus-5-6",
+          effortLevel: "low",
+          modelSettings: { "claude-opus-5-5": { effortLevel: "medium" }, "claude-opus-5-6": { effortLevel: "high" } },
+        })
+      );
+      const locator = {
+        _tag: "json-key",
+        binding: binding("effort"),
+        render: verbatim,
+        pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
+        fallbacks: [["effortLevel"]],
+      } as Locator;
+
+      assertSome(yield* reader.read(settings, bindLocatorModel(locator, "claude-opus-5-6")), "high");
+      // No per-model entry for the bound id: the top-level effort applies.
+      assertSome(yield* reader.read(settings, bindLocatorModel(locator, "claude-opus-5-7")), "low");
+    })
+  );
 });
