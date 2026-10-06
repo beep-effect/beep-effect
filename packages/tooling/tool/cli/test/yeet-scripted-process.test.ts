@@ -11,9 +11,15 @@ import {
   buildPrBody,
   buildYeetRunPlan,
   commandTextForStep,
+  decideYeetReadyGate,
   defaultYeetRunOptions,
+  deriveYeetMergeReady,
   ensurePullRequest,
   findOpenPullRequest,
+  ProofJobRecord,
+  ProofJobRequest,
+  ProofJobSubmitter,
+  ProofJobUnit,
   ProvenanceStampOutcome,
   RepoPlanStep,
   RepoRunContext,
@@ -21,6 +27,8 @@ import {
   recordPrCreateLane,
   recordPrProvenanceStampLane,
   runGhPullRequestView,
+  runYeetReady,
+  runYeetReadyGate,
   SweepGitState,
   shouldMonitorChecks,
   TurboPlanSnapshot,
@@ -32,7 +40,11 @@ import {
   validateRequiredMessage,
   YeetEnsuredPullRequest,
   YeetExecutedStep,
+  YeetReadyOptions,
+  YeetReadyPullRequestRead,
   YeetRetirePlan,
+  YeetStatusArtifact,
+  YeetStatusRemote,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -705,4 +717,228 @@ describe("yeet plan step models", () => {
     assertSome(turboTaskForStep(context, feedbackStep("feedback:test", { task: "unknown" })), byStepId);
     assertNone(turboTaskForStep(context, feedbackStep("feedback:missing")));
   });
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate over gh", (it) => {
+  const HEAD_SHA = "c051bba853c051bba853c051bba853c051bba853";
+  const passingCheck = {
+    bucket: "pass",
+    completedAt: "2026-10-05T18:15:00Z",
+    link: "https://github.com/o/r/actions/runs/77/job/3",
+    name: "Check / Lint",
+    startedAt: "2026-10-05T18:10:00Z",
+    state: "SUCCESS",
+    workflow: "Check",
+  };
+  // What `gh` prints for a draft pull request whose required checks are green
+  // and whose review threads are all answered: the D10 gate holds.
+  const greenDraft: ReadonlyArray<Reply> = [
+    [
+      "gh pr view --json id,number",
+      0,
+      encodeJson({
+        headRefOid: HEAD_SHA,
+        id: "PR_ready",
+        isDraft: true,
+        labels: [{ name: "ready-for-heavy" }],
+        mergeable: "MERGEABLE",
+        mergeStateStatus: "DRAFT",
+        number: 7,
+        reviewDecision: null,
+        state: "OPEN",
+        url: PR_URL,
+      }),
+    ],
+    ["gh pr checks", 0, encodeJson([passingCheck])],
+    [
+      "gh api graphql",
+      0,
+      encodeJson({
+        data: {
+          node: {
+            author: { login: "author" },
+            reviewThreads: { nodes: [], pageInfo: { endCursor: null, hasNextPage: false } },
+          },
+        },
+      }),
+    ],
+    ["gh run list", 0, "[]"],
+    ["git ", 0, ""],
+  ];
+
+  const remoteOf = (overrides: Partial<YeetStatusRemote> = {}) =>
+    YeetStatusRemote.make({
+      available: true,
+      checked: true,
+      detail: "PR #7 OPEN",
+      state: "OPEN",
+      number: 7,
+      headSha: O.some(HEAD_SHA),
+      isDraft: true,
+      mergeable: "MERGEABLE",
+      mergeStateStatus: "DRAFT",
+      requiredCheckCount: 1,
+      failingRequiredCheckCount: 0,
+      pendingRequiredCheckCount: 0,
+      unresolvedReviewThreadCount: 0,
+      ...overrides,
+    });
+  const closeout = YeetStatusArtifact.make({
+    detail: "closed",
+    issueCount: 0,
+    path: "pr-closeout.json",
+    state: "present",
+    reviewedHeadSha: O.some(HEAD_SHA),
+  });
+  const readOf = (remote: YeetStatusRemote, shown: YeetStatusRemote = remote) =>
+    YeetReadyPullRequestRead.make({ remote: shown, mergeReady: deriveYeetMergeReady(closeout, remote) });
+  const readTwice = Effect.fnUntraced(function* (first: YeetReadyPullRequestRead, later: YeetReadyPullRequestRead) {
+    const count = yield* Ref.make(0);
+    return () => Ref.getAndUpdate(count, (n) => n + 1).pipe(Effect.map((n) => (n === 0 ? first : later)));
+  });
+  const flipped = { exitCode: 0, output: "", truncated: false };
+
+  it("names what the read could not show in a blocker", () => {
+    const numberless = remoteOf({ state: "CLOSED" });
+    expect(
+      decideYeetReadyGate(
+        YeetReadyPullRequestRead.make({
+          remote: YeetStatusRemote.make({ available: true, checked: true, detail: "PR CLOSED", state: "CLOSED" }),
+          mergeReady: deriveYeetMergeReady(closeout, numberless),
+        })
+      )
+    ).toMatchObject({ _tag: "blocked", blocker: "pr-open", detail: "pull request #? is CLOSED" });
+    expect(decideYeetReadyGate(readOf(remoteOf({ headSha: O.none(), pendingRequiredCheckCount: 1 })))).toMatchObject({
+      _tag: "blocked",
+      blocker: "required-checks-green",
+      detail: "required checks are not green on head unknown: 0 failing, 1 pending of 1 required",
+    });
+    // Every criterion holds, yet the read carries no pull request number to
+    // flip: the gate refuses on its first criterion instead of guessing one.
+    expect(
+      decideYeetReadyGate(
+        readOf(remoteOf(), YeetStatusRemote.make({ available: false, checked: true, detail: "no number" }))
+      )
+    ).toMatchObject({
+      _tag: "blocked",
+      blocker: "pr-open",
+      detail: "no open pull request was found for this branch",
+    });
+  });
+
+  it.effect("flips the draft through gh when its own status read holds the gate, twice", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-flip-" });
+      const commands = yield* makeCommands;
+      const decision = yield* runYeetReadyGate(contextAt(root)).pipe(
+        withProcesses([["gh pr ready 7", 0, ""], ...greenDraft], commands)
+      );
+      expect(decision).toMatchObject({ _tag: "flip", prNumber: 7 });
+      const ran = yield* Ref.get(commands);
+      expect(A.length(A.filter(ran, Str.startsWith("gh pr view --json id,number")))).toBe(2);
+      assertSome(A.findFirst(ran, Str.startsWith("gh pr ready")), "gh pr ready 7");
+    })
+  );
+
+  it.effect("still flips when the job registry cannot be listed", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-registry-" });
+      // The registry directory is a file here, so listing it fails.
+      yield* fs.makeDirectory(path.join(root, ".beep", "yeet"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".beep", "yeet", "jobs"), "not a directory");
+      const commands = yield* makeCommands;
+      const decision = yield* runYeetReadyGate(contextAt(root), {
+        capture: () => Effect.succeed(flipped),
+        read: () => Effect.succeed(readOf(remoteOf())),
+      }).pipe(withProcesses([], commands));
+      expect(decision._tag).toBe("flip");
+    })
+  );
+
+  it.effect("names the live readiness monitor after the flip", () =>
+    Effect.gen(function* () {
+      const jobId = "cc5d6bd3-1111-4aaa-8bbb-000000000001";
+      const monitor = ProofJobRecord.make({
+        jobId,
+        phase: "running",
+        submittedAt: "2026-10-05T10:00:00.000Z",
+        request: ProofJobRequest.make({
+          mode: "monitor",
+          argv: ["monitor", "--until-ready", "--json"],
+          checkout: "/repo",
+          branch: BRANCH,
+          base: "origin/main",
+          head: HEAD_SHA,
+          forwardedEnvNames: [],
+        }),
+        submitter: ProofJobSubmitter.make({ pid: 4242, procStart: O.none(), cwd: "/repo", harness: O.none() }),
+        unit: ProofJobUnit.make({
+          unitName: `beep-proof-${jobId}.service`,
+          slice: "agent-runs.slice",
+          description: "beep-yeet-job",
+          logPath: `/repo/.beep/yeet/jobs/${jobId}.log`,
+          execStart: ["/opt/bun"],
+          execStopPost: ["/opt/bun"],
+          maxRuntimeSeconds: O.none(),
+          invocationId: O.none(),
+        }),
+        runner: O.none(),
+        outcome: O.none(),
+        systemd: O.none(),
+        terminationReason: O.none(),
+        cancelRequestedAt: O.none(),
+        prNumber: O.some(7),
+      });
+      const asked = yield* Ref.make<ReadonlyArray<number>>([]);
+      const decision = yield* runYeetReadyGate(contextAt("/repo"), {
+        capture: () => Effect.succeed(flipped),
+        findMonitor: (_context, prNumber) => Ref.update(asked, A.append(prNumber)).pipe(Effect.as(O.some(monitor))),
+        read: () => Effect.succeed(readOf(remoteOf())),
+      });
+      expect(decision._tag).toBe("flip");
+      expect(yield* Ref.get(asked)).toEqual([7]);
+    })
+  );
+
+  it.effect("refuses the flip when the confirming read differs from the gate read", () =>
+    Effect.gen(function* () {
+      const headless = readOf(remoteOf({ headSha: O.none() }));
+      const refusal = Effect.fnUntraced(function* (first: YeetReadyPullRequestRead, later: YeetReadyPullRequestRead) {
+        const error = yield* runYeetReadyGate(contextAt("/repo"), {
+          capture: () => Effect.die("gh must not run"),
+          read: yield* readTwice(first, later),
+        }).pipe(Effect.flip);
+        return error.message;
+      });
+      expect(yield* refusal(readOf(remoteOf()), readOf(remoteOf({ isDraft: false })))).toContain(
+        "the pull request changed between the gate read and the flip; it is already ready for review."
+      );
+      // Without a head on either read the gate cannot prove they match.
+      expect(yield* refusal(headless, headless)).toContain("the head moved (gate unknown, live unknown)");
+    })
+  );
+
+  it.effect("runs the gate for the checked-out branch and refuses when it has no pull request", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const packetDir = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-command-" });
+      const commands = yield* makeCommands;
+      const error = yield* runYeetReady(YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir })).pipe(
+        Effect.flip,
+        withProcesses(
+          [
+            ["gh pr view", 1, "no pull requests found"],
+            ["rev-parse --abbrev-ref HEAD", 0, `${BRANCH}\n`],
+            ["git ", 0, ""],
+          ],
+          commands
+        )
+      );
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
+      expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr ready"))).toBe(false);
+    })
+  );
 });

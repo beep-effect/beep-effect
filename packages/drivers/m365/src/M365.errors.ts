@@ -128,6 +128,7 @@ export const M365ErrorReason = LiteralKit([
   "transport",
   "throttled",
   "encrypted item",
+  "ambiguous write",
 ]).pipe(
   $I.annoteSchema("M365ErrorReason", {
     description: "Redacted technical error reasons emitted by the Microsoft 365 Graph driver.",
