@@ -22,9 +22,11 @@ Everything else you decide, record, and keep moving.
    failing check run at all (a Vercel failure you have confirmed was only
    rate-limited may be merged over by hand), no
    outstanding thread (unresolved, or author-resolved with a later human
-   reviewer comment), not draft, not conflicting. It exits non-zero when
-   main's required contexts can't be read, and prints `threads=?` when the
-   thread count is unknown; neither ever means "clear".
+   reviewer comment), not draft, not conflicting, and `window=ok`: 20 minutes
+   have passed since the later of the PR's last ready-for-review event and the
+   push of its head. It exits non-zero when main's required contexts can't be
+   read, and prints `threads=?` or `window=?` when a read failed; none of
+   these ever means "clear".
 
 ## Loop
 
@@ -33,7 +35,14 @@ on any new conflict, red or unresolved thread. Never poll GraphQL in a tight
 loop: the 5,000/hr pool is shared by every session on the account, and an
 exhausted pool makes thread counts read `?` (never treat that as zero).
 
-- **GATE-MET** → squash-merge over REST at the verified head:
+- **Green draft** → never flip and merge it yourself in one step. Tell the
+  owner to run `bun run beep yeet ready` (owners flip at content-final, before
+  heavy CI finishes); flip it yourself only after the owner calls it final.
+  Either way the review window then runs before `GATE-MET`.
+- **GATE-MET** → run `gate.sh` once more immediately before the merge, so the
+  thread count is seconds old, and merge only if the row is still `GATE-MET`
+  with a real thread count (`threads=?` is not zero). Then squash-merge over
+  REST at the verified head:
   `gh api -X PUT repos/<o>/<r>/pulls/<n>/merge -f merge_method=squash -f sha=<head> -f commit_title="<title> (#<n>)"`
   (fix a non-conventional title in `commit_title`). Then message the owner to
   run `yeet sweep --retire`. Respect owner-declared order (A before B).
