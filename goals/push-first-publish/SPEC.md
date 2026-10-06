@@ -28,7 +28,8 @@ This packet removes the need for that instruction.
 | D7 | "Publish done" = pushed + draft PR + `ready-for-heavy` applied + detached `monitor --until-ready` job submitted. Publish prints the PR URL and job id, then exits. Attached `--monitor` becomes opt-in. | Pushed + PR only (forgotten monitor); attached monitor (fleet holds processes). |
 | D8 | `--pr` becomes the default on a PR-less branch; `--no-pr` opts out. | Keep `--pr` opt-in. `check.yml` triggers only on `pull_request` and pushes to `main`, so a bare push produces no hosted signal at all. |
 | D9 | `monitor --until-ready` gains a terminal `ready-pending-flip` (exit 0) for a draft whose only remaining blocker is the draft flag. It prints the flip command. | Auto-flip (defeats draft-until-final); keep holding (agents hand-roll `gh`). |
-| D10 | `yeet ready` flips draft to ready only when, on the current head, every review thread is answered and the required checks are green. It refuses otherwise and names the blocker. No `--force`. | Threads-only gate; thin `gh pr ready` wrapper. |
+| D10 | `yeet ready` flips draft to ready only when, on the current head, every review thread is answered and the required checks are green. It refuses otherwise and names the blocker. No `--force`. Amended by D11. | Threads-only gate; thin `gh pr ready` wrapper. |
+| D11 | Operator ruling 2026-10-06 (see Decision Log). Ready at content-final: the owner flips draft to ready as soon as the content is final and cheap gates pass, before hosted heavy CI finishes; `yeet ready` refuses only on a known failing required check or an unanswered thread. The merge gate gains a review window: not mergeable until 20 minutes after the later of the latest ready-for-review event and the latest push to the head. Nobody un-drafts and merges in one step; the merger re-reads threads right before merging. | Keep draft-until-green (reviews start after the merge gate is already open); require a named reviewer or bot verdict (bots rotate with quota and must never gate); a window from PR creation only (a late push would merge unreviewed). |
 
 ### Why the full proof can leave the publish path
 
@@ -42,6 +43,12 @@ This packet removes the need for that instruction.
   schema-first, changeset, jsdoc ratchet, config sync, tsgo rule parity) that
   would otherwise cost a hosted run.
 
+## Decision Log
+
+| Date | Decision | Evidence and reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-06 | D11, review-window ruling (operator). `yeet ready` gates on `pr-open`, `no-required-red`, `threads-resolved` instead of fully green checks. `merge-ready` gains the hard criterion `review-window-elapsed`, read lazily over REST (`issues/<n>/timeline` for `ready_for_review`, `pulls/<n>` `created_at` when the PR was opened ready, `commits/<sha>/check-suites` for the head push) with `Clock` time; a failed read is `unknown` and blocks. Default 20 minutes, `YEET_REVIEW_WINDOW_DEFAULT` in `internal/ReviewWindow.ts`, overridable with `BEEP_YEET_REVIEW_WINDOW`. The orchestrator's `gate.sh` prints `window=` and needs `window=ok` for `GATE-MET`. | PRs were opened as drafts, un-drafted only when everything was green, and merged by the orchestrator within minutes. Review bots and people start when a PR leaves draft and take about 8–15 minutes, so on 2026-10-06 eight PRs merged with zero reviews and on others the review threads arrived at or after the gate. Heavy CI already takes longer than a review, so flipping at content-final costs no wall-clock time. | Set `BEEP_YEET_REVIEW_WINDOW="0 seconds"` to turn the window off without a code change (and `WINDOW_MIN=0` in `.claude/skills/orchestrate/gate.sh`). To restore D10, revert the D11 pull request: `YeetReadyGateCriterion` goes back to `required-checks-green`, and the `review-window-elapsed` criterion, `ReviewWindow.ts`, and the AGENTS.md "Mergeable" bullet are removed. |
+
 ## Non-Goals
 
 - Changing the admission scheduler, its weights, or the `yeet-proof-lock/v4`
@@ -54,7 +61,7 @@ This packet removes the need for that instruction.
 
 ## Source Hierarchy
 
-1. The operator decisions in this spec (D1–D10).
+1. The operator decisions in this spec (D1–D11).
 2. `AGENTS.md`, `CLAUDE.md`, and the `yeet` skill.
 3. `goals/ship-velocity/SPEC.md` for scheduler and parity doctrine it still owns.
 4. This `SPEC.md`.

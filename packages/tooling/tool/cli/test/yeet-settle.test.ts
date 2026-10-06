@@ -27,6 +27,7 @@ import {
   YeetMonitorExit,
   YeetMonitorLoopPolicy,
   YeetPrMergeReadyRow,
+  YeetReviewWindowElapsed,
   YeetRulesetRequiredContexts,
   YeetRulesetRulesPayload,
   YeetSettleChanged,
@@ -732,6 +733,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
+              reviewWindowElapsed: true,
               greptileScore: O.none(),
             });
           // Polls 0–2: tier 1 green, no label, heavy absent → held. Poll 3: the label
@@ -844,6 +846,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           mergeable: true,
           mergeStateAcceptable: true,
           reviewDecisionAcceptable: true,
+          reviewWindowElapsed: true,
           greptileScore: O.none(),
         });
         const fiber = yield* runYeetMonitorUntilMerged(contextFor(root), {
@@ -942,9 +945,20 @@ describe("closeout follow-up gate", () => {
     expect(O.flatMap(artifactOnly, (value) => value.failing)).toStrictEqual(O.some("threads-resolved"));
 
     // Answered: no follow-up left, no closeout issues, and the bot
-    // acknowledgement never counted against the merge.
+    // acknowledgement never counted against the merge. The review window is
+    // the one criterion left, read only now that nothing else blocks.
     const answered = deriveYeetMergeReady(closeoutWith(0), remoteWith(0));
-    expect(O.flatMap(answered, (value) => value.failing)).toStrictEqual(O.none());
+    expect(O.flatMap(answered, (value) => value.failing)).toStrictEqual(O.some("review-window-elapsed"));
+    const elapsed = deriveYeetMergeReady(
+      closeoutWith(0),
+      YeetStatusRemote.make({
+        ...remoteWith(0),
+        reviewWindow: O.some(
+          YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt: "2026-10-06T00:00:00.000Z", windowMs: 1 })
+        ),
+      })
+    );
+    expect(O.flatMap(elapsed, (value) => value.failing)).toStrictEqual(O.none());
   });
 });
 
