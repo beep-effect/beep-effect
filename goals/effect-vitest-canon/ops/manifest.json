@@ -5,7 +5,7 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-09-28",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
@@ -117,5 +117,5 @@
     "Never merge without explicit user authorization.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "PR #1312 merged as 204c347a6fd677f881fa15ad45e784b47fa2f6a1. Continuation branch merged current main with resolved ledger conflicts. Commit 77f8387edb saves verified allowlist/cache resource migrations and Desktop ledger reconciliation. Continue the existing legitimate inventory before the final main delta. Hosted runner-loss failures and the optional-heavy readiness gap carry into follow-up work by Benjamin instruction. Final empty baseline, complete inventory and hosted proof remain required; P1/P2 remain in progress and P3 pending."
+  "statusNote": "Full-goal continuation in codex/effect-vitest-canon-continuation from main 2208622aa8d0a5765769e3950c44ec9e81be9ceb. PRs #1390, #1467 and #1468 are merged; their historical migrations must not be replayed. Existing repo-cli backlog has 313 open detector and 56 actionable human rows at the continuation base; complete that backlog before current-main census delta. Installed Effect/Vitest is 4.0.1 with immutable adapter source equality verified. The 1,937-row baseline is nonempty. Current-cohort proof, complete inventory/lens reconciliation, timings, ratification and final reflection/hosted acceptance remain open. The fleet orchestrator owns merges. See history/2026-10-06-continuation-provenance.md."
 }

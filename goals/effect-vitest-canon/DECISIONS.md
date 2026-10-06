@@ -1,3 +1,9 @@
+> Current continuation, 2026-10-06: new proof uses Effect / Effect Vitest
+> 4.0.1 and Vitest 5.0.3. The full D1-D14 contract remains unchanged.
+> See [current cohort proof](history/2026-10-06-current-cohort-proof.md) and
+> [continuation provenance](history/2026-10-06-continuation-provenance.md).
+> The fleet orchestrator owns merges under the continuation handoff.
+
 > Current-source amendment, 2026-10-01: new work uses the verified Effect /
 > Effect Vitest 4.0.0 cohort, Vitest 5.0.3 and GPT-6.1-Sol medium. Older
 > rc.113/version/model receipts retain their historical provenance. See

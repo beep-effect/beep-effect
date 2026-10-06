@@ -7,6 +7,8 @@ import {
   REPLY_DRAFTS_FILE_NAME,
   REPLY_REPORT_FILE_NAME,
   REPLY_RERUN_COMMAND,
+  REPLY_THREAD_MUTATION,
+  RESOLVE_THREAD_MUTATION,
   ReplyDraft,
   ReplyDraftOutcome,
   ReplyDrafts,
@@ -27,11 +29,11 @@ import {
   replyReviewThreadsPageQuery,
   runYeetReply,
 } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
+import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, pipe, Result, Sink, Stream } from "effect";
 import * as A from "effect/Array";
@@ -472,31 +474,25 @@ const stubHandle = (stub: CommandStub) =>
   });
 
 /**
- * A spawner answering by command-line marker; unlisted commands succeed empty.
+ * A scripted spawner that rejects every unlisted command.
  * `spawned`, when given, records every command line so a test can assert what
  * was *not* run — which is the whole point of the follow-up routing.
  */
-const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<string>) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.succeed(
-      ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("the reply engine never spawns a piped command");
-        }
-        const line = A.join([command.command, ...command.args], " ");
-        spawned?.push(line);
-        return Effect.succeed(
-          stubHandle(
-            pipe(
-              A.findFirst(stubs, ([marker]) => Str.includes(marker)(line)),
-              O.match({ onNone: () => ok(""), onSome: ([, stub]) => stub })
-            )
-          )
-        );
+const stubSpawner = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<ReadonlyArray<string>>) =>
+  ChildProcessSpawner.make((command) => {
+    if (!ChildProcess.isStandardCommand(command)) {
+      return Effect.die("the reply engine never spawns a piped command");
+    }
+    const line = A.join([command.command, ...command.args], " ");
+    spawned?.push([command.command, ...command.args]);
+    return pipe(
+      A.findFirst(stubs, ([marker]) => Str.includes(marker)(line)),
+      O.match({
+        onNone: () => Effect.die(`Unscripted reply command: ${line}`),
+        onSome: ([, stub]) => Effect.succeed(stubHandle(stub)),
       })
-    )
-  );
+    );
+  });
 
 const repoViewJson = `{"name":"beep-effect","owner":{"login":"YeeBois"}}`;
 
@@ -523,17 +519,13 @@ const writeDrafts = Effect.fnUntraced(function* (context: RepoRunContext, drafts
   yield* fs.writeFileString(yield* replyDraftsPathForContext(context), yield* ReplyDraftsJson.encode(drafts));
 });
 
-const withTempDirectory = Effect.fn("withTempDirectory")(function* <Value, Failure, Requirements>(
-  use: (root: string) => Effect.Effect<Value, Failure, Requirements>
-) {
-  const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.acquireUseRelease(fs.makeTempDirectory(), use, (root) =>
-    Effect.ignore(fs.remove(root, { recursive: true }))
+const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
+  Layer.mergeAll(
+    BunCrypto.layer,
+    NodeFileSystem.layer,
+    NodePath.layer,
+    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(stubSpawner(stubs))
   );
-});
-
-const replyTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawned?: Array<string>) =>
-  Layer.mergeAll(BunCrypto.layer, NodeFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs, spawned));
 
 const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", { exitCode: 1, output: "gh: authentication required" }],
@@ -542,11 +534,14 @@ const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
 const liveThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", ok(repoViewJson)],
   ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
+  ["addPullRequestReviewThreadReply", ok("")],
+  ["resolveReviewThread", ok("")],
 ];
 
 const resolvedThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", ok(repoViewJson)],
   ["YeetReplyReviewThreads", ok(resolvedThreadsJson)],
+  ["addPullRequestReviewThreadReply", ok("")],
 ];
 
 describe("runYeetReply", () => {
@@ -555,9 +550,10 @@ describe("runYeetReply", () => {
     ReplyDraft.make({ commentId: O.some(RESOLVED_COMMENT_ID), body: "Already handled." }),
   ]);
 
-  it.effect("settles every loaded draft when the preflight repo read fails, then fails the run", () =>
-    withTempDirectory((root) =>
+  it.layer(replyTestLayer(deniedRepoViewStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("settles every loaded draft when the preflight repo read fails, then fails the run", () =>
       Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
         const context = replyContext(root);
         yield* writeDrafts(context, twoDrafts);
 
@@ -580,31 +576,50 @@ describe("runYeetReply", () => {
           expect(outcome.detail).toContain(REPLY_RERUN_COMMAND);
         }
       })
-    ).pipe(provideScopedLayer(replyTestLayer(deniedRepoViewStubs)))
-  );
+    );
+  });
 
-  it.effect("writes a reply-report.json that decodes back through ReplyReportJson", () =>
-    withTempDirectory((root) =>
+  it.layer(replyTestLayer(liveThreadStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("writes a reply-report.json that decodes back through ReplyReportJson", () =>
       Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const spawned: Array<ReadonlyArray<string>> = [];
         const context = replyContext(root);
         yield* writeDrafts(context, twoDrafts);
 
-        const report = yield* runYeetReply(context);
+        const report = yield* runYeetReply(context).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(liveThreadStubs, spawned))
+        );
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["resolved", "stale"]);
 
+        expect(A.filter(spawned, (args) => A.some(args, Str.includes("mutation(")))).toEqual([
+          [
+            "gh",
+            "api",
+            "graphql",
+            "-f",
+            `query=${REPLY_THREAD_MUTATION}`,
+            "-f",
+            "threadId=PRRT_open",
+            "-f",
+            "body=Fixed in 0123456.",
+          ],
+          ["gh", "api", "graphql", "-f", `query=${RESOLVE_THREAD_MUTATION}`, "-f", "threadId=PRRT_open"],
+        ]);
+        expect(spawned).toHaveLength(4);
         const fs = yield* FileSystem.FileSystem;
         const written = yield* fs.readFileString(yield* replyReportPathForContext(context));
         expect(written).not.toContain('"_id":"Option"');
         expect(yield* ReplyReportJson.decode(written)).toEqual(report);
       })
-    ).pipe(provideScopedLayer(replyTestLayer(liveThreadStubs)))
-  );
+    );
+  });
 
-  const spawned: Array<string> = [];
-
-  it.effect("answers a reviewer follow-up without resolving, and leaves an acknowledgement alone", () =>
-    withTempDirectory((root) =>
+  it.layer(replyTestLayer(resolvedThreadStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("answers a reviewer follow-up without resolving, and leaves an acknowledgement alone", () =>
       Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const spawned: Array<ReadonlyArray<string>> = [];
         const context = replyContext(root);
         yield* writeDrafts(
           context,
@@ -614,18 +629,22 @@ describe("runYeetReply", () => {
           ])
         );
 
-        const report = yield* runYeetReply(context);
+        const report = yield* runYeetReply(context).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(resolvedThreadStubs, spawned))
+        );
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["posted", "stale"]);
         const [followUp, acknowledged] = report.outcomes;
         expect(followUp?.detail).toContain("answered a reviewer follow-up on a resolved thread");
         expect(acknowledged?.detail).toContain("already resolved upstream");
         // The follow-up thread is already resolved on GitHub: the run posts the
         // answer and must not fire the resolve mutation for either thread.
-        expect(A.filter(spawned, Str.includes("addPullRequestReviewThreadReply"))).toHaveLength(1);
-        expect(A.filter(spawned, Str.includes("resolveReviewThread"))).toEqual([]);
+        expect(A.filter(spawned, (args) => A.some(args, Str.includes("addPullRequestReviewThreadReply")))).toHaveLength(
+          1
+        );
+        expect(A.filter(spawned, (args) => A.some(args, Str.includes("resolveReviewThread")))).toEqual([]);
       })
-    ).pipe(provideScopedLayer(replyTestLayer(resolvedThreadStubs, spawned)))
-  );
+    );
+  });
 });
 
 describe("reply operator surfaces", () => {
@@ -756,9 +775,10 @@ describe("reply run verdict", () => {
     })
   );
 
-  it.effect("fails the whole reply run when a live draft's reply is rejected", () =>
-    withTempDirectory((root) =>
+  it.layer(replyTestLayer(deniedReplyMutationStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("fails the whole reply run when a live draft's reply is rejected", () =>
       Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
         const context = replyContext(root);
         yield* writeDrafts(
           context,
@@ -776,6 +796,6 @@ describe("reply run verdict", () => {
           yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context)))
         );
       })
-    ).pipe(provideScopedLayer(replyTestLayer(deniedReplyMutationStubs)))
-  );
+    );
+  });
 });
