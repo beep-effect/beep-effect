@@ -545,3 +545,53 @@ promotion passed Node/Bun, root test types, and full package verification
 the initial snapshot separately and derives current counts and row dispositions
 from the ledger. See `research/cli-next-five-ledger-reconciliation.json`,
 `research/cli-next-five-native-review.md`, and the individual proof receipts.
+
+## 2026-10-06: Artifact IO runner and Memory filesystem migration
+
+Commit `1b9a3aebc5059a387b187b55c86f5a08fa8a553e` moves the seven artifact
+IO tests to runner-owned Effect layers and scoped Memory filesystem fixtures.
+Node and Bun each pass all seven cases, direct test-project typechecking passes,
+and the detector baseline falls by seven with no introduced rows. The seven
+historical detector records and two actionable resource/property lens findings
+are fixed against that source commit; earlier historical fix SHAs remain intact.
+The detector ledger now contains 3,623 rows: 3,075 fixed, 228 exceptions, and
+320 open. Full `@beep/repo-cli` verification passed (audit 838.8 seconds,
+docgen 24.0 seconds). The corrected session-ledger EV004 exception rationale
+keeps its existing identity and status. See
+`research/cli-artifacts-io-scope-proof.md` for the focused evidence and reversal.
+
+## 2026-10-06: Effect-fn native scratch-project runner migration
+
+Source `458ef7defe` replaces four manual runtime boundaries and two custom
+resource wrappers with fresh per-test runner layers. The scoped layer creates
+and cleans each real temporary cwd and builds NodeServices before TSMorph;
+the native CLI subprocess and project filesystem remain the subjects. Four
+tests pass on Node and Bun, direct test-project typechecking passes, and the
+detector reports 1,919 current findings with six resolved and none introduced.
+The six historical EV001/EV003 rows are fixed at that source commit. EV010 is
+reviewed as a native-platform exception. The detector ledger now contains
+3,623 rows: 3,081 fixed, 229 exceptions, and 313 open. See
+`research/cli-effect-fn-runner-proof.md`. Full package and hosted proof remain
+separate.
+
+## 2026-10-06: Current-main Yeet test integration
+
+Merging `origin/main` at `7cc77b528a` adds
+`yeet-scripted-process.test.ts` from #1463. Its one EV010 NodeServices
+candidate is preserved as an open platform judgment because the test combines
+scoped scratch files with scripted process replies. The merged detector scan
+covers 1,240 files and 1,920 current findings, one more than the pre-merge
+branch; no other current candidate was added. The detector ledger contains
+3,624 rows: 3,081 fixed, 229 exceptions, and 314 open. Existing historical
+`yeet-command-wiring.test.ts` IDs remain in the ledger despite a source line
+shift. See `research/cli-post-main-merge-delta.md`.
+
+The #1463 scripted Yeet process suite has since been adjudicated at source
+`757ae7186e2bfe365e5cea2e297c3947bbbeb779`: 30 cases run on a fresh memory
+filesystem and fail-closed process layer, while the ready-gate case needs the
+real checked-out repository from `process.cwd()`. Node/Bun each pass 31 cases,
+and test-project typechecking passes. The historical line-49 EV010 row is fixed
+with its original identity retained; the new line-50 import is a reviewed
+native-subject exception. The detector still reports 1,920 current findings.
+Full package and hosted proof are pending. See
+`research/cli-post-main-merge-delta.md`.

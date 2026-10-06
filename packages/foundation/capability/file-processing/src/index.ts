@@ -27,6 +27,13 @@ export * as Extraction from "./Extraction/index.ts";
  */
 export * as Operation from "./Operation/index.ts";
 /**
+ * Page OCR request, result, engine identity and service contracts.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * as PageOcr from "./PageOcr/index.ts";
+/**
  * Path-traversal safety guard for local file reads and writes.
  *
  * @category services
