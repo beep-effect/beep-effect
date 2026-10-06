@@ -13,7 +13,8 @@ For each new message:
 3. The pipeline works out the due date from what the two agents read. It never
    guesses a date. When the two dates differ it uses the earlier one and says
    so on the entry. When there is no usable date it writes a needs-review
-   entry instead.
+   entry instead. It looks the matter up in the practice knowledge graph and,
+   when configured, checks the date against the attorney's docket sheet.
 4. The entries go on the calendar as all-day events with a `Docket - *`
    category, and the message gets the `Docket - entered` category.
 
@@ -74,6 +75,8 @@ All settings come from the environment.
 | `DOCKET_INTAKE_REVIEW_NEGATIVES` | no | Whether the secretary also reviews messages the paralegal found nothing in. Defaults to `true`. |
 | `DOCKET_INTAKE_REVIEW_MAX_ROUNDS` | no | Rounds of review, from `1` to `10`, after which an item that was not accepted is flagged. A whole number. Defaults to `3`. |
 | `DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD` | no | Confidence score, from `0` to `1`, a review round must reach for an item to be accepted. Defaults to `0.85`. |
+| `DOCKET_INTAKE_KG_BUNDLE_DIR` | no | Directory of the practice knowledge-graph bundle used for the matter lookup. Unset: no lookup, and every entry is flagged `matter-lookup-failed`. |
+| `DOCKET_INTAKE_DOCKET_SHEET_CSV` | no | CSV export of the attorney's docket sheet to cross-check dates against. Unset: no cross-check and no flag. |
 | `AI_ANTHROPIC_API_KEY` | yes for `poll` and `run` | Key for the model both agents use. |
 | `AI_ANTHROPIC_MODEL` | no | Model id; the Anthropic driver's default applies when unset. |
 
@@ -183,9 +186,48 @@ message could not be processed.
 
 ## Matter lookup
 
-The practice knowledge-graph lookup is not wired in yet. Until it is, every
-entry is written with the `matter-lookup-failed` flag, which tells the
-attorney the matter was not resolved.
+With `DOCKET_INTAKE_KG_BUNDLE_DIR` set, every reference the two agents copied
+from the message is looked up in the practice knowledge-graph bundle. The
+current bundle is
+`~/data-home/oppold-corpus/staging/practice-kg-bundle-2026-10-06-03`. The
+service reads only `bundle.manifest.json` and `practice.duckdb`, opened
+read-only, so it runs beside the practice-KG host; it never opens `kg.pglite`.
+It refuses to start when the directory, the manifest or the database is
+missing, or when the bundle's DuckDB store format is not `3`.
+
+What the entry says about the matter:
+
+| Result | Flag | Entry line |
+| --- | --- | --- |
+| One matter, with a client and not resting on a recycle-bin stub | none | `Matter: family …` with the client, its name, dockets and numbers |
+| One matter without a client, on a recycle-bin stub, or matched on the bare family number only | `matter-unverified` | the same, marked `unverified; needs attorney` |
+| Several matters | `matter-ambiguous` | `Matter: ambiguous between …; needs attorney` |
+| No matter owns the number, but the documents of some matters cite it | `matter-suggested` | `Matter: not attached in the records; suggested candidates: …; needs attorney` |
+| Nothing | `matter-not-found` | `Matter: not found in the practice records; needs attorney` |
+| The lookup failed, or no bundle is configured | `matter-lookup-failed` | `Matter: lookup unavailable; needs attorney` |
+
+The attorney's own `<client>.<0NNNN>` matter number is never looked up as a
+docket family, and a bare client number names no matter.
+
+## Docket sheet cross-check
+
+With `DOCKET_INTAKE_DOCKET_SHEET_CSV` set, the service compares each entry
+with the tracked dates on the attorney's docket sheet. It reads a CSV export
+of the sheet, never the spreadsheet itself, and it never writes to the sheet.
+To make the export, open the sheet and choose File > Save As > CSV UTF-8, and
+save it at the configured path. Export again after editing the sheet; the
+service reads the file again when it changes.
+
+The sheet is asked about the dockets of a uniquely found matter (only those
+the message named, when it named any) and every docket the message itself
+names. Only `Due Date` and `Final Date` rows dated no more than a week before
+the message arrived count. When there is one, the entry goes on the earliest
+of the email's date and the sheet's date, the body shows
+`Docket sheet: <date> (<Date Type>: <Tracked Date Name>)`, and a difference
+is flagged `tracked-date-differs`. The sheet can move an entry earlier and add
+a flag; it never accepts a flagged item or clears a flag. A sheet that cannot
+be read is flagged `tracked-dates-unavailable` and the entry is written all
+the same.
 
 ## Development
 

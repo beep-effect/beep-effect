@@ -6,6 +6,8 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as O from "effect/Option";
+import { DocketIntakeAppConfig } from "@/Config";
 import { main } from "@/Main";
 import { liveWiring } from "@/runtime/Layer";
 import { fixtureConfig } from "./support/Config.ts";
@@ -16,6 +18,16 @@ describe("@beep/docket-intake live wiring", () => {
     const mailbox = liveWiring.mailbox(fixtureConfig);
 
     expect([Layer.isLayer(intake), Layer.isLayer(mailbox)]).toStrictEqual([true, true]);
+  });
+
+  it("composes the pipeline over a practice-KG bundle and a docket sheet export when both are configured", () => {
+    const config = DocketIntakeAppConfig.make({
+      ...fixtureConfig,
+      docketSheetCsv: O.some("/fixture/docket-sheet.csv"),
+      kgBundleDirectory: O.some("/fixture/practice-kg-bundle"),
+    });
+
+    expect(Layer.isLayer(liveWiring.intake({ config, initialSince: "2030-01-01T06:00:00.000Z" }))).toBe(true);
   });
 
   it("exposes the command line as one program", () => {

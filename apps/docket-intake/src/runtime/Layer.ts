@@ -9,10 +9,14 @@ import { AnthropicLanguageModelLive } from "@beep/anthropic";
 import {
   DocketFileStoreOptions,
   DocketGraphConfig,
+  DocketKgBundleOptions,
   DocketMatterLookupUnavailableLive,
+  DocketTrackedDatesCsvOptions,
   makeDocketAgentsLayer,
   makeDocketFileStoreLayer,
   makeDocketGraphLayer,
+  makeDocketMatterLookupLayer,
+  makeDocketTrackedDatesCsvLayer,
 } from "@beep/law-practice-server/DocketIntake";
 import {
   DocketIntakeConfig,
@@ -22,6 +26,7 @@ import {
 import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Layer } from "effect";
+import * as O from "effect/Option";
 import type { DocketIntakeAppConfig } from "../Config.ts";
 
 // The app-only Microsoft Graph layer for the configured tenant and certificate.
@@ -37,10 +42,25 @@ const makeM365Layer = (config: DocketIntakeAppConfig) =>
     })
   );
 
+// The matter lookup over the configured practice-KG bundle, opened read-only; without a bundle,
+// every entry is flagged `matter-lookup-failed`.
+const matterLookupLayer = (config: DocketIntakeAppConfig) =>
+  O.match(config.kgBundleDirectory, {
+    onNone: () => DocketMatterLookupUnavailableLive,
+    onSome: (bundleDir) => makeDocketMatterLookupLayer(DocketKgBundleOptions.make({ bundleDir })),
+  });
+
+// The docket sheet cross-check over the configured CSV export; without one there is no cross-check.
+const trackedDatesLayer = (config: DocketIntakeAppConfig) =>
+  O.match(config.docketSheetCsv, {
+    onNone: () => Layer.empty,
+    onSome: (path) => makeDocketTrackedDatesCsvLayer(DocketTrackedDatesCsvOptions.make({ path })),
+  });
+
 // The docket intake pipeline over its live ports: Graph mailbox and calendar, the two
-// Anthropic-backed agents, the file store and the matter lookup, with the review loop's round
-// limit and threshold taken from the configuration. The store is exposed beside the pipeline so
-// the service can seed its cursor.
+// Anthropic-backed agents, the file store, the matter lookup and the docket sheet, with the review
+// loop's round limit and threshold taken from the configuration. The store is exposed beside the
+// pipeline so the service can seed its cursor.
 const makeDocketIntakeAppLayer = (options: {
   readonly config: DocketIntakeAppConfig;
   readonly initialSince: string;
@@ -66,7 +86,7 @@ const makeDocketIntakeAppLayer = (options: {
       reviewNegatives: config.reviewNegatives,
     })
   ).pipe(
-    Layer.provideMerge(Layer.mergeAll(graph, agents, store, DocketMatterLookupUnavailableLive)),
+    Layer.provideMerge(Layer.mergeAll(graph, agents, store, matterLookupLayer(config), trackedDatesLayer(config))),
     Layer.provide(BunCrypto.layer)
   );
 };
