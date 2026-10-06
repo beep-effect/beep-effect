@@ -59,10 +59,12 @@ const buildPart = (add: ReadonlyArray<Primitive>, subtract: ReadonlyArray<Primit
     rest,
     A.reduce(buildPrimitive(first), (acc, p) => acc.fuse(buildPrimitive(p)))
   );
+  // Booleans leave seam edges where coplanar faces met; merge them so the
+  // hidden-line pass does not draw a line the article does not have.
   return pipe(
     subtract,
     A.reduce(fused, (acc, p) => acc.cut(buildPrimitive(p)))
-  );
+  ).simplify();
 };
 
 /**

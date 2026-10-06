@@ -90,3 +90,21 @@
 - **Would have prevented it:** keeping `replicad` types behind `@beep/occt`'s package boundary (a local
   declaration of the small replicad surface the kernel uses), or a repo lint that flags any dependency whose
   typings add `reference lib="dom"` to a `lib: ["ESNext"]` package.
+
+## 2026-10-05 — live-matter attachments unreachable from the agent
+
+- **Doing:** fetching the live matter's sketch and photos from the operator's request email to put them under the corpus root.
+- **Evidence:** the M365 connector read the `.docx` description but answered "Binary attachment — content cannot be returned inline" for the three JPEG attachments. `@beep/m365` has no attachment verb (`rg attachments packages/drivers/m365/src` finds only `hasAttachments`), and no `M365_TENANT_ID` or `M365_CLIENT_ID` is set on the workstation.
+- **Would have prevented it:** a `getMessageAttachment` verb in `@beep/m365` that streams bytes straight to a corpus-root path, plus a documented workstation auth setup for it. The operator also relayed that the email held measurements; a check of the attachment list before relaying would have shown it holds only images and a scale-free description.
+
+## 2026-10-06 — rounded spec coordinates defeated seam merging
+
+- **Doing:** rendering the live matter; stray V-shaped lines appeared where one primitive's end face lay flush on another's wall.
+- **Evidence:** the spec generator rounded coordinates to four decimals, so faces meant to be coplanar differed by about 1e-4 mm and OCCT's same-domain unification left them split. Segment counts fell from 31 to 21 in the top perspective once the spec carried full precision and `buildPart` called `simplify()`.
+- **Would have prevented it:** a spec-level way to say "this face lies on that face" (a mate or a shared named plane) instead of repeating irrational coordinates, or a validator finding for near-coplanar faces within a tolerance.
+
+## 2026-10-06 — hatch pitch was set in model space, not on the sheet
+
+- **Doing:** reading the first live render; walls seen at a shallow angle were hatched almost solid.
+- **Evidence:** `hatchFace` stepped section planes at the plan pitch along the face, so a face at 73° to the picture plane printed its lines at 0.29 of the pitch. The synthetic bracket has no steeply foreshortened shaded face, so its goldens and both synthetic judge rounds never showed it.
+- **Would have prevented it:** a synthetic fixture with a tall oblique wall, or a validator check on minimum line-to-line distance in the shading layer of each sheet.

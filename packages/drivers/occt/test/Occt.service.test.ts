@@ -185,6 +185,61 @@ describe("@beep/occt service", () => {
     );
 
     it.effect(
+      "merges the seam between coplanar faces of fused primitives",
+      Effect.fnUntraced(function* () {
+        const occt = yield* Occt;
+        // two boxes side by side share one flat front face after the fuse
+        const slab = ModelSpec.make({
+          parts: [
+            Part.make({
+              name: "slab",
+              add: [Box.make({ min: [0, 0, 0], max: [10, 10, 10] }), Box.make({ min: [10, 0, 0], max: [25, 10, 10] })],
+            }),
+          ],
+        });
+        const [view] = yield* occt.project(ProjectionRequest.make({ solid: slab, cameras: [front] }));
+        expect(view?.visible.length).toBe(4);
+        const summary = yield* occt.summarize(slab);
+        expect(summary.faceCount).toBe(6);
+      })
+    );
+
+    it.effect(
+      "keeps hatch lines at least the minimum pitch apart on a foreshortened face",
+      Effect.fnUntraced(function* () {
+        const occt = yield* Occt;
+        // a tall slab seen almost edge-on to its +Y face; the lit threshold
+        // leaves the +X face clear, so every line belongs to the +Y face
+        const post = ModelSpec.make({
+          parts: [Part.make({ name: "post", add: [Box.make({ min: [0, 0, 0], max: [60, 10, 80] })] })],
+        });
+        const [view] = yield* occt.project(
+          ProjectionRequest.make({
+            solid: post,
+            cameras: [Camera.make({ eye: [1, 0.3, 0], up: [0, 0, 1] })],
+            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 0 })),
+          })
+        );
+        const shading = view?.shading ?? [];
+        // lines still run along the 80-long vertical edges
+        expect(
+          pipe(
+            shading,
+            A.every(([x1, , x2]) => x1 === x2)
+          )
+        ).toBe(true);
+        expect(shading.length).toBeGreaterThan(2);
+        const columns = pipe(
+          shading,
+          A.map(([x]) => x),
+          A.sort(Order.Number)
+        );
+        const gaps = A.zipWith(columns, A.drop(columns, 1), (a, b) => b - a);
+        expect(Math.min(...gaps)).toBeGreaterThanOrEqual(0.99);
+      })
+    );
+
+    it.effect(
       "rejects a camera with a zero eye vector",
       Effect.fnUntraced(function* () {
         const occt = yield* Occt;

@@ -45,9 +45,18 @@ export const pitchFor = (input: { readonly exposure: number; readonly plan: Shad
   return O.some(plan.minPitch + (plan.maxPitch - plan.minPitch) * Math.max(0, Math.min(1, t)));
 };
 
-const lineLength = (edge: replicad.Edge): number => edge.length;
+// Lengths are compared to the micrometre so the equal edges of a regular face
+// tie instead of ordering by floating-point noise.
+const lineLength = (edge: replicad.Edge): number => Math.round(edge.length * 1e3) / 1e3;
 
-const longestLineOrder = Order.flip(Order.mapInput(Order.Number, lineLength));
+const rise = (edge: replicad.Edge): number => Math.abs(edge.endPoint.z - edge.startPoint.z);
+
+// Longest first; among equals the most level edge, so a regular face (an
+// equilateral lid flap) is hatched along its horizontal edge in every view.
+const hatchEdgeOrder = Order.combine(
+  Order.flip(Order.mapInput(Order.Number, lineLength)),
+  Order.mapInput(Order.Number, rise)
+);
 
 // Hatch direction: the face's longest straight edge, so lines read as running
 // along the face; none for a planar face without straight edges.
@@ -55,7 +64,7 @@ const hatchDirection = (face: replicad.Face): O.Option<V3> =>
   pipe(
     face.edges,
     A.filter((edge) => edge.geomType === "LINE"),
-    A.sort(longestLineOrder),
+    A.sort(hatchEdgeOrder),
     A.head,
     O.map((edge) => unit(add(vec(edge.endPoint), scale(vec(edge.startPoint), -1))))
   );
@@ -78,10 +87,40 @@ const sectionEdges = (oc: OpenCascadeInstance, face: replicad.Face, point: V3, n
   return edges;
 };
 
-// Parallel lines across one face: planes stepped along `normal × direction`
-// with a half-pitch phase so no line lands on the face's own boundary.
-const hatchFace = (oc: OpenCascadeInstance, face: replicad.Face, normal: V3, direction: V3, pitch: number) => {
-  const step = unit(cross(normal, direction));
+// Fraction of a step along `step` that survives projection toward `eye`: 1
+// when the step lies in the picture plane, 0 when it runs along the sight line.
+const spread = (step: V3, eye: V3): number => Math.sqrt(Math.max(0, 1 - dot(step, eye) ** 2));
+
+// Below this spread a face is nearly edge-on to its hatch step and the lines
+// would merge on the sheet however far apart they are on the model.
+const MIN_SPREAD = 0.2;
+
+// Step direction across the face: perpendicular to the longest edge, so the
+// lines run along the face in every view. Only when that step is too
+// foreshortened to keep lines apart does it fall back to the other in-plane
+// axis.
+const hatchStep = (normal: V3, direction: V3, eye: V3): V3 => {
+  const across = unit(cross(normal, direction));
+  return spread(across, eye) >= MIN_SPREAD || spread(across, eye) >= spread(direction, eye) ? across : direction;
+};
+
+// Parallel lines across one face: planes stepped along the hatch step with a
+// half-pitch phase so no line lands on the face's own boundary. `pitch` is
+// the spacing wanted on the sheet, so the model-space step is widened by the
+// face's foreshortening.
+const hatchFace = (options: {
+  readonly oc: OpenCascadeInstance;
+  readonly face: replicad.Face;
+  readonly step: V3;
+  readonly eye: V3;
+  readonly pitch: number;
+}): ReadonlyArray<replicad.Edge> => {
+  const { oc, face, step, eye } = options;
+  const visibleSpread = spread(step, eye);
+  if (visibleSpread < MIN_SPREAD) {
+    return A.empty<replicad.Edge>();
+  }
+  const pitch = options.pitch / visibleSpread;
   const center = vec(face.center);
   const [min, max] = face.boundingBox.bounds;
   const reach = Math.hypot(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
@@ -104,7 +143,11 @@ const shadeFace =
     return pipe(
       O.liftPredicate(normal, (n) => dot(n, eye) > 1e-9),
       O.flatMap(() => pitchFor({ exposure: dot(normal, light), plan })),
-      O.flatMap((pitch) => O.map(hatchDirection(face), (direction) => hatchFace(oc, face, normal, direction, pitch))),
+      O.flatMap((pitch) =>
+        O.map(hatchDirection(face), (direction) =>
+          hatchFace({ oc, face, step: hatchStep(normal, direction, eye), eye, pitch })
+        )
+      ),
       O.getOrElse(() => A.empty<replicad.Edge>())
     );
   };

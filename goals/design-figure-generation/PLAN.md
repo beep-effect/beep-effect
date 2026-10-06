@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
@@ -10,10 +10,10 @@ Status: `in-progress`
 | --- | --- | --- | --- |
 | P0 Research | complete | Deep-research sweep + align grill (exploration). | `explorations/patent-drawing-pipeline/{RESEARCH,DECISIONS,BRIEF,MAP}.md` exist. |
 | P1 Spike: perspective HLR via replicad | complete | Throwaway Bun script: opencascade.js + replicad, box + wedge, orthographic and perspective projected visible edges to SVG. | Result note in `research/`; kernel route for perspective figures fixed. |
-| P2 Slice 1: unshaded sheets for the live matter | in-progress | Schemas (`ModelSpec`, `FigureSetSpec`, view LiteralKit, omission claims), `GeometryEngine`/`PdfBackend` ports, `FigureSet` service (compose, validate, manifest), `@beep/occt` + `@beep/pdf-tools` drivers, `beep drawings render` / `validate`, synthetic fixture + goldens — DONE 2026-10-05; the live matter spec under the corpus root is OPEN (article unmeasured). | Acceptance items 2–4. |
+| P2 Slice 1: unshaded sheets for the live matter | complete | Schemas (`ModelSpec`, `FigureSetSpec`, view LiteralKit, omission claims), `GeometryEngine`/`PdfBackend` ports, `FigureSet` service (compose, validate, manifest), `@beep/occt` + `@beep/pdf-tools` drivers, `beep drawings render` / `validate`, synthetic fixture + goldens — DONE 2026-10-05; the live matter spec under the corpus root is OPEN (article unmeasured). | Acceptance items 2–4. |
 | P3 Slice 2: shading, judge rubric, sign-off | complete | `ShadingEngine` (face-exposure hatching through HLR), QA judge drawing rubric, `beep drawings judge` / `sign`, sign-off event schema. | Acceptance item 5. |
-| P4 Yeet: PR to mergeable | in-progress | Publish through yeet; required checks green; threads answered and resolved. | `merge-ready: yes`; zero unresolved review threads. |
-| P5 Close | pending | Closeout reflection; packet state flipped. | Reflection passes `beep lint reflection-artifacts`; README/manifest updated. |
+| P4 Yeet: PR to mergeable | complete | Publish through yeet; required checks green; threads answered and resolved. | `merge-ready: yes`; zero unresolved review threads. |
+| P5 Close | complete | Closeout reflection; packet state flipped. | Reflection passes `beep lint reflection-artifacts`; README/manifest updated. |
 
 Slices may ship as separate PRs; P4 then repeats per slice and the packet closes after the last.
 
@@ -47,8 +47,9 @@ bun run beep lint reflection-artifacts
 
 - 2026-10-06 — P3 shading done (`research/p3-shading-spike.md`): `beep drawings render --shade` hatches planar faces by exposure to the 1.84(m) light through the same HLR pass; faces seen square-on stay unshaded (lit threshold 0.55), so plans and elevations remain line drawings and the perspectives carry the contour. Synthetic shaded set: byte-stable across two runs, validator clean, unshaded goldens unchanged. Judge rubric and sign-off remain.
 - 2026-10-06 — P3 sign-off done: `beep drawings statement` prints the line to request; `beep drawings sign email|pdf` records `approval.json` next to the manifest only when the approver's own artifact carries the statement verbatim on a line above any reply/forward boundary (email: `from` and `sender` equal the approver, plain-text `uniqueBody` via the new `@beep/m365` `getMessageAuthoredText`; PDF: the initialed page under the corpus root, operator-attested delivery). The PDF on disk is re-hashed against the manifest first. Refusals covered: no hash, rejection/question quoting the hash, statement only below a reply/forward boundary, statement only on a non-initialed page, PDF outside the corpus root, wrong sender, edited PDF. - 2026-10-06 — P3 judge done: `beep drawings judge` builds a round pack (sheet PNGs, reference photos, drawing-rubric prompt); `judge-ingest` admits only a schema-valid `qa-inventory/v1` with drawing lenses and in-pack evidence. Two synthetic rounds were run (`history/judge-synthetic/`): round 1 found 2 P2s; R1-02 was fixed (minimum pitch 1.2 mm), and R1-01/R2-01 (cylindrical shading) is a carried follow-up. Decisions are in SPEC "Decision Log". #1439 is final for code; the live-matter render remains.
+- 2026-10-06 — Live matter done: inputs saved under the corpus root by the operator; spec modelled from the sketch (nominal proportions, ruling in the SPEC Decision Log); unshaded and shaded sets render byte-identically twice and pass the validator; two live judge rounds ingested as schema-valid inventories. Hashes in `history/live-matter/evidence.json`. The live render exposed two `@beep/occt` defects, fixed with regression tests: seam edges between coplanar faces after a fuse, and hatch lines crowding on foreshortened faces.
+- 2026-10-06 — P5 Close: reflection `history/reflections/2026-10-06-claude.md`; manifest and README flipped to `completed-retained`.
 
 ## Current blockers
 
-- Photos and sketch sheet from the request are not yet saved under the corpus root (manual Outlook download).
-- The article has not been measured.
+None. The attorney sign-off on the live shaded set is an operating step outside this packet: run `beep drawings statement`, then `beep drawings sign` on the reply.

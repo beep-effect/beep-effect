@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
+
+Latest evidence: the live matter's unshaded and shaded sheet sets pass the validator; hashes in [`history/live-matter/evidence.json`](./history/live-matter/evidence.json). Reflection: [`history/reflections/2026-10-06-claude.md`](./history/reflections/2026-10-06-claude.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

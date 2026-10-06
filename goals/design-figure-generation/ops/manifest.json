@@ -3,13 +3,13 @@
   "initiative": {
     "id": "design-figure-generation",
     "title": "Design Figure Generation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
     "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/design-figure-generation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Spec-as-code to one parametric solid to eight USPTO design-patent figures (hidden-line views, 37 CFR 1.84 sheets, validator, judge, attorney sign-off) as a beep drawings CLI.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,7 +61,7 @@
     {
       "id": "P2",
       "name": "Slice 1: unshaded sheets for the live matter",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
@@ -71,12 +71,12 @@
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
