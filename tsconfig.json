@@ -2027,6 +2027,9 @@
       ],
       "@beep/schema/PatternOntology": [
         "./packages/foundation/modeling/schema/src/PatternOntology/index.ts"
+      ],
+      "@beep/law-practice-domain/values/MailTagging": [
+        "./packages/law-practice/domain/src/values/MailTagging/index.ts"
       ]
     }
   }
