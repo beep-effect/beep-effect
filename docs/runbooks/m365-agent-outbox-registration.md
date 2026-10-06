@@ -131,6 +131,17 @@ New-ManagementScope -Name "beep-docket-intake-mailbox" -RecipientRestrictionFilt
 State on 2026-10-06: this step is done for the firm tenant. The outbox service
 principal holds the three roles below, each limited to that shared scope.
 
+**The scope is shared, so changes to it reach both registrations:**
+
+- A `Set-ManagementScope` filter change made for the docket service also
+  changes which mailboxes the outbox can send as. After any change to the
+  scope, re-run both `Test-ServicePrincipalAuthorization` checks in step 5 for
+  this registration as well as for the docket one.
+- `Remove-ManagementScope` is refused while any role assignment still uses the
+  scope. Removing the docket registration must not clear the outbox's three
+  assignments to get the scope removed; leave the scope while either
+  registration uses it.
+
 Assign the three roles, each limited to that scope:
 
 ```powershell
