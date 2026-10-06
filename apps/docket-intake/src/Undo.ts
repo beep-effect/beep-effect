@@ -85,7 +85,8 @@ const resolveRun = (
 const planRun = Effect.fnUntraced(function* (config: DocketIntakeAppConfig, selector: DocketRunSelector) {
   const entries = yield* readDocketJournal(config.stateDirectory);
   const runId = yield* resolveRun(entries, selector);
-  return yield* planDocketUndo({ entries, mailbox: config.mailbox, runId });
+  const state = yield* readDocketStateFile(config.stateDirectory);
+  return { plan: yield* planDocketUndo({ entries, mailbox: config.mailbox, runId, state }), state };
 });
 
 /**
@@ -107,8 +108,8 @@ export const undoDryRun = Effect.fn("DocketIntakeApp.undoDryRun")(function* (
   config: DocketIntakeAppConfig,
   selector: DocketRunSelector
 ) {
-  const plan = yield* planRun(config, selector);
-  return dryRunDocketUndo(plan, yield* readDocketStateFile(config.stateDirectory));
+  const { plan, state } = yield* planRun(config, selector);
+  return dryRunDocketUndo(plan, state);
 });
 
 /**
@@ -130,7 +131,7 @@ export const undoRun = Effect.fn("DocketIntakeApp.undoRun")(function* (
   config: DocketIntakeAppConfig,
   selector: DocketRunSelector
 ) {
-  const plan = yield* planRun(config, selector);
+  const { plan } = yield* planRun(config, selector);
   const report = yield* applyDocketUndo({ mailbox: config.mailbox, plan });
   yield* Effect.logInfo("docket intake run undone", {
     deleted: report.deleted,

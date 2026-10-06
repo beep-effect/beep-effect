@@ -188,7 +188,12 @@ const categoriesOf = Effect.fnUntraced(function* (messageId: string) {
 });
 
 const plan = Effect.gen(function* () {
-  return yield* planDocketUndo({ entries: yield* readDocketJournal(DIRECTORY), mailbox: MAILBOX, runId: RUN });
+  return yield* planDocketUndo({
+    entries: yield* readDocketJournal(DIRECTORY),
+    mailbox: MAILBOX,
+    runId: RUN,
+    state: yield* (yield* DocketIntakeStore).load,
+  });
 });
 
 describe("@beep/law-practice-server DocketIntake undo", () => {
@@ -486,6 +491,51 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
         expect(O.getOrUndefined(R.get(state.ledger, "m1"))?.outcome).toMatchObject({ entry: { eventId: "e-later" } });
         expect(A.length(yield* readDocketJournal(DIRECTORY))).toBe(linesBefore);
         expect(yield* Ref.get(fake.calls)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "keeps an event a later run's ledger record still names",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeGraph;
+        const store = yield* DocketIntakeStore;
+        const journalService = yield* DocketIntakeJournal;
+        // Run A created e-found-later and marked m-found-later, but its ledger record was lost; the later run found
+        // e-found-later by key (already journaled, so no adopted line), marked m-found-later and saved a record naming it.
+        yield* Ref.set(
+          fake.events,
+          HashMap.make(["e-found-later", event({ categories: ["Docket - unverified"], id: "e-found-later" })])
+        );
+        yield* Ref.set(
+          fake.messages,
+          HashMap.make(["m-found-later", mailMessage({ categories: ["Docket - entered"], id: "m-found-later" })])
+        );
+        yield* store.save(
+          DocketIntakeState.make({
+            cursor: O.some("2030-01-09T12:00:00.000Z"),
+            ledger: {
+              "m-found-later": record(needsReview("m-found-later", "e-found-later"), "2030-01-09T09:30:00.000Z"),
+            },
+          })
+        );
+        yield* journalService.append([
+          created(RUN, "e-found-later"),
+          marked(RUN, "m-found-later", 30),
+          marked(OTHER_RUN, "m-found-later", 30),
+        ]);
+
+        const planned = yield* plan;
+        const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
+
+        expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
+          ["e-found-later", "keep"],
+        ]);
+        expect(report).toMatchObject({ deleted: 0, kept: 1, ledgerCleared: 0, messagesKept: 1 });
+        expect(HashMap.has(yield* Ref.get(fake.events), "e-found-later")).toBe(true);
+        assertSome(yield* categoriesOf("m-found-later"), ["Docket - entered"]);
+        expect(R.keys((yield* store.load).ledger)).toStrictEqual(["m-found-later"]);
       })
     );
   });

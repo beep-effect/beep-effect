@@ -298,6 +298,13 @@ const isLaterRun = Order.isGreaterThan(Str.Order);
 const markedMessage = (line: DocketJournalEntry): O.Option<MarkedMessage> =>
   O.map(line.messageId, (messageId) => ({ messageId, receivedAt: line.receivedAt }));
 
+const outcomeEventIds: (outcome: DocketIntakeOutcome) => ReadonlyArray<string> = DocketIntakeOutcome.match({
+  DocketEntered: (outcome) => [outcome.entry.eventId, ...A.map(outcome.reminders, (reminder) => reminder.eventId)],
+  DocketNeedsReview: (outcome) => [outcome.entry.eventId],
+  IntakeFailed: A.empty<string>,
+  NotDocketItem: A.empty<string>,
+});
+
 /**
  * Read what an undo of one run would do. It only reads: each event the run
  * created or adopted is looked up for its categories and each message it
@@ -311,17 +318,20 @@ const markedMessage = (line: DocketJournalEntry): O.Option<MarkedMessage> =>
  * not looked up, so applying an undo again only finishes what an earlier one
  * left. A message a later run marked again is planned as `keep`, naming that
  * run, whether or not it was undone before: the mark and its ledger record
- * belong to the later run now.
+ * belong to the later run now, and so does every event that record names,
+ * which is planned as `keep` without being looked up.
  *
  * **Example** (Plan an undo)
  *
  * ```ts
  * import { DocketRunId, planDocketUndo } from "@beep/law-practice-server/DocketIntake";
+ * import { DocketIntakeState } from "@beep/law-practice-use-cases/DocketIntake";
  *
  * const program = planDocketUndo({
  *   entries: [],
  *   mailbox: "mailbox-id",
- *   runId: DocketRunId.make("run-20300109T100000000Z")
+ *   runId: DocketRunId.make("run-20300109T100000000Z"),
+ *   state: DocketIntakeState.make({})
  * });
  * console.log(program);
  * ```
@@ -333,6 +343,7 @@ export const planDocketUndo: (input: {
   readonly entries: ReadonlyArray<DocketJournalEntry>;
   readonly mailbox: string;
   readonly runId: DocketRunId;
+  readonly state: DocketIntakeState;
 }) => Effect.Effect<DocketUndoPlan, DocketIntakeError, M365> = Effect.fn("DocketUndo.plan")(function* (input) {
   const m365 = yield* M365;
   const userId = O.some(input.mailbox);
@@ -358,10 +369,23 @@ export const planDocketUndo: (input: {
       ),
       (entry) => entry.runId
     );
+  // A message a later run marked again keeps its ledger record, so every event that record names stays too.
+  const keptEvents = HashSet.fromIterable(
+    A.flatMap(marked, (line) =>
+      O.isSome(markedLaterBy(line.messageId))
+        ? O.match(R.get(input.state.ledger, line.messageId), {
+            onNone: A.empty<string>,
+            onSome: (record) => outcomeEventIds(record.outcome),
+          })
+        : []
+    )
+  );
   const events = yield* Effect.forEach(eventIds, (eventId) =>
     HashSet.has(undoneEvents, eventId)
       ? Effect.succeed(DocketUndoEvent.make({ action: "undone", eventId }))
-      : planEvent(m365, userId, eventId)
+      : HashSet.has(keptEvents, eventId)
+        ? Effect.succeed(DocketUndoEvent.make({ action: "keep", eventId }))
+        : planEvent(m365, userId, eventId)
   );
   const messages = yield* Effect.forEach(marked, (line) =>
     O.match(markedLaterBy(line.messageId), {
@@ -374,13 +398,6 @@ export const planDocketUndo: (input: {
     })
   );
   return DocketUndoPlan.make({ events, messages, runId: input.runId });
-});
-
-const outcomeEventIds: (outcome: DocketIntakeOutcome) => ReadonlyArray<string> = DocketIntakeOutcome.match({
-  DocketEntered: (outcome) => [outcome.entry.eventId, ...A.map(outcome.reminders, (reminder) => reminder.eventId)],
-  DocketNeedsReview: (outcome) => [outcome.entry.eventId],
-  IntakeFailed: A.empty<string>,
-  NotDocketItem: A.empty<string>,
 });
 
 /**
