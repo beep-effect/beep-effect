@@ -43,6 +43,7 @@ import {
   sortedUniquePaths,
   withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
+import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -77,12 +78,7 @@ import {
   lockfileChangedSinceBase,
   refreshBaseRef,
 } from "./GitExec.ts";
-import {
-  validateCommitMessage,
-  validateMonitorGuards,
-  validateRequiredMessage,
-  validateStartPrEarlyPrGuard,
-} from "./Guards.ts";
+import { validateCommitMessage, validateMonitorGuards, validateRequiredMessage } from "./Guards.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { INNER_LANE_REPORT_FILE_NAME, readInnerLaneReports } from "./InnerLaneReports.ts";
 import {
@@ -107,13 +103,15 @@ import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
+  MONITOR_READY_SUBMIT_STEP_ID,
+  PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   YeetProofTier,
   YeetRunMode,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { ProofJobOutcome, ProofJobRunner } from "./ProofJob.ts";
-import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import { findLiveReadyMonitorJob, ProofJobOutcome, ProofJobRecord, ProofJobRunner } from "./ProofJob.ts";
+import { ProofJobLauncher, updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
   changedPackagesForAttempt,
   proofShadowAttemptFacts,
@@ -136,7 +134,6 @@ import {
   enforceBaseFreshness,
   failPublishScopeWithPacket,
   formatPublishPaths,
-  postCommitProofChangedAfterEarlyPushMessage,
   prePushLocalShasFromStdin,
   prePushShaMismatches,
   restorePublishStashOnFailure,
@@ -147,7 +144,7 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import { ensurePullRequest } from "./PullRequest.ts";
+import { applyHeavyAdmissionLabel, ensurePullRequest } from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -155,6 +152,7 @@ import { buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.t
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type { ChildProcessSpawner } from "effect/process";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
+import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
@@ -163,6 +161,7 @@ import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
+const decodeProofJobRecordLine = S.decodeUnknownOption(S.fromJsonString(ProofJobRecord));
 const decodeUUID = S.decodeEffect(UUID);
 
 export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
@@ -643,25 +642,12 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
   }
 });
 
-const runRequiredProofPhase = Effect.fn("Yeet.runRequiredProofPhase")(function* (
-  context: RepoRunContext,
-  steps: ReadonlyArray<RepoPlanStep>,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  failureMessage: string
-) {
-  const results = yield* runProofPhase(context, steps, recorder);
-  if (A.some(results, (result) => result.exitCode !== 0)) {
-    return yield* failWithIssueArtifacts(context, steps, results, failureMessage);
-  }
-  yield* writeVerifiedState(context, "full", steps);
-});
-
 const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
 ) {
-  yield* ensurePullRequest(
+  return yield* ensurePullRequest(
     context,
     recorder,
     A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
@@ -830,62 +816,6 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
   return yield* stageAndCommitPublishIntent(plan, message, options, commitSteps, recorder, extras, publishIntent);
 });
 
-const runStartPrEarlyPublishPhases = Effect.fn("Yeet.runStartPrEarlyPublishPhases")(function* (
-  plan: RepoRunPlan,
-  fullSteps: ReadonlyArray<RepoPlanStep>,
-  earlyPublishSteps: ReadonlyArray<RepoPlanStep>,
-  monitorSteps: ReadonlyArray<RepoPlanStep>,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  extras: Ref.Ref<YeetVerdictExtras>,
-  skipCommit: boolean,
-  attempt: YeetAttemptStarted
-) {
-  yield* Console.log(
-    "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
-  );
-  const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-  yield* runRequiredPhase(
-    plan.context,
-    preflightSteps,
-    recorder,
-    "yeet clean-HEAD install preflight failed before the early push."
-  );
-  yield* warnOnMismatchedPublishUpstream(plan.context);
-  const earlyPushSteps = A.filter(
-    earlyPublishSteps,
-    (step) =>
-      step.id !== "publish:02-pr-create" &&
-      step.id !== "publish:03-pr-provenance-stamp" &&
-      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-  );
-  const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
-  if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
-    return yield* failWithIssueArtifacts(
-      plan.context,
-      earlyPushSteps,
-      earlyPublishResults,
-      "yeet start-pr-early push phase failed."
-    );
-  }
-  yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-  yield* runWithFullProofCoordinator(
-    plan.context,
-    fullSteps,
-    Effect.gen(function* () {
-      yield* runRequiredProofPhase(
-        plan.context,
-        fullSteps,
-        recorder,
-        "yeet publish --start-pr-early proof failed after pushing the commit. Fix the issue in a follow-up commit and publish again."
-      );
-      yield* validatePostCommitProofDidNotChangeWorktree(plan.context, postCommitProofChangedAfterEarlyPushMessage);
-    }),
-    { priority: "publish" },
-    O.some(attempt)
-  );
-  return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
-});
-
 const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
@@ -929,22 +859,320 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
   );
 
   yield* warnOnMismatchedPublishUpstream(plan.context);
-  const pushSteps = A.filter(
-    publishSteps,
-    (step) =>
-      step.id !== "publish:02-pr-create" &&
-      step.id !== "publish:03-pr-provenance-stamp" &&
-      step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
-  );
+  const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
   const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
   if (A.some(publishResults, (result) => result.exitCode !== 0)) {
     return yield* failWithIssueArtifacts(plan.context, pushSteps, publishResults, "yeet publish phase failed.");
   }
-  if (options.pr) {
-    yield* ensureRequestedPullRequest(plan.context, plan.steps, recorder);
-  }
-  return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
 });
+
+/**
+ * Injectable collaborators for the publish pull-request tail, so tests can
+ * drive it against a fake job registry and a known pull request.
+ *
+ * **Example** (Default collaborators)
+ *
+ * ```ts
+ * import type { PublishTailDependencies } from "@beep/repo-cli/test/Yeet"
+ *
+ * const dependencies: PublishTailDependencies = {}
+ * console.log(Object.keys(dependencies).length) // 0
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export interface PublishTailDependencies {
+  readonly ensurePullRequest?: typeof ensureRequestedPullRequest;
+  readonly listJobs?: (
+    context: RepoRunContext
+  ) => Effect.Effect<
+    ReadonlyArray<ProofJobRecord>,
+    YeetCommandError,
+    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  >;
+  readonly runnerStatus?: (
+    record: ProofJobRecord
+  ) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
+}
+
+// A job record can say `running` after its runner died without a finalizer
+// (the unit stays loaded, the record is never stamped). The record's runner
+// pid and process-start identity are the liveness evidence; a `submitted` job
+// has no runner yet because its unit is still starting.
+const readyMonitorRunnerStatus = (
+  record: ProofJobRecord
+): Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem> =>
+  O.match(record.runner, {
+    onNone: () => Effect.succeed<ProcessIdentityStatus>("alive"),
+    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
+  });
+
+// Newest live monitor whose runner is not provably dead; a dead one is named
+// and skipped so the publish submits a replacement instead of handing back a
+// job that no longer polls.
+const pickReusableReadyMonitor = (
+  records: ReadonlyArray<ProofJobRecord>,
+  target: { readonly branch: string; readonly prNumber: number },
+  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
+): Effect.Effect<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> =>
+  O.match(findLiveReadyMonitorJob(records, target), {
+    onNone: () => Effect.succeedNone,
+    onSome: (candidate) =>
+      Effect.flatMap(runnerStatus(candidate), (status) =>
+        status !== "dead"
+          ? Effect.succeedSome(candidate)
+          : Effect.andThen(
+              Console.error(
+                `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
+              ),
+              pickReusableReadyMonitor(
+                A.filter(records, (record) => record.jobId !== candidate.jobId),
+                target,
+                runnerStatus
+              )
+            )
+      ),
+  });
+
+// The checkout's own job registry: the same records `yeet job list` prints.
+const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* (context: RepoRunContext) {
+  const launcher = yield* ProofJobLauncher.make(context.repoRoot);
+  return yield* launcher.list;
+});
+
+// A registry read failure must not block the publish: fall back to submitting
+// a fresh monitor and say why.
+const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  listJobs: NonNullable<PublishTailDependencies["listJobs"]>,
+  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
+): Effect.fn.Return<
+  O.Option<ProofJobRecord>,
+  never,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  return yield* listJobs(context).pipe(
+    Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
+    Effect.catch((error) =>
+      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
+        Effect.as(O.none<ProofJobRecord>())
+      )
+    )
+  );
+});
+
+const renderReadyMonitorJob = (record: ProofJobRecord, reused: boolean): string =>
+  `[yeet] readiness monitor job: ${record.jobId}${reused ? ` (already ${record.phase}; not re-submitted)` : ""}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`;
+
+// The pull-request tail every publish path shares (push-first-publish D4, D7):
+// ensure the draft pull request, apply the heavy-admission label, then reuse
+// the readiness monitor already polling that pull request, submit a detached
+// one, or stay attached when `--monitor` asked to. A running monitor keeps
+// polling across fix pushes, so a second publish must not submit a second job.
+const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullRequest")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean,
+  dependencies: PublishTailDependencies = {}
+): Effect.fn.Return<
+  YeetRunResult,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (!options.pr) {
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  }
+  const pullRequest = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
+    plan.context,
+    plan.steps,
+    recorder
+  );
+  yield* applyHeavyAdmissionLabel(
+    plan.context,
+    recorder,
+    A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
+    pullRequest
+  );
+  const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
+  if (A.isReadonlyArrayEmpty(submitSteps)) {
+    return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
+  }
+  // Read-then-submit runs under the checkout's submit lock: two publishes
+  // racing here would otherwise both read a registry with no monitor and both
+  // submit one.
+  const launcher = yield* ProofJobLauncher.make(plan.context.repoRoot);
+  const { job, running } = yield* launcher.withReadyMonitorSubmitLock(
+    Effect.gen(function* () {
+      const running = yield* findRunningReadyMonitor(
+        plan.context,
+        pullRequest.number,
+        dependencies.listJobs ?? listCheckoutProofJobs,
+        dependencies.runnerStatus ?? readyMonitorRunnerStatus
+      );
+      const job = O.isSome(running)
+        ? yield* Effect.as(recordReusedReadyMonitor(recorder, submitSteps, running.value), running)
+        : yield* submitDetachedReadyMonitor(plan.context, submitSteps, recorder);
+      return { job, running };
+    })
+  );
+  yield* Console.log(
+    `[yeet] pull request: ${O.getOrElse(pullRequest.url, () => `#${pullRequest.number}`)}${pullRequest.created ? " (draft)" : ""}`
+  );
+  yield* O.match(job, {
+    onNone: () =>
+      Console.error(
+        "[yeet] warning: the readiness monitor was submitted but its job id could not be read; run `bun run beep yeet job list`"
+      ),
+    onSome: (record) => Console.log(renderReadyMonitorJob(record, O.isSome(running))),
+  });
+  return yield* publishResult(plan.context, !skipCommit);
+});
+
+/**
+ * Run the publish pull-request tail — pull request, heavy-admission label, and
+ * the readiness monitor reuse-or-submit — in isolation.
+ *
+ * **Example** (Reference the tail for a wiring test)
+ *
+ * ```ts
+ * import { finishPublishWithPullRequestForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof finishPublishWithPullRequestForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const finishPublishWithPullRequestForTesting = finishPublishWithPullRequest;
+
+// The submit step is planned but not run: record it as skipped so the verdict
+// and the attempt journal show which job the publish handed back.
+const recordReusedReadyMonitor = (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  submitSteps: ReadonlyArray<RepoPlanStep>,
+  record: ProofJobRecord
+) =>
+  Ref.update(
+    recorder,
+    A.appendAll(
+      A.map(submitSteps, (step) =>
+        YeetExecutedStep.make({
+          result: RepoStepRunResult.make({
+            stepId: step.id,
+            commandText: `${step.command} ${A.join(step.args, " ")}`,
+            exitCode: 0,
+            output: `skipped: readiness monitor job ${record.jobId} is already ${record.phase} for this pull request`,
+          }),
+          status: "skipped",
+          step,
+        })
+      )
+    )
+  );
+
+const PUSH_PHASE_EXCLUDED_STEP_IDS: ReadonlyArray<string> = [
+  "publish:02-pr-create",
+  PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+  "publish:03-pr-provenance-stamp",
+  HEAD_INSTALL_PREFLIGHT_STEP_ID,
+];
+
+// The detached submit prints the job record as one JSON line; `bun run` and
+// the child CLI may print other lines around it, so the last line that decodes
+// as a job record wins.
+const submittedProofJob = (result: RepoStepRunResult): O.Option<ProofJobRecord> =>
+  pipe(
+    O.fromUndefinedOr(result.output),
+    O.map(Str.split("\n")),
+    O.flatMap(A.findLast((line: string) => decodeProofJobRecordLine(line)))
+  );
+
+const submitDetachedReadyMonitor = Effect.fn("Yeet.submitDetachedReadyMonitor")(function* (
+  context: RepoRunContext,
+  submitSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+): Effect.fn.Return<
+  O.Option<ProofJobRecord>,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const results = yield* runPhase(context, submitSteps, recorder);
+  if (A.some(results, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(
+      context,
+      submitSteps,
+      results,
+      "yeet publish pushed the branch but could not submit the detached readiness monitor. Run `bun run beep yeet monitor --until-ready --detach`."
+    );
+  }
+  return pipe(A.head(results), O.flatMap(submittedProofJob));
+});
+
+// Push-first publish (push-first-publish D1-D8): the cheap-gates tier and the
+// head-install preflight are the whole local gate, and neither takes an
+// admission ticket. Hosted CI and review are the proof; publish ends once the
+// readiness monitor is submitted.
+const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(function* (
+  plan: RepoRunPlan,
+  options: YeetRunOptions,
+  gateSteps: ReadonlyArray<RepoPlanStep>,
+  publishSteps: ReadonlyArray<RepoPlanStep>,
+  monitorSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  extras: Ref.Ref<YeetVerdictExtras>,
+  skipCommit: boolean
+): Effect.fn.Return<
+  YeetRunResult,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const gateResults = yield* runProofPhase(plan.context, gateSteps, recorder);
+  if (A.some(gateResults, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(
+      plan.context,
+      gateSteps,
+      gateResults,
+      "yeet publish cheap-gates failed after creating the local commit; nothing was pushed. Fix the gate, then amend or reset the unpushed commit before retrying."
+    );
+  }
+  yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
+  yield* runRequiredPhase(
+    plan.context,
+    A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID),
+    recorder,
+    "yeet clean-HEAD install preflight failed before push."
+  );
+  yield* warnOnMismatchedPublishUpstream(plan.context);
+  const pushSteps = A.filter(publishSteps, (step) => !A.contains(PUSH_PHASE_EXCLUDED_STEP_IDS, step.id));
+  const pushResults = yield* runPhase(plan.context, pushSteps, recorder);
+  if (A.some(pushResults, (result) => result.exitCode !== 0)) {
+    return yield* failWithIssueArtifacts(plan.context, pushSteps, pushResults, "yeet publish phase failed.");
+  }
+  return yield* finishPublishWithPullRequest(plan, options, monitorSteps, recorder, extras, skipCommit);
+});
+
+/**
+ * Run the push-first publish tail — cheap-gates, preflight, push, pull request,
+ * and the readiness-monitor submit — in isolation.
+ *
+ * **Example** (Reference the tail for a wiring test)
+ *
+ * ```ts
+ * import { runPushFirstPublishPhasesForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof runPushFirstPublishPhasesForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
 
 const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   plan: RepoRunPlan,
@@ -952,7 +1180,6 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   options: YeetRunOptions,
   commitSteps: ReadonlyArray<RepoPlanStep>,
   fullSteps: ReadonlyArray<RepoPlanStep>,
-  earlyPublishSteps: ReadonlyArray<RepoPlanStep>,
   publishSteps: ReadonlyArray<RepoPlanStep>,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
@@ -978,28 +1205,25 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     reusableSkipCommit
   );
 
-  const runPostCommitPhases = options.startPrEarly
-    ? runStartPrEarlyPublishPhases(
-        plan,
-        fullSteps,
-        earlyPublishSteps,
-        monitorSteps,
-        recorder,
-        extras,
-        skipCommit,
-        attempt
-      )
-    : runStandardPublishPhases(
-        plan,
-        options,
-        fullSteps,
-        publishSteps,
-        monitorSteps,
-        recorder,
-        extras,
-        skipCommit,
-        attempt
-      );
+  if (!options.pr) {
+    yield* Console.error(
+      "[yeet] warning: --no-pr: no pull request will be opened. check.yml runs only on pull_request events, so no hosted checks will run until this branch has a pull request."
+    );
+  }
+  const runPostCommitPhases =
+    options.proveFirst || options.pushOnly
+      ? runStandardPublishPhases(
+          plan,
+          options,
+          fullSteps,
+          publishSteps,
+          monitorSteps,
+          recorder,
+          extras,
+          skipCommit,
+          attempt
+        )
+      : runPushFirstPublishPhases(plan, options, fullSteps, publishSteps, monitorSteps, recorder, extras, skipCommit);
 
   return yield* pipe(
     stash,
@@ -1831,6 +2055,11 @@ const attemptStageFor = (options: YeetRunOptions): ProofStage =>
 
 const attemptEnvProfileFor = (options: YeetRunOptions): ProofEnvProfile => (options.merged ? "pr-posture" : "local");
 
+// A push-first publish proves only the cheap-gates tier before it pushes, so its
+// attempt facts say so; `--prove-first` and `--push-only` keep the full tier.
+const attemptProofTierFor = (options: YeetRunOptions): YeetProofTier =>
+  options.mode === "publish" && !options.proveFirst && !options.pushOnly ? "cheap-gates" : options.tier;
+
 /**
  * Test-only stage classifier used by attempt-fact writer coverage.
  *
@@ -1890,7 +2119,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     ownerProcStart,
     resolvedHeadSha: O.some(resolvedHeadSha),
     diffFingerprint: O.some(diffFingerprint),
-    proofTier: O.some(options.tier),
+    proofTier: O.some(attemptProofTierFor(options)),
     envProfile: O.some(attemptEnvProfileFor(options)),
     stage: O.some(attemptStageFor(options)),
   });
@@ -1960,7 +2189,6 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const prepareSteps = A.filter(executionSteps, (step) => step.phase === "prepare");
   const feedbackSteps = A.filter(executionSteps, (step) => step.phase === "feedback");
   const commitSteps = A.filter(executionSteps, (step) => step.phase === "commit");
-  const earlyPublishSteps = A.filter(executionSteps, (step) => step.phase === "early-publish");
   const fullSteps = A.filter(executionSteps, (step) => step.phase === "full");
   const publishSteps = A.filter(executionSteps, (step) => step.phase === "publish");
   const monitorSteps = A.filter(executionSteps, (step) => step.phase === "monitor");
@@ -1986,7 +2214,6 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
           options,
           commitSteps,
           fullSteps,
-          earlyPublishSteps,
           publishSteps,
           monitorSteps,
           recorder,
@@ -2179,7 +2406,6 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
 > {
   const message = yield* validateRequiredMessage(options);
-  yield* validateStartPrEarlyPrGuard(options);
   const context = yield* hydrateYeetRunContext(options);
   yield* validatePublishBranch(context, options);
   yield* validateMonitorGuards(context, options);
@@ -2196,15 +2422,14 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     amend: options.amend,
     ciParity: options.ciParity,
     collectAll: options.collectAll,
-    fast: options.fast,
     forceTurbo,
     mode: options.mode,
     monitor: options.monitor,
     noEdit: options.noEdit,
     pr: options.pr,
+    proveFirst: options.proveFirst,
     pushOnly: options.pushOnly,
     remote: options.remote,
-    startPrEarly: options.startPrEarly,
     tier: options.tier,
   });
   const plan = buildYeetRunPlanWithMode(context, message, modeOptions);
@@ -2232,16 +2457,15 @@ export class BuildYeetRunPlanTestOptions extends S.Class<BuildYeetRunPlanTestOpt
     ciParity: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     collectAll: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     context: RepoRunContext,
-    fast: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     forceTurbo: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     message: S.Option(S.String),
     mode: YeetRunMode.pipe(S.withConstructorDefault(Effect.succeed("publish"))),
     monitor: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     noEdit: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     pr: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    proveFirst: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     pushOnly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     remote: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
-    startPrEarly: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     tier: YeetProofTier.pipe(S.withConstructorDefault(Effect.succeed("full"))),
   },
   $I.annote("BuildYeetRunPlanTestOptions", {
@@ -2268,15 +2492,14 @@ export const buildYeetRunPlanForTesting = (
       amend: normalized.amend,
       ciParity: normalized.ciParity,
       collectAll: normalized.collectAll,
-      fast: normalized.fast,
       forceTurbo: normalized.forceTurbo,
       mode: normalized.mode,
       monitor: normalized.monitor,
       noEdit: normalized.noEdit,
       pr: normalized.pr,
+      proveFirst: normalized.proveFirst,
       pushOnly: normalized.pushOnly,
       remote: normalized.remote,
-      startPrEarly: normalized.startPrEarly,
       tier: normalized.tier,
     })
   );
