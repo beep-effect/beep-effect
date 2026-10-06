@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "fleet-root-registry",
+    "title": "Fleet Root Registry",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/fleet-root-registry",
+  "lifecycle": "active",
+  "mission": "One fleet-root setting read by every path-dependent CLI surface, plus an authored seat/lane registry joined onto the derived fleet mirror.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-fleet-layout",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/fleet-root-registry/README.md",
+    "goals/fleet-root-registry/SPEC.md",
+    "goals/fleet-root-registry/PLAN.md",
+    "goals/fleet-root-registry/GOAL.md",
+    "goals/fleet-root-registry/research/SOURCES.md",
+    "explorations/agent-fleet-layout/BRIEF.md",
+    "explorations/agent-fleet-layout/DECISIONS.md",
+    "explorations/agent-fleet-layout/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/fleet-root-registry/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/fleet-root-registry/GOAL.md)\" -le 4000",
+    "jq . goals/fleet-root-registry/ops/manifest.json",
+    "rg -n \"fleet-root-registry|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/fleet-root-registry",
+    "git diff --check -- goals/fleet-root-registry",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "provides": ["fleet/root-config", "fleet/registry"]
+}
