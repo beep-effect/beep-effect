@@ -110,6 +110,17 @@ negotiates `2025-11-25`, `tools/list` returns ten tools, a tool call succeeds,
 and a stateless client still works on the same binary. The compiled smoke now
 has a handshake leg (`COMPILED_HANDSHAKE_OK`). Package version `0.2.1`.
 
+## Install state on the attorney's PC (relayed, end of 2026-10-06)
+
+The orchestrator replaced the extension by file with Claude Desktop closed
+(the Settings install had not taken): version `0.2.1`, pointed at bundle
+`2026-10-06-01`. After relaunch the server processes start from the extension
+folder and stay alive, where the stateless-only build was dropped at
+`initialize`. No chat tool call has been observed yet, so this is recorded as
+likely working, not proven. The machine runs the Microsoft Store build of
+Claude Desktop, whose data root is under `%LOCALAPPDATA%\Packages\...`, which
+explains why the earlier script-level config edit was never read.
+
 ## Not done here
 
 - **AC-6** needs people: the operator replaces the extension through

@@ -41,6 +41,26 @@ machine that uses the extension: some Claude Desktop installs keep their data
 under a virtualized path, so the file a script finds is not the one the app
 reads, and a second registration would duplicate the server.
 
+### Where Claude Desktop keeps extensions on Windows
+
+The Microsoft Store build of Claude Desktop does not use the plain
+`%APPDATA%\Claude` folder. Its data root is
+`%LOCALAPPDATA%\Packages\Claude_<publisher id>\LocalCache\Roaming\Claude`,
+and that is where `Claude Extensions\` and `extensions-installations.json`
+live. A script that reads or edits `%APPDATA%\Claude` on such a machine is
+looking at the wrong files.
+
+If the Settings → Extensions install does not take (the listed version does
+not change), the extension can be replaced by file with Claude Desktop closed:
+back up the extension folder, mirror the unpacked new package into it, and
+update that extension's entry in `extensions-installations.json` (version, and
+`hash` = the SHA-256 of the `.mcpb` file). This was done on the attorney's PC on
+2026-10-06 for version `0.2.1`.
+
+After any install, proof that it works is a tool call from a chat
+(`kg_provenance` with no arguments reporting the expected bundle version), not
+only a running process.
+
 The server and the bundle ship as a pair: this server reads store format
 pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
 formats. Replace the extension and the bundle folder together.
