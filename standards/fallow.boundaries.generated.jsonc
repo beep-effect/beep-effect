@@ -2487,20 +2487,26 @@
       {
         "from": "@beep/m365-mcp",
         "allow": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
