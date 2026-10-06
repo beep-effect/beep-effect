@@ -136,111 +136,6 @@
       "status": "open"
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:295:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 295,
-      "endLine": 315,
-      "symbol": "runPromise",
-      "occurrence": "v2:1924939bae54c8aba254efa019c70eb26e218c91cc6cc5d550f526dc5cfba511",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"apps/labs/cognee/src/main.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeLabApp(tmpDir); yield* runChangesetStatus(t",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:318:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 318,
-      "endLine": 343,
-      "symbol": "runPromise",
-      "occurrence": "v2:60631839e76540345bd9d663c4a79428cc6327abb78327e9096bcebec7d71035",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeRepoFile( tmpDir, \".changeset/base-backlog.md",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:346:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 346,
-      "endLine": 366,
-      "symbol": "runPromise",
-      "occurrence": "v2:4bb57c9ad0927ec4dee64eaab8298ad31cbadd48bbfe649b7c6f20f723c26285",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\"], [], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); yield* writeRepoFile(tmpDir, \"packages/demo/src/index.ts\"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:369:runPromise@6#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 369,
-      "endLine": 400,
-      "symbol": "runPromise",
-      "occurrence": "v2:2f8e6878d48feadcaeaacb643e68c0655c3d1086f1ba2480e4359101ec4f81f7",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\", \".changeset/demo-change.md\"], [\".changeset/demo-change.md\"], [], Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDir); y",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/changeset-status.test.ts:404:runPromise@13#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 404,
-      "endLine": 428,
-      "symbol": "runPromise",
-      "occurrence": "v2:e72b1921477805e19553698cd70e5abc3d8aa3080a73e1fd15e67a0a5fe209da",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempRepo( [\"packages/demo/src/index.ts\", \".changeset/demo-change.md\"], [\".changeset/demo-change.md\"], spawned, Effect.fn(function* (tmpDir) { yield* writeStatusFixtureRepo(tmpDi",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/codegen-command.test.ts:20:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -3350,13 +3245,34 @@
       "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1016:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1024:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1016,
-      "endLine": 1016,
+      "line": 1024,
+      "endLine": 1024,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:32af788ea28dfafc38161d3d2574f7735d808bedf70521956b841e72c5edacbe",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1042:provideScopedLayer@28#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1042,
+      "endLine": 1042,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:dc5a7d552d778ea8cac05e5ff7d38e5ec437c6a64542ed3750e0ab3997852eef",
       "class": "unresolved-layer-provide",
@@ -3371,13 +3287,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1037:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1063:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1037,
-      "endLine": 1037,
+      "line": 1063,
+      "endLine": 1063,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:59b8900e2af430f10d0b575b4495a4ad8ca474498cbb425caca313e3684123ba",
       "class": "unresolved-layer-provide",
@@ -3393,13 +3309,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1057:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1083:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1057,
-      "endLine": 1057,
+      "line": 1083,
+      "endLine": 1083,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:dd254055fbeb5ccf59f9d4ac11fd6655e6aa8dac8d8a5dcd01bc3a14a3ccef54",
       "class": "unresolved-layer-provide",
@@ -3415,13 +3331,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1101:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1127:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1101,
-      "endLine": 1101,
+      "line": 1127,
+      "endLine": 1127,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5fb9945070453ec7d778836579394318f3d81dc2dfba2443b3c41a32be3ec159",
       "class": "per-test-layer-provide",
@@ -3437,13 +3353,57 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1110:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1140:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1110,
-      "endLine": 1110,
+      "line": 1140,
+      "endLine": 1140,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:693c7a8be98b152403daadc1287bfc20741a5d5860148b6ffa148313ebfb14f8",
+      "class": "per-test-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1163:provideScopedLayer@10#1",
+      "lens": "detector",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1163,
+      "endLine": 1163,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:2fb5e145accd48d2fe450625e3743c58953b168116bfd0a1c5bc15c8c631216c",
+      "class": "per-test-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1171:provideScopedLayer@28#1",
+      "lens": "detector",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1171,
+      "endLine": 1171,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:541b4c0d2bbd863da0cb11d933844a9bbe4ed593ef7b452806faf348fd8668ea",
       "class": "per-test-layer-provide",
@@ -3459,13 +3419,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1118:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1179:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1118,
-      "endLine": 1118,
+      "line": 1179,
+      "endLine": 1179,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4d0b8bb696495388fb87881b798a46ac34469f91f04f50ac9a2160b421b77a22",
       "class": "per-test-layer-provide",
@@ -3481,13 +3441,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1126:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1187:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1126,
-      "endLine": 1126,
+      "line": 1187,
+      "endLine": 1187,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:6133ab523e9233a9cb064683d4b0e754103cca207862be3df8e9628e421e714f",
       "class": "per-test-layer-provide",
@@ -3503,13 +3463,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1134:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1195:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1134,
-      "endLine": 1134,
+      "line": 1195,
+      "endLine": 1195,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:47c6aee1e17894d64985de1195c72bb09cbed483f479deb3edc3a7a64e3e5e5d",
       "class": "per-test-layer-provide",
@@ -3525,13 +3485,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1149:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1210:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1149,
-      "endLine": 1149,
+      "line": 1210,
+      "endLine": 1210,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:cff37e46bc2fc6208c2e612f5cf620a3e36c2f7561ce4416f26d08d50e6d995f",
       "class": "per-test-layer-provide",
@@ -3546,13 +3506,13 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1160:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1221:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1160,
-      "endLine": 1160,
+      "line": 1221,
+      "endLine": 1221,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:7c1ace0f3b05666cccd7b09147d987fb51074a9b32afb2cdf6b74b064d80671a",
       "class": "per-test-layer-provide",
@@ -3568,13 +3528,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1171:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1232:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1171,
-      "endLine": 1171,
+      "line": 1232,
+      "endLine": 1232,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5dce18c25b0b2c7bcdd0be69e3578e3e2b4a15f83b4cff1d9fc15c6223a2e316",
       "class": "per-test-layer-provide",
@@ -3590,13 +3550,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1176:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1237:provideScopedLayer@10#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1176,
-      "endLine": 1176,
+      "line": 1237,
+      "endLine": 1237,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:99335c5b79a8a6f0bad7ce59171c8f4307fd80cfc5f4c4247623bd8e554ae6de",
       "class": "per-test-layer-provide",
@@ -3612,13 +3572,13 @@
       "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. Preserving these explicit shorter scopes retains native persistence and the existing exact error/span/byte assertions inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1197:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1258:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1197,
-      "endLine": 1197,
+      "line": 1258,
+      "endLine": 1258,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -3634,13 +3594,13 @@
       "reason": "A separate empty-input bundle is constructed within the case. Its body-derived PGlite directory and fixture model must be opened for the zero-claims failure and closed independently of the earlier populated bundle. Retain this scoped invocation inside the public outer fixture."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1219:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1280:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1219,
-      "endLine": 1219,
+      "line": 1280,
+      "endLine": 1280,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5ff83823f70e330d42bed4c97e89515ed5d9565d2fca4b8e0778bff03712bdbb",
       "class": "unresolved-layer-provide",
@@ -3656,13 +3616,13 @@
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1234:provideScopedLayer@10#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1295:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1234,
-      "endLine": 1234,
+      "line": 1295,
+      "endLine": 1295,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:906b637d9bde8fa44d431740efe98ca4d91fb70dfe7ac1dde46fb910aac4e6f6",
       "class": "unresolved-layer-provide",
@@ -3744,15 +3704,15 @@
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:951:provideScopedLayer@15#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:959:provideScopedLayer@15#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 951,
-      "endLine": 951,
+      "line": 959,
+      "endLine": 959,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:1dcbc53db572f97c1a38a92046fc14109fcc39ee9535a6723482db50b34f626f",
+      "occurrence": "v2:4243d8e40501686f209e6d0702bac1296576d1bc129f5cd5bff6a285556b4b88",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(claimsLayer)",
       "replacement": {
@@ -3765,13 +3725,35 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:961:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:976:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 961,
-      "endLine": 961,
+      "line": 976,
+      "endLine": 976,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:395cf4ab74b2d00590bc8629fd95429f7bb25da66d04db13c01f103a190432ec",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and each invocation closes its Pglite connection before independent failure injection, restoration, or persistence read-back. The outer NodeServices fixture already uses public it.layer; these shorter scopes preserve real native filesystem and DuckDB behavior."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:986:provideScopedLayer@16#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 986,
+      "endLine": 986,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:829f7c18810bd65b63f541e63097648d8c8832d0b22913d510f30d775cf29007",
       "class": "unresolved-layer-provide",
@@ -3785,27 +3767,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "This inner read-back connection is opened only after the body constructs its native bundle, then closed before the next connection or host. Keeping the body-derived data directory and shorter scope preserves real on-disk persistence and DDL/provenance assertions; the outer platform fixture already uses public it.layer."
-    },
-    {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:998:provideScopedLayer@10#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/law-practice-server",
-      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 998,
-      "endLine": 998,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:32af788ea28dfafc38161d3d2574f7735d808bedf70521956b841e72c5edacbe",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(claimsLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     },
     {
       "id": "EV002:packages/tooling/library/ai-metrics/test/agent-effectiveness.test.ts:1025:provideScopedLayer@12#1",
@@ -8664,90 +8625,6 @@
       "status": "open"
     },
     {
-      "id": "EV002:packages/tooling/tool/cli/test/session-ledger.test.ts:244:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 244,
-      "endLine": 244,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:c5dd703b7e38ded41c538e17d420350e04746093e718d7157eb722c0f11990cd",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/session-ledger.test.ts:290:provideScopedLayer@12#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 290,
-      "endLine": 290,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:7460e07c1948942bfeac4f210859b0c1171cb8917eaeefda66bc7ffe294910dc",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/session-ledger.test.ts:343:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 343,
-      "endLine": 343,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:2f471ecb4750cbe9b28dd28e61d776a7f958925ab34fecbc288e440b5c1b0f64",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV002:packages/tooling/tool/cli/test/session-ledger.test.ts:362:provideScopedLayer@11#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 362,
-      "endLine": 362,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:9a7668782dfaf1a3f13e361a20f1e73c3adc043d062b35bed1f86c315ca6648e",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV002:packages/tooling/tool/cli/test/step-git-exec.test.ts:230:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -12967,48 +12844,6 @@
       "status": "open"
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-status.test.ts:26:provideScopedLayer@2#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 26,
-      "endLine": 28,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:3824c2cc1cd7970503272d6b9ed4325e1e635eeba272a27f5f93a9c1272143e1",
-      "class": "resource-wrapper",
-      "evidence": "<ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) => <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> => Effect.scoped(Layer.build(layer).pipe(Effect.fla",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/changeset-status.test.ts:73:withTempRepo@21#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 73,
-      "endLine": 94,
-      "symbol": "withTempRepo",
-      "occurrence": "v2:b5884996647ebc12977155f472e165c627c0810b0ff9804abddc0278eafea3be",
-      "class": "resource-wrapper",
-      "evidence": "<A2, E, R>( changedFiles: ReadonlyArray<string>, addedChangesets: ReadonlyArray<string>, spawned: Array<string>, use: (tmpDir: string) => Effect.Effect<A2, E, R> ) => Effect.scoped( Effect.acquireUseR",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:1653:withEnvVarEffect@6#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -14831,7 +14666,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "The CLI command reads process.cwd directly. withCwd acquires and releases a narrow override around one command call, restoring the original function even on failure; native Git checkout behavior is the test subject."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/skills-command.test.ts:139:withTempRepoCommand@28#1",
@@ -18361,90 +18197,6 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:348:scoped@12#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 348,
-      "endLine": 348,
-      "symbol": "scoped",
-      "occurrence": "v2:52a99c66f557edbb24ca45b2ec495de57d159a720b626fdc0fa7adb3ade45acc",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:359:scoped@12#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 359,
-      "endLine": 359,
-      "symbol": "scoped",
-      "occurrence": "v2:174c085456fdc0d44336a6740d380a281fd8cc4c6a0f763476f024ae4625ccc1",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:382:scoped@12#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 382,
-      "endLine": 382,
-      "symbol": "scoped",
-      "occurrence": "v2:255d3ffa5ba5a76a851bf92af1afef5569ef674a87061177fc8c2652cb0be064",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV004:packages/tooling/tool/cli/test/models-check.test.ts:405:scoped@12#1",
-      "lens": "detector",
-      "ruleId": "EV004",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 405,
-      "endLine": 405,
-      "symbol": "scoped",
-      "occurrence": "v2:c0818dce7bc7e8ad50a48a1bc9a38fc2652fa2ed458dcabb2cbbb4660914fed4",
-      "class": "redundant-whole-body-scope",
-      "evidence": "Effect.scoped",
-      "replacement": {
-        "primitive": "readme.resource-safety",
-        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV004:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:107:scoped@12#1",
       "lens": "detector",
       "ruleId": "EV004",
@@ -18851,7 +18603,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "withScratchCheckout owns a real temporary Git clone and linked worktree, then closes its scope after the supplied callback. The public it.layer fixture provides NodeServices and TestConsole per test; this shorter scope is deliberate native cleanup."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:161:scoped@28#1",
@@ -21837,69 +21590,6 @@
       "replacement": {
         "primitive": "utils.assertSome",
         "sketch": "Review structural equality against the supplied Option.some constructor. Reuse only the existing expected operand; preserve matcher semantics. Exit.fail(error) does not supply the Cause required by assertExitFailure. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/session-ledger.test.ts:188:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 188,
-      "endLine": 188,
-      "symbol": "expect",
-      "occurrence": "v2:e938f3d1b99341d3d975e11ba904ea1bc461171c3c8b4fc1ffaed1ad3f93c376",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(claude).toStrictEqual({ harness: \"claude-code\", sessionId: O.some(\"s1\") })",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/session-ledger.test.ts:192:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 192,
-      "endLine": 192,
-      "symbol": "expect",
-      "occurrence": "v2:b5aec0e11637c41a3067204d78458f251f1a056b37549d6b5e33220e0e9f4acb",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(codex).toStrictEqual({ harness: \"codex\", sessionId: O.some(\"t1\") })",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
-      },
-      "severity": "minor",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV006:packages/tooling/tool/cli/test/session-ledger.test.ts:196:expect@6#1",
-      "lens": "resource",
-      "ruleId": "EV006",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 196,
-      "endLine": 196,
-      "symbol": "expect",
-      "occurrence": "v2:d2e1a18ede81a5da848e2d02f96409f48e56fb68894d84f75b2d709361de01f4",
-      "class": "hand-rolled-data-assertion",
-      "evidence": "expect(unknown).toStrictEqual({ harness: \"unknown\", sessionId: O.none() })",
-      "replacement": {
-        "primitive": "utils.deepStrictEqual",
-        "sketch": "Review the complete compound/ambiguous assertion, preserving matcher polarity and operands. Do not replace a Boolean branch check with invented payload/error/Cause expectations. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
       },
       "severity": "minor",
       "confidence": 0.55,
@@ -27481,27 +27171,6 @@
       "reason": "NodeServices is intentional because the release-path tests run real git against scoped temporary repository files; TestConsole captures the actual command error. All 11 cases pass with CI=true on Node and Bun; full package audit (663.2s) and docgen (27.8s) passed."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/changeset-status.test.ts:12:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/changeset-status.test.ts",
-      "line": 12,
-      "endLine": 12,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/check-census.test.ts:9:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -29934,13 +29603,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/session-ledger.test.ts:17:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/session-ledger.test.ts:16:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 16,
+      "endLine": 16,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -29952,7 +29621,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "NodeServices is required for native git subprocesses, linked worktrees, chmod/stat, and real path semantics in this suite. MemoryFileSystem would change the command subject."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:2:@effect/platform-node@0#1",
@@ -39336,27 +39006,6 @@
       "occurrence": "v2:5112044a51a850d08a7613e879f197bf830b4cc5d56ea6f0a1b95ca7886fc3f9",
       "class": "resource-layer-without-hook-timeout",
       "evidence": "layer(NodeServices.layer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/tooling/tool/cli/test/models-check.test.ts:398:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/models-check.test.ts",
-      "line": 398,
-      "endLine": 398,
-      "symbol": "it.layer",
-      "occurrence": "v2:cb44d7dba7637af844265501e9229ed3421ae3837013ee5f31467f5f4ce109d0",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(Layer.mergeAll(platform, modelsWithoutProxy))",
       "replacement": {
         "primitive": "it.layer.option.timeout",
         "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."

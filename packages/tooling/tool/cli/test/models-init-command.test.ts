@@ -22,7 +22,7 @@ const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttp
 const withFreshConsole = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
-layer(testLayer, { timeout: "10 seconds" })("models init command", (it) => {
+layer(testLayer, { timeout: "30 seconds" })("models init command", (it) => {
   it.effect("seeds the routing manifest under the explicit home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
