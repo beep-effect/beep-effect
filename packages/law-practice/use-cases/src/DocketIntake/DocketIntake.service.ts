@@ -170,6 +170,42 @@ export class DocketIntakeConfig extends S.Class<DocketIntakeConfig>($I`DocketInt
   $I.annote("DocketIntakeConfig", { description: "Settings of the docket intake pipeline." })
 ) {}
 
+const PositiveMessageCount = S.Int.check(S.isGreaterThan(0));
+
+/**
+ * Options of one poll cycle. With no `maxMessages` the cycle processes every
+ * pending message, as it always has.
+ *
+ * **Details**
+ *
+ * `maxMessages` bounds a cycle to the oldest pending messages. The rest stay
+ * pending for a later cycle, and the cursor never moves past a message that
+ * was not processed, because it only advances over settled messages.
+ *
+ * **Example** (Bound a cycle to five messages)
+ *
+ * ```ts
+ * import { DocketPollOptions } from "@beep/law-practice-use-cases/DocketIntake";
+ * import * as O from "effect/Option";
+ *
+ * const options = DocketPollOptions.make({ maxMessages: O.some(5) });
+ * console.log(O.getOrNull(options.maxMessages)); // 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocketPollOptions extends S.Class<DocketPollOptions>($I`DocketPollOptions`)(
+  {
+    maxMessages: S.OptionFromOptionalKey(PositiveMessageCount)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Most pending messages one cycle processes, oldest first; all when absent." }),
+  },
+  $I.annote("DocketPollOptions", { description: "Options of one docket intake poll cycle." })
+) {}
+
+const unboundedPoll = DocketPollOptions.make({});
+
 /**
  * Counts of one poll cycle. It carries no message content.
  *
@@ -244,8 +280,14 @@ export class DocketDigest extends S.Class<DocketDigest>($I`DocketDigest`)(
  * @since 0.0.0
  */
 export interface DocketIntakeShape {
-  /** Run one complete poll cycle. The cursor is saved only at its end. */
-  readonly pollOnce: (today: LocalDate) => Effect.Effect<DocketPollReport, DocketIntakeError>;
+  /**
+   * Run one complete poll cycle. The cursor is saved only at its end. The options may bound the
+   * cycle to the oldest pending messages; without them every pending message is processed.
+   */
+  readonly pollOnce: (
+    today: LocalDate,
+    options?: DocketPollOptions
+  ) => Effect.Effect<DocketPollReport, DocketIntakeError>;
   /**
    * Process one message to its typed outcome. A failed step becomes `IntakeFailed`, never a thrown error.
    * Each completed review round is saved in the message's ledger record as it goes, and rounds already
@@ -1246,14 +1288,20 @@ const makeService = (ports: Ports): DocketIntakeShape => {
   );
 
   return {
-    pollOnce: Effect.fn("DocketIntake.pollOnce")(function* (today) {
+    pollOnce: Effect.fn("DocketIntake.pollOnce")(function* (today, options = unboundedPoll) {
       const loaded = yield* ports.store.load;
       const since = O.map(loaded.cursor, (cursor) => subtractMinutes(cursor, ports.config.overlapMinutes));
       const messages = yield* ports.mailbox.receivedSince(since);
       const ordered = A.sort(messages, (left: DocketMessage, right: DocketMessage) =>
         Str.Order(left.receivedAt, right.receivedAt)
       );
-      const pending = A.filter(ordered, (message) => !isSettled(R.get(loaded.ledger, message.messageId)));
+      const unsettled = A.filter(ordered, (message) => !isSettled(R.get(loaded.ledger, message.messageId)));
+      // A bounded cycle takes the oldest pending messages. Those it leaves are unsettled, so the
+      // cursor, which only advances over the leading run of settled messages, stops before them.
+      const pending = O.match(options.maxMessages, {
+        onNone: () => unsettled,
+        onSome: (max) => A.take(unsettled, max),
+      });
 
       const final = yield* Effect.reduce(
         pending,

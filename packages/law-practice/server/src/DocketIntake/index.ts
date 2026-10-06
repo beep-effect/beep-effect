@@ -22,6 +22,13 @@ export * from "./DocketIntake.agents.ts";
  */
 export * from "./DocketIntake.graph.ts";
 /**
+ * Write journal, run summaries and the journaling port decorators.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./DocketIntake.journal.ts";
+/**
  * Matter lookup adapter.
  *
  * @category layers
@@ -42,3 +49,10 @@ export * from "./DocketIntake.store.ts";
  * @since 0.0.0
  */
 export * from "./DocketIntake.trackedDates.ts";
+/**
+ * Undo of one run: plan, dry-run report and apply.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./DocketIntake.undo.ts";

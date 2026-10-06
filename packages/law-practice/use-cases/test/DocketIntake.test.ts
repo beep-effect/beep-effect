@@ -18,6 +18,7 @@ import {
   DocketMatterLookup,
   DocketMessage,
   DocketParalegal,
+  DocketPollOptions,
   DocketReviewConfig,
   DocketReviewProgress,
   DocketSecretary,
@@ -830,6 +831,39 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([
           "matter-lookup-failed",
         ]);
+      })
+    );
+  });
+
+  it.layer(testLayer({ messages: [message("m3", 3), message("m1", 1), message("m2", 2)] }), {
+    timeout: "5 seconds",
+  })((it) => {
+    it.effect(
+      "a bounded cycle processes the oldest pending messages and keeps the cursor before the rest",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+        const bounded = DocketPollOptions.make({ maxMessages: O.some(2) });
+
+        const first = yield* intake.pollOnce(TODAY, bounded);
+        const afterFirst = A.last(yield* Ref.get(harness.saves));
+        const second = yield* intake.pollOnce(TODAY, bounded);
+        const afterSecond = A.last(yield* Ref.get(harness.saves));
+
+        expect([first.processed, first.entered, first.seen]).toStrictEqual([2, 2, 3]);
+        assertSome(
+          O.map(afterFirst, (state) => A.sort(R.keys(state.ledger), Str.Order)),
+          ["m1", "m2"]
+        );
+        assertSome(
+          O.flatMap(afterFirst, (state) => state.cursor),
+          "2030-01-09T10:02:00Z"
+        );
+        expect([second.processed, second.entered]).toStrictEqual([1, 1]);
+        assertSome(
+          O.flatMap(afterSecond, (state) => state.cursor),
+          "2030-01-09T10:03:00Z"
+        );
       })
     );
   });

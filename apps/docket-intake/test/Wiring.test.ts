@@ -13,11 +13,13 @@ import { liveWiring } from "@/runtime/Layer";
 import { fixtureConfig } from "./support/Config.ts";
 
 describe("@beep/docket-intake live wiring", () => {
-  it("composes the pipeline layer and the mailbox layer from a configuration", () => {
-    const intake = liveWiring.intake({ config: fixtureConfig, initialSince: "2030-01-01T06:00:00.000Z" });
+  it("composes the pipeline, dry-run and mailbox layers from a configuration", () => {
+    const options = { config: fixtureConfig, initialSince: "2030-01-01T06:00:00.000Z" };
+    const intake = liveWiring.intake(options);
+    const dryRun = liveWiring.dryRun({ ...options, directory: "/fixture/state/docket-intake/dry-run" });
     const mailbox = liveWiring.mailbox(fixtureConfig);
 
-    expect([Layer.isLayer(intake), Layer.isLayer(mailbox)]).toStrictEqual([true, true]);
+    expect([Layer.isLayer(intake), Layer.isLayer(dryRun), Layer.isLayer(mailbox)]).toStrictEqual([true, true, true]);
   });
 
   it("composes the pipeline over a practice-KG bundle and a docket sheet export when both are configured", () => {
