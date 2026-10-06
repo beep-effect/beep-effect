@@ -365,7 +365,7 @@ export const isPracticeKgPracticeAddress =
     });
   };
 
-const addressEntryPattern = /(?:"([^"]*)"|([^,<"]*?))\s*<([^<>\s]+@[^<>\s]+)>|([^\s,<>"';]+@[^\s,<>"';]+)/gu;
+const addressEntryPattern = /(?:"([^"]*)"|([^,<"]*?))\s*<([^<>\s]+@[^<>\s]+)>|([^\s,<>";]+@[^\s,<>"';]+)/gu;
 const surroundingQuotesPattern = /^['"\s]+|['"\s]+$/gu;
 
 const cleanName = (raw: string | null | undefined): string | null =>

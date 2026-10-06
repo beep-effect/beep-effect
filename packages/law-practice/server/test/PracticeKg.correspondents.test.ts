@@ -187,6 +187,11 @@ describe("practice KG correspondents", () => {
     "reads one address from a bare address or one header entry, and refuses none or several",
     Effect.fnUntraced(function* () {
       expect(yield* parsePracticeKgCorrespondentAddress(" Pat@Example.com ")).toBe("pat@example.com");
+      // An apostrophe is legal in a local part; it must not cut the address short.
+      expect(yield* parsePracticeKgCorrespondentAddress("O'Brien@Example.com")).toBe("o'brien@example.com");
+      expect(yield* parsePracticeKgCorrespondentAddress("Pat O'Brien <o'brien@example.com>")).toBe(
+        "o'brien@example.com"
+      );
       expect(yield* parsePracticeKgCorrespondentAddress('"Example, Pat" <Pat@Example.com>')).toBe("pat@example.com");
       expect(yield* parsePracticeKgCorrespondentAddress("pat@example.com, Pat <PAT@example.com>")).toBe(
         "pat@example.com"
