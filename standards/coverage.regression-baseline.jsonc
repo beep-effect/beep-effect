@@ -4360,8 +4360,8 @@
     },
     "@beep/docket-intake": {
       "path": "apps/docket-intake",
-      "lines": 99.07,
-      "statements": 99.15,
+      "lines": 99.21,
+      "statements": 99.28,
       "branches": 100,
       "functions": 100,
       "uncovered": {
