@@ -3056,6 +3056,50 @@
       "reason": "The canonical scoped helper deliberately closes the first persistent PGlite database before rebuilding another over the same dataDir. Outer platform services now use public it.layer; the database lifetime remains shorter than the body."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/MailTagging.files.test.ts:38:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/MailTagging.files.test.ts",
+      "line": 38,
+      "endLine": 38,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem behavior is the test subject: the file-backed mail-tagging ledgers and checkpoint are proven through real appends, fsync, whole-file reads, and a temp-file rename inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/MailTagging.layers.test.ts:50:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/MailTagging.layers.test.ts",
+      "line": 50,
+      "endLine": 50,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem behavior is the test subject: the live mail-tagging use-case layers are proven end to end over the file-backed ledgers and checkpoint (real appends, fsync, temp-file rename) inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+    },
+    {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1085:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -19936,6 +19980,27 @@
       "reason": "This Handoff assertion compares two independently derived Option relations. Preserve both operands and existing cardinality checks; an assertSome call would require replacing the expected Option relation with a concrete payload."
     },
     {
+      "id": "EV006:packages/foundation/capability/technical-drawing/test/FigureSet.test.ts:481:expect@8#1",
+      "lens": "detector",
+      "ruleId": "EV006",
+      "package": "@beep/technical-drawing",
+      "file": "packages/foundation/capability/technical-drawing/test/FigureSet.test.ts",
+      "line": 481,
+      "endLine": 481,
+      "symbol": "expect",
+      "occurrence": "v2:08f98db9d58005f004d8dd8bd14cd972dabcbd173a66d895f41a28b7828ea6c5",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "expect(O.isNone(unbound.manifest.approver)).toBe(true)",
+      "replacement": {
+        "primitive": "utils.assertNone",
+        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "open"
+    },
+    {
       "id": "EV006:packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts:135:expect@8#1",
       "lens": "resource",
       "ruleId": "EV006",
@@ -25172,8 +25237,8 @@
       "ruleId": "EV010",
       "package": "@beep/occt",
       "file": "packages/drivers/occt/test/Occt.service.test.ts",
-      "line": 4,
-      "endLine": 4,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -25232,7 +25297,7 @@
       "reason": "Actual executable files, chmod, child-visible paths, native process spawning and kernel termination are the subject. Retain NodeServices and scoped native temporary directories; MemoryFS would remove the tested boundary."
     },
     {
-      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:4:@effect/platform-node@0#1",
+      "id": "EV010:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/pdf-tools",
@@ -41197,6 +41262,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "This block has one effect test and a private TestClock. The case owns the request child fiber, advances the deterministic one-second retry delay and joins that fiber before fixture teardown. No sibling test shares or advances this clock; retain the retry subject without live time or resets."
+    },
+    {
+      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:313:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/pdf-tools",
+      "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
+      "line": 313,
+      "endLine": 313,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:be3d8e00e5f6724d35353fc1614267e0d1bfcb4ccc5fe18ab4b7f576a9af37dd",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"4 seconds\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV015:packages/drivers/pdf-tools/test/PdfTools.service.test.ts:315:TestClock.adjust@17#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/pdf-tools",
+      "file": "packages/drivers/pdf-tools/test/PdfTools.service.test.ts",
+      "line": 315,
+      "endLine": 315,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:b6ba6f79959fb4d3a93781abc1fec28975a344511f13ebfc790a66c9477b9854",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"2 seconds\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV015:packages/drivers/tailscale/test/tailscale.test.ts:291:TestClock.adjust@15#1",
