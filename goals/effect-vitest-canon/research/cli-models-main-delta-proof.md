@@ -25,4 +25,6 @@ repo-cli ledger without changing their IDs or source evidence: five EV004 and
 two EV014 rows are fixed at the source SHA above; two EV010 platform-provenance
 rows remain open for the full current-main lens review. This is a bounded
 repair receipt, not a claim that P1's new-main delta or every human lens is
-complete. Full combined repo-cli package proof and hosted checks remain gates.
+complete. The combined CLI source passed full `@beep/repo-cli` package
+verification (audit 821.8 seconds, docgen 28.5 seconds). Hosted checks remain
+a separate gate.

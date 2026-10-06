@@ -31,6 +31,7 @@ The starting `main` baseline had two unrelated EV006 findings in
 baseline rows, and this wave subtracted exactly eight (1,933). A second
 current-main model-test repair removes seven more to 1,926, with separate
 lineage in `cli-models-main-delta-proof.md`. The detector ratchet passed on
-the intermediate 1,933-row head. The exact post-model combined package proof
-and hosted checks remain outstanding, as does a new whole-package after-timing
-cohort. This local branch is not yet published or merge-ready.
+the intermediate 1,933-row head and at the 1,926-row combined CLI head. The
+combined `@beep/repo-cli` package verification passed (audit 821.8 seconds,
+docgen 28.5 seconds). Hosted checks and a new whole-package after-timing cohort
+remain outstanding. This local branch is not yet published or merge-ready.
