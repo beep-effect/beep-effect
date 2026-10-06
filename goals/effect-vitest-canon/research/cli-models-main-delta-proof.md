@@ -8,7 +8,7 @@ and two unbounded `it.layer` registrations. Main also carried a
 `Heavy / Lint Policy` fail its `lint:tsgo-rules` step. After integrating main,
 Yeet cheap gates identified six new Effect/Vitest findings in the model tests.
 
-Source fix: `74f3b6dece8394bd4f4177a4b70ff9b6fdfda031`. The repair deletes
+Source fix: `290c8b4bd382ba33cb1ddf6b0c51d681d6a8035f`. The repair deletes
 the nested scopes, adds 30-second layer setup timeouts, and projects the one
 missing alias. It leaves the Node-backed command boundary and fresh
 TestConsole behavior in place. The two model files and the previously migrated

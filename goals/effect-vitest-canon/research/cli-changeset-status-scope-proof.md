@@ -1,9 +1,9 @@
 # Changeset-status fixture scope migration — 2026-10-06
 
-Source commit after rebasing on merged main: `bb101c62e3bbed1124438c3a03d0cfe06aa0be40`.
+Source commit after rebasing on merged main: `ebf76a2d7d13f219450b17fceb1b54a8db008c9a`.
 Pre-stack source commit: `b8432779e9813d6b2b2024bf2c5516a07858f165`.
 Starting base: `26269bb0ec0094b1c255bab0a0451bd47415f22c` (`origin/main` at branch creation).
-Current base: `6f0cbeb021`, containing the merged #1445 and #1448 charter.
+Current base: `9e7742176f`, containing the merged #1445, #1448 charter, #1444, #1451, and #1434.
 
 The five integration cases in `packages/tooling/tool/cli/test/changeset-status.test.ts`
 now use `it.effect` inside per-case `it.layer` registrations. The layer provides

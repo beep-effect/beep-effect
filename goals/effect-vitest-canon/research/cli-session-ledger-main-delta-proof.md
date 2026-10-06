@@ -4,7 +4,7 @@ Main commit `6f0cbeb021` added `session-ledger.test.ts` after this goal's
 frozen CLI inventory. On the rebased follow-up branch, `beep lint
 effect-vitest` reported ten introduced rows from that file. The original
 source-bound rows were captured before repair. Source fix
-`41f93fa3b021aa0471e62da39c8d9c6da23aee7a` moves the harness test to `it.effect`, runs the four native
+`1ab5877e5e1e14c72a2c067795c11c494290c7d3` moves the harness test to `it.effect`, runs the four native
 service and command cases under a fresh `it.layer`, and asserts harness
 fields directly. The nine-case suite passes on Node and Bun.
 
