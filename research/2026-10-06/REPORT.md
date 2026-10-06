@@ -126,7 +126,7 @@ Effect is stable and patching. Local-first libraries are shipping sync-correctne
 
 ## Counts & run status
 
-- **Claims:** 34 (27 window_new and 8 refute, 4 overlapping; 3 late catches are neither; law 11 / effect 10 / agents 13).
+- **Claims:** 34 (27 window_new and 8 refute, 4 overlapping; 3 are neither, 2 of them labeled late catches; law 11 / effect 10 / agents 13).
 - **Novelty:** canonical exclusion collision **5.9%** (2/34 unique claim URLs ∩ 289-URL digest: [#8692](https://github.com/Effect-TS/effect/pull/8692), [py #3485](https://github.com/modelcontextprotocol/python-sdk/pull/3485), both deliberate refutes). Window-new collision **0.0%**. Under the 40% gate, so no self-reject.
 - **RUN:** **partial**. X is not enrolled and there is no blinded local verifier. Weekly consolidation is included and emitted 15 tombstones.
 
