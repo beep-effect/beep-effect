@@ -13,6 +13,7 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, Layer, Option as O } from "effect";
+import * as S from "effect/Schema";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 import type { Locator, ModelId, ModelsTargetFile } from "@beep/repo-cli/commands/Models";
 
@@ -36,6 +37,7 @@ const seat = ModelBinding.make({
   note: O.none(),
 });
 
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const verbatim = { _tag: "verbatim" } as const;
 const labels = {
   _tag: "effort-display-label",
@@ -376,7 +378,7 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
       // The reviewer's probe: the binding moved to claude-opus-5-6 while a
       // stale claude-opus-5-5 entry still says medium.
       const settings = file(
-        JSON.stringify({
+        yield* encodeJsonText({
           model: "claude-opus-5-6",
           effortLevel: "low",
           modelSettings: { "claude-opus-5-5": { effortLevel: "medium" }, "claude-opus-5-6": { effortLevel: "high" } },
