@@ -141,10 +141,6 @@
     // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
     // miner run ad hoc via `bun run`), not a package/app entrypoint.
     "explorations/lejeune-bolt-agentic-demo/ops/**",
-    // The Agentic Yoyo article builder is standalone publication tooling, invoked
-    // with `node build.mjs --out ...` as documented in its asset README. It has
-    // no package/app runtime consumers; keep it outside the production graph.
-    "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/build.mjs",
     // effect-schema-parity exploration research scripts are packet evidence
     // regenerators (rg censuses, TS-compiler-API retirement audits, and the
     // upstream-inventory prototype that reads the machine-local .repos/effect
