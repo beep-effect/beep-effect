@@ -3010,3 +3010,34 @@ full Yeet and final-head hosted verification remain required.
   re-records through `git merge-file`. The other generated files stay
   multi-line already; their residual conflicts come from adjacent-row edits
   and are out of scope here.
+
+
+### 2026-10-06 — Accepted evidence missing from cache storage
+
+- Work: recover PR #1389's accepted closeout without restarting implementation.
+- Evidence: the recorded private retention archive, residue archive, accepted
+  fragment store and issuer directories are absent. Targeted searches found no
+  matching originals; no cause of deletion or movement was established.
+- Effect: surviving native observations and operational records match fourteen
+  published hashes, but original authenticated import and final proof-file bytes
+  cannot be independently revalidated. Direct historical tool output survives.
+- Action: preserve verified copies in durable user-state storage and publish the
+  [recovery limits](recovery-audit-2026-10-06.md) alongside the accepted chronology.
+- Prevention: retain accepted evidence, including independent issuer/acceptance
+  records, under an explicit archival policy with a checked manifest and backup.
+- GitHub GraphQL also returned `API rate limit already exceeded`; REST remained
+  available. Preserve historical thread resolution separately from fresh REST
+  comments rather than claiming that unchanged comments prove current flags.
+
+### 2026-10-06 — Repair fixers expanded a documentation-only change
+
+- Work: publish the recovery addendum through Yeet.
+- Evidence: `yeet repair` rewrote inherited helper forms in cache governance and
+  the Session command before its feedback gate. Those packages were unchanged
+  by the documentation work.
+- Action: stopped this lane's repair process, retained its patch privately and
+  restored those two files. Publication runs the normal cheap-gates and
+  head-install preflight on the documentation scope; no successful repair run
+  is claimed.
+- Prevention: scope deterministic preparation to the intended change when a
+  documentation publication would otherwise acquire unrelated source edits.
