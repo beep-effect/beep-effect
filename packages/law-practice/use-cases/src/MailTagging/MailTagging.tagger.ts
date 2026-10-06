@@ -29,6 +29,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { extractPracticeKgReferences } from "../PracticeKg.matter-lookup.ts";
 import type {
   MailEnvelope,
   MailTaxonomy,
@@ -68,16 +69,22 @@ const applicationNumberPattern = /(?<!\d)(\d{2})\/?(\d{3}),?(\d{3})(?!\d)/gu;
 const patentNumberPattern = /(?<![\d/])(\d{1,2}),?(\d{3}),?(\d{3})(?!\d)/gu;
 const wordSeparatorPattern = /[\s,;:()[\]<>"'!?]+/u;
 const trailingDotsPattern = /\.+$/u;
+// The digits a docket reference opens with: `<client>.<family>` or a bare `<family>`.
+const referenceFamilyPattern = /^(?:\d+\.)?\d+/u;
+const nonDigitPattern = /\D/gu;
 
 type SenderSignals = {
   readonly senderAddresses: HashSet.HashSet<string>;
   readonly senderDomains: HashSet.HashSet<string>;
 };
 
+type MatterIdentifiers = Pick<UnattributedMatter, "docketNumbers" | "applicationNumbers" | "patentNumbers">;
+
 type MailSignals = SenderSignals & {
   readonly applicationNumbers: HashSet.HashSet<string>;
   readonly patentNumbers: HashSet.HashSet<string>;
   readonly words: HashSet.HashSet<string>;
+  readonly referencedFamilies: HashSet.HashSet<string>;
   readonly addresses: HashSet.HashSet<string>;
   readonly conversationId: O.Option<string>;
   readonly carriedMatter: O.Option<MatterKey>;
@@ -95,6 +102,26 @@ const wordsIn: (text: string) => HashSet.HashSet<string> = flow(
   HashSet.fromIterable
 );
 
+const isApplicationReference: (reference: string) => boolean = Str.includes("/");
+
+const isPatentReference = (reference: string): boolean =>
+  !isApplicationReference(reference) && pipe(reference, Str.includes(","));
+
+const isDocketReference = (reference: string): boolean =>
+  !isApplicationReference(reference) && !isPatentReference(reference);
+
+const referencedNumbers = (
+  references: ReadonlyArray<string>,
+  isKind: (reference: string) => boolean
+): HashSet.HashSet<string> =>
+  HashSet.fromIterable(A.map(A.filter(references, isKind), Str.replaceAll(nonDigitPattern, "")));
+
+const referencedDockets = (references: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.map(A.filter(references, isDocketReference), Str.toLowerCase);
+
+const familyOfReference = (docket: string): O.Option<string> =>
+  O.flatMap(Str.match(referenceFamilyPattern)(docket), A.head);
+
 const domainOf = (address: string): O.Option<string> => A.last(Str.split(address, "@"));
 
 const readableText = (envelope: MailEnvelope): string =>
@@ -110,11 +137,20 @@ const senderSignals = (envelope: MailEnvelope): SenderSignals => {
 
 const mailSignals = (context: MatterTaggerContext, envelope: MailEnvelope): MailSignals => {
   const text = readableText(envelope);
+  const references = extractPracticeKgReferences(text);
+  const dockets = referencedDockets(references);
   return {
     ...senderSignals(envelope),
-    applicationNumbers: numbersIn(applicationNumberPattern)(text),
-    patentNumbers: numbersIn(patentNumberPattern)(text),
-    words: wordsIn(text),
+    applicationNumbers: HashSet.union(
+      numbersIn(applicationNumberPattern)(text),
+      referencedNumbers(references, isApplicationReference)
+    ),
+    patentNumbers: HashSet.union(
+      numbersIn(patentNumberPattern)(text),
+      referencedNumbers(references, isPatentReference)
+    ),
+    words: HashSet.union(wordsIn(text), HashSet.fromIterable(dockets)),
+    referencedFamilies: HashSet.fromIterable(A.getSomes(A.map(dockets, familyOfReference))),
     addresses: HashSet.fromIterable(A.appendAll(O.toArray(envelope.senderAddress), envelope.recipientAddresses)),
     conversationId: envelope.conversationId,
     carriedMatter: O.flatMap(envelope.conversationId, (id) => HashMap.get(context.conversationMatters, id)),
@@ -145,22 +181,28 @@ const carriedConversation = (signals: MailSignals, entry: MatterIndexEntry): Rea
     O.toArray
   );
 
-const identifierEvidence = (signals: MailSignals, matter: UnattributedMatter): ReadonlyArray<MatterEvidence> =>
+// A family key counts only against the family of an extracted docket reference, never a loose word.
+const identifierEvidence = (
+  signals: MailSignals,
+  matter: MatterIdentifiers,
+  familyKeys: ReadonlyArray<string>
+): ReadonlyArray<MatterEvidence> =>
   A.flatten([
     hits("application-number", matter.applicationNumbers, within(signals.applicationNumbers)),
     hits("patent-number", matter.patentNumbers, within(signals.patentNumbers)),
     hits("docket-number", matter.docketNumbers, flow(Str.toLowerCase, within(signals.words))),
+    hits("docket-number", familyKeys, flow(Str.toLowerCase, within(signals.referencedFamilies))),
   ]);
 
 // The strongest identifier hit on a matter that cannot be tagged; 0 when none.
 const unattributedStrength = (context: MatterTaggerContext, signals: MailSignals): number =>
   A.reduce(context.index.unattributed, 0, (strongest, matter) =>
-    N.max(strongest, matterEvidenceConfidence(identifierEvidence(signals, matter)))
+    N.max(strongest, matterEvidenceConfidence(identifierEvidence(signals, matter, matter.familyKeys)))
   );
 
 const entryEvidence = (signals: MailSignals, entry: MatterIndexEntry): ReadonlyArray<MatterEvidence> =>
   A.flatten([
-    identifierEvidence(signals, entry),
+    identifierEvidence(signals, entry, [entry.matterKey]),
     hits("conversation-carryover", carriedConversation(signals, entry), () => true),
     hits("contact-address", entry.contactAddresses, within(signals.addresses)),
     hits(
@@ -260,6 +302,16 @@ const verdict = (
  * is a consumer mail domain). A matter appears once, with the confidence of
  * its distinct evidence kinds. Equal confidence falls back to matter-key order
  * so the ranking is deterministic.
+ *
+ * Identifiers are read twice. The practice-KG reference grammar
+ * (`extractPracticeKgReferences`) finds the attorney's docket references,
+ * including `<client>.<family><country><sequence>` and national-stage
+ * suffixes, wherever they sit in the text; the tagger's own patterns and
+ * word match stay as the fallback. A docket reference whose leading
+ * `<client>.<family>` equals a matter key is `docket-number` evidence even
+ * when the index does not list that docket, so a new country stage of a known
+ * matter still matches. A bare family never matches a taggable matter that
+ * way: bare families are reused across clients.
  *
  * **Example** (Rank a matter named by its application number)
  *
