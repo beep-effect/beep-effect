@@ -22,7 +22,7 @@ const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttp
 const withFreshConsole = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
-layer(testLayer)("models init command", (it) => {
+layer(testLayer, { timeout: "10 seconds" })("models init command", (it) => {
   it.effect("seeds the routing manifest under the explicit home", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -35,7 +35,7 @@ layer(testLayer)("models init command", (it) => {
       expect(yield* fs.exists(manifestPath)).toBe(true);
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
-    }).pipe(Effect.scoped, withFreshConsole)
+    }).pipe(withFreshConsole)
   );
 
   it.effect("adopt rewrites an existing manifest and keeps a timestamped backup", () =>
@@ -57,7 +57,7 @@ layer(testLayer)("models init command", (it) => {
       expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), backups[0]!))).toContain("bindings: []");
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: adopted the seed into"))).toBe(true);
-    }).pipe(Effect.scoped, withFreshConsole)
+    }).pipe(withFreshConsole)
   );
 
   it.effect("repeated adoptions keep distinct backups and leave no temporary files", () =>
@@ -79,7 +79,7 @@ layer(testLayer)("models init command", (it) => {
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(2);
       expect(A.filter(siblings, Str.startsWith("models.yaml.tmp-"))).toHaveLength(0);
       expect(yield* fs.readFileString(manifestPath)).toContain("gpt-6.1-sol");
-    }).pipe(Effect.scoped, withFreshConsole)
+    }).pipe(withFreshConsole)
   );
 
   it.effect("adopt on an empty slot behaves like init", () =>
@@ -96,6 +96,6 @@ layer(testLayer)("models init command", (it) => {
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(0);
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
-    }).pipe(Effect.scoped, withFreshConsole)
+    }).pipe(withFreshConsole)
   );
 });

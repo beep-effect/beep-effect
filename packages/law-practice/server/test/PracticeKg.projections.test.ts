@@ -1379,7 +1379,11 @@ describe("practice KG family attribution", () => {
       restored: true,
     });
     const result = attributeDocuments({
-      catalogRows: [family, restored],
+      catalogRows: [
+        family,
+        restored,
+        PracticeKgCatalogRow.make({ ...family, digest: "consensus", docket: "10008US02" }),
+      ],
       docketReferences: [
         PracticeKgDocketReferenceRow.make({
           digest: "family",
@@ -1396,6 +1400,12 @@ describe("practice KG family attribution", () => {
           client: "12345",
           attributionSource: "text-reference",
           familyKey: "12345.10008",
+        }),
+        expect.objectContaining({
+          digest: "consensus",
+          client: "12345",
+          attributionSource: "family-consensus",
+          docketKey: "12345.10008US02",
         }),
         expect.objectContaining({
           digest: "restored",

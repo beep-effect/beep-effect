@@ -218,7 +218,7 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
       });
       expect(A.map(drift, (entry) => entry.kind)).toEqual(["stale"]);
       assertSome(drift[0]!.current, "low");
-    }).pipe(Effect.scoped)
+    })
   );
 
   it.effect("reports routable unbound Codex candidates without proposing hidden or already-bound slugs", () =>
