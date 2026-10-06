@@ -7,6 +7,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -43,6 +44,33 @@ export const SessionLedgerState = LiteralKit(["open", "blocked", "done"]).pipe(
  * @since 0.0.0
  */
 export type SessionLedgerState = typeof SessionLedgerState.Type;
+
+/**
+ * Which fleet role a session holds: the one orchestrator that coordinates the
+ * rest, or a member it coordinates.
+ *
+ * **Example** (Narrow a role)
+ *
+ * ```ts
+ * import { SessionRole } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(SessionRole.is.orchestrator("orchestrator")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SessionRole = LiteralKit(["orchestrator", "member"]).pipe(
+  $I.annoteSchema("SessionRole", { description: "Fleet role a harness session holds for the repository." })
+);
+
+/**
+ * Fleet role a harness session holds for the repository.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SessionRole = typeof SessionRole.Type;
 
 /**
  * One append-only ledger row: a session's last known position in a checkout.
@@ -97,6 +125,7 @@ export class SessionLedgerRow extends S.Class<SessionLedgerRow>($I`SessionLedger
     harness: PrProvenanceHarness,
     sessionId: S.OptionFromNullOr(S.String),
     recordedAt: S.DateTimeUtcFromString,
+    role: SessionRole.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("SessionLedgerRow", {
     description: "Where one harness session stopped in a checkout and what it meant to do next.",
@@ -198,3 +227,30 @@ export const openSessionRows = (rows: ReadonlyArray<SessionLedgerRow>): Readonly
     A.sort(newestFirst)
   );
 };
+
+/**
+ * The session currently holding the orchestrator role, if any live row claims it.
+ *
+ * **Details**
+ *
+ * The newest open row whose `role` is `orchestrator` wins: a hand-off is
+ * recorded by the successor writing its own `orchestrator` row and the
+ * predecessor writing a `member` or `done` row, so a stale claim is superseded
+ * by recency rather than by deletion.
+ *
+ * **Example** (No orchestrator recorded)
+ *
+ * ```ts
+ * import { sessionOrchestrator } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(sessionOrchestrator([]))) // true
+ * ```
+ *
+ * @param rows - Ledger rows as read from the file.
+ * @returns The newest open orchestrator row.
+ * @category models
+ * @since 0.0.0
+ */
+export const sessionOrchestrator = (rows: ReadonlyArray<SessionLedgerRow>): O.Option<SessionLedgerRow> =>
+  A.findFirst(openSessionRows(rows), (row) => O.exists(row.role, SessionRole.is.orchestrator));

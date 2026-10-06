@@ -21,7 +21,7 @@ import {
 import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { SessionLedgerError } from "./Session.errors.ts";
-import { SessionLedgerRow, SessionLedgerRowJson, SessionLedgerState } from "./Session.schemas.ts";
+import { SessionLedgerRow, SessionLedgerRowJson, SessionLedgerState, SessionRole } from "./Session.schemas.ts";
 import type { PlatformError } from "effect";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
@@ -366,6 +366,7 @@ export const SessionNoteInput = S.Struct({
   cwd: S.String,
   next: S.String,
   pr: S.Option(PrNumber),
+  role: SessionRole.pipe(S.Option, S.optionalKey),
   state: SessionLedgerState,
   summary: S.Option(S.String),
 }).pipe(
@@ -419,6 +420,7 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
     harness: identity.harness,
     sessionId: identity.sessionId,
     recordedAt: yield* DateTime.now,
+    role: input.role ?? O.none<SessionRole>(),
   });
 });
 

@@ -1,0 +1,17 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "reviewThreads": {
+          "totalCount": 4,
+          "nodes": [
+            { "isResolved": true },
+            { "isResolved": true },
+            { "isResolved": true },
+            { "isResolved": true }
+          ]
+        }
+      }
+    }
+  }
+}

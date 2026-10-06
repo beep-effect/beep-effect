@@ -46,6 +46,7 @@ export * from "../commands/Yeet/internal/IssueParser.ts";
 export * from "../commands/Yeet/internal/LocalShardPoison.ts";
 export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MergedPreview.ts";
+export * from "../commands/Yeet/internal/MergeGate.ts";
 export * from "../commands/Yeet/internal/MonitorChecks.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";

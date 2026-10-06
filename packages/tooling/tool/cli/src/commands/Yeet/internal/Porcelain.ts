@@ -34,6 +34,7 @@ import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
+import { runMergeGate } from "./MergeGate.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
 import {
   YeetMonitorAttachment,
@@ -72,6 +73,7 @@ import type { runRepoCommandCapture } from "../../../internal/repo-run/index.ts"
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import type { runYeetAutomaticCloseout } from "./Closeout.ts";
+import type { MergeGateRunOptions } from "./MergeGate.ts";
 import type { YeetMonitorLoopPolicy, YeetMonitorTerminalState } from "./MonitorPolicy.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { ReplyReport } from "./Reply.schemas.ts";
@@ -400,6 +402,40 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
   const outcome = yield* mergePr(yield* hydrateYeetReadOnlyContext(options));
   yield* Console.log(`[yeet] pull request #${outcome.pullRequestNumber} is ${outcome.state}`);
   yield* Console.log(renderSweepReport(outcome.sweep));
+});
+
+/**
+ * Run the orchestrator merge gate for one pull request at a pinned head.
+ *
+ * **Details**
+ *
+ * Unlike {@link runYeetMerge}, which merges the current branch's pull request
+ * and sweeps the clone, this gate takes any pull request number and never
+ * sweeps: the owning session retires its own lane after the orchestrator
+ * reports the merge. The context is read-only and only supplies the repo root
+ * `gh` runs in.
+ *
+ * **Example** (Build the gate effect)
+ *
+ * ```ts
+ * import { runYeetMergeGate } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(Effect.succeed(runYeetMergeGate)))
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const runYeetMergeGate = Effect.fn("Yeet.runMergeGateCommand")(function* (
+  options: YeetPorcelainOptions & MergeGateRunOptions
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const context = yield* hydrateYeetReadOnlyContext(options);
+  yield* runMergeGate(context, options);
 });
 
 /**

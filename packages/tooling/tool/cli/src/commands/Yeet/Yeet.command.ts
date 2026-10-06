@@ -33,12 +33,14 @@ import { runYeet } from "./internal/Handler.ts";
 import { YeetInboxSeverity, yeetProofJobRowId } from "./internal/Inbox.ts";
 import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
+import { parseMergeGateTolerance } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
   rejectYeetUntilReadyPairing,
   runYeetMerge,
+  runYeetMergeGate,
   runYeetMergeLoop,
   runYeetReplyPass,
   runYeetSweep,
@@ -1133,6 +1135,64 @@ const yeetMergeCommand = Command.make("merge", porcelainFlags, (options) => runY
   Command.withDescription("Squash-merge this branch's pull request, confirm MERGED, then sweep the clone")
 );
 
+const mergeGatePrArgument = Argument.Int("pr").pipe(Argument.withDescription("Pull request number to gate"));
+const mergeGateShaArgument = Argument.String("sha").pipe(
+  Argument.withDescription(
+    "The head sha (or its 10-char prefix) the caller verified; the gate refuses when the head moved"
+  )
+);
+const mergeGateTolerateFlag = Flag.String("tolerate").pipe(
+  Flag.atMost(16),
+  Flag.withDescription(
+    'Tolerate a NON-required check red or pending, once attributed: "<check name>=<attribution>" (repeatable)'
+  )
+);
+const mergeGateForceWindowFlag = Flag.Boolean("force-window").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Skip the 20-minute review window; only for a fix that unblocks main")
+);
+const mergeGateDryRunFlag = Flag.Boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Decide and print, never merge")
+);
+
+const yeetMergeGateCommand = Command.make(
+  "merge-gate",
+  {
+    ...porcelainFlags,
+    pr: mergeGatePrArgument,
+    sha: mergeGateShaArgument,
+    tolerate: mergeGateTolerateFlag,
+    forceWindow: mergeGateForceWindowFlag,
+    dryRun: mergeGateDryRunFlag,
+  },
+  Effect.fn(function* ({ pr, sha, tolerate, forceWindow, dryRun, ...porcelain }) {
+    const parsed = A.map(tolerate, (value) => ({ value, tolerance: parseMergeGateTolerance(value) }));
+    const malformed = A.filter(parsed, (entry) => O.isNone(entry.tolerance));
+    if (A.isReadonlyArrayNonEmpty(malformed)) {
+      return yield* YeetCommandError.make({
+        message: `--tolerate needs "<check name>=<attribution>"; got ${A.join(
+          A.map(malformed, (entry) => JSON.stringify(entry.value)),
+          ", "
+        )}.`,
+        exitCode: 1,
+      });
+    }
+    yield* runYeetMergeGate({
+      ...porcelain,
+      prNumber: pr,
+      wantSha: sha,
+      tolerate: A.getSomes(A.map(parsed, (entry) => entry.tolerance)),
+      forceWindow,
+      dryRun,
+    });
+  })
+).pipe(
+  Command.withDescription(
+    "Orchestrator merge gate: re-verify one PR at a pinned head (required checks, attributed tolerances, 20-minute review window, re-read threads) and squash-merge it"
+  )
+);
+
 const yeetReplyCommand = Command.make("reply", porcelainFlags, (options) => runYeetReplyPass(options)).pipe(
   Command.withDescription("Post and resolve the drafted review-thread replies for this branch's pull request")
 );
@@ -1337,6 +1397,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetResumeCommand,
     yeetSweepCommand,
     yeetMergeCommand,
+    yeetMergeGateCommand,
     yeetReplyCommand,
     yeetReadyCommand,
     yeetInboxCommand,

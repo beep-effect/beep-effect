@@ -1,0 +1,368 @@
+/**
+ * Orchestrator register rows: every unit the orchestrator session coordinates,
+ * recorded so a successor can take the role over without orphaning anything.
+ *
+ * **Details**
+ *
+ * The session ledger answers "where did each checkout stop"; it is keyed by
+ * checkout and only knows harness sessions. The orchestrator also coordinates
+ * things that are not checkouts: in-process subagents, Codex lanes reachable
+ * only through PR comments, detached jobs, user-level systemd units, and
+ * people. The register is the one list of all of them, keyed by kind and
+ * address, with the plan a successor follows when a unit cannot be reached.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as S from "effect/Schema";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { PrRepository } from "../Yeet/internal/Provenance.ts";
+
+const $I = $RepoCliId.create("commands/Session/Register.schemas");
+
+/**
+ * What kind of thing the orchestrator coordinates, which decides how a
+ * successor reaches it and what dies with the predecessor.
+ *
+ * **Details**
+ *
+ * - `desktop-session`: a Claude desktop or Codex session; survives a hand-off
+ *   and is reached by session id.
+ * - `in-process-agent`: an Agent-tool subagent of the orchestrator; dies with
+ *   it and must be converted to a brief plus a session or task chip before
+ *   hand-off.
+ * - `codex-lane`: a Codex checkout with no session; reached only through PR
+ *   comments starting `orchestrator:`.
+ * - `background-job`: a yeet proof job, monitor, or watcher; reached by job id.
+ * - `systemd-unit`: a `systemd --user` unit; reached by unit name and survives
+ *   any session.
+ * - `external-person`: the operator or the attorney; reached through the
+ *   fleet desk, never chat.
+ *
+ * **Example** (Narrow a kind)
+ *
+ * ```ts
+ * import { RegisterUnitKind } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(RegisterUnitKind.is["codex-lane"]("codex-lane")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RegisterUnitKind = LiteralKit([
+  "desktop-session",
+  "in-process-agent",
+  "codex-lane",
+  "background-job",
+  "systemd-unit",
+  "external-person",
+]).pipe($I.annoteSchema("RegisterUnitKind", { description: "Kind of unit the orchestrator coordinates." }));
+
+/**
+ * Kind of unit the orchestrator coordinates.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisterUnitKind = typeof RegisterUnitKind.Type;
+
+/**
+ * Where a coordinated unit stands from the orchestrator's point of view.
+ *
+ * **Details**
+ *
+ * `retired` rows drop out of the rendered register. `unreachable` is the
+ * state a successor writes when a broadcast or message to the unit's address
+ * fails, before executing the row's orphan plan.
+ *
+ * **Example** (Narrow a state)
+ *
+ * ```ts
+ * import { RegisterUnitState } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(RegisterUnitState.is.retired("retired")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RegisterUnitState = LiteralKit(["active", "blocked", "unreachable", "retired"]).pipe(
+  $I.annoteSchema("RegisterUnitState", { description: "Coordination state of one registered unit." })
+);
+
+/**
+ * Coordination state of one registered unit.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisterUnitState = typeof RegisterUnitState.Type;
+
+/**
+ * One append-only register row describing a coordinated unit.
+ *
+ * **Details**
+ *
+ * Rows are keyed by `kind` plus `address` when read back; the newest row per
+ * key is that unit's current state. `name` is the human label (the session
+ * title, the agent's task); `owns` lists what the unit is responsible
+ * for in the orchestrator's vocabulary (`PR #1464`, `lane practice-mail-tagging`,
+ * `packet practice-kg-mcp`). `waitingOnOrchestrator` is what the unit is
+ * blocked on, empty when it is not blocked on the orchestrator. `orphanPlan`
+ * is what a successor does when it cannot reach the unit, and is mandatory
+ * because a hand-off without it recreates the orphaning it exists to prevent.
+ *
+ * **Example** (Make a row)
+ *
+ * ```ts
+ * import { PrRepository, RegisterRow } from "@beep/repo-cli/test/Session"
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const row = RegisterRow.make({
+ *   schemaVersion: "orchestrator-register/v1",
+ *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   kind: "codex-lane",
+ *   address: "PR #1468",
+ *   name: O.some("yeet REST discovery lane"),
+ *   owns: ["PR #1468", "lane yeet-rest-pr-discovery"],
+ *   state: "active",
+ *   waitingOnOrchestrator: O.none(),
+ *   lastContact: O.some(DateTime.makeUnsafe(0)),
+ *   orphanPlan: "post 'orchestrator: ...' on the PR; after 2h silence take the PR over in its checkout",
+ *   note: O.none(),
+ *   recordedBy: O.none(),
+ *   recordedAt: DateTime.makeUnsafe(0),
+ * })
+ * console.log(row.kind) // "codex-lane"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterRow extends S.Class<RegisterRow>($I`RegisterRow`)(
+  {
+    schemaVersion: S.Literal("orchestrator-register/v1"),
+    repository: PrRepository,
+    kind: RegisterUnitKind,
+    address: S.NonEmptyString,
+    name: S.OptionFromNullOr(S.String),
+    owns: S.Array(S.String),
+    state: RegisterUnitState,
+    waitingOnOrchestrator: S.OptionFromNullOr(S.String),
+    lastContact: S.OptionFromNullOr(S.DateTimeUtcFromString),
+    orphanPlan: S.NonEmptyString,
+    note: S.OptionFromNullOr(S.String),
+    recordedBy: S.OptionFromNullOr(S.String),
+    recordedAt: S.DateTimeUtcFromString,
+  },
+  $I.annote("RegisterRow", {
+    description: "One coordinated unit the orchestrator session is responsible for, and how a successor reaches it.",
+  })
+) {}
+
+/**
+ * JSON Lines codec for a register row.
+ *
+ * **Example** (Encode a row)
+ *
+ * ```ts
+ * import { RegisterRowJson } from "@beep/repo-cli/test/Session"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(RegisterRowJson.encode))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const RegisterRowJson = JsonStringCodec(RegisterRow);
+
+/**
+ * The register as a successor reads it: one row per unit, newest first.
+ *
+ * **Example** (An empty report)
+ *
+ * ```ts
+ * import { PrRepository, RegisterReport } from "@beep/repo-cli/test/Session"
+ *
+ * const report = RegisterReport.make({
+ *   schemaVersion: "orchestrator-register-report/v1",
+ *   repository: PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" }),
+ *   rows: [],
+ * })
+ * console.log(report.rows.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterReport extends S.Class<RegisterReport>($I`RegisterReport`)(
+  {
+    schemaVersion: S.Literal("orchestrator-register-report/v1"),
+    repository: PrRepository,
+    rows: S.Array(RegisterRow),
+  },
+  $I.annote("RegisterReport", { description: "The newest non-retired register row per unit, newest first." })
+) {}
+
+/**
+ * JSON codec for the register report.
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const RegisterReportJson = JsonStringCodec(RegisterReport);
+
+/**
+ * The register key: a unit is identified by what it is and where it is reached.
+ *
+ * **Example** (Key a row)
+ *
+ * ```ts
+ * import { registerUnitKey } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(registerUnitKey({ kind: "codex-lane", address: "PR #1468" })) // "codex-lane\u0000PR #1468"
+ * ```
+ *
+ * @param unit - The kind and address of a unit.
+ * @returns Kind and address joined by a NUL byte so neither can collide with the other.
+ * @category models
+ * @since 0.0.0
+ */
+export const registerUnitKey = (unit: { readonly kind: RegisterUnitKind; readonly address: string }): string =>
+  `${unit.kind}\u0000${unit.address}`;
+
+const newestFirst = Order.mapInput(Order.Number, (row: RegisterRow) => -DateTime.toEpochMillis(row.recordedAt));
+
+const notBefore = (left: DateTime.DateTime, right: DateTime.DateTime): boolean =>
+  DateTime.toEpochMillis(left) >= DateTime.toEpochMillis(right);
+
+/**
+ * Reduce append-only rows to the current register: newest row per unit,
+ * retired units dropped, newest first.
+ *
+ * **Example** (Reduce rows)
+ *
+ * ```ts
+ * import { currentRegisterRows } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(currentRegisterRows([]).length) // 0
+ * ```
+ *
+ * @param rows - Append-only rows as read from the file.
+ * @returns The current register, newest first.
+ * @category models
+ * @since 0.0.0
+ */
+export const currentRegisterRows = (rows: ReadonlyArray<RegisterRow>): ReadonlyArray<RegisterRow> => {
+  const newest = MutableHashMap.empty<string, RegisterRow>();
+  for (const row of rows) {
+    const key = registerUnitKey(row);
+    const current = MutableHashMap.get(newest, key);
+    if (O.isNone(current) || notBefore(row.recordedAt, current.value.recordedAt)) {
+      MutableHashMap.set(newest, key, row);
+    }
+  }
+  return newest.pipe(
+    MutableHashMap.values,
+    A.fromIterable,
+    A.filter((row) => !RegisterUnitState.is.retired(row.state)),
+    A.sort(newestFirst)
+  );
+};
+
+/**
+ * Units a successor must reach first: those blocked on the orchestrator.
+ *
+ * **Example** (Nothing waiting)
+ *
+ * ```ts
+ * import { registerRowsWaiting } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(registerRowsWaiting([]).length) // 0
+ * ```
+ *
+ * @param rows - Append-only rows as read from the file.
+ * @returns Current rows blocked on the orchestrator.
+ * @category models
+ * @since 0.0.0
+ */
+export const registerRowsWaiting = (rows: ReadonlyArray<RegisterRow>): ReadonlyArray<RegisterRow> =>
+  A.filter(currentRegisterRows(rows), (row) => O.isSome(row.waitingOnOrchestrator));
+
+const cell = (value: string): string => value.replace(/\|/gu, "\\|").replace(/\n/gu, " ");
+
+const optionCell = (value: O.Option<string>): string => O.getOrElse(value, () => "");
+
+/**
+ * Render the current register as the Markdown table HANDOFF.md embeds.
+ *
+ * **Details**
+ *
+ * Columns follow the row fields in reading order for a successor: what it is,
+ * how to reach it, what it owns, its state, what it waits on, when it was last
+ * heard from, and what to do if it cannot be reached. Pipes and newlines in
+ * values are escaped so a free-text orphan plan cannot break the table.
+ *
+ * **Example** (Render an empty register)
+ *
+ * ```ts
+ * import { renderRegisterMarkdown } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(renderRegisterMarkdown([]).split("\n")[0])
+ * // "| kind | address | name | owns | state | waiting on orchestrator | last contact | orphan plan |"
+ * ```
+ *
+ * @param rows - Append-only rows as read from the file.
+ * @returns A GitHub-flavoured Markdown table, header rows first.
+ * @category rendering
+ * @since 0.0.0
+ */
+export const renderRegisterMarkdown = (rows: ReadonlyArray<RegisterRow>): string =>
+  A.join(
+    [
+      "| kind | address | name | owns | state | waiting on orchestrator | last contact | orphan plan |",
+      "| --- | --- | --- | --- | --- | --- | --- | --- |",
+      ...A.map(
+        currentRegisterRows(rows),
+        (row) =>
+          `| ${row.kind} | ${cell(row.address)} | ${row.name.pipe(optionCell, cell)} | ${cell(A.join(row.owns, ", "))} | ${row.state} | ${row.waitingOnOrchestrator.pipe(optionCell, cell)} | ${O.match(row.lastContact, { onNone: () => "", onSome: DateTime.formatIso })} | ${cell(row.orphanPlan)} |`
+      ),
+    ],
+    "\n"
+  );
+
+/**
+ * Input for one register append before provenance is stamped.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RegisterNoteInput = S.Struct({
+  kind: RegisterUnitKind,
+  address: S.NonEmptyString,
+  name: S.Option(S.String),
+  owns: S.Array(S.String),
+  state: RegisterUnitState,
+  waitingOnOrchestrator: S.Option(S.String),
+  lastContact: S.Option(S.DateTimeUtcFromString),
+  orphanPlan: S.NonEmptyString,
+  note: S.Option(S.String),
+}).pipe($I.annoteSchema("RegisterNoteInput", { description: "Register append input before provenance is stamped." }));
+
+/**
+ * Register append input before provenance is stamped.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisterNoteInput = typeof RegisterNoteInput.Type;

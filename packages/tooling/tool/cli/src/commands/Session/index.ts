@@ -10,6 +10,21 @@
  * @category cli-commands
  * @since 0.0.0
  */
+
+/**
+ * Public orchestrator register schema exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Register.schemas.ts";
+/**
+ * Public orchestrator register service exports.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Register.service.ts";
 export * from "./Session.command.ts";
 /**
  * Public session error exports.

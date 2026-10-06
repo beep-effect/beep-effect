@@ -192,6 +192,9 @@ needed only for the escalation list below.
 - One orchestrator session coordinates the rest: it routes threads, reds and
   conflicts to the owning session, merges at the gate, and relays the
   operator's answers. Sessions report blockers to it, not to the operator.
+  The role is held, run and handed over by the `orchestrate` skill
+  (register, `HANDOFF.md`, `yeet merge-gate`); `bun run beep session open`
+  names the holder.
 
 ## Discovery & Reuse
 
