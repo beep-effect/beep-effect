@@ -59,12 +59,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -84,5 +84,6 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "2026-10-06: engine shipped on the lane; 3,772 files migrated live (verdict complete, sources unchanged); attorney collaborations applied. Open: PR to mergeable, the PC-side checklist (orchestrator-directed), and the attorney's spot-check answers."
 }

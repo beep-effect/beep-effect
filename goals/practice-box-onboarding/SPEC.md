@@ -98,25 +98,26 @@ specifics stay out of this file.
 | D14 | 2026-10-05 | OneDrive and SharePoint are not inventoried from the workstation in this pass; the PC checklist carries a read-only local and OneDrive inventory instead. | `@beep/m365` is delegated-only with no cached sign-in on the workstation, and the app-only registration awaits the operator's Entra admin consent. It is reported as a blocker; the engine takes any local source root once those files can be read. |
 | D16 | 2026-10-06 | The seven client folders created on 2026-10-05 from the superseded D5 (six applicant names and `Client To Be Confirmed`) stay in the tree, empty and visible only to the service identity. | The reconciler has no rename or delete, and the engine never deletes. They receive no collaboration, so the attorney never sees them; removing them is a follow-up for a reconciler that can prune. |
 | D17 | 2026-10-06 | The PC-side work is a single ordered checklist for a Claude Code session on the attorney's PC, with person-only steps marked, kept with the orchestrator's briefs. | Operator instruction of 2026-10-06: do not wait on his workstation; a session on the PC executes the steps. |
+| D18 | 2026-10-06 | The attorney's 29 collaborations were created with one driver call each and recorded in the private intent, not applied through the reconciler. | After the migration the reconciler's inventory costs about 6,000 provider calls per pass and a dry-run plus apply needs about five passes. Thirty thousand calls for 29 collaborations is an avoidable draw on the monthly API allowance. The script refuses to run unless the collaboration is declared internal. |
 | D15 | 2026-10-05 | Sharing with clients is by shared link and File Request from `90 Client Exchange`, never by inviting the client as a collaborator. | External collaborators are billable on the Business plan. |
 
 ## Acceptance Criteria
 
-- [ ] A private inventory lists every candidate file with path, size, and
+- [x] A private inventory lists every candidate file with path, size, and
       SHA-256, and a private migration map assigns each mapped file a
       destination in the client/matter tree; the sanitized counts are
       recorded in `history/`.
-- [ ] `@beep/box-provisioning` ships the content-migration engine with tests
+- [x] `@beep/box-provisioning` ships the content-migration engine with tests
       for determinism, drift rejection, never-overwrite, resumability, the
       provider-call budget, and artifact privacy.
-- [ ] A live dry-run plan and a live apply are recorded in `history/` as
+- [x] A live dry-run plan and a live apply are recorded in `history/` as
       sanitized counts, with a post-apply plan that is all existing folders
       and identical files, and sources verified unchanged.
 - [ ] The Box Drive install runbook and the one-page how-to are in
       `docs/runbooks/`, and the physical install is on the operator desk.
-- [ ] A private spot-check list exists for the attorney and is routed through
+- [x] A private spot-check list exists for the attorney and is routed through
       the orchestrator.
-- [ ] `bun run beep quality package-verify @beep/box-provisioning` passes.
+- [x] `bun run beep quality package-verify @beep/box-provisioning` passes.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
