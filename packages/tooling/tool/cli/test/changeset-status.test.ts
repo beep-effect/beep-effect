@@ -8,8 +8,9 @@ import {
   runChangesetStatus,
   uncoveredWorkspacePackageNames,
 } from "@beep/repo-cli/test/Quality";
+import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, flow, Layer, Path, Result, Sink, Stream } from "effect";
 import * as O from "effect/Option";
@@ -21,11 +22,6 @@ import * as TestConsole from "effect/testing/TestConsole";
 const REPO_ROOT = "/repo";
 const fixtureWorkspaceDirs: ReadonlyArray<string> = ["packages/demo", "apps/labs/cognee"];
 const encoder = new TextEncoder();
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -70,27 +66,17 @@ const gitFixtureLayer = (
     )
   );
 
-const withTempRepo = <A2, E, R>(
+const statusTestLayer = (
   changedFiles: ReadonlyArray<string>,
   addedChangesets: ReadonlyArray<string>,
-  spawned: Array<string>,
-  use: (tmpDir: string) => Effect.Effect<A2, E, R>
+  spawned: Array<string>
 ) =>
-  Effect.scoped(
-    Effect.acquireUseRelease(
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const tmpDir = yield* fs.makeTempDirectory();
-
-        return { fs, tmpDir } as const;
-      }),
-      ({ tmpDir }) => use(tmpDir),
-      ({ fs, tmpDir }) => fs.remove(tmpDir, { recursive: true, force: true })
-    ).pipe(
-      provideScopedLayer(
-        Layer.mergeAll(NodeServices.layer, TestConsole.layer, gitFixtureLayer(changedFiles, addedChangesets, spawned))
-      )
-    )
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    Path.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    gitFixtureLayer(changedFiles, addedChangesets, spawned)
   );
 
 const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (
@@ -291,140 +277,137 @@ describe("changeset status wrapper", () => {
   });
 
   describe("runChangesetStatus with captured git fixtures", () => {
-    it("exempts a lab-only branch without consulting changesets", () =>
-      Effect.runPromise(
-        withTempRepo(
-          ["apps/labs/cognee/src/main.ts"],
-          [],
-          [],
-          Effect.fn(function* (tmpDir) {
-            yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeLabApp(tmpDir);
+    it.layer(statusTestLayer(["apps/labs/cognee/src/main.ts"], [], []), { timeout: "30 seconds" })((it) => {
+      it.effect("exempts a lab-only branch without consulting changesets", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writeLabApp(tmpDir);
 
-            yield* runChangesetStatus(tmpDir, O.some("main"));
+          yield* runChangesetStatus(tmpDir, O.some("main"));
 
-            const logs = yield* TestConsole.logLines;
-            expect(
-              A.some(
-                logs,
-                (line) => P.isString(line) && line.includes("changeset ceremony exempt: lab-only change set")
-              )
-            ).toBe(true);
-          })
-        )
-      ));
+          const logs = yield* TestConsole.logLines;
+          expect(
+            A.some(logs, (line) => P.isString(line) && line.includes("changeset ceremony exempt: lab-only change set"))
+          ).toBe(true);
+        })
+      );
+    });
 
-    it("does not count a base-backlog changeset as product coverage", () =>
-      Effect.runPromise(
-        withTempRepo(
-          ["packages/demo/src/index.ts"],
-          [],
-          [],
-          Effect.fn(function* (tmpDir) {
-            yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeRepoFile(
-              tmpDir,
-              ".changeset/base-backlog.md",
-              `---
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+      it.effect("does not count a base-backlog changeset as product coverage", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writeRepoFile(
+            tmpDir,
+            ".changeset/base-backlog.md",
+            `---
 "@beep/demo": patch
 ---
 
 Base backlog coverage must not count.
 `
-            );
+          );
 
-            const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
+          const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
 
-            expect(error._tag).toBe("CliReportedExit");
-            const errors = yield* TestConsole.errorLines;
-            expect(A.some(errors, (line) => P.isString(line) && line.includes("@beep/demo"))).toBe(true);
-          })
-        )
-      ));
+          expect(error._tag).toBe("CliReportedExit");
+          const errors = yield* TestConsole.errorLines;
+          expect(A.some(errors, (line) => P.isString(line) && line.includes("@beep/demo"))).toBe(true);
+        })
+      );
+    });
 
-    it("fails the product-only path in-process when no in-range changeset covers it", () =>
-      Effect.runPromise(
-        withTempRepo(
-          ["packages/demo/src/index.ts"],
-          [],
-          [],
-          Effect.fn(function* (tmpDir) {
-            yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
+    it.layer(statusTestLayer(["packages/demo/src/index.ts"], [], []), { timeout: "30 seconds" })((it) => {
+      it.effect("fails the product-only path in-process when no in-range changeset covers it", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
 
-            const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
+          const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
 
-            expect(error._tag).toBe("CliReportedExit");
-            if (error._tag === "CliReportedExit") {
-              expect(error.exitCode).toBe(1);
-            }
+          expect(error._tag).toBe("CliReportedExit");
+          if (error._tag === "CliReportedExit") {
+            expect(error.exitCode).toBe(1);
+          }
 
-            const errors = yield* TestConsole.errorLines;
-            expect(A.some(errors, (line) => P.isString(line) && line.includes("@beep/demo"))).toBe(true);
-          })
-        )
-      ));
+          const errors = yield* TestConsole.errorLines;
+          expect(A.some(errors, (line) => P.isString(line) && line.includes("@beep/demo"))).toBe(true);
+        })
+      );
+    });
 
-    it("passes the product-only path when an in-range-added changeset covers it", () =>
-      Effect.runPromise(
-        withTempRepo(
-          ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
-          [".changeset/demo-change.md"],
-          [],
-          Effect.fn(function* (tmpDir) {
-            yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
-            yield* writeRepoFile(
-              tmpDir,
-              ".changeset/demo-change.md",
-              `---
+    it.layer(
+      statusTestLayer(["packages/demo/src/index.ts", ".changeset/demo-change.md"], [".changeset/demo-change.md"], []),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("passes the product-only path when an in-range-added changeset covers it", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writeRepoFile(tmpDir, "packages/demo/src/index.ts", "export const demo = 2;\n");
+          yield* writeRepoFile(
+            tmpDir,
+            ".changeset/demo-change.md",
+            `---
 "@beep/demo": patch
 ---
 
 Patch demo.
 `
-            );
+          );
 
-            yield* runChangesetStatus(tmpDir, O.some("main"));
+          yield* runChangesetStatus(tmpDir, O.some("main"));
 
-            const logs = yield* TestConsole.logLines;
-            expect(
-              A.some(
-                logs,
-                (line) =>
-                  P.isString(line) && line.includes("every changed product workspace is named by a changeset added")
-              )
-            ).toBe(true);
-          })
-        )
-      ));
+          const logs = yield* TestConsole.logLines;
+          expect(
+            A.some(
+              logs,
+              (line) =>
+                P.isString(line) && line.includes("every changed product workspace is named by a changeset added")
+            )
+          ).toBe(true);
+        })
+      );
+    });
 
-    it("defaults an absent --since value to origin/main without spawning stock changesets", () => {
-      const spawned: Array<string> = [];
-      return Effect.runPromise(
-        withTempRepo(
-          ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
-          [".changeset/demo-change.md"],
-          spawned,
-          Effect.fn(function* (tmpDir) {
-            yield* writeStatusFixtureRepo(tmpDir);
-            yield* writeRepoFile(
-              tmpDir,
-              ".changeset/demo-change.md",
-              `---
+    const spawned: Array<string> = [];
+    it.layer(
+      statusTestLayer(
+        ["packages/demo/src/index.ts", ".changeset/demo-change.md"],
+        [".changeset/demo-change.md"],
+        spawned
+      ),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("defaults an absent --since value to origin/main without spawning stock changesets", () =>
+        Effect.gen(function* () {
+          spawned.length = 0;
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped();
+          yield* writeStatusFixtureRepo(tmpDir);
+          yield* writeRepoFile(
+            tmpDir,
+            ".changeset/demo-change.md",
+            `---
 "@beep/demo": patch
 ---
 
 Patch demo.
 `
-            );
+          );
 
-            yield* runChangesetStatus(tmpDir, O.none());
+          yield* runChangesetStatus(tmpDir, O.none());
 
-            expect(A.some(spawned, (command) => command.includes("origin/main...HEAD"))).toBe(true);
-            expect(A.every(spawned, (command) => !command.includes("bunx changeset status"))).toBe(true);
-          })
-        )
+          expect(A.some(spawned, (command) => command.includes("origin/main...HEAD"))).toBe(true);
+          expect(A.every(spawned, (command) => !command.includes("bunx changeset status"))).toBe(true);
+        })
       );
     });
   });
