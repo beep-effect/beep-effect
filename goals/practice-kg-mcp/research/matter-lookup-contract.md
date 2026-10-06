@@ -132,15 +132,17 @@ weakest:
 
 | Source | Meaning |
 | --- | --- |
-| `docket-register` | the docket register lists exactly one client for the docket |
 | `folder-path` | the attorney's folder path names one client for the docket |
 | `text-reference` | the document's text names one `<client>.<docket>` for its family |
 | `client-map` | the organizer's source-label map |
-| `family-consensus` | every document of the family with one of the first three agrees |
+| `family-consensus` | every document of the family with one of the first two agrees |
+| `docket-register` | no document of the family has folder or text evidence, and the docket register lists exactly one client for the docket |
 | `filename`, `restored-name` | no client evidence; the matter is the bare family |
 
-A docket the register lists under two clients, or a path that names two
-dockets, is ambiguous and is not used.
+The register is last on purpose: bare docket codes are reused across clients
+and the register lists only current dockets, so it never overrides what a
+document says about itself. A docket the register lists under two clients, or
+a path that names two dockets, is ambiguous and is not used.
 
 ## Rules for callers
 

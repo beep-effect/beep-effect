@@ -439,6 +439,7 @@ const workingDigests = {
   ambiguous: `sha256:${Str.repeat(64)("2")}`,
   keyed: `sha256:${Str.repeat(64)("9")}`,
   newMatter: `sha256:${Str.repeat(64)("8")}`,
+  registered: `sha256:${Str.repeat(64)("6")}`,
   textKeyed: `sha256:${Str.repeat(64)("7")}`,
 };
 const workingClients = { register: "33333", text: "44444" } as const;
@@ -452,6 +453,8 @@ const workingFiles = [
     `Clients/Second Client ${fixtureClients.beta}/30002BR01 - ${fixtureClients.beta}.00003/Annuity notice.txt`,
   ],
   [workingDigests.textKeyed, "Loose files/40004ZA01/Notice.txt"],
+  // no client in the path or the text, and no other document in its family: the register may speak
+  [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
   [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
   // a second copy of an organized file adds no document
   [fixtureDigests.family, "Loose files/family-notes copy.txt"],
@@ -506,8 +509,9 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
     A.join(
       [
         `{"client":"${fixtureClients.alpha}","docket":"20001US09","clientName":"Example Client"}`,
-        // the register outranks the beta document's own text reference
+        // the beta document's own text names its client; the register must not move it
         `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`,
+        `{"client":"${workingClients.register}","docket":"50005US01","clientName":"Register Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR01","clientName":"Second Client"}`,
         `{"client":"${fixtureClients.beta}","docket":"30002BR02","clientName":"Second Client LLC"}`,
       ],
@@ -1131,7 +1135,7 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "folds an included run in, reads its folder paths, and ranks the docket register first",
+      "folds an included run in, reads its folder paths, and keeps the docket register for unnamed families",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1168,7 +1172,7 @@ describe("practice KG projections", () => {
           }),
           bundleOut
         );
-        expect([summary.counts.documents, summary.baseDigests, summary.includeRefresh]).toStrictEqual([10, 6, false]);
+        expect([summary.counts.documents, summary.baseDigests, summary.includeRefresh]).toStrictEqual([11, 6, false]);
         expect(summary.includedRuns).toStrictEqual([workingRun]);
         const manifest = yield* fs
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
@@ -1195,6 +1199,7 @@ describe("practice KG projections", () => {
             )
           ).toStrictEqual([
             '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
+            '{"category":"docket","docket":"50005US01","docket_family":"50005","effective_name":"Letter.txt"}',
             '{"category":"docket","docket":"40004ZA01","docket_family":"40004","effective_name":"Notice.txt"}',
             '{"category":"docket","docket":"30002BR01","docket_family":"30002","effective_name":"Annuity notice.txt"}',
             '{"category":"docket","docket":"20001US01","docket_family":"20001","effective_name":"Filing receipt.txt"}',
@@ -1209,9 +1214,10 @@ describe("practice KG projections", () => {
           ).toStrictEqual([
             `{"family_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","client_name":"Example Client","attribution_source":"folder-path","document_count":2}`,
             '{"family_key":"20001","client":null,"client_name":null,"attribution_source":"filename","document_count":2}',
-            // the register names this client two ways, so no name is written
-            `{"family_key":"${fixtureClients.beta}.30002","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"docket-register","document_count":1}`,
-            `{"family_key":"${workingClients.register}.20001","client":"${workingClients.register}","client_name":"Register Client","attribution_source":"docket-register","document_count":1}`,
+            // the register lists another client for 20001US02, and names this client two ways
+            `{"family_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
+            `{"family_key":"${fixtureClients.beta}.30002","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"folder-path","document_count":1}`,
+            `{"family_key":"${workingClients.register}.50005","client":"${workingClients.register}","client_name":"Register Client","attribution_source":"docket-register","document_count":1}`,
             `{"family_key":"${workingClients.text}.40004","client":"${workingClients.text}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
           ]);
         }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
@@ -1229,8 +1235,9 @@ describe("practice KG projections", () => {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           const documentLines = yield* sql
             .unsafe(
-              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5) ORDER BY natural_key) x",
+              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
               [
+                workingDigests.registered,
                 workingDigests.ambiguous,
                 workingDigests.textKeyed,
                 workingDigests.newMatter,
@@ -1241,10 +1248,11 @@ describe("practice KG projections", () => {
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(documentLines, (row) => row.line)).toStrictEqual([
             '{"client":null,"docket_family":null,"attribution_source":"filename"}',
+            `{"client":"${workingClients.register}","docket_family":"50005","attribution_source":"docket-register"}`,
             `{"client":"${workingClients.text}","docket_family":"40004","attribution_source":"text-reference"}`,
-            `{"client":"${fixtureClients.beta}","docket_family":"30002","attribution_source":"docket-register"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"30002","attribution_source":"folder-path"}`,
             `{"client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"folder-path"}`,
-            `{"client":"${workingClients.register}","docket_family":"20001","attribution_source":"docket-register"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference"}`,
           ]);
           const buildLines = yield* sql
             .unsafe("SELECT row_to_json(x)::text AS line FROM (SELECT built_from_runs FROM kg_build) x")
@@ -1256,9 +1264,13 @@ describe("practice KG projections", () => {
               Effect.flatMap(decodeToolResultJson),
               Effect.map((result) => A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))))
             );
-          const registered = yield* toolRows("kg_matter_lookup", { reference: "20001us02" });
+          const registered = yield* toolRows("kg_matter_lookup", { reference: "50005us01" });
           expect(A.map(registered, (row) => [row.resolution, row.familyKey, row.clientName])).toStrictEqual([
-            ["unique", `${workingClients.register}.20001`, "Register Client"],
+            ["unique", `${workingClients.register}.50005`, "Register Client"],
+          ]);
+          const notMoved = yield* toolRows("kg_matter_lookup", { reference: "20001US02" });
+          expect(A.map(notMoved, (row) => [row.resolution, row.familyKey])).toStrictEqual([
+            ["unique", `${fixtureClients.beta}.20001`],
           ]);
           const newStage = yield* toolRows("kg_matter_lookup", { reference: "30002BR01" });
           // null cells are stripped before the envelope is built, so an all-null column is absent

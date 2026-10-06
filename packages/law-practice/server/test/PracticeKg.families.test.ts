@@ -157,47 +157,80 @@ describe("practice KG family attribution", () => {
     expect(applyPracticeKgPathEvidence([organized, docketed, familied])).toStrictEqual([organized, docketed, familied]);
   });
 
-  it("ranks the docket register over the folder path, and the folder path over text references", () => {
-    const folder = (digest: string, docket: string, folderClient: string): PracticeKgCatalogRow =>
-      PracticeKgCatalogRow.make({ ...catalogRow(digest, { docket }), folderClient });
+  it("ranks the folder path over text references, and keeps the register for families nobody has named", () => {
+    const inFamily = (digest: string, docket: string, family: string, folderClient: string | null = null) =>
+      PracticeKgCatalogRow.make({ ...catalogRow(digest, { docket }), docketFamily: family, folderClient });
     const attributions = attribute(
       [
-        folder("register-wins", "20001US01", "22222"),
-        folder("folder-wins", "20001US02", "22222"),
-        catalogRow("text-wins", { client: "mapped-client", docket: "20001US03" }),
-        catalogRow("register-shared", { docket: "20001US04" }),
-        catalogRow("national-stage", { docket: "20001WO05-US1" }),
+        inFamily("folder-wins", "20001US02", "20001", "22222"),
+        // the register may only speak for a family with no folder or text client at all
+        inFamily("register-applies", "30002US01", "30002"),
+        inFamily("register-national-stage", "30002WO05-US1", "30002"),
+        inFamily("register-shared", "30002US04", "30002"),
+        inFamily("register-unlisted", "30002US09", "30002"),
         // a family-level document has no docket for the register to name
-        PracticeKgCatalogRow.make({ ...catalogRow("family-level"), docketFamily: "30002" }),
-        PracticeKgCatalogRow.make({ ...catalogRow("consensus", { docket: "40004US02" }), docketFamily: "40004" }),
-        PracticeKgCatalogRow.make({
-          ...catalogRow("consensus-voter", { docket: "40004US01" }),
-          docketFamily: "40004",
-          folderClient: "44444",
-        }),
+        PracticeKgCatalogRow.make({ ...catalogRow("family-level"), docketFamily: "50005" }),
+        inFamily("consensus", "40004US02", "40004"),
+        inFamily("consensus-voter", "40004US01", "40004", "44444"),
       ],
+      [reference("folder-wins", "33333", "20001US02")],
       [
-        reference("register-wins", "33333", "20001US01"),
-        reference("folder-wins", "33333", "20001US02"),
-        reference("text-wins", "33333", "20001US03"),
-      ],
-      [
-        registerRow("11111", "20001us01 "),
+        registerRow("11111", "30002us01 "),
+        registerRow("66666", "30002WO05"),
         // listed under two clients: the register cannot decide this docket
-        registerRow("11111", "20001US04"),
-        registerRow("55555", "20001US04"),
-        registerRow("66666", "20001WO05"),
+        registerRow("11111", "30002US04"),
+        registerRow("55555", "30002US04"),
+        // the register is not consulted where the family already has a consensus
+        registerRow("77777", "40004US02"),
       ]
     );
     expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
       ["consensus", "family-consensus", "44444.40004"],
       ["consensus-voter", "folder-path", "44444.40004"],
-      ["family-level", "filename", "30002"],
+      ["family-level", "filename", "50005"],
       ["folder-wins", "folder-path", "22222.20001"],
-      ["national-stage", "docket-register", "66666.20001"],
-      ["register-shared", "filename", "20001"],
-      ["register-wins", "docket-register", "11111.20001"],
-      ["text-wins", "text-reference", "33333.20001"],
+      ["register-applies", "docket-register", "11111.30002"],
+      ["register-national-stage", "docket-register", "66666.30002"],
+      ["register-shared", "filename", "30002"],
+      ["register-unlisted", "filename", "30002"],
+    ]);
+  });
+
+  it("never lets the register override or outvote a document's own client evidence", () => {
+    // Regression: bare docket codes are reused across clients and the register
+    // lists only current dockets. Register-first moved an older document whose
+    // text names 33333 for 20001US01 onto 11111, the code's current holder.
+    const register = [registerRow("11111", "20001US01"), registerRow("11111", "20001US07")];
+    const attributions = attribute(
+      [
+        catalogRow("own-text", { docket: "20001US01" }),
+        catalogRow("same-docket-no-evidence", { docket: "20001US01" }),
+        catalogRow("other-docket-no-evidence", { docket: "20001US07" }),
+      ],
+      [reference("own-text", "33333", "20001US01")],
+      register
+    );
+    expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
+      // the family's one vote is 33333, so its other documents follow that vote, never the register
+      ["other-docket-no-evidence", "family-consensus", "33333.20001"],
+      ["own-text", "text-reference", "33333.20001"],
+      ["same-docket-no-evidence", "family-consensus", "33333.20001"],
+    ]);
+
+    // Two clients vote in the family: no consensus, and still no register.
+    const contested = attribute(
+      [
+        catalogRow("own-text", { docket: "20001US01" }),
+        catalogRow("second-client", { docket: "20001US02" }),
+        catalogRow("same-docket-no-evidence", { docket: "20001US01" }),
+      ],
+      [reference("own-text", "33333", "20001US01"), reference("second-client", "44444", "20001US02")],
+      register
+    );
+    expect(A.map(contested, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
+      ["own-text", "text-reference", "33333.20001"],
+      ["same-docket-no-evidence", "filename", "20001"],
+      ["second-client", "text-reference", "44444.20001"],
     ]);
   });
 

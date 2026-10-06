@@ -460,22 +460,28 @@ const tagged =
   (client: string): DirectClient => ({ client, source });
 
 /*
- * Attribution precedence, strongest first. The first three are a document's
- * own direct evidence and are what votes in family consensus:
+ * Attribution precedence, strongest first. The first two are a document's own
+ * direct evidence and are the only things that vote in family consensus:
  *
- *   1. docket-register  - the register lists exactly one client for the docket
- *   2. folder-path      - the attorney's folder path names one client
- *   3. text-reference   - the document's text names one client for its family
- *   4. client-map       - the organizer's source-label map
- *   5. family-consensus - every direct-evidence document of the family agrees
+ *   1. folder-path      - the attorney's folder path names one client
+ *   2. text-reference   - the document's text names one client for its family
+ *   3. client-map       - the organizer's source-label map
+ *   4. family-consensus - every direct-evidence document of the family agrees
+ *   5. docket-register  - last, and only for a family with no direct-evidence
+ *                         vote at all: the register lists exactly one client
+ *                         for the docket
  *   6. filename / restored-name - no client; the bare family
+ *
+ * The register never overrides a document's own evidence and never votes. Bare
+ * docket codes are reused across clients and the register lists only current
+ * dockets, so a register-first order moved older documents, whose own text
+ * names their client, onto whichever client holds that code today.
  */
 const directClientLookup =
-  (registerClient: ClientLookup, textClient: ClientLookup) =>
+  (textClient: ClientLookup) =>
   (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
     pipe(
-      O.map(registerClient(row), tagged("docket-register")),
-      O.orElse(() => O.map(folderClientOf(row), tagged("folder-path"))),
+      O.map(folderClientOf(row), tagged("folder-path")),
       O.orElse(() => O.map(textClient(row), tagged("text-reference")))
     );
 
@@ -518,21 +524,31 @@ const fallbackClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
  * restores the client dimension deterministically, with no model in the loop.
  * The first source that answers wins:
  *
- * 1. the attorney's docket register lists exactly one client for the
- *    document's docket (`docket-register`);
- * 2. the document's folder path in the attorney's working files names one
+ * 1. the document's folder path in the attorney's working files names one
  *    client (`folder-path`);
- * 3. the document's own text names exactly one `<client>.<family>` for its
+ * 2. the document's own text names exactly one `<client>.<family>` for its
  *    family (`text-reference`); for a document with a docket code only
  *    references naming that exact docket count, so citing another client's
  *    matter under the same family number never moves it;
- * 4. an organizer client-map value (`client-map`);
- * 5. every non-recycled document of the bare family that has evidence from
- *    steps 1 to 3 agrees on one client (`family-consensus`);
+ * 3. an organizer client-map value (`client-map`);
+ * 4. every non-recycled document of the bare family that has evidence from
+ *    step 1 or 2 agrees on one client (`family-consensus`);
+ * 5. no document of the bare family has evidence from step 1 or 2, and the
+ *    attorney's docket register lists exactly one client for the document's
+ *    docket (`docket-register`);
  * 6. otherwise the document stays in the bare, unattributed family with its
  *    file-name source (`filename` or `restored-name`).
  *
- * Recycle-bin `$R` stubs never vote in step 5. Output is ordered by digest.
+ * Recycle-bin `$R` stubs never vote in step 4.
+ *
+ * **Gotchas**
+ *
+ * The register is the weakest client source on purpose. Bare docket codes are
+ * reused across clients and the register lists only current dockets, so it
+ * never overrides a document's own evidence, never votes, and does not apply
+ * to a family whose documents already name a client, even when they disagree.
+ *
+ * Output is ordered by digest.
  *
  * **Example** (Attribute an empty catalog)
  *
@@ -557,21 +573,31 @@ export const attributeDocuments = (
   const clientsByDigest = clientsByDigestFor(rowsByDigest, docketReferences);
   const textClient: ClientLookup = (row) =>
     pipe(MutableHashMap.get(clientsByDigest, row.digest), O.flatMap(uniqueMember));
-  const directClient = directClientLookup(registerClientLookup(registerRows), textClient);
+  const directClient = directClientLookup(textClient);
+  const registerClient = registerClientLookup(registerRows);
   const votesByFamily = familyVotes(catalogRows, directClient);
-  const consensusClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+  const votesFor = (row: PracticeKgCatalogRow): HashSet.HashSet<string> =>
     pipe(
       O.fromNullishOr(row.docketFamily),
       O.flatMap((family) => MutableHashMap.get(votesByFamily, family)),
-      O.flatMap(uniqueMember),
-      O.map(tagged("family-consensus"))
+      O.getOrElse(() => HashSet.empty<string>())
+    );
+  const consensusClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+    O.map(uniqueMember(votesFor(row)), tagged("family-consensus"));
+  // Only a family nobody has named a client for may take the register's word.
+  const unvotedRegisterClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+    pipe(
+      O.liftPredicate(row, (candidate) => HashSet.size(votesFor(candidate)) === 0),
+      O.flatMap(registerClient),
+      O.map(tagged("docket-register"))
     );
 
   const attributeRow = (row: PracticeKgCatalogRow): PracticeKgDocumentAttribution => {
     const resolved = pipe(
       directClient(row),
       O.orElse(() => fallbackClient(row)),
-      O.orElse(() => consensusClient(row))
+      O.orElse(() => consensusClient(row)),
+      O.orElse(() => unvotedRegisterClient(row))
     );
     const client = O.getOrNull(O.map(resolved, (direct) => direct.client));
     return PracticeKgDocumentAttribution.make({

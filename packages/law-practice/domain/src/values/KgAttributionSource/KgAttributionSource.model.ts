@@ -22,7 +22,8 @@ const $I = $LawPracticeDomainId.create("values/KgAttributionSource");
  * - `restored-name` — docket parsed from a recycle-bin restoration record's
  *   original name, so the file name itself was a `$R` stub.
  * - `docket-register` — client supplied by the attorney's docket register, which
- *   lists exactly one client for the document's docket.
+ *   lists exactly one client for the document's docket; used only when no
+ *   document of the family names a client itself.
  * - `folder-path` — client number read from the attorney's own folder path
  *   (`<client name> <client number>/<docket> - ...`).
  * - `text-reference` — client prefix read from a `<client>.<docket>` reference
