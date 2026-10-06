@@ -233,6 +233,7 @@ const RETIRE_FENCE_INVOKER = new URL("./support/RetireFenceInvoker.ts", import.m
 
 const RetireInvokerOutcome = S.Struct({ ok: S.Boolean, message: S.String });
 const decodeRetireInvokerOutcome = S.decodeUnknownEffect(S.fromJsonString(RetireInvokerOutcome));
+const encodeRetireInvokerOutcome = S.encodeEffect(S.fromJsonString(RetireInvokerOutcome));
 
 // The retirement step in its own process, with this test process as the agent
 // session above it: whatever CLAUDE_PID `env` carries lands in the invoker's
@@ -267,7 +268,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     { outcome: Arbitrary.schema(RetireInvokerOutcome) },
     ({ outcome }) =>
       Effect.gen(function* () {
-        const line = yield* S.encodeEffect(S.fromJsonString(RetireInvokerOutcome))(outcome);
+        const line = yield* encodeRetireInvokerOutcome(outcome);
         expect(yield* decodeRetireInvokerOutcome(line)).toEqual(outcome);
       })
   );

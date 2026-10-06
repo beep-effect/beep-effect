@@ -55,6 +55,10 @@ const findSubcommand = (name: string) =>
     (command) => command.name === name
   );
 
+// Compiled once at module scope: the plan fixtures and the plan render they are compared against.
+const decodeFixture = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
+const decodePlan = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
+
 describe("yeet merge-loop command wiring", () => {
   it.layer(commandTestLayer, { timeout: "30 seconds" })("foreground monitor", (it) => {
     it.effect(
@@ -237,8 +241,6 @@ describe("yeet push-first publish plan wiring", () => {
     );
     return A.join(chunks, "");
   });
-  const decodeFixture = S.decodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
-  const decodePlan = S.decodeUnknownEffect(S.fromJsonString(RepoRunPlan));
 
   it("plans the default publish as cheap-gates, preflight, push, draft PR, label, stamp, detached monitor", () => {
     expect(stepIds(publishPlan({ pr: true }))).toEqual([
