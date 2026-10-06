@@ -23,6 +23,14 @@ export * from "./Poppler.service.ts";
 /**
  * Package version.
  *
+ * **Example** (Read the package version)
+ *
+ * ```ts
+ * import { VERSION } from "@beep/poppler"
+ *
+ * console.log(VERSION) // "0.0.0"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

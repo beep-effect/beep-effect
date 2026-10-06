@@ -59,17 +59,20 @@ const fixture = Effect.fn("PopplerTest.fixture")(function* (stubs: {
 });
 
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (it) => {
-  it("applies the documented configuration defaults", () => {
-    const config = PopplerConfig.make({});
-    const decoded = S.decodeUnknownSync(PopplerConfig)({});
+  it.effect(
+    "applies the documented configuration defaults",
+    Effect.fnUntraced(function* () {
+      const config = PopplerConfig.make({});
+      const decoded = yield* S.decodeEffect(PopplerConfig)({});
 
-    expect(config).toEqual(decoded);
-    expect(config.dpi).toBe(300);
-    expect(config.pdfinfoPath).toBe("pdfinfo");
-    expect(config.pdftoppmPath).toBe("pdftoppm");
-    expect(config.timeoutMillis).toBe(60_000);
-    expect(VERSION).toBe("0.0.0");
-  });
+      expect(config).toEqual(decoded);
+      expect(config.dpi).toBe(300);
+      expect(config.pdfinfoPath).toBe("pdfinfo");
+      expect(config.pdftoppmPath).toBe("pdftoppm");
+      expect(config.timeoutMillis).toBe(60_000);
+      expect(VERSION).toBe("0.0.0");
+    })
+  );
 
   it.effect(
     "reads the page count from pdfinfo",

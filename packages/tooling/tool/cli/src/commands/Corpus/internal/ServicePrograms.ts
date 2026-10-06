@@ -1130,6 +1130,9 @@ const ocrImageMediaType: (extension: string | undefined) => O.Option<PageImageMe
 // A first reading with fewer bytes of text per page than this is not usable:
 // the page is a scan, or its text layer is a stub.
 const usableTextBytesPerPage = 50;
+
+const firstReadingPath = (first: CorpusExtractOutcome): O.Option<string> =>
+  first.sourceRecord.status === "succeeded" ? O.fromUndefinedOr(first.sourceRecord.textPath) : O.none();
 const ocrPageSeparator = "\n\f\n";
 
 interface ExtractOcrSourceInput {
@@ -1198,24 +1201,28 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     `corpus extract: OCR engine ${engine.identity.version}; language models installed: ${A.join(engine.installedLanguages, ", ")}`
   );
 
-  const readSource = Effect.fn("CorpusCommandService.ocrSource")(function* ({
+  interface OcrPages {
+    readonly format: FileFormatFamily;
+    readonly pageCount: number;
+    readonly render: (pageNumber: number) => Effect.Effect<PageImage, PopplerError>;
+  }
+
+  // Only PDFs and images whose first reading failed in a driver, or produced
+  // no text or too little of it, are read again. Deferred sources and sources
+  // no engine routes keep their outcome.
+  const pagesToRead = Effect.fn("CorpusCommandService.ocrPagesToRead")(function* ({
     first,
     ids,
     record,
     sourceBytes,
     sourcePath,
-  }: ExtractOcrSourceInput): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
+  }: ExtractOcrSourceInput): Effect.fn.Return<O.Option<OcrPages>> {
     const extension = extensionOf(basenameOf(record.relativePath));
     const format = classifySourceFormat(extension, undefined);
-    if (
-      (format !== "pdf-text-layer" && format !== "image-metadata") ||
-      first.sourceRecord.status === "skipped" ||
-      O.isSome(first.routingKey)
-    ) {
-      return first;
-    }
-    const pages =
-      format === "pdf-text-layer"
+    const eligible = first.sourceRecord.status !== "skipped" && O.isNone(first.routingKey);
+    const pages = !eligible
+      ? O.none<Omit<OcrPages, "format">>()
+      : format === "pdf-text-layer"
         ? yield* rasterizer.pageCount(sourcePath).pipe(
             Effect.map((pageCount) => ({
               pageCount,
@@ -1223,137 +1230,114 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
             })),
             Effect.option
           )
-        : O.map(ocrImageMediaType(extension), (mediaType) => ({
-            pageCount: 1,
-            render: (_pageNumber: number): Effect.Effect<PageImage, PopplerError> =>
-              Effect.succeed(PageImage.make({ bytes: sourceBytes, digest: ids.digest, mediaType })),
-          }));
-    if (O.isNone(pages)) {
-      return first;
-    }
-    const { pageCount, render } = pages.value;
-    const firstTextPath =
-      first.sourceRecord.status === "succeeded" ? O.fromUndefinedOr(first.sourceRecord.textPath) : O.none();
-    const firstTextBytes = O.isSome(firstTextPath)
-      ? yield* fs.stat(path.join(outDir, firstTextPath.value)).pipe(
+        : O.map(
+            format === "image-metadata" ? ocrImageMediaType(extension) : O.none<PageImageMediaType>(),
+            (mediaType) => ({
+              pageCount: 1,
+              render: (_pageNumber: number): Effect.Effect<PageImage, PopplerError> =>
+                Effect.succeed(PageImage.make({ bytes: sourceBytes, digest: ids.digest, mediaType })),
+            })
+          );
+    const firstTextBytes = yield* O.match(firstReadingPath(first), {
+      onNone: () => Effect.succeed(0),
+      onSome: (textPath) =>
+        fs.stat(path.join(outDir, textPath)).pipe(
           Effect.map((info) => Number(info.size)),
           Effect.orElseSucceed(() => 0)
-        )
-      : 0;
-    if (firstTextBytes >= usableTextBytesPerPage * pageCount) {
-      return first;
-    }
+        ),
+    });
+    return O.filter(
+      O.map(pages, (found) => ({ ...found, format })),
+      ({ pageCount }) => firstTextBytes < usableTextBytesPerPage * pageCount
+    );
+  });
 
-    const firstImage = yield* Effect.result(render(1));
-    const script =
-      scriptDetection && Result.isSuccess(firstImage)
-        ? yield* engine.detectScript(firstImage.success)
-        : O.none<TesseractScript>();
-    const plan = planTesseractLanguages(script, engine.installedLanguages);
-    yield* Ref.update(missingLanguagesRef, HashSet.union(HashSet.fromIterable(plan.missing)));
-    if (A.isReadonlyArrayEmpty(plan.selected)) {
-      return first;
-    }
-
-    const pageIdentity = (pageNumber: number) => ({
+  const readPage = Effect.fn("CorpusCommandService.ocrPage")(function* (
+    ids: ExtractOcrSourceInput["ids"],
+    pages: OcrPages,
+    languages: ReadonlyArray<string>,
+    image: Result.Result<PageImage, PopplerError>,
+    pageNumber: number
+  ): Effect.fn.Return<readonly [CorpusPageReadingRecord, string], CorpusCommandError> {
+    const pageIdentity = {
       artifactId: ids.artifactId,
       engine: engine.identity,
-      languages: plan.selected,
+      languages,
       operationId: ids.operationId,
-      pageCount,
+      pageCount: pages.pageCount,
       pageNumber,
       sourceDigest: ids.digest,
-    });
-    const readPage = Effect.fn("CorpusCommandService.ocrPage")(function* (
-      pageNumber: number
-    ): Effect.fn.Return<readonly [CorpusPageReadingRecord, string], CorpusCommandError> {
-      const image = pageNumber === 1 ? firstImage : yield* Effect.result(render(pageNumber));
-      if (Result.isFailure(image)) {
-        return [
-          CorpusPageFailedRecord.make({
-            ...pageIdentity(pageNumber),
-            message: image.failure.message,
-            reason: "render-failed",
-            status: "failed",
-          }),
-          "",
-        ];
-      }
-      const recognized = yield* Effect.result(
-        engine.recognizePage(
-          PageOcrRequest.make({
-            image: image.success,
-            languages: plan.selected,
-            operationId: ids.operationId,
-            pageCount,
-            pageNumber,
-            sourceArtifactId: ids.artifactId,
-            sourceDigest: ids.digest,
-            textFormat: "plain-text",
-          })
-        )
-      );
-      if (Result.isFailure(recognized)) {
-        return [
-          CorpusPageFailedRecord.make({
-            ...pageIdentity(pageNumber),
-            message: recognized.failure.message,
-            reason: recognized.failure.reason,
-            status: "failed",
-          }),
-          "",
-        ];
-      }
-      const { confidence, imageDigest, text, timing, warnings } = recognized.success;
-      const textRelative = `ocr/text/${ids.operationId}/${pageNumber}.${engine.identity.engineId}.txt`;
-      yield* writeExtractArtifact(path.join(outDir, textRelative), text);
+    };
+    if (Result.isFailure(image)) {
       return [
-        CorpusPageReadRecord.make({
-          ...pageIdentity(pageNumber),
-          charCount: S.Natural.make(Str.length(text)),
-          imageDigest,
-          status: "read",
-          textDigest: ContentDigest.make(`sha256:${bytesToHex(sha256(utf8ToBytes(text)))}`),
-          textPath: yield* decodePosixPath(textRelative).pipe(
-            CorpusCommandError.mapError("Page text path failed decoding.")
-          ),
-          timing,
-          warnings,
-          ...O.getSomesStruct({ confidence: O.fromUndefinedOr(confidence) }),
+        CorpusPageFailedRecord.make({
+          ...pageIdentity,
+          message: image.failure.message,
+          reason: "render-failed",
+          status: "failed",
         }),
-        text,
+        "",
       ];
-    });
-
-    const pageResults = yield* Effect.forEach(A.range(1, pageCount), readPage);
-    const rowLines = yield* Effect.forEach(pageResults, ([row]) =>
-      CorpusPageReadingRecordJson.encode(row).pipe(
-        CorpusCommandError.mapError("Page reading row failed JSONL encoding.")
+    }
+    const recognized = yield* Effect.result(
+      engine.recognizePage(
+        PageOcrRequest.make({
+          image: image.success,
+          languages,
+          operationId: ids.operationId,
+          pageCount: pages.pageCount,
+          pageNumber,
+          sourceArtifactId: ids.artifactId,
+          sourceDigest: ids.digest,
+          textFormat: "plain-text",
+        })
       )
     );
-    yield* writeExtractArtifact(path.join(outDir, "ocr", "pages", `${ids.operationId}.jsonl`), jsonlContent(rowLines));
-    const readPageCount = A.length(A.filter(pageResults, ([row]) => row.status === "read"));
-    const ocr = O.some(
-      CorpusExtractOcrCounts.make({
-        failedPageCount: S.Natural.make(pageCount - readPageCount),
-        readPageCount: S.Natural.make(readPageCount),
-      })
-    );
-    if (readPageCount === 0) {
-      return { ...first, ocr };
+    if (Result.isFailure(recognized)) {
+      return [
+        CorpusPageFailedRecord.make({
+          ...pageIdentity,
+          message: recognized.failure.message,
+          reason: recognized.failure.reason,
+          status: "failed",
+        }),
+        "",
+      ];
     }
+    const { confidence, imageDigest, text, timing, warnings } = recognized.success;
+    const textRelative = `ocr/text/${ids.operationId}/${pageNumber}.${engine.identity.engineId}.txt`;
+    yield* writeExtractArtifact(path.join(outDir, textRelative), text);
+    return [
+      CorpusPageReadRecord.make({
+        ...pageIdentity,
+        charCount: S.Natural.make(Str.length(text)),
+        imageDigest,
+        status: "read",
+        textDigest: ContentDigest.make(`sha256:${bytesToHex(sha256(utf8ToBytes(text)))}`),
+        textPath: yield* decodePosixPath(textRelative).pipe(
+          CorpusCommandError.mapError("Page text path failed decoding.")
+        ),
+        timing,
+        warnings,
+        ...O.getSomesStruct({ confidence: O.fromUndefinedOr(confidence) }),
+      }),
+      text,
+    ];
+  });
 
-    // The first reading is evidence too: it is kept beside the OCR text, and a
-    // source that had no first reading gets a metadata file so resume finds
-    // every artifact its marker implies.
-    const textRelative = `text/${ids.operationId}.txt`;
-    const textPath = path.join(outDir, textRelative);
+  // The first reading is evidence too: it is kept beside the OCR text, and a
+  // source that had no first reading gets a metadata file so resume finds
+  // every artifact its marker implies.
+  const keepFirstReading = Effect.fn("CorpusCommandService.ocrKeepFirstReading")(function* (
+    first: CorpusExtractOutcome,
+    ids: ExtractOcrSourceInput["ids"]
+  ): Effect.fn.Return<void, CorpusCommandError> {
     const firstReadingDir = path.join(outDir, "ocr", "first-reading");
     const ocrMetadataJson = yield* encodeMetadataRecordJson({
       "beep.ocr.engine": engine.identity.engineId,
       "beep.processing": "ocr",
     }).pipe(CorpusCommandError.mapError("OCR metadata failed JSON encoding."));
-    yield* O.match(firstTextPath, {
+    yield* O.match(firstReadingPath(first), {
       onNone: () =>
         first.sourceRecord.status === "succeeded"
           ? Effect.void
@@ -1362,12 +1346,37 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
         fs
           .makeDirectory(firstReadingDir, { recursive: true })
           .pipe(
-            Effect.andThen(fs.copyFile(textPath, path.join(firstReadingDir, `${ids.operationId}.txt`))),
+            Effect.andThen(
+              fs.copyFile(
+                path.join(outDir, `text/${ids.operationId}.txt`),
+                path.join(firstReadingDir, `${ids.operationId}.txt`)
+              )
+            ),
             CorpusCommandError.mapError(`Failed keeping the first reading of "${ids.relativePath}".`)
           ),
     });
+  });
+
+  const settleOcrOutcome = Effect.fn("CorpusCommandService.ocrSettleOutcome")(function* (
+    input: ExtractOcrSourceInput,
+    pages: OcrPages,
+    pageResults: ReadonlyArray<readonly [CorpusPageReadingRecord, string]>
+  ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
+    const { first, ids, record } = input;
+    const readPageCount = A.length(A.filter(pageResults, ([row]) => row.status === "read"));
+    const ocr = O.some(
+      CorpusExtractOcrCounts.make({
+        failedPageCount: S.Natural.make(pages.pageCount - readPageCount),
+        readPageCount: S.Natural.make(readPageCount),
+      })
+    );
+    if (readPageCount === 0) {
+      return { ...first, ocr };
+    }
+    const textRelative = `text/${ids.operationId}.txt`;
+    yield* keepFirstReading(first, ids);
     yield* writeExtractArtifact(
-      textPath,
+      path.join(outDir, textRelative),
       A.join(
         A.map(pageResults, ([, text]) => text),
         ocrPageSeparator
@@ -1382,7 +1391,7 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
         artifactId: ids.artifactId,
         digest: ids.digest,
         engine: engine.identity.engineId,
-        format,
+        format: pages.format,
         operationId: ids.operationId,
         relativePath: ids.relativePath,
         sizeBytes: record.sizeBytes,
@@ -1394,10 +1403,54 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       strategy: SupportedSelectedStrategy.make({
         disposition: "supported",
         engine: "auto",
-        format,
+        format: pages.format,
         operationKind: "extract",
       }),
     };
+  });
+
+  // Language comes from script detection on the first page; a source with no
+  // installed model for it (not even English) keeps its first outcome.
+  const readPages = Effect.fn("CorpusCommandService.ocrReadPages")(function* (
+    input: ExtractOcrSourceInput,
+    pages: OcrPages
+  ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
+    const firstImage = yield* Effect.result(pages.render(1));
+    const script =
+      scriptDetection && Result.isSuccess(firstImage)
+        ? yield* engine.detectScript(firstImage.success)
+        : O.none<TesseractScript>();
+    const plan = planTesseractLanguages(script, engine.installedLanguages);
+    yield* Ref.update(missingLanguagesRef, HashSet.union(HashSet.fromIterable(plan.missing)));
+    if (A.isReadonlyArrayEmpty(plan.selected)) {
+      return input.first;
+    }
+    const pageResults = yield* Effect.forEach(
+      A.range(1, pages.pageCount),
+      Effect.fnUntraced(function* (pageNumber) {
+        const image = pageNumber === 1 ? firstImage : yield* Effect.result(pages.render(pageNumber));
+        return yield* readPage(input.ids, pages, plan.selected, image, pageNumber);
+      })
+    );
+    const rowLines = yield* Effect.forEach(pageResults, ([row]) =>
+      CorpusPageReadingRecordJson.encode(row).pipe(
+        CorpusCommandError.mapError("Page reading row failed JSONL encoding.")
+      )
+    );
+    yield* writeExtractArtifact(
+      path.join(outDir, "ocr", "pages", `${input.ids.operationId}.jsonl`),
+      jsonlContent(rowLines)
+    );
+    return yield* settleOcrOutcome(input, pages, pageResults);
+  });
+
+  const readSource = Effect.fn("CorpusCommandService.ocrSource")(function* (
+    input: ExtractOcrSourceInput
+  ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
+    return yield* O.match(yield* pagesToRead(input), {
+      onNone: () => Effect.succeed(input.first),
+      onSome: (pages) => readPages(input, pages),
+    });
   });
 
   const writeLanguageReport = Effect.gen(function* () {

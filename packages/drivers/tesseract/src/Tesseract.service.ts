@@ -1,3 +1,4 @@
+// fallow-ignore-file code-duplication -- each process driver owns its spawn-and-capture step (tika, tesseract, poppler); drivers do not depend on each other and no shared capture helper exists below repo-cli.
 /**
  * Tesseract as a page OCR engine behind the `@beep/file-processing` contract.
  *
@@ -70,7 +71,7 @@ const imageExtension: (mediaType: PageImageMediaType) => string = Match.type<Pag
  *
  * ```ts
  * import { makeTesseractPageOcrEngine, TesseractConfig } from "@beep/tesseract"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const program = makeTesseractPageOcrEngine(TesseractConfig.make({})).pipe(
  *   Effect.map((engine) => engine.installedLanguages)

@@ -99,14 +99,17 @@ const pageRequest = (
     ...(overrides.maxOutputChars === undefined ? {} : { maxOutputChars: overrides.maxOutputChars }),
   });
 
-it("applies the documented configuration defaults", () => {
-  const config = TesseractConfig.make({});
+it.effect(
+  "applies the documented configuration defaults",
+  Effect.fnUntraced(function* () {
+    const config = TesseractConfig.make({});
 
-  expect(config).toEqual(S.decodeUnknownSync(TesseractConfig)({}));
-  expect(config.tesseractPath).toBe("tesseract");
-  expect(config.pageTimeoutMillis).toBe(60_000);
-  expect(VERSION).toBe("0.0.0");
-});
+    expect(config).toEqual(yield* S.decodeEffect(TesseractConfig)({}));
+    expect(config.tesseractPath).toBe("tesseract");
+    expect(config.pageTimeoutMillis).toBe(60_000);
+    expect(VERSION).toBe("0.0.0");
+  })
+);
 
 it("routes every script to language models that end in the English fallback", () => {
   const routed = A.map(TesseractScript.literals, tesseractLanguagesForScript);

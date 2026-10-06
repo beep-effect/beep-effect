@@ -141,7 +141,7 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusExtractSummary, encodeCorpusExtractSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const summary = CorpusExtractSummary.make({
  *   alreadyCompleteCount: S.Natural.make(0),
@@ -188,7 +188,7 @@ export const encodeCorpusExtractSummaryJson = JsonStringCodec(CorpusExtractSumma
  *
  * ```ts
  * import { CorpusExtractOutcomeRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const sourceRecord = `{"artifactId":"artifact:${sha256}","digest":"sha256:${sha256}","format":"unknown","operationId":"operation:${sha256}","relativePath":"source-a/empty.bin","sizeBytes":0,"skipReason":"unsupported-format","status":"skipped"}`

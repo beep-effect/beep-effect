@@ -23,6 +23,14 @@ export * from "./Tesseract.service.ts";
 /**
  * Package version.
  *
+ * **Example** (Read the package version)
+ *
+ * ```ts
+ * import { VERSION } from "@beep/tesseract"
+ *
+ * console.log(VERSION) // "0.0.0"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
