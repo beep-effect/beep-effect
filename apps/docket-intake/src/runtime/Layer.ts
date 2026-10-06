@@ -14,7 +14,11 @@ import {
   makeDocketFileStoreLayer,
   makeDocketGraphLayer,
 } from "@beep/law-practice-server/DocketIntake";
-import { DocketIntakeConfig, makeDocketIntakeLayer } from "@beep/law-practice-use-cases/DocketIntake";
+import {
+  DocketIntakeConfig,
+  DocketReviewConfig,
+  makeDocketIntakeLayer,
+} from "@beep/law-practice-use-cases/DocketIntake";
 import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Layer } from "effect";
@@ -34,8 +38,9 @@ const makeM365Layer = (config: DocketIntakeAppConfig) =>
   );
 
 // The docket intake pipeline over its live ports: Graph mailbox and calendar, the two
-// Anthropic-backed agents, the file store and the matter lookup. The store is exposed beside the
-// pipeline so the service can seed its cursor.
+// Anthropic-backed agents, the file store and the matter lookup, with the review loop's round
+// limit and threshold taken from the configuration. The store is exposed beside the pipeline so
+// the service can seed its cursor.
 const makeDocketIntakeAppLayer = (options: {
   readonly config: DocketIntakeAppConfig;
   readonly initialSince: string;
@@ -52,7 +57,14 @@ const makeDocketIntakeAppLayer = (options: {
   const store = makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: config.stateDirectory }));
 
   return makeDocketIntakeLayer(
-    DocketIntakeConfig.make({ mailbox: config.mailbox, reviewNegatives: config.reviewNegatives })
+    DocketIntakeConfig.make({
+      mailbox: config.mailbox,
+      review: DocketReviewConfig.make({
+        acceptThreshold: config.reviewAcceptThreshold,
+        maxRounds: config.reviewMaxRounds,
+      }),
+      reviewNegatives: config.reviewNegatives,
+    })
   ).pipe(
     Layer.provideMerge(Layer.mergeAll(graph, agents, store, DocketMatterLookupUnavailableLive)),
     Layer.provide(BunCrypto.layer)

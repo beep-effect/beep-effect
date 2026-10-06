@@ -72,6 +72,8 @@ All settings come from the environment.
 | `DOCKET_INTAKE_STATE_DIR` | no | State directory. Defaults to `$XDG_STATE_HOME/beep/docket-intake`, else `~/.local/state/beep/docket-intake`. |
 | `DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES` | no | Poll cycles that may fail in a row before `run` exits non-zero. A positive whole number. Defaults to `6`, which is thirty minutes at the default interval. |
 | `DOCKET_INTAKE_REVIEW_NEGATIVES` | no | Whether the secretary also reviews messages the paralegal found nothing in. Defaults to `true`. |
+| `DOCKET_INTAKE_REVIEW_MAX_ROUNDS` | no | Rounds of review, from `1` to `10`, after which an item that was not accepted is flagged. A whole number. Defaults to `3`. |
+| `DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD` | no | Confidence score, from `0` to `1`, a review round must reach for an item to be accepted. Defaults to `0.85`. |
 | `AI_ANTHROPIC_API_KEY` | yes for `poll` and `run` | Key for the model both agents use. |
 | `AI_ANTHROPIC_MODEL` | no | Model id; the Anthropic driver's default applies when unset. |
 
@@ -145,6 +147,34 @@ Only one process may use a state directory. The service holds `state.lock`
 there while it runs and a second copy refuses to start. A lock left behind by
 a process that was killed is taken over on the next start, so no cleanup is
 needed after a crash or a reboot.
+
+## What lands in Docket - needs review
+
+Each docket item is reviewed in rounds: the paralegal agent enters it, the
+secretary agent reads the source for itself and criticises the entry, and the
+paralegal revises or defends what is disputed. An item is accepted, and gets
+its `[UNVERIFIED]` entry and reminders, only when the automatic checks pass
+and the confidence score reaches the threshold. The score is half "the
+secretary has no serious objection left" and half "the share of fields the two
+agents read the same way"; the agents' own statements of confidence are shown
+but not counted.
+
+An item that is not accepted is never entered as a deadline and never
+dropped. It gets one entry in the category `Docket - needs review`, with no
+reminders, on the earliest date either agent read (or the day after receipt
+when neither read one). The body gives the score, the threshold, the rounds
+used, what is still open, and a link to the message. Nothing on such an entry
+is confirmed. The subject says why it is there:
+
+| Subject starts with | Meaning | What to do |
+| --- | --- | --- |
+| `[LOW CONFIDENCE]` | The round limit was reached with the score under the threshold. The agents still read some fields differently, but no serious objection is open and no single field stayed in dispute through every round. | Open the message, read the dates and the matter yourself, and enter the deadline by hand. The body lists the fields the agents differ on. |
+| `[REVIEW LIMIT REACHED]` | The round limit was reached with a serious objection still open, or with the agents disagreeing on the same field in every round. | Treat it as a standing dispute about the item: read the listed objection first, then the message, and enter the deadline by hand. |
+| `[CHECK FAILED]` | An automatic check still failed on the last round: a date that is not a real day, a due date that does not match the mail date plus the period, a due date before the mail date, or a date or period that is not in the text the paralegal quoted. | Do not rely on the dates on the entry. Read the source document and enter the deadline by hand. |
+
+`[NEEDS REVIEW]` entries are the older cases: no usable date was found, the
+agents disagree on whether the message is a docket item at all, or the
+message could not be processed.
 
 ## Matter lookup
 
