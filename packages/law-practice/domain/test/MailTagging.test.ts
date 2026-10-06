@@ -270,6 +270,15 @@ describe("MailTagging matching", () => {
     expect(belowThreshold([])).toStrictEqual(["P: Client"]);
     expect(belowThreshold([candidate([docket])])).toStrictEqual(["P: Client", "P: Unmatched - review"]);
     expect(belowThreshold([candidate([address, carryover])])).toStrictEqual(["P: Client", "P: Unmatched - review"]);
+    expect(belowThreshold([candidate([address, patentEvidence])])).toStrictEqual([
+      "P: Client",
+      "P: Unmatched - review",
+    ]);
+    expect(
+      belowThreshold([
+        candidate([MatterEvidence.make({ kind: "application-number", matched: MatterEvidenceToken.make("16000001") })]),
+      ])
+    ).toStrictEqual(["P: Client", "P: Unmatched - review"]);
     expect(belowThreshold([candidate([address]), candidate([patentEvidence])])).toStrictEqual(["P: Client"]);
   });
 

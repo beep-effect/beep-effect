@@ -66,6 +66,20 @@ const sharedContactIndex = MatterIndex.make({
   entries: [acmeEntry, MatterIndexEntry.make({ ...globexEntry, contactAddresses: acmeEntry.contactAddresses })],
 });
 
+// Contact-only mail: a known contact, a domain-only sender, and a reply to a contact two matters share.
+const contactOnlyMail = [
+  envelope({ at: 1, subject: "Quick question", sender: "counsel@acme.example.test" }),
+  envelope({ at: 2, subject: "Invoice copy", sender: "paralegal@acme.example.test" }),
+  envelope({
+    at: 3,
+    subject: "Following up",
+    sender: "attorney@example.test",
+    recipients: ["counsel@acme.example.test"],
+  }),
+];
+
+const contactOnlyWorld = () => scenario({ envelopes: contactOnlyMail, index: sharedContactIndex });
+
 const clientWorld = (matters: MatterIndex) =>
   scenario({
     envelopes: [clientReply],
@@ -431,6 +445,36 @@ describe("MailTagging job client filing", () => {
         expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
         expect(yield* state.writesOf("upload:")).toStrictEqual([]);
         expect(yield* state.categoriesOf(6)).toStrictEqual(["Personal", "M: acme.10001", "P: Client"]);
+      })
+    );
+  });
+});
+
+describe("MailTagging job contact-only near misses", () => {
+  it.layer(contactOnlyWorld(), { timeout: "30 seconds" })("below the threshold", (it) => {
+    it.effect(
+      "adds P: Client to the known contact and no review category to any of them, in dry run and apply",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const preview = yield* run("dry-run", "run-0000");
+        const applied = yield* run("apply", runId);
+
+        for (const report of [preview, applied]) {
+          expect(report.unmatched).toStrictEqual({
+            "no-signal": 0,
+            "below-threshold": 3,
+            ambiguous: 0,
+            "needs-attorney": 0,
+          });
+          expect(A.map(report.categoryAdds, (item) => [item.category, item.count])).toStrictEqual([["P: Client", 1]]);
+        }
+        expect([preview.wrote, applied.wrote]).toStrictEqual([false, true]);
+        expect(
+          A.map(activeTagEntries(yield* Ref.get(state.tagRecords)), (entry) => [entry.messageId, entry.addedCategories])
+        ).toStrictEqual([["msg-1", ["P: Client"]]]);
+        expect(yield* state.categoriesOf(1)).toStrictEqual(["P: Client"]);
+        expect(yield* state.categoriesOf(2)).toStrictEqual([]);
+        expect(yield* state.categoriesOf(3)).toStrictEqual([]);
       })
     );
   });

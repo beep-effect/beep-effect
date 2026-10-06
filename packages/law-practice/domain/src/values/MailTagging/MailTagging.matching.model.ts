@@ -697,18 +697,17 @@ const matchedCategories = (decision: MatterMatched): ReadonlyArray<MailCategoryN
   A.prepend(signalCategories(decision.practiceCategories), matterCategoryName(decision.matterKey));
 
 // Evidence that names the matter itself; contact evidence only says who is writing.
-const IdentifierEvidenceKind = LiteralKit([
-  "application-number",
-  "patent-number",
-  "docket-number",
-  "conversation-carryover",
-]).pipe(
-  $I.annoteSchema("IdentifierEvidenceKind", {
-    description: "Evidence kinds that name a matter rather than a correspondent.",
-  })
-);
+// Exhaustive, so a new evidence kind must be classified before it compiles.
+const namesMatter: (kind: MatterEvidenceKind) => boolean = MatterEvidenceKind.$match({
+  "application-number": () => true,
+  "patent-number": () => true,
+  "docket-number": () => true,
+  "conversation-carryover": () => true,
+  "contact-address": () => false,
+  "contact-domain": () => false,
+});
 
-const isIdentifierEvidence = (evidence: MatterEvidence): boolean => S.is(IdentifierEvidenceKind)(evidence.kind);
+const isIdentifierEvidence = (evidence: MatterEvidence): boolean => namesMatter(evidence.kind);
 
 // A below-threshold outcome is a near miss only when its best candidate carries identifier evidence.
 const belowThresholdCategories = (decision: MatterUnmatched): ReadonlyArray<MailCategoryName> =>
