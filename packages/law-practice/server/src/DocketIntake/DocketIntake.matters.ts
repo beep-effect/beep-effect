@@ -9,7 +9,7 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
+import { KgAttributionSource, PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   DocketIntakeError,
   DocketMatterLookup,
@@ -33,7 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgBundle, PracticeKgBundleContext } from "../PracticeKg.host.ts";
 import { PracticeKgMatterLookup, PracticeKgMatterLookupLive } from "../PracticeKg.matters.ts";
-import { PracticeKgBundleManifest } from "../PracticeKg.schemas.ts";
+import { PracticeKgBundleManifest, PracticeKgSchemaVersions } from "../PracticeKg.schemas.ts";
 import type { MatterLookupResult } from "@beep/law-practice-use-cases/DocketIntake";
 import type { PracticeKgMatter, PracticeKgMatterLookupResult } from "@beep/law-practice-use-cases/server";
 
@@ -249,7 +249,11 @@ const sortedKeys = (keys: ReadonlyArray<string>): ReadonlyArray<string> => A.sor
 const isBareFamily = (matchedOn: ReadonlyArray<PracticeKgMatterMatchedOn>): boolean =>
   A.every(matchedOn, PracticeKgMatterMatchedOn.is.family);
 
-// The contract's "needs attorney" rule: no client, a recycle-bin stub, or a bare family match.
+// A match through an application or patent number filed from one of the matter's dockets.
+const isNumberMatch = S.is(PracticeKgMatterMatchedOn.pick(["application", "patent"]));
+
+// The contract's "needs attorney" rule: no client, a recycle-bin stub, a bare family match, or a
+// membership the practice KG only inferred from where most citing documents sit.
 const uniqueMatter = (matches: A.NonEmptyReadonlyArray<PracticeKgMatter>): MatterUnique => {
   const matter = A.headNonEmpty(matches);
   const dockets = matter.dockets;
@@ -271,13 +275,20 @@ const uniqueMatter = (matches: A.NonEmptyReadonlyArray<PracticeKgMatter>): Matte
     verified:
       matter.client !== null &&
       !PracticeKgEpistemicStatus.is["recycled-unverified"](matter.epistemicStatus) &&
+      !KgAttributionSource.is["mention-dominance"](matter.attributionSource) &&
       !isBareFamily(A.flatMap(matches, (match) => match.matchedOn)),
   });
 };
 
+// What the references resolve to, and the number references whose membership still has to be
+// checked: a verified matter found only through application or patent numbers.
+type NumberMembership = { readonly forms: ReadonlyArray<string>; readonly unique: MatterUnique };
+
+type Resolved = { readonly answer: MatterLookupResult; readonly membership: O.Option<NumberMembership> };
+
 // One matter is the answer only when every reference that resolved uniquely names it and every
 // reference that resolved to several matters includes it. Any other spread is ambiguous.
-const combine = (results: ReadonlyArray<FormResult>): O.Option<MatterLookupResult> => {
+const combine = (results: ReadonlyArray<FormResult>): O.Option<Resolved> => {
   const resolvedOnce: ReadonlyArray<FormResult> = A.filter(results, (result) => A.length(result.matters) === 1);
   const uniqueMatches: ReadonlyArray<PracticeKgMatter> = A.flatMap(resolvedOnce, (result) => result.matters);
   const several = A.filter(results, (result) => A.length(result.matters) > 1);
@@ -288,16 +299,48 @@ const combine = (results: ReadonlyArray<FormResult>): O.Option<MatterLookupResul
       A.every(several, (result) => A.contains(familyKeysOf(result.matters), key))
     );
   });
-  return O.orElse(O.map(sole, uniqueMatter), () =>
-    O.map(
-      O.liftPredicate(
-        sortedKeys(A.flatMap(results, (result) => familyKeysOf(result.matters))),
-        A.isReadonlyArrayNonEmpty
-      ),
-      (familyKeys) => MatterAmbiguous.make({ familyKeys })
-    )
+  return O.orElse(
+    O.map(sole, (matches): Resolved => {
+      const unique = uniqueMatter(matches);
+      const numberOnly = A.every(
+        A.flatMap(matches, (match) => match.matchedOn),
+        isNumberMatch
+      );
+      return {
+        answer: unique,
+        membership: O.liftPredicate(
+          { forms: A.map(resolvedOnce, (result) => result.form), unique },
+          () => unique.verified && numberOnly
+        ),
+      };
+    }),
+    () =>
+      O.map(
+        O.liftPredicate(
+          sortedKeys(A.flatMap(results, (result) => familyKeysOf(result.matters))),
+          A.isReadonlyArrayNonEmpty
+        ),
+        (familyKeys): Resolved => ({ answer: MatterAmbiguous.make({ familyKeys }), membership: O.none() })
+      )
   );
 };
+
+// A membership the bundle took from where most citing documents sit (`mention-dominance`) is not
+// labelled in the lookup result, so it is recognised the way the build decides it: documents of
+// another matter cite the number too. Such a matter needs the attorney.
+const checkMembership = (
+  mentions: DocketMatterMentionsShape,
+  resolved: Resolved
+): Effect.Effect<MatterLookupResult, DocketIntakeError> =>
+  O.match(resolved.membership, {
+    onNone: () => Effect.succeed(resolved.answer),
+    onSome: ({ forms, unique }) =>
+      Effect.map(Effect.forEach(forms, mentions.familiesMentioning), (mentioned) =>
+        A.some(A.flatten(mentioned), (familyKey) => familyKey !== unique.familyKey)
+          ? MatterUnique.make({ ...unique, verified: false })
+          : unique
+      ),
+  });
 
 const lookupFailed = () => DocketIntakeError.make({ cause: "practice-kg-lookup", stage: "lookup" });
 
@@ -328,7 +371,7 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
               })
           )
         ),
-      onSome: Effect.succeed,
+      onSome: (resolved) => checkMembership(mentions, resolved),
     });
     yield* Effect.annotateCurrentSpan({
       docket_lookup_form_count: A.length(forms),
@@ -352,8 +395,10 @@ const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketM
  * names no matter and is dropped.
  *
  * One matter named by every reference that resolved is `MatterUnique`; it is
- * unverified when it has no client, rests on a recycle-bin stub, or matched
- * on the bare family number only. Several matters are `MatterAmbiguous`. When
+ * unverified when it has no client, rests on a recycle-bin stub, matched on
+ * the bare family number only, or is a `mention-dominance` member: found only
+ * through application or patent numbers that other matters' documents cite
+ * too. Several matters are `MatterAmbiguous`. When
  * nothing resolves, the matters whose documents mention an application or
  * patent number of the references are `MatterSuggested` (even one); otherwise
  * the answer is `MatterNotFound`. A failing lookup fails at stage `lookup`.
@@ -442,8 +487,8 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
 
 const MANIFEST_FILE = "bundle.manifest.json";
 const DATABASE_FILE = "practice.duckdb";
-// The `matters` and `matter_dockets` layout with `client_name` (D-21 of the practice-kg-mcp packet).
-const SUPPORTED_DUCKDB_FORMAT = "3";
+// The DuckDB store format the practice-KG code in this package reads and writes.
+const SUPPORTED_DUCKDB_FORMAT: string = PracticeKgSchemaVersions.make({}).duckdb;
 
 const bundleError = (message: string) => (cause: unknown) => DocketKgBundleError.make({ cause, message });
 
@@ -476,7 +521,8 @@ export class DocketKgBundle extends S.Class<DocketKgBundle>($I`DocketKgBundle`)(
  * **Details**
  *
  * The directory, its `bundle.manifest.json` and `practice.duckdb` must exist,
- * the manifest must decode, and its DuckDB store format must be `3`;
+ * the manifest must decode, and its DuckDB store format must be the one this
+ * package's practice-KG code reads (`PracticeKgSchemaVersions`, `4` today);
  * otherwise this fails with a {@link DocketKgBundleError} that names the path.
  * Nothing is opened: the checks only read the manifest and look for the
  * database file.
@@ -538,7 +584,7 @@ export const openDocketKgBundle = Effect.fn("DocketMatterLookup.openBundle")(fun
  * **Details**
  *
  * Building the layer checks the bundle first: the directory, its
- * `bundle.manifest.json`, the DuckDB store format (`3`) and `practice.duckdb`
+ * `bundle.manifest.json`, the DuckDB store format (`4`) and `practice.duckdb`
  * must all be there, or the layer fails with a {@link DocketKgBundleError}
  * that names the path. The database is opened read-only, so the lookup runs
  * beside the practice-KG host and any other reader. The bundle's `kg.pglite`

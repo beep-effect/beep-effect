@@ -45,7 +45,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Platform } from "./MailTagging.adapters.fixture.ts";
-import type { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
+import type { KgAttributionSource, PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import type { MatterLookupResult } from "@beep/law-practice-use-cases/DocketIntake";
 import type { PracticeKgMatterMatchedOn } from "@beep/law-practice-use-cases/server";
 
@@ -55,6 +55,7 @@ type MatterSeed = {
   readonly familyKey: string;
   readonly matched?: boolean;
   readonly matchedOn?: ReadonlyArray<PracticeKgMatterMatchedOn>;
+  readonly source?: KgAttributionSource;
   readonly status?: PracticeKgEpistemicStatus;
 };
 
@@ -71,7 +72,7 @@ const kgDocket = (familyKey: string, stage: string, matched: boolean) =>
 
 const kgMatter = (seed: MatterSeed) =>
   PracticeKgMatter.make({
-    attributionSource: "folder-path",
+    attributionSource: seed.source ?? "folder-path",
     client: seed.client === undefined ? "0000" : seed.client,
     clientName: seed.clientName ?? null,
     docketCount: 2,
@@ -210,6 +211,45 @@ describe("@beep/law-practice-server DocketIntake matter lookup", () => {
           ["0000.00001", false, "0000"],
         ]);
         expect(yield* Ref.get(asked)).toStrictEqual(["00001"]);
+      })
+    );
+
+    it.effect(
+      "treats a membership found only through numbers other matters' documents also cite as mention-dominance, so unverified",
+      Effect.fnUntraced(function* () {
+        const owned = kgMatter({ familyKey: "0000.00001", matchedOn: ["application"] });
+        const matters = {
+          "00/000,001": [owned],
+          "US 0,000,001": [kgMatter({ familyKey: "0000.00001", matchedOn: ["patent"] })],
+        };
+
+        const dominance = yield* lookupOver(
+          { matters, mentions: { "00/000,001": ["0000.00001"], "US 0,000,001": ["0000.00001", "0001.00009"] } },
+          ["00/000,001", "US 0,000,001"]
+        );
+        const unanimous = yield* lookupOver({ matters, mentions: { "00/000,001": ["0000.00001"] } }, ["00/000,001"]);
+        const labelled = yield* lookupOver(
+          { matters: { [US01]: [kgMatter({ familyKey: "0000.00001", source: "mention-dominance" })] } },
+          [US01]
+        );
+        const byDocket = yield* lookupOver(
+          {
+            matters: { ...matters, [US01]: [kgMatter({ familyKey: "0000.00001" })] },
+            mentions: { "00/000,001": ["0001.00009"] },
+          },
+          [US01, "00/000,001"]
+        );
+
+        expect(
+          A.map([dominance, unanimous, labelled, byDocket], (result) => A.take(uniqueOf(result), 2))
+        ).toStrictEqual([
+          ["0000.00001", false],
+          ["0000.00001", true],
+          ["0000.00001", false],
+          ["0000.00001", true],
+        ]);
+        // A docket match settles it: the citing documents are not searched.
+        expect(yield* Ref.get(mentionAsked)).toStrictEqual([]);
       })
     );
 
@@ -501,17 +541,17 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
         const older = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some(Str.replace('"duckdb":"3"', '"duckdb":"2"')(yield* fixtureManifest)),
+          manifest: O.some(Str.replace('"duckdb":"4"', '"duckdb":"3"')(yield* fixtureManifest)),
         });
         const noFormat = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some('{"schemaVersion":{"pglite":"3"}}'),
+          manifest: O.some('{"schemaVersion":{"pglite":"4"}}'),
         });
         const partial = yield* bundleDirectory({
           database: true,
           documents: false,
-          manifest: O.some('{"schemaVersion":{"duckdb":"3","pglite":"3"}}'),
+          manifest: O.some('{"schemaVersion":{"duckdb":"4","pglite":"4"}}'),
         });
         const noDatabase = yield* bundleDirectory({
           database: false,
@@ -528,8 +568,8 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
           "Practice KG bundle directory <path> does not exist.",
           "Practice KG bundle manifest <path> cannot be read.",
           "Practice KG bundle manifest <path> is not a bundle manifest.",
-          "Practice KG bundle at <path> uses DuckDB store format 2; the docket intake reads format 3. Install a rebuilt bundle.",
-          "Practice KG bundle at <path> uses DuckDB store format none; the docket intake reads format 3. Install a rebuilt bundle.",
+          "Practice KG bundle at <path> uses DuckDB store format 3; the docket intake reads format 4. Install a rebuilt bundle.",
+          "Practice KG bundle at <path> uses DuckDB store format none; the docket intake reads format 4. Install a rebuilt bundle.",
           "Practice KG bundle manifest <path> is invalid.",
           "Practice KG bundle database <path> is missing.",
         ]);

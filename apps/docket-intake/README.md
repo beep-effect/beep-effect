@@ -189,18 +189,19 @@ message could not be processed.
 With `DOCKET_INTAKE_KG_BUNDLE_DIR` set, every reference the two agents copied
 from the message is looked up in the practice knowledge-graph bundle. The
 current bundle is
-`~/data-home/oppold-corpus/staging/practice-kg-bundle-2026-10-06-03`. The
+`~/data-home/oppold-corpus/staging/practice-kg-bundle-2026-10-07-01`. The
 service reads only `bundle.manifest.json` and `practice.duckdb`, opened
 read-only, so it runs beside the practice-KG host; it never opens `kg.pglite`.
 It refuses to start when the directory, the manifest or the database is
-missing, or when the bundle's DuckDB store format is not `3`.
+missing, or when the bundle's DuckDB store format is not the one the
+practice-KG code reads (`4`).
 
 What the entry says about the matter:
 
 | Result | Flag | Entry line |
 | --- | --- | --- |
 | One matter, with a client and not resting on a recycle-bin stub | none | `Matter: family …` with the client, its name, dockets and numbers |
-| One matter without a client, on a recycle-bin stub, or matched on the bare family number only | `matter-unverified` | the same, marked `unverified; needs attorney` |
+| One matter without a client, on a recycle-bin stub, matched on the bare family number only, or a `mention-dominance` member (found only through numbers other matters' documents cite too) | `matter-unverified` | the same, marked `unverified; needs attorney` |
 | Several matters | `matter-ambiguous` | `Matter: ambiguous between …; needs attorney` |
 | No matter owns the number, but the documents of some matters cite it | `matter-suggested` | `Matter: not attached in the records; suggested candidates: …; needs attorney` |
 | Nothing | `matter-not-found` | `Matter: not found in the practice records; needs attorney` |
