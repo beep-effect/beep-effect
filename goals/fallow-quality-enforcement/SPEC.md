@@ -324,3 +324,9 @@ Required critic findings may be closed only as `fixed` or `waived`. A waived
 finding must carry owner, approver, source standard refs, rationale,
 expiry/review date, residual risk, and acceptance evidence refs in
 `history/review-rounds.jsonc`; otherwise the packet validator fails.
+
+## Decision Log
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-06 | `beep quality fallow` steers Fallow's reusable audit base snapshot (`fallow-audit-base-cache-<key>-root-<key>` plus sidecars) at the disk-backed `~/.cache/beep/fallow` root via the child's `TMPDIR` (`BEEP_FALLOW_CACHE_ROOT` overrides) and forwards `FALLOW_AUDIT_CACHE_MAX_AGE_DAYS=2`; `yeet sweep --retire` runs `fallow audit-cache remove --root <lane>`; `quality tmpfs-reap` scans that root, reaps a snapshot whose recorded owner root is gone at age zero and an idle live-owner snapshot after one hour (was six). Snapshots stay keyed per project root: Fallow 3.31 hashes the root, so lanes cannot share one snapshot per base commit without an upstream change. | 29 live snapshots (~19 GB) and their retired predecessors sat in zram-backed `/tmp` on 2026-10-06 and accounted for most of 37 GB of swap; the janitor skipped them as `too-young`. The repo law already places tool clones under `~/.cache/beep/`. | Drop the env projection in `FallowQuality.command.ts` and the retire hook in `Yeet/internal/Retire.ts`; restore the six-hour `fallow-cache` threshold and remove `discoverCacheFallowCaches` in `TmpfsReap.ts`. Runbook: `docs/runbooks/fallow-audit-cache.md`. |
