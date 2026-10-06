@@ -59,7 +59,7 @@ export type MailTaggingPort = typeof MailTaggingPort.Type;
  *
  * **When to use**
  *
- * Adapters raise it for every provider failure. `reason` carries ids, counts,
+ * Use when an adapter must report a provider failure. `reason` carries ids, counts,
  * and status text only: never a subject, a body, or a file name.
  *
  * **Example** (Report a failed category write)
