@@ -195,13 +195,16 @@ const digestBytes = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(bytesToHex(
 // 1.68 GB/s against 187 MB/s for the pure-JS hasher on the 147 GB root
 // archive (2026-10-06); Effect's `Crypto` service only offers one-shot
 // digests. Node (tests) falls back to the pure-JS hasher; digests are
-// identical either way.
+// identical either way. The probe checks the hasher surface, not the `Bun`
+// global: `vitest.setup.ts` installs a partial Bun shim under Node that has
+// no `CryptoHasher`.
 interface StreamingSha256 {
   readonly digestHex: () => Sha256Hex;
   readonly update: (chunk: Uint8Array) => void;
 }
+const hasNativeSha256 = (): boolean => typeof Bun !== "undefined" && typeof Bun.CryptoHasher === "function";
 const createStreamingSha256 = (): StreamingSha256 => {
-  if (typeof Bun !== "undefined") {
+  if (hasNativeSha256()) {
     const native = new Bun.CryptoHasher("sha256");
     return {
       update: (chunk) => {

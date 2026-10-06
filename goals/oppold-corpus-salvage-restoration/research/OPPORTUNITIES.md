@@ -177,3 +177,31 @@ because the coordinator has no queue.
 - **Prevented by:** a shared streaming hasher primitive on the platform hash
   (now `createStreamingSha256` in `Restoration.ts`), and a throughput line in
   the run log so a slow hasher is visible in minutes.
+
+## 2026-10-06 — Yeet's packet named the wrong red gate
+
+- **Doing:** reading the cheap-gates failure after the first `yeet publish` of
+  the provenance index.
+- **Evidence:** the quality packet reported one `repo-law` issue, "full:cheap-gates
+  failed in tsconfig-sync", and suggested `bun run config-sync`; that command
+  answered "all files already in sync". The real reds were lint:schema-first
+  (two exported interfaces), lint:effect-vitest (six rows in a new test file)
+  and fallow:audit (eleven complexity findings), visible only in the raw log.
+- **Prevented by:** the packet should carry every failed lane's own findings
+  (schema-first symbols, effect-vitest rows, fallow path:line:metric) instead of
+  collapsing the wave to the first lane in its fallback table.
+
+## 2026-10-06 — `typeof Bun` is not a runtime probe under Vitest
+
+- **Doing:** running the corpus command suite after switching the streaming
+  hasher to Bun's native `CryptoHasher` with a pure-JS fallback for Node.
+- **Evidence:** 26 tests failed in 16 seconds with
+  `TypeError: Bun.CryptoHasher is not a constructor`. `vitest.setup.ts`
+  installs a partial Bun shim (spawn, file, serve, sleep) when Vitest runs on
+  Node, so `typeof Bun !== "undefined"` was true while the hasher surface was
+  absent. A Codex lane saw the same suite fail nine tests with a different
+  message under its sandbox and attributed them to the baseline.
+- **Prevented by:** probing the API you call (`typeof Bun.CryptoHasher ===
+  "function"`), which the shim's own header comment prescribes, and a note in
+  the shim's docs that `Bun` is defined under Node tests so feature probes
+  must target members, never the global.

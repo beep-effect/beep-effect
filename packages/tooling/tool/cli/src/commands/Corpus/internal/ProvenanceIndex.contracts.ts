@@ -19,6 +19,8 @@ import type { Effect } from "effect";
 import type { CorpusCommandError } from "../Corpus.errors.ts";
 import type {
   AttachmentRepairJournalRow,
+  MagicSniffResult,
+  MailExportTreeIndexResult,
   MailExportTreeLabel,
   MailMessageIndexRecord,
   MetadataCensusRecord,
@@ -52,23 +54,6 @@ export interface MailExportTreeIndexerShape {
 }
 
 /**
- * Walk-level counters returned by {@link MailExportTreeIndexerShape.indexTree}.
- *
- * @category models
- * @since 0.0.0
- */
-export interface MailExportTreeIndexResult {
-  readonly attachmentBytes: number;
-  readonly attachmentCount: number;
-  readonly embeddedMessageCount: number;
-  readonly internetHeaderCount: number;
-  readonly messageCount: number;
-  readonly messageIdCount: number;
-  readonly recipientCount: number;
-  readonly sourceArtifactCount: number;
-}
-
-/**
  * Service tag for {@link MailExportTreeIndexerShape}.
  *
  * **Example** (Reference the tag)
@@ -85,24 +70,6 @@ export interface MailExportTreeIndexResult {
 export class MailExportTreeIndexer extends Context.Service<MailExportTreeIndexer, MailExportTreeIndexerShape>()(
   $I`MailExportTreeIndexer`
 ) {}
-
-/**
- * Byte-signature verdict for one file from `file(1)`.
- *
- * **Details**
- *
- * `extensions` is `file --extension`'s slash-separated candidate list split
- * into entries (for example `["jpeg", "jpg", "jpe", "jfif"]`), empty when the
- * tool prints `???`.
- *
- * @category models
- * @since 0.0.0
- */
-export interface MagicSniffResult {
-  readonly extensions: ReadonlyArray<string>;
-  readonly mimeType: string;
-  readonly path: string;
-}
 
 /**
  * Sniffs file types by magic bytes in batches.

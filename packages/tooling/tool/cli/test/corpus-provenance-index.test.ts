@@ -25,18 +25,12 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 
-const services = Layer.mergeAll(
+const Services = Layer.mergeAll(
   MailExportTreeIndexerLive,
   AttachmentRepairJournalLive,
   AttachmentMagicSnifferLive(),
   FileMetadataCensusReaderLive()
 ).pipe(Layer.provideMerge(process.versions.bun === undefined ? NodeServices.layer : BunServices.layer));
-const withServices = Effect.fn("Provenance.testServices")(function* <A, E>(
-  program: Effect.Effect<A, E, Layer.Success<typeof services>>
-) {
-  const context = yield* Layer.build(services);
-  return yield* program.pipe(Effect.provide(context));
-}, Effect.scoped);
 const pdf =
   "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n";
 const jpeg = Uint8Array.from([
@@ -126,8 +120,8 @@ describe("fallback magic extensions", () => {
   });
 });
 
-it.effect("indexes two artifacts and a nested embedded message with counts and parsed headers", () =>
-  Effect.scoped(
+it.layer(Services, { timeout: "30 seconds" })((it) => {
+  it.effect("indexes two artifacts and a nested embedded message with counts and parsed headers", () =>
     Effect.gen(function* () {
       const { root } = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
@@ -171,11 +165,9 @@ it.effect("indexes two artifacts and a nested embedded message with counts and p
         lines(yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl")))
       ).toHaveLength(3);
     })
-  ).pipe(withServices)
-);
+  );
 
-it.effect("plans, applies, journals, skips collisions and undoes actual magic repairs", () =>
-  Effect.scoped(
+  it.effect("plans, applies, journals, skips collisions and undoes actual magic repairs", () =>
     Effect.gen(function* () {
       const { root, attachments } = yield* fixture();
       const fs = yield* FileSystem.FileSystem;
@@ -238,11 +230,9 @@ it.effect("plans, applies, journals, skips collisions and undoes actual magic re
       yield* fs.writeFileString(malformed, '{"fromPath":"incomplete"}\n');
       expect((yield* journal.readAll(malformed).pipe(Effect.result))._tag).toBe("Failure");
     })
-  ).pipe(withServices)
-);
+  );
 
-it.effect("metadata census reads PDF/JPEG bytes and excludes staging sidecars", (ctx) =>
-  Effect.scoped(
+  it.effect("metadata census reads PDF/JPEG bytes and excludes staging sidecars", (ctx) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -270,5 +260,5 @@ it.effect("metadata census reads PDF/JPEG bytes and excludes staging sidecars", 
       expect(rows.find((row) => row.relativePath.endsWith("4_blob"))?.status).toBe("error");
       for (const row of rows) expect(Object.keys(row.tags).some((key) => /^(System|File):/.test(key))).toBe(false);
     })
-  ).pipe(withServices)
-);
+  );
+});

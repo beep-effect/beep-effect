@@ -11,6 +11,7 @@
  */
 
 import { A, O, R, Str } from "@beep/utils";
+import { Match } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
 
@@ -200,6 +201,9 @@ export const rfc5322DateFromOutlookTimestamp = (value: string): O.Option<string>
     O.map(({ day, hour, minute, month, second, year }) => `${day} ${month} ${year} ${hour}:${minute}:${second} +0000`)
   );
 
+const isStructuralHeader = (line: string) =>
+  headerName(line).pipe(O.exists((name) => A.contains(structuralHeaderNames, name)));
+
 /**
  * Normalize a verbatim transport-header block for reuse in an assembled EML.
  *
@@ -229,26 +233,9 @@ export const stripMimeStructuralHeaders = (headerBlock: string): string => {
   const kept: Array<string> = [];
   let dropping = false;
 
-  for (const line of headerBlock.split(lineBreakPattern)) {
-    if (Str.isEmpty(Str.trim(line))) {
-      break;
-    }
-
-    if (continuationPattern.test(line)) {
-      if (!dropping) {
-        kept.push(...foldHeaderLine(line));
-      }
-      continue;
-    }
-
-    dropping = O.match(headerName(line), {
-      onNone: () => false,
-      onSome: (name) => A.contains(structuralHeaderNames, name),
-    });
-
-    if (!dropping) {
-      kept.push(...foldHeaderLine(line));
-    }
+  for (const line of A.takeWhile(Str.split(headerBlock, lineBreakPattern), (line) => Str.isNonEmpty(Str.trim(line)))) {
+    dropping = continuationPattern.test(line) ? dropping : isStructuralHeader(line);
+    if (!dropping) kept.push(...foldHeaderLine(line));
   }
 
   return A.join(kept, CRLF);
@@ -484,40 +471,65 @@ export const InternetHeaderMap = S.Record(S.String, S.Array(S.String));
  * @since 0.0.0 */
 export type InternetHeaderMap = typeof InternetHeaderMap.Type;
 
+const addressSeparator = (
+  state: { quoted: boolean; escaped: boolean; angleDepth: number; commentDepth: number },
+  c: string | undefined
+): boolean => {
+  if (state.escaped) {
+    state.escaped = false;
+    return false;
+  }
+  if (c === "\\") {
+    state.escaped = true;
+    return false;
+  }
+  if (c === '"' && state.commentDepth === 0) state.quoted = !state.quoted;
+  if (state.quoted) return false;
+  updateAddressDepth(state, c);
+  return state.commentDepth === 0 && c === "," && state.angleDepth === 0;
+};
+const updateAddressDepth = (state: { angleDepth: number; commentDepth: number }, c: string | undefined) => {
+  if (c === "(") state.commentDepth++;
+  if (c === ")") state.commentDepth = Math.max(0, state.commentDepth - 1);
+  if (state.commentDepth !== 0) return;
+  if (c === "<") state.angleDepth++;
+  if (c === ">") state.angleDepth = Math.max(0, state.angleDepth - 1);
+};
+
 const splitAddresses = (value: string): ReadonlyArray<string> => {
   const parts: Array<string> = [];
-  let quoted = false;
-  let escaped = false;
-  let angleDepth = 0;
-  let commentDepth = 0;
+  const state = { quoted: false, escaped: false, angleDepth: 0, commentDepth: 0 };
   let start = 0;
   for (let i = 0; i < value.length; i++) {
-    const c = value[i];
-    if (escaped) {
-      escaped = false;
-      continue;
-    }
-    if (c === "\\") {
-      escaped = true;
-      continue;
-    }
-    if (c === '"' && commentDepth === 0) quoted = !quoted;
-    if (!quoted) {
-      if (c === "(") commentDepth++;
-      if (c === ")") commentDepth = Math.max(0, commentDepth - 1);
-      if (commentDepth === 0) {
-        if (c === "<") angleDepth++;
-        if (c === ">") angleDepth = Math.max(0, angleDepth - 1);
-        if (c === "," && angleDepth === 0) {
-          parts.push(Str.trim(value.slice(start, i)));
-          start = i + 1;
-        }
-      }
+    if (addressSeparator(state, value[i])) {
+      parts.push(Str.trim(value.slice(start, i)));
+      start = i + 1;
     }
   }
   parts.push(Str.trim(value.slice(start)));
   return A.filter(parts, Str.isNonEmpty);
 };
+
+const appendUnfoldedLine = (lines: Array<string>, line: string) => {
+  if (!/^[ \t]/.test(line)) {
+    lines.push(line);
+    return;
+  }
+  const last = lines.pop();
+  if (last !== undefined) lines.push(`${last} ${Str.trim(line)}`);
+};
+const unfoldInternetHeaders = (text: string) => {
+  const lines: Array<string> = [];
+  for (const line of A.takeWhile(Str.split(text, /\r?\n/), Str.isNonEmpty)) {
+    appendUnfoldedLine(lines, line);
+  }
+  return lines;
+};
+const internetHeaderValues = Match.type<{ key: string; value: string }>().pipe(
+  Match.when({ key: Match.is("to", "cc") }, ({ value }) => splitAddresses(value)),
+  Match.when({ key: "references" }, ({ value }) => A.filter(Str.split(value, /\s+/), Str.isNonEmpty)),
+  Match.orElse(({ value }) => [value])
+);
 
 /** Unfold RFC 5322 headers and retain repeated fields in input order.
  * **Example** (Read folded addresses)
@@ -529,26 +541,14 @@ const splitAddresses = (value: string): ReadonlyArray<string> => {
  * @since 0.0.0
  */
 export const parseInternetHeaders = (text: string): InternetHeaderMap => {
-  const lines: Array<string> = [];
-  for (const line of Str.split(text, /\r?\n/)) {
-    if (Str.isEmpty(line)) break;
-    if (/^[ \t]/.test(line)) {
-      const last = lines.pop();
-      if (last !== undefined) lines.push(`${last} ${Str.trim(line)}`);
-    } else lines.push(line);
-  }
+  const lines = unfoldInternetHeaders(text);
   const headers: Record<string, ReadonlyArray<string>> = {};
   for (const line of lines) {
     const colon = line.indexOf(":");
     if (colon <= 0) continue;
     const key = Str.toLowerCase(Str.trim(line.slice(0, colon)));
     const value = Str.trim(line.slice(colon + 1));
-    const values =
-      key === "to" || key === "cc"
-        ? splitAddresses(value)
-        : key === "references"
-          ? A.filter(Str.split(value, /\s+/), Str.isNonEmpty)
-          : [value];
+    const values = internetHeaderValues({ key, value });
     headers[key] = [...(headers[key] ?? []), ...values];
   }
   return headers;

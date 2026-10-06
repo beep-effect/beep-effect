@@ -2,11 +2,12 @@
 
 import { parseInternetHeaders, parseOutlookHeaders } from "@beep/libpff";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { DateTime, Effect, FileSystem, HashSet, Layer, Path, Stream } from "effect";
+import { O } from "@beep/utils";
+import { DateTime, Effect, FileSystem, HashSet, Layer, Match, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import { ChildProcess } from "effect/process";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusCommandError } from "../Corpus.errors.ts";
@@ -19,7 +20,7 @@ import {
 import * as P from "./ProvenanceIndex.schemas.ts";
 import { appendCorpusJsonLines, resolveWithinRoot, writeCorpusStringFile } from "./Shared.ts";
 import type { ChildProcessSpawner } from "effect/process";
-import type { MagicSniffResult, MailExportTreeIndexResult } from "./ProvenanceIndex.contracts.ts";
+import type { MailExportTreeIndexResult } from "./ProvenanceIndex.schemas.ts";
 
 type Io = FileSystem.FileSystem | Path.Path;
 type ProcessIo = Io | ChildProcessSpawner.ChildProcessSpawner;
@@ -83,21 +84,117 @@ const parseRecipients = (text: string) =>
     const fields = parseOutlookHeaders(block);
     const kind = Str.toLowerCase(fields["Recipient type"] ?? "");
     return P.MailRecipient.make({
-      kind:
-        kind === "to" || kind === "1"
-          ? "to"
-          : kind === "cc" || kind === "2"
-            ? "cc"
-            : kind === "bcc" || kind === "3"
-              ? "bcc"
-              : "unknown",
-      ...(fields["Email address"] === undefined ? {} : { emailAddress: fields["Email address"] }),
-      ...((fields["Recipient display name"] ?? fields["Display name"]) !== undefined
-        ? { displayName: fields["Recipient display name"] ?? fields["Display name"] }
-        : {}),
-      ...(fields["Address type"] === undefined ? {} : { addressType: fields["Address type"] }),
+      kind: Match.value(kind).pipe(
+        Match.when(Match.is("to", "1"), (): P.MailRecipient["kind"] => "to"),
+        Match.when(Match.is("cc", "2"), (): P.MailRecipient["kind"] => "cc"),
+        Match.when(Match.is("bcc", "3"), (): P.MailRecipient["kind"] => "bcc"),
+        Match.orElse((): P.MailRecipient["kind"] => "unknown")
+      ),
+      ...O.getSomesStruct({
+        emailAddress: O.fromUndefinedOr(fields["Email address"]),
+        displayName: O.fromUndefinedOr(fields["Recipient display name"] ?? fields["Display name"]),
+        addressType: O.fromUndefinedOr(fields["Address type"]),
+      }),
     });
   });
+const decodeOutlook = Effect.fn("Provenance.decodeOutlook")(function* (headers: Record<string, string>) {
+  const fields: Record<string, string | number> = {};
+  for (const [key, label] of Object.entries(outlookFields))
+    if (headers[label] !== undefined) fields[key] = headers[label];
+  if (headers.Size !== undefined && /^\d+$/.test(headers.Size)) fields.sizeBytes = Number(headers.Size);
+  return yield* S.decodeEffect(P.OutlookMessageHeaders)(fields).pipe(Effect.mapError(fail));
+});
+const decodeInternet = Effect.fn("Provenance.decodeInternet")(function* (transport: string | undefined) {
+  if (transport === undefined) return undefined;
+  const h = parseInternetHeaders(transport);
+  const selected = {
+    to: h.to ?? [],
+    cc: h.cc ?? [],
+    references: h.references ?? [],
+    ...R.getSomes(
+      R.map(
+        {
+          contentType: "content-type",
+          date: "date",
+          from: "from",
+          inReplyTo: "in-reply-to",
+          messageId: "message-id",
+          subject: "subject",
+        },
+        (label) => O.fromUndefinedOr(h[label]).pipe(O.flatMap(A.head))
+      )
+    ),
+  };
+  return yield* S.decodeEffect(P.InternetMessageHeaders)(selected).pipe(Effect.mapError(fail));
+});
+const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
+  root: string,
+  attachmentDir: string,
+  name: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const attachmentPath = yield* checked(root, path.join(attachmentDir, name));
+  const info = yield* fs.stat(attachmentPath).pipe(Effect.mapError(fail));
+  if (info.type === "File")
+    return O.some(
+      P.MailAttachmentEntry.make({
+        kind: "file",
+        ordinal: Number(/^(\d+)_/.exec(name)?.[1] ?? 0),
+        fileName: name,
+        relativePath: relative(path, root, attachmentPath),
+        sizeBytes: Number(info.size),
+      })
+    );
+  if (info.type === "Directory" && /^Attachment\d+$/.test(name)) {
+    let embeddedMessagePath: PosixPath | undefined;
+    yield* walk(
+      attachmentPath,
+      Effect.fn(function* (nested) {
+        if (embeddedMessagePath === undefined && path.basename(nested) === "OutlookHeaders.txt")
+          embeddedMessagePath = relative(path, root, path.dirname(nested));
+      })
+    );
+    return O.some(
+      P.MailAttachmentEntry.make({
+        kind: "embedded-message",
+        ordinal: Number(Str.replace("Attachment", "")(name)),
+        fileName: name,
+        relativePath: relative(path, root, attachmentPath),
+        sizeBytes: 0,
+        ...(embeddedMessagePath === undefined ? {} : { embeddedMessagePath }),
+      })
+    );
+  }
+  return O.none();
+});
+
+const readAttachments = Effect.fn("Provenance.readAttachments")(function* (root: string, directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const attachmentDir = path.join(directory, "Attachments");
+  if (!(yield* fs.exists(attachmentDir).pipe(Effect.mapError(fail)))) return [];
+  const names = yield* fs.readDirectory(attachmentDir).pipe(Effect.mapError(fail));
+  return A.getSomes(yield* Effect.forEach(names, (name) => readAttachment(root, attachmentDir, name)));
+});
+const readBody = Effect.fn("Provenance.readBody")(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let bodyFileName: string | undefined;
+  let bodySizeBytes: number | undefined;
+  for (const name of ["Message.rtf", "Message.html", "Message.txt"]) {
+    if (yield* fs.exists(path.join(directory, name)).pipe(Effect.mapError(fail))) {
+      bodyFileName = name;
+      bodySizeBytes = Number((yield* fs.stat(path.join(directory, name)).pipe(Effect.mapError(fail))).size);
+      break;
+    }
+  }
+  return O.getSomesStruct({
+    bodyFileName: O.fromUndefinedOr(bodyFileName),
+    bodySizeBytes: O.fromUndefinedOr(bodySizeBytes),
+  });
+});
+
 const indexTree = Effect.fn("Provenance.indexTree")(function* (
   root: string,
   tree: string,
@@ -130,84 +227,23 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
       const artifact = Str.replace(/\.export$/, "")(parts[artifactIndex] ?? "");
       sources = HashSet.add(sources, artifact);
       const headers = parseOutlookHeaders(yield* fs.readFileString(file).pipe(Effect.mapError(fail)));
-      const fields: Record<string, string | number> = {};
-      for (const [key, label] of Object.entries(outlookFields))
-        if (headers[label] !== undefined) fields[key] = headers[label];
-      if (headers.Size !== undefined && /^\d+$/.test(headers.Size)) fields.sizeBytes = Number(headers.Size);
-      const outlook = yield* S.decodeEffect(P.OutlookMessageHeaders)(fields).pipe(Effect.mapError(fail));
+      const outlook = yield* decodeOutlook(headers);
       const transport = yield* readOptional(root, path.join(directory, "InternetHeaders.txt")).pipe(
         Effect.mapError(fail)
       );
-      let internet: P.InternetMessageHeaders | undefined;
-      if (transport !== undefined) {
-        const h = parseInternetHeaders(transport);
-        const selected: Record<string, unknown> = { to: h.to ?? [], cc: h.cc ?? [], references: h.references ?? [] };
-        for (const [key, label] of Object.entries({
-          contentType: "content-type",
-          date: "date",
-          from: "from",
-          inReplyTo: "in-reply-to",
-          messageId: "message-id",
-          subject: "subject",
-        }))
-          if (h[label]?.[0] !== undefined) selected[key] = h[label]?.[0];
-        internet = yield* S.decodeUnknownEffect(P.InternetMessageHeaders)(selected).pipe(Effect.mapError(fail));
-      }
+      const internet = yield* decodeInternet(transport);
       const recipients = parseRecipients(
         (yield* readOptional(root, path.join(directory, "Recipients.txt")).pipe(Effect.mapError(fail))) ?? ""
       );
-      const attachments: Array<P.MailAttachmentEntry> = [];
-      const attachmentDir = path.join(directory, "Attachments");
-      if (yield* fs.exists(attachmentDir).pipe(Effect.mapError(fail))) {
-        for (const name of yield* fs.readDirectory(attachmentDir).pipe(Effect.mapError(fail))) {
-          const attachmentPath = yield* checked(root, path.join(attachmentDir, name));
-          const info = yield* fs.stat(attachmentPath).pipe(Effect.mapError(fail));
-          if (info.type === "File")
-            attachments.push(
-              P.MailAttachmentEntry.make({
-                kind: "file",
-                ordinal: Number(/^(\d+)_/.exec(name)?.[1] ?? 0),
-                fileName: name,
-                relativePath: relative(path, root, attachmentPath),
-                sizeBytes: Number(info.size),
-              })
-            );
-          else if (info.type === "Directory" && /^Attachment\d+$/.test(name)) {
-            let embeddedMessagePath: PosixPath | undefined;
-            yield* walk(
-              attachmentPath,
-              Effect.fn(function* (nested) {
-                if (embeddedMessagePath === undefined && path.basename(nested) === "OutlookHeaders.txt")
-                  embeddedMessagePath = relative(path, root, path.dirname(nested));
-              })
-            );
-            attachments.push(
-              P.MailAttachmentEntry.make({
-                kind: "embedded-message",
-                ordinal: Number(Str.replace("Attachment", "")(name)),
-                fileName: name,
-                relativePath: relative(path, root, attachmentPath),
-                sizeBytes: 0,
-                ...(embeddedMessagePath === undefined ? {} : { embeddedMessagePath }),
-              })
-            );
-          }
-        }
-      }
-      let bodyFileName: string | undefined;
-      let bodySizeBytes: number | undefined;
-      for (const name of ["Message.rtf", "Message.html", "Message.txt"]) {
-        if (yield* fs.exists(path.join(directory, name)).pipe(Effect.mapError(fail))) {
-          bodyFileName = name;
-          bodySizeBytes = Number((yield* fs.stat(path.join(directory, name)).pipe(Effect.mapError(fail))).size);
-          break;
-        }
-      }
+      const attachments = yield* readAttachments(root, directory);
+      const body = yield* readBody(directory);
       const conversation = yield* readOptional(root, path.join(directory, "ConversationIndex.txt")).pipe(
         Effect.mapError(fail)
       );
-      const conversationIndexHex =
-        conversation === undefined ? undefined : /Conversation index:\s*([a-f\d]+)/i.exec(conversation)?.[1];
+      const conversationIndexHex = O.fromUndefinedOr(conversation).pipe(
+        O.flatMap((text) => O.fromNullishOr(/Conversation index:\s*([a-f\d]+)/i.exec(text)?.[1])),
+        O.getOrUndefined
+      );
       const embeddedDepth = A.filter(
         parts,
         (part, i) => /^Attachment\d+$/.test(part) && parts[i - 1] === "Attachments"
@@ -221,10 +257,11 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
         outlook,
         recipients,
         attachments,
-        ...(internet === undefined ? {} : { internet }),
-        ...(bodyFileName === undefined ? {} : { bodyFileName }),
-        ...(bodySizeBytes === undefined ? {} : { bodySizeBytes }),
-        ...(conversationIndexHex === undefined ? {} : { conversationIndexHex }),
+        ...O.getSomesStruct({
+          internet: O.fromUndefinedOr(internet),
+          conversationIndexHex: O.fromUndefinedOr(conversationIndexHex),
+        }),
+        ...body,
       });
       yield* emit(row);
       counts.messageCount++;
@@ -237,7 +274,7 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
     })
   );
   counts.sourceArtifactCount = HashSet.size(sources);
-  return counts;
+  return P.MailExportTreeIndexResult.make(counts);
 });
 
 /**
@@ -304,31 +341,31 @@ const capture = Effect.fn("Provenance.capture")(function* (
     })
   ).pipe(Effect.mapError(fail));
 });
+const sniffBatch = Effect.fn("Provenance.sniffBatch")(function* (batch: ReadonlyArray<string>, command: string) {
+  if (O.isSome(A.findFirst(batch, (file) => /[\r\n\0]/.test(file))))
+    return yield* CorpusCommandError.make({ message: "file(1) batch paths cannot contain line breaks or NUL." });
+  const input = `${A.join(batch, "\n")}\n`;
+  const mime = yield* capture(command, ["-b", "--mime-type", "--print0", "-f", "-"], input);
+  const ext = yield* capture(command, ["-b", "--extension", "--print0", "-f", "-"], input);
+  if (mime.code !== 0 || ext.code !== 0) return yield* CorpusCommandError.make({ message: "file(1) batch failed." });
+  // With -b, file(1) emits verdict lines; --print0 adds filename NULs only without -b.
+  const mimes = Str.split(Str.trim(mime.stdout), /\0?\r?\n/);
+  const extensions = Str.split(Str.trim(ext.stdout), /\0?\r?\n/);
+  if (mimes.length !== batch.length || extensions.length !== batch.length)
+    return yield* CorpusCommandError.make({ message: "file(1) output count does not match input batch." });
+  return A.map(batch, (file, i) =>
+    P.MagicSniffResult.make({
+      path: file,
+      mimeType: Str.trim(mimes[i] ?? ""),
+      extensions: A.filter(
+        Str.split(Str.toLowerCase(Str.trim(extensions[i] ?? "")), "/"),
+        (e) => e !== "???" && Str.isNonEmpty(e)
+      ),
+    })
+  );
+});
 const sniff = Effect.fn("Provenance.sniff")(function* (paths: ReadonlyArray<string>, command: string) {
-  const results: Array<MagicSniffResult> = [];
-  for (const batch of A.chunksOf(paths, 2000)) {
-    if (O.isSome(A.findFirst(batch, (file) => /[\r\n\0]/.test(file))))
-      return yield* CorpusCommandError.make({ message: "file(1) batch paths cannot contain line breaks or NUL." });
-    const input = `${A.join(batch, "\n")}\n`;
-    const mime = yield* capture(command, ["-b", "--mime-type", "--print0", "-f", "-"], input);
-    const ext = yield* capture(command, ["-b", "--extension", "--print0", "-f", "-"], input);
-    if (mime.code !== 0 || ext.code !== 0) return yield* CorpusCommandError.make({ message: "file(1) batch failed." });
-    // With -b, file(1) emits verdict lines; --print0 adds filename NULs only without -b.
-    const mimes = Str.split(Str.trim(mime.stdout), /\0?\r?\n/);
-    const extensions = Str.split(Str.trim(ext.stdout), /\0?\r?\n/);
-    if (mimes.length !== batch.length || extensions.length !== batch.length)
-      return yield* CorpusCommandError.make({ message: "file(1) output count does not match input batch." });
-    for (let i = 0; i < batch.length; i++)
-      results.push({
-        path: batch[i] ?? "",
-        mimeType: Str.trim(mimes[i] ?? ""),
-        extensions: A.filter(
-          Str.split(Str.toLowerCase(Str.trim(extensions[i] ?? "")), "/"),
-          (e) => e !== "???" && Str.isNonEmpty(e)
-        ),
-      });
-  }
-  return results;
+  return A.flatten(yield* Effect.forEach(A.chunksOf(paths, 2000), (batch) => sniffBatch(batch, command)));
 });
 /**
  * Byte-only file identification through `file(1)`.
@@ -496,6 +533,35 @@ export const fallbackMagicExtensions: {
   return remnant === "" ? table : A.filter(table, (extension) => Str.startsWith(remnant)(extension));
 });
 
+const completeAttachmentName = (
+  prefix: string,
+  rest: string,
+  dot: number,
+  remnant: string,
+  candidates: ReadonlyArray<string>
+) => {
+  if (remnant === "")
+    return {
+      flag: P.AttachmentRepairFlag.Enum["extension-fully-eaten"],
+      proposedFileName: `${prefix}${Str.replace(/\.$/, "")(rest)}.${candidates[0]}`,
+    };
+  const completions = A.filter(candidates, (extension) => Str.startsWith(remnant)(extension));
+  const exact = A.findFirst(completions, (extension) => extension.length - remnant.length === prefix.length);
+  const candidate = exact.pipe(O.orElse(() => A.head(completions)));
+  const flag = Match.value([O.isSome(exact), O.isSome(candidate)]).pipe(
+    Match.when([true, Match.any], () => P.AttachmentRepairFlag.Enum["exact-completion"]),
+    Match.when([false, true], () => P.AttachmentRepairFlag.Enum["inexact-completion"]),
+    Match.orElse(() => P.AttachmentRepairFlag.Enum["remnant-mismatch"])
+  );
+  return {
+    flag,
+    proposedFileName: candidate.pipe(
+      O.map((extension) => `${prefix}${rest.slice(0, dot)}.${extension}`),
+      O.getOrElse(() => `${prefix}${rest}.${candidates[0]}`)
+    ),
+  };
+};
+
 const proposal = (name: string, mime: string, extensions: ReadonlyArray<string>) => {
   const candidates = A.map(extensions, Str.toLowerCase);
   const match = /^(\d+_)(.*)$/.exec(name);
@@ -503,23 +569,18 @@ const proposal = (name: string, mime: string, extensions: ReadonlyArray<string>)
   const rest = match?.[2] ?? name;
   const dot = rest.lastIndexOf(".");
   const remnant = dot < 0 ? "" : Str.toLowerCase(rest.slice(dot + 1));
-  let flag: typeof P.AttachmentRepairFlag.Type;
-  let proposedFileName: string | undefined;
-  if (match === null) flag = "no-ordinal-prefix";
-  else if (mime === "application/octet-stream" || candidates.length === 0) flag = "ambiguous-mime";
-  else if (A.contains(candidates, remnant)) flag = "already-consistent";
-  else if (remnant === "") {
-    flag = "extension-fully-eaten";
-    proposedFileName = `${prefix}${Str.replace(/\.$/, "")(rest)}.${candidates[0]}`;
-  } else {
-    const completions = A.filter(candidates, (extension) => Str.startsWith(remnant)(extension));
-    const exact = completions.find((extension) => extension.length - remnant.length === prefix.length);
-    const candidate = exact ?? completions[0];
-    flag =
-      exact !== undefined ? "exact-completion" : candidate !== undefined ? "inexact-completion" : "remnant-mismatch";
-    proposedFileName =
-      candidate === undefined ? `${prefix}${rest}.${candidates[0]}` : `${prefix}${rest.slice(0, dot)}.${candidate}`;
-  }
+  const { flag, proposedFileName } = Match.value(match).pipe(
+    Match.when(null, () => ({ flag: P.AttachmentRepairFlag.Enum["no-ordinal-prefix"], proposedFileName: undefined })),
+    Match.when(
+      () => mime === "application/octet-stream" || candidates.length === 0,
+      () => ({ flag: P.AttachmentRepairFlag.Enum["ambiguous-mime"], proposedFileName: undefined })
+    ),
+    Match.when(
+      () => A.contains(candidates, remnant),
+      () => ({ flag: P.AttachmentRepairFlag.Enum["already-consistent"], proposedFileName: undefined })
+    ),
+    Match.orElse(() => completeAttachmentName(prefix, rest, dot, remnant, candidates))
+  );
   return {
     clipLength: prefix.length,
     decision:
@@ -571,6 +632,22 @@ const metadataVersion = Effect.fn("Provenance.metadataVersion")(function* (comma
   if (result.code !== 0) return yield* CorpusCommandError.make({ message: "exiftool version lookup failed." });
   return Str.trim(result.stdout);
 });
+const selectMetadata = (tags: typeof ExiftoolTagSet.Type | undefined) => {
+  const source = tags ?? {};
+  const fields = R.getSomes(
+    R.map(metadataFields, (keys, key) =>
+      A.findFirst(keys, (candidate) => source[candidate] !== undefined).pipe(
+        O.flatMap((tag) => normalizeTag(source[tag])),
+        O.flatMap(
+          (text): O.Option<string | number> =>
+            key === "pageCount" ? S.decodeOption(S.Natural)(Number(text)) : O.some(text)
+        )
+      )
+    )
+  );
+  const retained = R.filter(source, (_, key) => !/^(System|File):/.test(key) && key !== "SourceFile");
+  return { fields, retained };
+};
 const readBatch = Effect.fn("Provenance.readBatch")(function* (
   command: string,
   version: string,
@@ -598,24 +675,7 @@ const readBatch = Effect.fn("Provenance.readBatch")(function* (
           const errorTag = tags?.["ExifTool:Error"] ?? tags?.Error;
           const error =
             tags === undefined ? "exiftool returned no row for file" : O.getOrUndefined(normalizeTag(errorTag));
-          const fields: Record<string, unknown> = {};
-          if (tags !== undefined)
-            for (const [key, keys] of Object.entries(metadataFields)) {
-              const tag = keys.find((candidate) => tags[candidate] !== undefined);
-              if (tag === undefined) continue;
-              const value = tags[tag];
-              if (key === "pageCount") {
-                const count = Number(O.getOrElse(normalizeTag(value), () => "NaN"));
-                if (Number.isSafeInteger(count) && count >= 0) fields[key] = count;
-              } else {
-                const text = normalizeTag(value);
-                if (O.isSome(text)) fields[key] = text.value;
-              }
-            }
-          const retained: Record<string, unknown> = {};
-          if (tags !== undefined)
-            for (const [key, value] of Object.entries(tags))
-              if (!/^(System|File):/.test(key) && key !== "SourceFile") retained[key] = value;
+          const { fields, retained } = selectMetadata(tags);
           return P.MetadataCensusRecord.make({
             engine: "exiftool",
             engineVersion: version,
@@ -746,6 +806,144 @@ const renameChecked = Effect.fn("Provenance.renameChecked")(function* (
   return P.AttachmentRepairOutcome.Enum.renamed;
 }, Effect.mapError(fail));
 
+const undoAttachments = Effect.fn("Provenance.undoAttachments")(function* (
+  options: P.AttachmentRepairOptions,
+  _output: string,
+  journalPath: string,
+  runId: string
+) {
+  const path = yield* Path.Path;
+  const journal = yield* AttachmentRepairJournal;
+  const byFlag: Record<string, number> = {};
+  const byMime: Record<string, number> = {};
+  const byOutcome: Record<string, number> = {};
+  let scannedFiles = 0;
+  let proposedRenames = 0;
+
+  if (options.journalPath === undefined) return yield* CorpusCommandError.make({ message: "Undo requires --journal." });
+  const inputPath = yield* checked(options.corpusRoot, path.resolve(options.corpusRoot, options.journalPath));
+  const rows = yield* journal.readAll(inputPath);
+  for (const row of A.reverse(rows)) {
+    if (row.outcome !== "renamed") continue;
+    scannedFiles++;
+    proposedRenames++;
+    bump(byMime, row.mimeType);
+    const result = yield* renameChecked(
+      options.corpusRoot,
+      path.join(options.corpusRoot, row.toPath),
+      path.join(options.corpusRoot, row.fromPath),
+      row.sizeBytes
+    );
+    const outcome = result === "renamed" ? "reverted" : result;
+    bump(byOutcome, outcome);
+    yield* journal.append(
+      journalPath,
+      P.AttachmentRepairJournalRow.make({ ...row, journalRunId: runId, recordedAt: yield* now, outcome })
+    );
+  }
+  return { scannedFiles, proposedRenames, byFlag, byMime, byOutcome };
+});
+
+const repairProposal = (
+  path: Path.Path,
+  root: string,
+  tree: string,
+  verdict: P.MagicSniffResult,
+  observation: FileSystem.File.Info
+) =>
+  P.AttachmentRepairProposal.make({
+    ...proposeAttachmentRepair(
+      path.basename(verdict.path),
+      verdict.mimeType,
+      verdict.extensions.length > 0
+        ? verdict.extensions
+        : fallbackMagicExtensions(verdict.mimeType, path.basename(verdict.path))
+    ),
+    tree,
+    relativePath: relative(path, root, verdict.path),
+    sizeBytes: Number(observation.size),
+  });
+const applyProposal = Effect.fn("Provenance.applyProposal")(function* (
+  root: string,
+  row: P.AttachmentRepairProposal,
+  observation: FileSystem.File.Info,
+  journalPath: string,
+  runId: string
+) {
+  const path = yield* Path.Path;
+  const journal = yield* AttachmentRepairJournal;
+  if (row.proposedFileName === undefined) return yield* CorpusCommandError.make({ message: "Missing proposed name." });
+  if (/[/\\\0]/.test(row.proposedFileName))
+    return yield* CorpusCommandError.make({ message: "Unsafe magic extension proposal." });
+  const target = path.join(path.dirname(path.join(root, row.relativePath)), row.proposedFileName);
+  const outcome = yield* renameChecked(root, path.join(root, row.relativePath), target, row.sizeBytes);
+  yield* journal.append(
+    journalPath,
+    P.AttachmentRepairJournalRow.make({
+      fromPath: row.relativePath,
+      toPath: relative(path, root, target),
+      tree: row.tree,
+      mimeType: row.mimeType,
+      sizeBytes: row.sizeBytes,
+      mtimeEpoch: epoch(observation),
+      journalRunId: runId,
+      recordedAt: yield* now,
+      outcome,
+    })
+  );
+  return outcome;
+});
+
+const scanAttachments = Effect.fn("Provenance.scanAttachments")(function* (
+  options: P.AttachmentRepairOptions,
+  output: string,
+  journalPath: string,
+  runId: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const byFlag: Record<string, number> = {};
+  const byMime: Record<string, number> = {};
+  const byOutcome: Record<string, number> = {};
+  let scannedFiles = 0;
+  let proposedRenames = 0;
+
+  const sniffer = yield* AttachmentMagicSniffer;
+  for (const tree of options.trees) {
+    const root = yield* childrenRoot(options.corpusRoot, tree);
+    const files = yield* attachmentFiles(root);
+    const proposalFile = path.join(output, `proposals-${tree}.jsonl`);
+    yield* writeCorpusStringFile(proposalFile, "");
+    yield* Effect.forEach(
+      A.chunksOf(files, 2000),
+      Effect.fn("Provenance.scanBatch")(function* (batch) {
+        const observations = yield* Effect.forEach(batch, (file) => fs.stat(file).pipe(Effect.mapError(fail)));
+        const verdicts = yield* sniffer.sniff(batch);
+        yield* Effect.forEach(
+          verdicts,
+          Effect.fn("Provenance.scanVerdict")(function* (verdict, i) {
+            const observation = observations[i];
+            if (verdict === undefined || observation === undefined) return;
+            const row = repairProposal(path, options.corpusRoot, tree, verdict, observation);
+            scannedFiles++;
+            bump(byMime, row.mimeType);
+            for (const flag of row.flags) bump(byFlag, flag);
+            yield* appendCorpusJsonLines(proposalFile, [
+              yield* P.AttachmentRepairProposalJson.encode(row).pipe(Effect.mapError(fail)),
+            ]);
+            if (row.decision !== "rename" || row.proposedFileName === undefined) return;
+            proposedRenames++;
+            if (options.mode !== "apply") return;
+            const outcome = yield* applyProposal(options.corpusRoot, row, observation, journalPath, runId);
+            bump(byOutcome, outcome);
+          })
+        );
+      })
+    );
+  }
+  return { scannedFiles, proposedRenames, byFlag, byMime, byOutcome };
+});
+
 /**
  * Plan, apply, or undo byte-signature attachment extension repairs.
  * **Example** (Build a plan)
@@ -761,9 +959,7 @@ const renameChecked = Effect.fn("Provenance.renameChecked")(function* (
 export const repairAttachmentExtensions = Effect.fn("Provenance.repairAttachmentExtensions")(function* (
   options: P.AttachmentRepairOptions
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const journal = yield* AttachmentRepairJournal;
   const output = yield* outputRoot(options.corpusRoot, options.outputDir);
   const generatedAt = yield* now;
   const runId = Str.replaceAll(/[:.]/g, "-")(generatedAt);
@@ -773,92 +969,9 @@ export const repairAttachmentExtensions = Effect.fn("Provenance.repairAttachment
       : options.journalPath === undefined
         ? path.join(output, `attachments-${runId}.journal.jsonl`)
         : yield* checked(options.corpusRoot, path.resolve(options.corpusRoot, options.journalPath));
-  const byFlag: Record<string, number> = {};
-  const byMime: Record<string, number> = {};
-  const byOutcome: Record<string, number> = {};
-  let scannedFiles = 0;
-  let proposedRenames = 0;
-  if (options.mode === "undo") {
-    if (options.journalPath === undefined)
-      return yield* CorpusCommandError.make({ message: "Undo requires --journal." });
-    const inputPath = yield* checked(options.corpusRoot, path.resolve(options.corpusRoot, options.journalPath));
-    const rows = yield* journal.readAll(inputPath);
-    for (const row of A.reverse(rows)) {
-      if (row.outcome !== "renamed") continue;
-      scannedFiles++;
-      proposedRenames++;
-      bump(byMime, row.mimeType);
-      const result = yield* renameChecked(
-        options.corpusRoot,
-        path.join(options.corpusRoot, row.toPath),
-        path.join(options.corpusRoot, row.fromPath),
-        row.sizeBytes
-      );
-      const outcome = result === "renamed" ? "reverted" : result;
-      bump(byOutcome, outcome);
-      yield* journal.append(
-        journalPath,
-        P.AttachmentRepairJournalRow.make({ ...row, journalRunId: runId, recordedAt: yield* now, outcome })
-      );
-    }
-  } else {
-    const sniffer = yield* AttachmentMagicSniffer;
-    for (const tree of options.trees) {
-      const root = yield* childrenRoot(options.corpusRoot, tree);
-      const files = yield* attachmentFiles(root);
-      const proposalFile = path.join(output, `proposals-${tree}.jsonl`);
-      yield* writeCorpusStringFile(proposalFile, "");
-      for (const batch of A.chunksOf(files, 2000)) {
-        const observations = yield* Effect.forEach(batch, (file) => fs.stat(file).pipe(Effect.mapError(fail)));
-        const verdicts = yield* sniffer.sniff(batch);
-        for (let i = 0; i < verdicts.length; i++) {
-          const verdict = verdicts[i];
-          const observation = observations[i];
-          if (verdict === undefined || observation === undefined) continue;
-          const row = P.AttachmentRepairProposal.make({
-            ...proposeAttachmentRepair(
-              path.basename(verdict.path),
-              verdict.mimeType,
-              verdict.extensions.length > 0
-                ? verdict.extensions
-                : fallbackMagicExtensions(verdict.mimeType, path.basename(verdict.path))
-            ),
-            tree,
-            relativePath: relative(path, options.corpusRoot, verdict.path),
-            sizeBytes: Number(observation.size),
-          });
-          scannedFiles++;
-          bump(byMime, row.mimeType);
-          for (const flag of row.flags) bump(byFlag, flag);
-          yield* appendCorpusJsonLines(proposalFile, [
-            yield* P.AttachmentRepairProposalJson.encode(row).pipe(Effect.mapError(fail)),
-          ]);
-          if (row.decision !== "rename" || row.proposedFileName === undefined) continue;
-          proposedRenames++;
-          if (options.mode !== "apply") continue;
-          if (/[/\\\0]/.test(row.proposedFileName))
-            return yield* CorpusCommandError.make({ message: "Unsafe magic extension proposal." });
-          const target = path.join(path.dirname(verdict.path), row.proposedFileName);
-          const outcome = yield* renameChecked(options.corpusRoot, verdict.path, target, row.sizeBytes);
-          bump(byOutcome, outcome);
-          yield* journal.append(
-            journalPath,
-            P.AttachmentRepairJournalRow.make({
-              fromPath: row.relativePath,
-              toPath: relative(path, options.corpusRoot, target),
-              tree,
-              mimeType: row.mimeType,
-              sizeBytes: row.sizeBytes,
-              mtimeEpoch: epoch(observation),
-              journalRunId: runId,
-              recordedAt: yield* now,
-              outcome,
-            })
-          );
-        }
-      }
-    }
-  }
+  const { scannedFiles, proposedRenames, byFlag, byMime, byOutcome } = yield* (
+    options.mode === "undo" ? undoAttachments : scanAttachments
+  )(options, output, journalPath, runId);
   const summary = P.AttachmentRepairSummary.make({
     mode: options.mode,
     trees: options.trees,
@@ -874,6 +987,23 @@ export const repairAttachmentExtensions = Effect.fn("Provenance.repairAttachment
     yield* P.AttachmentRepairSummaryJson.encode(summary).pipe(Effect.mapError(fail))
   );
   return summary;
+});
+
+const writeMetadataBatches = Effect.fn("Provenance.writeMetadataBatches")(function* (
+  file: string,
+  batches: ReadonlyArray<ReadonlyArray<P.MetadataCensusRecord>>,
+  counts: { fileCount: number; errorCount: number; withAuthor: number; withCreateDate: number },
+  byFileType: Record<string, number>
+) {
+  for (const batch of batches)
+    for (const row of batch) {
+      counts.fileCount++;
+      counts.errorCount += Number(row.status === "error");
+      counts.withAuthor += Number(row.fields.author !== undefined);
+      counts.withCreateDate += Number(row.fields.createDate !== undefined);
+      bump(byFileType, row.fields.fileType ?? "unknown");
+      yield* appendCorpusJsonLines(file, [yield* P.MetadataCensusRecordJson.encode(row).pipe(Effect.mapError(fail))]);
+    }
 });
 
 /**
@@ -900,10 +1030,7 @@ export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(funct
   yield* writeCorpusStringFile(file, "");
   const engineVersion = yield* reader.version;
   const byFileType: Record<string, number> = {};
-  let fileCount = 0;
-  let errorCount = 0;
-  let withAuthor = 0;
-  let withCreateDate = 0;
+  const counts = { fileCount: 0, errorCount: 0, withAuthor: 0, withCreateDate: 0 };
   let seen = HashSet.empty<string>();
   for (const label of options.roots) {
     const root = yield* checked(options.corpusRoot, path.resolve(options.corpusRoot, label));
@@ -924,28 +1051,15 @@ export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(funct
       const batches = yield* Effect.forEach(wave, (batch) => reader.readBatch(options.corpusRoot, label, batch), {
         concurrency: options.concurrency,
       });
-      for (const batch of batches)
-        for (const row of batch) {
-          fileCount++;
-          errorCount += Number(row.status === "error");
-          withAuthor += Number(row.fields.author !== undefined);
-          withCreateDate += Number(row.fields.createDate !== undefined);
-          bump(byFileType, row.fields.fileType ?? "unknown");
-          yield* appendCorpusJsonLines(file, [
-            yield* P.MetadataCensusRecordJson.encode(row).pipe(Effect.mapError(fail)),
-          ]);
-        }
+      yield* writeMetadataBatches(file, batches, counts, byFileType);
     }
   }
   const summary = P.MetadataCensusSummary.make({
     engineVersion,
     roots: options.roots,
     generatedAt: yield* now,
-    fileCount,
-    okCount: fileCount - errorCount,
-    errorCount,
-    withAuthor,
-    withCreateDate,
+    ...counts,
+    okCount: counts.fileCount - counts.errorCount,
     byFileType,
   });
   yield* writeCorpusStringFile(

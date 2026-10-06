@@ -1017,3 +1017,62 @@ export class MetadataCensusOptions extends S.Class<MetadataCensusOptions>($I`Met
     description: "Corpus root, roots to scan, exiftool binary, batch size, concurrency, and output override.",
   })
 ) {}
+
+/**
+ * Walk-level counters for one exported mail tree.
+ *
+ * **Example** (Summarize a walk)
+ *
+ * ```ts
+ * import { MailExportTreeIndexResult } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.schemas"
+ *
+ * const result = MailExportTreeIndexResult.make({ attachmentBytes: 0, attachmentCount: 0, embeddedMessageCount: 0, internetHeaderCount: 0, messageCount: 0, messageIdCount: 0, recipientCount: 0, sourceArtifactCount: 0 })
+ * console.log(result.attachmentBytes)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MailExportTreeIndexResult extends S.Class<MailExportTreeIndexResult>($I`MailExportTreeIndexResult`)(
+  {
+    attachmentBytes: S.Natural,
+    attachmentCount: S.Natural,
+    embeddedMessageCount: S.Natural,
+    internetHeaderCount: S.Natural,
+    messageCount: S.Natural,
+    messageIdCount: S.Natural,
+    recipientCount: S.Natural,
+    sourceArtifactCount: S.Natural,
+  },
+  $I.annote("MailExportTreeIndexResult", {
+    title: "Mail Export Tree Index Result",
+    description: "Walk-level counters for one exported mail tree.",
+  })
+) {}
+
+/**
+ * Byte-signature verdict for one file from file(1).
+ *
+ * **Example** (Construct a verdict)
+ *
+ * ```ts
+ * import { MagicSniffResult } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.schemas"
+ *
+ * const result = MagicSniffResult.make({ path: "report.p", mimeType: "application/pdf", extensions: [] })
+ * console.log(result.path)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MagicSniffResult extends S.Class<MagicSniffResult>($I`MagicSniffResult`)(
+  {
+    path: S.String,
+    mimeType: S.String,
+    extensions: S.Array(S.String),
+  },
+  $I.annote("MagicSniffResult", {
+    title: "Magic Sniff Result",
+    description: "Byte-signature verdict for one file from file(1).",
+  })
+) {}

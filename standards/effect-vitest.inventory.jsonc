@@ -43076,6 +43076,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The audit-timestamp regression is the only test in its independent fresh Cuid layer block. It owns its deterministic TestClock and advances one minute between creation and rename. All exact createdAt/updatedAt assertions remain; no other test or forked task shares this block clock."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:21:@effect/platform-bun@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
+      "line": 21,
+      "endLine": 21,
+      "symbol": "@effect/platform-bun",
+      "occurrence": "v2:9e77cd79daa758d2a326930d4f4108c2b730c00f6d783ae85924e284823dafba",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { BunServices } from \"@effect/platform-bun\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:22:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
+      "line": 22,
+      "endLine": 22,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     }
   ]
 }

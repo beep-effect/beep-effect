@@ -108,6 +108,109 @@ const archivePreflightRoundTrip = schemaRoundTripLaw(ArchiveLedgerRecord.cases["
 const familySummaryRoundTrip = schemaRoundTripLaw(TransformationLedgerRecord.cases["family-run-summary"]);
 const verifyOptionsRoundTrip = schemaRoundTripLaw(RestorationVerifyOptions);
 
+const makeSealedLedgerVariants = Effect.fn("CorpusTest.makeSealedLedgerVariants")(function* (
+  records: ReadonlyArray<ArchiveLedgerRecord>,
+  seal: (typeof ArchiveLedgerRecord.cases)["archive-manifest-seal"]["Type"],
+  terminal:
+    | (typeof ArchiveLedgerRecord.cases)["archive-file-pass"]["Type"]
+    | (typeof ArchiveLedgerRecord.cases)["archive-directory-pass"]["Type"],
+  preflight: (typeof ArchiveLedgerRecord.cases)["archive-preflight"]["Type"]
+) {
+  const terminalRows = A.filter(
+    records,
+    (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
+  );
+  const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
+  const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (unsealed: ReadonlyArray<ArchiveLedgerRecord>) {
+    const encoded = yield* Effect.forEach(unsealed, encodeArchiveLedgerRecordJson);
+    const manifestSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encoded, "\n")}\n`))));
+    return A.append(
+      unsealed,
+      ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
+        ...seal,
+        manifestSha256,
+        recordCount: S.Natural.make(unsealed.length),
+      })
+    );
+  });
+  const duplicateTerminal = yield* reseal(A.append(withoutSeal, terminal));
+  const withoutTerminal = yield* reseal(A.filter(withoutSeal, (record) => record !== terminal));
+  const withoutInheritedLoss = yield* reseal(A.filter(withoutSeal, (record) => record.recordType !== "inherited-loss"));
+  const duplicatePreflight = yield* reseal(A.append(withoutSeal, preflight));
+  const unapprovedPreflight = yield* reseal(
+    A.map(withoutSeal, (record) =>
+      record === preflight
+        ? ArchiveLedgerRecord.cases["archive-preflight"].make({ ...preflight, approved: false })
+        : record
+    )
+  );
+  const withFailure = yield* reseal(
+    A.append(
+      withoutSeal,
+      ArchiveLedgerRecord.cases["archive-failure"].make({
+        approved: false,
+        failureKind: "unreadable",
+        message: "synthetic sealed failure",
+        objectId: terminal.objectId,
+        recordedAt: terminal.recordedAt,
+        recordType: "archive-failure",
+        runId: terminal.runId,
+        schemaVersion: terminal.schemaVersion,
+        sourceLabel: terminal.sourceLabel,
+        sourceRelativePath: terminal.sourceRelativePath,
+      })
+    )
+  );
+  const firstTerminal = terminalRows[0];
+  const secondTerminal = terminalRows[1];
+  if (firstTerminal === undefined || secondTerminal === undefined) {
+    return yield* Effect.die("Expected at least two archive terminal fixture rows.");
+  }
+  const duplicateDestinationTerminal =
+    secondTerminal.recordType === "archive-file-pass"
+      ? ArchiveLedgerRecord.cases["archive-file-pass"].make({
+          ...secondTerminal,
+          destinationRelativePath: firstTerminal.destinationRelativePath,
+        })
+      : ArchiveLedgerRecord.cases["archive-directory-pass"].make({
+          ...secondTerminal,
+          destinationRelativePath: firstTerminal.destinationRelativePath,
+        });
+  const duplicateDestination = yield* reseal(
+    A.map(withoutSeal, (record) => (record === secondTerminal ? duplicateDestinationTerminal : record))
+  );
+  const firstInheritedLoss = A.findFirst(withoutSeal, (record) => record.recordType === "inherited-loss");
+  if (O.isNone(firstInheritedLoss) || firstInheritedLoss.value.recordType !== "inherited-loss") {
+    return yield* Effect.die("Expected an inherited-loss fixture row.");
+  }
+  const duplicateInheritedLossClass = yield* reseal(A.append(withoutSeal, firstInheritedLoss.value));
+  const withOperatorDeletedClass = yield* reseal(
+    A.append(
+      withoutSeal,
+      ArchiveLedgerRecord.cases["inherited-loss"].make({
+        ...firstInheritedLoss.value,
+        category: "operator-deleted-noise",
+        count: S.Natural.make(1818),
+      })
+    )
+  );
+  const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
+    withoutSeal,
+    A.append(records, seal),
+    A.append(A.prepend(withoutSeal, seal), terminal),
+    duplicateTerminal,
+    withoutTerminal,
+    withoutInheritedLoss,
+    duplicateInheritedLossClass,
+    duplicatePreflight,
+    unapprovedPreflight,
+    withFailure,
+    duplicateDestination,
+  ];
+
+  return { variants, withOperatorDeletedClass };
+});
+
 it.layer(testLayer, { timeout: "30 seconds" })("corpus evidence schemas", (it) => {
   it.effect.prop("round-trips schema-derived collector manifest", [CollectorManifestRecord], collectorRoundTrip, {
     arbitrary: fcRuns(10),
@@ -3341,10 +3444,6 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         records,
         (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
       );
-      const terminalRows = A.filter(
-        records,
-        (record) => record.recordType === "archive-file-pass" || record.recordType === "archive-directory-pass"
-      );
       const fileTerminal = A.findFirst(records, (record) => record.recordType === "archive-file-pass");
       const directoryTerminal = A.findFirst(records, (record) => record.recordType === "archive-directory-pass");
       const preflight = A.findFirst(records, (record) => record.recordType === "archive-preflight");
@@ -3424,97 +3523,12 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       (yield* RA.requireArchivePayloadOwned(archiveRoot, RA.indexArchiveTerminals([failureTerminal]).terminals).pipe(
         Effect.exit
       )).pipe(Exit.isFailure, assertTrue);
-      const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
-      const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (
-        unsealed: ReadonlyArray<ArchiveLedgerRecord>
-      ) {
-        const encoded = yield* Effect.forEach(unsealed, encodeArchiveLedgerRecordJson);
-        const manifestSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encoded, "\n")}\n`))));
-        return A.append(
-          unsealed,
-          ArchiveLedgerRecord.cases["archive-manifest-seal"].make({
-            ...seal.value,
-            manifestSha256,
-            recordCount: S.Natural.make(unsealed.length),
-          })
-        );
-      });
-      const duplicateTerminal = yield* reseal(A.append(withoutSeal, terminal.value));
-      const withoutTerminal = yield* reseal(A.filter(withoutSeal, (record) => record !== terminal.value));
-      const withoutInheritedLoss = yield* reseal(
-        A.filter(withoutSeal, (record) => record.recordType !== "inherited-loss")
+      const { variants, withOperatorDeletedClass } = yield* makeSealedLedgerVariants(
+        records,
+        seal.value,
+        terminal.value,
+        preflight.value
       );
-      const duplicatePreflight = yield* reseal(A.append(withoutSeal, preflight.value));
-      const unapprovedPreflight = yield* reseal(
-        A.map(withoutSeal, (record) =>
-          record === preflight.value
-            ? ArchiveLedgerRecord.cases["archive-preflight"].make({ ...preflight.value, approved: false })
-            : record
-        )
-      );
-      const withFailure = yield* reseal(
-        A.append(
-          withoutSeal,
-          ArchiveLedgerRecord.cases["archive-failure"].make({
-            approved: false,
-            failureKind: "unreadable",
-            message: "synthetic sealed failure",
-            objectId: terminal.value.objectId,
-            recordedAt: terminal.value.recordedAt,
-            recordType: "archive-failure",
-            runId: terminal.value.runId,
-            schemaVersion: terminal.value.schemaVersion,
-            sourceLabel: terminal.value.sourceLabel,
-            sourceRelativePath: terminal.value.sourceRelativePath,
-          })
-        )
-      );
-      const firstTerminal = terminalRows[0];
-      const secondTerminal = terminalRows[1];
-      if (firstTerminal === undefined || secondTerminal === undefined) {
-        return yield* Effect.die("Expected at least two archive terminal fixture rows.");
-      }
-      const duplicateDestinationTerminal =
-        secondTerminal.recordType === "archive-file-pass"
-          ? ArchiveLedgerRecord.cases["archive-file-pass"].make({
-              ...secondTerminal,
-              destinationRelativePath: firstTerminal.destinationRelativePath,
-            })
-          : ArchiveLedgerRecord.cases["archive-directory-pass"].make({
-              ...secondTerminal,
-              destinationRelativePath: firstTerminal.destinationRelativePath,
-            });
-      const duplicateDestination = yield* reseal(
-        A.map(withoutSeal, (record) => (record === secondTerminal ? duplicateDestinationTerminal : record))
-      );
-      const firstInheritedLoss = A.findFirst(withoutSeal, (record) => record.recordType === "inherited-loss");
-      if (O.isNone(firstInheritedLoss) || firstInheritedLoss.value.recordType !== "inherited-loss") {
-        return yield* Effect.die("Expected an inherited-loss fixture row.");
-      }
-      const duplicateInheritedLossClass = yield* reseal(A.append(withoutSeal, firstInheritedLoss.value));
-      const withOperatorDeletedClass = yield* reseal(
-        A.append(
-          withoutSeal,
-          ArchiveLedgerRecord.cases["inherited-loss"].make({
-            ...firstInheritedLoss.value,
-            category: "operator-deleted-noise",
-            count: S.Natural.make(1818),
-          })
-        )
-      );
-      const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
-        withoutSeal,
-        A.append(records, seal.value),
-        A.append(A.prepend(withoutSeal, seal.value), terminal.value),
-        duplicateTerminal,
-        withoutTerminal,
-        withoutInheritedLoss,
-        duplicateInheritedLossClass,
-        duplicatePreflight,
-        unapprovedPreflight,
-        withFailure,
-        duplicateDestination,
-      ];
 
       yield* Effect.forEach(
         variants,
