@@ -15217,9 +15217,9 @@
     },
     "@beep/m365-mcp": {
       "path": "packages/drivers/m365-mcp",
-      "lines": 90.43,
-      "statements": 90.7,
-      "branches": 89.13,
+      "lines": 90.47,
+      "statements": 90.74,
+      "branches": 89.36,
       "functions": 79.86,
       "uncovered": {
         "lines": 42,
@@ -15337,8 +15337,8 @@
           }
         },
         "packages/drivers/m365-mcp/src/OutboxStoredAttachments.ts": {
-          "lines": 97.22,
-          "statements": 97.22,
+          "lines": 97.36,
+          "statements": 97.36,
           "branches": 100,
           "functions": 90,
           "uncovered": {
