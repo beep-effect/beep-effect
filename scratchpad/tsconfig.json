@@ -84,6 +84,9 @@
     },
     {
       "path": "../packages/tooling/library/repo-utils/tsconfig.json"
+    },
+    {
+      "path": "../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }
