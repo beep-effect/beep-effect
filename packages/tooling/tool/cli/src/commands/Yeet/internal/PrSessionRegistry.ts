@@ -11,11 +11,16 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Config, Console, Context, Effect, FileSystem, Layer, Path, Ref, Runtime } from "effect";
+import { Console, Context, Effect, FileSystem, Layer, Path, Ref, Runtime } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  emptyWhenNotFound,
+  repositoryJsonLinesFileName,
+  resolveWorkstationStateDir,
+} from "../../../internal/state/WorkstationState.ts";
 import { PrSessionRecord } from "./Provenance.ts";
 import type { PlatformError } from "effect";
 import type { PrNumber, PrRepository } from "./Provenance.ts";
@@ -185,15 +190,6 @@ const mapPlatformError = (cause: PlatformError.PlatformError): PrSessionRegistry
     cause,
   });
 
-const resolveRoot = Effect.fn("PrSessionRegistry.resolveRoot")(function* () {
-  const configured = yield* Config.option(Config.String("BEEP_YEET_STATE_ROOT"));
-  if (O.isSome(configured) && Str.isNonEmpty(Str.trim(configured.value))) return configured.value;
-  const xdg = yield* Config.option(Config.String("XDG_STATE_HOME"));
-  if (O.isSome(xdg) && Str.isNonEmpty(Str.trim(xdg.value))) return `${xdg.value}/beep/yeet`;
-  const home = yield* Config.String("HOME");
-  return `${home}/.local/state/beep/yeet`;
-});
-
 /**
  * Return the registry file name for a repository.
  *
@@ -210,8 +206,7 @@ const resolveRoot = Effect.fn("PrSessionRegistry.resolveRoot")(function* () {
  * @category formatting
  * @since 0.0.0
  */
-export const prSessionRegistryFileName = (repository: PrRepository): string =>
-  `${repository.host}__${repository.owner}__${repository.name}.jsonl`;
+export const prSessionRegistryFileName: (repository: PrRepository) => string = repositoryJsonLinesFileName;
 
 /**
  * Construct the filesystem-backed registry service.
@@ -231,7 +226,7 @@ export const prSessionRegistryFileName = (repository: PrRepository): string =>
 export const makePrSessionRegistryLive = Effect.fn("PrSessionRegistry.makeLive")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* resolveRoot();
+  const root = yield* resolveWorkstationStateDir({ override: "BEEP_YEET_STATE_ROOT", store: "yeet" });
   const directory = path.join(root, "pr-sessions");
   const fileFor = (repository: PrRepository): string => path.join(directory, prSessionRegistryFileName(repository));
   const list = Effect.fn("PrSessionRegistry.list")((repository: PrRepository) =>
@@ -243,11 +238,7 @@ export const makePrSessionRegistryLive = Effect.fn("PrSessionRegistry.makeLive")
           : Effect.void
       ),
       Effect.map((result) => result.records),
-      Effect.catchTag("PlatformError", (error) =>
-        error.reason._tag === "NotFound"
-          ? Effect.succeed(A.empty<PrSessionRecord>())
-          : Effect.fail(mapPlatformError(error))
-      )
+      emptyWhenNotFound(mapPlatformError)
     )
   );
   return PrSessionRegistry.of({

@@ -16,4 +16,5 @@ export * from "../internal/quality/TestTypecheckCoverage.ts";
 export * from "../internal/schema/JsonCodec.ts";
 export * from "../internal/schema/TextCodec.ts";
 export * from "../internal/schema/Uuid.ts";
+export * from "../internal/state/WorkstationState.ts";
 export * from "../internal/stats/NearestRank.ts";

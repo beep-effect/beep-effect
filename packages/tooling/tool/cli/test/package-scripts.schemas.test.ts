@@ -9,6 +9,7 @@ import {
   TaskScriptRule,
   taskScriptRules,
 } from "@beep/repo-cli/test/PackageScripts";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import { Effect } from "effect";
@@ -53,22 +54,15 @@ const presenceRows: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe("canonical package scripts schemas", () => {
-  it("round trips schema-derived script records", () => {
-    expect(
-      Effect.runSync(
-        Arbitrary.checkEffect(
-          Arbitrary.all([scriptsArbitrary]),
-          ([input]) => {
-            const block = Result.getOrThrow(decodeAppResult(input));
-            expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
-
-            return true;
-          },
-          { runs: 100 }
-        )
-      )._tag
-    ).toBe("Passed");
-  });
+  it.prop(
+    "round trips schema-derived script records",
+    { input: scriptsArbitrary },
+    ({ input }) => {
+      const block = Result.getOrThrow(decodeAppResult(input));
+      expect(Result.getOrThrow(encodeAppResult(block))).toEqual(input);
+    },
+    { arbitrary: fcRuns(100) }
+  );
   it.effect(
     "round trips implementation text and extras without interpretation",
     Effect.fnUntraced(function* () {

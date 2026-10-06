@@ -31,7 +31,7 @@ import {
 } from "./Models.catalog.service.ts";
 import { catalogModelsById, diffSnapshots } from "./Models.diff.ts";
 import { ModelsCommandError } from "./Models.errors.ts";
-import { ModelsLocatorReader, ModelsLocatorReaderLive } from "./Models.locator.service.ts";
+import { bindLocatorModel, ModelsLocatorReader, ModelsLocatorReaderLive } from "./Models.locator.service.ts";
 import { isEffortAllowedOnSurface } from "./Models.manifest.schemas.ts";
 import { ModelsManifestStore, ModelsManifestStoreLive } from "./Models.manifest.service.ts";
 import { ModelsTargetFile, ModelsTargetLocation, resolveTargetPath } from "./Models.paths.ts";
@@ -324,10 +324,21 @@ const bindingFinding = (input: LocatorCheckInput, expected: O.Option<string>): O
   );
 };
 
+// A per-model pointer must read the entry for the model the binding names
+// right now, so the bound-model segment is resolved before every read.
+const boundLocator = (input: LocatorCheckInput): Locator =>
+  input.locator._tag === "md-generated-block"
+    ? input.locator
+    : O.match(HashMap.get(input.bindings, bindingKey(input.locator.binding.role, input.locator.binding.surface)), {
+        onNone: () => input.locator,
+        onSome: (binding) => bindLocatorModel(input.locator, binding.modelId),
+      });
+
 const checkLocator = Effect.fnUntraced(function* (
   input: LocatorCheckInput
 ): Effect.fn.Return<O.Option<DriftFinding>, ModelsLocatorError> {
   const expected = expectedFor(input);
+  const readable = boundLocator(input);
   const upstreamProblem = bindingFinding(input, expected);
   if (O.isSome(upstreamProblem)) {
     // Catalog availability and file drift are independent observations. Keep
@@ -335,7 +346,7 @@ const checkLocator = Effect.fnUntraced(function* (
     return O.some(
       DriftFinding.make({
         ...upstreamProblem.value,
-        current: yield* input.reader.read(input.file, input.locator),
+        current: yield* input.reader.read(input.file, readable),
       })
     );
   }
@@ -344,7 +355,7 @@ const checkLocator = Effect.fnUntraced(function* (
     return O.some(finding(input.target, input.locator, O.none(), "a renderable binding value", "invalid-effort"));
   }
 
-  const current = yield* input.reader.read(input.file, input.locator);
+  const current = yield* input.reader.read(input.file, readable);
   if (O.isNone(current)) {
     return O.some(finding(input.target, input.locator, O.none(), expected.value, "missing-locator"));
   }

@@ -7,7 +7,7 @@ import { Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
-import { Cause, Effect, FileSystem, Layer, Path } from "effect";
+import { Cause, Effect, FileSystem, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -23,25 +23,6 @@ const BaselineProjection = S.Struct({
   packages: S.Record(S.String, S.Struct({ path: S.String })),
 });
 const decodeUnknownBaselineProjection = S.decodeUnknownEffect(BaselineProjection);
-
-const provideNode = <A2, E, R2>(effect: Effect.Effect<A2, E, R2>) =>
-  Effect.scoped(
-    Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
-  );
-
-const withTempDirectory = <A2, E, R2>(use: (directory: string) => Effect.Effect<A2, E, R2>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      return yield* fs.makeTempDirectory();
-    }),
-    use,
-    (directory) =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        yield* fs.remove(directory, { recursive: true, force: true });
-      })
-  );
 
 const zeroUncovered = { branches: 0, functions: 0, lines: 0, statements: 0 };
 
@@ -95,89 +76,76 @@ const readBaselineText = Effect.fn("readBaselineText")(function* (repoRoot: stri
 });
 
 describe("coverage baseline subtraction", () => {
-  it("removes exactly the target's packages, exemptions, and follow_ups rows", () =>
-    Effect.runPromise(
-      provideNode(
-        withTempDirectory((repoRoot) =>
-          Effect.gen(function* () {
-            yield* writeBaselineFixture(repoRoot, baselineFixture);
-            yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener");
+  it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds" })((it) => {
+    it.effect("removes exactly the target's packages, exemptions, and follow_ups rows", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-baseline-subtraction-test-" });
+        yield* writeBaselineFixture(repoRoot, baselineFixture);
+        yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener");
 
-            const text = yield* readBaselineText(repoRoot);
-            expect(Str.startsWith("// Coverage regression baseline. Do not edit by hand.")(text)).toBe(true);
-            expect(Str.includes("@beep/courtlistener")(text)).toBe(false);
+        const text = yield* readBaselineText(repoRoot);
+        expect(Str.startsWith("// Coverage regression baseline. Do not edit by hand.")(text)).toBe(true);
+        expect(Str.includes("@beep/courtlistener")(text)).toBe(false);
 
-            const decoded = yield* decodeUnknownBaselineProjection(parse(text));
-            expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
-            expect(R.keys(decoded.exemptions)).toStrictEqual([]);
-            expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);
-            assertSome(R.get(decoded.packages, "@beep/alpha"), { path: "packages/foundation/modeling/alpha" });
-            // Provenance is inherited, matching how scoped merges carry it through.
-            expect(decoded.generated_at).toBe(baselineFixture.generated_at);
-            expect(decoded.git_sha).toBe(baselineFixture.git_sha);
-          })
-        )
-      )
-    ));
+        const decoded = yield* decodeUnknownBaselineProjection(parse(text));
+        expect(R.keys(decoded.packages)).toStrictEqual(["@beep/alpha"]);
+        expect(R.keys(decoded.exemptions)).toStrictEqual([]);
+        expect(R.keys(decoded.follow_ups)).toStrictEqual(["@beep/alpha"]);
+        assertSome(R.get(decoded.packages, "@beep/alpha"), { path: "packages/foundation/modeling/alpha" });
+        // Provenance is inherited, matching how scoped merges carry it through.
+        expect(decoded.generated_at).toBe(baselineFixture.generated_at);
+        expect(decoded.git_sha).toBe(baselineFixture.git_sha);
+      })
+    );
 
-  it("leaves the document byte-identical when the target has no rows", () =>
-    Effect.runPromise(
-      provideNode(
-        withTempDirectory((repoRoot) =>
-          Effect.gen(function* () {
-            yield* writeBaselineFixture(repoRoot, baselineFixture);
-            const before = yield* readBaselineText(repoRoot);
-            yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/round-trip-probe");
-            const after = yield* readBaselineText(repoRoot);
-            expect(after).toBe(before);
-          })
-        )
-      )
-    ));
+    it.effect("leaves the document byte-identical when the target has no rows", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-baseline-subtraction-test-" });
+        yield* writeBaselineFixture(repoRoot, baselineFixture);
+        const before = yield* readBaselineText(repoRoot);
+        yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/round-trip-probe");
+        const after = yield* readBaselineText(repoRoot);
+        expect(after).toBe(before);
+      })
+    );
 
-  it("succeeds as a no-op when no committed baseline exists", () =>
-    Effect.runPromise(
-      provideNode(
-        withTempDirectory((repoRoot) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const path = yield* Path.Path;
-            yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener");
-            const exists = yield* fs.exists(path.join(repoRoot, coverageRegressionBaselinePath));
-            expect(exists).toBe(false);
-          })
-        )
-      )
-    ));
+    it.effect("succeeds as a no-op when no committed baseline exists", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-baseline-subtraction-test-" });
+        const path = yield* Path.Path;
+        yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener");
+        const exists = yield* fs.exists(path.join(repoRoot, coverageRegressionBaselinePath));
+        expect(exists).toBe(false);
+      })
+    );
 
-  it("refuses a schema-v1 document without touching the file", () =>
-    Effect.runPromise(
-      provideNode(
-        withTempDirectory((repoRoot) =>
-          Effect.gen(function* () {
-            const legacy = {
-              schema_version: 1,
-              generated_at: "2026-01-01T00:00:00.000Z",
-              git_sha: "feedfacefeedfacefeedfacefeedfacefeedface",
-              command: "bun run coverage:baseline:write",
-              epsilon: 0.001,
-              packages: { "@beep/courtlistener": { path: "packages/drivers/courtlistener" } },
-            };
-            yield* writeBaselineFixture(repoRoot, legacy);
-            const before = yield* readBaselineText(repoRoot);
+    it.effect("refuses a schema-v1 document without touching the file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "coverage-baseline-subtraction-test-" });
+        const legacy = {
+          schema_version: 1,
+          generated_at: "2026-01-01T00:00:00.000Z",
+          git_sha: "feedfacefeedfacefeedfacefeedfacefeedface",
+          command: "bun run coverage:baseline:write",
+          epsilon: 0.001,
+          packages: { "@beep/courtlistener": { path: "packages/drivers/courtlistener" } },
+        };
+        yield* writeBaselineFixture(repoRoot, legacy);
+        const before = yield* readBaselineText(repoRoot);
 
-            const exit = yield* Effect.exit(
-              subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener")
-            );
-            exit.pipe(Exit.isFailure, assertTrue);
-            if (Exit.isFailure(exit)) {
-              expect(Str.includes("schema version 1")(Cause.pretty(exit.cause))).toBe(true);
-            }
+        const exit = yield* Effect.exit(subtractPackageFromCoverageRegressionBaseline(repoRoot, "@beep/courtlistener"));
+        exit.pipe(Exit.isFailure, assertTrue);
+        if (Exit.isFailure(exit)) {
+          expect(Str.includes("schema version 1")(Cause.pretty(exit.cause))).toBe(true);
+        }
 
-            const after = yield* readBaselineText(repoRoot);
-            expect(after).toBe(before);
-          })
-        )
-      )
-    ));
+        const after = yield* readBaselineText(repoRoot);
+        expect(after).toBe(before);
+      })
+    );
+  });
 });

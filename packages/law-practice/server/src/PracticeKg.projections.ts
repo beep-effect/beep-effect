@@ -619,7 +619,9 @@ const buildGraphRows = (
   const attributed = A.map(catalogRows, (row) => ({
     attribution: pipe(
       MutableHashMap.get(attributionByDigest, row.digest),
-      O.getOrThrowWith(() => new Error(`Graph build lost the attribution for "${row.digest}".`))
+      O.getOrThrowWith(() =>
+        PracticeKgProjectionError.make({ message: `Graph build lost the attribution for "${row.digest}".` })
+      )
     ),
     row,
   }));
