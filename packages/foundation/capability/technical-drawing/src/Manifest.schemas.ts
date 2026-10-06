@@ -189,7 +189,9 @@ export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(
     omissions: S.Array(OmissionProof).annotateKey({ description: "Omission claims and their proofs." }),
     pdfFile: S.NonEmptyString.annotateKey({ description: "Sheet-set PDF file name in the output directory." }),
     pdfSha256: S.String.annotateKey({ description: "SHA-256 of the sheet-set PDF; the sheet-set hash." }),
-    validation: S.Option(ValidationReport).annotateKey({ description: "Validator report, when it ran." }),
+    validation: S.OptionFromNullOr(ValidationReport).annotateKey({
+      description: "Validator report, when it ran; `null` in JSON otherwise.",
+    }),
   },
   $I.annote("RenderManifest", {
     description:

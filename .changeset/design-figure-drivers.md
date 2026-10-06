@@ -14,4 +14,6 @@ stroke lettering, the filing validator rules, omission proofs, and the render ma
 geometry-engine port and a PDF-backend port; `beep drawings render` / `validate` serve them.
 `render --shade` adds 37 CFR 1.152 straight-line shading: planar faces are hatched by exposure to
 the 1.84(m) light, the hatch is hidden by the same projection pass as the outlines, and faces
-seen square-on stay unshaded.
+seen square-on stay unshaded. `drawings statement` and `drawings sign email|pdf` record an approval keyed to
+the sheet-set hash only from an approver-authored artifact carrying the verbatim statement line;
+`@beep/pdf-tools` gains `pageText` for the initialed page.

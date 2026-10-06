@@ -1,4 +1,4 @@
-import { PdfTools, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
+import { PageTextRequest, PdfTools, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
@@ -58,6 +58,19 @@ describe("@beep/pdf-tools live tools", () => {
         // the gray square is the only impurity; no anti-aliasing means no edge grays
         expect(metrics.impurePixels).toBe(100 * 100);
         expect(metrics.chromaPixels).toBe(0);
+
+        // page text: only the requested page, raw (no layout padding)
+        const textSvg = (line: string) =>
+          `<svg xmlns="http://www.w3.org/2000/svg" width="612pt" height="792pt"><text x="300" y="100" font-size="12">${line}</text></svg>\n`;
+        yield* fs.writeFileString(path.join(dir, "p1.svg"), textSvg("Request page"));
+        yield* fs.writeFileString(path.join(dir, "p2.svg"), textSvg("Initialed page AB"));
+        const textPdf = path.join(dir, "text.pdf");
+        yield* tools.svgToPdf(
+          SvgToPdfRequest.make({ svgPaths: [path.join(dir, "p1.svg"), path.join(dir, "p2.svg")], outputPath: textPdf })
+        );
+        const text = yield* tools.pageText(PageTextRequest.make({ pdfPath: textPdf, page: 2 }));
+        expect(text).toContain("Initialed page AB");
+        expect(text).not.toContain("Request page");
       })
     );
   });

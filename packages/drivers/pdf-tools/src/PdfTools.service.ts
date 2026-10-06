@@ -15,13 +15,14 @@ import { PDFDocument } from "pdf-lib";
 import { measureP6 } from "./internal/ppm.ts";
 import { structureOf } from "./internal/structure.ts";
 import { PdfToolsError } from "./PdfTools.errors.ts";
-import { PngRequest, RasterRequest, SvgToPdfRequest, SvgToPdfResult } from "./PdfTools.models.ts";
+import { PageTextRequest, PngRequest, RasterRequest, SvgToPdfRequest, SvgToPdfResult } from "./PdfTools.models.ts";
 import type { PdfStructure, PdfVersion, RasterMetrics } from "./PdfTools.models.ts";
 
 const $I = $PdfToolsId.create("PdfTools.service");
 const validateSvgToPdfRequest = S.decodeUnknownEffect(S.toType(SvgToPdfRequest));
 const validateRasterRequest = S.decodeUnknownEffect(S.toType(RasterRequest));
 const validatePngRequest = S.decodeUnknownEffect(S.toType(PngRequest));
+const validatePageTextRequest = S.decodeUnknownEffect(S.toType(PageTextRequest));
 const encoder = new TextEncoder();
 
 // pdf-lib always writes a `%PDF-1.7` header; the merged pages only use the
@@ -68,6 +69,10 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
       S.withConstructorDefault(Effect.succeed("pdftoppm")),
       S.annotateKey({ description: "pdftoppm executable. Defaults to the PATH name." })
     ),
+    pdftotextPath: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("pdftotext")),
+      S.annotateKey({ description: "pdftotext executable. Defaults to the PATH name." })
+    ),
     forceKillAfterMillis: S.Natural.pipe(
       S.withConstructorDefault(Effect.succeed(120_000)),
       S.annotateKey({ description: "Grace period before a stuck tool is killed. Defaults to two minutes." })
@@ -91,7 +96,8 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
  *   svgToPdf: () => Effect.die("not implemented"),
  *   inspect: () => Effect.die("not implemented"),
  *   measurePage: () => Effect.die("not implemented"),
- *   renderPng: () => Effect.die("not implemented")
+ *   renderPng: () => Effect.die("not implemented"),
+ *   pageText: () => Effect.die("not implemented")
  * }
  * console.log(service)
  * ```
@@ -102,6 +108,7 @@ export class PdfToolsConfig extends S.Class<PdfToolsConfig>($I`PdfToolsConfig`)(
 export interface PdfToolsShape {
   readonly inspect: (pdfPath: string) => Effect.Effect<PdfStructure, PdfToolsError>;
   readonly measurePage: (request: RasterRequest) => Effect.Effect<RasterMetrics, PdfToolsError>;
+  readonly pageText: (request: PageTextRequest) => Effect.Effect<string, PdfToolsError>;
   readonly renderPng: (request: PngRequest) => Effect.Effect<string, PdfToolsError>;
   readonly svgToPdf: (request: SvgToPdfRequest) => Effect.Effect<SvgToPdfResult, PdfToolsError>;
 }
@@ -124,7 +131,7 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     args: ReadonlyArray<string>,
     env: Readonly<Record<string, string>>,
     what: string
-  ): Effect.Effect<void, PdfToolsError> =>
+  ): Effect.Effect<string, PdfToolsError> =>
     Effect.scoped(
       Effect.gen(function* () {
         const unavailable = (cause: unknown) =>
@@ -137,13 +144,14 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
               forceKillAfter: `${config.forceKillAfterMillis} millis`,
               stdin: "ignore",
               stderr: "pipe",
-              stdout: "ignore",
+              stdout: "pipe",
             })
           )
           .pipe(Effect.mapError(unavailable));
-        const [stderr, exitCode] = yield* Effect.all([collectText(handle.stderr), handle.exitCode], {
-          concurrency: "unbounded",
-        }).pipe(Effect.mapError(unavailable));
+        const [stdout, stderr, exitCode] = yield* Effect.all(
+          [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
+          { concurrency: "unbounded" }
+        ).pipe(Effect.mapError(unavailable));
         if (exitCode !== 0) {
           return yield* PdfToolsError.make({
             reason: "tool-failed",
@@ -151,6 +159,7 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
             cause: O.some(Str.trim(stderr)),
           });
         }
+        return stdout;
       })
     );
 
@@ -257,7 +266,22 @@ const makeService = Effect.fn("PdfTools.makeService")(function* (config: PdfTool
     return `${prefix}.png`;
   });
 
-  return { svgToPdf, inspect, measurePage, renderPng } satisfies PdfToolsShape;
+  // Raw (non-layout) text of exactly one page; layout mode pads lines with
+  // leading spaces, which would defeat a whole-line match.
+  const pageText = Effect.fn("PdfTools.pageText")(function* (rawRequest: PageTextRequest) {
+    const request = yield* validatePageTextRequest(rawRequest).pipe(
+      Effect.mapError((cause) => PdfToolsError.fromUnknown("invalid-request", "Invalid page-text request.", cause))
+    );
+    const page = `${request.page}`;
+    return yield* run(
+      config.pdftotextPath,
+      ["-f", page, "-l", page, "-enc", "UTF-8", path.resolve(request.pdfPath), "-"],
+      {},
+      `extracting the text of page ${page}`
+    );
+  });
+
+  return { svgToPdf, inspect, measurePage, renderPng, pageText } satisfies PdfToolsShape;
 });
 
 /**

@@ -438,3 +438,27 @@ export class PngRequest extends S.Class<PngRequest>($I`PngRequest`)(
     description: "One page rendered to a PNG file at a resolution.",
   })
 ) {}
+
+/**
+ * Request for the text of one PDF page.
+ *
+ * **Example** (Page 2)
+ *
+ * ```ts
+ * import { PageTextRequest } from "@beep/pdf-tools"
+ *
+ * console.log(PageTextRequest.make({ pdfPath: "approval.pdf", page: 2 }).page)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PageTextRequest extends S.Class<PageTextRequest>($I`PageTextRequest`)(
+  {
+    pdfPath: S.NonEmptyString.annotateKey({ description: "PDF to read." }),
+    page: PageNumber.annotateKey({ description: "One-based page whose text is extracted." }),
+  },
+  $I.annote("PageTextRequest", {
+    description: "One page of a PDF whose text is extracted.",
+  })
+) {}

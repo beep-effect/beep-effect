@@ -22,6 +22,13 @@ export * from "./Approval.rules.ts";
  */
 export * from "./Approval.schemas.ts";
 /**
+ * Sheet-set approval service.
+ *
+ * @since 0.0.0
+ * @category approval
+ */
+export * from "./Approval.service.ts";
+/**
  * Figure-set renderer and validator service.
  *
  * @since 0.0.0

@@ -191,6 +191,7 @@
     "@beep/firecrawl": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/libpff": "workspace:^",
+    "@beep/m365": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/obs": "workspace:^",
     "@beep/observability": "workspace:^",

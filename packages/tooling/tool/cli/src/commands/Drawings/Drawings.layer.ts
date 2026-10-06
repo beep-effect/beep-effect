@@ -6,22 +6,29 @@
  * @since 0.0.0
  */
 
+import { M365, M365GetMessageRequest } from "@beep/m365";
 import { Occt, ProjectionRequest } from "@beep/occt";
-import { PdfTools, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
+import { PageTextRequest, PdfTools, RasterRequest, SvgToPdfRequest } from "@beep/pdf-tools";
 import {
   DrawingError,
+  EmailAddress,
+  EmailConfirmation,
   EngineInfo,
   FigureSet,
   GeometryEngine,
   InkBounds,
+  MailReader,
   PageMetrics,
   PdfBackend,
   PdfFacts,
   PdfFontFact,
   PdfPageSize,
+  SheetSetApproval,
 } from "@beep/technical-drawing";
 import { A, O } from "@beep/utils";
 import { Effect, Layer, pipe } from "effect";
+import * as S from "effect/Schema";
+import type { M365Error } from "@beep/m365";
 import type { OcctError } from "@beep/occt";
 import type { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
 import type { FileSystem, Path } from "effect";
@@ -107,7 +114,10 @@ const backendFromPdfTools = Effect.fn("DrawingsLayer.backendFromPdfTools")(funct
       largestBlackSquare: metrics.largestBlackSquare,
     });
   });
-  return PdfBackend.of({ svgToPdf, inspect, measurePage });
+  const pageText = Effect.fn("DrawingsLayer.pageText")(function* (pdfPath: string, page: number) {
+    return yield* tools.pageText(PageTextRequest.make({ pdfPath, page })).pipe(Effect.mapError(pdf));
+  });
+  return PdfBackend.of({ svgToPdf, inspect, measurePage, pageText });
 });
 
 /**
@@ -166,3 +176,92 @@ export const FigureSetLive: Layer.Layer<
   OcctError,
   ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
 > = FigureSet.layer.pipe(Layer.provide(Layer.merge(GeometryEngineOcctLive, PdfBackendToolsLive)));
+
+const mailFromM365 = Effect.fn("DrawingsLayer.mailFromM365")(function* () {
+  const m365 = yield* M365;
+  const authoredText = Effect.fn("DrawingsLayer.authoredText")(function* (messageId: string) {
+    const message = yield* m365
+      .getMessageAuthoredText(M365GetMessageRequest.make({ messageId }))
+      .pipe(
+        Effect.mapError((cause) =>
+          DrawingError.fromUnknown(
+            "approval",
+            "Could not read a plain-text reply from the mail service; an HTML-only or unreadable reply is refused.",
+            cause
+          )
+        )
+      );
+    const address = (value: string) =>
+      S.decodeEffect(EmailAddress)(value).pipe(
+        Effect.mapError((cause) => DrawingError.fromUnknown("approval", `"${value}" is not an email address.`, cause))
+      );
+    return EmailConfirmation.make({
+      internetMessageId: message.internetMessageId,
+      from: yield* address(message.from.emailAddress.address),
+      sender: yield* address(message.sender.emailAddress.address),
+      receivedAt: message.receivedDateTime,
+      authoredText: message.uniqueBody.content,
+    });
+  });
+  return MailReader.of({ authoredText });
+});
+
+/**
+ * Mail-reader port served by `@beep/m365` (`M365_TENANT_ID`, `M365_CLIENT_ID`).
+ *
+ * **Example** (Reference the layer)
+ *
+ * ```ts
+ * import { MailReaderM365Live } from "@beep/repo-cli/commands/Drawings"
+ *
+ * console.log(MailReaderM365Live)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const MailReaderM365Live: Layer.Layer<MailReader, M365Error> = Layer.effect(MailReader, mailFromM365()).pipe(
+  Layer.provide(M365.layer)
+);
+
+/**
+ * Mail-reader port that refuses every read, for the PDF sign route.
+ *
+ * **Example** (Reference the layer)
+ *
+ * ```ts
+ * import { MailReaderUnavailable } from "@beep/repo-cli/commands/Drawings"
+ *
+ * console.log(MailReaderUnavailable)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const MailReaderUnavailable: Layer.Layer<MailReader> = Layer.succeed(
+  MailReader,
+  MailReader.of({
+    authoredText: Effect.fn("DrawingsLayer.mailUnavailable")(function* () {
+      return yield* DrawingError.make({ reason: "approval", message: "Mail is not configured for this command." });
+    }),
+  })
+);
+
+/**
+ * Sheet-set approval over the PDF tools and a mail-reader layer.
+ *
+ * **Example** (PDF route)
+ *
+ * ```ts
+ * import { MailReaderUnavailable, sheetSetApprovalLive } from "@beep/repo-cli/commands/Drawings"
+ *
+ * console.log(sheetSetApprovalLive(MailReaderUnavailable))
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const sheetSetApprovalLive = <E>(
+  mail: Layer.Layer<MailReader, E>
+): Layer.Layer<SheetSetApproval, E, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> =>
+  SheetSetApproval.layer.pipe(Layer.provide(Layer.merge(PdfBackendToolsLive, mail)));

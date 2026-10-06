@@ -21,6 +21,7 @@ import {
   PdfFontFact,
   PdfPageSize,
   purityFindings,
+  RenderManifest,
   RenderRequest,
   SheetOptions,
   sameSegments,
@@ -34,6 +35,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 // A fake engine: every view projects a unit square, except that the "rear"
 // camera (eye +Y) projects the square shifted, so omission proofs can fail.
@@ -109,6 +111,9 @@ const fakeBackend = (pageCount: { current: number }) =>
         }),
         measurePage: Effect.fnUntraced(function* ({ dpi, antiAlias }) {
           return cleanMetrics(dpi, antiAlias);
+        }),
+        pageText: Effect.fnUntraced(function* () {
+          return "";
         }),
       });
     })
@@ -331,6 +336,10 @@ describe("@beep/technical-drawing", () => {
             "manifest.json",
             "sheets.pdf",
           ]);
+          // the written manifest decodes back to the returned one (it feeds `drawings sign`)
+          const written = yield* fs.readFileString(path.join(out, "manifest.json"));
+          const decoded = yield* S.decodeEffect(S.fromJsonString(RenderManifest))(written);
+          expect(decoded).toEqual(manifest);
           const again = yield* service.render(RenderRequest.make({ specPath, outputDir: out }));
           expect(again.figures).toEqual(manifest.figures);
         })

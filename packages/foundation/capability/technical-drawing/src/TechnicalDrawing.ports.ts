@@ -10,6 +10,7 @@ import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type { Effect } from "effect";
 import type * as O from "effect/Option";
+import type { EmailConfirmation } from "./Approval.schemas.ts";
 import type { Camera, EdgeSet, ModelSpec, ModelSummary, ShadingPlan } from "./Geometry.schemas.ts";
 import type { EngineInfo } from "./Manifest.schemas.ts";
 import type { DrawingError } from "./TechnicalDrawing.errors.ts";
@@ -77,7 +78,8 @@ export class GeometryEngine extends Context.Service<GeometryEngine, GeometryEngi
  * const backend: PdfBackendShape = {
  *   svgToPdf: () => Effect.die("not implemented"),
  *   inspect: () => Effect.die("not implemented"),
- *   measurePage: () => Effect.die("not implemented")
+ *   measurePage: () => Effect.die("not implemented"),
+ *   pageText: () => Effect.die("not implemented")
  * }
  * console.log(backend)
  * ```
@@ -93,12 +95,14 @@ export interface PdfBackendShape {
     readonly dpi: number;
     readonly antiAlias: boolean;
   }) => Effect.Effect<PageMetrics, DrawingError>;
+  readonly pageText: (pdfPath: string, page: number) => Effect.Effect<string, DrawingError>;
   readonly svgToPdf: (svgPaths: ReadonlyArray<string>, outputPath: string) => Effect.Effect<void, DrawingError>;
 }
 
 /**
  * PDF backend port: converts sheet SVGs into one PDF (version ≤ 1.6, fixed
- * dates), reports a PDF's structure, and measures rendered pages.
+ * dates), reports a PDF's structure, measures rendered pages, and reads the
+ * text of one page.
  *
  * **Example** (Reference the port)
  *
@@ -112,3 +116,40 @@ export interface PdfBackendShape {
  * @since 0.0.0
  */
 export class PdfBackend extends Context.Service<PdfBackend, PdfBackendShape>()($I`PdfBackend`) {}
+
+/**
+ * Shape of the {@link MailReader} port.
+ *
+ * **Example** (Stub mail reader)
+ *
+ * ```ts
+ * import type { MailReaderShape } from "@beep/technical-drawing"
+ * import { Effect } from "effect"
+ *
+ * const reader: MailReaderShape = { authoredText: () => Effect.die("not implemented") }
+ * console.log(reader)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export interface MailReaderShape {
+  readonly authoredText: (messageId: string) => Effect.Effect<EmailConfirmation, DrawingError>;
+}
+
+/**
+ * Mail reader port: one message's sender addresses and the plain-text
+ * portion its sender wrote (never the quoted thread, never HTML).
+ *
+ * **Example** (Reference the port)
+ *
+ * ```ts
+ * import { MailReader } from "@beep/technical-drawing"
+ *
+ * console.log(MailReader)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class MailReader extends Context.Service<MailReader, MailReaderShape>()($I`MailReader`) {}

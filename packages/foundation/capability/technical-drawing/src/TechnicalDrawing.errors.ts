@@ -12,7 +12,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $TechnicalDrawingId.create("TechnicalDrawing.errors");
-const DrawingErrorReasonBase = LiteralKit(["spec", "geometry", "projection", "omission", "pdf", "io"]);
+const DrawingErrorReasonBase = LiteralKit(["spec", "geometry", "projection", "omission", "pdf", "io", "approval"]);
 
 /**
  * Where a drawing operation failed.
@@ -31,7 +31,7 @@ const DrawingErrorReasonBase = LiteralKit(["spec", "geometry", "projection", "om
 export const DrawingErrorReason = DrawingErrorReasonBase.pipe(
   $I.annoteSchema("DrawingErrorReason", {
     description:
-      "Failure site: spec decoding, geometry engine, projection, an omission claim that the render disproved, the PDF backend, or file I/O.",
+      "Failure site: spec decoding, geometry engine, projection, an omission claim that the render disproved, the PDF backend, file I/O, or a refused approval.",
   }),
   SchemaUtils.withLiteralKitStatics(DrawingErrorReasonBase)
 );

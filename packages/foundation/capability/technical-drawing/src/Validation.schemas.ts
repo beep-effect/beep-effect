@@ -233,7 +233,9 @@ export type FindingCode = typeof FindingCode.Type;
 export class SheetFinding extends S.Class<SheetFinding>($I`SheetFinding`)(
   {
     code: FindingCode.annotateKey({ description: "Rule broken." }),
-    page: S.Option(S.Natural).annotateKey({ description: "One-based page, or none for file-level findings." }),
+    page: S.OptionFromNullOr(S.Natural).annotateKey({
+      description: "One-based page, or none for file-level findings (`null` in JSON).",
+    }),
     message: S.NonEmptyString.annotateKey({ description: "What was measured and the limit it broke." }),
   },
   $I.annote("SheetFinding", {
