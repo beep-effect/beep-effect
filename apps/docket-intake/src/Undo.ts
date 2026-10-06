@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { $DocketIntakeId } from "@beep/identity/packages";
 import {
   applyDocketUndo,
   DocketRunId,
@@ -24,6 +25,8 @@ import { DocketIntakeCommandError } from "./Errors.ts";
 import type { DocketJournalEntry } from "@beep/law-practice-server/DocketIntake";
 import type { DocketIntakeAppConfig } from "./Config.ts";
 
+const $I = $DocketIntakeId.create("Undo");
+
 /**
  * The run an undo is for: a run id, or `latest` for the newest run in the
  * journal.
@@ -41,7 +44,11 @@ import type { DocketIntakeAppConfig } from "./Config.ts";
  * @category models
  * @since 0.0.0
  */
-export const DocketRunSelector = S.Union([S.Literal("latest"), DocketRunId]);
+export const DocketRunSelector = S.Union([S.Literal("latest"), DocketRunId]).pipe(
+  $I.annoteSchema("DocketRunSelector", {
+    description: "Run to undo: a run id, or `latest` for the newest run in the journal.",
+  })
+);
 
 /**
  * Type of {@link DocketRunSelector}.
