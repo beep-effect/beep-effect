@@ -337,7 +337,7 @@ describe("@beep/docket-intake commands", () => {
 
         expect(before).toStrictEqual([]);
         expect(A.drop(lines, 1)).toStrictEqual([
-          '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":5,"messagesMarked":1,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0}',
+          '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":5,"messagesMarked":1,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0,"eventsAdopted":0}',
         ]);
         assertSome(
           O.map(refused, (error) => error.kind),
@@ -365,8 +365,8 @@ describe("@beep/docket-intake commands", () => {
 
         expect(A.every(dryCalls, (call) => Str.startsWith("get")(call))).toBe(true);
         expect(lines).toStrictEqual([
-          '{"runId":"run-19700101T000000000Z","dryRun":true,"deleted":5,"kept":0,"gone":0,"unmarked":1,"messagesGone":0,"ledgerCleared":0}',
-          '{"runId":"run-19700101T000000000Z","dryRun":false,"deleted":5,"kept":0,"gone":0,"unmarked":1,"messagesGone":0,"ledgerCleared":0}',
+          '{"runId":"run-19700101T000000000Z","dryRun":true,"deleted":5,"kept":0,"gone":0,"unmarked":1,"messagesGone":0,"ledgerCleared":0,"messagesKept":0,"alreadyUndone":0}',
+          '{"runId":"run-19700101T000000000Z","dryRun":false,"deleted":5,"kept":0,"gone":0,"unmarked":1,"messagesGone":0,"ledgerCleared":0,"messagesKept":0,"alreadyUndone":0}',
         ]);
         expect(A.length(A.filter(calls, Str.startsWith("deleteEvent")))).toBe(5);
         expect(A.filter(calls, Str.startsWith("updateMessageCategories"))).toStrictEqual([

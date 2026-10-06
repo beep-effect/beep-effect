@@ -17,7 +17,7 @@ import {
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { M365, M365DeleteEventRequest, M365GetEventRequest, M365GetMessageRequest } from "@beep/m365";
 import { LiteralKit } from "@beep/schema";
-import { DateTime, Effect, HashSet, pipe } from "effect";
+import { DateTime, Effect, HashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -45,8 +45,11 @@ const isProvisional = S.is(
  *
  * **Details**
  *
- * `delete` when the event still carries one of the service's provisional
- * categories, `keep` when it does not, and `gone` when it no longer exists.
+ * `delete` when every category the event carries is one of the service's
+ * provisional categories, `keep` when it has no category or any category of
+ * someone else's (Outlook adds categories, it does not replace them), `gone`
+ * when it no longer exists, and `undone` when an earlier undo of the same run
+ * already recorded what it did with the event, so nothing is done again.
  *
  * **Example** (Check an event action)
  *
@@ -59,7 +62,7 @@ const isProvisional = S.is(
  * @category models
  * @since 0.0.0
  */
-export const DocketUndoEventAction = LiteralKit(["delete", "keep", "gone"]).pipe(
+export const DocketUndoEventAction = LiteralKit(["delete", "keep", "gone", "undone"]).pipe(
   $I.annoteSchema("DocketUndoEventAction", { description: "What an undo does with one event a run created." })
 );
 
@@ -81,8 +84,14 @@ export const DocketUndoEventAction = LiteralKit(["delete", "keep", "gone"]).pipe
 export type DocketUndoEventAction = typeof DocketUndoEventAction.Type;
 
 /**
- * What an undo does with one message a run marked: `unmark` it, or nothing
- * because it is `gone`.
+ * What an undo does with one message a run marked.
+ *
+ * **Details**
+ *
+ * `unmark` takes `Docket - entered` off it. `keep` leaves it alone because a
+ * later run marked it again, so the mark and its ledger record are that
+ * run's. `gone` means it no longer exists, and `undone` that an earlier undo
+ * of the same run already recorded what it did with the message.
  *
  * **Example** (Check a message action)
  *
@@ -95,7 +104,7 @@ export type DocketUndoEventAction = typeof DocketUndoEventAction.Type;
  * @category models
  * @since 0.0.0
  */
-export const DocketUndoMessageAction = LiteralKit(["unmark", "gone"]).pipe(
+export const DocketUndoMessageAction = LiteralKit(["unmark", "keep", "gone", "undone"]).pipe(
   $I.annoteSchema("DocketUndoMessageAction", { description: "What an undo does with one message a run marked." })
 );
 
@@ -159,6 +168,9 @@ export class DocketUndoMessage extends S.Class<DocketUndoMessage>($I`DocketUndoM
     action: DocketUndoMessageAction.annotateKey({ description: "What the undo does with the message." }),
     messageId: S.NonEmptyString.annotateKey({ description: "Message id." }),
     receivedAt: S.Option(S.NonEmptyString).annotateKey({ description: "UTC receipt time, when the journal has it." }),
+    markedLaterBy: S.Option(DocketRunId)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "The later run that marked the message again, when it is kept for that run." }),
   },
   $I.annote("DocketUndoMessage", { description: "One message a run marked and what an undo does with it." })
 ) {}
@@ -212,6 +224,10 @@ export class DocketUndoReport extends S.Class<DocketUndoReport>($I`DocketUndoRep
     unmarked: S.Natural.annotateKey({ description: "Messages that no longer carry `Docket - entered`." }),
     messagesGone: S.Natural.annotateKey({ description: "Messages that no longer existed." }),
     ledgerCleared: S.Natural.annotateKey({ description: "Ledger records removed, so a later run reprocesses them." }),
+    messagesKept: S.Natural.annotateKey({ description: "Messages kept because a later run marked them again." }),
+    alreadyUndone: S.Natural.annotateKey({
+      description: "Events and messages an earlier undo of the same run already handled.",
+    }),
   },
   $I.annote("DocketUndoReport", { description: "Counts of one docket intake undo." })
 ) {}
@@ -236,16 +252,16 @@ const orGone = <A, B>(effect: Effect.Effect<A, M365Error>, onGone: B, stage: Doc
 const linesOf = (entries: ReadonlyArray<DocketJournalEntry>, runId: DocketRunId, kind: DocketJournalKind) =>
   A.filter(entries, (entry) => entry.runId === runId && entry.kind === kind);
 
+// Only an event every category of which is the service's own is deleted: Outlook adds categories,
+// so one the attorney also put in a category of their own (or verified) is theirs.
+const eventAction = (categories: ReadonlyArray<string>): DocketUndoEventAction =>
+  A.isReadonlyArrayNonEmpty(categories) && A.every(categories, isProvisional) ? "delete" : "keep";
+
 const planEvent = Effect.fnUntraced(function* (m365: M365Shape, userId: O.Option<string>, eventId: string) {
   const action = yield* orGone(
     m365
       .getEvent(M365GetEventRequest.make({ eventId, userId }))
-      .pipe(
-        Effect.map(
-          (event): DocketUndoEventAction =>
-            A.some(O.getOrElse(event.categories, A.empty<string>), isProvisional) ? "delete" : "keep"
-        )
-      ),
+      .pipe(Effect.map((event) => eventAction(O.getOrElse(event.categories, A.empty<string>)))),
     DocketUndoEventAction.Enum.gone,
     "calendar"
   );
@@ -265,18 +281,37 @@ const planMessage = Effect.fnUntraced(function* (m365: M365Shape, userId: O.Opti
   return DocketUndoMessage.make({ action, messageId: marked.messageId, receivedAt: marked.receivedAt });
 });
 
+const isEventWrite = (line: DocketJournalEntry) =>
+  line.kind === DocketJournalKind.Enum["event-created"] || line.kind === DocketJournalKind.Enum["event-adopted"];
+
+const isEventUndo = (line: DocketJournalEntry) =>
+  line.kind === DocketJournalKind.Enum["undo-event-deleted"] ||
+  line.kind === DocketJournalKind.Enum["undo-event-kept"] ||
+  line.kind === DocketJournalKind.Enum["undo-event-gone"];
+
+const isMessageUndo = (line: DocketJournalEntry) =>
+  line.kind === DocketJournalKind.Enum["undo-message-unmarked"] ||
+  line.kind === DocketJournalKind.Enum["undo-message-gone"];
+
+const isLaterRun = Order.isGreaterThan(Str.Order);
+
 const markedMessage = (line: DocketJournalEntry): O.Option<MarkedMessage> =>
   O.map(line.messageId, (messageId) => ({ messageId, receivedAt: line.receivedAt }));
 
 /**
  * Read what an undo of one run would do. It only reads: each event the run
- * created is looked up for its categories and each message it marked is
- * looked up to see that it still exists.
+ * created or adopted is looked up for its categories and each message it
+ * marked is looked up to see that it still exists.
  *
  * **Details**
  *
  * An event or message that appears more than once in the run is planned
- * once. A run with no lines in the journal plans nothing.
+ * once. A run with no lines in the journal plans nothing. An event or message
+ * that already has an `undo-` line under the run is planned as `undone` and
+ * not looked up, so applying an undo again only finishes what an earlier one
+ * left. A message a later run marked again is planned as `keep`, naming that
+ * run, whether or not it was undone before: the mark and its ledger record
+ * belong to the later run now.
  *
  * **Example** (Plan an undo)
  *
@@ -301,15 +336,43 @@ export const planDocketUndo: (input: {
 }) => Effect.Effect<DocketUndoPlan, DocketIntakeError, M365> = Effect.fn("DocketUndo.plan")(function* (input) {
   const m365 = yield* M365;
   const userId = O.some(input.mailbox);
-  const eventIds = A.dedupe(
-    A.getSomes(A.map(linesOf(input.entries, input.runId, "event-created"), (line) => line.eventId))
-  );
+  const ofRun = A.filter(input.entries, (entry) => entry.runId === input.runId);
+  const idsOf = (lines: ReadonlyArray<DocketJournalEntry>, id: (line: DocketJournalEntry) => O.Option<string>) =>
+    HashSet.fromIterable(A.getSomes(A.map(lines, id)));
+  const undoneEvents = idsOf(A.filter(ofRun, isEventUndo), (line) => line.eventId);
+  const undoneMessages = idsOf(A.filter(ofRun, isMessageUndo), (line) => line.messageId);
+  const eventIds = A.dedupe(A.getSomes(A.map(A.filter(ofRun, isEventWrite), (line) => line.eventId)));
   const marked = A.dedupeWith(
     A.getSomes(A.map(linesOf(input.entries, input.runId, "message-marked"), markedMessage)),
     (left, right) => left.messageId === right.messageId
   );
-  const events = yield* Effect.forEach(eventIds, (eventId) => planEvent(m365, userId, eventId));
-  const messages = yield* Effect.forEach(marked, (line) => planMessage(m365, userId, line));
+  // The first later run that marked the message again, if any.
+  const markedLaterBy = (messageId: string) =>
+    O.map(
+      A.findFirst(
+        input.entries,
+        (entry) =>
+          entry.kind === DocketJournalKind.Enum["message-marked"] &&
+          O.contains(entry.messageId, messageId) &&
+          isLaterRun(entry.runId, input.runId)
+      ),
+      (entry) => entry.runId
+    );
+  const events = yield* Effect.forEach(eventIds, (eventId) =>
+    HashSet.has(undoneEvents, eventId)
+      ? Effect.succeed(DocketUndoEvent.make({ action: "undone", eventId }))
+      : planEvent(m365, userId, eventId)
+  );
+  const messages = yield* Effect.forEach(marked, (line) =>
+    O.match(markedLaterBy(line.messageId), {
+      onNone: () =>
+        HashSet.has(undoneMessages, line.messageId)
+          ? Effect.succeed(DocketUndoMessage.make({ ...line, action: "undone" }))
+          : planMessage(m365, userId, line),
+      onSome: (laterRun) =>
+        Effect.succeed(DocketUndoMessage.make({ ...line, action: "keep", markedLaterBy: O.some(laterRun) })),
+    })
+  );
   return DocketUndoPlan.make({ events, messages, runId: input.runId });
 });
 
@@ -350,7 +413,8 @@ export class DocketLedgerClearance extends S.Class<DocketLedgerClearance>($I`Doc
  *
  * A record is removed when its message is one the run marked, or when its
  * entry is one of the events the run created (that covers a message whose
- * mark failed). The cursor moves back to the earliest receipt time among the
+ * mark failed), unless the message is planned as `keep`: a later run marked
+ * it again, so the record is that run's. The cursor moves back to the earliest receipt time among the
  * removed messages, so the next poll lists them again; it never moves
  * forward. The digest day is kept.
  *
@@ -371,17 +435,22 @@ export const clearDocketRun: {
   (plan: DocketUndoPlan): (state: DocketIntakeState) => DocketLedgerClearance;
   (state: DocketIntakeState, plan: DocketUndoPlan): DocketLedgerClearance;
 } = dual(2, (state: DocketIntakeState, plan: DocketUndoPlan): DocketLedgerClearance => {
-  const messageIds = HashSet.fromIterable(A.map(plan.messages, (target) => target.messageId));
+  const isKept = (target: DocketUndoMessage) => target.action === "keep";
+  const cleared = A.filter(plan.messages, (target) => !isKept(target));
+  const kept = A.filter(plan.messages, isKept);
+  const messageIds = HashSet.fromIterable(A.map(cleared, (target) => target.messageId));
+  const keptIds = HashSet.fromIterable(A.map(kept, (target) => target.messageId));
   const eventIds = HashSet.fromIterable(A.map(plan.events, (target) => target.eventId));
   const undone = R.filter(
     state.ledger,
     (record, messageId) =>
-      HashSet.has(messageIds, messageId) ||
-      A.some(outcomeEventIds(record.outcome), (eventId) => HashSet.has(eventIds, eventId))
+      !HashSet.has(keptIds, messageId) &&
+      (HashSet.has(messageIds, messageId) ||
+        A.some(outcomeEventIds(record.outcome), (eventId) => HashSet.has(eventIds, eventId)))
   );
   const receipts = A.appendAll(
     A.map(R.values(undone), (record) => record.receivedAt),
-    A.getSomes(A.map(plan.messages, (target) => target.receivedAt))
+    A.getSomes(A.map(cleared, (target) => target.receivedAt))
   );
   const cursor = pipe(
     A.sort(A.appendAll(receipts, O.toArray(state.cursor)), Str.Order),
@@ -413,8 +482,10 @@ const reportOf = (input: {
     dryRun: input.dryRun,
     gone: countOf(input.eventActions, "gone"),
     kept: countOf(input.eventActions, "keep"),
+    alreadyUndone: countOf(input.eventActions, "undone") + countOf(input.messageActions, "undone"),
     ledgerCleared: input.ledgerCleared,
     messagesGone: countOf(input.messageActions, "gone"),
+    messagesKept: countOf(input.messageActions, "keep"),
     runId: input.runId,
     unmarked: countOf(input.messageActions, "unmark"),
   });
@@ -451,15 +522,19 @@ export const dryRunDocketUndo: {
     })
 );
 
+// The `undo-` line an action records; an item already undone, or kept for a later run, records none.
 const eventLineKind = DocketUndoEventAction.$match({
-  delete: () => DocketJournalKind.Enum["undo-event-deleted"],
-  gone: () => DocketJournalKind.Enum["undo-event-gone"],
-  keep: () => DocketJournalKind.Enum["undo-event-kept"],
+  delete: () => O.some(DocketJournalKind.Enum["undo-event-deleted"]),
+  gone: () => O.some(DocketJournalKind.Enum["undo-event-gone"]),
+  keep: () => O.some(DocketJournalKind.Enum["undo-event-kept"]),
+  undone: O.none<DocketJournalKind>,
 });
 
 const messageLineKind = DocketUndoMessageAction.$match({
-  gone: () => DocketJournalKind.Enum["undo-message-gone"],
-  unmark: () => DocketJournalKind.Enum["undo-message-unmarked"],
+  gone: () => O.some(DocketJournalKind.Enum["undo-message-gone"]),
+  keep: O.none<DocketJournalKind>,
+  undone: O.none<DocketJournalKind>,
+  unmark: () => O.some(DocketJournalKind.Enum["undo-message-unmarked"]),
 });
 
 /**
@@ -473,7 +548,9 @@ const messageLineKind = DocketUndoMessageAction.$match({
  * key and is retried once from a fresh read when the message changed in
  * between. Every event and message gets an `undo-` line in the journal,
  * under the undone run's id, as soon as it is done, so an undo that stops
- * halfway can simply be run again. The ledger is cleared last, under the
+ * halfway can simply be run again. An item planned as `undone` is not
+ * touched again and gets no second line; a message kept for a later run is
+ * not touched and gets no line. The ledger is cleared last, under the
  * store the caller holds the lock of.
  *
  * **Example** (Apply an undo plan)
@@ -501,10 +578,14 @@ export const applyDocketUndo: (input: {
   const userId = O.some(input.mailbox);
 
   const record = Effect.fnUntraced(function* (
-    fields: Pick<ConstructorParameters<typeof DocketJournalEntry>[0], "eventId" | "kind" | "messageId">
+    kind: O.Option<DocketJournalKind>,
+    fields: Pick<ConstructorParameters<typeof DocketJournalEntry>[0], "eventId" | "messageId">
   ) {
+    if (O.isNone(kind)) {
+      return;
+    }
     const at = yield* DateTime.now;
-    yield* journal.append([DocketJournalEntry.make({ ...fields, at, runId: plan.runId })]);
+    yield* journal.append([DocketJournalEntry.make({ ...fields, at, kind: kind.value, runId: plan.runId })]);
   });
 
   const eventActions = yield* Effect.forEach(
@@ -520,7 +601,7 @@ export const applyDocketUndo: (input: {
               "calendar"
             )
           : target.action;
-      yield* record({ eventId: O.some(target.eventId), kind: eventLineKind(action) });
+      yield* record(eventLineKind(action), { eventId: O.some(target.eventId) });
       return action;
     })
   );
@@ -540,7 +621,7 @@ export const applyDocketUndo: (input: {
               "mailbox"
             )
           : target.action;
-      yield* record({ kind: messageLineKind(action), messageId: O.some(target.messageId) });
+      yield* record(messageLineKind(action), { messageId: O.some(target.messageId) });
       return action;
     })
   );

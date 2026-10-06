@@ -92,6 +92,19 @@ const journal = [
   DocketJournalEntry.make({ at, kind: "message-marked", runId: RUN }),
 ];
 
+const undoLine = (
+  runId: DocketRunId,
+  kind: DocketJournalEntry["kind"],
+  ids: { eventId?: string; messageId?: string }
+) =>
+  DocketJournalEntry.make({
+    at,
+    eventId: O.fromUndefinedOr(ids.eventId),
+    kind,
+    messageId: O.fromUndefinedOr(ids.messageId),
+    runId,
+  });
+
 const writtenEntry = (eventId: string) => DocketWrittenEntry.make({ eventId });
 
 const record = (outcome: DocketIntakeOutcome, receivedAt: string) =>
@@ -300,6 +313,179 @@ describe("@beep/law-practice-server DocketIntake undo", () => {
           }),
           ["throttled", "calendar"]
         );
+      })
+    );
+  });
+
+  it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "deletes an event only when every category it carries is provisional, adopted ones included",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeGraph;
+        const journalService = yield* DocketIntakeJournal;
+        yield* Ref.set(
+          fake.events,
+          HashMap.fromIterable(
+            A.map(
+              [
+                event({ categories: ["Docket - unverified", "Docket - reminder"], id: "e-ours" }),
+                event({ categories: ["Docket - unverified", "Docket - verified"], id: "e-verified-added" }),
+                event({ categories: ["Docket - unverified", "Client - fixture"], id: "e-client-added" }),
+                event({ categories: [], id: "e-uncategorised" }),
+                event({ categories: ["Docket - needs review"], id: "e-adopted" }),
+              ],
+              (value) => [value.id, value] as const
+            )
+          )
+        );
+        yield* journalService.append([
+          created(RUN, "e-ours"),
+          created(RUN, "e-verified-added"),
+          created(RUN, "e-client-added"),
+          created(RUN, "e-uncategorised"),
+          undoLine(RUN, "event-adopted", { eventId: "e-adopted" }),
+        ]);
+
+        const planned = yield* plan;
+        yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
+
+        expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
+          ["e-ours", "delete"],
+          ["e-verified-added", "keep"],
+          ["e-client-added", "keep"],
+          ["e-uncategorised", "keep"],
+          ["e-adopted", "delete"],
+        ]);
+        expect(A.sort(A.fromIterable(HashMap.keys(yield* Ref.get(fake.events))), Str.Order)).toStrictEqual([
+          "e-client-added",
+          "e-uncategorised",
+          "e-verified-added",
+        ]);
+      })
+    );
+  });
+
+  it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "resumes a halfway undo without touching what it already did",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeGraph;
+        const store = yield* DocketIntakeStore;
+        const journalService = yield* DocketIntakeJournal;
+        yield* Ref.set(
+          fake.events,
+          HashMap.make(["e-left", event({ categories: ["Docket - unverified"], id: "e-left" })])
+        );
+        yield* Ref.set(
+          fake.messages,
+          HashMap.fromIterable(
+            A.map(
+              [mailMessage({ categories: [], id: "m1" }), mailMessage({ categories: ["Docket - entered"], id: "m2" })],
+              (value) => [value.id, value] as const
+            )
+          )
+        );
+        yield* store.save(
+          DocketIntakeState.make({
+            cursor: O.some("2030-01-09T12:00:00.000Z"),
+            ledger: { m1: ledger.m1, m2: ledger.m2 },
+          })
+        );
+        // The first undo deleted e-provisional, unmarked m1 and stopped before anything else,
+        // so the ledger still holds both messages.
+        yield* journalService.append([
+          created(RUN, "e-provisional"),
+          created(RUN, "e-left"),
+          marked(RUN, "m1", 30),
+          marked(RUN, "m2", 40),
+          undoLine(RUN, "undo-event-deleted", { eventId: "e-provisional" }),
+          undoLine(RUN, "undo-message-unmarked", { messageId: "m1" }),
+        ]);
+
+        const planned = yield* plan;
+        const report = yield* applyDocketUndo({ mailbox: MAILBOX, plan: planned });
+        const calls = yield* Ref.get(fake.calls);
+        const undoLines = A.filter(yield* readDocketJournal(DIRECTORY), (line) => Str.startsWith("undo-")(line.kind));
+
+        expect(A.map(planned.events, (target) => [target.eventId, target.action])).toStrictEqual([
+          ["e-provisional", "undone"],
+          ["e-left", "delete"],
+        ]);
+        expect(A.map(planned.messages, (target) => [target.messageId, target.action])).toStrictEqual([
+          ["m1", "undone"],
+          ["m2", "unmark"],
+        ]);
+        expect(report).toMatchObject({ alreadyUndone: 2, deleted: 1, ledgerCleared: 2, unmarked: 1 });
+        expect(A.some(calls, (call) => Str.endsWith(" e-provisional")(call) || Str.endsWith(" m1")(call))).toBe(false);
+        expect(A.map(undoLines, (line) => line.kind)).toStrictEqual([
+          "undo-event-deleted",
+          "undo-message-unmarked",
+          "undo-event-deleted",
+          "undo-message-unmarked",
+        ]);
+        assertSome(yield* categoriesOf("m2"), []);
+        expect(R.keys((yield* store.load).ledger)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(UndoLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "undoing a run again leaves a later run's mark, ledger record and event alone",
+      Effect.fnUntraced(function* () {
+        const fake = yield* FakeGraph;
+        const store = yield* DocketIntakeStore;
+        const journalService = yield* DocketIntakeJournal;
+        yield* Ref.set(
+          fake.events,
+          HashMap.make(["e-provisional", event({ categories: ["Docket - unverified"], id: "e-provisional" })])
+        );
+        yield* Ref.set(
+          fake.messages,
+          HashMap.make(["m1", mailMessage({ categories: ["Docket - entered"], id: "m1" })])
+        );
+        yield* store.save(
+          DocketIntakeState.make({ cursor: O.some("2030-01-09T12:00:00.000Z"), ledger: { m1: ledger.m1 } })
+        );
+        yield* journalService.append([created(RUN, "e-provisional"), marked(RUN, "m1", 30)]);
+        const first = yield* applyDocketUndo({ mailbox: MAILBOX, plan: yield* plan });
+
+        // The later run reads m1 again, enters it under a new event and marks it.
+        const laterRecord = record(needsReview("m1", "e-later"), "2030-01-09T09:30:00.000Z");
+        yield* Ref.update(
+          fake.events,
+          HashMap.set("e-later", event({ categories: ["Docket - needs review"], id: "e-later" }))
+        );
+        yield* Ref.update(
+          fake.messages,
+          HashMap.set("m1", mailMessage({ categories: ["Docket - entered"], id: "m1" }))
+        );
+        yield* store.save(
+          DocketIntakeState.make({ cursor: O.some("2030-01-09T12:00:00.000Z"), ledger: { m1: laterRecord } })
+        );
+        yield* journalService.append([created(OTHER_RUN, "e-later"), marked(OTHER_RUN, "m1", 30)]);
+        const linesBefore = A.length(yield* readDocketJournal(DIRECTORY));
+        yield* Ref.set(fake.calls, []);
+
+        const replanned = yield* plan;
+        const again = yield* applyDocketUndo({ mailbox: MAILBOX, plan: replanned });
+        const state = yield* store.load;
+
+        expect(first).toMatchObject({ deleted: 1, ledgerCleared: 1, unmarked: 1 });
+        expect(A.map(replanned.messages, (target) => [target.messageId, target.action])).toStrictEqual([
+          ["m1", "keep"],
+        ]);
+        assertSome(
+          O.flatMap(A.head(replanned.messages), (target) => target.markedLaterBy),
+          OTHER_RUN
+        );
+        expect(again).toMatchObject({ alreadyUndone: 1, deleted: 0, ledgerCleared: 0, messagesKept: 1, unmarked: 0 });
+        assertSome(yield* categoriesOf("m1"), ["Docket - entered"]);
+        expect(HashMap.has(yield* Ref.get(fake.events), "e-later")).toBe(true);
+        expect(R.keys(state.ledger)).toStrictEqual(["m1"]);
+        expect(O.getOrUndefined(R.get(state.ledger, "m1"))?.outcome).toMatchObject({ entry: { eventId: "e-later" } });
+        expect(A.length(yield* readDocketJournal(DIRECTORY))).toBe(linesBefore);
+        expect(yield* Ref.get(fake.calls)).toStrictEqual([]);
       })
     );
   });

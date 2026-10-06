@@ -29,6 +29,7 @@ const $I = $LawPracticeServerId.create("DocketIntake/DocketIntake.journal");
 
 const JOURNAL_FILE = "journal.jsonl";
 const LINE_BREAK = "\n";
+const LINE_FEED = 0x0a;
 
 /**
  * Id of one poll cycle, the unit `runs` lists and `undo` takes back.
@@ -101,7 +102,10 @@ export const makeDocketRunId = (instant: DateTime.DateTime): DocketRunId =>
  *
  * **Details**
  *
- * `event-created` and `message-marked` are the writes of a poll cycle. The
+ * `event-created` and `message-marked` are the writes of a poll cycle.
+ * `event-adopted` names an event a cycle found by its key that no earlier
+ * line names, such as one created by a cycle that stopped before it could
+ * journal the create; an undo treats it as created by the adopting run. The
  * `undo-` kinds are what an undo of that run found and did: an event it
  * deleted, kept (the attorney had confirmed or recategorised it) or found
  * gone, and a message it unmarked or found gone.
@@ -119,6 +123,7 @@ export const makeDocketRunId = (instant: DateTime.DateTime): DocketRunId =>
  */
 export const DocketJournalKind = LiteralKit([
   "event-created",
+  "event-adopted",
   "message-marked",
   "undo-event-deleted",
   "undo-event-kept",
@@ -218,6 +223,8 @@ export interface DocketIntakeJournalShape {
   readonly beginRun: Effect.Effect<DocketRunId>;
   /** The id writes are recorded under now. */
   readonly currentRun: Effect.Effect<DocketRunId>;
+  /** Every line of the journal, oldest first. */
+  readonly entries: Effect.Effect<ReadonlyArray<DocketJournalEntry>, DocketIntakeError>;
 }
 
 /**
@@ -243,6 +250,19 @@ const journalPath = Effect.fnUntraced(function* (directory: string) {
   return path.join(directory, JOURNAL_FILE);
 });
 
+// Cut a final line a crash left without its line break, so the next append starts a line of its
+// own instead of being glued onto the torn one.
+const repairTornTail = Effect.fnUntraced(function* (fs: FileSystem.FileSystem, file: string) {
+  if (!(yield* fs.exists(file))) {
+    return;
+  }
+  const bytes = yield* fs.readFile(file);
+  const complete = bytes.lastIndexOf(LINE_FEED) + 1;
+  if (complete < bytes.length) {
+    yield* fs.truncate(file, complete);
+  }
+});
+
 /**
  * Build the file-backed write journal, `journal.jsonl` in the state
  * directory.
@@ -250,7 +270,8 @@ const journalPath = Effect.fnUntraced(function* (directory: string) {
  * **Details**
  *
  * Each line is one schema-encoded {@link DocketJournalEntry}. The directory
- * is created when the layer is built. Lines are only ever appended, and every
+ * is created when the layer is built, and a final line a crash left without
+ * its line break is cut off then, so later appends stay readable. Lines are only ever appended, and every
  * append is synced to disk before it succeeds. The layer needs the file
  * store: building the store takes `state.lock`, so the journal is only
  * written by the one process that holds the state directory.
@@ -278,10 +299,16 @@ export const makeDocketFileJournalLayer = (
       // The store is not used here; requiring it means the state lock is held while the journal is open.
       yield* DocketIntakeStore;
       const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
       const file = yield* journalPath(options.directory);
       yield* fs
         .makeDirectory(options.directory, { recursive: true })
         .pipe(Effect.mapError(journalError("journal-directory")));
+      yield* repairTornTail(fs, file).pipe(Effect.mapError(journalError("journal-repair")));
+      const read = readDocketJournal(options.directory).pipe(
+        Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.provideService(Path.Path, path)
+      );
       const mint = Effect.map(DateTime.now, makeDocketRunId);
       const run = yield* Ref.make(yield* mint);
 
@@ -300,6 +327,7 @@ export const makeDocketFileJournalLayer = (
         }),
         beginRun: Effect.tap(mint, (runId) => Ref.set(run, runId)),
         currentRun: Ref.get(run),
+        entries: read,
       });
     }).pipe(Effect.withSpan("DocketJournal.make"))
   );
@@ -353,6 +381,23 @@ const recordWrite = Effect.fnUntraced(function* (
   yield* journal.append([DocketJournalEntry.make({ ...fields, at, runId })]).pipe(Effect.orDie);
 });
 
+const isEventLine = (line: DocketJournalEntry) =>
+  line.kind === DocketJournalKind.Enum["event-created"] || line.kind === DocketJournalKind.Enum["event-adopted"];
+
+// Journal an event the pipeline found by its key when no line names it yet: a cycle created it
+// and stopped before the create was journaled, so without this line no undo could reach it.
+const adopt = Effect.fnUntraced(function* (journal: DocketIntakeJournalShape, key: string, found: DocketWrittenEntry) {
+  const lines = yield* journal.entries.pipe(Effect.orDie);
+  const known = A.some(lines, (line) => isEventLine(line) && O.contains(line.eventId, found.eventId));
+  if (!known) {
+    yield* recordWrite(journal, {
+      eventId: O.some(found.eventId),
+      idempotencyKey: O.some(key),
+      kind: DocketJournalKind.Enum["event-adopted"],
+    });
+  }
+});
+
 const createdLine = (entry: DocketCalendarEntry, written: DocketWrittenEntry) => ({
   category: O.some(entry.category),
   eventId: O.some(written.eventId),
@@ -368,12 +413,15 @@ const createdLine = (entry: DocketCalendarEntry, written: DocketWrittenEntry) =>
  *
  * `create` records an `event-created` line after the event exists, and
  * `markEntered` a `message-marked` line after the message is marked. A failed
- * write records nothing, and an entry the pipeline finds by its key is not a
- * write, so it records nothing either. When a create fails as an ambiguous
- * write, the decorator looks the event up by its key, as the pipeline would:
- * an event found there was created by this call and is recorded and
- * returned. A line the journal cannot write stops the cycle as a defect,
- * because a write missing from the journal could not be undone. Reads pass
+ * write records nothing. An entry the pipeline finds by its key is not a
+ * write and records nothing when a journal line already names it; one no
+ * line names, which is what a cycle that stopped between a create and its
+ * line leaves behind, gets an `event-adopted` line under the current run, so
+ * undoing that run reaches it. When a create fails as an ambiguous write, the
+ * decorator looks the event up by its key, as the pipeline would: an event
+ * found there was created by this call and is recorded and returned. A line
+ * the journal cannot write or read stops the cycle as a defect, because a
+ * write missing from the journal could not be undone. The mailbox reads pass
  * through unchanged.
  *
  * **Example** (Decorate the ports)
@@ -415,7 +463,13 @@ export const DocketJournalingPortsLive: Layer.Layer<
             Effect.tap(created(entry))
           );
         }),
-        findByKey: calendar.findByKey,
+        findByKey: Effect.fn("DocketJournal.findByKey")(function* (key) {
+          const found = yield* calendar.findByKey(key);
+          if (O.isSome(found)) {
+            yield* adopt(journal, key, found.value);
+          }
+          return found;
+        }),
       })
     ).pipe(
       Context.add(
@@ -462,6 +516,9 @@ export class DocketRunSummary extends S.Class<DocketRunSummary>($I`DocketRunSumm
     eventsGone: S.Natural.annotateKey({ description: "Events an undo of the run found gone." }),
     messagesUnmarked: S.Natural.annotateKey({ description: "Messages an undo of the run unmarked." }),
     messagesGone: S.Natural.annotateKey({ description: "Messages an undo of the run found gone." }),
+    eventsAdopted: S.Natural.annotateKey({
+      description: "Events the run found by key that no earlier journal line named.",
+    }),
   },
   $I.annote("DocketRunSummary", { description: "Counts of one docket intake run in the journal." })
 ) {}
@@ -472,6 +529,7 @@ const summarize = (lines: A.NonEmptyReadonlyArray<DocketJournalEntry>): DocketRu
   const first = A.headNonEmpty(lines);
   const count = (kind: DocketJournalKind) => A.length(A.filter(lines, (line) => line.kind === kind));
   return DocketRunSummary.make({
+    eventsAdopted: count("event-adopted"),
     eventsCreated: count("event-created"),
     eventsDeleted: count("undo-event-deleted"),
     eventsGone: count("undo-event-gone"),

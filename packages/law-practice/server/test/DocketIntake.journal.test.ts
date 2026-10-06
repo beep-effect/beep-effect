@@ -121,6 +121,8 @@ const DecoratedLayer = DocketJournalingPortsLive.pipe(Layer.provideMerge(Layer.m
 
 const journalLines = readDocketJournal(DIRECTORY);
 
+const encodeJournalLine = S.encodeEffect(S.fromJsonString(DocketJournalEntry));
+
 const kinds = (lines: ReadonlyArray<DocketJournalEntry>) => A.map(lines, (line) => line.kind);
 
 const failureOf = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<O.Option<E>, never, R> =>
@@ -151,6 +153,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
       line(RUN, "undo-event-gone", 6),
       line(RUN, "undo-message-unmarked", 7),
       line(RUN, "undo-message-gone", 8),
+      line(RUN, "event-adopted", 9),
     ];
 
     const summaries = summarizeDocketRuns(lines);
@@ -164,6 +167,7 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
       messagesGone: 1,
       messagesMarked: 1,
       messagesUnmarked: 1,
+      eventsAdopted: 1,
     });
     expect(summaries[0]?.eventsCreated).toBe(2);
     assertSome(latestDocketRun(lines), LATER_RUN);
@@ -210,6 +214,30 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
           O.map(failure, (error) => error.cause),
           "journal-decode"
         );
+      })
+    );
+  });
+
+  it.layer(StoreLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "cuts a torn final line off when the journal is opened, so the next append stays readable",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const good = yield* encodeJournalLine(line(RUN, "event-created"));
+        yield* fs.makeDirectory(DIRECTORY, { recursive: true });
+        yield* fs.writeFileString(JOURNAL, `${good}\n{"runId":"run-`);
+
+        const openJournal = Layer.build(
+          makeDocketFileJournalLayer(DocketFileStoreOptions.make({ directory: DIRECTORY }))
+        ).pipe(Effect.map(Context.get(DocketIntakeJournal)));
+
+        // Opening the journal after the crash is what repairs it; opening an intact one changes nothing.
+        yield* (yield* openJournal).append([line(RUN, "message-marked", 1)]);
+        yield* (yield* openJournal).append([line(RUN, "undo-event-kept", 2)]);
+        const lines = yield* journalLines;
+
+        expect(kinds(lines)).toStrictEqual(["event-created", "message-marked", "undo-event-kept"]);
+        expect(Str.endsWith("\n")(yield* fs.readFileString(JOURNAL))).toBe(true);
       })
     );
   });
@@ -293,6 +321,48 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
 
         assertSome(lost, ambiguous);
         expect(recovered).toStrictEqual(written);
+        expect(kinds(yield* journalLines)).toStrictEqual(["event-created"]);
+      })
+    );
+  });
+
+  it.layer(DecoratedLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "adopts an event a crash left unjournaled when the next cycle finds it by key, and only once",
+      Effect.fnUntraced(function* () {
+        const calendar = yield* DocketCalendar;
+        const inner = yield* InnerPorts;
+        const fs = yield* FileSystem.FileSystem;
+        // The create reaches the calendar, then the process dies before the line is written.
+        yield* fs.remove(DIRECTORY, { recursive: true });
+        const crashed = yield* Effect.exit(calendar.create(entry));
+        yield* fs.makeDirectory(DIRECTORY, { recursive: true });
+        yield* Ref.set(inner.found, O.some(written));
+
+        const found = yield* calendar.findByKey(entry.key);
+        yield* calendar.findByKey(entry.key);
+        const lines = yield* journalLines;
+
+        assertTrue(Exit.hasDies(crashed));
+        assertSome(found, written);
+        expect(
+          A.map(lines, (line) => [line.kind, line.runId, O.getOrNull(line.eventId), O.getOrNull(line.idempotencyKey)])
+        ).toStrictEqual([["event-adopted", RUN, "event-1", "docket:0f3a"]]);
+      })
+    );
+  });
+
+  it.layer(DecoratedLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "does not adopt an event the journal already names",
+      Effect.fnUntraced(function* () {
+        const calendar = yield* DocketCalendar;
+        const inner = yield* InnerPorts;
+        yield* calendar.create(entry);
+        yield* Ref.set(inner.found, O.some(written));
+
+        yield* calendar.findByKey(entry.key);
+
         expect(kinds(yield* journalLines)).toStrictEqual(["event-created"]);
       })
     );

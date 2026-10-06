@@ -44,7 +44,7 @@ DOCKET_INTAKE_CERT_PRIVATE_KEY="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET
 DOCKET_INTAKE_MAILBOX="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET_MAILBOX"
 DOCKET_INTAKE_TIME_ZONE="America/Chicago"
 DOCKET_INTAKE_STATE_DIR="/home/<you>/.local/state/beep/docket-intake-first-run"
-AI_ANTHROPIC_API_KEY="op://beep-dev-secrets/beep-ai/AI_ANTHROPIC_API_KEY"
+AI_ANTHROPIC_API_KEY="op://BEEP_SECRETS/BEEP_SECRETS/AI_ANTHROPIC_API_KEY"
 ```
 
 Check that every reference resolves, with no output:
@@ -55,7 +55,12 @@ op run --env-file=$HOME/.config/beep-docket-intake/first-run.env -- true >/dev/n
 
 ## The run
 
-Every command below is run from the repository root and prints one JSON line.
+Every command below is run from the repository root. On standard output,
+`smoke` prints `PASS` or `FAIL` lines of text, ending with `PASS smoke` or
+`FAIL smoke: …`; `dry-run`, `poll` and `undo` print one JSON line; `runs`
+prints one JSON line per run. A command that fails prints no
+JSON: it prints `stage <stage>: <cause>` on standard error and exits non-zero.
+Logs also go to standard error.
 
 1. **Smoke, read only.** Confirms the connection and the mailbox scope.
 
@@ -72,7 +77,8 @@ Every command below is run from the repository root and prints one JSON line.
    ```
 
    Stop here if any would-be entry is on a date you can see is wrong, or if
-   the run fails. Send the JSON line to the docket intake session.
+   the run fails. Send the JSON line, or on a failure the `stage` line from
+   standard error, to the docket intake session.
 
 3. **Live run.** Same window, now writing tentative entries.
 
@@ -90,8 +96,11 @@ Every command below is run from the repository root and prints one JSON line.
 ## Undo
 
 Removes the calendar entries that run created and the `Docket - entered`
-mark it put on messages. An entry the attorney has already changed to
-`Docket - verified`, or recategorised, is kept and reported as kept.
+mark it put on messages. An entry is deleted only when every category on it
+is one of the service's provisional ones; an entry the attorney changed to or
+added `Docket - verified` on, or put in a category of their own, is kept and
+reported as kept. Running the same undo again only finishes what an earlier
+one left, and a message a later run marked again is left alone.
 
 Use the run id you noted. `--run latest` also works but means the newest run
 in the journal, whether or not it has been undone, so the explicit id is safer.
@@ -121,7 +130,8 @@ directory: `rm -r ~/.local/state/beep/docket-intake-first-run`.
 - [ ] Smoke prints `PASS smoke`.
 - [ ] Dry run: count of would-be entries and needs-review items noted;
       no date looks wrong at a glance.
-- [ ] Live run exits 0; JSON line (with `runId`) saved.
+- [ ] Live run exits 0; JSON line (with `runId`) saved. On a non-zero exit,
+      the `stage <stage>: <cause>` line from standard error saved instead.
 - [ ] In Outlook (attorney's calendar): each new entry is tentative, in a
       `Docket - *` category, with the source email link in its body.
 - [ ] `[UNVERIFIED]` entries: date checked against the linked email.
@@ -137,6 +147,6 @@ directory: `rm -r ~/.local/state/beep/docket-intake-first-run`.
 | Code | Meaning |
 | --- | --- |
 | 0 | Done. |
-| 1 | A step failed; the JSON line names the stage. |
+| 1 | A step failed. No JSON is printed; standard error carries `stage <stage>: <cause>`. |
 | 2 | Refused: a writing command (`undo`) ran without `--yes`. |
 | 3 | Graph throttled the run. Wait and run the same command again. |

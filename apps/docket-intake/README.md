@@ -67,17 +67,21 @@ Run from the repository root with `bun run apps/docket-intake/src/bin.ts <comman
   would do, but the real cursor, ledger, journal and `state.lock` are never
   touched, and it runs while the service runs. No digest is written.
 - `undo --run <runId>` reads the run's lines from the journal. Each calendar
-  entry the run created is deleted if it still carries one of the service's
-  provisional categories (`Docket - unverified`, `Docket - needs review`,
-  `Docket - reminder`, `Docket - digest`); an entry the attorney moved to
-  `Docket - verified`, or to a category of their own, is kept and counted as
-  kept; an entry already deleted counts as gone. `Docket - entered` is taken
+  entry the run created or adopted is deleted only if every category it
+  carries is one of the service's provisional categories
+  (`Docket - unverified`, `Docket - needs review`, `Docket - reminder`,
+  `Docket - digest`); an entry with no category, or with `Docket - verified` or a
+  category of the attorney's own beside or instead of ours, is kept and
+  counted as kept; an entry already deleted counts as gone. `Docket - entered` is taken
   off each message the run marked, and every other category stays; the write
   is conditional on the message's change key and is retried once when the
   message changed in between. The run's messages are removed from the ledger
   and the cursor moves back to the earliest of them, so a later `poll`
   processes them again. Each event and message gets an `undo-` line in the
-  journal, so an undo that stopped halfway can be run again. Undo needs the
+  journal, so an undo that stopped halfway can be run again: what already has
+  a line is not touched again and counts as `alreadyUndone`. A message a later
+  run marked again is left alone, with its mark and ledger record, and counts
+  as `messagesKept`. Undo needs the
   Graph settings only, not the model key. It holds `state.lock` while it
   writes, so stop the service first; `undo --dry-run` reports the same counts,
   writes nothing and takes no lock.
@@ -112,9 +116,14 @@ line per write, after the write succeeded:
 
 A run id is minted at the start of every poll cycle, `poll` or each cycle of
 `run`: `run-` and the UTC start time to the millisecond. An entry the service
-finds already on the calendar by its key is not a write and gets no line. A
-create that timed out but did land is found by its key and recorded. Lines are
-only appended, under `state.lock`, and each append is synced to disk. If a
+finds already on the calendar by its key is not a write and gets no line when
+a journal line already names it; one no line names, left by a cycle that
+stopped between the create and its line, gets an `event-adopted` line under
+the current run, so `undo` of that run reaches it. A create that timed out but
+did land is found by its key and recorded. Lines are
+only appended, under `state.lock`, and each append is synced to disk. A final
+line a crash left without its line break is cut off when the journal is next
+opened for writing, so the next line starts cleanly. If a
 line cannot be written the cycle stops with an error rather than leave a
 write that `undo` could not find. An undo adds `undo-event-deleted`,
 `undo-event-kept`, `undo-event-gone`, `undo-message-unmarked` and
@@ -132,8 +141,8 @@ would write on the calendar entry.
 | --- | --- |
 | `poll` | `runId`, `seen`, `processed`, `entered`, `needsReview`, `notDocket`, `failed`. |
 | `dry-run` | The same counts, `dryRun: true`, and `entries`: one `{ messageId, kind, category, date, flags, subject }` per entry it would create. |
-| `runs` | One line per run: `runId`, `startedAt`, `eventsCreated`, `messagesMarked`, and what undos did: `eventsDeleted`, `eventsKept`, `eventsGone`, `messagesUnmarked`, `messagesGone`. |
-| `undo` | `runId`, `dryRun`, `deleted`, `kept`, `gone`, `unmarked`, `messagesGone`, `ledgerCleared`. |
+| `runs` | One line per run: `runId`, `startedAt`, `eventsCreated`, `messagesMarked`, and what undos did: `eventsDeleted`, `eventsKept`, `eventsGone`, `messagesUnmarked`, `messagesGone`, and `eventsAdopted`: events the run found by key that no journal line named, such as one a crashed cycle created. |
+| `undo` | `runId`, `dryRun`, `deleted`, `kept`, `gone`, `unmarked`, `messagesGone`, `ledgerCleared`, `messagesKept` (a later run marked them again) and `alreadyUndone` (an earlier undo of the run handled them). |
 
 | Code | Meaning |
 | --- | --- |
@@ -186,7 +195,7 @@ DOCKET_INTAKE_CERT_THUMBPRINT_SHA256="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_
 DOCKET_INTAKE_CERT_PRIVATE_KEY="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET_CERT_PRIVATE_KEY"
 DOCKET_INTAKE_MAILBOX="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET_MAILBOX"
 DOCKET_INTAKE_TIME_ZONE="America/Chicago"
-AI_ANTHROPIC_API_KEY="op://beep-dev-secrets/beep-ai/AI_ANTHROPIC_API_KEY"
+AI_ANTHROPIC_API_KEY="op://BEEP_SECRETS/BEEP_SECRETS/AI_ANTHROPIC_API_KEY"
 ```
 
 Check the references resolve, then launch through the same wrapper:
