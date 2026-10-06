@@ -22000,13 +22000,13 @@
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. This native CLI integration runs one complete provision/import/revoke transaction. The inner generated loop mutates only the acceptance reference while asserting the same persisted marker remains unchanged before revocation. Moving the whole CLI transaction into each generated case would remove that shared-marker invariant and multiply subprocess work. Keep fcRuns(10), seed/shrinking, and the explicit Passed assertion; focused and 400-run integration checks pass."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:365:checkEffect@36#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:366:checkEffect@36#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
-      "line": 365,
-      "endLine": 380,
+      "line": 366,
+      "endLine": 381,
       "symbol": "checkEffect",
       "occurrence": "v2:ad6b69003cf2934fbcada88907461f762e95046ef2b8d09dd43f723902ca2c85",
       "class": "direct-arbitrary-check",
@@ -26768,6 +26768,27 @@
       "reason": "Reviewed in goals/turborepo-task-qualification/research/test-resource-boundaries.md. NodeServices supplies real private acceptance and issuer files; NodeCrypto supplies actual hashing and authentication. The tests check mode, replacement, persistence and revocation with these native services in explicit it.layer registrations. This exception covers import provenance only; the shared-clock finding remains separate."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/cache-baseline-merge.test.ts:17:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/cache-baseline-merge.test.ts",
+      "line": 17,
+      "endLine": 17,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/cache-command.test.ts:4:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -26896,13 +26917,13 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:44:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:45:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
-      "line": 44,
-      "endLine": 44,
+      "line": 45,
+      "endLine": 45,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
