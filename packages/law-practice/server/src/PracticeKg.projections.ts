@@ -26,6 +26,7 @@ import {
   resolveAnchors,
 } from "./PracticeKg.families.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { buildMatterTables, PracticeKgMatterGraph, writeMatterTables } from "./PracticeKg.matters.ts";
 import { readReferenceScans } from "./PracticeKg.references.ts";
 import { PracticeKgCatalogRow, PracticeKgEnrichmentRow, stripPrefix, withDuckDb } from "./PracticeKg.rows.ts";
 import {
@@ -53,7 +54,7 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-05-01";
+const graphBundleVersion = "2026-10-06-01";
 const graphReadme = `Practice Knowledge Graph Bundle
 
 This folder is a read-only local data bundle for the Practice KG MCP server.
@@ -619,7 +620,9 @@ const buildGraphRows = (
   const attributed = A.map(catalogRows, (row) => ({
     attribution: pipe(
       MutableHashMap.get(attributionByDigest, row.digest),
-      O.getOrThrowWith(() => new Error(`Graph build lost the attribution for "${row.digest}".`))
+      O.getOrThrowWith(() =>
+        PracticeKgProjectionError.make({ message: `Graph build lost the attribution for "${row.digest}".` })
+      )
     ),
     row,
   }));
@@ -831,6 +834,9 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   );
   const scans = yield* readReferenceScans(duckDbPath);
   const graph = projectGraph(catalogRows, enrichmentRows, scans);
+  yield* writeMatterTables(duckDbPath)(
+    buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes }))
+  );
   const builtAt = DateTime.formatIso(yield* DateTime.now);
   const counts = PracticeKgCounts.make({
     documents: S.Natural.make(duckCounts.documents),
@@ -852,7 +858,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "2", pglite: "2" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(

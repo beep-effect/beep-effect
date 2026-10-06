@@ -27,11 +27,21 @@ administrator instead.
 
 ## Refresh
 
+The server and the bundle ship as a pair: this server reads store format
+pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
+formats. Replace the extension and the bundle folder together.
+
 Refresh always means full replacement; never merge database files. Close
 Claude Desktop, rename the current `practice-kg-bundle/` to
 `practice-kg-bundle.bak/`, copy the new folder into its place, reopen Claude
 Desktop, and call `kg_provenance` with no arguments to confirm the new bundle
 version. Delete the backup only after the gauntlet passes.
+
+## Before asking evaluation questions
+
+Claude Desktop memory crosses chats. Before a gauntlet or acceptance run,
+open **Settings → Memory**, clear saved memories (or turn memory off), and
+start a new chat, so earlier answers cannot leak into the run.
 
 ## Optional USPTO companion
 

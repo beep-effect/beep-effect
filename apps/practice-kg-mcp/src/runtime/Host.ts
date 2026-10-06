@@ -22,9 +22,9 @@ import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
 const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
 // Mirrors `PracticeKgSchemaVersions.pglite`; bumped with every breaking kg_node/kg_edge layout change.
-const supportedPgliteStoreVersion = "2";
+const supportedStoreVersions = { duckdb: "2", pglite: "2" } as const;
 const decodeStoreVersionProbe = S.decodeUnknownEffect(
-  S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ pglite: S.String }) }))
+  S.fromJsonString(S.Struct({ schemaVersion: S.Struct({ duckdb: S.String, pglite: S.String }) }))
 );
 
 /**
@@ -72,9 +72,14 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
   // attribution columns the tools read, so it is refused by store version
   // before the strict decode can report it as merely "invalid".
   const storeVersion = yield* decodeStoreVersionProbe(manifestText).pipe(Effect.option);
-  if (O.isSome(storeVersion) && storeVersion.value.schemaVersion.pglite !== supportedPgliteStoreVersion) {
+  if (
+    O.isSome(storeVersion) &&
+    (storeVersion.value.schemaVersion.pglite !== supportedStoreVersions.pglite ||
+      storeVersion.value.schemaVersion.duckdb !== supportedStoreVersions.duckdb)
+  ) {
+    const found = storeVersion.value.schemaVersion;
     return yield* PracticeKgHostError.make({
-      message: `Practice KG bundle at "${bundleDir}" uses graph store format ${storeVersion.value.schemaVersion.pglite}; this server reads format ${supportedPgliteStoreVersion}. Install the rebuilt bundle that matches this server.`,
+      message: `Practice KG bundle at "${bundleDir}" uses store format pglite ${found.pglite} / duckdb ${found.duckdb}; this server reads pglite ${supportedStoreVersions.pglite} / duckdb ${supportedStoreVersions.duckdb}. Install the rebuilt bundle that matches this server.`,
     });
   }
   const manifest = yield* decodeManifest(manifestText).pipe(

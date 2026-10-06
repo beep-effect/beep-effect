@@ -104,6 +104,12 @@ documents/archives. `kg_docket_family` accepts either form: a bare family
 returns every keyed family sharing it.
 All keys are natural ⇒ IRIs are rerun-stable with no sequence state.
 
+**Matter tables (D-12).** The build also writes `matters` (one row per
+`docket_family` node) and `matter_dockets` (one row per `docket` node, with the
+application and patent numbers filed from it) into `practice.duckdb`. They are
+the read surface for services; shapes and rules are in
+`matter-lookup-contract.md`. `schemaVersion.duckdb` is `2`.
+
 **Email messages are NOT PGlite rows.** 663k rows belong in DuckDB (§3);
 PGlite keeps the spine small and fast. Archive-level linkage (D-2 caveat) is
 expressed by `archived_in` edges plus DuckDB `email_messages.archive_digest`.
@@ -198,6 +204,7 @@ envelope carries `epistemic_status` and `bundle_version`.
 | `corpus_get_document` | `digest \| organized_path`, `range?` | DuckDB `document_text`; fallback pointer into `corpus_root` when over budget/absent | spine label; enables side-by-side (two calls) |
 | `email_search` | `query?, sender?, after?, before?, family?` | DuckDB `email_messages` (subject/sender/recipients filters); family filter via archive→family heuristic **explicitly marked archive-level confidence** | spine label + linkage-confidence note |
 | `kg_candidate_claims` | `docket \| family \| digest` | PGlite epistemic tables via existing converters; join `Evidence` spans | **`candidate — unreviewed`** on every row + evidence span |
+| `kg_matter_lookup` | `reference` (docket, family, application, patent, or client number) | DuckDB `matters` + `matter_dockets`; `resolution` unique / ambiguous / none | spine label |
 | `kg_provenance` | `iri \| digest \| natural_key` (none ⇒ bundle status) | PGlite node → provenance columns; digest → DuckDB `documents` row + source_files origin chain | spine label |
 
 ## 7. Determinism & tests (AC-1, AC-2)

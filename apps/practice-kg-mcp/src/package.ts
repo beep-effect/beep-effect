@@ -23,15 +23,15 @@ import { PackageFailure } from "./PracticeKgMcp.errors.ts";
 
 const $I = $PracticeKgMcpId.create("package");
 
-const DuckDbVersion = "1.5.5-r.2";
+const DuckDbVersion = "1.5.6-r.1";
 /*
  * sha512 integrity for the win32 bindings tarball, copied from bun.lock's
- * entry for @duckdb/node-bindings-win32-x64@1.5.5-r.2. The download is
+ * entry for @duckdb/node-bindings-win32-x64@1.5.6-r.1. The download is
  * verified against this pin before anything is extracted into a
  * user-installed artifact; a DuckDB catalog bump must update both constants.
  */
 const WindowsBindingsSha512 =
-  "r5V6Q0zcv5HSHGDXsd6M+t3jakhm6S11TNH5vydKGeq8JBWj4v3ZTof/mF3R8Rly+90Z205KoI9ujblg/jN04g==";
+  "5Rpn5WXEG5gY/u7Keh+c4kuwG/LiE31pCP9CoCohv+u0aFensk/yRIQVW/CXuIoITky9xFhdRzaWUtAnGTYxJQ==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
 class BindingsManifest extends S.Class<BindingsManifest>($I`BindingsManifest`)(
   { version: S.String },
@@ -181,6 +181,7 @@ const ManifestToolDescriptions: Readonly<Record<keyof typeof PracticeKgToolkit.t
   kg_clients: "List practice clients and docket-family counts.",
   kg_docket_family: "Walk one docket-family spine.",
   kg_find: "Find knowledge-graph nodes.",
+  kg_matter_lookup: "Resolve a reference to its practice matter.",
   kg_provenance: "Resolve row provenance or report bundle status.",
 };
 
