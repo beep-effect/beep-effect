@@ -1,4 +1,6 @@
 import {
+  BOUND_MODEL_SEGMENT,
+  bindLocatorModel,
   expectedLocatorValue,
   extractGeneratedBlock,
   generatedBlockBegin,
@@ -11,6 +13,7 @@ import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { assertNone, assertSome, strictEqual } from "@effect/vitest/utils";
 import { Effect, Layer, Option as O } from "effect";
+import * as S from "effect/Schema";
 import { readFixtureText } from "./helpers/models-fixtures.ts";
 import type { Locator, ModelId, ModelsTargetFile } from "@beep/repo-cli/commands/Models";
 
@@ -34,6 +37,7 @@ const seat = ModelBinding.make({
   note: O.none(),
 });
 
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const verbatim = { _tag: "verbatim" } as const;
 const labels = {
   _tag: "effort-display-label",
@@ -226,6 +230,32 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
           binding: binding("model"),
           render: verbatim,
           pointer: ["nested", "model"],
+          fallbacks: [],
+        } as Locator),
+        "gpt-5.6-luna"
+      );
+      // An absent primary pointer falls through to the first fallback that
+      // resolves; a present primary pointer wins over every fallback.
+      assertSome(
+        yield* readFixture("locators.json", {
+          _tag: "json-key",
+          binding: binding("model"),
+          render: verbatim,
+          pointer: ["absent", "model"],
+          fallbacks: [
+            ["also", "absent"],
+            ["nested", "model"],
+          ],
+        } as Locator),
+        "gpt-5.6-luna"
+      );
+      assertSome(
+        yield* readFixture("locators.json", {
+          _tag: "json-key",
+          binding: binding("model"),
+          render: verbatim,
+          pointer: ["nested", "model"],
+          fallbacks: [["absent", "model"]],
         } as Locator),
         "gpt-5.6-luna"
       );
@@ -341,4 +371,30 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
     expect(body).toContain("| codex.heavy | codex-cli | `gpt-6-astra` | `medium` |");
     strictEqual(body.includes("superseded:"), false);
   });
+
+  it.effect("a bound-model pointer follows the binding, not a stale literal entry", () =>
+    Effect.gen(function* () {
+      const reader = yield* ModelsLocatorReader;
+      // The reviewer's probe: the binding moved to claude-opus-5-6 while a
+      // stale claude-opus-5-5 entry still says medium.
+      const settings = file(
+        yield* encodeJsonText({
+          model: "claude-opus-5-6",
+          effortLevel: "low",
+          modelSettings: { "claude-opus-5-5": { effortLevel: "medium" }, "claude-opus-5-6": { effortLevel: "high" } },
+        })
+      );
+      const locator = {
+        _tag: "json-key",
+        binding: binding("effort"),
+        render: verbatim,
+        pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
+        fallbacks: [["effortLevel"]],
+      } as Locator;
+
+      assertSome(yield* reader.read(settings, bindLocatorModel(locator, "claude-opus-5-6")), "high");
+      // No per-model entry for the bound id: the top-level effort applies.
+      assertSome(yield* reader.read(settings, bindLocatorModel(locator, "claude-opus-5-7")), "low");
+    })
+  );
 });
