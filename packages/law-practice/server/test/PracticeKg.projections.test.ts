@@ -1153,7 +1153,7 @@ describe("practice KG projections", () => {
           A.dedupe(A.map(rows, ({ docket, sourceDocumentDigest }) => [docket, sourceDocumentDigest]))
         ).toStrictEqual([
           ["20001US05", fixtureDigests.beta],
-          ["20001US06", fixtureDigests.alpha],
+          ["20001US06", fixtureDigests.docket],
         ]);
         expect(A.map(rows, ({ claimText }) => claimText)).toStrictEqual(
           A.appendAll(
