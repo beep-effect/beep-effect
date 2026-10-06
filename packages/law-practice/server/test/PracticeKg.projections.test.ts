@@ -1172,6 +1172,7 @@ describe("practice KG projections", () => {
           PracticeKgOptions.make({
             ...graphOptions(corpusRoot, bundleOut),
             docketRegisterPath: registerPath,
+            bundleVersion: "2026-10-06-09",
             includeRuns: [workingRun],
             skipEmails: true,
           }),
@@ -1183,7 +1184,7 @@ describe("practice KG projections", () => {
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
           .pipe(Effect.flatMap(decodeManifestJson));
         expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
-          "2026-10-06-02",
+          "2026-10-06-09",
           "3",
           "3",
         ]);

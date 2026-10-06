@@ -181,6 +181,7 @@ bun run apps/practice-kg-mcp/src/build.ts
   --bundle-out <dir>           # default <corpus-root>/staging/practice-kg-bundle
   --include-refresh            # same as --include-run 2026-07-refresh (default: false, recorded either way)
   --include-run <label>        # fold one later source run in; repeatable
+  --bundle-version <version>   # stamp the bundle, e.g. 2026-10-06-03 (default: the build's own version)
   --docket-register <file>     # the attorney's docket register as JSONL
   --skip-emails                # spine+text only (fast iteration)
   --max-text-bytes <n>         # per-document inline cap, default 2097152

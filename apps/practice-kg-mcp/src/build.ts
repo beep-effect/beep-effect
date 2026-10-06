@@ -38,13 +38,29 @@ const docketRegister = Flag.File("docket-register", { mustExist: true }).pipe(
   Flag.withDescription("Docket register as JSONL, one {client, docket, clientName} object per line."),
   Flag.optional
 );
+const bundleVersion = Flag.String("bundle-version").pipe(
+  Flag.withDescription(
+    "Version stamped on the bundle, for example 2026-10-06-03; defaults to the build's own version."
+  ),
+  Flag.optional
+);
 const skipEmails = Flag.Boolean("skip-emails").pipe(Flag.withDefault(false));
 const maxTextBytes = Flag.Int("max-text-bytes").pipe(Flag.optional);
 const overwrite = Flag.Boolean("overwrite").pipe(Flag.withDefault(false));
 
 const buildCommand = Command.make(
   "build",
-  { bundleOut, corpusRoot, docketRegister, includeRefresh, includeRun, maxTextBytes, overwrite, skipEmails },
+  {
+    bundleOut,
+    bundleVersion,
+    corpusRoot,
+    docketRegister,
+    includeRefresh,
+    includeRun,
+    maxTextBytes,
+    overwrite,
+    skipEmails,
+  },
   Effect.fnUntraced(function* (flags) {
     const path = yield* Path.Path;
     const fs = yield* FileSystem.FileSystem;
@@ -66,6 +82,7 @@ const buildCommand = Command.make(
         overwrite: flags.overwrite,
         skipEmails: flags.skipEmails,
         ...OptionUtils.getSomesStruct({
+          bundleVersion: flags.bundleVersion,
           docketRegisterPath: flags.docketRegister,
           maxTextBytes: O.map(flags.maxTextBytes, PosInt.make),
         }),

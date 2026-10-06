@@ -721,7 +721,8 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
   counts: PracticeKgCounts,
   sourceRuns: PracticeKgSourceRuns,
   builtAt: string,
-  corpusSnapshotAt: string
+  corpusSnapshotAt: string,
+  bundleVersion: string
 ) {
   const countsJson = yield* encodePracticeKgCountsJson(counts).pipe(
     PracticeKgProjectionError.mapError("Graph build counts failed JSON encoding.")
@@ -767,7 +768,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
   yield* sql.unsafe(
     `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at, corpus_snapshot_at) VALUES ($1, $2, $3::jsonb, $4, $5)`,
     [
-      graphBundleVersion,
+      bundleVersion,
       A.join(A.prepend(sourceRuns.includedRuns, "base"), runListSeparator),
       countsJson,
       builtAt,
@@ -917,13 +918,22 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     includedRuns,
     refresh202607: A.contains(includedRuns, PRACTICE_KG_REFRESH_RUN) ? "included" : "excluded",
   });
-  yield* writePgliteProjection(graph.nodes, graph.edges, counts, sourceRuns, builtAt, reconciliation.snapshotIso).pipe(
+  const bundleVersion = options.bundleVersion ?? graphBundleVersion;
+  yield* writePgliteProjection(
+    graph.nodes,
+    graph.edges,
+    counts,
+    sourceRuns,
+    builtAt,
+    reconciliation.snapshotIso,
+    bundleVersion
+  ).pipe(
     PracticeKgProjectionError.mapError(`Failed building graph PGlite store "${path.join(bundleOut, "kg.pglite")}".`)
   );
 
   const manifest = PracticeKgBundleManifest.make({
     builtAt,
-    bundleVersion: graphBundleVersion,
+    bundleVersion,
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
