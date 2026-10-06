@@ -29,6 +29,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { constFalse } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -358,7 +359,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
     const canonicalInputs = yield* fs.realPath(options.inputs);
     const bundleDuckDbPath = path.join(options.bundleOut, "practice.duckdb");
-    const bundleDuckDbExists = yield* fs.exists(bundleDuckDbPath).pipe(Effect.orElseSucceed(() => false));
+    const bundleDuckDbExists = yield* fs.exists(bundleDuckDbPath).pipe(Effect.orElseSucceed(constFalse));
     const sourceDocumentDigestFor = (filename: string) =>
       bundleDuckDbExists
         ? resolveSourceDocumentDigest(bundleDuckDbPath, filename)
@@ -559,5 +560,297 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     isPracticeKgClaimsError(cause)
       ? cause
       : PracticeKgClaimsError.make({ cause, message: "Practice KG claims batch failed." })
+  )
+);
+
+class CarriedCandidateRow extends S.Class<CarriedCandidateRow>($I`CarriedCandidateRow`)({
+  createdAt: S.Finite,
+  createdByPrincipal: S.String,
+  entityType: S.String,
+  fixtureKey: S.String,
+  lifecycle: S.String,
+  orgId: S.Finite,
+  publicId: S.NonEmptyString,
+  rowVersion: S.Finite,
+  schemaVersion: S.String,
+  snapshot: S.String,
+  source: S.String,
+  sourceFile: S.NullOr(S.String),
+  updatedAt: S.Finite,
+  updatedByPrincipal: S.String,
+}) {}
+
+class CarriedEvidenceRow extends S.Class<CarriedEvidenceRow>($I`CarriedEvidenceRow`)({
+  artifactFixtureKey: S.String,
+  createdAt: S.Finite,
+  createdByPrincipal: S.String,
+  entityType: S.String,
+  orgId: S.Finite,
+  publicId: S.NonEmptyString,
+  rowVersion: S.Finite,
+  schemaVersion: S.String,
+  source: S.String,
+  span: S.String,
+  spanFixtureKey: S.String,
+  updatedAt: S.Finite,
+  updatedByPrincipal: S.String,
+}) {}
+
+/**
+ * Candidate claims and their evidence read out of one bundle so they can be
+ * carried into a rebuilt bundle without re-running extraction.
+ *
+ * **Example** (Make an empty carry)
+ *
+ * ```ts
+ * import { PracticeKgClaimsCarry } from "@beep/law-practice-server"
+ *
+ * const carry = PracticeKgClaimsCarry.make({ candidates: [], evidence: [] })
+ * console.log(carry.candidates.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PracticeKgClaimsCarry extends S.Class<PracticeKgClaimsCarry>($I`PracticeKgClaimsCarry`)(
+  {
+    candidates: S.Array(CarriedCandidateRow),
+    evidence: S.Array(CarriedEvidenceRow),
+  },
+  $I.annote("PracticeKgClaimsCarry", {
+    description: "Candidate-claim and evidence rows lifted verbatim from a source bundle.",
+  })
+) {}
+
+/**
+ * Destination bundle and rows for one claims carry.
+ *
+ * **Example** (Make a carry write request)
+ *
+ * ```ts
+ * import { PracticeKgClaimsCarry, PracticeKgClaimsCarryWrite } from "@beep/law-practice-server"
+ *
+ * const write = PracticeKgClaimsCarryWrite.make({
+ *   bundleOut: "/corpus/staging/practice-kg-bundle",
+ *   carry: PracticeKgClaimsCarry.make({ candidates: [], evidence: [] })
+ * })
+ * console.log(write.bundleOut) // "/corpus/staging/practice-kg-bundle"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PracticeKgClaimsCarryWrite extends S.Class<PracticeKgClaimsCarryWrite>($I`PracticeKgClaimsCarryWrite`)(
+  {
+    bundleOut: S.NonEmptyString,
+    carry: PracticeKgClaimsCarry,
+  },
+  $I.annote("PracticeKgClaimsCarryWrite", {
+    description: "Destination bundle directory and the claim rows to write into it.",
+  })
+) {}
+
+/**
+ * Counts from one claims carry.
+ *
+ * **Example** (Make a carry summary)
+ *
+ * ```ts
+ * import { PracticeKgClaimsCarrySummary } from "@beep/law-practice-server"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = PracticeKgClaimsCarrySummary.make({
+ *   claims: S.Natural.make(16),
+ *   evidence: S.Natural.make(16),
+ *   withSourceDocument: S.Natural.make(15)
+ * })
+ * console.log(summary.claims) // 16
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PracticeKgClaimsCarrySummary extends S.Class<PracticeKgClaimsCarrySummary>(
+  $I`PracticeKgClaimsCarrySummary`
+)(
+  {
+    claims: S.Natural,
+    evidence: S.Natural,
+    withSourceDocument: S.Natural,
+  },
+  $I.annote("PracticeKgClaimsCarrySummary", {
+    description: "Carried claim and evidence counts, and how many claims resolved to a catalogued document.",
+  })
+) {}
+
+const decodeCarriedCandidates = S.decodeUnknownEffect(S.Array(CarriedCandidateRow));
+const decodeCarriedEvidence = S.decodeUnknownEffect(S.Array(CarriedEvidenceRow));
+
+const selectCarriedCandidates = `
+SELECT created_at::FLOAT8 AS "createdAt", created_by_principal::TEXT AS "createdByPrincipal",
+  entity_type AS "entityType", fixture_key AS "fixtureKey", lifecycle, org_id::FLOAT8 AS "orgId",
+  public_id AS "publicId", row_version::FLOAT8 AS "rowVersion", schema_version AS "schemaVersion",
+  snapshot::TEXT AS snapshot, source, snapshot->>'sourceFile' AS "sourceFile",
+  updated_at::FLOAT8 AS "updatedAt", updated_by_principal::TEXT AS "updatedByPrincipal"
+FROM epistemic_candidate_claim
+ORDER BY public_id`;
+
+const selectCarriedEvidence = `
+SELECT artifact_fixture_key AS "artifactFixtureKey", created_at::FLOAT8 AS "createdAt",
+  created_by_principal::TEXT AS "createdByPrincipal", entity_type AS "entityType", org_id::FLOAT8 AS "orgId",
+  public_id AS "publicId", row_version::FLOAT8 AS "rowVersion", schema_version AS "schemaVersion",
+  source, span::TEXT AS span, span_fixture_key AS "spanFixtureKey",
+  updated_at::FLOAT8 AS "updatedAt", updated_by_principal::TEXT AS "updatedByPrincipal"
+FROM epistemic_evidence
+ORDER BY public_id`;
+
+const insertCarriedCandidate = `
+INSERT INTO epistemic_candidate_claim (
+  created_at, created_by_principal, org_id, public_id, row_version, schema_version,
+  source, updated_at, updated_by_principal, fixture_key, lifecycle, snapshot, entity_type
+) VALUES (
+  $1, $2::JSONB, $3, $4, $5, $6, $7, $8, $9::JSONB, $10, $11,
+  $12::JSONB || jsonb_build_object('sourceDocumentDigest', $14::TEXT), $13
+)
+ON CONFLICT (public_id) DO NOTHING`;
+
+const carryFailure =
+  (message: string) =>
+  (cause: unknown): PracticeKgClaimsError =>
+    PracticeKgClaimsError.make({ cause, message });
+
+/**
+ * Read every candidate claim and evidence row from the ambient bundle store.
+ *
+ * **Details**
+ *
+ * Run this under the SQL client of the bundle that already holds claims. The
+ * rows come back verbatim, with JSON columns as text, so writing them into a
+ * rebuilt bundle preserves public identifiers, spans, and lifecycle exactly.
+ *
+ * **Example** (Read claims for a carry)
+ *
+ * ```ts
+ * import { readPracticeKgClaimsCarry } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readPracticeKgClaimsCarry)) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const readPracticeKgClaimsCarry: Effect.Effect<
+  PracticeKgClaimsCarry,
+  PracticeKgClaimsError,
+  SqlClient.SqlClient
+> = Effect.gen(function* () {
+  const sql = (yield* SqlClientService).withoutTransforms();
+  const candidates = yield* sql.unsafe(selectCarriedCandidates).pipe(Effect.flatMap(decodeCarriedCandidates));
+  const evidence = yield* sql.unsafe(selectCarriedEvidence).pipe(Effect.flatMap(decodeCarriedEvidence));
+  return PracticeKgClaimsCarry.make({ candidates, evidence });
+}).pipe(Effect.mapError(carryFailure("Failed reading candidate claims from the source bundle.")));
+
+/**
+ * Write carried claims into the ambient bundle store, resolving each claim's
+ * catalogued source document against the destination bundle.
+ *
+ * **Details**
+ *
+ * The rebuilt bundle starts with an empty graph store, so claims produced by an
+ * earlier extraction batch would otherwise be lost. Carrying them is
+ * deterministic and free: no model is called. Each claim gains
+ * `sourceDocumentDigest` when its source file name resolves to exactly one
+ * document in the destination bundle; rows already present are left untouched,
+ * so the write is idempotent.
+ *
+ * **Example** (Write an empty carry)
+ *
+ * ```ts
+ * import {
+ *   PracticeKgClaimsCarry,
+ *   PracticeKgClaimsCarryWrite,
+ *   writePracticeKgClaimsCarry
+ * } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * const write = writePracticeKgClaimsCarry(
+ *   PracticeKgClaimsCarryWrite.make({
+ *     bundleOut: "/corpus/staging/practice-kg-bundle",
+ *     carry: PracticeKgClaimsCarry.make({ candidates: [], evidence: [] })
+ *   })
+ * )
+ * console.log(Effect.isEffect(write)) // true
+ * ```
+ *
+ * @param request - Destination bundle directory and the rows to write.
+ * @returns Carried counts.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const writePracticeKgClaimsCarry = Effect.fn("PracticeKgClaims.writeCarry")(
+  function* (request: PracticeKgClaimsCarryWrite) {
+    const path = yield* Path.Path;
+    const sql = (yield* SqlClientService).withoutTransforms();
+    const bundleDuckDbPath = path.join(request.bundleOut, "practice.duckdb");
+    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
+    const resolved = yield* Effect.forEach(
+      request.carry.candidates,
+      (candidate) =>
+        O.match(O.fromNullishOr(candidate.sourceFile), {
+          onNone: () => Effect.succeed(O.none<ContentDigest>()),
+          onSome: (sourceFile) => resolveSourceDocumentDigest(bundleDuckDbPath, sourceFile),
+        }).pipe(
+          Effect.tap((digest) =>
+            sql.unsafe(insertCarriedCandidate, [
+              candidate.createdAt,
+              candidate.createdByPrincipal,
+              candidate.orgId,
+              candidate.publicId,
+              candidate.rowVersion,
+              candidate.schemaVersion,
+              candidate.source,
+              candidate.updatedAt,
+              candidate.updatedByPrincipal,
+              candidate.fixtureKey,
+              candidate.lifecycle,
+              candidate.snapshot,
+              candidate.entityType,
+              O.getOrNull(digest),
+            ])
+          )
+        ),
+      { concurrency: 1 }
+    );
+    yield* Effect.forEach(
+      request.carry.evidence,
+      (evidence) =>
+        sql.unsafe(insertEvidence, [
+          evidence.createdAt,
+          evidence.createdByPrincipal,
+          evidence.orgId,
+          evidence.publicId,
+          evidence.rowVersion,
+          evidence.schemaVersion,
+          evidence.source,
+          evidence.updatedAt,
+          evidence.updatedByPrincipal,
+          evidence.artifactFixtureKey,
+          evidence.span,
+          evidence.spanFixtureKey,
+          evidence.entityType,
+        ]),
+      { concurrency: 1, discard: true }
+    );
+    return PracticeKgClaimsCarrySummary.make({
+      claims: S.Natural.make(A.length(request.carry.candidates)),
+      evidence: S.Natural.make(A.length(request.carry.evidence)),
+      withSourceDocument: S.Natural.make(A.length(A.getSomes(resolved))),
+    });
+  },
+  Effect.mapError((cause) =>
+    isPracticeKgClaimsError(cause)
+      ? cause
+      : PracticeKgClaimsError.make({ cause, message: "Failed carrying candidate claims into the bundle." })
   )
 );

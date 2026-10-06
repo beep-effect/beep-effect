@@ -239,27 +239,33 @@ const clientsByDigestFor = (
   rowsByDigest: MutableHashMap.MutableHashMap<string, PracticeKgCatalogRow>,
   docketReferences: ReadonlyArray<PracticeKgDocketReferenceRow>
 ): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
-  const referencesByDigest = MutableHashMap.empty<string, ReadonlyArray<PracticeKgDocketReferenceRow>>();
+  // Keyed by digest; each entry keeps its row beside the references that name
+  // the row's own family, so the second pass needs no further lookup.
+  const referencesByDigest = MutableHashMap.empty<
+    string,
+    { readonly references: ReadonlyArray<PracticeKgDocketReferenceRow>; readonly row: PracticeKgCatalogRow }
+  >();
   A.forEach(docketReferences, (reference) => {
-    const row = MutableHashMap.get(rowsByDigest, reference.digest);
-    if (O.isSome(row) && row.value.docketFamily === reference.family) {
-      MutableHashMap.set(
-        referencesByDigest,
-        reference.digest,
-        A.append(
+    const row = pipe(
+      MutableHashMap.get(rowsByDigest, reference.digest),
+      O.filter((candidate) => candidate.docketFamily === reference.family)
+    );
+    if (O.isSome(row)) {
+      MutableHashMap.set(referencesByDigest, reference.digest, {
+        references: A.append(
           pipe(
             MutableHashMap.get(referencesByDigest, reference.digest),
+            O.map((entry) => entry.references),
             O.getOrElse(A.empty<PracticeKgDocketReferenceRow>)
           ),
           reference
-        )
-      );
+        ),
+        row: row.value,
+      });
     }
   });
   const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-  MutableHashMap.forEach(referencesByDigest, (references, digest) => {
-    // Only catalogued digests enter referencesByDigest above.
-    const row = O.getOrThrow(MutableHashMap.get(rowsByDigest, digest));
+  MutableHashMap.forEach(referencesByDigest, ({ references, row }, digest) => {
     MutableHashMap.set(
       clients,
       digest,
@@ -600,9 +606,10 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
         source: HashSet.has(filenameFamilies, familyKey) ? ("filename" as const) : ("text-reference" as const),
       }))
     );
+    // A member exists only when every mention sits in that one family, so the
+    // member's documents are exactly the mentioning documents.
     const memberAttributions = O.match(member, {
       onNone: A.empty<PracticeKgDocumentAttribution>,
-      // A member exists only when every mention belongs to its sole family.
       onSome: () => A.map(mentions, (mention) => mention.attribution),
     });
     const memberHead = A.head(memberAttributions);
