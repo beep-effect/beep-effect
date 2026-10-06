@@ -118,25 +118,31 @@ Create the Exchange pointer to the service principal:
 New-ServicePrincipal -AppId "<outbox-client-id>" -ObjectId "<outbox-enterprise-app-object-id>" -DisplayName "beep-agent-outbox"
 ```
 
-Create a scope of its own, so that either registration can be removed without
-touching the other:
+Use the management scope the docket registration created for the same mailbox,
+`beep-docket-intake-mailbox`. Exchange refuses a second scope with the same
+recipient filter, so the two registrations share one scope and differ only in
+their role assignments. If the docket registration has not been run, create
+the scope first:
 
 ```powershell
-New-ManagementScope -Name "beep-agent-outbox-mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq '<attorney-mailbox>'"
+New-ManagementScope -Name "beep-docket-intake-mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq '<attorney-mailbox>'"
 ```
+
+State on 2026-10-06: this step is done for the firm tenant. The outbox service
+principal holds the three roles below, each limited to that shared scope.
 
 Assign the three roles, each limited to that scope:
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.ReadWrite" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.ReadWrite" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.Send" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Mail.Send" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ```powershell
-New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Calendars.ReadWrite" -CustomResourceScope "beep-agent-outbox-mailbox"
+New-ManagementRoleAssignment -App "<outbox-enterprise-app-object-id>" -Role "Application Calendars.ReadWrite" -CustomResourceScope "beep-docket-intake-mailbox"
 ```
 
 ## 5. Verify the scope (same PowerShell session)
@@ -259,9 +265,10 @@ The audit log is under
   `Remove-ManagementRoleAssignment` for the `Application Mail.Send`
   assignment. Either stops sending immediately for new tokens; a token already
   issued stays valid for up to an hour.
-- **Remove entirely**: remove the three role assignments, the management scope
-  (`Remove-ManagementScope "beep-agent-outbox-mailbox"`), the Exchange service
-  principal (`Remove-ServicePrincipal`), and the app registration.
+- **Remove entirely**: remove the three role assignments, the Exchange service
+  principal (`Remove-ServicePrincipal`), and the app registration. Leave the
+  management scope `beep-docket-intake-mailbox` in place while the docket
+  registration still uses it.
 
 `ApplicationAccessPolicy` is the legacy way to scope application access and is
 not used here.
