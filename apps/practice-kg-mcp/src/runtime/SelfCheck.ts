@@ -8,13 +8,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
-import {
-  lookupPracticeKgMatters,
-  PracticeKgQueries,
-  PracticeKgSchemaVersions,
-  PracticeKgToolkit,
-} from "@beep/law-practice-server";
-import { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server";
+import { PracticeKgQueries, PracticeKgSchemaVersions, PracticeKgToolkit } from "@beep/law-practice-server";
 import { Console, Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { constFalse } from "effect/Function";
@@ -121,6 +115,13 @@ const storeFailure = (store: string, bundleDir: string) => (cause: unknown) =>
     message: `Practice KG ${store} at "${bundleDir}" does not answer the queries this server's tools run; install the bundle that matches this server.`,
   });
 
+const matterColumnsProbe = `
+SELECT m.family_key, m.family, m.client, m.client_name, m.attribution_source, m.epistemic_status,
+  m.docket_count, m.document_count, d.docket_key, d.docket, d.epistemic_status, d.document_count,
+  d.application_numbers, d.patent_numbers
+FROM matters m LEFT JOIN matter_dockets d USING (family_key)
+LIMIT 1`;
+
 const readGraphStore = Effect.gen(function* () {
   const sql = (yield* SqlClient).withoutTransforms();
   // `kg_find` text: selects every graph column the tools project, attribution_source included.
@@ -132,9 +133,9 @@ const readGraphStore = Effect.gen(function* () {
 
 const readMatterStore = Effect.gen(function* () {
   const duckdb = yield* DuckDb;
-  // `kg_matter_lookup` itself: its four statements read matters.client_name and every
-  // matter_dockets column whether or not the reference matches a matter.
-  yield* lookupPracticeKgMatters(PracticeKgMatterLookupRequest.make({ reference: SELF_CHECK_REFERENCE }));
+  // Every column `kg_matter_lookup` reads from both matter tables, `client_name`
+  // included: an older store that lacks one fails here, not in a tool call.
+  yield* duckdb.query(matterColumnsProbe);
   return yield* duckdb
     .query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")
     .pipe(Effect.flatMap(decodeCountRows), Effect.map(firstCount));
