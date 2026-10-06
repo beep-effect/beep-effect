@@ -601,6 +601,8 @@ export const TsconfigSyncSection = LiteralKit([
   "package-references",
   "package-check-references",
   "package-docgen",
+  "root-vitest-aliases",
+  "root-fallow-boundaries",
 ]).pipe(
   $I.annoteSchema("TsconfigSyncSection", {
     description: "Sync change section categories for tsconfig-sync.",
@@ -690,6 +692,28 @@ class PackageDocgenChange extends S.Class<PackageDocgenChange>($I`PackageDocgenC
   })
 ) {}
 
+class RootVitestAliasesChange extends S.Class<RootVitestAliasesChange>($I`RootVitestAliasesChange`)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-vitest-aliases"),
+  },
+  $I.annote("RootVitestAliasesChange", {
+    description: "Planned change entry for the generated root Vitest alias data.",
+  })
+) {}
+
+class RootFallowBoundariesChange extends S.Class<RootFallowBoundariesChange>($I`RootFallowBoundariesChange`)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-fallow-boundaries"),
+  },
+  $I.annote("RootFallowBoundariesChange", {
+    description: "Planned change entry for the generated Fallow boundary config.",
+  })
+) {}
+
 /**
  * A single planned file change.
  *
@@ -715,6 +739,8 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
     () => PackageReferencesChange,
     () => PackageCheckReferencesChange,
     () => PackageDocgenChange,
+    () => RootVitestAliasesChange,
+    () => RootFallowBoundariesChange,
   ])
 ).pipe(
   $I.annoteSchema("TsconfigSyncChange", {
@@ -820,6 +846,34 @@ class PackageDocgenPlannedFileChange extends S.Class<PackageDocgenPlannedFileCha
   })
 ) {}
 
+class RootVitestAliasesPlannedFileChange extends S.Class<RootVitestAliasesPlannedFileChange>(
+  $I`RootVitestAliasesPlannedFileChange`
+)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-vitest-aliases"),
+    content: S.String,
+  },
+  $I.annote("RootVitestAliasesPlannedFileChange", {
+    description: "Planned file content change for the generated root Vitest alias data.",
+  })
+) {}
+
+class RootFallowBoundariesPlannedFileChange extends S.Class<RootFallowBoundariesPlannedFileChange>(
+  $I`RootFallowBoundariesPlannedFileChange`
+)(
+  {
+    filePath: S.String,
+    summary: S.String,
+    section: S.tag("root-fallow-boundaries"),
+    content: S.String,
+  },
+  $I.annote("RootFallowBoundariesPlannedFileChange", {
+    description: "Planned file content change for the generated Fallow boundary config.",
+  })
+) {}
+
 /**
  * A planned file change with transformed file content.
  *
@@ -845,6 +899,8 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
     () => PackageReferencesPlannedFileChange,
     () => PackageCheckReferencesPlannedFileChange,
     () => PackageDocgenPlannedFileChange,
+    () => RootVitestAliasesPlannedFileChange,
+    () => RootFallowBoundariesPlannedFileChange,
   ])
 ).pipe(
   $I.annoteSchema("TsconfigSyncChange", {

@@ -1,11 +1,13 @@
+import { CI_LANE_PARTITIONS, proveCiLanePartition } from "@beep/repo-cli/commands/Ci";
 import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
+import { syncTsconfigAtRoot } from "@beep/repo-cli/commands/TsconfigSync";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Console, Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import { Command } from "effect/cli";
 import { flow } from "effect/Function";
@@ -1510,6 +1512,115 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               expect(syncpackConfig).toContain(`"packages/ecosystem/*/package.json"`);
               expect(syncpackConfig).not.toContain(`"packages/ecosystem/portable-effect/package.json"`);
             })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+
+    // Regression for the hosted reds a freshly created package used to hit:
+    // partition placement, generated-config drift, the JSDoc ratchet, Knip,
+    // the effect-vitest inventory, and a service template that no longer
+    // compiled against the installed Effect.
+    it.effect(
+      "scaffolds a library and a service app that pass the repo gates create-package owns",
+      () =>
+        withBootstrappedRootConfig(FoundationIdentityRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            const aliasesPath = path.join(rootDir, "vitest.aliases.generated.json");
+            const boundariesPath = path.join(rootDir, "standards", "fallow.boundaries.generated.jsonc");
+            const libraryDir = path.join(rootDir, "packages", "foundation", "modeling", "fresh-lib");
+            const serviceDir = path.join(rootDir, "apps", "fresh-svc");
+            const created = ["@beep/fresh-lib", "@beep/fresh-svc"];
+
+            yield* bootstrapIdentityWorkspace(rootDir);
+            yield* writeTextFile(aliasesPath, "{}\n");
+            yield* writeTextFile(boundariesPath, "{}\n");
+
+            yield* runCreatePackageCommand([
+              "fresh-lib",
+              "--family",
+              "foundation",
+              "--kind",
+              "modeling",
+              "--description",
+              "A fresh library",
+            ]);
+            yield* runCreatePackageCommand([
+              "fresh-svc",
+              "--type",
+              "app",
+              "--app-kind",
+              "service",
+              "--description",
+              "A fresh service app",
+            ]);
+
+            // config-sync:check, fallow:boundaries:config-check, and the tsgo-rules alias mirror.
+            const check = yield* syncTsconfigAtRoot(rootDir, { mode: "check", filter: undefined, verbose: false });
+            expect(check.changedFiles).toBe(0);
+            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            expect(yield* readJsonFile(aliasesPath)).toEqual(rootPaths.compilerOptions.paths);
+            expect(R.keys(rootPaths.compilerOptions.paths)).toContain("@beep/fresh-lib");
+            const boundaries = yield* fs.readFileString(boundariesPath);
+            expect(boundaries).toContain(`"packages/foundation/modeling/fresh-lib/src/**"`);
+            expect(boundaries).toContain(`"apps/fresh-svc/src/**"`);
+
+            // Lint and Test Unit partition proofs: each new package lands in exactly one shard.
+            for (const [laneId, partitions] of [
+              ["lint", ["lint-a", "lint-b"]],
+              ["test-unit", ["repo-cli-1", "repo-cli-2", "unit-a", "unit-b"]],
+            ] as const) {
+              const taskPackages = pipe(
+                CI_LANE_PARTITIONS,
+                A.filter((partition) => partition.lane === laneId),
+                A.flatMap((partition) => partition.packages),
+                A.dedupe,
+                A.appendAll(created)
+              );
+              const proofs = yield* Effect.forEach(partitions, (partition) =>
+                proveCiLanePartition(laneId, partition, taskPackages, taskPackages, taskPackages, false)
+              );
+              for (const packageName of created) {
+                expect(A.length(A.filter(proofs, (proof) => A.contains(proof.packages, packageName)))).toBe(1);
+              }
+            }
+
+            // JSDoc ratchet: every scaffolded export carries a titled example.
+            for (const filePath of [
+              path.join(libraryDir, "src", "index.ts"),
+              path.join(serviceDir, "src", "Api.ts"),
+              path.join(serviceDir, "src", "runtime", "Layer.ts"),
+            ]) {
+              const lines = Str.split("\n")(yield* fs.readFileString(filePath));
+              const exportCount = A.length(A.filter(lines, Str.startsWith("export ")));
+              expect(exportCount).toBeGreaterThan(0);
+              expect(A.length(A.filter(lines, Str.startsWith(" * **Example** (")))).toBe(exportCount);
+              expect(A.some(lines, Str.startsWith(" * @packageDocumentation"))).toBe(true);
+            }
+
+            // Knip: declared dependencies are used and referenced types are declared.
+            const libraryManifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(libraryDir, "package.json"))
+            );
+            expect(libraryManifest.devDependencies?.["bun-types"]).toBe("catalog:");
+            const libraryTest = yield* fs.readFileString(path.join(libraryDir, "test", "index.test.ts"));
+            expect(libraryTest).toContain(`from "@beep/fresh-lib"`);
+            expect(libraryTest).toContain(`from "@effect/vitest"`);
+            expect(libraryTest).toContain(`from "effect/Effect"`);
+            expect(yield* fs.exists(path.join(libraryDir, "test", ".gitkeep"))).toBe(false);
+            const serviceManifest = yield* decodeGeneratedPackageManifest(
+              yield* readJsonFile(path.join(serviceDir, "package.json"))
+            );
+            expect(R.keys(serviceManifest.devDependencies ?? {})).not.toContain("@beep/test-utils");
+
+            // check, test, and the effect-vitest inventory for the service template.
+            const serviceMain = yield* fs.readFileString(path.join(serviceDir, "src", "main.ts"));
+            expect(serviceMain).toContain(`Config.Port("PORT")`);
+            const serviceTest = yield* fs.readFileString(path.join(serviceDir, "test", "health.test.ts"));
+            expect(serviceTest).toContain(`Match.tag("InetAddressV4", "InetAddressV6"`);
+            expect(serviceTest).toContain(`it.layer(TestLayer, { timeout: "10 seconds" })`);
+            expect(serviceTest).not.toContain("Effect.scoped");
+            expect(serviceTest).not.toContain("@beep/test-utils");
+          })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs
     );

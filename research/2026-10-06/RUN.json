@@ -1,0 +1,137 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-10-06",
+  "status": "partial",
+  "window": {
+    "start": "2026-10-03T08:18:00-05:00",
+    "end": "2026-10-06T08:30:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 72,
+    "sunday_weekly": true,
+    "note": "10-04 and 10-05 runs blocked by open #1409; Sunday 2026-10-04 weekly consolidation deferred and folded into this packet"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-10-03",
+    "lastSuccessfulPr": 1409,
+    "lastSuccessfulRun": "2026-10-03T08:18:00-05:00",
+    "mergedAt": "2026-10-05T16:29:04Z",
+    "mergeCommit": "d058d510"
+  },
+  "counts": {
+    "total": 34,
+    "window_new": 27,
+    "refute": 8,
+    "late_catch": 4,
+    "by_axis": {
+      "law": 11,
+      "effect": 10,
+      "agents": 13
+    }
+  },
+  "novelty": {
+    "unique_claim_urls": 34,
+    "exclusion_url_collisions": 2,
+    "exclusion_collision_pct": 5.9,
+    "collision_urls": [
+      "https://github.com/Effect-TS/effect/pull/8692",
+      "https://github.com/modelcontextprotocol/python-sdk/pull/3485"
+    ],
+    "window_new": 27,
+    "window_new_collision_pct": 0.0,
+    "exclusion_digest_size": 289,
+    "note": "Canonical gate: distinct claim URLs ∩ exclusion digest (all research/*/claims.jsonl on main incl. 2026-10-03 + tombstones + excluded-packets) / unique claim URLs. 2/34 = 5.9% (both deliberate refutes). Under ≤40%; no self-reject."
+  },
+  "weekly": {
+    "included": true,
+    "covers": [
+      "research/2026-09-30",
+      "research/2026-10-02",
+      "research/2026-10-03",
+      "research/2026-10-06"
+    ],
+    "tombstones_emitted": 15,
+    "tombstone_file": "research/ledger/tombstones/2026-10-06.jsonl",
+    "tombstone_leak_findings": 5
+  },
+  "quotaPools": {
+    "search": "web+arxiv-export+github-api+cursor-github-mcp+npm-registry",
+    "x": "blocked-client-not-enrolled",
+    "verify": "none (no blinded local verifier in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "user-X",
+      "tools": ["search_posts_all", "search_news"],
+      "error": "client-not-enrolled",
+      "detail": "Both calls returned Client Forbidden / client-not-enrolled (Appropriate Level of API Access). Tried once each; continued without X."
+    },
+    {
+      "source": "gh-cli-box",
+      "error": "401-bad-credentials",
+      "detail": "Box gh token invalid; used cursor-github MCP + raw.githubusercontent.com for reads."
+    },
+    {
+      "source": "github-api-unauth",
+      "error": "rate-limit-intermittent",
+      "detail": "api.github.com secondary rate limit on some egress IPs; retried / used cursor-github."
+    },
+    {
+      "source": "arxiv-export-api",
+      "error": "http-empty-body",
+      "detail": "http://export.arxiv.org returned empty body; https retry succeeded."
+    },
+    {
+      "source": "npmjs.com",
+      "error": "429",
+      "detail": "npmjs.com HTML pages rate-limited for link checks; registry.npmjs.org JSON used for facts."
+    },
+    {
+      "source": "nightly-gate",
+      "error": "blocked-2-runs",
+      "detail": "10-04 and 10-05 runs blocked by open research PR #1409 (merged 2026-10-05)."
+    }
+  ],
+  "capabilities": {
+    "cursor-github": "ok",
+    "raw.githubusercontent.com": "ok",
+    "registry.npmjs.org": "ok",
+    "arxiv-export-api": "ok(https)",
+    "WebSearch": "ok",
+    "WebFetch": "ok",
+    "user-X": "blocked-client-not-enrolled",
+    "gh-cli": "401"
+  },
+  "resume_cursor": {
+    "x": "retry when X project enrollment fixed",
+    "arxiv": "2610.06825",
+    "watch": [
+      "Effect #8744 → effect@4.0.2",
+      "python-sdk #3485 merge",
+      "Harvey↔Everlaw fall-2026 GA",
+      "USPTO SI roundtable Oct 15"
+    ]
+  },
+  "headline_deltas": [
+    "Legora Skills (Markdown skills, 250+ library) GA Oct 5",
+    "Effect #8647 shipped effect@4.0.1 not 4.1.0 (contradicted); #8744 stages 4.0.2",
+    "NetDocuments↔Copilot MCP live; Legora↔iManage write-back live",
+    "TR v ROSS cert plan + USPTO AI-eligibility posture (DWT)",
+    "Agent-skills security wave: CRIME, skill revisions, SWE-CC, scoped authz; MCP Local Server Security guide merged",
+    "Zero canary.25 / Evolu 8.18.0 / Jazz alpha.59 / TanStack DB 0.12.0"
+  ],
+  "blinding": {
+    "cloned": false,
+    "opened_pr": false,
+    "wrote_explorations_inbox": false,
+    "wrote_goals": false,
+    "stage": "writer"
+  },
+  "publisher": {
+    "agent": "cursor-cloud-agent",
+    "pr": 1497,
+    "branch": "research/2026-10-06"
+  },
+  "written_at": "2026-10-06T08:45:00-05:00"
+}

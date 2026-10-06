@@ -21,6 +21,7 @@ import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdent
 import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
 import { UUID } from "../../internal/schema/Uuid.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
+import { yeetGhCommand } from "./Gh.command.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";
 import {
@@ -1387,5 +1388,6 @@ export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...o
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,
     yeetPlanContractCheckCommand,
+    yeetGhCommand,
   ])
 );

@@ -3,7 +3,7 @@
  * SDK client. Every folder id, file name, and byte is synthetic.
  */
 
-import { BoxApiFailureContext, BoxError } from "@beep/box";
+import { BoxApiFailureConflict, BoxApiFailureContext, BoxError } from "@beep/box";
 import { DocumentFolderId } from "@beep/law-practice-domain/values/MailTagging";
 import { boxConflictingFile, DocumentStoreBox, ProviderCallMeter } from "@beep/law-practice-server/MailTagging";
 import {
@@ -83,11 +83,16 @@ const failureOf = Effect.fn("MailTaggingDocumentsTest.failureOf")(function* (rej
 const conflictError = (conflicts: ReadonlyArray<{ readonly id: string; readonly type: "file" | "folder" }>) =>
   BoxError.fromReason("response status", {
     status: 409,
-    context: BoxApiFailureContext.make({ values: { conflictCount: conflicts.length, conflicts } }),
+    context: BoxApiFailureContext.make({
+      values: {
+        conflictCount: conflicts.length,
+        conflicts: A.map(conflicts, (conflict) => BoxApiFailureConflict.make(conflict)),
+      },
+    }),
   });
 
 describe("MailTagging Box conflicting file", () => {
-  it("reads the first file conflict's id and reports no size or hash, which the driver error does not keep", () => {
+  it("reads the first file conflict's id and reports no size or hash when the conflict carries none", () => {
     const found = boxConflictingFile(
       conflictError([
         { id: "8000", type: "folder" },
@@ -155,12 +160,21 @@ describe("MailTagging Box document store", () => {
           },
         })
       ).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
+      // Box reports the holder's size and SHA-1 for a file; both reach the outcome when well formed.
+      expect(
+        yield* taken({
+          contextInfo: {
+            conflicts: { id: "8002", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
+          },
+        })
+      ).toStrictEqual(["name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf", 1]);
       expect(yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } })).toStrictEqual([
         "name taken",
         1,
       ]);
+      // The upload shape: Box sends one conflict object, which the driver normalizes to a list.
       expect(yield* taken({ contextInfo: { conflicts: { id: "8001", type: "file" } } })).toStrictEqual([
-        "name taken",
+        "name taken by 8001 size=null sha1=null",
         1,
       ]);
       expect(yield* taken({})).toStrictEqual(["name taken", 1]);

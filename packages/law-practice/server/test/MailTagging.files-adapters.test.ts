@@ -147,6 +147,28 @@ describe("MailTagging file adapters", () => {
     );
 
     it.effect(
+      "ignores files held outside any matter, whether the family key is null or absent",
+      Effect.fnUntraced(function* () {
+        const path = yield* writeText(
+          yield* temporaryDirectory,
+          "box-files.jsonl",
+          A.join(
+            [
+              `{"sha256":"${sha("a")}","familyKey":null,"boxFileId":"9001"}`,
+              `{"sha256":"${sha("b")}","boxFileId":"9002"}`,
+              `{"sha256":"${sha("c")}","familyKey":"1234.10001","boxFileId":"9003"}`,
+            ],
+            "\n"
+          )
+        );
+
+        expect(yield* knownInRun(path, sha("a"), acme)).toBe(false);
+        expect(yield* knownInRun(path, sha("b"), acme)).toBe(false);
+        expect(yield* knownInRun(path, sha("c"), acme)).toBe(true);
+      })
+    );
+
+    it.effect(
       "shows a regenerated index to the next run",
       Effect.fnUntraced(function* () {
         const directory = yield* temporaryDirectory;

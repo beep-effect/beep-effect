@@ -145,10 +145,13 @@ secret failure through desktop sign-in.
   required checks and reviews handled.
 - [x] Final evidence, reflection and lifecycle closeout land in that same PR.
 
-The [acceptance audit](research/acceptance-2026-10-02.md) binds these criteria
+The historical [acceptance audit](research/acceptance-2026-10-02.md) binds these criteria
 to the retained native evidence and verified implementation checkpoint. This
 same-PR closeout must pass final-head publication and strict readiness before
-merge; prior-head green does not waive those gates.
+merge; prior-head green does not waive those gates. PR #1389 missed the ordering
+requirement and closed under the explicit operator exception below. The
+[recovery audit](research/recovery-audit-2026-10-06.md) preserves that chronology
+and records the present evidence limits. The exception grants no future waiver.
 
 Packet creation satisfies no implementation criterion. A partial or blocked
 result remains active/paused with receipts, not completed-retained.
@@ -192,4 +195,15 @@ cache deletion.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None approved | This goal | Goal executor | Record real exceptions before using them. | Every temporary exception needs a bounded removal condition. |
+| Post-merge verification ordering, accepted 2026-10-02 | Final readiness ordering for PR #1389 only | Operator | PR merged externally before final verification; the operator explicitly accepted the subsequent exact-merged-tree proof and final-head hosted checks. See the [recovery audit](research/recovery-audit-2026-10-06.md). | Historical disposition only; no future PR, source revision, profile or missing-evidence waiver. |
+
+## Decision log
+
+### 2026-10-06 — Publish the accepted closeout and recovery limits
+
+Publish a documentation addendum and update current-status navigation because
+pre-final-publication text still presented the accepted closeout as pending.
+Preserve the original receipts, frozen source identity and completed-retained
+lifecycle. Keep raw observations and trust material private. Revert this
+addendum and navigation change to reverse the publication; doing so would not
+revoke the already-recorded operator acceptance or alter historical evidence.

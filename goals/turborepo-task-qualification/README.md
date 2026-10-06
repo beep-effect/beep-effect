@@ -6,7 +6,8 @@ Lifecycle: `completed-retained`
 
 Source: [ops/manifest.json](./ops/manifest.json).
 Implementation and pilot acceptance are recorded in [PLAN.md](./PLAN.md).
-Final publication remains gated on current-head proof before merge.
+PR #1389 is merged and accepted. The [October 6 recovery audit](./research/recovery-audit-2026-10-06.md)
+records the accepted ordering exception and remaining private-evidence limits.
 
 ## Mission
 
@@ -30,24 +31,27 @@ Make cache reuse an enforced, evidence-backed contract for each quality computat
 
 ## Current phase
 
-Same-PR closeout in PR #1389. The real signed pilot qualified in its named
-private-loopback profile at frozen source `93a19425da`; the public adoption
-handoff is published. Full local proof and strict hosted readiness passed at
-`466ecff`. Broad rollout remains adoption's responsibility.
+The implementation and named private-profile pilot are complete. PR #1389
+merged on October 2, and the operator accepted the documented exception that
+final verification finished after the external merge. The implementation lane
+was retired. Broad rollout remains adoption's responsibility.
 
-The final publication repeats current-head proof after the main integration
-and packet closeout changes, then proceeds to the authorized merge and lane
-retirement. The [acceptance audit](./research/acceptance-2026-10-02.md) distinguishes
-those operational steps from the completed mechanism and retained pilot proof.
+The October 6 audit recovered hash-matching native evidence and reproduced the
+adoption bundle. The original proof archive and private acceptance/trust stores
+remain unavailable; see the [recovery audit](./research/recovery-audit-2026-10-06.md)
+for exactly what can and cannot be independently revalidated.
 
 ## Latest evidence
+
+- [Recovery audit and accepted chronology](./research/recovery-audit-2026-10-06.md):
+  final merge identity, operator exception, recovered evidence and missing originals.
 
 - [Signed qualification receipt](./research/current-signed-qualification.json):
   native stable/canary matrix, authenticated acceptance and operational promotion.
 - [Adoption handoff](./research/adoption-handoff.md) and
   [checked artifact manifest](./research/adoption/manifest.json): complete
   executable/graph-only population, semantic families and invalidation rules.
-- [Current acceptance audit](./research/acceptance-2026-10-02.md): requirements,
+- [Pre-final-publication acceptance audit](./research/acceptance-2026-10-02.md): requirements,
   evidence boundaries and final publication gates.
 - [Closeout reflection](./history/reflections/2026-10-02-codex.md): lessons from
   implementation, native evidence and verification.

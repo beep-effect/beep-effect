@@ -1,4 +1,5 @@
 import {
+  GraphEvent,
   M365,
   M365_IDEMPOTENCY_KEY_PROPERTY_ID,
   M365AppOnlyConfigInput,
@@ -184,6 +185,8 @@ const roundTrip = <Sch extends S.ConstraintCodec<unknown, unknown, never, never>
 ): Sch["Type"] => Result.getOrThrow(S.decodeUnknownResult(schema)(Result.getOrThrow(S.encodeResult(schema)(value))));
 
 const isNamedBody = S.is(S.Struct({ displayName: S.String }));
+
+const encodeGraphEvent = S.encodeEffect(GraphEvent);
 
 const DayOffset = S.Int.check(S.isBetween({ maximum: 40_000, minimum: -40_000 }));
 
@@ -713,6 +716,37 @@ describe("@beep/m365 app-only lane and write verbs", () => {
           O.map(withoutMailbox, (error) => error.reason),
           "request encoding"
         );
+      })
+    );
+  });
+
+  it.layer(appOnlyLayer(), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "decodes Graph resources whose absent fields arrive as null",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* WriteTestHttp;
+        const m365 = yield* M365;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(
+            jsonResponse(
+              {
+                ...eventResponse,
+                occurrenceId: null,
+                onlineMeeting: null,
+                onlineMeetingUrl: null,
+                recurrence: null,
+                seriesMasterId: null,
+              },
+              201
+            )
+          )
+        );
+
+        const event = yield* m365.createEvent(createRequest);
+
+        expect(event.id).toBe("event-id");
+        assertNone(event.seriesMasterId);
+        expect(yield* encodeGraphEvent(event)).not.toHaveProperty("seriesMasterId");
       })
     );
   });

@@ -8,6 +8,14 @@ slice's use-case ports to real implementations.
   `OfficeActionReview` loop over the epistemic server (`ClaimGate` +
   `ClaimTransition`, themselves over the bounded SHACL engine).
 
+- `@beep/law-practice-server/DocketIntake` — live adapters of the docket intake
+  pipeline: `makeDocketGraphLayer` (mailbox and calendar over the app-only
+  `@beep/m365` lane), `makeDocketAgentsLayer` (paralegal and secretary over a
+  `LanguageModel`), `makeDocketFileStoreLayer` (state file and digest archive)
+  and `DocketMatterLookupUnavailableLive` (stands in until the practice
+  knowledge-graph lookup is wired). The adapters add no date logic; the
+  `@beep/docket-intake` app composes them.
+
 `LawPracticeServerLive` requires the host application to provide a
 `LanguageModel.LanguageModel` layer for `@beep/langextract`; model selection and
 credentials stay at the application merge boundary.
