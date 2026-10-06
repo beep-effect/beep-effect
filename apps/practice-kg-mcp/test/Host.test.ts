@@ -1,3 +1,4 @@
+import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
   PracticeKgBundleManifest,
   PracticeKgCounts,
@@ -6,12 +7,13 @@ import {
   PracticeKgToolkit,
 } from "@beep/law-practice-server";
 import { it } from "@beep/test-runner";
+import { provideScopedLayer } from "@beep/test-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Console, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -34,10 +36,13 @@ const encodeManifest = S.encodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
 const decodeReportLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const decodeFailureLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 const isString = S.is(S.String);
-// The test console is shared by every test in one `it.layer` block, so each
-// test reads only the lines printed after the count it started with.
-const printedSince = (start: number) =>
-  TestConsole.logLines.pipe(Effect.map(A.drop(start)), Effect.map(A.filter(isString)));
+// Tests in one `it.layer` block share a console and may overlap, so each
+// printing effect runs against a console of its own.
+const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
+  Effect.all({
+    value: self,
+    lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))),
+  }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
 const manifest = PracticeKgBundleManifest.make({
   builtAt: "2026-08-13T00:00:00.000Z",
@@ -180,11 +185,9 @@ describe("@beep/practice-kg-mcp self-check", () => {
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
         const bundleDir = yield* makePracticeKgSmokeBundle(root);
         const context = yield* loadPracticeKgBundleContext(bundleDir);
-        const start = A.length(yield* TestConsole.logLines);
 
-        yield* printPracticeKgSelfCheck(runPracticeKgSelfCheck(bundleDir));
+        const { lines } = yield* runPracticeKgSelfCheck(bundleDir).pipe(printPracticeKgSelfCheck, printed);
 
-        const lines = yield* printedSince(start);
         expect(lines).toHaveLength(1);
         const line = lines[0] ?? "";
         expect(line).toMatch(
@@ -210,11 +213,13 @@ describe("@beep/practice-kg-mcp self-check", () => {
           path.join(bundleDir, "bundle.manifest.json"),
           '{"builtAt":"2026-10-06T00:00:00.000Z","bundleVersion":"2026-10-06-01","corpusRootExpected":true,"corpusSnapshotAt":"2026-10-05T00:00:00.000Z","counts":{"documents":1,"edges":1,"emails":1,"nodes":1},"schemaVersion":{"duckdb":"2","pglite":"2"},"sourceRuns":{"base":"included","refresh202607":"excluded"}}'
         );
-        const start = A.length(yield* TestConsole.logLines);
 
-        const error = yield* Effect.flip(printPracticeKgSelfCheck(runPracticeKgSelfCheck(bundleDir)));
+        const { lines, value: error } = yield* runPracticeKgSelfCheck(bundleDir).pipe(
+          printPracticeKgSelfCheck,
+          Effect.flip,
+          printed
+        );
 
-        const lines = yield* printedSince(start);
         expect(lines).toHaveLength(1);
         const failure = yield* decodeFailureLine(lines[0] ?? "");
         expect(error).toBeInstanceOf(SelfCheckFailure);
@@ -242,7 +247,43 @@ describe("@beep/practice-kg-mcp self-check", () => {
 
         expect(missing.message).toBe(`Practice KG bundle store is missing at "${path.join(bundleDir, "kg.pglite")}".`);
         expect(unreadable).toBeInstanceOf(PracticeKgHostError);
-        expect(unreadable.message).toBe(`Practice KG self-check could not read the bundle stores at "${bundleDir}".`);
+        expect(unreadable.message).toContain(`at "${bundleDir}"`);
+      })
+    );
+
+    it.effect(
+      "refuses a current-format manifest over matter tables built for the previous format",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        // Store format 2 had no `matters.client_name`; the manifest still says format 3.
+        const dropClientName = Effect.gen(function* () {
+          const db = yield* DuckDb;
+          yield* db.run("ALTER TABLE matters DROP COLUMN client_name");
+        });
+        yield* dropClientName.pipe(
+          provideScopedLayer(
+            DuckDb.makeNodeLayer(
+              DuckDbConnectionOptions.make({ databasePath: path.join(bundleDir, "practice.duckdb") })
+            )
+          )
+        );
+
+        const { lines, value: error } = yield* runPracticeKgSelfCheck(bundleDir).pipe(
+          printPracticeKgSelfCheck,
+          Effect.flip,
+          printed
+        );
+
+        expect(lines).toHaveLength(1);
+        const refusal = yield* decodeFailureLine(lines[0] ?? "");
+        expect(error).toBeInstanceOf(SelfCheckFailure);
+        expect(refusal.ok).toBe(false);
+        expect(refusal.message).toBe(
+          `Practice KG matter store (practice.duckdb) at "${bundleDir}" does not answer the queries this server's tools run; install the bundle that matches this server.`
+        );
       })
     );
   });

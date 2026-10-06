@@ -47,6 +47,7 @@
     "@beep/duckdb": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/law-practice-server": "workspace:^",
+    "@beep/law-practice-use-cases": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",

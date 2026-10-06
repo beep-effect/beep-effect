@@ -8,7 +8,13 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
-import { PracticeKgSchemaVersions, PracticeKgToolkit } from "@beep/law-practice-server";
+import {
+  lookupPracticeKgMatters,
+  PracticeKgQueries,
+  PracticeKgSchemaVersions,
+  PracticeKgToolkit,
+} from "@beep/law-practice-server";
+import { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server";
 import { Console, Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { constFalse } from "effect/Function";
@@ -104,17 +110,43 @@ const refuse = (cause: PracticeKgHostError) =>
     Effect.andThen(SelfCheckFailure.make({ cause, message: cause.message }))
   );
 
-const readStoreCounts = Effect.gen(function* () {
+// A manifest can say store format 3 over tables built for an older format, and a
+// bare COUNT would still pass. Each store is therefore read through a query the
+// tools really run, so a missing column fails here instead of in a chat.
+const SELF_CHECK_REFERENCE = "practice-kg-self-check";
+
+const storeFailure = (store: string, bundleDir: string) => (cause: unknown) =>
+  PracticeKgHostError.make({
+    cause,
+    message: `Practice KG ${store} at "${bundleDir}" does not answer the queries this server's tools run; install the bundle that matches this server.`,
+  });
+
+const readGraphStore = Effect.gen(function* () {
   const sql = (yield* SqlClient).withoutTransforms();
-  const duckdb = yield* DuckDb;
-  const nodes = yield* sql
+  // `kg_find` text: selects every graph column the tools project, attribution_source included.
+  yield* sql.unsafe(PracticeKgQueries.find, [SELF_CHECK_REFERENCE]);
+  return yield* sql
     .unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM kg_node")
     .pipe(Effect.flatMap(decodeCountRows), Effect.map(firstCount));
-  const matters = yield* duckdb
+}).pipe(Effect.withSpan("PracticeKgSelfCheck.readGraphStore"));
+
+const readMatterStore = Effect.gen(function* () {
+  const duckdb = yield* DuckDb;
+  // `kg_matter_lookup` itself: its four statements read matters.client_name and every
+  // matter_dockets column whether or not the reference matches a matter.
+  yield* lookupPracticeKgMatters(PracticeKgMatterLookupRequest.make({ reference: SELF_CHECK_REFERENCE }));
+  return yield* duckdb
     .query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")
     .pipe(Effect.flatMap(decodeCountRows), Effect.map(firstCount));
+}).pipe(Effect.withSpan("PracticeKgSelfCheck.readMatterStore"));
+
+const readStoreCounts = Effect.fn("PracticeKgSelfCheck.readStoreCounts")(function* (bundleDir: string) {
+  const nodes = yield* readGraphStore.pipe(Effect.mapError(storeFailure("graph store (kg.pglite)", bundleDir)));
+  const matters = yield* readMatterStore.pipe(
+    Effect.mapError(storeFailure("matter store (practice.duckdb)", bundleDir))
+  );
   return { matters, nodes };
-}).pipe(Effect.withSpan("PracticeKgSelfCheck.readStoreCounts"));
+});
 
 // PGlite and DuckDB both create a missing store on open, so a mistyped bundle
 // folder would gain two empty stores and then fail on the first query.
@@ -129,12 +161,15 @@ const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bu
 });
 
 /**
- * Load a bundle exactly as the server does and count one table in each store.
+ * Load a bundle exactly as the server does and read each store the way the tools do.
  *
  * **Details**
  *
- * Only `SELECT` statements run, and both stores close before the report is
- * returned. The stores are the ones `makePracticeKgHostResourcesLayer` hands
+ * Each store answers one query the tools really run (`kg_find` on the graph,
+ * `kg_matter_lookup` on the matter tables) before it is counted, so a bundle
+ * whose manifest claims the current store format over older tables is refused
+ * with a message naming the store. Only `SELECT` statements run, and both
+ * stores close before the report is returned. The stores are the ones `makePracticeKgHostResourcesLayer` hands
  * the stdio server, so a passing report covers the files the server reads.
  *
  * **Example** (Check a bundle folder)
@@ -160,14 +195,14 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
   yield* requireStore(bundleDir, "kg.pglite");
   yield* requireStore(bundleDir, "practice.duckdb");
   const counts = yield* Layer.build(makePracticeKgHostResourcesLayer(context)).pipe(
-    Effect.flatMap((resources) => readStoreCounts.pipe(Effect.provide(resources))),
-    Effect.scoped,
     Effect.mapError((cause) =>
       PracticeKgHostError.make({
         cause,
-        message: `Practice KG self-check could not read the bundle stores at "${bundleDir}".`,
+        message: `Practice KG self-check could not open the bundle stores at "${bundleDir}".`,
       })
-    )
+    ),
+    Effect.flatMap((resources) => readStoreCounts(bundleDir).pipe(Effect.provide(resources))),
+    Effect.scoped
   );
   return PracticeKgSelfCheckReport.make({
     extensionVersion: PRACTICE_KG_EXTENSION_VERSION,

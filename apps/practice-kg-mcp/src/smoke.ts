@@ -208,6 +208,16 @@ export const makePracticeKgSmokeBundle = Effect.fn("PracticeKgSmoke.makeFixtureB
   return bundleOut;
 });
 
+// bin.ts resolves PRACTICE_KG_BUNDLE_DIR ahead of BUNDLE_DIR, so an ambient value in a
+// developer or CI shell would aim the compiled host at another bundle and let a leg pass
+// without proving the staged artifact. Dropping both higher-precedence overrides also
+// leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install. Every leg
+// spawns the host from this environment.
+const compiledHostEnv = (): Record<string, string | undefined> => {
+  const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
+  return R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT");
+};
+
 // fallow-ignore-next-line complexity -- stdio smoke harness; IS the coverage for the compiled artifact
 const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   executable: string,
@@ -230,12 +240,7 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
     )
   );
   const substitute = substituteManifestTokens(exeDir, bundleOut);
-  // bin.ts resolves PRACTICE_KG_BUNDLE_DIR ahead of the manifest's BUNDLE_DIR, so an ambient
-  // value in a developer or CI shell would aim the compiled host at another bundle and let the
-  // smoke pass without proving the staged artifact. Dropping both higher-precedence overrides
-  // also leaves PRACTICE_KG_CORPUS_ROOT unset, mirroring the pointer-only install.
-  const ambientEnv: Record<string, string | undefined> = { ...Bun.env };
-  const hostEnv = R.remove(R.remove(ambientEnv, "PRACTICE_KG_BUNDLE_DIR"), "PRACTICE_KG_CORPUS_ROOT");
+  const hostEnv = compiledHostEnv();
   // 2026-07-28 framing: no initialize handshake; every request carries the
   // protocol version, client capabilities and client info in `_meta`.
   const requestMeta = `{"${PROTOCOL_VERSION_META_KEY}":"${MCP_PROTOCOL_VERSION}","${CLIENT_CAPABILITIES_META_KEY}":{},"${CLIENT_INFO_META_KEY}":{"name":"compiled-smoke","version":"0.0.0"}}`;
@@ -362,7 +367,11 @@ const runCompiledHandshake = Effect.fn("PracticeKgSmoke.runCompiledHandshake")(f
       new Response(
         Bun.spawn(["sh", "-c", pipeScript, "practice-kg-handshake", executable], {
           cwd: neutralCwd,
-          env: { ...Bun.env, BUNDLE_DIR: bundleOut, NODE_PATH: path.join(path.dirname(executable), "node_modules") },
+          env: {
+            ...compiledHostEnv(),
+            BUNDLE_DIR: bundleOut,
+            NODE_PATH: path.join(path.dirname(executable), "node_modules"),
+          },
           stderr: "inherit",
           stdout: "pipe",
         }).stdout
@@ -408,7 +417,11 @@ const runCompiledSelfCheck = Effect.fn("PracticeKgSmoke.runCompiledSelfCheck")(f
     try: () =>
       Bun.spawn([executable, "--self-check"], {
         cwd: neutralCwd,
-        env: { ...Bun.env, BUNDLE_DIR: bundleOut, NODE_PATH: path.join(path.dirname(executable), "node_modules") },
+        env: {
+          ...compiledHostEnv(),
+          BUNDLE_DIR: bundleOut,
+          NODE_PATH: path.join(path.dirname(executable), "node_modules"),
+        },
         stderr: "inherit",
         stdin: "ignore",
         stdout: "pipe",
