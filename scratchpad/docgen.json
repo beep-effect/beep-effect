@@ -15,8 +15,7 @@
     "identity-kit-probe.ts",
     "exec.ts",
     "effect-ontology/**",
-    "beep/**",
-    "claudecode/vitest.config.ts"
+    "beep/**"
   ],
   "enforceDescriptions": true,
   "enforceExamples": true,
@@ -46,22 +45,7 @@
       "@beep/schema": ["../packages/foundation/modeling/schema/src/index.ts"],
       "@beep/utils": ["../packages/foundation/modeling/utils/src/index.ts"],
       "@beep/utils/*": ["../packages/foundation/modeling/utils/src/*.ts"],
-      "effect-claudecode": ["claudecode/index.ts"],
-      "@beep/scratchpad/yaml": ["yaml/index.ts"],
-      "@beep/scratchpad/jsonc": ["jsonc/index.ts"],
-      "@beep/scratchpad/jsonl": ["jsonl/index.ts"],
-      "@beep/scratchpad/toml": ["toml/index.ts"],
-      "@beep/scratchpad/glob": ["glob/index.ts"],
-      "@beep/scratchpad/semver": ["semver/index.ts"],
-      "@beep/scratchpad/schemastore": ["schemastore/index.ts"],
-      "@beep/scratchpad/memfs": ["memfs/index.ts"],
-      "@beep/scratchpad/codemode": ["codemode/index.ts"],
-      "@beep/scratchpad/beep-docs": ["beep-docs/api-reference/index.ts"],
-      "@beep/scratchpad/metadata": ["metadata/Metadata.models.ts"],
-      "@beep/scratchpad/microdata": ["microdata/Microdata.model.ts"],
-      "@beep/scratchpad/ontoskills/registry": [
-        "ontoskills/registry/Registry.models.ts"
-      ]
+      "@beep/scratchpad/semver": ["semver/index.ts"]
     }
   },
   "examplesCompilerOptions": {
@@ -91,7 +75,6 @@
     "noErrorTruncation": true,
     "jsx": "react-jsx",
     "paths": {
-      "effect-claudecode": ["../../../claudecode/index.ts"],
       "@effect-ontology/index": ["../../../effect-ontology/index.ts"],
       "@effect-ontology/Identity": [
         "../../../effect-ontology/Domain/Identity.ts"
