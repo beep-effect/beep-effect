@@ -161,3 +161,26 @@ equality and the exact hook lint are recorded. Package proof did not expose this
 hook-only failure before publication. Running the staged JSDoc hook alongside
 local final checks would have prevented the late interruption. Nonblocking
 JSDoc advisories are not described as errors or silently suppressed.
+
+### Review corrections on PR #1513
+
+The first review found three acquisition contract failures: a retained redirect
+was accepted by the adapter but rejected by shared revalidation; a reference
+resolution read a relative proof path from the process directory; and paper size
+limits ran after the complete body had already been buffered. The correction
+replays retained redirect proof, resolves proof paths beside their manifest, and
+bounds the HTTP stream before retaining more bytes. Regression tests exercise
+the producer and validator together, nested manifests, and cancellation on body
+overflow. These cases should be included when adding another acquisition route.
+
+The review also identified two usability follow-ups for acquisition: explain why
+an explicitly selected failed source needs `--retry`, and accept retained alias
+IDs in `--source` selection. Both remain tracked here for the later CLI work.
+Additional orchestration tests are preserved with the deferred CI handoff; this
+review repair does not restore that separate wave or change coverage floors.
+
+The schema inventory writer matched this fixture's existing exception by its old
+line number, then replaced the moved row with a generic advisory. The correction
+preserves the reviewed reason and status at the new line. Matching this policy
+record by stable file and symbol would avoid losing its rationale after imports
+move. No new schema exception or coverage floor was admitted.

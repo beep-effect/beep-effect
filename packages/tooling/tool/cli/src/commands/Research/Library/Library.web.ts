@@ -5,8 +5,9 @@
  */
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect, Layer, Path } from "effect";
+import { Effect, Layer, Path, Stream } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -65,6 +66,55 @@ const paperHeaderObservation = (text: string) => {
 };
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.web");
+
+// Reject declared oversize before pulling, then enforce observed bytes independent of headers.
+// Stream finalization cancels/releases the response reader on failure, including early rejection.
+const readBoundedPaperBody = Effect.fn("Library.paper.readBoundedBody")(function* (
+  response: HttpClientResponse.HttpClientResponse,
+  pdfAllowed: boolean
+) {
+  const declaredLimit =
+    !pdfAllowed || Str.includes("text/html")(Str.toLowerCase(response.headers["content-type"] ?? ""))
+      ? 5_000_000
+      : 50_000_000;
+  const declared = S.decodeUnknownOption(S.FiniteFromString)(response.headers["content-length"]);
+  if (O.isSome(declared) && declared.value > declaredLimit) {
+    yield* Effect.scoped(Stream.toPull(response.stream).pipe(Effect.asVoid));
+    return yield* LibraryError.make({
+      cause: "body-bound",
+      message: `Paper HTTP body declared ${declared.value} bytes above the ${declaredLimit}-byte limit.`,
+    });
+  }
+  let bytes = new Uint8Array(0);
+  const signature = new Uint8Array(5);
+  let signatureBytes = 0;
+  let total = 0;
+  yield* response.stream.pipe(
+    Stream.runForEach(
+      Effect.fnUntraced(function* (chunk: Uint8Array) {
+        const prefix = chunk.subarray(0, 5 - signatureBytes);
+        signature.set(prefix, signatureBytes);
+        signatureBytes += prefix.byteLength;
+        const limit = pdfAllowed && isPdf(signature) ? 50_000_000 : 5_000_000;
+        if (chunk.byteLength > limit - total)
+          return yield* LibraryError.make({
+            cause: "body-bound",
+            message: `Paper HTTP body exceeded the ${limit}-byte observed stream limit.`,
+          });
+        const required = total + chunk.byteLength;
+        if (required > bytes.byteLength) {
+          const grown = new Uint8Array(Num.min(limit, Num.max(required, Num.max(1024, bytes.byteLength * 2))));
+          grown.set(bytes);
+          bytes = grown;
+        }
+        bytes.set(chunk, total);
+        total = required;
+      })
+    )
+  );
+  return bytes.slice(0, total);
+});
+
 const ScrapedDocument = S.Struct({
   markdown: S.String,
   rawHtml: S.String,
@@ -243,7 +293,7 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     const client = yield* HttpClient.HttpClient;
     let fetchedUrl = pdfUrl;
     let response = yield* client.get(fetchedUrl).pipe(Effect.timeout("90 seconds"));
-    let bytes = new Uint8Array(yield* response.arrayBuffer);
+    let bytes = yield* readBoundedPaperBody(response, true).pipe(Effect.timeout("90 seconds"));
     const resolvePublisherPdf = Effect.fn("Library.paper.resolvePublisherPdf")(function* () {
       const landing = yield* saveImmutable(root, `${prefix}/landing.html`, bytes);
       artifacts.push(LibraryArtifact.make({ ...landing, mediaType: "text/html", role: "publisher-landing-page" }));
@@ -304,7 +354,7 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
         });
       fetchedUrl = candidate.href;
       response = yield* client.get(fetchedUrl).pipe(Effect.timeout("90 seconds"));
-      bytes = new Uint8Array(yield* response.arrayBuffer);
+      bytes = yield* readBoundedPaperBody(response, true).pipe(Effect.timeout("90 seconds"));
       return O.none();
     });
     if (!isPdf(bytes)) {
@@ -372,7 +422,7 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     ) {
       const explicitUrl = `https://arxiv.org/pdf/${paperId}${observedRevision}`;
       const explicitResponse = yield* client.get(explicitUrl).pipe(Effect.timeout("90 seconds"));
-      const explicitBytes = new Uint8Array(yield* explicitResponse.arrayBuffer);
+      const explicitBytes = yield* readBoundedPaperBody(explicitResponse, true).pipe(Effect.timeout("90 seconds"));
       const explicitHash = yield* hashBytes(explicitBytes);
       const versionedSaved = yield* saveImmutable(root, `${prefix}/versioned-source.pdf`, explicitBytes);
       artifacts.push(
@@ -409,7 +459,9 @@ export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
     const observeHeaderlessVersion = Effect.fn("Library.paper.observeHeaderlessVersion")(function* (citedId: string) {
       const metadataUrl = `https://export.arxiv.org/api/query?id_list=${encodeURIComponent(citedId)}`;
       const metadataResponse = yield* client.get(metadataUrl).pipe(Effect.timeout("60 seconds"));
-      const atom = yield* metadataResponse.text;
+      const atom = new TextDecoder().decode(
+        yield* readBoundedPaperBody(metadataResponse, false).pipe(Effect.timeout("90 seconds"))
+      );
       const originalMetadata = yield* saveLibraryText(
         root,
         `${prefix}/arxiv-metadata.xml`,

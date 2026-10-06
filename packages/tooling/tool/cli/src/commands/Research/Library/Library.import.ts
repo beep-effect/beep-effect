@@ -470,7 +470,7 @@ export const importLibraryResult = Effect.fn("Library.importResult")(function* (
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(resultPath);
   const resolution = yield* decodeLibraryJson(LibraryReferenceResolutionPayload)(raw).pipe(Effect.option);
-  if (O.isSome(resolution)) return yield* importReferenceResolution(root, raw, resolution.value);
+  if (O.isSome(resolution)) return yield* importReferenceResolution(root, resultPath, raw, resolution.value);
   const disposition = yield* decodeLibraryJson(LibraryDispositionImportPayload)(raw).pipe(Effect.option);
   if (O.isSome(disposition)) return yield* importDisposition(root, resultPath, raw, disposition.value);
   const qualification = yield* decodeLibraryJson(LibraryQualificationImportPayload)(raw).pipe(Effect.option);
@@ -559,11 +559,13 @@ const resolutionProofMatches = (
   requestedUrl === canonicalUrl &&
   (proof.pull_request === undefined || Str.toLowerCase(proof.pull_request.html_url) === canonicalUrl);
 const validateResolutionProof = Effect.fn("Library.validateResolutionProof")(function* (
+  resultPath: string,
   payload: LibraryReferenceResolutionPayload,
   locator: RegExpMatchArray
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const proofBytes = yield* fs.readFile(payload.evidence.path);
+  const path = yield* Path.Path;
+  const proofBytes = yield* fs.readFile(path.resolve(path.dirname(resultPath), payload.evidence.path));
   if ((yield* hashBytes(proofBytes)) !== payload.evidence.sha256 || proofBytes.byteLength !== payload.evidence.bytes)
     return yield* LibraryError.make({ message: "Reference resolution API evidence hash differs.", cause: "hash" });
   const envelope = yield* decodeLibraryJson(GithubResolutionResponse)(new TextDecoder().decode(proofBytes));
@@ -658,6 +660,7 @@ const resolutionSourceMatches = (source: LibrarySource, payload: LibraryReferenc
   (source.kind === "unresolved" || A.contains(source.aliasIds, payload.sourceId));
 const importReferenceResolution = Effect.fn("Library.importReferenceResolution")(function* (
   root: string,
+  resultPath: string,
   raw: string,
   payload: LibraryReferenceResolutionPayload
 ) {
@@ -673,7 +676,7 @@ const importReferenceResolution = Effect.fn("Library.importReferenceResolution")
           message: "Reference resolution source or citation binding differs.",
           cause: "identity",
         });
-      const { proofBytes, repository, canonicalUrl } = yield* validateResolutionProof(payload, locator);
+      const { proofBytes, repository, canonicalUrl } = yield* validateResolutionProof(resultPath, payload, locator);
       const citations = yield* resolutionCitations(catalog, source.value, payload);
       for (const occurrence of citations) yield* validateResolutionCitation(root, catalog, payload, occurrence);
       const documentId = O.getOrElse(

@@ -412,6 +412,32 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         expect(A.getUnsafe(bare, 1)).toMatchObject({ locator: "2609.11682", form: "arxiv-id" });
       })
     );
+    it.effect.each(["relative", "absolute"])(
+      "resolves reference proof paths from a nested manifest directory: %s",
+      (mode) =>
+        Effect.gen(function* () {
+          const f = yield* resolutionFixture();
+          const directory = f.path.join(f.path.dirname(f.payloadPath), "nested", "manifest");
+          yield* f.fs.makeDirectory(directory, { recursive: true });
+          const proofPath = f.path.join(directory, "proof.json");
+          yield* f.fs.writeFileString(proofPath, f.proof);
+          // Remove the original so only the manifest-relative copy can satisfy the import.
+          yield* f.fs.remove(f.proofPath);
+          const manifest = f.path.join(directory, "resolution.json");
+          yield* f.fs.writeFileString(
+            manifest,
+            yield* fixtureJson({
+              ...f.payload,
+              evidence: { ...f.payload.evidence, path: mode === "relative" ? "proof.json" : proofPath },
+            })
+          );
+          const result = yield* importLibraryResult(f.root, manifest);
+          const resolved = A.findFirst(result.sources, (entry) => entry.id === f.preexisting.id);
+          expect(resolved).toMatchObject({ _tag: "Some", value: { aliasIds: expect.arrayContaining([f.source.id]) } });
+          const retained = A.findFirst(result.artifacts, (entry) => entry.role === "reference-resolution-evidence");
+          expect(retained).toMatchObject({ _tag: "Some", value: { sha256: f.payload.evidence.sha256 } });
+        })
+    );
     it.effect(
       "resolves GitHub shorthand from bound API proof and preserves aliases across import and inventory reruns",
       () =>

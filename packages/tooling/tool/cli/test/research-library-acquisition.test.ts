@@ -1,8 +1,9 @@
-import { Firecrawl } from "@beep/firecrawl";
+import { Firecrawl, FirecrawlScrapeSuccess } from "@beep/firecrawl";
 import {
   hashBytes,
   importLibraryResult,
   LibraryArtifact,
+  LibraryCapture,
   LibraryCatalog,
   LibraryDispositionImportPayload,
   LibraryImportPayload,
@@ -17,18 +18,21 @@ import {
   acquireLibraryGithub,
   acquireLibraryPaper,
   acquireLibrarySource,
+  acquireLibraryWeb,
   correctLibraryCaptures,
   LibraryCaptureCorrection,
   libraryCaptionProvenance,
   libraryQualificationValid,
+  librarySourceEvidenceValid,
   runLibraryCommand,
+  saveLibraryText,
   validateProviderQualification,
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
 import { Config, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
-import { HttpClient, HttpClientResponse } from "effect/http";
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 import * as S from "effect/Schema";
 
 const source = LibrarySource.make({
@@ -111,6 +115,78 @@ it.layer(
   ),
   { timeout: "30 seconds" }
 )("research acquisition integrity", (it) => {
+  it.effect.each(["unchanged", "missing", "requested", "resolved", "provider", "status", "merged", "corrupt"])(
+    "revalidates captured web redirects only with retained matching proof: %s",
+    (scenario) =>
+      Effect.gen(function* () {
+        const f = yield* prepare();
+        const resolved = "https://example.com/moved-article";
+        const client = HttpClient.make((request) =>
+          Effect.succeed(
+            HttpClientResponse.fromWeb(
+              HttpClientRequest.setUrl(request, resolved),
+              new Response("redirect", { status: 200 })
+            )
+          )
+        );
+        const driver = yield* Layer.build(
+          Layer.mock(Firecrawl, {
+            scrape: () =>
+              Effect.succeed(
+                FirecrawlScrapeSuccess.make({
+                  data: {
+                    markdown: "The retained full article.",
+                    rawHtml: "<article>The retained full article.</article>",
+                    metadata: { sourceURL: resolved, statusCode: 200 },
+                  },
+                })
+              ),
+          })
+        );
+        const result = yield* acquireLibraryWeb(f.root, source, "redirect").pipe(
+          Effect.provide(driver),
+          Effect.provideService(HttpClient.HttpClient, client)
+        );
+        expect(result.status).toBe("readable");
+        expect(result.complete).toBe(true);
+        let artifacts = result.artifacts;
+        if (scenario !== "unchanged") {
+          artifacts = A.filter(artifacts, (artifact) => artifact.role !== "target-metadata");
+          if (scenario !== "missing") {
+            const proof = yield* saveLibraryText(
+              f.root,
+              "replacement/redirect.json",
+              yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+                requestedUrl: scenario === "requested" ? "https://example.com/other" : source.canonicalUrl,
+                resolvedUrl: scenario === "resolved" ? "https://example.com/other" : resolved,
+                providerSourceUrl: scenario === "provider" ? "https://example.com/other" : resolved,
+                status: scenario === "status" ? 403 : 200,
+                identityMerged: scenario === "merged",
+              }),
+              "application/json",
+              "target-metadata"
+            );
+            artifacts = A.append(
+              artifacts,
+              scenario === "corrupt" ? LibraryArtifact.make({ ...proof, sha256: "0".repeat(64) }) : proof
+            );
+          }
+        }
+        const capture = LibraryCapture.make({
+          id: "redirect-capture",
+          sourceId: source.id,
+          status: result.status,
+          method: "firecrawl",
+          recordedAt: "2026-10-06T00:00:00Z",
+          requestedRevision: "",
+          capturedRevision: result.revision,
+          complete: result.complete,
+          artifacts,
+          reason: result.reason,
+        });
+        expect(yield* librarySourceEvidenceValid(f.root, source, capture)).toBe(scenario === "unchanged");
+      })
+  );
   it.effect("decodes authentic plain alphaXiv envelopes before class-based qualification", () =>
     Effect.gen(function* () {
       const receipt = {

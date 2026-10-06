@@ -167,6 +167,19 @@ const TargetMetadata = S.Struct({
   capturedRevision: S.optionalKey(S.String),
   paperId: S.optionalKey(S.String),
 });
+class WebRedirectProof extends S.Class<WebRedirectProof>($I`WebRedirectProof`)(
+  {
+    requestedUrl: S.String,
+    resolvedUrl: S.String,
+    status: S.Finite,
+    providerSourceUrl: S.String,
+    identityMerged: S.Literal(false),
+  },
+  $I.annote("WebRedirectProof", {
+    description:
+      "Retained HTTP confirmation linking a requested page to the provider's resolved URL without merging identities.",
+  })
+) {}
 const CitationResolution = S.Struct({
   sourceId: S.String,
   citedUrl: S.String,
@@ -329,14 +342,34 @@ const makeEvidenceContext = Effect.fn("Library.evidenceContext")(function* (
     const responses = yield* json("raw-response", S.Struct({ data: S.Unknown }));
     const markdown = yield* texts("extracted-full-text");
     const html = yield* texts("raw-full-text");
+    const redirects = yield* Effect.forEach(
+      role("target-metadata"),
+      (artifact) => read(artifact).pipe(Effect.flatMap(decodeLibraryJson(WebRedirectProof)), Effect.option),
+      { concurrency: 1 }
+    );
+    const targets = A.prepend(
+      A.map(
+        A.filter(
+          A.getSomes(redirects),
+          (proof) =>
+            proof.requestedUrl === url &&
+            successfulStatus(proof.status) &&
+            proof.resolvedUrl === proof.providerSourceUrl
+        ),
+        (proof) => proof.resolvedUrl
+      ),
+      url
+    );
     for (const response of responses) {
-      const document = yield* validateLibraryScrape(url, response.data).pipe(Effect.option);
-      if (
-        O.isSome(document) &&
-        A.contains(markdown, document.value.markdown) &&
-        A.contains(html, document.value.rawHtml)
-      )
-        return true;
+      for (const target of targets) {
+        const document = yield* validateLibraryScrape(target, response.data).pipe(Effect.option);
+        if (
+          O.isSome(document) &&
+          A.contains(markdown, document.value.markdown) &&
+          A.contains(html, document.value.rawHtml)
+        )
+          return true;
+      }
     }
     return false;
   });
