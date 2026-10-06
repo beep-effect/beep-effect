@@ -23,7 +23,7 @@ import {
 import { A, O } from "@beep/utils";
 import { Effect, Layer, pipe } from "effect";
 import type { OcctError } from "@beep/occt";
-import type { Camera, ModelSpec } from "@beep/technical-drawing";
+import type { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 
@@ -46,9 +46,13 @@ const engineFromOcct = Effect.fn("DrawingsLayer.engineFromOcct")(function* () {
         Effect.mapError((cause) => DrawingError.fromUnknown("geometry", "The kernel could not build the model.", cause))
       );
   });
-  const project = Effect.fn("DrawingsLayer.project")(function* (model: ModelSpec, cameras: ReadonlyArray<Camera>) {
+  const project = Effect.fn("DrawingsLayer.project")(function* (
+    model: ModelSpec,
+    cameras: ReadonlyArray<Camera>,
+    shading: O.Option<ShadingPlan>
+  ) {
     return yield* occt
-      .project(ProjectionRequest.make({ solid: model, cameras }))
+      .project(ProjectionRequest.make({ solid: model, cameras, shading }))
       .pipe(
         Effect.mapError((cause) => DrawingError.fromUnknown("projection", "Hidden-line projection failed.", cause))
       );

@@ -5,7 +5,7 @@
     "title": "Design Figure Generation",
     "status": "active",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/design-figure-generation",
@@ -35,7 +35,8 @@
   ],
   "researchReports": [
     "research/SOURCES.md",
-    "research/p1-perspective-hlr-spike.md"
+    "research/p1-perspective-hlr-spike.md",
+    "research/p3-shading-spike.md"
   ],
   "agentLaunchers": [
     {
@@ -65,7 +66,7 @@
     {
       "id": "P3",
       "name": "Slice 2: shading, judge rubric, sign-off",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

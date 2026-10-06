@@ -10,7 +10,7 @@
 
 import { $OcctId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Camera, ModelSpec } from "@beep/technical-drawing";
+import { Camera, ModelSpec, ShadingPlan } from "@beep/technical-drawing";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -35,6 +35,7 @@ export {
   Prism,
   Rotation,
   Segment2,
+  ShadingPlan,
   Vec3,
 } from "@beep/technical-drawing";
 
@@ -75,6 +76,10 @@ export class ProjectionRequest extends S.Class<ProjectionRequest>($I`ProjectionR
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether to also collect hidden edges. Defaults to false." })
+    ),
+    shading: S.OptionFromOptionalKey(ShadingPlan).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Straight-line shading plan; none projects outlines only." })
     ),
   },
   $I.annote("ProjectionRequest", {

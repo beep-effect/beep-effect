@@ -46,6 +46,9 @@ the live matter still needs its measured `spec.json` under the corpus root.
 - 2026-10-05 — synthetic bracket: 8 sheets, two consecutive renders share
   sheet-set sha256, validator clean; margin / gray / PDF 1.7 negatives
   flagged (`packages/tooling/tool/cli/test/drawings-live.test.ts`).
+- 2026-10-06 — `research/p3-shading-spike.md`: straight-line shading built on
+  the model's faces and hidden by the same HLR pass; `--shade` renders the
+  synthetic set byte-stably and validator-clean.
 
 ## Notes
 

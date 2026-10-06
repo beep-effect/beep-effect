@@ -31,6 +31,7 @@ const Golden = S.fromJsonString(
       edgeCount: S.Natural,
     }),
     figures: S.Array(S.Struct({ figure: S.Natural, view: S.String, svgSha256: S.String, visibleSegments: S.Natural })),
+    shadedSegments: S.Array(S.Natural),
   })
 );
 const decodeGolden = S.decodeUnknownEffect(Golden);
@@ -62,6 +63,34 @@ describe.skipIf(!toolsPresent)("beep drawings live", () => {
             visibleSegments: f.visibleSegments,
           }))
         ).toEqual(golden.figures);
+        expect(second.figures).toEqual(first.figures);
+        expect(second.pdfSha256).toBe(first.pdfSha256);
+        assertSome(
+          O.map(first.validation, (v) => [v.pageCount, v.findings.length]),
+          [8, 0]
+        );
+      })
+    );
+
+    it.effect(
+      "shades the synthetic bracket deterministically, perspectives only, validator clean",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const figureSet = yield* FigureSet;
+        const golden = yield* fs.readFileString(goldenPath).pipe(Effect.flatMap(decodeGolden));
+        const specPath = path.join(repoRoot, golden.spec);
+        const dir = yield* fs.makeTempDirectoryScoped();
+        const first = yield* figureSet.render(
+          RenderRequest.make({ specPath, outputDir: path.join(dir, "a"), shade: true })
+        );
+        const second = yield* figureSet.render(
+          RenderRequest.make({ specPath, outputDir: path.join(dir, "b"), shade: true })
+        );
+        expect(first.shaded).toBe(true);
+        expect(A.map(first.figures, (f) => f.shadingSegments)).toEqual(golden.shadedSegments);
+        // outlines are unchanged by shading
+        expect(A.map(first.figures, (f) => f.visibleSegments)).toEqual(A.map(golden.figures, (f) => f.visibleSegments));
         expect(second.figures).toEqual(first.figures);
         expect(second.pdfSha256).toBe(first.pdfSha256);
         assertSome(

@@ -6,6 +6,7 @@
  */
 
 import { $TechnicalDrawingId } from "@beep/identity/packages";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { ModelSummary } from "./Geometry.schemas.ts";
 import { ValidationReport } from "./Validation.schemas.ts";
@@ -108,6 +109,11 @@ export class FigureRecord extends S.Class<FigureRecord>($I`FigureRecord`)(
     svgFile: S.NonEmptyString.annotateKey({ description: "Sheet SVG file name in the output directory." }),
     svgSha256: S.String.annotateKey({ description: "SHA-256 of the sheet SVG." }),
     visibleSegments: S.Natural.annotateKey({ description: "Visible segments drawn." }),
+    shadingSegments: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0)),
+      S.annotateKey({ description: "Surface-shading segments drawn. Defaults to 0." })
+    ),
   },
   $I.annote("FigureRecord", {
     description: "FIG. number, view, description, sheet file, hash, and segment count of one figure.",
@@ -174,6 +180,11 @@ export class RenderManifest extends S.Class<RenderManifest>($I`RenderManifest`)(
     engine: EngineInfo.annotateKey({ description: "Geometry engine provenance." }),
     model: ModelSummary.annotateKey({ description: "Measured model facts." }),
     scale: S.Finite.annotateKey({ description: "Points per model unit used on every sheet." }),
+    shaded: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether the figures carry procedural surface shading. Defaults to false." })
+    ),
     figures: S.Array(FigureRecord).annotateKey({ description: "Rendered figures in FIG. order." }),
     omissions: S.Array(OmissionProof).annotateKey({ description: "Omission claims and their proofs." }),
     pdfFile: S.NonEmptyString.annotateKey({ description: "Sheet-set PDF file name in the output directory." }),

@@ -1,10 +1,10 @@
-import { Box, Camera, ModelSpec, Occt, OcctError, Part, Prism, ProjectionRequest } from "@beep/occt";
+import { Box, Camera, ModelSpec, Occt, OcctError, Part, Prism, ProjectionRequest, ShadingPlan } from "@beep/occt";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
-import { Effect, Layer, pipe } from "effect";
+import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 
 // A 40 × 30 × 20 box with an off-centre wedge on top, so no two principal
@@ -115,6 +115,72 @@ describe("@beep/occt service", () => {
         const second = yield* occt.project(request);
         expect(first).toEqual(second);
         expect(first.length).toBe(2);
+      })
+    );
+
+    it.effect(
+      "shades nothing without a plan, and nothing above a lit threshold of -1",
+      Effect.fnUntraced(function* () {
+        const occt = yield* Occt;
+        const [plain, unlit] = yield* occt.project(ProjectionRequest.make({ solid: fixture, cameras: [front] })).pipe(
+          Effect.zip(
+            occt.project(
+              ProjectionRequest.make({
+                solid: fixture,
+                cameras: [front],
+                shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: -1 })),
+              })
+            )
+          ),
+          Effect.map(([a, b]) => [a[0], b[0]] as const)
+        );
+        expect(plain?.shading).toEqual([]);
+        expect(unlit?.shading).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "hatches the front elevation with lines along the face's longest edge",
+      Effect.fnUntraced(function* () {
+        const occt = yield* Occt;
+        const [view] = yield* occt.project(
+          ProjectionRequest.make({
+            solid: fixture,
+            cameras: [front],
+            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3 })),
+          })
+        );
+        const shading = view?.shading ?? [];
+        // box front face: lines along its 40-long bottom edge (horizontal); wedge
+        // triangle: lines along its hypotenuse, slope -15/20 in this view
+        const slopeOf = ([x1, y1, x2, y2]: readonly [number, number, number, number]) =>
+          Math.round(((y2 - y1) / (x2 - x1)) * 1000) / 1000;
+        const slopes = pipe(shading, A.map(slopeOf), A.dedupe, A.sort(Order.Number));
+        expect(slopes).toEqual([-0.75, 0]);
+        // outlines are unchanged by shading
+        expect(view?.visible.length).toBe(6);
+      })
+    );
+
+    it.effect(
+      "hides hatch lines behind a separate part",
+      Effect.fnUntraced(function* () {
+        const occt = yield* Occt;
+        const post = Part.make({ name: "post", add: [Box.make({ min: [-4, -30, 0], max: [4, -24, 30] })] });
+        const plan = O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3 }));
+        const shadingLength = (solid: ModelSpec) =>
+          occt.project(ProjectionRequest.make({ solid, cameras: [front], shading: plan })).pipe(
+            Effect.map((views) =>
+              pipe(
+                views[0]?.shading ?? [],
+                A.reduce(0, (sum, [x1, y1, x2, y2]) => sum + Math.hypot(x2 - x1, y2 - y1))
+              )
+            )
+          );
+        const together = yield* shadingLength(ModelSpec.make({ parts: [...fixture.parts, post] }));
+        const bodyAlone = yield* shadingLength(fixture);
+        const postAlone = yield* shadingLength(ModelSpec.make({ parts: [post] }));
+        expect(together).toBeLessThan(bodyAlone + postAlone - 1);
       })
     );
 

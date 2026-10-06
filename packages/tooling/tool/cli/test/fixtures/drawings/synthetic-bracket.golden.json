@@ -2,7 +2,10 @@
   "spec": "packages/foundation/capability/technical-drawing/test/fixtures/synthetic-bracket.spec.json",
   "scale": 6.4835,
   "model": {
-    "boundingBox": { "min": [0, 0, 0], "max": [60, 40, 26] },
+    "boundingBox": {
+      "min": [0, 0, 0],
+      "max": [60, 40, 26]
+    },
     "volume": 19776.885,
     "faceCount": 21,
     "edgeCount": 45
@@ -56,5 +59,6 @@
       "svgSha256": "c25560cf0cda599d76bb77df58b0dd6c645cb3f6e4778cdab652ca61c9b0bf8f",
       "visibleSegments": 59
     }
-  ]
+  ],
+  "shadedSegments": [80, 116, 5, 0, 0, 0, 0, 0]
 }

@@ -10,16 +10,17 @@ import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
+import { ShadingPlan } from "./Geometry.schemas.ts";
 import { mirrorSegments, sameSegments } from "./Geometry.segments.ts";
 import { FigureRecord, OmissionProof, RenderManifest, Sha256Hex } from "./Manifest.schemas.ts";
 import { commonScale, composeSheet } from "./Sheet.compose.ts";
-import { SheetOptions } from "./Sheet.schemas.ts";
+import { PT_PER_MM, SheetOptions } from "./Sheet.schemas.ts";
 import { DrawingError } from "./TechnicalDrawing.errors.ts";
 import { GeometryEngine, PdfBackend } from "./TechnicalDrawing.ports.ts";
 import { marginFindings, purityFindings, structuralFindings } from "./Validation.rules.ts";
 import { ValidationOptions, ValidationReport } from "./Validation.schemas.ts";
 import { cameraForView, FigureSetSpec } from "./View.schemas.ts";
-import type { EdgeSet } from "./Geometry.schemas.ts";
+import type { EdgeSet, Segment2 } from "./Geometry.schemas.ts";
 import type { FigureSpec, OmissionClaim } from "./View.schemas.ts";
 
 const $I = $TechnicalDrawingId.create("FigureSet.service");
@@ -54,6 +55,10 @@ export class RenderRequest extends S.Class<RenderRequest>($I`RenderRequest`)(
     validate: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.annotateKey({ description: "Whether to validate the PDF and record the report. Defaults to true." })
+    ),
+    shade: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.annotateKey({ description: "Whether to add procedural straight-line surface shading. Defaults to false." })
     ),
   },
   $I.annote("RenderRequest", {
@@ -98,6 +103,27 @@ const sha256 = (bytes: Uint8Array): Effect.Effect<Sha256Hex> =>
   Effect.promise(() => crypto.subtle.digest("SHA-256", bytes.slice().buffer)).pipe(
     Effect.map((digest) => Sha256Hex.make(hexOf(digest)))
   );
+
+// Shading pitch is a paper quantity: convert the sheet's mm range to model
+// units at the common scale (points per model unit), then project once more.
+const shadingFor = (input: {
+  readonly request: RenderRequest;
+  readonly scale: number;
+  readonly project: (plan: ShadingPlan) => Effect.Effect<ReadonlyArray<EdgeSet>, DrawingError>;
+}): Effect.Effect<ReadonlyArray<EdgeSet>, DrawingError> => {
+  const { request, scale } = input;
+  if (!request.shade) {
+    return Effect.succeed([]);
+  }
+  const toModel = (mm: number) => (mm * PT_PER_MM) / scale;
+  return input.project(
+    ShadingPlan.make({
+      minPitch: toModel(request.sheet.shadingMinPitchMm),
+      maxPitch: toModel(Math.max(request.sheet.shadingMaxPitchMm, request.sheet.shadingMinPitchMm)),
+      litThreshold: request.sheet.shadingLitThreshold,
+    })
+  );
+};
 
 const proveOmission = (claim: OmissionClaim, shown: EdgeSet, omitted: EdgeSet): OmissionProof =>
   OmissionProof.make({
@@ -153,7 +179,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
     const model = yield* engine.summarize(spec.model);
     const views = [...A.map(spec.figures, (f) => f.view), ...A.map(spec.omissions, (o) => o.omitted)];
     const cameras = A.map(views, (view) => cameraForView({ view, box: model.boundingBox }));
-    const projected = yield* engine.project(spec.model, cameras);
+    const projected = yield* engine.project(spec.model, cameras, O.none());
     const edgesOf = (index: number): Effect.Effect<EdgeSet, DrawingError> =>
       pipe(
         A.get(projected, index),
@@ -193,6 +219,11 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       })
     );
     const scale = commonScale({ views: A.map(figureEdges, (e) => e.visible), options: request.sheet });
+    const shading = yield* shadingFor({
+      request,
+      scale,
+      project: (plan) => engine.project(spec.model, A.take(cameras, A.length(spec.figures)), O.some(plan)),
+    });
     const outputDir = path.resolve(request.outputDir);
     yield* fs
       .makeDirectory(outputDir, { recursive: true })
@@ -202,8 +233,14 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       spec.figures,
       Effect.fnUntraced(function* (figure: FigureSpec, index: number) {
         const edges = yield* edgesOf(index);
+        const shadingLines = pipe(
+          A.get(shading, index),
+          O.map((view) => view.shading),
+          O.getOrElse(() => A.empty<Segment2>())
+        );
         const svg = composeSheet({
           segments: edges.visible,
+          shading: shadingLines,
           figure: index + 1,
           sheet: index + 1,
           sheets,
@@ -222,6 +259,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           svgFile,
           svgSha256: yield* sha256(svgBytes),
           visibleSegments: A.length(edges.visible),
+          shadingSegments: A.length(shadingLines),
         });
       })
     );
@@ -242,6 +280,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       engine: info,
       model,
       scale,
+      shaded: request.shade,
       figures,
       omissions,
       pdfFile,

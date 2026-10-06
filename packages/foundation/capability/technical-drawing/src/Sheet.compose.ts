@@ -362,7 +362,7 @@ export const commonScale = (input: {
  * import { SheetOptions, composeSheet } from "@beep/technical-drawing"
  *
  * const svg = composeSheet({
- *   segments: [[0, 0, 40, 0]], figure: 1, sheet: 1, sheets: 1, scale: 5, options: SheetOptions.make({})
+ *   segments: [[0, 0, 40, 0]], shading: [], figure: 1, sheet: 1, sheets: 1, scale: 5, options: SheetOptions.make({})
  * })
  * console.log(svg.startsWith("<svg"))
  * ```
@@ -372,6 +372,7 @@ export const commonScale = (input: {
  */
 export const composeSheet = (input: {
   readonly segments: ReadonlyArray<Segment2>;
+  readonly shading: ReadonlyArray<Segment2>;
   readonly figure: number;
   readonly sheet: number;
   readonly sheets: number;
@@ -393,12 +394,14 @@ export const composeSheet = (input: {
     originX + (x2 - extents.minX) * scale,
     originY - (y2 - extents.minY) * scale,
   ];
-  const figurePath = pipe(
-    segments,
-    A.map(toSheet),
-    A.map(([x1, y1, x2, y2]) => `M${r3(x1)} ${r3(y1)}L${r3(x2)} ${r3(y2)}`),
-    A.join("")
-  );
+  const pathOf = (lines: ReadonlyArray<Segment2>) =>
+    pipe(
+      lines,
+      A.map(toSheet),
+      A.map(([x1, y1, x2, y2]) => `M${r3(x1)} ${r3(y1)}L${r3(x2)} ${r3(y2)}`),
+      A.join("")
+    );
+  const figurePath = pathOf(segments);
   const sheetLabel = `${input.sheet}/${input.sheets}`;
   const figLabel = `FIG. ${input.figure}`;
   const centred = (text: string, y: number) =>
@@ -410,10 +413,19 @@ export const composeSheet = (input: {
     });
   const labels = [...centred(sheetLabel, sight.top + cap), ...centred(figLabel, sight.bottom)];
   const labelPath = pipe(labels, A.map(polylinePath), A.join(""));
-  const attrs = `fill="none" stroke="#000000" stroke-width="${r3(stroke)}" stroke-linecap="round" stroke-linejoin="round"`;
+  const attrsFor = (width: number) =>
+    `fill="none" stroke="#000000" stroke-width="${r3(width)}" stroke-linecap="round" stroke-linejoin="round"`;
+  const attrs = attrsFor(stroke);
+  // The shading layer is emitted only when present, so unshaded sheets stay
+  // byte-identical to sheets composed before shading existed.
+  const shadingLayer =
+    A.length(input.shading) === 0
+      ? []
+      : [`<path id="shading" d="${pathOf(input.shading)}" ${attrsFor(options.shadingWeightMm * PT_PER_MM)}/>`];
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${r3(page.width)}pt" height="${r3(page.height)}pt" viewBox="0 0 ${r3(page.width)} ${r3(page.height)}">`,
     `<path id="labels" d="${labelPath}" ${attrs}/>`,
+    ...shadingLayer,
     `<path id="figure" d="${figurePath}" ${attrs}/>`,
     "</svg>",
     "",

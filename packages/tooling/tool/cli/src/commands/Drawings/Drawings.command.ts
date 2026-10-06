@@ -27,6 +27,10 @@ const noValidateFlag = Flag.Boolean("no-validate").pipe(
   Flag.withDefault(false),
   Flag.withDescription("Skip the filing validator after rendering")
 );
+const shadeFlag = Flag.Boolean("shade").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Add procedural 37 CFR 1.152 straight-line surface shading")
+);
 const pagesFlag = Flag.Int("pages").pipe(Flag.optional, Flag.withDescription("Expected page count"));
 const pdfArgument = Argument.File("pdf", { mustExist: true }).pipe(
   Argument.withDescription("Sheet-set PDF to validate")
@@ -52,9 +56,13 @@ const renderFindings = (report: ValidationReport): ReadonlyArray<string> =>
       ];
 
 const renderManifestSummary = (manifest: RenderManifest): ReadonlyArray<string> => [
-  `rendered "${manifest.title}": ${A.length(manifest.figures)} sheet(s) at ${manifest.scale} pt/unit → ${manifest.pdfFile}`,
+  `rendered "${manifest.title}": ${A.length(manifest.figures)} ${manifest.shaded ? "shaded" : "unshaded"} sheet(s) at ${manifest.scale} pt/unit → ${manifest.pdfFile}`,
   `sheet-set sha256 ${manifest.pdfSha256}`,
-  ...A.map(manifest.figures, (f) => `  FIG. ${f.figure} ${f.view}: ${f.svgFile} (${f.visibleSegments} segments)`),
+  ...A.map(
+    manifest.figures,
+    (f) =>
+      `  FIG. ${f.figure} ${f.view}: ${f.svgFile} (${f.visibleSegments} segments${manifest.shaded ? `, ${f.shadingSegments} shading` : ""})`
+  ),
   ...A.map(manifest.omissions, (o) => `  omitted ${o.omitted}: ${o.relation} to ${o.shown} — proven`),
   ...pipe(
     manifest.validation,
@@ -83,6 +91,7 @@ const runRender = Effect.fn("DrawingsCommand.render")(function* (options: {
   readonly out: string;
   readonly format: SheetFormat;
   readonly noValidate: boolean;
+  readonly shade: boolean;
 }) {
   const figureSet = yield* FigureSet;
   const manifest = yield* figureSet
@@ -92,6 +101,7 @@ const runRender = Effect.fn("DrawingsCommand.render")(function* (options: {
         outputDir: options.out,
         sheet: SheetOptions.make({ format: options.format }),
         validate: !options.noValidate,
+        shade: options.shade,
       })
     )
     .pipe(
@@ -119,7 +129,7 @@ const runValidate = Effect.fn("DrawingsCommand.validate")(function* (options: {
 
 const drawingsRenderCommand = Command.make(
   "render",
-  { spec: specFlag, out: outFlag, format: formatFlag, noValidate: noValidateFlag },
+  { spec: specFlag, out: outFlag, format: formatFlag, noValidate: noValidateFlag, shade: shadeFlag },
   runRender
 ).pipe(
   Command.withDescription("Render a figure-set spec into 37 CFR 1.84 sheets and a PDF"),

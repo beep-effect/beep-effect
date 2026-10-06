@@ -512,9 +512,69 @@ export class EdgeSet extends S.Class<EdgeSet>($I`EdgeSet`)(
   {
     visible: S.Array(Segment2).annotateKey({ description: "Visible edges, including silhouettes." }),
     hidden: S.Array(Segment2).annotateKey({ description: "Hidden edges, including silhouettes." }),
+    shading: S.Array(Segment2).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultTypeKey(Effect.succeed([])),
+      S.annotateKey({ description: "Visible surface-shading lines; empty when the view was not shaded." })
+    ),
   },
   $I.annote("EdgeSet", {
     description: "Canonically ordered visible and hidden projected segments of one view.",
+  })
+) {}
+
+const ExposureThreshold = S.Finite.check(
+  S.isGreaterThanOrEqualTo(-1, {
+    identifier: $I`ExposureThresholdMinCheck`,
+    title: "Exposure Threshold Minimum",
+    description: "Exposure is a cosine, so a threshold below -1 shades nothing differently.",
+    message: "Expected a threshold of at least -1",
+  }),
+  S.isLessThanOrEqualTo(1, {
+    identifier: $I`ExposureThresholdMaxCheck`,
+    title: "Exposure Threshold Maximum",
+    description: "Exposure is a cosine, so a threshold above 1 shades every face.",
+    message: "Expected a threshold of at most 1",
+  })
+);
+
+/**
+ * Straight-line surface-shading plan for one projection, in model units.
+ *
+ * **Details**
+ *
+ * Exposure is the cosine between a face's outward normal and the 37 CFR
+ * 1.84(m) light (upper left, toward the viewer, 45°) in the camera frame.
+ * Faces whose exposure exceeds `litThreshold` stay unshaded; the rest get
+ * parallel lines whose pitch runs from `minPitch` (exposure -1, darkest) to
+ * `maxPitch` (exposure at the threshold). Only planar faces turned toward the
+ * camera are shaded, and the lines pass through the same hidden-line removal
+ * as the outlines.
+ *
+ * **Example** (A plan in millimetres)
+ *
+ * ```ts
+ * import { ShadingPlan } from "@beep/technical-drawing"
+ *
+ * const plan = ShadingPlan.make({ minPitch: 0.6, maxPitch: 2.4 })
+ * console.log(plan.litThreshold)
+ * ```
+ *
+ * @category geometry
+ * @since 0.0.0
+ */
+export class ShadingPlan extends S.Class<ShadingPlan>($I`ShadingPlan`)(
+  {
+    minPitch: PositiveLength.annotateKey({ description: "Line pitch on the darkest faces, in model units." }),
+    maxPitch: PositiveLength.annotateKey({ description: "Line pitch on the faintest shaded faces, in model units." }),
+    litThreshold: ExposureThreshold.pipe(
+      S.withConstructorDefault(Effect.succeed(0.75)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.75)),
+      S.annotateKey({ description: "Exposure above which a face stays unshaded. Defaults to 0.75." })
+    ),
+  },
+  $I.annote("ShadingPlan", {
+    description: "Pitch range and lit threshold of procedural straight-line shading, in model units.",
   })
 ) {}
 

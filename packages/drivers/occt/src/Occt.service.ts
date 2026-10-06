@@ -115,7 +115,8 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
     const built = yield* build(request.solid);
     return yield* Effect.forEach(request.cameras, (camera) =>
       Effect.try({
-        try: () => project({ oc, compound: built.compound, camera, withHidden: request.withHidden }),
+        try: () =>
+          project({ oc, compound: built.compound, camera, withHidden: request.withHidden, shading: request.shading }),
         catch: (cause) => OcctError.fromUnknown("projection", "Hidden-line removal failed.", cause),
       })
     );

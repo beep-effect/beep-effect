@@ -57,8 +57,12 @@ const fakeEngine = Layer.succeed(
         edgeCount: 12,
       });
     }),
-    project: Effect.fnUntraced(function* (_, cameras) {
-      return A.map(cameras, (camera) => EdgeSet.make({ visible: camera.eye[1] > 0 ? shifted : square, hidden: [] }));
+    project: Effect.fnUntraced(function* (_, cameras, shading) {
+      // shaded projections carry one diagonal hatch line per view
+      const hatch = O.match(shading, { onNone: () => [], onSome: () => [[1, 1, 4, 4] as const] });
+      return A.map(cameras, (camera) =>
+        EdgeSet.make({ visible: camera.eye[1] > 0 ? shifted : square, hidden: [], shading: hatch })
+      );
     }),
   })
 );
@@ -132,8 +136,8 @@ describe("@beep/technical-drawing", () => {
       "composeSheet is deterministic and keeps every mark inside the sight",
       Effect.fnUntraced(function* () {
         const options = SheetOptions.make({});
-        const a = composeSheet({ segments: square, figure: 3, sheet: 3, sheets: 8, scale: 20, options });
-        const b = composeSheet({ segments: square, figure: 3, sheet: 3, sheets: 8, scale: 20, options });
+        const a = composeSheet({ segments: square, shading: [], figure: 3, sheet: 3, sheets: 8, scale: 20, options });
+        const b = composeSheet({ segments: square, shading: [], figure: 3, sheet: 3, sheets: 8, scale: 20, options });
         expect(a).toBe(b);
         expect(a).toContain('width="612.000pt"');
         const coords = A.map(
@@ -329,6 +333,35 @@ describe("@beep/technical-drawing", () => {
           ]);
           const again = yield* service.render(RenderRequest.make({ specPath, outputDir: out }));
           expect(again.figures).toEqual(manifest.figures);
+        })
+      );
+
+      it.effect(
+        "adds a thinner shading layer only when shading is requested",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped();
+          const specPath = path.join(dir, "spec.json");
+          yield* fs.writeFileString(specPath, spec([{ view: "front", description: "is a front elevation view" }]));
+          const service = yield* FigureSet;
+          const plain = yield* service.render(
+            RenderRequest.make({ specPath, outputDir: path.join(dir, "plain"), validate: false })
+          );
+          const shaded = yield* service.render(
+            RenderRequest.make({ specPath, outputDir: path.join(dir, "shaded"), validate: false, shade: true })
+          );
+          expect(plain.shaded).toBe(false);
+          expect(shaded.shaded).toBe(true);
+          expect(A.map(plain.figures, (f) => f.shadingSegments)).toEqual([0]);
+          expect(A.map(shaded.figures, (f) => f.shadingSegments)).toEqual([1]);
+          const plainSvg = yield* fs.readFileString(path.join(dir, "plain", "fig-1.svg"));
+          const shadedSvg = yield* fs.readFileString(path.join(dir, "shaded", "fig-1.svg"));
+          expect(plainSvg).not.toContain('id="shading"');
+          expect(shadedSvg).toContain('<path id="shading"');
+          // 0.2 mm shading under 0.35 mm outlines
+          expect(shadedSvg).toContain('stroke-width="0.567"');
+          expect(shadedSvg).toContain('stroke-width="0.992"');
         })
       );
 

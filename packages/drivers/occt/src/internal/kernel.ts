@@ -11,8 +11,10 @@ import { Order, pipe } from "effect";
 import * as replicad from "replicad";
 import { OcctError } from "../Occt.errors.ts";
 import { BoundingBox, EdgeSet, ModelSummary, Primitive } from "../Occt.models.ts";
+import { hatchCompound } from "./shading.ts";
+import { cross } from "./vector.ts";
 import type { OpenCascadeInstance } from "replicad-opencascadejs";
-import type { Camera, ModelSpec, Rotation, Segment2 } from "../Occt.models.ts";
+import type { Camera, ModelSpec, Rotation, Segment2, ShadingPlan } from "../Occt.models.ts";
 
 type Shape3D = replicad.Shape3D;
 type AnyShape = replicad.AnyShape;
@@ -108,11 +110,6 @@ const normalize = (v: readonly [number, number, number]): [number, number, numbe
   return [v[0] / length, v[1] / length, v[2] / length];
 };
 
-const cross = (
-  a: readonly [number, number, number],
-  b: readonly [number, number, number]
-): [number, number, number] => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-
 /**
  * Build the OCCT projector for a camera.
  *
@@ -191,25 +188,33 @@ export const project = (options: {
   readonly compound: AnyShape;
   readonly camera: Camera;
   readonly withHidden: boolean;
+  readonly shading: O.Option<ShadingPlan>;
 }): EdgeSet => {
   const { oc, compound, camera, withHidden } = options;
+  const hatch = O.flatMap(options.shading, (plan) => hatchCompound({ oc, shape: compound, camera, plan }));
   const algo = new oc.HLRBRep_Algo();
   algo.Add(compound.wrapped, 0);
+  O.map(hatch, (shape) => algo.Add(shape.wrapped, 0));
   algo.Projector(makeProjector(oc, camera));
   algo.Update();
   algo.Hide();
   const shapes = new oc.HLRBRep_HLRToShape(algo);
+  const own = compound.wrapped;
   const visible = [
-    ...edgesOf(shapes.VCompound(), oc),
-    ...edgesOf(shapes.Rg1LineVCompound(), oc),
-    ...edgesOf(shapes.OutLineVCompound(), oc),
+    ...edgesOf(shapes.VCompound(own), oc),
+    ...edgesOf(shapes.Rg1LineVCompound(own), oc),
+    ...edgesOf(shapes.OutLineVCompound(own), oc),
   ];
   const hidden = withHidden
     ? [
-        ...edgesOf(shapes.HCompound(), oc),
-        ...edgesOf(shapes.Rg1LineHCompound(), oc),
-        ...edgesOf(shapes.OutLineHCompound(), oc),
+        ...edgesOf(shapes.HCompound(own), oc),
+        ...edgesOf(shapes.Rg1LineHCompound(own), oc),
+        ...edgesOf(shapes.OutLineHCompound(own), oc),
       ]
     : [];
-  return EdgeSet.make({ visible: toSegments(visible), hidden: toSegments(hidden) });
+  const shading = O.match(hatch, {
+    onNone: () => [],
+    onSome: (shape) => edgesOf(shapes.VCompound(shape.wrapped), oc),
+  });
+  return EdgeSet.make({ visible: toSegments(visible), hidden: toSegments(hidden), shading: toSegments(shading) });
 };

@@ -9,7 +9,8 @@
 import { $TechnicalDrawingId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type { Effect } from "effect";
-import type { Camera, EdgeSet, ModelSpec, ModelSummary } from "./Geometry.schemas.ts";
+import type * as O from "effect/Option";
+import type { Camera, EdgeSet, ModelSpec, ModelSummary, ShadingPlan } from "./Geometry.schemas.ts";
 import type { EngineInfo } from "./Manifest.schemas.ts";
 import type { DrawingError } from "./TechnicalDrawing.errors.ts";
 import type { PageMetrics, PdfFacts } from "./Validation.schemas.ts";
@@ -40,14 +41,16 @@ export interface GeometryEngineShape {
   readonly info: Effect.Effect<EngineInfo, DrawingError>;
   readonly project: (
     model: ModelSpec,
-    cameras: ReadonlyArray<Camera>
+    cameras: ReadonlyArray<Camera>,
+    shading: O.Option<ShadingPlan>
   ) => Effect.Effect<ReadonlyArray<EdgeSet>, DrawingError>;
   readonly summarize: (model: ModelSpec) => Effect.Effect<ModelSummary, DrawingError>;
 }
 
 /**
  * Geometry engine port: builds the model and projects it with hidden-line
- * removal under each camera.
+ * removal under each camera, optionally with straight-line surface shading
+ * hidden by the same pass.
  *
  * **Example** (Reference the port)
  *

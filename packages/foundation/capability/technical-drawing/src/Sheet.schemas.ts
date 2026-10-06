@@ -202,8 +202,66 @@ export class SheetOptions extends S.Class<SheetOptions>($I`SheetOptions`)(
       S.withDecodingDefaultTypeKey(Effect.succeed(3)),
       S.annotateKey({ description: "Clearance kept inside the 1.84 margins, in mm. Defaults to 3." })
     ),
+    shadingWeightMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0.15, {
+        identifier: $I`ShadingWeightCheck`,
+        title: "Shading Weight",
+        description: "Shading strokes thinner than 0.15 mm break up when the sheet is reduced to two-thirds.",
+        message: "Expected a shading weight of at least 0.15 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0.2)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.2)),
+      S.annotateKey({ description: "Stroke width of surface-shading lines in mm. Defaults to 0.2." })
+    ),
+    shadingMinPitchMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0.5, {
+        identifier: $I`ShadingMinPitchCheck`,
+        title: "Shading Minimum Pitch",
+        description: "Shading lines closer than 0.5 mm read as a solid black area.",
+        message: "Expected a minimum shading pitch of at least 0.5 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0.8)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.8)),
+      S.annotateKey({ description: "Line pitch on the darkest faces, in mm on the sheet. Defaults to 0.8." })
+    ),
+    shadingMaxPitchMm: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0.5, {
+        identifier: $I`ShadingMaxPitchCheck`,
+        title: "Shading Maximum Pitch",
+        description: "Shading lines closer than 0.5 mm read as a solid black area.",
+        message: "Expected a maximum shading pitch of at least 0.5 mm",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(2.5)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(2.5)),
+      S.annotateKey({ description: "Line pitch on the faintest shaded faces, in mm on the sheet. Defaults to 2.5." })
+    ),
+    shadingLitThreshold: S.Finite.check(
+      S.isGreaterThanOrEqualTo(-1, {
+        identifier: $I`ShadingLitThresholdMinCheck`,
+        title: "Shading Lit Threshold Minimum",
+        description: "Exposure is a cosine; a threshold below -1 has no effect.",
+        message: "Expected a lit threshold of at least -1",
+      }),
+      S.isLessThanOrEqualTo(1, {
+        identifier: $I`ShadingLitThresholdMaxCheck`,
+        title: "Shading Lit Threshold Maximum",
+        description: "Exposure is a cosine; a threshold above 1 shades every face.",
+        message: "Expected a lit threshold of at most 1",
+      })
+    ).pipe(
+      S.withConstructorDefault(Effect.succeed(0.55)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(0.55)),
+      S.annotateKey({
+        description:
+          "Exposure above which a face stays unshaded. Defaults to 0.55, just below a face seen square-on (1/√3 under the 45° light), so plans and elevations stay line drawings and only oblique faces are shaded.",
+      })
+    ),
   },
   $I.annote("SheetOptions", {
-    description: "Page format, stroke width, lettering height, and margin safety gap of a render.",
+    description:
+      "Page format, stroke and shading widths, shading pitch range, lettering height, and margin safety gap of a render.",
   })
 ) {}
