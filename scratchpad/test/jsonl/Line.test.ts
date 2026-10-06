@@ -1,5 +1,5 @@
 // Adapted from upstream Line.test.ts and LineProperty.test.ts (MIT).
-import { Line, LineSlice, MalformedLine, ParsedLine } from "@beep/scratchpad/effected/jsonl/index";
+import { Line, LineSlice, MalformedLine, ParsedLine } from "../../effected/jsonl/index.ts";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

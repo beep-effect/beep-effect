@@ -11,13 +11,14 @@ import {
   JsonlEvent,
   Line,
   LineSlice,
-} from "@beep/scratchpad/effected/jsonl/index";
+} from "../effected/jsonl/index.ts";
 import { canMerge, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
 import { probeBomBytes, readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import { assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
-import { Effect, pipe } from "effect";
+import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Fiber from "effect/Fiber";

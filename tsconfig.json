@@ -2066,6 +2066,13 @@
       "@beep/technical-drawing/*": [
         "./packages/foundation/capability/technical-drawing/src/*"
       ]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "inlays": true,
+        "noExternal": true
+      }
+    ]
   }
 }

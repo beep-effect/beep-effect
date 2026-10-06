@@ -2,7 +2,7 @@
 // come from MemoryFileSystem; the decorator only exposes watcher registration.
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Fiber from "effect/Fiber";
 import type * as FileSystem from "effect/FileSystem";
@@ -77,7 +77,7 @@ it.effect("a torn external tail is consumed only after completion", () =>
     // A local finite query proves that the partial tail is still invalid; completion
     // is synchronized by the subscriber instead of guessing scheduler turns.
     assertFailure(
-      (yield* Effect.result(Stream.runCollect(journal.query()))).pipe(Result.mapError((error) => error._tag)),
+      (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
       "MalformedLine",
     );
     yield* externalAppend(fs, Str.slice(20)(whole));

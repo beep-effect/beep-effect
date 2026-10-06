@@ -1,8 +1,8 @@
 // Adapted from upstream Journal.test.ts and ReadSurfaces.test.ts (MIT).
-import { JournalClosed, JournalNotFound, TerminalViolation } from "@beep/scratchpad/effected/jsonl/index";
+import { JournalClosed, JournalNotFound, TerminalViolation } from "../../effected/jsonl/index.ts";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";

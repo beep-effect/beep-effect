@@ -10,7 +10,7 @@ import {
   TerminalViolation,
   UnknownEvent,
   UnserializableData,
-} from "@beep/scratchpad/effected/jsonl/index";
+} from "../../effected/jsonl/index.ts";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as O from "effect/Option";

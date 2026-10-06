@@ -6,10 +6,10 @@ import {
   Line,
   MalformedLine,
   UnknownEvent,
-} from "@beep/scratchpad/effected/jsonl/index";
+} from "../../effected/jsonl/index.ts";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";

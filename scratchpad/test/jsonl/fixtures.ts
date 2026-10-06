@@ -1,5 +1,5 @@
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Envelope, Journal, type JournalConfig, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+import { Envelope, Journal, type JournalConfig, JsonlEvent } from "../../effected/jsonl/index.ts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { Effect } from "effect";
 import * as Context from "effect/Context";

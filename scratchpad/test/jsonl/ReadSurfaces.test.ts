@@ -1,7 +1,7 @@
 // Adapted from upstream ReadSurfaces.test.ts (MIT).
 import { assert, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
@@ -75,7 +75,7 @@ it.effect("frame filters skip invalid payloads while an unfiltered read reports 
     assert.strictEqual((yield* Stream.runCollect(journal.query({ events: ["noted"] }))).length, 1);
     assert.deepStrictEqual(yield* Stream.runCollect(journal.query({ scopes: ["absent"] })), []);
     assertFailure(
-      (yield* Effect.result(Stream.runCollect(journal.query()))).pipe(Result.mapError((error) => error._tag)),
+      (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
       "InvalidData",
     );
   }),
