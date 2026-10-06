@@ -16,6 +16,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, flow, O, P, pipe, R, Str } from "@beep/utils";
 import { Effect, Layer, Match } from "effect";
 import * as Context from "effect/Context";
+import { dual } from "effect/Function";
 import { XMLParser } from "fast-xml-parser";
 import { parseDocument } from "yaml";
 import { ModelsLocatorError } from "./Models.errors.ts";
@@ -268,6 +269,79 @@ const readXmlAttribute = Effect.fnUntraced(function* (
   });
 });
 
+/**
+ * Pointer segment that stands for the bound model id.
+ *
+ * **Details**
+ *
+ * A JSON pointer that addresses a per-model entry (Claude Code's
+ * `modelSettings[<model>]`) writes this token instead of a literal id, so the
+ * key follows the binding when the seed or an adopted manifest moves it.
+ * {@link bindLocatorModel} substitutes it before the read.
+ *
+ * **Example** (Address the bound model's effort)
+ *
+ * ```ts
+ * import { BOUND_MODEL_SEGMENT } from "@beep/repo-cli/commands/Models"
+ *
+ * console.log(["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"].join(".")) // "modelSettings.{model}.effortLevel"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const BOUND_MODEL_SEGMENT = "{model}";
+
+const bindSegments = (segments: ReadonlyArray<string>, modelId: string): ReadonlyArray<string> =>
+  A.map(segments, (segment) => (segment === BOUND_MODEL_SEGMENT ? modelId : segment));
+
+/**
+ * Resolve {@link BOUND_MODEL_SEGMENT} in a locator's JSON pointers to the bound model id.
+ *
+ * **Details**
+ *
+ * Only `json-key` locators carry pointers; every other locator is returned
+ * unchanged. The check calls this with the binding the locator names, so a
+ * per-model pointer always reads the entry the client applies.
+ *
+ * **Example** (Bind a per-model effort pointer)
+ *
+ * ```ts
+ * import { BOUND_MODEL_SEGMENT, bindLocatorModel, Locator } from "@beep/repo-cli/commands/Models"
+ * import * as S from "effect/Schema"
+ *
+ * const locator = S.decodeUnknownSync(Locator)({
+ *   _tag: "json-key",
+ *   binding: { role: "orchestrator", surface: "claude-code", field: "effort" },
+ *   render: { _tag: "verbatim" },
+ *   pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
+ *   fallbacks: [["effortLevel"]],
+ * })
+ * const bound = bindLocatorModel(locator, "claude-opus-5-6")
+ * console.log(bound._tag === "json-key" ? bound.pointer.join(".") : "") // "modelSettings.claude-opus-5-6.effortLevel"
+ * ```
+ *
+ * @param locator - The locator to resolve.
+ * @param modelId - The model id of the binding the locator names.
+ * @returns The locator with every bound-model segment replaced.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const bindLocatorModel: {
+  (modelId: string): (locator: Locator) => Locator;
+  (locator: Locator, modelId: string): Locator;
+} = dual(
+  2,
+  (locator: Locator, modelId: string): Locator =>
+    locator._tag === "json-key"
+      ? {
+          ...locator,
+          pointer: bindSegments(locator.pointer, modelId),
+          fallbacks: A.map(locator.fallbacks, (fallback) => bindSegments(fallback, modelId)),
+        }
+      : locator
+);
+
 const makeLocatorReader = (): ModelsLocatorReaderShape => ({
   read: Effect.fnUntraced(function* (file: ModelsTargetFile, locator: Locator) {
     return yield* Match.value(locator).pipe(
@@ -287,11 +361,15 @@ const makeLocatorReader = (): ModelsLocatorReaderShape => ({
             }),
         }).pipe(Effect.map(scalarText))
       ),
-      Match.tag("json-key", ({ pointer }) =>
+      Match.tag("json-key", ({ pointer, fallbacks }) =>
         Effect.succeed(
           pipe(
             parseJsonText(file.content),
-            O.flatMap((json) => walkPointer(json, pointer))
+            O.flatMap((json) =>
+              A.reduce(fallbacks, walkPointer(json, pointer), (found, fallback) =>
+                O.orElse(found, () => walkPointer(json, fallback))
+              )
+            )
           )
         )
       ),
