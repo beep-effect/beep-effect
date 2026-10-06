@@ -90,11 +90,12 @@ exploration's 2026-10-01 graduation sitting.
       manifest records.
 - [ ] **W6 `planEpisode` body.** Read `gate-order-handoff/v1` by path and sha256, build the
       lane DAG in canonical insertion order with `Graph` from `effect`, fail with
-      `CyclicPlanError` on cycles, and add 32 lane steps to the `ScheduleProposal` A-Box in
-      `ciops-prov:` as provisional terms. `schedulesWorkUnit` stays unratified. Tests:
-      byte-determinism, totality, the cyclic-input must-fail, and the 32-lane handoff
-      fixture pinned by sha256. Then run amended CQ-020 over the emitted Turtle with
-      `apps/labs/ciops/scripts/check-emission-cq.py`.
+      `CyclicPlanError` on cycles, and emit the pinned handoff's lane steps (33 at
+      `705f3e75…`; P2 Ruling 2 amends the earlier "32") as a `LanePlanProposal` A-Box in
+      `ciops-prov:` with a disjoint provisional vocabulary (P2 Ruling 3). `schedulesWorkUnit`
+      stays unratified. Tests: byte-determinism, totality, the cyclic-input must-fail, and the
+      handoff fixture pinned by sha256. Then run amended CQ-020 over the emitted Turtle with
+      `apps/labs/ciops/scripts/check-emission-cq.py` and its lane-plan sibling (P2 Ruling 7).
 
 ### P3 — Auditor run 4
 

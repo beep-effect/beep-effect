@@ -356,3 +356,137 @@ P1 merged as #1434 (squash `9e7742176f`, 2026-10-06T04:10Z). P2 starts at once p
 W6's S7-v2 seam first (the §3.2 and §6 amendment and the `PlanEpisodeInput` widening, design before
 code), then W5 live differential replay on the `run4-fleet` pin and the `planEpisode` body, as one
 projection PR. Rulings for P2 are appended below as they are taken. Reversal: a later entry.
+
+## 2026-10-06 — P2 design sitting (orchestrator under the autonomy charter)
+
+Inputs: a five-lane read-only survey with a critic (the S7-v2 seam, the gate-order handoff and its
+rulings, the live replay, the installed `effect` Graph module, CQ-020 and the lab gates), checked
+against PLAN P2, SPEC and graduation Rulings 9 and 11. Facts the survey settled: the handoff
+`goals/time-to-certainty/research/gate-order-handoff.json` carries 33 lanes at sha256
+`705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198` (#1380 added
+`quality:shadcn-lint`; PLAN and MAP's "32" predate it), it carries a total order and no edges
+(time-to-certainty ruling 78 rejected `blockedBy`), the installed `effect` 4.0.0 Graph module is
+byte-identical to the reference checkout and `Graph.topo` throws on a cycle while `Graph.findCycle`
+returns a typed witness, the lab's v3 admission decoders require `pid` and `procStart` and reject
+every pinned `run4-fleet` row, the pinned canonical journal (689 rows) has exactly one release whose
+admission fell outside the retained window and three pre-v3 chains, no pinned row precedes #929, and
+`check-emission-cq.py` is hard-wired to the admission golden. Each ruling is reversible by a later
+entry before the projection PR merges, and by a follow-up PR after.
+
+**Ruling 1 — one projection PR off main; the seam amendment is its first commit.** P1 merged
+before P2 started, so the `run4-fleet` pin is on main and the W5 + W6 work rides one PR
+(`feat/ciops-p2-projection`, PLAN "W5 + W6 ship as one projection PR"). Graduation Ruling 11's
+"before any planner body lands" is satisfied by commit order inside that PR: the §3.2/§6 amendment,
+the widened `PlanEpisodeInput` and the lane-plan schemas land in the first commit with the stub
+still failing, and the body in a later one; a squash merge flattens the history, so this entry is
+the record. Rejected: a separate seam PR (two hosted cycles for one deliverable).
+
+**Ruling 2 — the pinned handoff is the live 33-lane document; counts come from the decoded
+bytes.** W6 pins `705f3e75…`. PLAN W6's "32 lane steps" and "the 32-lane handoff fixture" are
+amended to "the lane steps of the pinned handoff" (33 at that digest); MAP keeps its text as
+provenance (graduation Ruling 7). No test or script asserts a literal lane count; each asserts the
+count the decoded document carries. A byte copy of the document lives in the lab's test fixtures
+(`apps/labs/ciops/test/fixtures/gate-order-handoff-v1.json`, excluded from Biome like the pin
+roots) for hermetic tests, and one test reads the live path and requires its sha256 to equal the
+pinned constant, so handoff drift turns the lab red on the next uncached run. Known limit, accepted:
+the lab's Turbo inputs do not name the handoff, so a cached green can hide drift until the lab's own
+files change; the live-evidence script re-reads the path on every run. Rejected: a Turbo input (it
+moves the cache-qualification baseline); the superseded 32-lane bytes.
+
+**Ruling 3 — the lane plan is its own proposal type, with a fully disjoint provisional
+vocabulary.** `planEpisode` succeeds with a `LanePlanProposal` (episode id, plan id, handoff path
+and sha256, order rule, lane scope, the ordered lane steps), never by widening `ScheduleProposal`:
+the ratified `ScheduleStep` identity is one ordinal slot aimed at one `SeatRequest`, and CT §3.3
+"Only admitted actions get steps" outranks PLAN's "add … lane steps to the `ScheduleProposal`
+A-Box". Emission of a lane plan uses only new provisional `ciops-prov:` terms (a lane-plan class,
+a lane-step class, an episode-to-plan edge, a plan-to-step edge, a plan-to-specification edge, a
+lane-plan specification class, step index, scheduled lane reference, a precedence edge between
+consecutive steps, handoff digest and order rule members) and never the ratified ordering cluster
+(`hasCurrentProposal`, `hasProjectionSpecification`, `hasStep`, `hasScopeTag`, `stepIndex`,
+`ScheduleStep`, `ScheduleProposal` typing), never `ciops:VerificationLane` typing, never
+`schedulesWorkUnit`, `hasScope` or `Scope` in any namespace (CQ-019 arm 3; Queue E). The exact
+term names are proposed by the W6 lane and pass an ontology-foundational-auditor lens in review
+before the body lands; the run-4 Queue E/G intake decides ratification. The admission emission
+`s7-emission/v2` and its golden stay byte-equal (a regression test proves it); the lane-plan
+specification tuple is `(s7-lane-plan/v1, handoff sha256, order rule, lane scope)` under
+`pnLocalSlug`. `ScheduleScope` stays admission-only; the lane scope is its own literal kit
+(`pre-push:non-main`, the handoff's `scope`).
+
+**Ruling 4 — the lane DAG is the rank chain over nodes inserted in declaration order; cycles come
+only from explicit precedence input.** The handoff carries no edges, and the deployed pre-push
+runs one single-lane wave per lane in rank order, so the lab's lane DAG has one edge from each
+rank to the next (provisional precedence, never a dependency claim) and nothing else; nodes are
+inserted in `declarationIndex` order so that `Graph.topo` recovering the rank order is a real
+agreement check, not a tautology. A duplicate `laneId` is a decode failure, not a cycle. The pure
+core `planLanes(lanes, precedences)` is exported and takes an explicit precedence list, so the
+cyclic must-fail fixture is a hand-built precedence set; `Graph.findCycle` runs before `Graph.topo`
+and its closed path becomes `CyclicPlanError.cycleNodes`; tests assert a typed `Fail`, never a
+defect. Rejected: deriving edges from `firstRedSourceLane` (12 self-loops; not a dependency);
+recomputing `gate-order-lexicographic/v1` in the lab (the mirror ruling 78 forbids, and a new order
+literal under ruling 76).
+
+**Ruling 5 — the handoff subset decoder and its errors.** The lab decodes `schemaVersion`
+(`gate-order-handoff/v1` literal), `scope` and `orderRule` (single-member literal kits), and
+`lanes[{rank, laneId, declarationIndex}]` with `laneId` a pattern-checked non-empty string
+(`^[a-z0-9-]+(:[a-z0-9-]+)+$`), ignoring every other member (Effect v4 excess properties are
+ignored by default; the lab never mirrors `GateOrderHandoff`). Reading goes through `FileSystem`
+and the digest through `Crypto` (`@beep/schema` `Sha256HexFromBytes` over the raw bytes, never a
+re-encoded string); the sha256 is compared with `PlanEpisodeInput.handoffSha256` before decoding.
+New tagged errors: `HandoffReadError {path}`, `HandoffDigestMismatchError {path, expected,
+actual}`, `HandoffDecodeError {path, message}`; `CyclicPlanError` stays; `PlannerNotImplementedError`
+and `plannerNotImplemented` retire in the body commit. `CiOpsProjectionLive` captures `FileSystem`
+and `Crypto` at construction so the service shape keeps requirement-free methods; providers add the
+Bun layers. The handoff path is repo-relative under a caller-supplied repo root and may not contain
+`..`.
+
+**Ruling 6 — amendment home and stale prose.** The S7 contract gains a dated §8 ("2026-10-06
+amendment — the S7-v2 seam") that supersedes the §3.2 `planEpisode` bullet and the first §6 bullet,
+with one pointer line in each; the consequential §3.1 (new schemas and errors), §3.3 (Graph
+construction and the findCycle pre-check), §3.5 (lane-plan IRIs and the disjoint vocabulary) and
+§5 (live evidence) notes ride the same entry, and the stale §5/§7 claims (the bare `evidence:s7`
+rewrite, now check-by-default with `evidence:s7:write`; the test count) are corrected in place as
+dated notes. A §3.4 delta line records that the deployed same-checkout skip (#929) is not modelled
+by admission v1 and is the attribution for live mismatches (Ruling 9).
+
+**Ruling 7 — CQ-020 over the emitted Turtle.** `check-emission-cq.py` stays unchanged as the
+admission regression. A sibling `check-lane-plan-cq.py` loads the admission golden and a new
+lane-plan golden (`test/fixtures/lane-plan-v1.ttl`) into one graph, runs the yaml-extracted
+amended CQ-020 and requires its admission rows unchanged, and runs provisional lane queries: the
+step count equals the fixture's lane count, the precedence chain has count−1 edges in rank order,
+no ratified ordering term touches a lane node, and `schedulesWorkUnit`, `hasScope` and `Scope`
+appear nowhere. Both scripts' outputs ride the PR body because the Labs context is not required.
+
+**Ruling 8 — W5 decoder widening.** The admission-journal v3 identity classes widen schema-first:
+`pid`, `procStart` and `checkoutRoot` become optional members beside optional `ownerRef`,
+`ownerRefVariant` and `checkoutRef`; an invariant requires a v3 row to carry exactly one of `pid`
+or `ownerRef` (live versus surrogate custody) and fails decode otherwise; a derived `custody`
+reading labels each row live, surrogate or redacted; the frozen golden's decode and replay bytes do
+not change (regression test). If a class-level check cannot survive the lab's `.extend`/spread
+composition on effect 4.0.0, the invariant moves into `decodeAdmissionJournal` with the same typed
+error; the lane proves which. Rejected: fake pids; a parallel corpus-view schema family (two
+decoders to keep in step).
+
+**Ruling 9 — W5 replay window, skip rule, mismatches and the report.** `ReplayOptions` gains an
+optional `window` (first and last retained instants, the pre-v3 chain count, the pinned journal
+sha256, the manifest sha256) supplied by the evidence script as typed constants asserted against
+the pinned bytes (never a JSON extract beside the pin, never a YAML dependency). Inside the fold,
+only a terminal row whose admission is absent from the retained window is skipped (one row today);
+enqueue-less admitted→released pairs replay; the window's pre-v3 count (3) is the guard the skip
+is checked against; verdicts before the last skipped release are marked ledger-censored. The
+engine is unchanged: first-choice disagreements are reported with a diagnostic attribution (the
+#929 same-checkout skip, from the pinned rows' `checkoutRoot`), never modelled. The report is a
+`LiveReplayReport` wrapping `ReplayReport`, printed by a new
+`apps/labs/ciops/scripts/generate-live-replay-evidence.ts` (check-by-default, `--write` for the
+render) into `goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md` beside the
+frozen golden's 41-of-41 recomputed in the same run; `research/s7-replay-evidence.md` is never
+re-rendered. The report states the pending-set censorship (withdrawn and ticket-evicted requests
+never compete) and any grant active before the window. CQ-009 prints one line, "temporally out of
+scope: 0 of 689 pinned rows precede #929", never a pass or a failure (graduation Ruling 9).
+
+**Ruling 10 — gates and test hygiene for the lab PR.** New test files go through
+`bun run beep lint effect-vitest --rows <dir>` before publish and get spliced inventory rows (never
+a whole-file `--write`); `bun run beep quality test-tsgo` and `bun run --filter @beep/ciops check`
+run after the last test edit; `bun run beep quality package-verify @beep/ciops`, lint:laws,
+schema-first, knip, fallow (cognitive ≤ 8, unit ≤ 60: keep the planner and decoder small) and the
+packet validators and CQ suite run before the flip; no changeset (labs are exempt); every new
+export carries the titled JSDoc the law requires even though the lab has no docgen.
