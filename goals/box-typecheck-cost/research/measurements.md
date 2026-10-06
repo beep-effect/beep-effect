@@ -33,6 +33,11 @@ bunx tsc -p packages/drivers/box/tsconfig.measure.json --extendedDiagnostics
 | 2026-08-01 | P2 | **import floor** | **1,649,265** | 452,451 | 0.509s | 7.0.2+effect-tsgo.0.24.3 | Probe file importing only `@beep/identity`, `@beep/schema`, `effect/Schema` and declaring one trivial `LiteralKit` schema. See "The floor" below. |
 | 2026-08-01 | P2 | `Box.models.gen.ts` | 1,987,845 | 533,027 | 0.816s | 7.0.2+effect-tsgo.0.24.3 | Post-prune. 9,822 lines. **Marginal over floor: 338,580.** |
 | 2026-08-01 | P2 | package (`src`) | 2,503,112 | 647,830 | 0.989s | 7.0.2+effect-tsgo.0.24.3 | Post-prune. 1,412,259 symbols, 0.86 GB peak. |
+| 2026-10-06 | SDK 10.17.0 regen | **import floor** | **1,269,541** | 357,623 | 0.368s | 7.0.2+effect-tsgo.0.47.2 | Floor re-derived; `effect` and `@beep/schema` moved since the last recorded floor. |
+| 2026-10-06 | SDK 10.17.0 regen | `Box.models.gen.ts` | 1,874,499 | 501,873 | 1.005s | 7.0.2+effect-tsgo.0.47.2 | Before: committed file, generated from SDK 10.14.0. Marginal over floor: 604,958. |
+| 2026-10-06 | SDK 10.17.0 regen | `Box.models.gen.ts` | 1,874,787 | 501,930 | 0.967s | 7.0.2+effect-tsgo.0.47.2 | After regeneration against the installed SDK 10.17.0 (three fields gain `NullOr`; `CollaborationItem` becomes a union of mini types). **Marginal over floor: 605,246** (+288), under the 750K budget. |
+| 2026-10-06 | SDK 10.17.0 regen | `Box.operations.gen.ts` | 2,492,675 | 638,188 | 1.016s | 7.0.2+effect-tsgo.0.47.2 | After. Before: 2,491,941 (+734). The file imports the models, so its total includes them. |
+| 2026-10-06 | SDK 10.17.0 regen | package (`src`) | 2,653,892 | 677,501 | 0.969s | 7.0.2+effect-tsgo.0.47.2 | After. Before: 2,652,863 (+1,029). Under the 3M absolute budget. |
 
 ### Result
 
