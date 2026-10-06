@@ -1549,6 +1549,58 @@ describe("tmpfs reap", () => {
         })
       )
     );
+    it.effect(
+      "reaps an abandoned fallow cache under the beep cache root at once and holds a live owner's for an hour",
+      () =>
+        Effect.flatMap(temporaryDirectory, (root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tmpRoot = path.join(root, "tmp");
+            const cacheRoot = path.join(root, "cache");
+            const fallowRoot = path.join(cacheRoot, "beep", "fallow");
+            const liveOwner = path.join(root, "live-lane");
+            const goneOwner = path.join(root, "retired-lane");
+            const abandoned = path.join(fallowRoot, "fallow-audit-base-cache-aaaa-root-aaaa");
+            const held = path.join(fallowRoot, "fallow-audit-base-cache-bbbb-root-bbbb");
+            yield* Effect.forEach(
+              [tmpRoot, liveOwner, abandoned, held],
+              (directory) => fs.makeDirectory(directory, { recursive: true }),
+              { discard: true }
+            );
+            yield* fs.writeFileString(path.join(abandoned, "payload.txt"), "stale bytes\n");
+            yield* fs.writeFileString(`${abandoned}.last-used`, `${goneOwner}\n`);
+            yield* fs.writeFileString(`${abandoned}.lock`, "");
+            yield* fs.writeFileString(`${abandoned}.sha`, "deadbeef\n");
+            yield* fs.writeFileString(path.join(held, "payload.txt"), "warm bytes\n");
+            yield* fs.writeFileString(`${held}.last-used`, `${liveOwner}\n`);
+            yield* runCommand("touch", ["-d", fixtureTimestamp(0), abandoned, `${abandoned}.last-used`], root);
+            yield* runCommand("touch", ["-d", fixtureTimestamp(0.5), held, `${held}.last-used`], root);
+
+            const fresh = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
+            const abandonedCandidate = candidateByPath(fresh, abandoned);
+            expect(abandonedCandidate.reapClass).toBe("fallow-cache");
+            expect(abandonedCandidate.ownerRoot).toBe(goneOwner);
+            expect(abandonedCandidate.action).toBe("remove-dir");
+            expect(abandonedCandidate.ageHours).toBeLessThan(1);
+            const heldCandidate = candidateByPath(fresh, held);
+            expect(heldCandidate.ownerRoot).toBe(liveOwner);
+            expect(heldCandidate.action).toBe("skip");
+            expect(heldCandidate.skipReason).toBe("too-young");
+
+            yield* runCommand("touch", ["-d", fixtureTimestamp(2), held, `${held}.last-used`], root);
+            const aged = yield* runTmpfsReap({ apply: true, cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
+            expect(candidateByPath(aged, held).action).toBe("remove-dir");
+            expect(aged.reapedCount).toBe(2);
+            expect(yield* fs.exists(abandoned)).toBe(false);
+            expect(yield* fs.exists(`${abandoned}.last-used`)).toBe(false);
+            expect(yield* fs.exists(`${abandoned}.lock`)).toBe(false);
+            expect(yield* fs.exists(`${abandoned}.sha`)).toBe(false);
+            expect(yield* fs.exists(held)).toBe(false);
+            expect(yield* fs.exists(liveOwner)).toBe(true);
+          })
+        )
+    );
   });
   it.layer(NodeServices.layer, { concurrent: false, timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("sweep step reaps this repo's idle tmpfs worktree and reports the reclaim", () =>

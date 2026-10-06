@@ -67,12 +67,13 @@ export * from "./PatentClaimCandidate/index.ts";
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 10
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 11
  * ```
  *
  * @category tools
  * @since 0.0.0
  */
+export * from "./PracticeKg.correspondent-lookup.ts";
 export * from "./PracticeKg.matter-lookup.ts";
 export * from "./PracticeKg.tools.ts";
 /**

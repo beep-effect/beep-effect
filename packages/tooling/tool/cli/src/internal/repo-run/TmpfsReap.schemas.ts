@@ -154,6 +154,7 @@ export class TmpfsReapCandidate extends S.Class<TmpfsReapCandidate>($I`TmpfsReap
     action: TmpfsReapAction,
     skipReason: S.optional(TmpfsReapSkipReason),
     parentRepo: S.optional(S.String),
+    ownerRoot: S.optional(S.String),
     bytes: S.optional(S.Finite),
   },
   $I.annote("TmpfsReapCandidate", {

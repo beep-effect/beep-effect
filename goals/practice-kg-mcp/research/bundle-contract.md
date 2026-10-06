@@ -84,9 +84,13 @@ files), `archived_in` (document→email_archive), `continuation_of`
 `mentioned_in_family` (application|patent→family, `mention-derived`: the family's
 docket documents mention the number; never membership).
 
-Membership of an anchor (`files_as`) exists only when the anchor's number is
+Membership of an anchor (`files_as`) exists when the anchor's number is
 mentioned by exactly one family's docket documents — file names and text
-counted together — and that family is client-keyed (D-11c). `corpus_enrichment.docket_families` is read into the
+counted together — and that family is client-keyed (D-11c), or, since D-23,
+when one client-keyed family holds at least 3 of the citing documents and at
+least 80% of them and no file name outside it carries the number
+(`attribution_source` `mention-dominance`; thresholds in
+`PRACTICE_KG_ANCHOR_DOMINANCE`). `corpus_enrichment.docket_families` is read into the
 DuckDB `enrichment` table for reference but never creates families or edges.
 
 Node counts (2026-10-05-01 rebuild): 30 clients · 170 families (143
@@ -183,6 +187,8 @@ bun run apps/practice-kg-mcp/src/build.ts
   --include-run <label>        # fold one later source run in; repeatable
   --bundle-version <version>   # stamp the bundle, e.g. 2026-10-06-03 (default: the build's own version)
   --docket-register <file>     # the attorney's docket register as JSONL
+  --contacts <file>            # the contacts table as JSONL (D-24)
+  --practice-domain <domain>   # the practice's own mail domain; repeatable
   --skip-emails                # spine+text only (fast iteration)
   --max-text-bytes <n>         # per-document inline cap, default 2097152
   --overwrite                  # replace an existing bundle dir (mirrors organize --overwrite)
@@ -213,6 +219,20 @@ path that names more than one is left alone.
 `clientName` may be null. A line that does not decode stops the build and the
 error names the line number, never its content. The register is client
 material: convert it and keep it outside the repo.
+
+**Contacts and correspondents (D-24).** `--contacts` reads one contact per
+line: `{"contactId": "c_<12 hex>", "displayName", "organization" | null,
+"emails": [{"address", "role"}], "sources": ["csv" | "vcf"], "links":
+[{"clientNumber": "<5 digits>", "familyKey" | null, "source", "evidence"}]}`.
+A line that does not decode stops the build with its line number; an unknown
+link `source` is named in the error so a new producer value is never trusted
+silently. Email documents are documents named `*.eml` / `*.msg`; their
+headers come from the Tika metadata beside their text
+(`<extract root>/metadata/<operationId>.json`: `Message-From`,
+`Message:From-Email`, `Message-To`, `Message-Cc`, `dcterms:created`). A
+document without readable metadata is skipped with a warning. The contacts
+table is client material, produced by the Box workstream and kept outside the
+repo.
 
 Determinism rules (binding): every INSERT batch ordered by full natural key;
 no wall-clock values in any row (build time lives only in `kg_build` /
