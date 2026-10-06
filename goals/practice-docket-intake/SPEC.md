@@ -174,6 +174,98 @@ Every processed message ends in exactly one outcome:
 - Required source files are missing or materially contradictory.
 - The same blocker repeats after reasonable investigation.
 
+## Adversarial Review Loop
+
+Operator ruling of 2026-10-06: a single pass by two agents is not enough. The
+review is a bounded back-and-forth between an extractor (the paralegal role)
+and a critic (the secretary role), on top of the deterministic checks. It runs
+until a confidence score reaches a threshold or the round limit is hit. An
+item that does not reach the threshold is flagged and shown to the attorney;
+it is neither accepted silently nor dropped. This section is the design for
+slice 3b; the pipeline merged in slices 2 and 3 runs one round.
+
+### Schemas
+
+- `ReviewFindingSeverity`: literal domain `P0`, `P1`, `P2`, `P3`. `P0` and
+  `P1` are material.
+- `ReviewField`: literal domain `classification`, `title`, `mail-date`,
+  `response-period`, `stated-due-date`, `due-date`, `matter-references`,
+  `source-document`.
+- `ReviewFinding`: `severity`, `field`, `reason` (one sentence, no message
+  text quoted beyond the value in dispute).
+- `DeterministicCheck`: `check` (literal domain, below) and `passed`.
+- `FieldAgreement`: `field` and `agreed`, for each field both sides read.
+- `ReviewRound`: `index` (1-based), `entry` (the extractor's entry for this
+  round), `reading` (the critic's own reading for this round), `findings`,
+  `extractorResponse` (per disputed field: `revised` or `defended`, with the
+  span of source text it relies on), `checks`, `agreement`, `score`.
+- `ReviewTerminalStatus`: literal domain `accepted`,
+  `flagged-low-confidence`, `flagged-max-rounds`, `deterministic-failure`.
+- `ReviewVerdict`: `status`, `rounds`, `finalScore`, `threshold`,
+  `maxRounds`.
+- `DocketReviewConfig`: `maxRounds` (integer 1 to 10, default 3) and
+  `acceptThreshold` (unit interval, default 0.85). Both are typed
+  configuration, never literals in the pipeline.
+
+### Confidence
+
+The score is built from things that can be measured. A model's own statement
+of confidence is recorded for the attorney but is not part of the score.
+
+1. **Deterministic gate.** Every check must pass: each date parses as a real
+   calendar day; the due date equals the mail date plus the stated period;
+   the due date is not before the mail date; every date and period the
+   extractor reports appears in the text it cites; the cited span exists in
+   the message or the attached document. If any check fails on the final
+   round the status is `deterministic-failure`, whatever the score.
+2. **Material findings** `M`: 1 when the critic raised no `P0` or `P1`
+   finding in the final round, otherwise 0.
+3. **Field agreement** `A`: the share of compared fields on which the two
+   independent readings agree, over `classification`, `mail-date`,
+   `response-period`, `due-date` and `matter-references` (only fields at
+   least one side read are compared). The comparison is code, not a model
+   judgement.
+
+`score = 0.5 * M + 0.5 * A`. With the default threshold of 0.85 an item is
+accepted only when the critic has no material finding left and the two
+readings agree on at least 70 percent of the compared fields; with five
+fields compared that means at most one disagreement.
+
+### Loop
+
+1. Round 1: the extractor enters the message; the critic reads the source
+   document and the message for itself, without the extractor's dates.
+2. The pipeline runs the deterministic checks, compares the fields, collects
+   the critic's findings on what it was shown (classification, title,
+   rationale), and scores the round.
+3. If the gate passes and `score >= acceptThreshold`, the status is
+   `accepted`.
+4. Otherwise, while `index < maxRounds`: the extractor is given the disputed
+   fields and the critic's reasons, not the critic's values, and must revise
+   or defend each with the span of text it relies on. The critic then re-reads
+   only the disputed fields against those spans. Go to step 2.
+5. At `maxRounds` without acceptance the status is `flagged-max-rounds` when
+   the last round still had a material finding or a failed comparison that
+   never changed, and `flagged-low-confidence` when the score simply stayed
+   under the threshold.
+
+Each round is appended to the message's ledger record before the next round
+starts. After a restart the loop continues from the next index; completed
+rounds are read back, not run again.
+
+### What the attorney sees
+
+- `accepted`: the tentative entry as today (`Docket - unverified`).
+- Any flagged status: an entry in `Docket - needs review`, with a subject that
+  starts `[LOW CONFIDENCE]`, `[REVIEW LIMIT REACHED]` or `[CHECK FAILED]`. It
+  goes on the earliest candidate date when any date was read, with no
+  reminder ladder, and otherwise on the day after receipt. The body lists the
+  score, the threshold, the rounds used and the open findings.
+- The outcome is `DocketNeedsReview` with the terminal status as its reason,
+  never `DocketEntered`, so the digest, the docket-sheet cross-check and the
+  matter lookup of slice 4 cannot mistake a flagged item for an accepted
+  deadline.
+
 ## Known Limits
 
 - The message listing has no page cap: an old start date on a large mailbox is
@@ -221,6 +313,11 @@ autonomy charter.
 | D-28 | Both agents are told the reference forms that sheet uses (firm docket number with country code and optional national-stage suffix, billing file number, application and patent numbers, a foreign associate's own reference with an optional `/ <firm docket>` tail) and copy each verbatim; a pair is two references. | These are the forms mail will carry, and the matter lookup accepts any of them. |
 | D-29 | Cross-checking an extracted deadline against the sheet's tracked date for the same docket is slice 4, behind its own read-only port. The sheet's date joins the comparison under the standing rule: the earliest date wins and a mismatch is flagged. Slice 4 starts after slices 1-3 land. | It is a third, attorney-kept source and the best available check on both agents. It needs the matter lookup wired first to join a message to a docket, and it reads a private file that stays out of the repository. |
 | D-30 | The service does not write rows back to the attorney's docket sheet. | Whether it should is the attorney's call at his first review; the sheet is his record. |
+| D-31 | Operator ruling 2026-10-06: the review becomes a bounded extractor-versus-critic loop with a confidence threshold, as designed in "Adversarial Review Loop". It is slice 3b, built after slice 3 lands and before slice 4. Slice 3 is not reopened. | Slice 3 is a clean adapter slice already in review; the loop changes the use-case models and the pipeline, which is its own reviewable change. Slice 4 depends on the loop's outcomes, so the loop goes first. |
+| D-32 | Confidence is `0.5 * M + 0.5 * A` behind a deterministic gate, where `M` is "no material critic finding in the final round" and `A` is the share of independently read fields that agree. The model's self-reported confidence is recorded but not scored. | The attorney can be told exactly why an item was or was not accepted. A self-reported number cannot be checked. |
+| D-33 | Defaults: `maxRounds` 3, `acceptThreshold` 0.85, both typed configuration. | Three rounds is one revision and one defence beyond the first pass; later rounds rarely change a reading and each costs two model calls. 0.85 admits at most one disagreeing field out of five and no material finding. |
+| D-34 | A flagged item still gets a calendar entry, in `Docket - needs review`, under the `DocketNeedsReview` outcome with the terminal status as its reason. It never produces `DocketEntered` and gets no reminder ladder. | Alignment decision 3 (missed is worse than wrong-tentative) still holds, and a flagged item must not look like an accepted deadline anywhere downstream. |
+| D-35 | Each round is persisted in the message's ledger record before the next begins; the loop resumes from the next index after a restart. In the disputed rounds the extractor sees the critic's reasons but not the critic's values. | The workstation was killed twice by memory pressure on 2026-10-06; a loop that restarts from zero would repeat model calls. Showing the critic's values would let the extractor copy them, and agreement would stop meaning anything. |
 
 ## Exception Ledger
 
