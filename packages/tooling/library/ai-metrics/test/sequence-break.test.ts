@@ -31,6 +31,10 @@ import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import type { SequenceBreakNotificationStage } from "@beep/repo-ai-metrics";
 
+// Writes the capture to a temporary file and renames it, so a reader that polls for opened.txt never sees it empty.
+const fakeXdgOpenAtomicScript =
+  '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n';
+
 const decodeUnknownSequenceBreakDampingV1Result = S.decodeUnknownResult(SequenceBreakDampingV1);
 const decodeUnknownSequenceBreakNotificationV1Result = S.decodeUnknownResult(SequenceBreakNotificationV1);
 const encodeSequenceBreakDampingV1Result = S.encodeResult(SequenceBreakDampingV1);
@@ -606,10 +610,7 @@ esac
         `${store.fakeBin}/notify-send`,
         '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
       );
-      yield* fs.writeFileString(
-        `${store.fakeBin}/xdg-open`,
-        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
-      );
+      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri));
       yield* waitForNotificationRows(store, 2);
@@ -701,10 +702,7 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(
-              `${store.fakeBin}/xdg-open`,
-              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
-            );
+            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri, "", "parent"));
             yield* waitForNotificationRows(store, 2);
@@ -786,10 +784,7 @@ esac
               `${store.fakeBin}/notify-send`,
               '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/desktop.txt"\nprintf "42\\ndefault\\n"\n'
             );
-            yield* fs.writeFileString(
-              `${store.fakeBin}/xdg-open`,
-              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
-            );
+            yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             expectSilentSuccess(
               yield* runWriter(
@@ -1057,10 +1052,7 @@ sleep 0.5
 cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
 `
       );
-      yield* fs.writeFileString(
-        `${store.fakeBin}/xdg-open`,
-        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
-      );
+      yield* fs.writeFileString(`${store.fakeBin}/xdg-open`, fakeXdgOpenAtomicScript);
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       yield* fs.writeFileString(`${store.fakeBin}/gdbus`, "#!/usr/bin/env bash\nexit 0\n");
       yield* fs.chmod(`${store.fakeBin}/gdbus`, 0o755);
