@@ -6806,3 +6806,15 @@ interfaces from #1444 (`SessionCheckoutFacts`, `SessionNoteInput`, and
 law-practice and schema tests. It pushed nothing. The owning PR's schema-first
 lane and an early `quality changeset-status --since origin/main` check would
 have surfaced these before the combined publish gate.
+
+### Yeet loses PR discovery after a GitHub GraphQL rate error (2026-10-06)
+
+Yeet passed all 15 local preflight lanes and pushed the follow-up branch, but
+`gh pr create` failed with `GraphQL: API rate limit already exceeded`.
+GitHub's REST API still allowed PR #1460 to be created at the pushed head.
+The attached `yeet monitor --until-ready` then reported that the current branch
+had no open PR, despite the REST-visible PR; detached monitoring also could
+not start because the systemd user manager was unavailable. A REST fallback
+for PR creation and discovery, followed by an automatic attached monitor
+fallback, would keep an already-pushed Yeet run observable under these
+conditions.

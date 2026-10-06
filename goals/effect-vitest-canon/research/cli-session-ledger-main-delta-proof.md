@@ -17,7 +17,9 @@ filesystem semantics (EV010). The original ten rows and two additional
 current identities remain in the CLI detector ledger. The current baseline
 adds the four reviewed exceptions, moving from 1,929 to 1,933. This is a
 bounded integration of the new main delta, not the complete P1 human-lens
-review. Full combined CLI package proof and hosted checks remain pending.
+review. Full combined `@beep/repo-cli` package verification passed on the
+current source (audit 704.0 seconds; docgen 25.6 seconds). Hosted checks
+remain pending.
 
 The same main commit added three exported pure-data interfaces that failed
 `lint:schema-first` on this branch. `StateRepository`,
@@ -27,4 +29,4 @@ helpers and command callers exchange plain objects; three reviewed
 class-preference exceptions are recorded in the schema-first inventory.
 The JSON Lines decoder now returns an internal annotated `S.Class` for its
 row/count result, eliminating the new inline-contract advisory. A full
-package audit is still required on this exact source.
+package audit passed on this exact source with the combined CLI changes.
