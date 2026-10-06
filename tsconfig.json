@@ -2045,6 +2045,13 @@
       ],
       "@beep/law-practice-use-cases/MailTagging": [
         "./packages/law-practice/use-cases/src/MailTagging/index.ts"
+      ],
+      "@beep/poppler": ["./packages/drivers/poppler/src/index.ts"],
+      "@beep/poppler/*": ["./packages/drivers/poppler/src/*"],
+      "@beep/tesseract": ["./packages/drivers/tesseract/src/index.ts"],
+      "@beep/tesseract/*": ["./packages/drivers/tesseract/src/*"],
+      "@beep/law-practice-server/DocketIntake": [
+        "./packages/law-practice/server/src/DocketIntake/index.ts"
       ]
     }
   }

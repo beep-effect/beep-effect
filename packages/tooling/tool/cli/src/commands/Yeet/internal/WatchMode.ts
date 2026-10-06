@@ -69,6 +69,7 @@ import {
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateOutstanding,
 } from "./ReviewThreadState.ts";
+import { readYeetReviewWindow, yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -448,7 +449,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     !A.some(threadStates, yeetReviewThreadStateOutstanding) &&
     !O.exists(closeout, (report) => A.some(report.issues, closeoutIssueFromReviewThread));
   const mergeStateStatus = view.mergeStateStatus ?? "UNKNOWN";
-  const criteria = YeetMergeReadyCriteria.make({
+  const unwindowed = YeetMergeReadyCriteria.make({
     prOpen: Str.toUpperCase(view.state) === "OPEN",
     notDraft: !view.isDraft,
     closeoutRun,
@@ -460,7 +461,17 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
       view.reviewDecision === null ||
       Str.isEmpty(view.reviewDecision) ||
       Str.toUpperCase(view.reviewDecision) === "APPROVED",
+    reviewWindowElapsed: false,
     greptileScore: O.none(),
+  });
+  // Same lazy read the status gate takes: the review window is read only once
+  // it is the last criterion standing, and an unknown window stays unmet.
+  const reviewWindow = yeetReviewWindowDue(unwindowed)
+    ? O.some(yield* readYeetReviewWindow(context, { prNumber: view.number, headSha: view.headRefOid }))
+    : O.none();
+  const criteria = YeetMergeReadyCriteria.make({
+    ...unwindowed,
+    reviewWindowElapsed: yeetReviewWindowElapsed(reviewWindow),
   });
 
   return YeetWatchSnapshot.make({

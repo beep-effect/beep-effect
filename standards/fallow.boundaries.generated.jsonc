@@ -204,6 +204,12 @@
         ]
       },
       {
+        "name": "@beep/docket-intake",
+        "patterns": [
+          "apps/docket-intake/src/**"
+        ]
+      },
+      {
         "name": "@beep/documents-domain",
         "patterns": [
           "packages/documents/domain/src/**"
@@ -600,6 +606,12 @@
         ]
       },
       {
+        "name": "@beep/poppler",
+        "patterns": [
+          "packages/drivers/poppler/src/**"
+        ]
+      },
+      {
         "name": "@beep/postgres",
         "patterns": [
           "packages/drivers/postgres/src/**"
@@ -753,6 +765,12 @@
         "name": "@beep/tailscale",
         "patterns": [
           "packages/drivers/tailscale/src/**"
+        ]
+      },
+      {
+        "name": "@beep/tesseract",
+        "patterns": [
+          "packages/drivers/tesseract/src/**"
         ]
       },
       {
@@ -1574,6 +1592,33 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/test-runner"
+        ]
+      },
+      {
+        "from": "@beep/docket-intake",
+        "allow": [
+          "@beep/anthropic",
+          "@beep/docket-intake",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/docket-intake",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
         ]
       },
       {
@@ -2525,20 +2570,26 @@
       {
         "from": "@beep/m365-mcp",
         "allow": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -3087,6 +3138,25 @@
         ]
       },
       {
+        "from": "@beep/poppler",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/poppler",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/postgres",
         "allow": [
           "@beep/colors",
@@ -3379,6 +3449,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3388,6 +3459,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
@@ -3410,6 +3482,7 @@
           "@beep/obs",
           "@beep/observability",
           "@beep/phoenix",
+          "@beep/poppler",
           "@beep/qa-capture",
           "@beep/repo-ai-metrics",
           "@beep/repo-cli",
@@ -3419,6 +3492,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
@@ -3800,6 +3874,25 @@
           "@beep/schema",
           "@beep/tailscale",
           "@beep/test-runner"
+        ]
+      },
+      {
+        "from": "@beep/tesseract",
+        "allow": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
+          "@beep/test-runner",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tesseract",
+          "@beep/test-runner",
+          "@beep/utils"
         ]
       },
       {

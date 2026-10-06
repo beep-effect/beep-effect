@@ -152,9 +152,11 @@ bun run beep yeet publish --no-pr --message "type(scope): summary"
 bun run beep yeet publish --prove-first --message "type(scope): summary"
 ```
 
-- Flip this branch's draft PR to ready once every review thread is answered
-  and the required checks are green on the current head (refuses otherwise and
-  names the blocker; there is no `--force`):
+- Flip this branch's draft PR to ready as soon as its content is final: no
+  further push planned, cheap gates passed at publish, every review thread
+  answered. Hosted heavy CI may still be running; only a required check that
+  is already red holds the flip (it refuses and names the blocker; there is no
+  `--force`):
 
 ```bash
 bun run beep yeet ready
@@ -668,7 +670,8 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    so it ends itself with exit 2 on a wave (rows already in the inbox when it
    started end it only when a rerun of their check comes back red); re-run it
    after the fix push. Exit 0 with
-   `merge-ready: yes` means merge it yourself (`bun run beep yeet merge`), or
+   `merge-ready: yes` means the review window has elapsed too: re-read the
+   review threads, then merge it yourself (`bun run beep yeet merge`), or
    leave it to the orchestrator session at the gate; the monitor never merges on
    its own.
    On exit 1 or 3, read the summary line, fix the named blocker, publish, and
@@ -687,18 +690,24 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    push-first path.
 9. Address failed checks or actionable review comments with follow-up commits
    through the same Yeet publish path.
-10. When the job ends `ready-pending-flip` (exit 0: threads answered, required
-    checks green, the draft flag is the only blocker) and no further push is
-    planned, run `bun run beep yeet ready`. It flips the draft only under that
-    gate on the current head and names the first blocker otherwise. Do not
-    flip while a fix wave is still coming: this account merges within minutes
-    of required-green, and a late push is dropped. Mergeable still means no
-    outstanding review thread — unresolved, or resolved by the author with a
-    later human reviewer comment nobody answered, outdated threads included
-    until they are explicitly resolved — and GitHub reports the branch as
-    mergeable or not conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
-    that names the first failing criterion instead of making you read three
-    surfaces.
+10. Flip ready at content-final: as soon as no further push is planned and
+    the publish passed its cheap gates, run `bun run beep yeet ready`, without
+    waiting for hosted heavy CI. Draft means only "I am still pushing".
+    Reviewers start when the PR leaves draft and take 8–15 minutes, so the CI
+    run is the review window (review-window ruling, 2026-10-06). The flip
+    refuses only on a required check that is already red or an unanswered
+    thread. A job that ends `ready-pending-flip` (exit 0) means you left the
+    draft until green: flip it, then the full review window still has to run.
+    Mergeable means all of: required checks green; no outstanding review
+    thread — unresolved, or resolved by the author with a later human reviewer
+    comment nobody answered, outdated threads included until they are
+    explicitly resolved; GitHub reports the branch mergeable; and the review
+    window has elapsed — 20 minutes since the later of the last
+    ready-for-review event and the last push to the head, so a fix push
+    restarts it. Never flip and merge in one step, and re-read the threads
+    right before merging. `bun run beep yeet status --remote` prints a
+    `merge-ready:` line that names the first failing criterion, with
+    `review window open: N min left` when the window is the last one.
 11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
     worktree, `bun run beep yeet sweep --retire` — or let
     `monitor --until-merged` run the sweep on merged detection — so the next
@@ -841,13 +850,69 @@ is the accepted miss. Inline review comments reach the inbox as
 
 ## Ready
 
-`monitor --until-ready` ends `ready-pending-flip` (exit 0) when the PR is a
-draft and the draft flag is the only remaining readiness blocker. It prints
-`bun run beep yeet ready`. That command reads the PR with the monitor's own
-status read and runs `gh pr ready` only when, on the current head, every
-review thread is answered and the required checks are green; otherwise it
-refuses with the first blocker named. There is no `--force`. Flip only when no
-further push is planned.
+`bun run beep yeet ready` flips a draft at content-final (push-first-publish
+D11, which amends D10). It reads the PR with the monitor's own status read and
+flips the draft when, on the current head, the PR is open, no required
+check is known to be failing, and every review thread is answered. Pending
+checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
+with the first blocker named (`pr-open`, `no-required-red`,
+`threads-resolved`). There is no `--force`. Flip only when no further push is
+planned: a push after the flip restarts the review window. The flip is the
+GraphQL-only `markPullRequestReadyForReview`, spent through the GraphQL budget
+guard: when the shared budget is spent it waits (bounded, logged) for the
+hourly reset instead of failing the way `gh pr ready` did.
+
+The merge gate carries the wait instead. `merge-ready: yes` needs the
+`review-window-elapsed` criterion: 20 minutes since the later of the latest
+`ready_for_review` timeline event (the PR's creation when it was opened
+ready) and the push of the current head (the earliest check suite on the head
+commit). Both are read over REST, only once every other criterion holds, and
+the current time comes from the Effect `Clock`. A failed or unparsable read
+is `review window unknown`, which blocks exactly like an open window.
+`BEEP_YEET_REVIEW_WINDOW` overrides the length with an Effect duration string
+(`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
+`internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
+
+`monitor --until-ready` still ends `ready-pending-flip` (exit 0) when the PR
+is a draft and nothing but the draft flag blocks it. That now means the owner
+flipped late: the window starts at the flip, so submit a new monitor after
+`yeet ready` and wait for `merge-ready: yes`.
+
+## REST-first GitHub operations (`yeet gh`)
+
+GitHub GraphQL is 5,000 points an hour per identity, shared by every session on
+the account; `gh pr view|edit|ready|merge|checks|comment` all spend it. REST has
+its own budget. Use `bun run beep yeet gh …` instead of those `gh pr` commands:
+
+| Need | Command | Budget |
+| --- | --- | --- |
+| Gate view: draft, head, required checks, review window | `yeet gh pr status <n> [--threads]` | REST (`--threads`: guarded GraphQL) |
+| Label | `yeet gh pr label add\|remove <n> <label>` | REST |
+| Comment | `yeet gh pr comment <n> --body <text>` | REST |
+| Draft → ready | `yeet gh pr ready <n> [--no-wait]` | guarded GraphQL (no REST equivalent) |
+| Re-run failed / cancel queued runs on the head | `yeet gh checks rerun-failed\|cancel-queued <n>` | REST |
+| Merge at a pinned head | `yeet gh merge <n> --sha <sha10> [--tolerate <check>] [--force-window] [--dry-run]` | REST + guarded GraphQL thread read |
+| Budgets | `yeet gh rate-limit` | REST + one GraphQL point |
+
+- The guard probes `rateLimit { remaining resetAt }` (one point) before a
+  GraphQL-only call; below 25 points it waits until `resetAt` (at most 65
+  minutes) or, with `--no-wait`, exits 75. REST `/rate_limit` misreports the
+  GraphQL bucket, so the probe is the truth.
+- `merge` refuses unless the head equals `--sha`, the PR is open, not a draft,
+  and not conflicted, every required context's newest run is green, no other
+  check is red or pending (unless `--tolerate`d after attribution), the review
+  window (20 minutes after the later of "marked ready" and the head commit) has
+  passed, and the outstanding thread count is zero. A thread read that failed is
+  never zero. Exit 75 means hold (time can clear it); exit 1 means refused.
+- Alternate identity (its own rate-limit budget): `--token-ref op://…` or
+  `BEEP_GH_TOKEN_REF`, or a GitHub App installation token from
+  `BEEP_GH_APP_ID`, `BEEP_GH_APP_INSTALLATION_ID`, and `BEEP_GH_APP_KEY_REF`
+  (an `op://` reference to the PEM key). Tokens stay in-process and are never
+  printed. Default: the `gh` login.
+- `yeet publish|monitor` already use REST for the PR lookup, the
+  `ready-for-heavy` label, the provenance footer read/write, and the Greptile
+  re-trigger comment. Still GraphQL: review-thread resolution state and
+  replies (`closeout`, `reply`, `status`, `watch`).
 
 ## Merge Loop
 
@@ -860,7 +925,7 @@ turbo work, so they are cheap to run mid-loop.
   matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
   code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
   is a PR that already existed before the publish, or one whose label edit
-  failed. Only then run `gh pr edit <n> --add-label ready-for-heavy` yourself;
+  failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
   the held `monitor --until-ready` loop prints that exact command and does not
   burn its settle budget. Never remove and re-add the label.
   The label triggers `heavy-admit.yml`, which runs only the admission job and

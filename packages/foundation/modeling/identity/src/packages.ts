@@ -196,7 +196,10 @@ const generatedComposers = $I.compose(
   "box-provisioning",
   "freshbooks",
   "test-runner",
-  "xstate"
+  "xstate",
+  "tesseract",
+  "poppler",
+  "docket-intake"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -223,7 +226,7 @@ const composers = {
  * **Example** (Make package ID)
  *
  * ```ts import.meta.vitest name="Make package ID"
- * import { $ApiDocsId } from "@beep/identity"
+ * import { $ApiDocsId } from "@beep/identity/packages"
  *
  * const id = $ApiDocsId.make("ApiDocs")
  * console.log(id)
@@ -240,7 +243,7 @@ export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers
  * **Example** (Make package ID)
  *
  * ```ts import.meta.vitest name="Make package ID"
- * import { $CiopsId } from "@beep/identity"
+ * import { $CiopsId } from "@beep/identity/packages"
  *
  * const id = $CiopsId.make("Ciops")
  * console.log(id)
@@ -257,7 +260,7 @@ export const $CiopsId: Identity.IdentityComposer<"@beep/ciops"> = composers.$Cio
  * **Example** (Make package ID)
  *
  * ```ts import.meta.vitest name="Make package ID"
- * import { $LejeuneBoltWorkbenchId } from "@beep/identity"
+ * import { $LejeuneBoltWorkbenchId } from "@beep/identity/packages"
  *
  * const id = $LejeuneBoltWorkbenchId.make("LejeuneBoltWorkbench")
  * console.log(id)
@@ -275,7 +278,7 @@ export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-b
  * **Example** (Make package ID)
  *
  * ```ts import.meta.vitest name="Make package ID"
- * import { $SemanticaId } from "@beep/identity"
+ * import { $SemanticaId } from "@beep/identity/packages"
  *
  * const id = $SemanticaId.make("Semantica")
  * console.log(id)
@@ -292,7 +295,7 @@ export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = compos
  * **Example** (Make package ID)
  *
  * ```ts import.meta.vitest name="Make package ID"
- * import { $TrustgraphWorkbenchId } from "@beep/identity"
+ * import { $TrustgraphWorkbenchId } from "@beep/identity/packages"
  *
  * const id = $TrustgraphWorkbenchId.make("TrustgraphWorkbench")
  * console.log(id)
@@ -2680,3 +2683,54 @@ export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = com
  * @since 0.0.0
  */
 export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$XstateId;
+
+/**
+ * Identity composer for `@beep/tesseract`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TesseractId } from "@beep/identity/packages"
+ *
+ * const id = $TesseractId.make("Tesseract")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TesseractId: Identity.IdentityComposer<"@beep/tesseract"> = composers.$TesseractId;
+
+/**
+ * Identity composer for `@beep/poppler`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PopplerId } from "@beep/identity/packages"
+ *
+ * const id = $PopplerId.make("Poppler")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.$PopplerId;
+
+/**
+ * Identity composer for `@beep/docket-intake`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $DocketIntakeId } from "@beep/identity/packages"
+ *
+ * const id = $DocketIntakeId.make("DocketIntake")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> = composers.$DocketIntakeId;

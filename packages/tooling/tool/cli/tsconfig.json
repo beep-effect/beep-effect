@@ -33,7 +33,13 @@
       "path": "../../../drivers/phoenix/tsconfig.json"
     },
     {
+      "path": "../../../drivers/poppler/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/runpod/tsconfig.json"
+    },
+    {
+      "path": "../../../drivers/tesseract/tsconfig.json"
     },
     {
       "path": "../../../drivers/tika/tsconfig.json"

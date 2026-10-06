@@ -1,3 +1,4 @@
+import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
 import {
   decideYeetReadyGate,
   deriveYeetMergeReady,
@@ -12,8 +13,8 @@ import {
   YeetReadyPullRequestRead,
   YeetStatusArtifact,
   YeetStatusRemote,
+  YeetWatchCheck,
 } from "@beep/repo-cli/test/Yeet";
-import { DomainError } from "@beep/repo-utils";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
@@ -24,6 +25,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Struct from "effect/Struct";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const headSha = "abc1234def";
 
@@ -43,10 +45,14 @@ const context = RepoRunContext.make({
 const prView = (
   overrides: Partial<{
     readonly available: boolean;
+    readonly checks: ReadonlyArray<YeetWatchCheck>;
+    readonly failingOptionalCheckCount: number;
     readonly failingRequiredCheckCount: number;
     readonly headSha: O.Option<string>;
     readonly isDraft: boolean;
     readonly mergeable: string;
+    readonly pendingCheckCount: number;
+    readonly pendingOptionalCheckCount: number;
     readonly pendingRequiredCheckCount: number;
     readonly state: string;
     readonly unresolvedReviewThreadCount: number;
@@ -83,12 +89,28 @@ const noPullRequest = YeetReadyPullRequestRead.make({
   mergeReady: O.none(),
 });
 
-describe("yeet ready gate decision (push-first-publish D10)", () => {
+describe("yeet ready gate decision (push-first-publish D11: ready at content-final)", () => {
   it("flips a draft whose threads are answered and required checks are green", () => {
     expect(decideYeetReadyGate(prView())).toMatchObject({ _tag: "flip", prNumber: 42 });
   });
 
-  it("flips even while the base conflicts: D10 gates threads and checks only", () => {
+  it.each([
+    ["required checks still pending", prView({ pendingRequiredCheckCount: 2, pendingCheckCount: 2 })],
+    ["the heavy matrix still pending", prView({ pendingOptionalCheckCount: 9, pendingCheckCount: 9 })],
+    [
+      "a red optional lane such as Heavy / Coverage Regression",
+      prView({
+        failingOptionalCheckCount: 1,
+        checks: [YeetWatchCheck.make({ name: "Heavy / Coverage Regression", outcome: "fail", required: false })],
+      }),
+    ],
+  ] as const)("flips at content-final with %s", (_name, read) => {
+    // The merge gate still refuses this pull request; only the flip is early.
+    expect(O.exists(read.mergeReady, (ready) => ready.criteria.requiredChecksGreen)).toBe(false);
+    expect(decideYeetReadyGate(read)).toMatchObject({ _tag: "flip", prNumber: 42 });
+  });
+
+  it("flips even while the base conflicts: the flip gates threads and known reds only", () => {
     expect(decideYeetReadyGate(prView({ mergeable: "CONFLICTING" }))).toMatchObject({ _tag: "flip" });
   });
 
@@ -99,8 +121,12 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
   it.each([
     ["no pull request", noPullRequest, "pr-open"],
     ["a closed pull request", prView({ state: "CLOSED" }), "pr-open"],
-    ["a failing required check", prView({ failingRequiredCheckCount: 1 }), "required-checks-green"],
-    ["a pending required check", prView({ pendingRequiredCheckCount: 2 }), "required-checks-green"],
+    ["a failing required check", prView({ failingRequiredCheckCount: 1 }), "no-required-red"],
+    [
+      "a required check row that is red",
+      prView({ checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })] }),
+      "no-required-red",
+    ],
     ["an unanswered review thread", prView({ unresolvedReviewThreadCount: 1 }), "threads-resolved"],
   ] as const)("refuses %s and names the blocker", (_name, read, blocker) => {
     expect(decideYeetReadyGate(read)).toMatchObject({ _tag: "blocked", blocker });
@@ -108,17 +134,27 @@ describe("yeet ready gate decision (push-first-publish D10)", () => {
 
   it("names the first blocker in gate order when several fail", () => {
     expect(decideYeetReadyGate(prView({ failingRequiredCheckCount: 1, unresolvedReviewThreadCount: 3 }))).toMatchObject(
-      { _tag: "blocked", blocker: "required-checks-green" }
+      { _tag: "blocked", blocker: "no-required-red" }
     );
   });
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (it) => {
-  const recordingCapture =
-    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, exitCode = 0) =>
-    (command: string, args: ReadonlyArray<string>) =>
-      Ref.update(calls, (all) => [...all, [command, ...args]]).pipe(
-        Effect.as({ exitCode, output: exitCode === 0 ? "" : "gh: not permitted", truncated: false })
+  const recordingMarkReady =
+    (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>, fails = false) =>
+    (prNumber: number) =>
+      Ref.update(calls, (all) => [...all, ["ready", `${prNumber}`]]).pipe(
+        Effect.andThen(
+          fails
+            ? Effect.fail(
+                YeetCommandError.make({
+                  message: "could not mark pull request #42 ready for review: not permitted",
+                  command: "bun run beep yeet gh pr ready 42",
+                  exitCode: 1,
+                })
+              )
+            : Effect.void
+        )
       );
   // The flip takes the gate read twice: once to decide, once to confirm right
   // before `gh pr ready`. This fake answers the first read with `first` and
@@ -134,11 +170,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const decision = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView()),
-        capture: recordingCapture(calls),
+        markReady: recordingMarkReady(calls),
         findMonitor: () => Effect.succeedNone,
       });
       expect(decision._tag).toBe("flip");
-      expect(yield* Ref.get(calls)).toEqual([["gh", "pr", "ready", "42"]]);
+      expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
     })
   );
 
@@ -147,7 +183,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const error = yield* runYeetReadyGate(context, {
         read: yield* readTwice(prView(), prView({ headSha: O.some("fedcba9876") })),
-        capture: recordingCapture(calls),
+        markReady: recordingMarkReady(calls),
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetCommandError" });
       expect(error.message).toContain("changed between the gate read and the flip");
@@ -161,7 +197,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const error = yield* runYeetReadyGate(context, {
         read: yield* readTwice(prView(), prView({ unresolvedReviewThreadCount: 1 })),
-        capture: recordingCapture(calls),
+        markReady: recordingMarkReady(calls),
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetCommandError" });
       expect(error.message).toContain("now blocked on threads-resolved");
@@ -174,7 +210,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const error = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView({ unresolvedReviewThreadCount: 2 })),
-        capture: recordingCapture(calls),
+        markReady: recordingMarkReady(calls),
       }).pipe(Effect.flip);
       expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "threads-resolved" });
       expect(error.message).toContain("blocked on threads-resolved");
@@ -183,14 +219,36 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     })
   );
 
-  it.effect("names the current head when required checks are not green", () =>
+  it.effect("names the current head and the red check when a required check is failing", () =>
     Effect.gen(function* () {
       const error = yield* runYeetReadyGate(context, {
-        read: () => Effect.succeed(prView({ pendingRequiredCheckCount: 1 })),
-        capture: () => Effect.die("gh must not run"),
+        read: () =>
+          Effect.succeed(
+            prView({
+              failingRequiredCheckCount: 1,
+              checks: [YeetWatchCheck.make({ name: "Lint", outcome: "fail", required: true })],
+            })
+          ),
+        markReady: () => Effect.die("the flip must not run"),
       }).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "required-checks-green" });
-      expect(error.message).toContain(`on head ${headSha}`);
+      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "no-required-red" });
+      expect(error.message).toContain(`1 required check(s) are failing on head ${headSha} (Lint)`);
+    })
+  );
+
+  it.effect("flips with hosted heavy checks still pending and says the review window starts", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const decision = yield* runYeetReadyGate(context, {
+        read: () => Effect.succeed(prView({ pendingOptionalCheckCount: 9, pendingRequiredCheckCount: 1 })),
+        markReady: recordingMarkReady(calls),
+        findMonitor: () => Effect.succeedNone,
+      });
+      expect(decision._tag).toBe("flip");
+      expect(yield* Ref.get(calls)).toEqual([["ready", "42"]]);
+      const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+      expect(printed).toContain("the review window starts now");
+      expect(printed).toContain("do not merge in this step");
     })
   );
 
@@ -198,7 +256,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     Effect.gen(function* () {
       const decision = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView({ isDraft: false, unresolvedReviewThreadCount: 1 })),
-        capture: () => Effect.die("gh must not run"),
+        markReady: () => Effect.die("the flip must not run"),
       });
       expect(decision._tag).toBe("already-ready");
     })
@@ -209,7 +267,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
       for (const state of ["CLOSED", "MERGED"] as const) {
         const error = yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView({ isDraft: false, state })),
-          capture: () => Effect.die("gh must not run"),
+          markReady: () => Effect.die("the flip must not run"),
         }).pipe(Effect.flip);
         expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
         expect(error.message).toContain(state);
@@ -221,21 +279,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready gate run", (
     Effect.gen(function* () {
       const decision = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView({ isDraft: false })),
-        capture: () => Effect.die("gh must not run"),
+        markReady: () => Effect.die("the flip must not run"),
       });
       expect(decision._tag).toBe("already-ready");
     })
   );
 
-  it.effect("fails with a command error when gh pr ready fails", () =>
+  it.effect("fails with a command error when the ready flip fails", () =>
     Effect.gen(function* () {
       const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
       const error = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView()),
-        capture: recordingCapture(calls, 1),
+        markReady: recordingMarkReady(calls, true),
       }).pipe(Effect.flip);
-      expect(error).toMatchObject({ _tag: "YeetCommandError", command: "gh pr ready 42" });
-      expect(error.message).toContain("gh: not permitted");
+      expect(error).toMatchObject({ _tag: "YeetCommandError", command: "bun run beep yeet gh pr ready 42" });
+      expect(error.message).toContain("not permitted");
     })
   );
 });
@@ -264,7 +322,7 @@ const readyPlatform = Layer.mergeAll(
   Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, mockSpawner)
 );
 it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundaries", (it) => {
-  it.effect("confirms and flips through the default remote reader and capture", () =>
+  it.effect("confirms and flips through the default remote reader", () =>
     Effect.gen(function* () {
       const runner = ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
@@ -281,8 +339,9 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
         return Effect.succeed(fakeHandle(command.command === "gh" ? (answers[route] ?? "") : ""));
       });
       expect(
-        (yield* runYeetReadyGate(context).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)))
-          ._tag
+        (yield* runYeetReadyGate(context, { markReady: () => Effect.void }).pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
+        ))._tag
       ).toBe("flip");
     })
   );
@@ -313,7 +372,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       expect(
         (yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView()),
-          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+          markReady: () => Effect.void,
         }).pipe(Effect.provideService(FileSystem.FileSystem, failingFs)))._tag
       ).toBe("flip");
     })
@@ -327,7 +386,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       expect(
         (yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView()),
-          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+          markReady: () => Effect.void,
         }))._tag
       ).toBe("flip");
     })
@@ -351,13 +410,15 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("ready confirmation race
       expect(error.message).toContain("gate unknown, live unknown");
     })
   );
-  it.effect("maps a spawn failure to the command error", () =>
+  it.effect("maps an unavailable GitHub token on the default flip to the command error", () =>
     Effect.gen(function* () {
+      // Every child process (`gh auth token`) fails, so no request reaches GitHub.
+      const refusing = ChildProcessSpawner.make(() => Effect.succeed(fakeHandle("", 1)));
       const error = yield* runYeetReadyGate(context, {
         read: () => Effect.succeed(prView()),
-        capture: () => Effect.fail(DomainError.make({ message: "spawn failed" })),
-      }).pipe(Effect.flip);
-      expect(error.message).toContain("Failed to run gh pr ready");
+      }).pipe(Effect.flip, Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, refusing));
+      expect(error).toMatchObject({ _tag: "YeetCommandError", command: "bun run beep yeet gh pr ready 42" });
+      expect(error.message).toContain("could not mark pull request #42 ready for review");
     })
   );
   it.effect("reports the existing monitor after a successful flip", () =>
@@ -396,7 +457,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("ready confirmation race
       expect(
         (yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView()),
-          capture: () => Effect.succeed({ exitCode: 0, output: "", truncated: false }),
+          markReady: () => Effect.void,
           findMonitor: () => Effect.succeedSome(record),
         }))._tag
       ).toBe("flip");

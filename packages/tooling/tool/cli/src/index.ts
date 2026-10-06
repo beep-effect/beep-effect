@@ -13,6 +13,13 @@
  */
 
 /**
+ * Subscription account usage command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { accountsCommand } from "./commands/Accounts/index.ts";
+/**
  * Agent-effectiveness evidence command group.
  *
  * @category cli-commands

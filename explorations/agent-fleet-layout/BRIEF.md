@@ -76,8 +76,11 @@ on sight by the same scan the mirror already performs.
 the timer renderers all derive "where the fleet is" today from the repo
 root's parent or a baked `WorkingDirectory`. Replace that with one setting
 (working name `BEEP_FLEET_ROOT`, defaulting to a new `beep` directory under the
-configured projects root) that the CLI reads and the unit renderers bake. A fleet root may also list sibling
-legacy roots so discovery sees `projects/beep-effect*` until the drain ends.
+configured projects directory) that the CLI reads and the unit renderers bake.
+The configured projects directory is the discovery root: discovery selects only
+matching `beep-effect*` child checkout roots and excludes unrelated project
+directories. The sibling `beep-effect*` checkout directories are the legacy
+checkouts and stay discoverable until the drain ends.
 
 ### Lane bootstrap
 

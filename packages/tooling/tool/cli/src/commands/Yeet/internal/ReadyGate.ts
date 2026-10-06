@@ -1,34 +1,41 @@
 /**
- * `yeet ready`: flip a draft pull request to ready under the D10 gate.
+ * `yeet ready`: flip a draft pull request to ready once its content is final.
  *
  * **Details**
  *
  * Push-first publish opens every pull request as a draft (push-first-publish
- * D4) and `monitor --until-ready` ends `ready-pending-flip` once the draft flag
- * is the only blocker (D9). This module is the flip: it reads the pull request
- * through the same status read the readiness monitor uses, and runs
- * `gh pr ready` only when, on the current head, every review thread is answered
- * and the required checks are green (D10). Anything else refuses with the first
- * blocker named. There is no `--force`.
+ * D4). Draft means only "the owner is still pushing": the owner runs this flip
+ * as soon as the content is final, without waiting for hosted heavy CI, so the
+ * CI run doubles as the review window (review-window ruling, 2026-10-06, which
+ * amends D10). The flip reads the pull request through the same status read
+ * the readiness monitor uses and flips it (the GraphQL-only mutation, through
+ * the budget guard) when, on the current head, no required check is known to
+ * be failing and every review thread is answered. Pending checks and optional
+ * lanes do not hold it. Anything else refuses with the first blocker named.
+ * There is no `--force`. The merge gate, not this flip, waits for green checks
+ * and for the review window.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Effect, Match, pipe, Runtime } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Console, Duration, Effect, Match, pipe, Runtime } from "effect";
 import * as A from "effect/Array";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { flipPullRequestReady } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
-import { mergeReadyCriterionHolds, YeetMergeReady, YeetMergeReadyCriterion } from "./Verdict.ts";
+import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
@@ -41,41 +48,38 @@ const $I = $RepoCliId.create("commands/Yeet/internal/ReadyGate");
 const YEET_MONITOR_SUBMIT_COMMAND = "bun run beep yeet monitor --until-ready --detach";
 
 /**
- * The merge-protocol criteria the draft-to-ready flip checks, in the order it
- * names a blocker.
+ * The criteria the draft-to-ready flip checks, in the order it names a blocker.
  *
  * **Details**
  *
- * A subset of {@link YeetMergeReadyCriterion}: the pull request must be open,
- * its required checks green on the current head, and every review thread
- * answered (push-first-publish D10). Mergeability and the closeout run are left
- * to `monitor --until-ready`. The job that reported `ready-pending-flip` has
- * already ended by the time the flip runs, so the flip names the live monitor
- * for the pull request or prints the command that submits a new one.
+ * The pull request must be open, no required check may be known to be failing
+ * on the current head, and every review thread must be answered. `no-required-red`
+ * is deliberately weaker than the merge gate's `required-checks-green`: a
+ * pending required check, a pending or red optional lane (the `Heavy / *`
+ * matrix), and a check census that could not be read all let the flip through,
+ * because the flip happens at content-final and the merge gate still demands
+ * green. Mergeability, the closeout run, and the review window are left to
+ * `monitor --until-ready`.
  *
  * **Example** (List the gate criteria)
  *
  * ```ts
  * import { YeetReadyGateCriterion } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YeetReadyGateCriterion.literals) // ["pr-open", "required-checks-green", "threads-resolved"]
+ * console.log(YeetReadyGateCriterion.literals) // ["pr-open", "no-required-red", "threads-resolved"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const YeetReadyGateCriterion = YeetMergeReadyCriterion.pick([
-  "pr-open",
-  "required-checks-green",
-  "threads-resolved",
-]).pipe(
+export const YeetReadyGateCriterion = LiteralKit(["pr-open", "no-required-red", "threads-resolved"]).pipe(
   $I.annoteSchema("YeetReadyGateCriterion", {
-    description: "A merge-protocol criterion the yeet ready flip requires before it leaves draft.",
+    description: "A criterion the yeet ready flip requires before a content-final pull request leaves draft.",
   })
 );
 
 /**
- * A merge-protocol criterion the draft-to-ready flip requires.
+ * A criterion the draft-to-ready flip requires.
  *
  * @category type-level
  * @since 0.0.0
@@ -131,7 +135,9 @@ export class YeetReadyPullRequestRead extends S.Class<YeetReadyPullRequestRead>(
 export class YeetReadyGateFlip extends S.TaggedClass<YeetReadyGateFlip>($I`YeetReadyGateFlip`)(
   "flip",
   { prNumber: S.Finite, headSha: S.Option(S.String) },
-  $I.annote("YeetReadyGateFlip", { description: "The D10 gate holds on a draft pull request; flip it to ready." })
+  $I.annote("YeetReadyGateFlip", {
+    description: "The content-final gate holds on a draft pull request; flip it to ready.",
+  })
 ) {}
 
 /**
@@ -153,7 +159,7 @@ export class YeetReadyGateAlreadyReady extends S.TaggedClass<YeetReadyGateAlread
   "already-ready",
   { prNumber: S.Finite },
   $I.annote("YeetReadyGateAlreadyReady", {
-    description: "The D10 gate holds and the pull request is not a draft; nothing to flip.",
+    description: "The pull request is open and not a draft; nothing to flip.",
   })
 ) {}
 
@@ -179,7 +185,7 @@ export class YeetReadyGateBlocked extends S.TaggedClass<YeetReadyGateBlocked>($I
   "blocked",
   { blocker: YeetReadyGateCriterion, detail: S.NonEmptyString },
   $I.annote("YeetReadyGateBlocked", {
-    description: "The D10 gate refuses the flip on its first unmet criterion.",
+    description: "The content-final gate refuses the flip on its first unmet criterion.",
   })
 ) {}
 
@@ -224,8 +230,8 @@ export type YeetReadyGateDecision = typeof YeetReadyGateDecision.Type;
  * ```ts
  * import { YeetReadyGateRefused } from "@beep/repo-cli/test/Yeet"
  *
- * const error = YeetReadyGateRefused.make({ blocker: "required-checks-green", message: "required checks pending" })
- * console.log(error.blocker) // "required-checks-green"
+ * const error = YeetReadyGateRefused.make({ blocker: "no-required-red", message: "1 required check is failing" })
+ * console.log(error.blocker) // "no-required-red"
  * ```
  *
  * @category errors
@@ -238,7 +244,7 @@ export class YeetReadyGateRefused extends S.TaggedError<YeetReadyGateRefused>($I
     message: S.String,
   },
   $I.annoteError<YeetReadyGateRefused>("YeetReadyGateRefused", {
-    description: "yeet ready refused to flip a draft pull request because a D10 criterion is unmet.",
+    description: "yeet ready refused to flip a draft pull request because a content-final criterion is unmet.",
   })
 ) {
   /** Process exit code reported when the refusal reaches the runtime boundary. */
@@ -247,6 +253,23 @@ export class YeetReadyGateRefused extends S.TaggedError<YeetReadyGateRefused>($I
 
 const countOf = (value: number | undefined): number => value ?? 0;
 
+const failingRequiredChecks = (remote: YeetStatusRemote) =>
+  A.filter(remote.checks, (check) => check.required && check.outcome === "fail");
+
+// A required check known to be red on the current head. Pending and unread
+// checks are not red: the flip happens before hosted CI finishes.
+const noRequiredRed = (remote: YeetStatusRemote): boolean =>
+  countOf(remote.failingRequiredCheckCount) === 0 && A.isReadonlyArrayEmpty(failingRequiredChecks(remote));
+
+const readyGateCriterionHolds = (read: YeetReadyPullRequestRead, criterion: YeetReadyGateCriterion): boolean =>
+  O.exists(read.mergeReady, (ready) =>
+    YeetReadyGateCriterion.$match(criterion, {
+      "pr-open": () => mergeReadyCriterionHolds(ready.criteria, "pr-open"),
+      "no-required-red": () => noRequiredRed(read.remote),
+      "threads-resolved": () => mergeReadyCriterionHolds(ready.criteria, "threads-resolved"),
+    })
+  );
+
 const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote): string =>
   Match.value(blocker).pipe(
     Match.when("pr-open", () =>
@@ -254,13 +277,12 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
         ? `pull request #${remote.number ?? "?"} is ${remote.state}`
         : "no open pull request was found for this branch"
     ),
-    Match.when(
-      "required-checks-green",
-      () =>
-        `required checks are not green on head ${O.getOrElse(remote.headSha, () => "unknown")}: ${countOf(
-          remote.failingRequiredCheckCount
-        )} failing, ${countOf(remote.pendingRequiredCheckCount)} pending of ${countOf(remote.requiredCheckCount)} required`
-    ),
+    Match.when("no-required-red", () => {
+      const names = A.map(failingRequiredChecks(remote), (check) => check.name);
+      const count = Num.max(countOf(remote.failingRequiredCheckCount), A.length(names));
+      const named = A.isReadonlyArrayNonEmpty(names) ? ` (${A.join(names, ", ")})` : Str.empty;
+      return `${count} required check(s) are failing on head ${O.getOrElse(remote.headSha, () => "unknown")}${named}; a red required check means the content is not final. Pending checks and optional lanes do not hold the flip`;
+    }),
     Match.when(
       "threads-resolved",
       () =>
@@ -274,10 +296,11 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
  *
  * **Details**
  *
- * Walks {@link YeetReadyGateCriterion} in order against the merge-readiness
- * verdict the monitor derives from the same read. An unread pull request fails
- * every criterion, so it is blocked on `pr-open`. With the gate met, a draft is
- * flipped and a non-draft is reported as already ready.
+ * Walks {@link YeetReadyGateCriterion} in order against the read the monitor
+ * also takes. An unread pull request fails every criterion, so it is blocked on
+ * `pr-open`. With the gate met, a draft is flipped and a non-draft is reported
+ * as already ready. Hosted checks that are still pending, and optional lanes
+ * in any state, never block: the flip is due at content-final.
  *
  * **Example** (A missing pull request is blocked on pr-open)
  *
@@ -302,7 +325,7 @@ const blockerDetail = (blocker: YeetReadyGateCriterion, remote: YeetStatusRemote
 export const decideYeetReadyGate = (read: YeetReadyPullRequestRead): YeetReadyGateDecision => {
   const blocker = A.findFirst(
     YeetReadyGateCriterion.literals,
-    (criterion) => !O.exists(read.mergeReady, (ready) => mergeReadyCriterionHolds(ready.criteria, criterion))
+    (criterion) => !readyGateCriterionHolds(read, criterion)
   );
   // A pull request that is no longer a draft has nothing to flip, whatever
   // its checks and threads say: the verb must be idempotent, so a thread that
@@ -349,9 +372,22 @@ const findLiveMonitorForReady = (
     Effect.catch(() => Effect.succeedNone)
   );
 
+const markReadyThroughBudget = (prNumber: number) =>
+  flipPullRequestReady(prNumber).pipe(
+    Effect.mapError((cause) =>
+      YeetCommandError.make({
+        message: `could not mark pull request #${prNumber} ready for review: ${cause.message}`,
+        command: `bun run beep yeet gh pr ready ${prNumber}`,
+        exitCode: cause._tag === "GraphqlBudgetExhausted" ? 75 : 1,
+      })
+    )
+  );
+
 interface YeetReadyGateDependencies {
-  readonly capture?: typeof runRepoCommandCapture;
   readonly findMonitor?: typeof findLiveMonitorForReady;
+  readonly markReady?: (
+    prNumber: number
+  ) => Effect.Effect<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
   readonly read?: (
     context: RepoRunContext
   ) => Effect.Effect<
@@ -362,14 +398,15 @@ interface YeetReadyGateDependencies {
 }
 
 /**
- * Read the branch's pull request and flip it from draft to ready under D10.
+ * Read the branch's pull request and flip it from draft to ready at content-final.
  *
  * **Details**
  *
  * The read is the status snapshot `monitor --until-ready` takes on every poll,
  * so the flip and the monitor never disagree about the current head, its
  * checks, or its threads. A blocked decision fails with
- * {@link YeetReadyGateRefused}; a failed `gh pr ready` fails with
+ * {@link YeetReadyGateRefused}; a failed flip (the GraphQL-only
+ * `markPullRequestReadyForReview`, spent through the budget guard) fails with
  * `YeetCommandError`.
  *
  * **Example** (Build the gate effect)
@@ -381,7 +418,7 @@ interface YeetReadyGateDependencies {
  * ```
  *
  * @param context - Repo context of the branch whose pull request is flipped.
- * @param dependencies - Injectable pull request read and GitHub runner for tests.
+ * @param dependencies - Injectable pull request read and ready flip for tests.
  * @returns The decision the gate acted on.
  * @category workflows
  * @since 0.0.0
@@ -407,7 +444,6 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
     "already-ready": ({ prNumber }) =>
       Console.log(`[yeet] pull request #${prNumber} is already ready for review; nothing to flip`),
     flip: Effect.fnUntraced(function* ({ prNumber, headSha }) {
-      const capture = dependencies.capture ?? runRepoCommandCapture;
       // The gate decided on a read taken moments ago. A push, a check rerun,
       // or a new thread can land in between, even on the same head, so take
       // the whole gate read again immediately before the flip and require the
@@ -426,20 +462,16 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
           exitCode: 1,
         });
       }
-      const args = ["pr", "ready", `${prNumber}`];
-      const result = yield* capture("gh", args, context.repoRoot).pipe(
-        Effect.mapError(YeetCommandError.new("Failed to run gh pr ready."))
-      );
-      if (result.exitCode !== 0) {
-        return yield* YeetCommandError.make({
-          message: `gh pr ready failed:\n${Str.trim(result.output)}`,
-          command: `gh ${A.join(args, " ")}`,
-          exitCode: result.exitCode,
-        });
-      }
+      // markPullRequestReadyForReview is GraphQL-only; the default flip spends it
+      // through the GraphQL budget guard, waiting for the hourly reset when the
+      // shared budget is spent instead of failing the way `gh pr ready` did.
+      yield* (dependencies.markReady ?? markReadyThroughBudget)(prNumber);
       yield* Console.log(`[yeet] pull request #${prNumber} flipped from draft to ready for review`);
-      // The monitor that reported `ready-pending-flip` has ended, and reviewers
-      // that skip drafts post only now: name who is watching, or how to watch.
+      yield* Console.log(
+        `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this flip or the last push, whichever is later; do not merge in this step`
+      );
+      // Reviewers that skip drafts post only now, and a monitor that reported
+      // `ready-pending-flip` has ended: name who is watching, or how to watch.
       const watching = yield* (dependencies.findMonitor ?? findLiveMonitorForReady)(context, prNumber);
       yield* Console.log(
         O.match(watching, {

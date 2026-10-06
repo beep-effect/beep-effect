@@ -110,6 +110,13 @@ Create the scope that matches only the attorney's mailbox:
 New-ManagementScope -Name "beep-docket-intake-mailbox" -RecipientRestrictionFilter "PrimarySmtpAddress -eq '<attorney-mailbox>'"
 ```
 
+This scope is shared: the agent outbox registration
+([agent outbox registration](m365-agent-outbox-registration.md)) assigns its
+roles, including `Application Mail.Send`, to the same scope, because Exchange
+refuses a second scope with the same filter. A change to this scope's filter
+changes which mailboxes the outbox can send as; after any change, re-run the
+step 5 checks for both registrations.
+
 Assign the three roles, each limited to that scope:
 
 ```powershell
@@ -160,9 +167,12 @@ test event, and deletes it.
   1Password, restart the service, then delete the old certificate in Entra.
 - **Revoke at once**: delete the certificate in Entra, or run
   `Remove-ManagementRoleAssignment` for the three assignments.
-- **Remove entirely**: remove the role assignments, the management scope
-  (`Remove-ManagementScope`), the Exchange service principal
-  (`Remove-ServicePrincipal`), and the app registration.
+- **Remove entirely**: remove this registration's three role assignments,
+  the Exchange service principal (`Remove-ServicePrincipal`), and the app
+  registration. Remove the management scope (`Remove-ManagementScope`) only
+  when no other registration uses it: the agent outbox shares it, Exchange
+  refuses the removal while any assignment remains, and clearing the outbox's
+  assignments to force it would revoke the outbox.
 
 `ApplicationAccessPolicy` is the legacy way to scope application access and is
 not used here.
