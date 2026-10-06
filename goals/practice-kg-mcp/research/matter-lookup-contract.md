@@ -109,6 +109,19 @@ The MCP tool returns the same data as one row per docket.
 5. The bundle is a snapshot of the corpus at `corpusSnapshotAt`. A matter opened
    after that date returns `none` until the bundle is rebuilt.
 
+## Where unresolved files go in Box
+
+The Box workstream files by `family_key`. A file whose reference does not
+resolve `unique`, or resolves to a matter with no client or with
+`recycled-unverified` status, is never auto-filed:
+
+- unresolved docket files: `03 Historical Files To Be Filed/Dockets To Be Confirmed/<family>/<docket>/`
+- other unresolved files: `03 Historical Files To Be Filed/<original layout>/`
+
+Use these names when describing the outcome to the attorney. When a new bundle
+version adds matters, Box re-runs its map and moves files; nothing is
+re-uploaded.
+
 ## Table shapes
 
 ```
