@@ -5,7 +5,8 @@ running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
 Outcome: `AGENTS.md` and `docs/runbooks/agent-pools.md` state the pool order
-(Opus 5.5 sub-agents → Cursor agent when authorized → hold; Codex opt-in), the bucket-aware seat
+(2026-10-01: Codex `gpt-6.1-sol` / Claude `claude-opus-5-5`, each → Cursor on Opus 5.5 →
+grok-build `grok-4.7`), the bucket-aware seat
 map, and the structural guards; `.cursor/` carries the deny list and the pulse
 hook adapter; `@beep/repo-ai-metrics` decodes `cursor-cli` rows; a real
 headless `cursor-agent -p` run leaves pulse rows in the evidence ledger.
