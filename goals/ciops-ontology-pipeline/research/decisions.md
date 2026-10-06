@@ -853,3 +853,100 @@ engine step's scratch root is `~/.cache/beep/run4-engine` as its brief names (ca
 other lanes); the three empty directories left under `ONT/work/` stay; the system interpreter version
 is named in the run README as the adapter runtime. Reversal: a later entry before the first blinded
 seat launches; after it, a re-run of the blinded pass.
+
+## 2026-10-06 — P3 pin-stage and seat-stage calls (orchestrator under the autonomy charter)
+
+Inputs: the engine lane's stage-2 report and its skeptic, the docket and CQ-009 lane's report and its
+skeptic, and the five seat briefs with their two skeptics. Each call is reversible by a later entry
+before the pin commit, and by a new run after it, unless it says otherwise.
+
+**Call (t) — the CQ-009 package is committed and its digests are final.** The package landed as
+`4af5ca6981`; read from those blobs, the CQ suite is `e1ed9c0f65f5` (26 CQs), the scope document
+`750657e0c5b7` and the S6 predicate registry `93b8172adc08` (89 predicates; `hasCheckout` and
+`hasCoordinationProtocol` seed-only). The orchestrator's gates on that tree: validators base, `--s5`
+and `--s6` at 0 blockers and 0 warns, the CQ suite at 0 failures across 25 seed tests and 22
+fixtures with CQ-009 non-vacuous on the seed. One skeptic correction is adopted as law for any later
+ETL: `hasCoordinationProtocol` carries the DECODED value (a persisted record without the field decodes
+as `legacy-origin-lock/v1`), so an absent triple would be a false green on the legacy arm. No CQ or
+scope byte changes after this commit until the run closes (the digest sits in every review chain).
+
+**Call (u) — adapter v1.3.0 before the pin.** v1.2.0 as proven emits 287 source observations in 5.2 MB,
+three of them whole-file vocabulary records of 0.27 to 2.2 MB, and with the 95 prose observations the
+run would open at 382 against a budget of about 250 (run 3: 216). It is not pinned. v1.3.0 changes
+two rules and keeps the rest: R2 keeps every admission chain that carries a withdrawal or an eviction
+(47; Queue D needs the organic evictions and a withdrawal chain with both ticket records, so none is
+sampled away) plus the first plain chain per (kind, priority) of its enqueue row; R1 emits one
+vocabulary record per record stanza that holds the first occurrence of at least one key of its (pin,
+kind), carrying exactly the keys first seen there, so no record spans a whole file. R3 and R4 stand,
+with R4(b) keyed on (decision kind, reason, observed) as the brief and the adapter have it (call
+(q)'s "decision class" wording yields to it). The prose grain stands: the lane-plan terms have per-term
+Turtle observations and the tier evidence has the literal-domains row beside the KPI section. The
+golden keeps every lock the review round added (each rule component alone, thirty failing mutants)
+and adds locks for the two changed rules; its expected set may be produced through the sandbox by a
+throwaway variant and then proven by the real adapter, disclosed in the adapter record. The lane
+reports the new totals; the orchestrator accepts them only at or under the budget, or rules again.
+Rejected: pinning 382 (seats would denote 196 near-identical plain chains and read megabyte
+excerpts); per-item prose grain (more records for no new kind).
+
+**Call (v) — one rule set for every seat.** Seats run none of the common brief's preconditions (they
+read this log, which is excluded for seats; the orchestrator verifies them before each launch), write
+no report file and no receipt (friction returns in the structured result and the orchestrator files
+it), run scan A only, and run only the plain validator scan in the lane, or none when their toolset
+has no shell. Seats receive a trimmed seat-common brief (the common brief without the scan-B file
+names, the owners table and the prior-index census, which name archived slugs and outcomes), never
+the lane copy. Launch variables are fixed: `LANE`, `PREFIX`, `BATCH` (always the observation list
+`ONT/work/denotation-batches/batch-<PREFIX>.txt`), `INPUT MANIFEST` (the exhaustive file list for
+that launch; a needed file missing from it is a stop), `ROUND` (r1 to r3 for synthesis revision and
+the adversary), `REPAIR` (validator lines under the seat's own directory only, never a line naming
+`work/alternative/` and never a FLAGGED line; or the orchestrator's restatement of a landed attack
+as rule id, target record and one sentence, never review text), and for consolidation `OUT` and
+`SOURCES`. Each seat's input set is closed as its brief lists it; extra record keys the validator
+does not close (`referent_grain`, `evidence_refs`, `rationale`) are allowed on identity cards and
+analyses as at run 3. Expected noise once proposals exist is the 138 lines of call (c) plus one
+"dispositions.index.yaml missing" line; stages run in order (all denotation, then foundational beside
+blinded, then synthesis, then the gate, then the adversary), so a seat that sees another prefix's
+partial files in a plain scan reports their count and fixes nothing.
+
+**Call (w) — denotation and batching.** The skill's default stands: a discriminated referent with
+neither a warranting suite CQ nor a CQ-warranted kind it supports is written null-standing and
+`unresolved` with Ruling 12's sentence as the named missing decision, so the Queue D terminations
+re-park on the CQ barrier while a tier member reaches analysis through the tier CQs. The
+consolidation pass is conditional: it runs only when the orchestrator's cross-batch check finds one
+kind under two or more prefixes, a status disagreement or per-individual grain. Batches are planned
+so each queue's evidence sits together: the change-event rows with KPI law section 2 (Queue G); KPI
+section 6, the literal-domains rows, the `ProofStage` line, both manifest census records and the
+stage-bearing attempt and ledger observations (Queue H, with the `AssuranceTierId` row in the same
+batch so the tier class can be hypothesized beside a member); S7 section 8 with the lane-plan Turtle
+(the lane-plan terms). No batch is built to manufacture a support chain: the lane-plan terms have no
+CQ and no same-run decision term to support, so they are analyzed and end deferred with the missing
+lane-order CQ named, unless the seats find a warrant the orchestrator did not.
+
+**Call (x) — blinded seat details (extends call (s)).** Prose observations are evidence for every
+seat, the blinded one included: identifiers of earlier ratifications, flags or archived record ids
+that appear inside quoted source text (S7 section 8, literal-domains, hypothesis descriptions quoting
+them) are sanctioned exposure, read as quoted text and never as a category verdict. The root also
+receives the shared foundational-analysis contract. A pass that meets a permission denial stands when
+the three init assertions held and its output cites nothing outside its manifest; the denial is
+logged in `ONT/work/review-audit/blinded-launch-log.md` with the pass's root, prefix and init facts.
+A pass whose init assertions fail is void. A repair pass is a fresh process in a rebuilt root holding
+only the failing `-alt-` pairs and the validator lines naming that prefix's alternative files;
+DISPUTED flags and coverage errors are never forwarded (they name the primary category). A prefix gets
+at most the first pass and two repair passes. Before the first launch the orchestrator confirms that
+the user-level instruction files the headless seat loads carry no ontology content and that the
+per-root memory directory is empty.
+
+**Call (y) — proposals, reviews and withdrawals.** Proposals name `https://oip.law/ontology/ci-ops#`
+plus the local name as the proposed IRI (run-3 precedent; proposing an IRI is not IRI-scheme work). A
+flagged term that a surviving chain denotes is carried by a reuse proposal with the phrase "flag
+<name> persists; no lift claimed", because a `mapped` row needs a same-run proposal; a lift is claimed
+only by a proposal that says so. Category rivals on one hypothesis go to a steward-choice open issue,
+never a second proposal. A struck attack stays listed in the revision log with an open-issues line
+naming the striking ruling, and the adversary does not re-land it without a different counterexample;
+when a revision log misses a failed digest or a landed rule, the adversary writes no review and
+reports the gap. New proposals in a revision pass are allowed only in rounds 1 and 2 and only where a
+landed attack, a ruling or an upstream repair requires one. The synthesis seat writes a withdrawal
+receipt (digests of the proposal and each review); the orchestrator verifies the digests and deletes
+the files, so no seat deletes another seat's records. Ruling 11's cap holds: a round-3 FAIL is
+withdrawn, except that a sitting which strikes every landed attack of that FAIL may order one more
+review of the unchanged bytes, recorded in that sitting entry. The orchestrator runs the mechanical
+gate in the pin worktree before every adversary round and checks slug freshness against the shelters.
