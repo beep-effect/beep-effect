@@ -3,6 +3,7 @@ import {
   M365_IDEMPOTENCY_KEY_PROPERTY_ID,
   M365AppOnlyConfigInput,
   M365Auth,
+  M365CertificateCredential,
   M365ClientSecretCredential,
   M365ConfigInput,
   M365CreateEventRequest,
@@ -181,12 +182,48 @@ const roundTrip = <Sch extends S.ConstraintCodec<unknown, unknown, never, never>
   value: Sch["Type"]
 ): Sch["Type"] => Result.getOrThrow(S.decodeUnknownResult(schema)(Result.getOrThrow(S.encodeResult(schema)(value))));
 
+const isNamedBody = S.is(S.Struct({ displayName: S.String }));
+
 const DayOffset = S.Int.check(S.isBetween({ maximum: 40_000, minimum: -40_000 }));
 
 describe("@beep/m365 app-only lane and write verbs", () => {
   it("derives the app-only scope and authority from configuration", () => {
     expect(m365AppOnlyScope(GRAPH_BASE_URL)).toBe("https://graph.microsoft.com/.default");
     expect(resolveM365AppOnlyAuthority(appOnlyConfig())).toBe("https://login.microsoftonline.com/tenant-id");
+  });
+
+  it.layer(M365Auth.makeAppOnlyLayer(appOnlyConfig()), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "builds the app-only token provider from a client-secret credential without any network call",
+      Effect.fnUntraced(function* () {
+        const auth = yield* M365Auth;
+
+        expect(Effect.isEffect(auth.acquireToken)).toBe(true);
+      })
+    );
+  });
+
+  it.layer(
+    M365Auth.makeAppOnlyLayer(
+      M365AppOnlyConfigInput.make({
+        clientId: "client-id",
+        credential: M365CertificateCredential.make({
+          privateKey: Redacted.make("fixture-key-material"),
+          thumbprintSha256: "AB12CD34",
+        }),
+        tenantId: "tenant-id",
+      })
+    ),
+    { timeout: "10 seconds" }
+  )((it) => {
+    it.effect(
+      "builds the app-only token provider from a certificate credential without any network call",
+      Effect.fnUntraced(function* () {
+        const auth = yield* M365Auth;
+
+        expect(Effect.isEffect(auth.acquireToken)).toBe(true);
+      })
+    );
   });
 
   it.prop(
@@ -479,9 +516,7 @@ describe("@beep/m365 app-only lane and write verbs", () => {
           }
           const name = pipe(
             requestBody(request),
-            O.filter((body): body is { readonly displayName: string } =>
-              S.is(S.Struct({ displayName: S.String }))(body)
-            ),
+            O.filter(isNamedBody),
             O.map((body) => body.displayName),
             O.getOrElse(() => "")
           );
