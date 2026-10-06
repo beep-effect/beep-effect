@@ -62,3 +62,16 @@
 - **Would have prevented it:** the monitor classing a job with an empty runner and no steps as
   `not-admitted` (environment-only) instead of a P0 failure, as it already does for
   `heavy-not-admitted`.
+
+## 2026-10-06 — one new workspace dependency stales three generated surfaces
+
+- **Doing:** adding `@beep/m365` to `@beep/repo-cli` for `beep drawings sign email`.
+- **Evidence:** hosted Knip, JSDoc Ratchet, Fallow, and Repo Sanity all went red on `446bb5f4f6`
+  through one cause (`lint:policy-fingerprint` stale); locally the same edge also staled
+  `standards/fallow.boundaries.generated.jsonc`, and editing the changeset that is the cache
+  baseline's review basis produced `Qualification evidence digest mismatch.`
+- **Cost:** one wasted hosted run and a second push.
+- **Would have prevented it:** a single `beep repo refresh-generated` (fingerprint, boundaries,
+  config-sync, cache baseline re-record against the current basis) that runs before any push
+  touching a `package.json` or a basis changeset; or the cheap-gates preflight failing fast on
+  the fingerprint before the push.
