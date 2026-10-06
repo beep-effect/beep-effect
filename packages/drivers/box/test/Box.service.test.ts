@@ -555,7 +555,7 @@ describe("@beep/box", () => {
 
     assertNone(error.status);
     assertNone(outOfRange.status);
-    expect(error.sdkVersion).toBe("10.14.0");
+    expect(error.sdkVersion).toBe("10.17.0");
   });
 
   it("sanitizes raw string SDK throws", () => {
@@ -596,7 +596,7 @@ describe("@beep/box", () => {
         if (O.isSome(error)) {
           expect(error.value).toBeInstanceOf(B.BoxError);
           expect(error.value.reason).toBe("config");
-          expect(error.value.sdkVersion).toBe("10.14.0");
+          expect(error.value.sdkVersion).toBe("10.17.0");
         }
       }
     })
@@ -923,7 +923,7 @@ describe("@beep/box", () => {
             assertSome(error.value.requestId, "request-id");
             assertNone(error.value.context);
             assertNone(error.value.helpUrl);
-            expect(error.value.sdkVersion).toBe("10.14.0");
+            expect(error.value.sdkVersion).toBe("10.17.0");
             assertSome(error.value.cause, "Unknown");
           }
         }
