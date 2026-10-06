@@ -18,8 +18,9 @@ test-project typechecking with the package root directory exits 0. The
 Effect/Vitest scanner reports 1,925 current findings, exactly seven fewer
 than the prior 1,932-row baseline and with no introduced row. The historical
 seven detector IDs and two actionable lens IDs remain in the ledgers as
-`fixed` at the source commit. Full repo-cli package verification is running
-on the unchanged source; hosted proof is not yet claimed.
+`fixed` at the source commit. Full `@beep/repo-cli` package verification passed
+on the unchanged source: audit 838.8 seconds and docgen 24.0 seconds. Hosted
+proof is not yet claimed.
 
 Issue #1461's separate review-round follow-up corrects the session-ledger
 EV004 exception rationale: its `it.layer` build is shared across the block,

@@ -545,3 +545,17 @@ promotion passed Node/Bun, root test types, and full package verification
 the initial snapshot separately and derives current counts and row dispositions
 from the ledger. See `research/cli-next-five-ledger-reconciliation.json`,
 `research/cli-next-five-native-review.md`, and the individual proof receipts.
+
+## 2026-10-06: Artifact IO runner and Memory filesystem migration
+
+Commit `1b9a3aebc5059a387b187b55c86f5a08fa8a553e` moves the seven artifact
+IO tests to runner-owned Effect layers and scoped Memory filesystem fixtures.
+Node and Bun each pass all seven cases, direct test-project typechecking passes,
+and the detector baseline falls by seven with no introduced rows. The seven
+historical detector records and two actionable resource/property lens findings
+are fixed against that source commit; earlier historical fix SHAs remain intact.
+The detector ledger now contains 3,623 rows: 3,075 fixed, 228 exceptions, and
+320 open. Full `@beep/repo-cli` verification passed (audit 838.8 seconds,
+docgen 24.0 seconds). The corrected session-ledger EV004 exception rationale
+keeps its existing identity and status. See
+`research/cli-artifacts-io-scope-proof.md` for the focused evidence and reversal.
