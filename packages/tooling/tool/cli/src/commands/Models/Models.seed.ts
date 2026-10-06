@@ -23,6 +23,7 @@
 import { A } from "@beep/utils";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import { BOUND_MODEL_SEGMENT } from "./Models.locator.service.ts";
 import {
   BindingFilter,
   LocatorBinding,
@@ -362,6 +363,18 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       binding: at("orchestrator", "claude-code", "model"),
       render: verbatim,
       pointer: ["model"],
+      fallbacks: [],
+    },
+    {
+      _tag: "json-key",
+      binding: at("orchestrator", "claude-code", "effort"),
+      render: verbatim,
+      // `{model}` resolves to this binding's model id at check time, so the
+      // per-model key follows the binding instead of copying its literal id.
+      // Claude Code applies that entry when present, else the top-level
+      // `effortLevel`; the check reads the same effective value.
+      pointer: ["modelSettings", BOUND_MODEL_SEGMENT, "effortLevel"],
+      fallbacks: [["effortLevel"]],
     },
   ]),
   target("home.beep-graft.env", "home", "$HOME/.config/beep-graft/env", true, [

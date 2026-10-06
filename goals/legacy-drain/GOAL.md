@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: every legacy Beep clone and lane beneath the configured projects root is either registered `legacy` and still in use, or reaped by residue-reap's drainable class after its grace window; `standards/git-worktrees.md` describes seats and lanes.
+Outcome: every legacy `beep-effect*` clone and lane under the configured projects directory is either registered `legacy` and still in use, or reaped by residue-reap's drainable class after its grace window; `standards/git-worktrees.md` describes seats and lanes.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:

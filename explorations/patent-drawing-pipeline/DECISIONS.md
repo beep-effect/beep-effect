@@ -34,8 +34,7 @@ renders live?
 
 **Answer:** Real matter material (spec, photos, CAD code, renders, PDFs,
 sign-off events, and the deep-research notes that use the article as an
-example) lives under the root selected by the existing
-**`BEEP_OPPOLD_CORPUS_ROOT`** config. The repo carries only a
+example) lives under the existing **`BEEP_OPPOLD_CORPUS_ROOT`** config. The repo carries only a
 **synthetic fixture article** plus golden outputs. Packet prose stays
 generic about any live article.
 

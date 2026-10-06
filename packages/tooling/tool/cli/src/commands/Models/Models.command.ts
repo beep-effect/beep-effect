@@ -59,7 +59,13 @@ const offlineFlag = Flag.Boolean("offline").pipe(
   Flag.withDescription("Skip the upstream fetch and assemble from the local overlays alone")
 );
 
+const adoptFlag = Flag.Boolean("adopt").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("init only: rewrite an existing manifest from the bundled seed, keeping a timestamped backup")
+);
+
 const modelsFlags = {
+  adopt: adoptFlag,
   home: homeFlag,
   repo: repoFlag,
   manifest: manifestFlag,
@@ -71,6 +77,7 @@ const modelsFlags = {
 // Every subcommand takes the same flag set, so the three runners share one
 // named shape rather than three copies of the same literal.
 interface ModelsCommandFlags {
+  readonly adopt: boolean;
   readonly home: O.Option<string>;
   readonly json: boolean;
   readonly manifest: O.Option<string>;
@@ -251,6 +258,18 @@ const runCatalog = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
 const runInit = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
   const paths = yield* resolvePaths(flags);
   const store = yield* ModelsManifestStore;
+  if (flags.adopt) {
+    const adoption = yield* store
+      .adopt(paths.manifestPath, seedModelsManifest)
+      .pipe(Effect.mapError(ModelsCommandError.fromInternal));
+    yield* Console.log(
+      O.match(adoption.backup, {
+        onNone: () => `models: seeded ${adoption.file}`,
+        onSome: (backup) => `models: adopted the seed into ${adoption.file} (previous manifest kept at ${backup})`,
+      })
+    );
+    return;
+  }
   const written = yield* store
     .init(paths.manifestPath, seedModelsManifest)
     .pipe(Effect.mapError(ModelsCommandError.fromInternal));
@@ -280,7 +299,9 @@ const initCommand = Command.make(
   "init",
   modelsFlags,
   Effect.fn(runInit, Effect.catchTag("ModelsCommandError", failWithModelsError))
-).pipe(Command.withDescription("Seed the routing manifest when none exists; never overwrites one"));
+).pipe(
+  Command.withDescription("Seed the routing manifest when none exists; --adopt rewrites an existing one with a backup")
+);
 
 /**
  * The `beep models` command group.

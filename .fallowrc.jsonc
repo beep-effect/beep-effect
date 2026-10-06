@@ -138,6 +138,9 @@
     // Identity-as-IRI exploration prototype assets are packet evidence, not
     // package/app entrypoints in the production dead-code graph.
     "explorations/identity-as-iri/assets/ontology-prototype/**",
+    // The documented article-page builder is run ad hoc from its exploration
+    // README and emits a standalone HTML artifact; it is not workspace source.
+    "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/build.mjs",
     // LeJeune Bolt exploration ops script is packet tooling (machine-local corpus
     // miner run ad hoc via `bun run`), not a package/app entrypoint.
     "explorations/lejeune-bolt-agentic-demo/ops/**",

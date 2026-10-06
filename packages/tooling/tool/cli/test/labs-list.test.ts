@@ -2,12 +2,11 @@ import { LabsListRow, labsCommand } from "@beep/repo-cli/commands/Labs";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { Effect, FileSystem, flow, Layer, Path, Result } from "effect";
+import { Console, Effect, FileSystem, flow, Layer, Path, Result } from "effect";
 import { Command } from "effect/cli";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -38,7 +37,7 @@ const withLabsRepo = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>
       );
       return yield* use;
     })
-  ).pipe(provideScopedLayer(LabsTestLayer), Effect.orDie);
+  ).pipe(Effect.orDie);
 
 const writeLab = Effect.fn(function* (labSlug: string, manifestBody: O.Option<string>) {
   const fs = yield* FileSystem.FileSystem;
@@ -71,8 +70,8 @@ const expiredManifestWithPostgres = `${encodeJson({
 })}\n`;
 
 describe("beep labs list", { concurrent: false }, () => {
-  it("renders one row per lab with disposition, created date, and postgres schema", () =>
-    Effect.runPromise(
+  it.layer(LabsTestLayer, { concurrent: false, timeout: "15 seconds" })((it) => {
+    it.effect("renders one row per lab with disposition, created date, and postgres schema", () =>
       withLabsRepo(
         Effect.gen(function* () {
           yield* writeLab("alpha-lab", O.some(activeManifest("Alpha probe")));
@@ -86,11 +85,10 @@ describe("beep labs list", { concurrent: false }, () => {
             "@beep/beta-lab | expired | created 2026-07-04 | Expired probe kept for data-drop rehearsal | postgres: lab_beta_lab"
           );
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("emits schema-encoded rows under --json that decode back through LabsListRow", () =>
-    Effect.runPromise(
+    it.effect("emits schema-encoded rows under --json that decode back through LabsListRow", () =>
       withLabsRepo(
         Effect.gen(function* () {
           yield* writeLab("alpha-lab", O.some(activeManifest("Alpha probe")));
@@ -114,11 +112,10 @@ describe("beep labs list", { concurrent: false }, () => {
           expect(manifest.disposition).toBe("expired");
           expect(O.getOrThrow(manifest.postgresSchema)).toBe("lab_beta_lab");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("renders missing and invalid manifest rows and exits non-zero", () =>
-    Effect.runPromise(
+    it.effect("renders missing and invalid manifest rows and exits non-zero", () =>
       withLabsRepo(
         Effect.gen(function* () {
           yield* writeLab("alpha-lab", O.some(activeManifest("Alpha probe")));
@@ -137,11 +134,10 @@ describe("beep labs list", { concurrent: false }, () => {
           const errors = A.map(yield* TestConsole.errorLines, String);
           expect(A.some(errors, Str.includes("2 lab manifest issue(s)"))).toBe(true);
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
-  it("prints a friendly line and succeeds when apps/labs is empty", () =>
-    Effect.runPromise(
+    it.effect("prints a friendly line and succeeds when apps/labs is empty", () =>
       withLabsRepo(
         Effect.gen(function* () {
           yield* runLabs(["list"]);
@@ -149,6 +145,7 @@ describe("beep labs list", { concurrent: false }, () => {
           const lines = A.map(yield* TestConsole.logLines, String);
           expect(lines).toContain("No labs under apps/labs/.");
         })
-      )
-    ));
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
 });

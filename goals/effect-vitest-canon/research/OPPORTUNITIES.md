@@ -6644,6 +6644,37 @@ local Yeet proof also passed 37 lanes, including affected coverage. Waiting for 
 before merging, plus runner health telemetry when communication drops, would
 have made the failure actionable before it reached main.
 
+### Fresh worktree package check lacks dependency declarations (2026-10-05)
+
+While qualifying the `explore-atlas.test.ts` migration, `bun run beep quality
+package-verify @beep/repo-cli --quick` passed lint but failed check with
+`TS6305` because `packages/foundation/modeling/utils/dist/index.d.ts` had not
+been built in the fresh worktree. The missing `dist` directory is a setup
+condition, not evidence that the test edit introduced the subsequent TypeScript
+diagnostics. A package-verify preflight that builds or names missing referenced
+declaration outputs would prevent a large, misleading check failure.
+
+### Detector write churns unrelated position-based IDs (2026-10-05)
+
+After the atlas migration, `bun run beep lint effect-vitest` reported eight
+resolved rows and zero introductions. Running `--write` after building package
+dependencies also rewrote 19 existing repo-cli IDs whose line numbers had
+drifted in other files, alongside the intended atlas rows. We kept the
+unchanged rows and reconciled only the eight removed atlas findings plus one
+new, intentional shorter-scope review candidate; the detector then reported
+zero introductions and resolutions. Matching and writing by stable occurrence
+identity instead of source position would avoid this unrelated baseline churn.
+
+### PR closeout hid a GraphQL rate-limit failure (2026-10-05)
+
+While checking PR #1416's new head, `bun run beep yeet closeout --summary
+--require-review-comments 0` reported that the branch had no open pull
+request. The REST pull-request endpoint confirmed the PR was open on that exact
+head, while `gh pr view` returned `GraphQL: API rate limit already exceeded`.
+Closeout should report the transport or rate-limit error instead of converting
+an unavailable GraphQL lookup into a misleading no-PR conclusion. A REST
+fallback for basic PR identity would also keep read-only status available.
+
 ### Unrelated HTML coverage floor blocked the CLI wave (2026-10-05)
 
 PR #1416's local `quality:coverage` gate failed on the unchanged
@@ -6655,3 +6686,95 @@ installed comma-list parser always returns at least one entry for that input.
 Removing the unreachable guard preserves the existing malformed-input behavior.
 Retaining the coverage ratchet's rendered diagnostic in Yeet evidence, rather
 than truncating its log before the failure, would have made attribution faster.
+
+### Main merge displaced detector IDs and exception reasons (2026-10-05)
+
+Integrating current main into the next CLI wave moved detector anchors in
+`PracticeKg.projections.test.ts` and several repo-cli tests. The live scan
+reported five introduced and two resolved position IDs. `lint effect-vitest
+--write` reconciled the current 1,934 findings but reset two previously
+reasoned shorter-scope `PracticeKg` exceptions to open after their occurrence
+fingerprints changed. We checked the current nested database and host scopes
+and restored those reasons. Three `yeet-sweep-retire.test.ts` EV002 candidates
+remain open for the later main-delta inventory. A stable identity or reviewed
+exception reattachment across line and expression shifts would prevent this
+manual merge repair.
+
+### Shared cloud bootstrap moved beneath a repo-cli assertion (2026-10-05)
+
+The full `@beep/repo-cli` package audit failed one of 5,267 tests after
+PR #1432 moved cloud installation logic from `.cursor/install.sh` into
+`scripts/cloud/bootstrap.sh`. The unchanged `runners-bake.test.ts` still
+expected the thin caller to contain the Bun archive URL and checksum code.
+A focused Node/Bun reproduction identified the stale assertion; checking the
+shared bootstrap and the caller's delegation passed all 25 tests on each
+runner. A cross-file test search when moving a script's implementation would
+have caught this before the full package audit.
+
+### Newly merged test and exploration asset blocked PR cheap gates (2026-10-05)
+
+Yeet's cheap gates on PR #1445 found one missing schema-first inventory row
+for `yeet-sweep-retire.test.ts` and Fallow dead-code/health findings in the
+documented ad hoc `agentic-yoyo/build.mjs` article builder. Neither file is
+changed by this CLI migration; both arrived on main after their owning PRs.
+The test's fixed GitHub/packet codec fixtures are now reasoned as a regression
+exception, and the exact article builder is excluded from production Fallow
+analysis. All three focused gates pass. Running these generated inventory and
+Fallow checks on each owning PR before merge would have avoided cross-PR gate
+repair.
+
+### Full local proof surfaced shared main reds after the CLI push (2026-10-05)
+
+PR #1445's pre-push proof found seven OSV findings in the unchanged lockfile,
+six live checkout paths in newly merged fleet packet prose, a native `Error`
+in the law-practice projection, and one `effect/tsgo` diagnostic in this wave's
+atlas fixture test. The focused Node/Bun and package proofs did not cover
+these root lanes. The atlas diagnostic is fixed in this wave; the inherited
+docs and native error are repaired before resubmitting. A separate dependency
+branch resolved four patched packages and recorded a short-lived exact-version
+exception for the unpatched `sprintf-js`; PR #1435 subsequently landed the
+shared security fixes on main, so that branch was not published. The merged
+lockfile passes the local Security lane. Main-head root-gate preflight on each
+owning PR, with
+OSV advisories refreshed at review time, would prevent this cross-PR repair.
+
+### Shared test console hid an order-dependent assertion (2026-10-05)
+
+PR #1445 review found that `changeset-graph.test.ts` provided
+`TestConsole.layer` once to an `it.layer` block, so a second failure-path test
+could see error lines from the first. The reviewer's second-case reproduction
+made the exact assertion fail with four lines instead of two. Each test now
+creates its own test console, and a two-failure regression passes on Node and
+Bun; the full repo-cli package proof passes. A test fixture check that runs
+two output-producing cases within each shared layer would have exposed this
+before review.
+
+### Newly merged schema source failed the root law gate (2026-10-05)
+
+PR #1445's full local Yeet proof failed `quality:lint-policy` after the new
+Pattern Ontology module from main used `typeof value === "string"` in
+`PatternOntology.schema.ts`. The focused `@beep/schema` law command reported
+one native-runtime finding; replacing that guard with `P.isString` makes the
+law lane and full package verification pass. Running the package's generated
+`lint:laws` script on its owning PR before merge would have kept this repair
+out of the next unrelated goal wave.
+
+### Concurrent goal baseline edits conflicted during main integration (2026-10-05)
+
+PR #1427 landed new Yeet test candidates in
+`standards/effect-vitest.inventory.jsonc` while PR #1445 removed reviewed CLI
+findings from the same generated inventory. The merge reported one content
+conflict. Regenerating from the combined source yielded 1,941 findings with
+zero ratchet drift and retained every reviewed exception reason. A merge-aware
+inventory writer keyed by stable occurrence and preserving human dispositions
+would avoid manual reconciliation when independent PRs touch the same baseline.
+
+### Main-side test move left a stale schema inventory entry (2026-10-05)
+
+After integrating PR #1427, Yeet cheap gates blocked publication because the
+schema-first inventory still named the previous location of the fixed-fixture
+codec test in `yeet-sweep-retire.test.ts`. The live scan reported one stale
+entry and no missing or enforced candidates. Regenerating the inventory
+removed only that stale exception, and `lint schema-first` returned to zero
+drift. An owning PR check for schema-first inventory freshness would have
+caught the mismatch before another branch tried to publish.
