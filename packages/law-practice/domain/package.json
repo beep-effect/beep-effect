@@ -80,6 +80,7 @@
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -1850,5 +1850,8 @@
   "@beep/xstate/*": ["./packages/drivers/xstate/src/*"],
   "@beep/dock-react/dock.css": [
     "./packages/foundation/ui-system/dock-react/src/dock.css"
+  ],
+  "@beep/schema/PatternOntology": [
+    "./packages/foundation/modeling/schema/src/PatternOntology/index.ts"
   ]
 }

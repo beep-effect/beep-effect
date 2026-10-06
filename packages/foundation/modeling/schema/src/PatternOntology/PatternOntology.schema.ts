@@ -274,10 +274,7 @@ const tagLiteral = (ast: SchemaAST.AST, tagKey: PropertyKey): O.Option<string> =
       : O.none();
 
 const identifierAt = (annotations: S.Annotations.Annotations | undefined): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(annotations?.identifier),
-    O.filter((value): value is string => typeof value === "string")
-  );
+  pipe(O.fromUndefinedOr(annotations?.identifier), O.filter(S.is(S.String)));
 
 const collectTagged = (schema: S.Top, tagKey: PropertyKey): ReadonlyArray<PoTaggedConstructor> => {
   const visited = MutableHashSet.empty<SchemaAST.AST>();

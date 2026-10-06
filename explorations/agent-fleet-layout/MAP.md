@@ -44,9 +44,9 @@ enumerated; a fired gate reopens this packet at `decompose`.
 `fleet-root-registry` lands when, on this workstation:
 
 - `BEEP_FLEET_ROOT` (or its config-file equivalent) is set to
-  `~/YeeBois/projects/beep` with `~/YeeBois/projects` listed as a legacy
+  `<projects-root>/beep` with `<projects-root>` listed as a legacy
   root;
-- `mkdir -p ~/YeeBois/projects/beep/{seats,lanes}` plus a fresh clone at
+- `mkdir -p <projects-root>/beep/{seats,lanes}` plus a fresh clone at
   `seats/main` is discovered by `beep worktree fleet` alongside the 223
   legacy checkouts;
 - the joined view prints, for this very lane

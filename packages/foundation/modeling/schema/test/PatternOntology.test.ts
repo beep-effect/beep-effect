@@ -1,6 +1,7 @@
 import * as PatternOntology from "@beep/schema/PatternOntology";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -28,8 +29,8 @@ describe("@beep/schema PatternOntology", () => {
 
   it("reads a stamped pattern from a class declaration", () => {
     expect(O.getOrNull(getPoPattern(Leaf))).toBe("atom");
-    expect(O.isNone(getPoPattern(Bare))).toBe(true);
-    expect(O.isNone(getPoPattern(S.String.annotate({ po: "not-a-pattern" as never })))).toBe(true);
+    assertNone(getPoPattern(Bare));
+    assertNone(getPoPattern(S.String.annotate({ po: "not-a-pattern" as never })));
   });
 
   it("collects every reachable tagged constructor once and surfaces missing patterns", () => {
@@ -38,6 +39,17 @@ describe("@beep/schema PatternOntology", () => {
     expect(A.map(rows, (row) => row.tag)).toEqual(["leaf", "bare", "row"]);
     expect(A.map(rows, (row) => O.getOrNull(row.pattern))).toEqual(["atom", null, "table"]);
     expect(A.map(rows, (row) => O.getOrNull(row.identifier))).toEqual(["Leaf", "Bare", null]);
+  });
+
+  it("deduplicates type projections while retaining conflicting pattern annotations", () => {
+    const projected = S.toType(Leaf);
+    const conflicting = Leaf.annotate({ po: "block" });
+    const rows = collectPoTaggedConstructors(S.Union([Leaf, projected, conflicting]), "_tag");
+
+    expect(A.map(rows, (row) => [row.tag, O.getOrNull(row.pattern)])).toEqual([
+      ["leaf", "atom"],
+      ["leaf", "block"],
+    ]);
   });
 
   it("classifies conservation by pattern identity", () => {

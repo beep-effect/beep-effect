@@ -56,12 +56,18 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
 
 const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
 const encodePacketLifecycle = S.encodeEffect(
-  S.fromJsonString(S.Struct({ lifecycle: S.String, statusNote: S.optionalKey(S.String) }))
+  S.fromJsonString(
+    S.Struct({
+      lifecycle: S.String,
+      statusNote: S.optionalKey(S.String),
+      blockedBy: S.String.pipe(S.Array, S.optionalKey),
+    })
+  )
 );
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
 
-const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = []) =>
+const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = [], failFiles = false) =>
   Layer.effect(
     ChildProcessSpawner.ChildProcessSpawner,
     Effect.gen(function* () {
@@ -71,11 +77,11 @@ const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyAr
       // pull request view, or its file list when `--json files` is asked for.
       const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
       const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
-      const handleFor = (text: string) => {
+      const handleFor = (text: string, exitCode = 0) => {
         const output = Stream.make(new TextEncoder().encode(text));
         return ChildProcessSpawner.makeHandle({
           all: output,
-          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+          exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
           getInputFd: () => Sink.drain,
           getOutputFd: () => Stream.empty,
           isRunning: Effect.succeed(false),
@@ -89,7 +95,12 @@ const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyAr
       };
       return ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command) && command.command === "gh"
-          ? Effect.succeed(handleFor(A.contains(command.args, "files") ? filesText : viewText))
+          ? Effect.succeed(
+              handleFor(
+                A.contains(command.args, "files") ? filesText : viewText,
+                failFiles && A.contains(command.args, "files") ? 1 : 0
+              )
+            )
           : real.spawn(command)
       );
     })
@@ -703,7 +714,8 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         // left active with a statusNote saying why: only the unexplained open
         // one is an advisory, and a non-packet path under goals/ is ignored.
         for (const [slug, manifest] of [
-          ["open-packet", { lifecycle: "active" }],
+          ["open-packet", { lifecycle: "active", blockedBy: [] }],
+          ["blocked-packet", { lifecycle: "active", blockedBy: ["operator"] }],
           ["closed-packet", { lifecycle: "completed-retained" }],
           ["noted-packet", { lifecycle: "active", statusNote: "P8 is an operator gate." }],
         ] as const) {
@@ -726,6 +738,15 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         const plan = yield* YeetRetireSweepPlanJson.decode(planOutput);
         expect(plan.activePackets).toEqual(["open-packet"]);
+        const unavailablePrFiles = yield* YeetRetireSweepPlanJson.decode(
+          yield* captureOutput(
+            withCwd(lane, sweep(packetDir, { plan: true, json: true })).pipe(
+              provideScopedLayer(ghLayer(tip, "MERGED", [], true))
+            )
+          )
+        );
+        expect(unavailablePrFiles.activePackets).toEqual(["open-packet"]);
+
         // Once the clone's main already contains the merge, the diff is
         // empty and the pull request's own file list carries the packets. An
         // uncommitted edit closing the packet in the working tree does not
@@ -750,6 +771,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
         expect(output).not.toContain("closed-packet");
         expect(output).not.toContain("noted-packet");
+        expect(output).not.toContain("blocked-packet");
         expect(yield* fs.exists(lane)).toBe(false);
       })
     )

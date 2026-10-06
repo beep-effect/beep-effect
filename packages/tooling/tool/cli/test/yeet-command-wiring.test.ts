@@ -69,15 +69,20 @@ describe("yeet merge-loop command wiring", () => {
         const root = yield* fs.makeTempDirectoryScoped();
         yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(originalCwd)));
         yield* Effect.sync(() => process.chdir(root));
-        yield* runYeetCommand(["monitor", "--until-ready"]).pipe(
-          Effect.result,
-          Effect.tap((result) =>
-            Effect.sync(() => {
-              expect(result._tag).toBe("Failure");
-              if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "YeetCommandError" });
-            })
-          ),
-          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+        yield* Effect.forEach(
+          [["monitor", "--until-ready"], ["ready"], ["merge"], ["reply"]],
+          (args) =>
+            runYeetCommand(args).pipe(
+              Effect.result,
+              Effect.tap((result) =>
+                Effect.sync(() => {
+                  expect(result._tag).toBe("Failure");
+                  if (result._tag === "Failure") expect(result.failure).toMatchObject({ _tag: "YeetCommandError" });
+                })
+              ),
+              Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+            ),
+          { discard: true }
         );
       })
     );
@@ -89,6 +94,8 @@ describe("yeet merge-loop command wiring", () => {
         ["--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
         ["monitor", "--plan", "--state-root", "/tmp/yeet-command-wiring-state"],
         ["repair", "--plan"],
+        ["status", "--plan"],
+        ["sweep", "--plan"],
         ["pre-push-hook", "--plan"],
       ],
       // Hosted runners check out a detached HEAD, where publish/monitor refuse with a

@@ -9,7 +9,7 @@ rebuilding them). Date sections; research goes stale.
 ## 2026-10-05 — Deep-research sweep (5 researchers + writer, Opus 5.5)
 
 Full report and per-topic notes (with every citation) are out-of-repo at
-`~/data-home/oppold-corpus/ops/patent-drawing-pipeline/deep-research/`
+`$BEEP_OPPOLD_CORPUS_ROOT/ops/patent-drawing-pipeline/deep-research/`
 (`report.md`, `uspto_rules.md`, `ai_generation.md`,
 `open_source_pipeline.md`, `commercial_options.md`,
 `reproducible_pipeline.md`). They stay out of the public repo because they

@@ -7,13 +7,17 @@ import {
   PatentApplicationDocument,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import {
+  attributeDocuments,
   buildPracticeKgBundle,
+  isRecycleStubPath,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
+  PracticeKgCatalogRow,
   PracticeKgClaimsOptions,
+  PracticeKgDocketReferenceRow,
   PracticeKgOptions,
   PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
@@ -1340,5 +1344,66 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
       arguments: { query: "alpha" },
       invalidArguments: { query: 1 },
     },
+  });
+});
+
+describe("practice KG family attribution", () => {
+  it("recognizes Windows and POSIX recycle stubs without mistaking parent directories", () => {
+    assertTrue(isRecycleStubPath("recycle/$R123.docx"));
+    assertTrue(isRecycleStubPath("recycle\\$R123.docx"));
+    assertFalse(isRecycleStubPath("$R123/response.docx"));
+    assertFalse(isRecycleStubPath(""));
+  });
+
+  it("uses family-wide references for undocketed rows and preserves restored-name fallback", () => {
+    const family = PracticeKgCatalogRow.make({
+      category: "document",
+      client: null,
+      digest: "family",
+      docket: null,
+      docketFamily: "10008",
+      effectiveName: "family.pdf",
+      mtimeIso: "2026-10-05T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "family.pdf",
+    });
+    const restored = PracticeKgCatalogRow.make({
+      ...family,
+      digest: "restored",
+      docketFamily: "20009",
+      restored: true,
+    });
+    const result = attributeDocuments({
+      catalogRows: [family, restored],
+      docketReferences: [
+        PracticeKgDocketReferenceRow.make({
+          digest: "family",
+          client: "12345",
+          docket: "10008US01",
+          family: "10008",
+        }),
+      ],
+    });
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          digest: "family",
+          client: "12345",
+          attributionSource: "text-reference",
+          familyKey: "12345.10008",
+        }),
+        expect.objectContaining({
+          digest: "restored",
+          client: null,
+          attributionSource: "restored-name",
+          familyKey: "20009",
+        }),
+      ])
+    );
   });
 });
