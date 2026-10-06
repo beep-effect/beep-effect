@@ -8,6 +8,7 @@ import {
   RegisterRowJson,
   registerRowsWaiting,
   renderRegisterMarkdown,
+  renderSessionOrchestrator,
   SessionLedgerRow,
   SessionLedgerRowJson,
   sessionOrchestrator,
@@ -86,6 +87,9 @@ describe("session ledger role", () => {
       ledgerRow({ checkout: "/c", role: O.some("orchestrator"), recordedAt: 30, state: "done" }),
     ];
     expect(O.flatMap(sessionOrchestrator(rows), (row) => row.sessionId)).toEqual(O.some("new"));
+    expect(renderSessionOrchestrator(sessionOrchestrator(rows))).toContain("session new since ");
+    const anonymous = ledgerRow({ checkout: "/x", role: O.some("orchestrator"), recordedAt: 40 });
+    expect(renderSessionOrchestrator(O.some(anonymous))).toContain("session unknown since ");
   });
 });
 

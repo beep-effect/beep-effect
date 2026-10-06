@@ -6,56 +6,56 @@
           "totalCount": 4,
           "nodes": [
             {
-              "id": "PRRT_kwDOPbO_N86pYSnC",
-              "isResolved": true,
+              "id": "PRRT_kwDOPbO_N86pk5El",
+              "isResolved": false,
               "isOutdated": false,
-              "resolvedBy": { "login": "kriegcloud" },
+              "resolvedBy": null,
               "comments": {
                 "nodes": [
                   {
-                    "createdAt": "2026-10-06T08:39:32Z",
+                    "createdAt": "2026-10-06T17:09:41Z",
                     "author": { "__typename": "User", "login": "kriegcloud" }
                   }
                 ]
               }
             },
             {
-              "id": "PRRT_kwDOPbO_N86pYTm5",
-              "isResolved": true,
-              "isOutdated": true,
-              "resolvedBy": { "login": "kriegcloud" },
+              "id": "PRRT_kwDOPbO_N86pk5Er",
+              "isResolved": false,
+              "isOutdated": false,
+              "resolvedBy": null,
               "comments": {
                 "nodes": [
                   {
-                    "createdAt": "2026-10-06T08:39:34Z",
+                    "createdAt": "2026-10-06T17:09:41Z",
                     "author": { "__typename": "User", "login": "kriegcloud" }
                   }
                 ]
               }
             },
             {
-              "id": "PRRT_kwDOPbO_N86pYTnN",
-              "isResolved": true,
-              "isOutdated": true,
-              "resolvedBy": { "login": "kriegcloud" },
+              "id": "PRRT_kwDOPbO_N86pk5E2",
+              "isResolved": false,
+              "isOutdated": false,
+              "resolvedBy": null,
               "comments": {
                 "nodes": [
                   {
-                    "createdAt": "2026-10-06T08:39:36Z",
+                    "createdAt": "2026-10-06T17:09:41Z",
                     "author": { "__typename": "User", "login": "kriegcloud" }
                   }
                 ]
               }
             },
             {
-              "id": "PRRT_kwDOPbO_N86pYokB",
-              "isResolved": true,
-              "isOutdated": true,
-              "resolvedBy": { "login": "kriegcloud" },
+              "id": "PRRT_kwDOPbO_N86pk5E_",
+              "isResolved": false,
+              "isOutdated": false,
+              "resolvedBy": null,
               "comments": {
                 "nodes": [
                   {
-                    "createdAt": "2026-10-06T09:32:49Z",
+                    "createdAt": "2026-10-06T17:09:41Z",
                     "author": { "__typename": "User", "login": "kriegcloud" }
                   }
                 ]

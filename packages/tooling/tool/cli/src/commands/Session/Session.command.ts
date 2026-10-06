@@ -31,6 +31,30 @@ const decodePrNumber = S.decodeUnknownResult(PrNumber);
 const decodeRole = S.decodeUnknownResult(SessionRole);
 
 /**
+ * The first line of `session open`: who holds the orchestrator role.
+ *
+ * **Example** (Nobody holds the role)
+ *
+ * ```ts
+ * import { renderSessionOrchestrator } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(renderSessionOrchestrator(O.none()).startsWith("[session] orchestrator: none recorded")) // true
+ * ```
+ *
+ * @param holder - The newest open row claiming the role, if any.
+ * @returns One line naming the holder, its lane and since when.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderSessionOrchestrator = (holder: O.Option<SessionLedgerRow>): string =>
+  O.match(holder, {
+    onNone: () => "[session] orchestrator: none recorded (take the role with `session note --role orchestrator`)",
+    onSome: (row) =>
+      `[session] orchestrator: ${row.lane} (${row.branch}) session ${O.getOrElse(row.sessionId, () => "unknown")} since ${DateTime.formatIso(row.recordedAt)}`,
+  });
+
+/**
  * Render one live row as the operator reads it.
  *
  * **Example** (Render a row)
@@ -193,13 +217,7 @@ export const sessionOpenCommand = Command.make(
       yield* Console.log(
         `[session] ${A.length(rows)} live session(s) for ${facts.repository.owner}/${facts.repository.name}:`
       );
-      yield* Console.log(
-        O.match(sessionOrchestrator(rows), {
-          onNone: () => "[session] orchestrator: none recorded (take the role with `session note --role orchestrator`)",
-          onSome: (row) =>
-            `[session] orchestrator: ${row.lane} (${row.branch}) session ${O.getOrElse(row.sessionId, () => "unknown")} since ${DateTime.formatIso(row.recordedAt)}`,
-        })
-      );
+      yield* Console.log(renderSessionOrchestrator(sessionOrchestrator(rows)));
       yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { discard: true });
     });
     yield* reportSessionFailure(program);

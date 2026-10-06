@@ -16,11 +16,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
 import { PrRepository } from "../Yeet/internal/Provenance.ts";
@@ -312,7 +313,7 @@ export const renderRegisterMarkdown = (rows: ReadonlyArray<RegisterRow>): string
       ...A.map(
         currentRegisterRows(rows),
         (row) =>
-          `| ${row.kind} | ${cell(row.address)} | ${row.name.pipe(optionCell, cell)} | ${cell(A.join(row.owns, ", "))} | ${row.state} | ${row.waitingOnOrchestrator.pipe(optionCell, cell)} | ${O.match(row.lastContact, { onNone: () => "", onSome: DateTime.formatIso })} | ${cell(row.orphanPlan)} |`
+          `| ${row.kind} | ${cell(row.address)} | ${row.name.pipe(optionCell, cell)} | ${cell(A.join(row.owns, ", "))} | ${row.state} | ${row.waitingOnOrchestrator.pipe(optionCell, cell)} | ${row.lastContact.pipe(O.map(DateTime.formatIso), optionCell)} | ${cell(row.orphanPlan)} |`
       ),
     ],
     "\n"
@@ -346,3 +347,177 @@ export class RegisterNoteInput extends S.Class<RegisterNoteInput>($I`RegisterNot
   },
   $I.annote("RegisterNoteInput", { description: "Register append input before provenance is stamped." })
 ) {}
+
+/**
+ * One `register add` as typed: every field but the unit's key is optional, so
+ * a state change does not retype or erase what the register already knows.
+ *
+ * **Example** (A state-only change)
+ *
+ * ```ts
+ * import { RegisterNotePatch } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * const patch = RegisterNotePatch.make({
+ *   kind: "codex-lane",
+ *   address: "PR #1468",
+ *   name: O.none(),
+ *   owns: O.none(),
+ *   state: O.some("unreachable"),
+ *   waitingOnOrchestrator: O.none(),
+ *   lastContact: O.none(),
+ *   orphanPlan: O.none(),
+ *   note: O.none(),
+ * })
+ * console.log(patch.address) // "PR #1468"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterNotePatch extends S.Class<RegisterNotePatch>($I`RegisterNotePatch`)(
+  {
+    kind: RegisterUnitKind,
+    address: S.NonEmptyString,
+    name: S.Option(S.String),
+    owns: S.String.pipe(S.Array, S.Option),
+    state: S.Option(RegisterUnitState),
+    waitingOnOrchestrator: S.Option(S.String),
+    lastContact: S.Option(S.DateTimeUtcFromString),
+    orphanPlan: S.Option(S.String),
+    note: S.Option(S.String),
+  },
+  $I.annote("RegisterNotePatch", { description: "A register append as typed, with omitted fields left unset." })
+) {}
+
+// An empty text value clears the field; an omitted one keeps the prior value.
+const patchText = (patch: O.Option<string>, prior: O.Option<string>): O.Option<string> =>
+  O.match(patch, { onNone: () => prior, onSome: (value) => O.liftPredicate(value, Str.isNonEmpty) });
+
+/**
+ * The question `mergeRegisterNote` answers: the unit's current row, the patch, and the time now.
+ *
+ * **Example** (Build the question)
+ *
+ * ```ts
+ * import { RegisterMergeInput } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof RegisterMergeInput.make) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegisterMergeInput extends S.Class<RegisterMergeInput>($I`RegisterMergeInput`)(
+  { prior: S.Option(RegisterRow), patch: RegisterNotePatch, now: S.DateTimeUtcFromString },
+  $I.annote("RegisterMergeInput", { description: "A register patch with the unit's current row and the time now." })
+) {}
+
+/**
+ * Resolve a patch against the unit's current row: omitted fields keep their
+ * value, and the last contact moves only when the patch gives one.
+ *
+ * **Details**
+ *
+ * A unit seen for the first time takes `active`, no owns, and `now` as its
+ * last contact, and must carry an orphan plan: the result is `None` when it
+ * has none, because a registered unit without an orphan plan recreates the
+ * orphaning the register exists to prevent.
+ *
+ * **Example** (A first registration needs an orphan plan)
+ *
+ * ```ts
+ * import { mergeRegisterNote, RegisterMergeInput, RegisterNotePatch } from "@beep/repo-cli/test/Session"
+ * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const patch = RegisterNotePatch.make({
+ *   kind: "codex-lane",
+ *   address: "PR #1",
+ *   name: O.none(),
+ *   owns: O.none(),
+ *   state: O.none(),
+ *   waitingOnOrchestrator: O.none(),
+ *   lastContact: O.none(),
+ *   orphanPlan: O.none(),
+ *   note: O.none(),
+ * })
+ * console.log(O.isNone(mergeRegisterNote(RegisterMergeInput.make({ prior: O.none(), patch, now: DateTime.makeUnsafe(0) })))) // true
+ * ```
+ *
+ * @param input - The unit's current row (if any), the patch, and the time now.
+ * @returns The resolved append, or `None` for a new unit with no orphan plan.
+ * @category models
+ * @since 0.0.0
+ */
+export const mergeRegisterNote = (input: RegisterMergeInput): O.Option<RegisterNoteInput> => {
+  const { prior, patch } = input;
+  const from = <A>(pick: (row: RegisterRow) => O.Option<A>): O.Option<A> => O.flatMap(prior, pick);
+  return O.map(
+    patchText(
+      patch.orphanPlan,
+      O.map(prior, (row) => row.orphanPlan)
+    ),
+    (orphanPlan) =>
+      RegisterNoteInput.make({
+        kind: patch.kind,
+        address: patch.address,
+        name: patchText(
+          patch.name,
+          from((row) => row.name)
+        ),
+        owns: O.getOrElse(patch.owns, () => O.match(prior, { onNone: A.empty<string>, onSome: (row) => row.owns })),
+        state: O.getOrElse(patch.state, () =>
+          O.match(prior, { onNone: () => RegisterUnitState.Enum.active, onSome: (row) => row.state })
+        ),
+        waitingOnOrchestrator: patchText(
+          patch.waitingOnOrchestrator,
+          from((row) => row.waitingOnOrchestrator)
+        ),
+        lastContact: O.orElse(patch.lastContact, () =>
+          O.isSome(prior) ? from((row) => row.lastContact) : O.some(input.now)
+        ),
+        orphanPlan,
+        note: patchText(
+          patch.note,
+          from((row) => row.note)
+        ),
+      })
+  );
+};
+
+/**
+ * What identifies a unit in the register: its kind and its address.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisterUnitRef = Pick<RegisterRow, "kind" | "address">;
+
+/**
+ * The current row for one unit, if the register has one.
+ *
+ * **Example** (Nothing registered)
+ *
+ * ```ts
+ * import { currentRegisterRow } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(currentRegisterRow([], { kind: "codex-lane", address: "PR #1" }))) // true
+ * ```
+ *
+ * @param rows - Append-only rows as read from the file.
+ * @param unit - The unit's kind and address.
+ * @returns The newest row for that unit, retired units included.
+ * @category models
+ * @since 0.0.0
+ */
+export const currentRegisterRow: {
+  (unit: RegisterUnitRef): (rows: ReadonlyArray<RegisterRow>) => O.Option<RegisterRow>;
+  (rows: ReadonlyArray<RegisterRow>, unit: RegisterUnitRef): O.Option<RegisterRow>;
+} = dual(2, (rows: ReadonlyArray<RegisterRow>, unit: RegisterUnitRef) =>
+  A.findFirst(
+    newestPerKey<RegisterRow>({ key: registerUnitKey, at: (row) => row.recordedAt })(rows),
+    (row) => row.kind === unit.kind && row.address === unit.address
+  )
+);

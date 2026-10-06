@@ -7,6 +7,7 @@ import {
   PrRepository,
   RegisterReport,
   RegisterReportJson,
+  RegisterRowJson,
   recordSweepDone,
   renderSessionRow,
   SessionLedger,
@@ -412,6 +413,11 @@ describe("beep session", () => {
           expect(held).toContain("[session] orchestrator: lane (feat/lane) session thread-1 since ");
           expect(held).toContain("by codex [orchestrator]");
 
+          // A routine closeout note without --role keeps the claim.
+          yield* captureOutput(withCwd(lane, runSession(["note", "--state", "blocked", "--next", "wait on #1"])));
+          const kept = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(kept).toContain("[session] orchestrator: lane (feat/lane) session thread-1 since ");
+
           // Handing the role back is one more append: the newest row no longer claims it.
           yield* captureOutput(withCwd(lane, runSession(["note", "--role", "member", "--next", "idle"])));
           const released = yield* captureOutput(withCwd(clone, runSession(["open"])));
@@ -512,6 +518,41 @@ describe("beep session", () => {
           );
           const after = yield* captureOutput(withCwd(clone, runSession(["register", "list"])));
           expect(after).toContain("[session] 1 registered unit(s):");
+
+          // A state-only change keeps everything else the register knew, including the last contact.
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession(["register", "add", "--kind", "codex-lane", "--address", "PR #1468", "--state", "unreachable"])
+            )
+          );
+          const patched = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--json"])));
+          expect(patched).toContain('"state":"unreachable"');
+          expect(patched).toContain('"owns":["PR #1468","lane yeet-rest-pr-discovery"]');
+          expect(patched).toContain('"lastContact":"2026-10-06T11:08:00.000Z"');
+          expect(patched).toContain('"waitingOnOrchestrator":"merge at gate"');
+
+          // Empty text clears a field; "now" stamps the contact.
+          yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "register",
+                "add",
+                "--kind",
+                "codex-lane",
+                "--address",
+                "PR #1468",
+                "--waiting",
+                "",
+                "--last-contact",
+                "now",
+              ])
+            )
+          );
+          const cleared = yield* captureOutput(withCwd(clone, runSession(["register", "list", "--json"])));
+          expect(cleared).toContain('"waitingOnOrchestrator":null');
+          expect(cleared).not.toContain('"lastContact":"2026-10-06T11:08:00.000Z"');
         })
       )
     );
@@ -531,12 +572,22 @@ describe("beep session", () => {
               ["register", "add", "--kind", "codex-lane", "--address", "x", "--orphan-plan", " "],
               "--orphan-plan must say",
             ],
-            [[...base, "--last-contact", "yesterday"], '--last-contact must be an ISO instant; got "yesterday".'],
+            [
+              [...base, "--last-contact", "yesterday"],
+              '--last-contact must be an ISO instant or "now"; got "yesterday".',
+            ],
           ];
           for (const [args, message] of cases) {
             const error = yield* withCwd(lane, runSession(args)).pipe(Effect.flip);
             expect(error.message).toContain(message);
           }
+          const rowCause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
+          const rowEncoder = vi.spyOn(RegisterRowJson, "encode").mockReturnValue(Effect.fail(rowCause));
+          const rowError = yield* withCwd(
+            lane,
+            runSession(["register", "add", "--kind", "codex-lane", "--address", "PR #9", "--orphan-plan", "take over"])
+          ).pipe(Effect.flip, Effect.ensuring(Effect.sync(() => rowEncoder.mockRestore())));
+          expect(rowError.message).toBe("[session] Failed to encode the register row.");
           const cause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
           const encoder = vi.spyOn(RegisterReportJson, "encode").mockReturnValue(Effect.fail(cause));
           const error = yield* withCwd(clone, runSession(["register", "list", "--json"])).pipe(

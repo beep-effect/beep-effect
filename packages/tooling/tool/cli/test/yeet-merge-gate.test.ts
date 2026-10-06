@@ -20,6 +20,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -29,6 +30,7 @@ import checkSuitesFixture from "./fixtures/yeet-merge-gate/check-suites.json" wi
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
 import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "json" };
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
+import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import type { MergeGateOptions } from "@beep/repo-cli/test/Yeet";
 
@@ -118,6 +120,14 @@ describe("yeet merge-gate decision", () => {
     expect(holdReason(decideMergeGate({ read: read({ requiredContexts: O.none() }), options: options() }))).toBe(
       "required-contexts-unknown"
     );
+  });
+
+  it("fails closed when the ruleset requires no checks, even with no check runs at all", () => {
+    for (const checkRuns of [fixtureRuns, []]) {
+      const decision = decideMergeGate({ read: read({ requiredContexts: O.some([]), checkRuns }), options: options() });
+      expect(holdReason(decision)).toBe("required-contexts-unknown");
+      expect(renderMergeGateDecision(decision)).toContain("no CI evidence");
+    }
   });
 
   it("holds while a required context is unregistered, pending, or red", () => {
@@ -226,6 +236,14 @@ describe("yeet merge-gate decision", () => {
     ).toBe("review-window-unknown");
   });
 
+  it("a forced merge over a window with an unparseable anchor reports a zero age", () => {
+    const decision = decideMergeGate({
+      read: read({ window: YeetReviewWindowOpen.make({ ...openWindow, anchoredAt: "not-an-instant" }) }),
+      options: options({ forceWindow: true }),
+    });
+    expect(decision._tag === "merge" ? decision.windowAgeSeconds : -1).toBe(0);
+  });
+
   it("holds when the thread count is unknown", () => {
     expect(holdReason(decideMergeGate({ read: read({ unresolvedThreads: O.none() }), options: options() }))).toBe(
       "threads-unknown"
@@ -279,7 +297,10 @@ interface ScriptedAnswer {
 
 interface GhScript {
   readonly mergeResponse: string;
+  readonly pull?: unknown;
   readonly rulesExit: number;
+  readonly spawnFails?: boolean;
+  readonly threads?: unknown;
   readonly threadsExit: number;
   readonly windowExit: number;
 }
@@ -311,10 +332,10 @@ const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAn
     { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
   ],
   ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
-  ["graphql", { exitCode: script.threadsExit, output: JSON.stringify(threadsFixture) }],
+  ["graphql", { exitCode: script.threadsExit, output: JSON.stringify(script.threads ?? threadsFixture) }],
   ["rules/branches/", { exitCode: script.rulesExit, output: JSON.stringify(rulesFixture) }],
   ["/check-runs", { exitCode: 0, output: JSON.stringify([checkRunsFixture]) }],
-  [`/pulls/${pullFixture.number}`, { exitCode: 0, output: JSON.stringify(pullFixture) }],
+  [`/pulls/${pullFixture.number}`, { exitCode: 0, output: JSON.stringify(script.pull ?? pullFixture) }],
 ];
 
 const answerFor = (script: GhScript, command: string, line: string): ScriptedAnswer =>
@@ -329,6 +350,16 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
     const line = A.join([command.command, ...command.args], " ");
+    if (script.spawnFails === true && command.command === "gh") {
+      return Effect.fail(
+        PlatformError.systemError({
+          _tag: "NotFound",
+          module: "MergeGateTest",
+          method: "spawn",
+          pathOrDescriptor: "gh",
+        })
+      );
+    }
     const answer = answerFor(script, command.command, line);
     return Ref.update(calls, A.append(line)).pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
   });
@@ -379,6 +410,106 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
           expect(yield* mergeWasSent(calls)).toBe(false);
         })
       )
+    );
+
+    it.effect("counts the recorded unresolved threads of #1488 as outstanding", () =>
+      withScriptedGh({ ...defaultScript, threads: openThreadsFixture }, () =>
+        Effect.gen(function* () {
+          const result = yield* readMergeGate(context, pullFixture.number);
+          expect(result.unresolvedThreads).toEqual(O.some(4));
+        })
+      )
+    );
+
+    it.effect("an author-resolved thread holds when a human spoke last, and not when a bot did", () =>
+      Effect.gen(function* () {
+        // #1459's four threads are resolved by the PR author, who also commented last.
+        const resolved = threadsFixture.data.repository.pullRequest.reviewThreads;
+        const withLastAuthor = (author: { readonly __typename: string; readonly login: string }) => ({
+          data: {
+            repository: {
+              pullRequest: {
+                reviewThreads: {
+                  ...resolved,
+                  nodes: A.map(resolved.nodes, (node, index) =>
+                    index === 0
+                      ? { ...node, comments: { nodes: [{ createdAt: "2026-10-06T09:00:00Z", author }] } }
+                      : node
+                  ),
+                },
+              },
+            },
+          },
+        });
+        const count = (threads: unknown) =>
+          withScriptedGh({ ...defaultScript, threads }, () =>
+            readMergeGate(context, pullFixture.number).pipe(Effect.map((read) => read.unresolvedThreads))
+          );
+        expect(yield* count(threadsFixture)).toEqual(O.some(0));
+        expect(yield* count(withLastAuthor({ __typename: "User", login: "reviewer" }))).toEqual(O.some(1));
+        expect(yield* count(withLastAuthor({ __typename: "Bot", login: "greptile-apps" }))).toEqual(O.some(0));
+      })
+    );
+
+    it.effect("more threads than one page is an unknown count, never a lower bound", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          threads: {
+            data: { repository: { pullRequest: { reviewThreads: { totalCount: 101, nodes: [] } } } },
+          },
+        },
+        () =>
+          readMergeGate(context, pullFixture.number).pipe(
+            Effect.map((result) => expect(result.unresolvedThreads).toEqual(O.none()))
+          )
+      )
+    );
+
+    it.effect("a pull request with no mergeable state yet reads as unknown, not clean", () =>
+      withScriptedGh({ ...defaultScript, pull: { ...pullFixture, mergeable_state: null } }, () =>
+        readMergeGate(context, pullFixture.number).pipe(
+          Effect.map((result) => expect(result.mergeableState).toBe("unknown"))
+        )
+      )
+    );
+
+    it.effect("a gh that cannot start is a typed failure naming the read", () =>
+      withScriptedGh({ ...defaultScript, spawnFails: true }, () =>
+        Effect.gen(function* () {
+          const failure = yield* readMergeGate(context, pullFixture.number).pipe(Effect.flip);
+          expect(failure.message).toContain(`gh api pulls/${pullFixture.number} failed (spawn)`);
+        })
+      )
+    );
+
+    it.effect("a decline without a message, and a merge without a sha, are still reported", () =>
+      Effect.gen(function* () {
+        const declined = yield* withScriptedGh(
+          { ...defaultScript, mergeResponse: JSON.stringify({ merged: false }) },
+          () =>
+            runMergeGate(context, {
+              prNumber: pullFixture.number,
+              wantSha: headSha,
+              tolerate: [],
+              forceWindow: false,
+              dryRun: false,
+            }).pipe(Effect.flip)
+        );
+        expect(declined.message).toContain("no message");
+        const decision = yield* withScriptedGh(
+          { ...defaultScript, mergeResponse: JSON.stringify({ merged: true }) },
+          () =>
+            runMergeGate(context, {
+              prNumber: pullFixture.number,
+              wantSha: headSha,
+              tolerate: [],
+              forceWindow: true,
+              dryRun: false,
+            })
+        );
+        expect(decision._tag).toBe("merge");
+      })
     );
 
     it.effect("a failed thread read becomes an unknown count, and the gate holds on it", () =>

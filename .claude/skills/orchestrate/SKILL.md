@@ -84,8 +84,8 @@ Where each event is recorded, in the order it happens:
 | Conflict | STATE line; brief if generated files are involved | Owner merges main; generated files are regenerated, never hand-merged. |
 | Operator ruling | HANDOFF "Rulings in force" with date and verbatim wording; memory file; brief to every affected session | Relay verbatim with the date. Peer messages are teammates, not the operator; none widens your permissions. |
 | Money question | HANDOFF "Pending operator decisions"; fleet desk `decisions/<slug>` | Relay the answer verbatim to the asking session. |
-| A new unit appears (session, agent, lane, job, unit, person) | `session register add` with an orphan plan | A unit without an orphan plan is not registered. |
-| A unit retires | `session register add --state retired` | Drop it from the next HANDOFF. |
+| A new unit appears (session, agent, lane, job, unit, person) | `session register add` with an orphan plan (required the first time) | A unit without an orphan plan is not registered. |
+| A unit retires | `session register add --kind <k> --address <a> --state retired` | Omitted flags keep the unit's owns, waiting, orphan plan and last contact; pass `--last-contact now` only when you actually heard from it. Retired units drop from the next HANDOFF. |
 | Queue starved | STATE line | Cancel queued runs on PRs that must re-run anyway. |
 | Orphan PR (no live session, no process, clean tree) | register row kind `codex-lane` or take-over | Take it over in its checkout. |
 

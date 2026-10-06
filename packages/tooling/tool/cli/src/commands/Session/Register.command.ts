@@ -14,7 +14,11 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  currentRegisterRow,
   currentRegisterRows,
+  mergeRegisterNote,
+  RegisterMergeInput,
+  RegisterNotePatch,
   RegisterReport,
   RegisterReportJson,
   RegisterUnitKind,
@@ -46,7 +50,7 @@ const ownsFlag = Flag.String("owns").pipe(
   Flag.withDescription("Comma-separated list of what it owns: PR #n, lane <name>, packet <slug>")
 );
 const unitStateFlag = Flag.String("state").pipe(
-  Flag.withDefault("active"),
+  Flag.optional,
   Flag.withDescription(`Coordination state: ${A.join(RegisterUnitState.literals, ", ")}`)
 );
 const waitingFlag = Flag.String("waiting").pipe(
@@ -55,10 +59,11 @@ const waitingFlag = Flag.String("waiting").pipe(
 );
 const lastContactFlag = Flag.String("last-contact").pipe(
   Flag.optional,
-  Flag.withDescription("ISO instant of the last message from or to the unit; defaults to now")
+  Flag.withDescription('ISO instant of the last message from or to the unit, or "now"; omitted keeps the current value')
 );
 const orphanPlanFlag = Flag.String("orphan-plan").pipe(
-  Flag.withDescription("What a successor does when it cannot reach the unit")
+  Flag.optional,
+  Flag.withDescription("What a successor does when it cannot reach the unit; required the first time a unit is added")
 );
 const noteFlag = Flag.String("note").pipe(Flag.optional, Flag.withDescription("Free text for the successor"));
 const markdownFlag = Flag.Boolean("markdown").pipe(
@@ -66,11 +71,8 @@ const markdownFlag = Flag.Boolean("markdown").pipe(
   Flag.withDescription("Render the register as the Markdown table HANDOFF.md embeds")
 );
 
-const splitOwns = (owns: O.Option<string>): ReadonlyArray<string> =>
-  O.match(owns, {
-    onNone: () => A.empty<string>(),
-    onSome: (value) => A.filter(A.map(Str.split(value, ","), Str.trim), Str.isNonEmpty),
-  });
+const splitOwns = (owns: string): ReadonlyArray<string> =>
+  A.filter(A.map(Str.split(owns, ","), Str.trim), Str.isNonEmpty);
 
 /**
  * Append one register row for a unit the orchestrator coordinates.
@@ -107,34 +109,44 @@ export const sessionRegisterAddCommand = Command.make(
           `--kind must be one of ${A.join(RegisterUnitKind.literals, ", ")}; got "${kind}".`
         );
       }
-      const decodedState = decodeUnitState(state);
-      if (decodedState._tag === "Failure") {
+      const decodedState = O.map(state, decodeUnitState);
+      const stateValue = O.flatMap(decodedState, Result.getSuccess);
+      if (O.isSome(state) && O.isNone(stateValue)) {
         return yield* sessionUsageError(
-          `--state must be one of ${A.join(RegisterUnitState.literals, ", ")}; got "${state}".`
+          `--state must be one of ${A.join(RegisterUnitState.literals, ", ")}; got "${state.value}".`
         );
       }
       if (Str.isEmpty(Str.trim(address))) {
         return yield* sessionUsageError("--address must say how the orchestrator reaches the unit.");
       }
-      if (Str.isEmpty(Str.trim(orphanPlan))) {
-        return yield* sessionUsageError("--orphan-plan must say what a successor does when it cannot reach the unit.");
-      }
-      const contact = O.flatMap(O.map(lastContact, decodeInstant), Result.getSuccess);
-      if (O.isSome(lastContact) && O.isNone(contact)) {
-        return yield* sessionUsageError(`--last-contact must be an ISO instant; got "${lastContact.value}".`);
-      }
       const now = yield* DateTime.now;
-      const row = yield* noteRegister(process.cwd(), {
+      const contact = O.map(lastContact, (value) =>
+        Str.trim(value) === "now" ? O.some(now) : Result.getSuccess(decodeInstant(value))
+      );
+      if (O.exists(contact, O.isNone)) {
+        return yield* sessionUsageError(
+          `--last-contact must be an ISO instant or "now"; got "${O.getOrNull(lastContact)}".`
+        );
+      }
+      const patch = RegisterNotePatch.make({
         kind: decodedKind.success,
         address: Str.trim(address),
         name: O.map(name, Str.trim),
-        owns: splitOwns(owns),
-        state: decodedState.success,
+        owns: O.map(owns, splitOwns),
+        state: stateValue,
         waitingOnOrchestrator: O.map(waiting, Str.trim),
-        lastContact: O.some(O.getOrElse(contact, () => now)),
-        orphanPlan: Str.trim(orphanPlan),
+        lastContact: O.flatten(contact),
+        orphanPlan: O.map(orphanPlan, Str.trim),
         note: O.map(note, Str.trim),
       });
+      const facts = yield* sessionCheckoutFacts(process.cwd());
+      const register = yield* OrchestratorRegister;
+      const prior = currentRegisterRow(yield* register.list(facts.repository), patch);
+      const resolved = mergeRegisterNote(RegisterMergeInput.make({ prior, patch, now }));
+      if (O.isNone(resolved)) {
+        return yield* sessionUsageError("--orphan-plan must say what a successor does when it cannot reach the unit.");
+      }
+      const row = yield* noteRegister(process.cwd(), resolved.value);
       yield* Console.log(`[session] registered ${row.kind} ${row.address} (${row.state})`);
     });
     yield* reportSessionFailure(program);
@@ -236,7 +248,8 @@ export const sessionRegisterCommand = Command.make("register", {}, () =>
     A.join(
       [
         "Register commands:",
-        '- bun run beep session register add --kind <kind> --address <addr> [--name <label>] --owns "PR #n, lane x" --orphan-plan "<what a successor does>" [--state active|blocked|unreachable|retired] [--waiting "<ask>"] [--note "<text>"]',
+        '- bun run beep session register add --kind <kind> --address <addr> [--name <label>] [--owns "PR #n, lane x"] [--orphan-plan "<what a successor does>"] [--state active|blocked|unreachable|retired] [--waiting "<ask>"] [--last-contact <iso>|now] [--note "<text>"]',
+        "  omitted flags keep the unit's current values; empty text clears a field; --orphan-plan is required the first time",
         "- bun run beep session register list [--json|--markdown]",
       ],
       "\n"

@@ -18,7 +18,13 @@ import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../i
 import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
 import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
-import { SessionLedgerRow, SessionLedgerRowJson, SessionLedgerState, SessionRole } from "./Session.schemas.ts";
+import {
+  openSessionRows,
+  SessionLedgerRow,
+  SessionLedgerRowJson,
+  SessionLedgerState,
+  SessionRole,
+} from "./Session.schemas.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
@@ -404,11 +410,24 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
  * @since 0.0.0
  */
 export const noteSession = Effect.fn("SessionLedger.note")(function* (input: SessionNoteInput) {
-  const row = yield* buildSessionRow(input);
+  const built = yield* buildSessionRow(input);
   const ledger = yield* SessionLedger;
+  // A note that omits --role keeps the checkout's current role, so a routine
+  // closeout note by the orchestrator does not silently drop its claim. Only
+  // `--role member` or a `done` row releases it.
+  const row =
+    O.isSome(built.role) || SessionLedgerState.is.done(built.state)
+      ? built
+      : SessionLedgerRow.make({
+          ...built,
+          role: inheritedRole(yield* ledger.list(built.repository), built.checkout),
+        });
   yield* ledger.append(row);
   return row;
 });
+
+const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string): O.Option<SessionRole> =>
+  A.findFirst(openSessionRows(rows), (row) => row.checkout === checkout).pipe(O.flatMap((row) => row.role));
 
 /**
  * Record that a sweep finished a checkout's work. `executeSweep` calls this

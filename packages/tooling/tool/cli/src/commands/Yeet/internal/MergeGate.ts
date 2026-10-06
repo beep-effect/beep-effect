@@ -30,17 +30,25 @@ import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
+import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import {
+  deriveYeetReviewThreadState,
+  YeetReviewThreadNewestComment,
+  YeetReviewThreadStateInput,
+  yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateOutstanding,
+} from "./ReviewThreadState.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
 
@@ -419,6 +427,15 @@ const checksHold = (
         hold(read.prNumber, "required-contexts-unknown", "base ruleset unreadable; never evaluate the gate without it")
       ),
     onSome: (contexts) => {
+      if (!A.isReadonlyArrayNonEmpty(contexts)) {
+        return O.some(
+          hold(
+            read.prNumber,
+            "required-contexts-unknown",
+            "base ruleset requires no status checks; no CI evidence to gate on"
+          )
+        );
+      }
       const required = HashSet.fromIterable(contexts);
       const tolerated = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
       const runs = latest.pipe(HashMap.values, A.fromIterable);
@@ -448,22 +465,23 @@ const checksHold = (
     },
   });
 
-// An unknown window always holds; an open one holds unless the caller forced it.
-const windowHold = ({ read, options }: MergeGateInput): O.Option<MergeGateHold> =>
-  O.firstSomeOf([
-    holdWhen(
-      read.window._tag === "unknown",
-      read.prNumber,
-      "review-window-unknown",
-      renderYeetReviewWindow(read.window)
-    ),
-    holdWhen(
-      !options.forceWindow && read.window._tag === "open",
-      read.prNumber,
-      "review-window-open",
-      renderYeetReviewWindow(read.window)
-    ),
-  ]);
+// An unknown window always holds; an open one holds unless the caller forced
+// it. Otherwise the step yields how long the window has run, for the merge line.
+const windowStep = ({ read, options }: MergeGateInput): Result.Result<number, MergeGateHold> => {
+  const window = read.window;
+  if (window._tag === "unknown") {
+    return Result.fail(hold(read.prNumber, "review-window-unknown", renderYeetReviewWindow(window)));
+  }
+  if (!options.forceWindow && window._tag === "open") {
+    return Result.fail(hold(read.prNumber, "review-window-open", renderYeetReviewWindow(window)));
+  }
+  return Result.succeed(
+    DateTime.make(window.anchoredAt).pipe(
+      O.map((anchored) => Math.floor((DateTime.toEpochMillis(options.now) - DateTime.toEpochMillis(anchored)) / 1000)),
+      O.getOrElse(() => 0)
+    )
+  );
+};
 
 const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
   O.match(read.unresolvedThreads, {
@@ -477,14 +495,6 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
       ),
     onSome: (count) => holdWhen(count > 0, read.prNumber, "threads-unresolved", `${count} unresolved thread(s)`),
   });
-
-const windowAgeSeconds = (window: YeetReviewWindow, now: DateTime.Utc): number =>
-  window._tag === "unknown"
-    ? 0
-    : DateTime.make(window.anchoredAt).pipe(
-        O.map((anchored) => Math.floor((DateTime.toEpochMillis(now) - DateTime.toEpochMillis(anchored)) / 1000)),
-        O.getOrElse(() => 0)
-      );
 
 /**
  * Decide the gate from one read. Pure, so recorded payloads prove every branch.
@@ -533,14 +543,21 @@ const windowAgeSeconds = (window: YeetReviewWindow, now: DateTime.Utc): number =
 export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   const { read, options } = input;
   const latest = latestRunPerName(read.checkRuns);
-  return O.firstSomeOf([structuralHold(input), checksHold(input, latest), windowHold(input), threadsHold(read)]).pipe(
+  const window = windowStep(input);
+  return O.firstSomeOf([
+    structuralHold(input),
+    checksHold(input, latest),
+    Result.getFailure(window),
+    threadsHold(read),
+  ]).pipe(
     O.getOrElse(
       (): MergeGateDecision =>
         MergeGateMerge.make({
           prNumber: read.prNumber,
           headSha: read.headSha,
           commitTitle: `${read.title} (#${read.prNumber})`,
-          windowAgeSeconds: windowAgeSeconds(read.window, options.now),
+          // Every hold above is None here, so the window step succeeded.
+          windowAgeSeconds: Result.getOrThrow(window),
           tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check)),
         })
     )
@@ -583,15 +600,31 @@ const GhPull = S.Struct({
   created_at: S.String,
   mergeable_state: S.NullOr(S.String),
   head: S.Struct({ sha: S.String }),
+  base: S.Struct({ ref: S.String }),
+  user: S.NullOr(S.Struct({ login: S.String })),
 });
 const GhCheckRuns = S.Struct({
   check_runs: S.Array(S.Struct({ id: S.Finite, name: S.String, status: S.String, conclusion: S.NullOr(S.String) })),
+});
+const GhThreadNode = S.Struct({
+  id: S.String,
+  isResolved: S.Boolean,
+  isOutdated: S.Boolean,
+  resolvedBy: S.NullOr(S.Struct({ login: S.String })),
+  comments: S.Struct({
+    nodes: S.Array(
+      S.Struct({
+        createdAt: S.optionalKey(S.String),
+        author: S.NullOr(S.Struct({ __typename: S.optionalKey(S.String), login: S.String })),
+      })
+    ),
+  }),
 });
 const GhThreads = S.Struct({
   data: S.Struct({
     repository: S.Struct({
       pullRequest: S.Struct({
-        reviewThreads: S.Struct({ totalCount: S.Finite, nodes: S.Array(S.Struct({ isResolved: S.Boolean })) }),
+        reviewThreads: S.Struct({ totalCount: S.Finite, nodes: S.Array(GhThreadNode) }),
       }),
     }),
   }),
@@ -603,8 +636,42 @@ const decodeCheckRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhChe
 const decodeThreads = S.decodeUnknownEffect(S.fromJsonString(GhThreads));
 const decodeMergeResult = S.decodeUnknownEffect(S.fromJsonString(GhMergeResult));
 
+// AGENTS.md "Mergeable": an unresolved thread, or one the author resolved
+// that a human commented on afterwards, still owes a reply. Same rule as
+// closeout, status and watch: deriveYeetReviewThreadState.
+const outstandingThreadCount = (
+  nodes: ReadonlyArray<typeof GhThreadNode.Type>,
+  pullRequestAuthor: O.Option<string>
+): number =>
+  A.length(
+    A.filter(nodes, (node) =>
+      yeetReviewThreadStateOutstanding(
+        deriveYeetReviewThreadState(
+          YeetReviewThreadStateInput.make({
+            threadId: node.id,
+            isResolved: node.isResolved,
+            isOutdated: node.isOutdated,
+            pullRequestAuthor,
+            resolvedBy: O.fromNullishOr(node.resolvedBy?.login),
+            newestComment: A.last(node.comments.nodes).pipe(
+              O.flatMap((comment) =>
+                O.map(O.fromNullishOr(comment.author), (author) =>
+                  YeetReviewThreadNewestComment.make({
+                    authorLogin: author.login,
+                    authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(author.__typename)),
+                    createdAt: O.fromUndefinedOr(comment.createdAt),
+                  })
+                )
+              )
+            ),
+          })
+        )
+      )
+    )
+  );
+
 const THREADS_QUERY =
-  "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewThreads(first:100){totalCount nodes{isResolved}}}}}";
+  "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewThreads(first:100){totalCount nodes{id isResolved isOutdated resolvedBy{login} comments(last:1){nodes{createdAt author{__typename login}}}}}}}}";
 
 const ghFailure = (what: string) => (failure: GhCommandFailure) =>
   YeetCommandError.make({
@@ -680,11 +747,14 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
       // More threads than one page: the count is unknown, never a lower bound.
       return threads.totalCount > A.length(threads.nodes)
         ? O.none<number>()
-        : O.some(A.length(A.filter(threads.nodes, (node) => !node.isResolved)));
+        : O.some(outstandingThreadCount(threads.nodes, O.fromNullishOr(pull.user?.login)));
     }),
     Effect.orElseSucceed(O.none<number>)
   );
-  const ruleset = yield* readYeetRulesetRequiredContexts(context);
+  // The PR's own base decides the required contexts, not the caller's --base.
+  const ruleset = yield* readYeetRulesetRequiredContexts(
+    RepoRunContext.make({ ...context, base: `origin/${pull.base.ref}` })
+  );
   return MergeGateRead.make({
     prNumber: pull.number,
     title: pull.title,
