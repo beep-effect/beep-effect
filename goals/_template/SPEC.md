@@ -45,8 +45,8 @@ Higher sources outrank lower sources when they conflict.
 ## Stop Conditions
 
 - Required source files are missing or materially contradictory.
-- Verification requires money (purchases, paid services, quota top-ups, plan
-  changes) not named in this spec.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
 - The same blocker repeats after reasonable investigation.
 
 Scope growth, destructive side effects and policy calls are not stops: decide

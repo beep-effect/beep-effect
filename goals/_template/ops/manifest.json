@@ -79,7 +79,7 @@
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
-    "Verification requires money (purchases, paid services, quota top-ups, plan changes) not named in this spec.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

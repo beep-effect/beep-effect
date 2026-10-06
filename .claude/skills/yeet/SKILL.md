@@ -640,7 +640,9 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    so it ends itself with exit 2 on a wave (rows already in the inbox when it
    started end it only when a rerun of their check comes back red); re-run it
    after the fix push. Exit 0 with
-   `merge-ready: yes` means hand the PR to the operator; it does not merge it.
+   `merge-ready: yes` means merge it yourself (`bun run beep yeet merge`), or
+   leave it to the orchestrator session at the gate; the monitor never merges on
+   its own.
    On exit 1 or 3, read the summary line, fix the named blocker, publish, and
    re-submit the monitor. A code PR holds at `heavy-not-admitted` until you
    apply the `ready-for-heavy` label (see Merge Loop); do that once tier 1 is

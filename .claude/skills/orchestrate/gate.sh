@@ -8,7 +8,8 @@
 # A thread is outstanding when it is unresolved, or when the PR author resolved it and a
 # different human (not a bot) commented last — the same rule as yeet's
 # deriveYeetReviewThreadState "resolved-follow-up". GATE-MET also needs no failing
-# non-required check run, except Vercel deployments.
+# check run at all; a rate-limited Vercel failure (the one AGENTS.md exception) is a
+# judgment call for the orchestrator after reading the run, never automatic.
 set -uo pipefail
 R="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 OWNER="${R%/*}"
@@ -54,8 +55,7 @@ while IFS=$'\t' read -r n draft base sha; do
     (group_by(.name) | map(max_by(.id))) as $latest
     | ($latest | map(select(.name as $x | $req | index($x)))) as $r
     | ($r | map(select(good)) | length) as $ok
-    | ($latest | map(select(.status=="completed" and (good | not)
-        and ((.name as $x | $req | index($x)) or (.name | test("vercel"; "i") | not))))
+    | ($latest | map(select(.status=="completed" and (good | not)))
         | map("\(.name)=\(.conclusion)")) as $bad
     | ($th[$n] // null) as $t
     | [ "#"+$n, (if $draft=="true" then "DRAFT" else "ready" end), $base, $sha[0:10], $state,

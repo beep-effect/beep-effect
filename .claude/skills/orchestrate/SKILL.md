@@ -19,7 +19,8 @@ Everything else you decide, record, and keep moving.
    unlisted lane (Codex, Cursor); leave it alone.
 3. `bash .claude/skills/orchestrate/gate.sh` prints one row per open PR.
    `GATE-MET` = AGENTS.md "Mergeable": every required context green, no
-   failing non-required check run (Vercel deployments excepted), no
+   failing check run at all (a Vercel failure you have confirmed was only
+   rate-limited may be merged over by hand), no
    outstanding thread (unresolved, or author-resolved with a later human
    reviewer comment), not draft, not conflicting. It exits non-zero when
    main's required contexts can't be read, and prints `threads=?` when the
