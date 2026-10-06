@@ -6710,3 +6710,15 @@ A focused Node/Bun reproduction identified the stale assertion; checking the
 shared bootstrap and the caller's delegation passed all 25 tests on each
 runner. A cross-file test search when moving a script's implementation would
 have caught this before the full package audit.
+
+### Newly merged test and exploration asset blocked PR cheap gates (2026-10-05)
+
+Yeet's cheap gates on PR #1445 found one missing schema-first inventory row
+for `yeet-sweep-retire.test.ts` and Fallow dead-code/health findings in the
+documented ad hoc `agentic-yoyo/build.mjs` article builder. Neither file is
+changed by this CLI migration; both arrived on main after their owning PRs.
+The test's fixed GitHub/packet codec fixtures are now reasoned as a regression
+exception, and the exact article builder is excluded from production Fallow
+analysis. All three focused gates pass. Running these generated inventory and
+Fallow checks on each owning PR before merge would have avoided cross-PR gate
+repair.
