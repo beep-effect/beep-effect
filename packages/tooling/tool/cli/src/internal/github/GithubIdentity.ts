@@ -265,6 +265,17 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
   readSecretOutput("op", ["read", "--no-newline", reference], cwd, "op-read-failed", what);
 
 /**
+ * The identity to speak as and the working directory for its `gh`/`op` child processes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubClientRequest extends S.Class<GithubClientRequest>($I`GithubClientRequest`)(
+  { identity: GithubIdentity, cwd: S.String },
+  $I.annote("GithubClientRequest", { description: "An identity and the working directory to resolve its token in." })
+) {}
+
+/**
  * Build the `@effected/github` client layer for an identity.
  *
  * **Details**
@@ -277,7 +288,7 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
  * **Example** (Build the default client layer)
  *
  * ```ts
- * import { GithubIdentity, layerGithubClientFor } from "@beep/repo-cli/test/SharedInternals"
+ * import { GithubClientRequest, GithubIdentity, layerGithubClientFor } from "@beep/repo-cli/test/SharedInternals"
  * import * as O from "effect/Option"
  *
  * const identity = GithubIdentity.make({
@@ -287,7 +298,7 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
  *   installationId: O.none(),
  *   privateKeyRef: O.none()
  * })
- * console.log(typeof layerGithubClientFor({ identity, cwd: process.cwd() })) // "object"
+ * console.log(typeof layerGithubClientFor(GithubClientRequest.make({ identity, cwd: process.cwd() }))) // "object"
  * ```
  *
  * @param options - The selected identity and the working directory for the `gh`/`op` child processes.
@@ -298,10 +309,11 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
 export const layerGithubClientFor = ({
   identity,
   cwd,
-}: {
-  readonly identity: GithubIdentity;
-  readonly cwd: string;
-}): Layer.Layer<GitHubClient, GithubIdentityError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
+}: GithubClientRequest): Layer.Layer<
+  GitHubClient,
+  GithubIdentityError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> =>
   Layer.unwrap(
     Effect.gen(function* () {
       if (identity.kind === "github-app") {

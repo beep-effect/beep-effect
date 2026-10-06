@@ -37,6 +37,7 @@ import * as Str from "effect/String";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import {
   GithubCheckRunRecord,
+  GithubClientRequest,
   GithubPullRequestRecord,
   GithubRest,
   GraphqlBudget,
@@ -290,6 +291,120 @@ const finding = (reason: YeetGhGateReason, detail: string) => YeetGhGateFinding.
 
 const formatAge = (age: Duration.Duration): string => `${Math.floor(Duration.toMinutes(age))}m`;
 
+const when = (condition: boolean, reason: YeetGhGateReason, detail: string): ReadonlyArray<YeetGhGateFinding> =>
+  condition ? [finding(reason, detail)] : [];
+
+const pullRequestFindings = (facts: YeetGhGateFacts): ReadonlyArray<YeetGhGateFinding> => {
+  const pr = facts.pullRequest;
+  const headMoved = !Str.startsWith(facts.pinnedSha)(pr.headSha) || Str.length(facts.pinnedSha) < 7;
+  return [
+    ...when(pr.state !== "open" || pr.merged, "not-open", `state=${pr.state} merged=${pr.merged}`),
+    ...when(headMoved, "head-moved", `head is ${Str.slice(0, 10)(pr.headSha)}, pinned ${facts.pinnedSha}`),
+    ...when(pr.draft, "draft", "the pull request is still a draft"),
+    ...when(
+      O.contains(pr.mergeableState, "dirty"),
+      "merge-conflict",
+      "the base has moved and the branch conflicts with it"
+    ),
+  ];
+};
+
+const conclusionOf = (run: GithubCheckRunRecord): string => O.getOrElse(run.conclusion, () => "?");
+
+const RequiredContextState = LiteralKit(["green", "red", "pending"]);
+
+const requiredContextState = (run: O.Option<GithubCheckRunRecord>): typeof RequiredContextState.Type =>
+  O.match(run, {
+    onNone: () => "pending",
+    onSome: (found) => (isGood(found) ? "green" : found.status === "completed" ? "red" : "pending"),
+  });
+
+const requiredFindings = (
+  required: ReadonlyArray<string>,
+  latest: HashMap.HashMap<string, GithubCheckRunRecord>
+): { readonly findings: ReadonlyArray<YeetGhGateFinding>; readonly green: number } => {
+  const states = A.map(required, (context) => {
+    const run = HashMap.get(latest, context);
+    return { context, run, state: requiredContextState(run) };
+  });
+  const red = A.filter(states, (entry) => entry.state === "red");
+  const pending = A.filter(states, (entry) => entry.state === "pending");
+  const describeRed = (entry: (typeof states)[number]) =>
+    `${entry.context}=${O.match(entry.run, { onNone: () => "?", onSome: conclusionOf })}`;
+  const describePending = (entry: (typeof states)[number]) =>
+    O.isNone(entry.run) ? `${entry.context} (no run)` : entry.context;
+  return {
+    findings: [
+      ...when(A.isReadonlyArrayNonEmpty(red), "required-red", A.join(A.map(red, describeRed), ", ")),
+      ...when(A.isReadonlyArrayNonEmpty(pending), "required-pending", A.join(A.map(pending, describePending), ", ")),
+    ],
+    green: A.length(A.filter(states, (entry) => entry.state === "green")),
+  };
+};
+
+const otherCheckFindings = (
+  latest: HashMap.HashMap<string, GithubCheckRunRecord>,
+  requiredSet: HashSet.HashSet<string>,
+  tolerated: HashSet.HashSet<string>
+): ReadonlyArray<YeetGhGateFinding> => {
+  const others = pipe(
+    HashMap.toValues(latest),
+    A.filter((run) => !HashSet.has(requiredSet, run.name) && !HashSet.has(tolerated, run.name) && !isGood(run)),
+    A.sort(Order.mapInput(Str.Order, (run: GithubCheckRunRecord) => run.name))
+  );
+  const red = A.filter(others, (run) => run.status === "completed");
+  const pending = A.filter(others, (run) => run.status !== "completed");
+  return [
+    ...when(
+      A.isReadonlyArrayNonEmpty(red),
+      "check-red",
+      `${A.join(
+        A.map(red, (run) => `${run.name}=${conclusionOf(run)}`),
+        ", "
+      )} (attribute it, then --tolerate "<name>")`
+    ),
+    ...when(
+      A.isReadonlyArrayNonEmpty(pending),
+      "check-pending",
+      A.join(
+        A.map(pending, (run) => run.name),
+        ", "
+      )
+    ),
+  ];
+};
+
+const reviewWindowAge = (facts: YeetGhGateFacts): O.Option<Duration.Duration> =>
+  O.map(facts.headCommittedAt, (head) => {
+    const start = DateTime.max(
+      O.getOrElse(facts.readyAt, () => facts.pullRequest.createdAt),
+      head
+    );
+    return Duration.millis(Math.max(0, DateTime.toEpochMillis(facts.now) - DateTime.toEpochMillis(start)));
+  });
+
+const reviewWindowFindings = (
+  forceWindow: boolean,
+  windowAge: O.Option<Duration.Duration>
+): ReadonlyArray<YeetGhGateFinding> =>
+  forceWindow
+    ? []
+    : O.match(windowAge, {
+        onNone: () => [finding("review-window-unknown", "the head commit time could not be read")],
+        onSome: (age) =>
+          when(
+            Duration.isLessThan(age, YEET_GH_REVIEW_WINDOW),
+            "review-window-open",
+            `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(Duration.subtract(YEET_GH_REVIEW_WINDOW, age)))}m left`
+          ),
+      });
+
+const threadFindings = (outstanding: O.Option<number>): ReadonlyArray<YeetGhGateFinding> =>
+  O.match(outstanding, {
+    onNone: () => [finding("threads-unknown", "the GraphQL thread read did not come back; never read as zero")],
+    onSome: (count) => when(count > 0, "threads-outstanding", `${count} outstanding review thread(s)`),
+  });
+
 /**
  * Decide whether a pull request may merge at its pinned head.
  *
@@ -315,101 +430,28 @@ const formatAge = (age: Duration.Duration): string => `${Math.floor(Duration.toM
  * @since 0.0.0
  */
 export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict => {
-  const pr = facts.pullRequest;
-  const findings = A.empty<YeetGhGateFinding>();
-  const push = (item: YeetGhGateFinding) => {
-    findings.push(item);
-  };
-  if (pr.state !== "open" || pr.merged) push(finding("not-open", `state=${pr.state} merged=${pr.merged}`));
-  if (!Str.startsWith(facts.pinnedSha)(pr.headSha) || Str.length(facts.pinnedSha) < 7) {
-    push(finding("head-moved", `head is ${Str.slice(0, 10)(pr.headSha)}, pinned ${facts.pinnedSha}`));
-  }
-  if (pr.draft) push(finding("draft", "the pull request is still a draft"));
-  if (O.contains(pr.mergeableState, "dirty"))
-    push(finding("merge-conflict", "the base has moved and the branch conflicts with it"));
-
   const latest = latestCheckRunsByName(facts.checkRuns);
-  const tolerated = HashSet.fromIterable(facts.tolerated);
   const required = O.getOrElse(facts.requiredContexts, A.empty<string>);
-  const requiredSet = HashSet.fromIterable(required);
-  if (O.isNone(facts.requiredContexts) || A.isReadonlyArrayEmpty(required)) {
-    push(finding("required-contexts-unknown", "the base ruleset's required contexts could not be read"));
-  }
-  const requiredRed = A.empty<string>();
-  const requiredPending = A.empty<string>();
-  let requiredGreen = 0;
-  for (const context of required) {
-    O.match(HashMap.get(latest, context), {
-      onNone: () => requiredPending.push(`${context} (no run)`),
-      onSome: (run) => {
-        if (isGood(run)) requiredGreen += 1;
-        else if (run.status === "completed") requiredRed.push(`${context}=${O.getOrElse(run.conclusion, () => "?")}`);
-        else requiredPending.push(context);
-      },
-    });
-  }
-  if (A.isReadonlyArrayNonEmpty(requiredRed)) push(finding("required-red", A.join(requiredRed, ", ")));
-  if (A.isReadonlyArrayNonEmpty(requiredPending)) push(finding("required-pending", A.join(requiredPending, ", ")));
-
-  const others = pipe(
-    HashMap.toValues(latest),
-    A.filter((run) => !HashSet.has(requiredSet, run.name) && !HashSet.has(tolerated, run.name) && !isGood(run)),
-    A.sort(Order.mapInput(Str.Order, (run: GithubCheckRunRecord) => run.name))
-  );
-  const otherRed = A.filter(others, (run) => run.status === "completed");
-  const otherPending = A.filter(others, (run) => run.status !== "completed");
-  if (A.isReadonlyArrayNonEmpty(otherRed)) {
-    push(
-      finding(
-        "check-red",
-        `${A.join(
-          A.map(otherRed, (run) => `${run.name}=${O.getOrElse(run.conclusion, () => "?")}`),
-          ", "
-        )} (attribute it, then --tolerate "<name>")`
-      )
-    );
-  }
-  if (A.isReadonlyArrayNonEmpty(otherPending)) {
-    push(
-      finding(
-        "check-pending",
-        A.join(
-          A.map(otherPending, (run) => run.name),
-          ", "
-        )
-      )
-    );
-  }
-
-  const windowStart = O.map(facts.headCommittedAt, (head) =>
-    DateTime.max(
-      O.getOrElse(facts.readyAt, () => pr.createdAt),
-      head
-    )
-  );
-  const windowAge = O.map(windowStart, (start) =>
-    Duration.millis(Math.max(0, DateTime.toEpochMillis(facts.now) - DateTime.toEpochMillis(start)))
-  );
-  if (!facts.forceWindow) {
-    O.match(windowAge, {
-      onNone: () => push(finding("review-window-unknown", "the head commit time could not be read")),
-      onSome: (age) => {
-        if (Duration.isLessThan(age, YEET_GH_REVIEW_WINDOW)) {
-          const left = Duration.subtract(YEET_GH_REVIEW_WINDOW, age);
-          push(finding("review-window-open", `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(left))}m left`));
-        }
-      },
-    });
-  }
-
-  O.match(facts.outstandingThreads, {
-    onNone: () => push(finding("threads-unknown", "the GraphQL thread read did not come back; never read as zero")),
-    onSome: (count) => {
-      if (count > 0) push(finding("threads-outstanding", `${count} outstanding review thread(s)`));
-    },
+  const requiredRead = requiredFindings(required, latest);
+  const windowAge = reviewWindowAge(facts);
+  const findings = [
+    ...pullRequestFindings(facts),
+    ...when(
+      A.isReadonlyArrayEmpty(required),
+      "required-contexts-unknown",
+      "the base ruleset's required contexts could not be read"
+    ),
+    ...requiredRead.findings,
+    ...otherCheckFindings(latest, HashSet.fromIterable(required), HashSet.fromIterable(facts.tolerated)),
+    ...reviewWindowFindings(facts.forceWindow, windowAge),
+    ...threadFindings(facts.outstandingThreads),
+  ];
+  return YeetGhGateVerdict.make({
+    findings,
+    requiredGreen: requiredRead.green,
+    requiredTotal: A.length(required),
+    windowAge,
   });
-
-  return YeetGhGateVerdict.make({ findings, requiredGreen, requiredTotal: A.length(required), windowAge });
 };
 
 /**
@@ -468,9 +510,10 @@ export const countOutstandingThreads = (read: GithubReviewThreads): number =>
  * @category models
  * @since 0.0.0
  */
-export interface YeetGhCommonOptions {
-  readonly tokenRef: O.Option<string>;
-}
+export class YeetGhCommonOptions extends S.Class<YeetGhCommonOptions>($I`YeetGhCommonOptions`)(
+  { tokenRef: S.Option(S.String) },
+  $I.annote("YeetGhCommonOptions", { description: "Options shared by every yeet gh subcommand." })
+) {}
 
 /**
  * The `GithubRest`, `GraphqlBudget`, and `GitHubClient` layer for one `yeet gh`
@@ -485,10 +528,10 @@ export interface YeetGhCommonOptions {
  * **Example** (Build the layer for the default identity)
  *
  * ```ts
- * import { layerYeetGh } from "@beep/repo-cli/test/Yeet"
+ * import { layerYeetGh, YeetGhCommonOptions } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * console.log(typeof layerYeetGh({ tokenRef: O.none() })) // "object"
+ * console.log(typeof layerYeetGh(YeetGhCommonOptions.make({ tokenRef: O.none() }))) // "object"
  * ```
  *
  * @param options - The `--token-ref` value, if any.
@@ -501,7 +544,10 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
     Effect.map(selectGithubIdentity(tokenRef), (identity) =>
       Layer.mergeAll(layerGithubRest, layerGraphqlBudget).pipe(
         Layer.provideMerge(
-          Layer.mergeAll(layerGithubClientFor({ identity, cwd: process.cwd() }), layerGithubRepoFor(process.cwd()))
+          Layer.mergeAll(
+            layerGithubClientFor(GithubClientRequest.make({ identity, cwd: process.cwd() })),
+            layerGithubRepoFor(process.cwd())
+          )
         )
       )
     )
@@ -539,7 +585,9 @@ export const withYeetGh =
     program: Effect.Effect<A, E, GithubRest | GraphqlBudget | GitHubClient | Repo>
   ): Effect.Effect<A, E | GithubIdentityError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> =>
     Effect.scoped(
-      Effect.flatMap(Layer.build(layerYeetGh({ tokenRef })), (context) => Effect.provideContext(program, context))
+      Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
+        Effect.provideContext(program, context)
+      )
     );
 
 /**

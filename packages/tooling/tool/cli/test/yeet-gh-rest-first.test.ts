@@ -6,6 +6,7 @@ import {
   GithubReviewThreadNode,
   GithubReviewThreads,
   GraphqlBudget,
+  GraphqlBudgetDecisionInput,
   GraphqlBudgetExhausted,
   GraphqlBudgetPolicy,
   GraphqlBudgetSnapshot,
@@ -142,7 +143,7 @@ const snapshot = (remaining: number, resetAt: string) =>
 describe("GraphQL budget decisions", () => {
   const now = DateTime.makeUnsafe("2026-10-06T17:19:00Z");
   const decide = (remaining: number, resetAt: string, policy: GraphqlBudgetPolicy) =>
-    decideGraphqlBudget({ snapshot: snapshot(remaining, resetAt), policy, now });
+    decideGraphqlBudget(GraphqlBudgetDecisionInput.make({ snapshot: snapshot(remaining, resetAt), policy, now }));
 
   it("proceeds at or above the threshold, waits for a near reset, refuses a far one or with no-wait", () => {
     expect(decide(25, "2026-10-06T17:29:00Z", GraphqlBudgetPolicy.default).action).toBe("proceed");

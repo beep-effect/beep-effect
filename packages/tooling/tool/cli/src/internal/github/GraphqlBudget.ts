@@ -121,12 +121,28 @@ export class GraphqlBudgetDecision extends S.Class<GraphqlBudgetDecision>($I`Gra
 const WAIT_SLACK = Duration.seconds(5);
 
 /**
+ * What a budget decision reads: the snapshot, the policy, and the current time.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphqlBudgetDecisionInput extends S.Class<GraphqlBudgetDecisionInput>($I`GraphqlBudgetDecisionInput`)(
+  { snapshot: GraphqlBudgetSnapshot, policy: GraphqlBudgetPolicy, now: S.DateTimeUtc },
+  $I.annote("GraphqlBudgetDecisionInput", { description: "The inputs of one GraphQL budget decision." })
+) {}
+
+/**
  * Decide whether an operation may spend GraphQL points now.
  *
  * **Example** (Wait for a reset ten minutes away)
  *
  * ```ts
- * import { decideGraphqlBudget, GraphqlBudgetPolicy, GraphqlBudgetSnapshot } from "@beep/repo-cli/test/SharedInternals"
+ * import {
+ *   decideGraphqlBudget,
+ *   GraphqlBudgetDecisionInput,
+ *   GraphqlBudgetPolicy,
+ *   GraphqlBudgetSnapshot
+ * } from "@beep/repo-cli/test/SharedInternals"
  * import { DateTime } from "effect"
  *
  * const now = DateTime.makeUnsafe("2026-10-06T17:19:00Z")
@@ -135,7 +151,7 @@ const WAIT_SLACK = Duration.seconds(5);
  *   resetAt: DateTime.makeUnsafe("2026-10-06T17:29:00Z"),
  *   source: "graphql-probe"
  * })
- * console.log(decideGraphqlBudget({ snapshot, policy: GraphqlBudgetPolicy.default, now }).action) // "wait"
+ * console.log(decideGraphqlBudget(GraphqlBudgetDecisionInput.make({ snapshot, policy: GraphqlBudgetPolicy.default, now })).action) // "wait"
  * ```
  *
  * @param input - The budget read just now, the threshold and waiting rules, and the current time.
@@ -143,15 +159,7 @@ const WAIT_SLACK = Duration.seconds(5);
  * @category decisions
  * @since 0.0.0
  */
-export const decideGraphqlBudget = ({
-  snapshot,
-  policy,
-  now,
-}: {
-  readonly snapshot: GraphqlBudgetSnapshot;
-  readonly policy: GraphqlBudgetPolicy;
-  readonly now: DateTime.Utc;
-}): GraphqlBudgetDecision => {
+export const decideGraphqlBudget = ({ snapshot, policy, now }: GraphqlBudgetDecisionInput): GraphqlBudgetDecision => {
   if (snapshot.remaining >= policy.threshold) {
     return GraphqlBudgetDecision.make({ action: "proceed", waitFor: Duration.zero });
   }
@@ -286,7 +294,9 @@ const makeGraphqlBudget = Effect.gen(function* () {
       Effect.gen(function* () {
         for (let attempt = 0; attempt < 2; attempt++) {
           const snapshot = yield* probe;
-          const decision = decideGraphqlBudget({ snapshot, policy, now: yield* DateTime.now });
+          const decision = decideGraphqlBudget(
+            GraphqlBudgetDecisionInput.make({ snapshot, policy, now: yield* DateTime.now })
+          );
           if (decision.action === "proceed") return yield* self;
           if (decision.action === "refuse" || attempt > 0) {
             return yield* GraphqlBudgetExhausted.make({
