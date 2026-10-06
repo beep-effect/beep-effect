@@ -170,8 +170,17 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   if (options.retriggerGreptile) {
     yield* closeoutGhOutput(
       context,
-      ["pr", "comment", `${pr.number}`, "--body", GREPTILE_RETRIGGER_COMMENT],
-      "gh pr comment"
+      // REST issue comment: `gh pr comment` spends the shared GraphQL budget.
+      [
+        "api",
+        "-X",
+        "POST",
+        `repos/{owner}/{repo}/issues/${pr.number}/comments`,
+        "--silent",
+        "-f",
+        `body=${GREPTILE_RETRIGGER_COMMENT}`,
+      ],
+      "gh api issues comments"
     );
   }
 

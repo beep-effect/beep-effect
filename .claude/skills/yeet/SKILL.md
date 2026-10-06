@@ -852,12 +852,15 @@ is the accepted miss. Inline review comments reach the inbox as
 
 `bun run beep yeet ready` flips a draft at content-final (push-first-publish
 D11, which amends D10). It reads the PR with the monitor's own status read and
-runs `gh pr ready` when, on the current head, the PR is open, no required
+flips the draft when, on the current head, the PR is open, no required
 check is known to be failing, and every review thread is answered. Pending
 checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
 with the first blocker named (`pr-open`, `no-required-red`,
 `threads-resolved`). There is no `--force`. Flip only when no further push is
-planned: a push after the flip restarts the review window.
+planned: a push after the flip restarts the review window. The flip is the
+GraphQL-only `markPullRequestReadyForReview`, spent through the GraphQL budget
+guard: when the shared budget is spent it waits (bounded, logged) for the
+hourly reset instead of failing the way `gh pr ready` did.
 
 The merge gate carries the wait instead. `merge-ready: yes` needs the
 `review-window-elapsed` criterion: 20 minutes since the later of the latest
@@ -875,6 +878,42 @@ is a draft and nothing but the draft flag blocks it. That now means the owner
 flipped late: the window starts at the flip, so submit a new monitor after
 `yeet ready` and wait for `merge-ready: yes`.
 
+## REST-first GitHub operations (`yeet gh`)
+
+GitHub GraphQL is 5,000 points an hour per identity, shared by every session on
+the account; `gh pr view|edit|ready|merge|checks|comment` all spend it. REST has
+its own budget. Use `bun run beep yeet gh …` instead of those `gh pr` commands:
+
+| Need | Command | Budget |
+| --- | --- | --- |
+| Gate view: draft, head, required checks, review window | `yeet gh pr status <n> [--threads]` | REST (`--threads`: guarded GraphQL) |
+| Label | `yeet gh pr label add\|remove <n> <label>` | REST |
+| Comment | `yeet gh pr comment <n> --body <text>` | REST |
+| Draft → ready | `yeet gh pr ready <n> [--no-wait]` | guarded GraphQL (no REST equivalent) |
+| Re-run failed / cancel queued runs on the head | `yeet gh checks rerun-failed\|cancel-queued <n>` | REST |
+| Merge at a pinned head | `yeet gh merge <n> --sha <sha10> [--tolerate <check>] [--force-window] [--dry-run]` | REST + guarded GraphQL thread read |
+| Budgets | `yeet gh rate-limit` | REST + one GraphQL point |
+
+- The guard probes `rateLimit { remaining resetAt }` (one point) before a
+  GraphQL-only call; below 25 points it waits until `resetAt` (at most 65
+  minutes) or, with `--no-wait`, exits 75. REST `/rate_limit` misreports the
+  GraphQL bucket, so the probe is the truth.
+- `merge` refuses unless the head equals `--sha`, the PR is open, not a draft,
+  and not conflicted, every required context's newest run is green, no other
+  check is red or pending (unless `--tolerate`d after attribution), the review
+  window (20 minutes after the later of "marked ready" and the head commit) has
+  passed, and the outstanding thread count is zero. A thread read that failed is
+  never zero. Exit 75 means hold (time can clear it); exit 1 means refused.
+- Alternate identity (its own rate-limit budget): `--token-ref op://…` or
+  `BEEP_GH_TOKEN_REF`, or a GitHub App installation token from
+  `BEEP_GH_APP_ID`, `BEEP_GH_APP_INSTALLATION_ID`, and `BEEP_GH_APP_KEY_REF`
+  (an `op://` reference to the PEM key). Tokens stay in-process and are never
+  printed. Default: the `gh` login.
+- `yeet publish|monitor` already use REST for the PR lookup, the
+  `ready-for-heavy` label, the provenance footer read/write, and the Greptile
+  re-trigger comment. Still GraphQL: review-thread resolution state and
+  replies (`closeout`, `reply`, `status`, `watch`).
+
 ## Merge Loop
 
 `yeet monitor --until-merged`, `yeet sweep`, `yeet reply`, and `yeet merge` are
@@ -886,7 +925,7 @@ turbo work, so they are cheap to run mid-loop.
   matrix starts with tier 1. `Heavy Admission` in `check.yml` still holds any
   code PR without the label (`Heavy / *` stays "Expected", merge blocked): that
   is a PR that already existed before the publish, or one whose label edit
-  failed. Only then run `gh pr edit <n> --add-label ready-for-heavy` yourself;
+  failed. Only then run `bun run beep yeet gh pr label add <n> ready-for-heavy` (REST) yourself;
   the held `monitor --until-ready` loop prints that exact command and does not
   burn its settle budget. Never remove and re-add the label.
   The label triggers `heavy-admit.yml`, which runs only the admission job and

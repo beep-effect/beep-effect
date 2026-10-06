@@ -158,7 +158,7 @@ describe("thin lint workers", { concurrent: false }, () => {
           command: `${root}/node_modules/.bin/eslint`,
           args: ["--config", `${root}/eslint.config.mjs`, prefix],
           cwd: root,
-          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
+          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=12288" },
           extendEnv: true,
           stdio: "inherit",
         });
@@ -214,7 +214,7 @@ describe("thin lint workers", { concurrent: false }, () => {
             "eslint.config.mjs",
             "apps/architecture-lab-proof",
           ],
-          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=8192" },
+          env: { BEEP_ESLINT_PROFILE: "deprecated-apis", NODE_OPTIONS: "--max-old-space-size=12288" },
         });
       })
     );
@@ -322,7 +322,7 @@ describe("thin lint workers", { concurrent: false }, () => {
           command: `${root}/node_modules/.bin/eslint`,
           args: ["--config", `${root}/eslint.config.mjs`, "--max-warnings=0", "--no-warn-ignored", prefix],
           cwd: root,
-          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=8192" },
+          env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--trace-warnings --max-old-space-size=12288" },
           extendEnv: true,
           stdio: "inherit",
         });
@@ -371,7 +371,7 @@ describe("thin lint workers", { concurrent: false }, () => {
               "packages/unowned/example.ts",
             ],
             cwd: fixtureRoot,
-            env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=8192" },
+            env: { BEEP_ESLINT_PROFILE: "docs", NODE_OPTIONS: "--max-old-space-size=12288" },
             extendEnv: true,
             stdio: "inherit",
           });

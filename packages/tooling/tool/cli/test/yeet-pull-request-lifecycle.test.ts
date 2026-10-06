@@ -175,7 +175,22 @@ describe("Yeet pull request lifecycle boundaries", () => {
           });
           const docs = A.contains(paths, "README.md");
           expect(A.map(yield* Ref.get(recorder), (entry) => entry.status)).toEqual([docs ? "skipped" : "passed"]);
-          expect(yield* Ref.get(calls)).toEqual(docs ? [] : [["pr", "edit", "42", "--add-label", "ready-for-heavy"]]);
+          expect(yield* Ref.get(calls)).toEqual(
+            docs
+              ? []
+              : [
+                  [
+                    "api",
+                    "-X",
+                    "POST",
+                    "repos/{owner}/{repo}/issues/42/labels",
+                    "-f",
+                    "labels[]=ready-for-heavy",
+                    "--jq",
+                    'map(.name) | join(",")',
+                  ],
+                ]
+          );
         }
         const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
         yield* applyHeavyAdmissionLabel(context, recorder, O.none(), created);

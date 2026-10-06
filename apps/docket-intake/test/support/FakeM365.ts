@@ -65,10 +65,13 @@ export const FakeM365Layer = Layer.effect(
       Ref.update(fake.calls, A.append(call)).pipe(Effect.andThen(Ref.get(fake.script)), Effect.flatMap(pick));
 
     return M365.of({
+      addMessageAttachment: unused,
+      createDraftMessage: unused,
       createEvent: Effect.fnUntraced(function* () {
         return yield* run("createEvent", (script) => script.createEvent);
       }),
       createMasterCategory: unused,
+      deleteDraftMessage: unused,
       deleteEvent: Effect.fnUntraced(function* (request) {
         return yield* run(`deleteEvent ${request.eventId}`, (script) => script.deleteEvent);
       }),
@@ -83,6 +86,7 @@ export const FakeM365Layer = Layer.effect(
       getListItem: unused,
       getMailFolder: unused,
       getMessage: unused,
+      getMessageAuthoredText: unused,
       getSite: unused,
       listDriveItemVersions: unused,
       listDrives: unused,
@@ -95,6 +99,7 @@ export const FakeM365Layer = Layer.effect(
         return yield* run("listMessages", (script) => script.listMessages);
       }),
       listSites: unused,
+      sendDraftMessage: unused,
       updateEvent: unused,
       updateMessageCategories: unused,
     });

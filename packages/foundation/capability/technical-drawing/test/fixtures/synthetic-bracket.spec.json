@@ -1,0 +1,65 @@
+{
+  "title": "Synthetic bracket",
+  "model": {
+    "units": "mm",
+    "parts": [
+      {
+        "name": "base",
+        "add": [
+          { "kind": "box", "min": [0, 0, 0], "max": [60, 40, 6] },
+          { "kind": "box", "min": [0, 36, 6], "max": [60, 40, 26] }
+        ],
+        "subtract": [
+          { "kind": "box", "min": [24, -1, -1], "max": [36, 8, 7] },
+          {
+            "kind": "cylinder",
+            "base": [48, 18, -1],
+            "axis": [0, 0, 1],
+            "radius": 4,
+            "height": 8
+          }
+        ]
+      },
+      {
+        "name": "peg",
+        "add": [
+          {
+            "kind": "cylinder",
+            "base": [14, 18, 6],
+            "axis": [0, 0, 1],
+            "radius": 5,
+            "height": 12
+          }
+        ]
+      },
+      {
+        "name": "gusset",
+        "add": [
+          {
+            "kind": "prism",
+            "profile": [[0, 36, 6], [0, 20, 6], [0, 36, 22]],
+            "extrusion": [4, 0, 0],
+            "translate": [28, 0, 0]
+          }
+        ]
+      }
+    ]
+  },
+  "figures": [
+    {
+      "view": "top-perspective",
+      "description": "is a top, front and left side perspective view of a bracket showing my new design"
+    },
+    {
+      "view": "bottom-perspective",
+      "description": "is a bottom, front and left side perspective view thereof"
+    },
+    { "view": "top-plan", "description": "is a top plan view thereof" },
+    { "view": "bottom-plan", "description": "is a bottom plan view thereof" },
+    { "view": "front", "description": "is a front elevation view thereof" },
+    { "view": "rear", "description": "is a rear elevation view thereof" },
+    { "view": "left", "description": "is a left side elevation view thereof" },
+    { "view": "right", "description": "is a right side elevation view thereof" }
+  ],
+  "omissions": []
+}

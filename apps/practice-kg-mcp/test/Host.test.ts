@@ -44,6 +44,29 @@ const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
     lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))),
   }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
+// Runs a failing self-check and returns the one refusal line it printed.
+const refusalLine = Effect.fnUntraced(function* (bundleDir: string) {
+  const { lines, value: error } = yield* runPracticeKgSelfCheck(bundleDir).pipe(
+    printPracticeKgSelfCheck,
+    Effect.flip,
+    printed
+  );
+  expect(error).toBeInstanceOf(SelfCheckFailure);
+  expect(lines).toHaveLength(1);
+  return yield* decodeFailureLine(lines[0] ?? "");
+});
+
+const expectUnopenable = (refusal: PracticeKgSelfCheckRefusal, store: string, bundleDir: string) => {
+  expect(refusal.message).toContain(`${store} at "${bundleDir}" could not be opened`);
+  expect(refusal.message).toContain("close Claude Desktop");
+  expect(refusal.message).not.toContain("install");
+  expect(refusal.cause ?? "").not.toBe("");
+  expect(refusal.cause ?? "").not.toContain("\n");
+  expect(refusal.cause ?? "").not.toMatch(/\bat .+:\d+:\d+/);
+};
+
+const runsAsRoot = process.getuid?.() === 0;
+
 const manifest = PracticeKgBundleManifest.make({
   builtAt: "2026-08-13T00:00:00.000Z",
   bundleVersion: "2026.08.1",
@@ -241,7 +264,9 @@ describe("@beep/practice-kg-mcp self-check", () => {
         yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
 
         const missing = yield* Effect.flip(runPracticeKgSelfCheck(bundleDir));
-        expect(missing.message).toBe(`Practice KG bundle store is missing at "${path.join(bundleDir, "kg.pglite")}".`);
+        expect(missing.message).toBe(
+          `Practice KG graph store (kg.pglite) at "${bundleDir}" is missing or not an initialised store; install the bundle that matches this server.`
+        );
       })
     );
 
@@ -254,21 +279,78 @@ describe("@beep/practice-kg-mcp self-check", () => {
         const bundleDir = yield* makePracticeKgSmokeBundle(root);
         yield* fs.writeFileString(path.join(bundleDir, "practice.duckdb"), "not a database");
 
-        const { lines, value: unreadable } = yield* runPracticeKgSelfCheck(bundleDir).pipe(
-          printPracticeKgSelfCheck,
-          Effect.flip,
-          printed
-        );
+        const refusal = yield* refusalLine(bundleDir);
 
-        expect(unreadable).toBeInstanceOf(SelfCheckFailure);
-        expect(lines).toHaveLength(1);
-        const refusal = yield* decodeFailureLine(lines[0] ?? "");
-        expect(refusal.message).toContain(`matter store (practice.duckdb) at "${bundleDir}" could not be opened`);
-        expect(refusal.message).toContain("close Claude Desktop");
-        expect(refusal.message).not.toContain("install");
-        expect(refusal.cause ?? "").not.toBe("");
-        expect(refusal.cause ?? "").not.toContain("\n");
-        expect(refusal.cause ?? "").not.toMatch(/\n\s+at /);
+        expectUnopenable(refusal, "matter store (practice.duckdb)", bundleDir);
+      })
+    );
+
+    it.effect(
+      "names the graph store and carries the driver's words when kg.pglite is corrupt",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        yield* fs.writeFile(path.join(bundleDir, "kg.pglite", "global", "pg_control"), new Uint8Array(8192).fill(0x5a));
+
+        const refusal = yield* refusalLine(bundleDir);
+
+        expectUnopenable(refusal, "graph store (kg.pglite)", bundleDir);
+        expect(refusal.cause).toContain("PgliteClient");
+      })
+    );
+
+    it.effect.skipIf(runsAsRoot)(
+      "reports an unreadable kg.pglite folder as a graph store that will not open (skipped as root: root reads it)",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        const store = path.join(bundleDir, "kg.pglite");
+        yield* Effect.acquireRelease(fs.chmod(store, 0o000), () => fs.chmod(store, 0o755).pipe(Effect.orDie));
+
+        const refusal = yield* refusalLine(bundleDir);
+
+        expectUnopenable(refusal, "graph store (kg.pglite)", bundleDir);
+        expect(refusal.cause).toContain("PermissionDenied");
+      })
+    );
+
+    it.effect(
+      "refuses an empty kg.pglite folder and a zero-byte practice.duckdb before opening either",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        const graphStore = path.join(bundleDir, "kg.pglite");
+        const matterStore = path.join(bundleDir, "practice.duckdb");
+        yield* fs.remove(graphStore, { recursive: true });
+        yield* fs.makeDirectory(graphStore);
+
+        const emptyGraph = yield* refusalLine(bundleDir);
+        const graphEntries = yield* fs.readDirectory(graphStore);
+        yield* fs.remove(graphStore, { recursive: true });
+        yield* fs.writeFileString(graphStore, "not a store folder");
+        const fileGraph = yield* refusalLine(bundleDir);
+        yield* fs.remove(graphStore);
+        yield* fs.makeDirectory(graphStore);
+        yield* fs.writeFileString(path.join(graphStore, "PG_VERSION"), "17\n");
+        yield* fs.writeFileString(matterStore, "");
+        const zeroMatter = yield* refusalLine(bundleDir);
+        const matterInfo = yield* fs.stat(matterStore);
+
+        expect(emptyGraph.message).toBe(
+          `Practice KG graph store (kg.pglite) at "${bundleDir}" is missing or not an initialised store; install the bundle that matches this server.`
+        );
+        expect(graphEntries).toEqual([]);
+        expect(fileGraph.message).toBe(emptyGraph.message);
+        expect(zeroMatter.message).toBe(
+          `Practice KG matter store (practice.duckdb) at "${bundleDir}" is missing or not an initialised store; install the bundle that matches this server.`
+        );
+        expect(Number(matterInfo.size)).toBe(0);
       })
     );
 

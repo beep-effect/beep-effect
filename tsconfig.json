@@ -2046,8 +2046,25 @@
       "@beep/law-practice-use-cases/MailTagging": [
         "./packages/law-practice/use-cases/src/MailTagging/index.ts"
       ],
+      "@beep/poppler": ["./packages/drivers/poppler/src/index.ts"],
+      "@beep/poppler/*": ["./packages/drivers/poppler/src/*"],
+      "@beep/tesseract": ["./packages/drivers/tesseract/src/index.ts"],
+      "@beep/tesseract/*": ["./packages/drivers/tesseract/src/*"],
       "@beep/law-practice-server/DocketIntake": [
         "./packages/law-practice/server/src/DocketIntake/index.ts"
+      ],
+      "@beep/occt": ["./packages/drivers/occt/src/index.ts"],
+      "@beep/occt/*": ["./packages/drivers/occt/src/*"],
+      "@beep/pdf-tools": ["./packages/drivers/pdf-tools/src/index.ts"],
+      "@beep/pdf-tools/*": ["./packages/drivers/pdf-tools/src/*"],
+      "@beep/repo-cli/commands/Drawings": [
+        "./packages/tooling/tool/cli/src/commands/Drawings/index.ts"
+      ],
+      "@beep/technical-drawing": [
+        "./packages/foundation/capability/technical-drawing/src/index.ts"
+      ],
+      "@beep/technical-drawing/*": [
+        "./packages/foundation/capability/technical-drawing/src/*"
       ]
     }
   }

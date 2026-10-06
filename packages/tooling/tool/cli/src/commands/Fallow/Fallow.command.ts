@@ -295,6 +295,54 @@ const renderBoundaryConfig = Effect.fn("Fallow.renderBoundaryConfig")(function* 
   return `${configText}\n`;
 });
 
+/**
+ * Repository-relative path of the committed Fallow boundary config.
+ *
+ * **Example** (Show the generated config path)
+ *
+ * ```ts
+ * import { FALLOW_BOUNDARY_CONFIG_PATH } from "@beep/repo-cli/commands/Fallow"
+ *
+ * console.log(FALLOW_BOUNDARY_CONFIG_PATH)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FALLOW_BOUNDARY_CONFIG_PATH = DEFAULT_BOUNDARY_CONFIG_PATH;
+
+/**
+ * Render the committed Fallow boundary config from the current workspace dependency edges.
+ *
+ * **Details**
+ *
+ * The text is exactly what `beep fallow boundaries --write` stores, so
+ * `beep tsconfig-sync` can plan the same file without spawning the command.
+ *
+ * **Example** (Render the boundary config for a repo root)
+ *
+ * ```ts
+ * import { renderFallowBoundaryConfig } from "@beep/repo-cli/commands/Fallow"
+ * import { Effect } from "effect"
+ *
+ * // Provide FileSystem, Path and FsUtils to run the effect.
+ * const program = renderFallowBoundaryConfig("/repo")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root directory.
+ * @returns The absolute config path and its expected text.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderFallowBoundaryConfig = Effect.fn("Fallow.renderFallowBoundaryConfig")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const filePath = path.join(repoRoot, DEFAULT_BOUNDARY_CONFIG_PATH);
+  const content = yield* renderBoundaryConfig(repoRoot, filePath);
+
+  return { filePath, content } as const;
+});
+
 const extractJsonDocumentText = (output: string): O.Option<string> =>
   pipe(
     Str.match(/\{[\s\S]*\}/u)(output),
@@ -453,7 +501,7 @@ const checkBoundaryConfig = Effect.fn("Fallow.checkBoundaryConfig")(function* (
   }
 
   yield* Console.error(`fallow boundaries: ${outputPath} is stale.`);
-  yield* Console.error("Run `bun run fallow:boundaries:write` to refresh it.");
+  yield* Console.error("Run `bun run config-sync` (or `bun run fallow:boundaries:write`) to refresh it.");
   return yield* failWithReportedExit("fallow boundaries: generated config drift detected.");
 });
 

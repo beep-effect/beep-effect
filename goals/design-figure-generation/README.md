@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
+
+Latest evidence: the live matter's unshaded and shaded sheet sets pass the validator; hashes in [`history/live-matter/evidence.json`](./history/live-matter/evidence.json). Reflection: [`history/reflections/2026-10-06-claude.md`](./history/reflections/2026-10-06-claude.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -11,7 +13,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 Turn a measured matter spec into eight USPTO design-patent figures from one
 parametric solid: hidden-line views, 37 CFR 1.84 sheets, a validator, a
 vision-judge rubric, and a recorded attorney sign-off, operated as
-`bun run beep drawings …` on the developer workstation.
+`bun run beep drawings render` and its sibling commands on the developer workstation.
 
 ## Launch
 
@@ -35,14 +37,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — perspective-HLR spike through replicad's public API. Next concrete
-action: a throwaway Bun script that loads opencascade.js, builds a box, and
-asks replicad for projected visible edges under a perspective camera; record
-the result in `research/`.
+P2 — slice 1. The pipeline runs end to end on the synthetic fixture
+(`bun run beep drawings render --spec packages/foundation/capability/technical-drawing/test/fixtures/synthetic-bracket.spec.json --out <dir>`);
+the live matter still needs its measured `spec.json` under the corpus root.
 
 ## Latest Evidence
 
-Not started.
+- 2026-10-05 — `research/p1-perspective-hlr-spike.md`: perspective HLR
+  through the opencascade.js `HLRAlgo_Projector(gp_Ax2, focus)` binding.
+- 2026-10-05 — synthetic bracket: 8 sheets, two consecutive renders share
+  sheet-set sha256, validator clean; margin / gray / PDF 1.7 negatives
+  flagged (`packages/tooling/tool/cli/test/drawings-live.test.ts`).
+- 2026-10-06 — `research/p3-shading-spike.md`: straight-line shading built on
+  the model's faces and hidden by the same HLR pass; `--shade` renders the
+  synthetic set byte-stably and validator-clean.
 
 ## Notes
 
