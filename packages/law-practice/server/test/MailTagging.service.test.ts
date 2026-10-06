@@ -6,7 +6,17 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
+import {
+  ContentSha256,
+  DocumentFolderId,
+  FilingIntent,
+  FilingLedgerRecord,
+  FilingLedgerRecordJsonLine,
+  MailAttachmentId,
+  MailMessageId,
+  MatterKey,
+  TaggingRunId,
+} from "@beep/law-practice-domain/values/MailTagging";
 import {
   PracticeKgMatterDocketRow,
   PracticeKgMatterRow,
@@ -36,11 +46,14 @@ import {
 } from "@beep/m365";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, Layer, Path, Ref } from "effect";
+import { Context, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   boxFiles,
+  boxRejection,
   linesOf,
   mailboxUserId,
   makeBoxStub,
@@ -52,6 +65,7 @@ import {
   writeText,
 } from "./MailTagging.adapters.fixture.ts";
 import type { TaggingMode } from "@beep/law-practice-domain/values/MailTagging";
+import type { BoxUploadBody } from "./MailTagging.adapters.fixture.ts";
 
 const since = DateTime.makeUnsafe("2026-07-01T00:00:00.000Z");
 
@@ -100,7 +114,9 @@ const officeAction = (outlook: Outlook) =>
   });
 
 // One stubbed mailbox with a single message, and one stubbed Box that counts uploads.
-const makeProviders = Effect.gen(function* () {
+const makeProviders = Effect.fn("MailTaggingServiceTest.makeProviders")(function* (
+  answer: (requestBody: BoxUploadBody) => Promise<unknown>
+) {
   const outlook = yield* Ref.make<Outlook>({ categories: ["Personal"], version: 1 });
   // The SDK client is promise-based, so its call log is a plain array.
   const uploads: Array<string> = [];
@@ -136,7 +152,7 @@ const makeProviders = Effect.gen(function* () {
       }),
       makeBoxStub((requestBody) => {
         uploads.push(`${requestBody.attributes.parent.id}/${requestBody.attributes.name}`);
-        return Promise.resolve(boxFiles("7001"));
+        return answer(requestBody);
       })
     ),
   };
@@ -173,39 +189,70 @@ const makeWorkspace = Effect.gen(function* () {
   };
 });
 
+type Workspace = Effect.Success<typeof makeWorkspace>;
+type Providers = Effect.Success<ReturnType<typeof makeProviders>>["layer"];
+
+// A run builds the whole service in its own scope and releases it when it ends.
+const serviceOver = (workspace: Workspace, providers: Providers) => (runLabel: string) =>
+  Layer.build(
+    MailTaggingServiceLive.pipe(
+      Layer.provide(
+        Layer.mergeAll(
+          providers,
+          mailTaggingServiceConfigLayer(workspace.config(runLabel)),
+          DuckDb.makeNodeLayer(
+            DuckDbConnectionOptions.make({
+              databaseOptions: { access_mode: "READ_ONLY" },
+              databasePath: workspace.databasePath,
+            })
+          )
+        )
+      )
+    )
+  );
+
+const taggingOver = (workspace: Workspace, providers: Providers) => (mode: TaggingMode, runLabel: string) =>
+  oneRun(
+    Effect.flatMap(serviceOver(workspace, providers)(runLabel), (services) =>
+      Context.get(services, MailTaggingJob).run(
+        RunMailTaggingRequest.make({ mode, since, runId: TaggingRunId.make(runLabel) })
+      )
+    )
+  );
+
+const intendedName = "2026-07-02 office-action.pdf";
+const encodeFilingRecord = S.encodeEffect(FilingLedgerRecordJsonLine);
+const decodeFilingRecord = S.decodeEffect(FilingLedgerRecordJsonLine);
+
+// The line an earlier run wrote before its upload; that run stopped before its completion line.
+const interruptedIntent = FilingIntent.make({
+  runId: TaggingRunId.make("run-0001"),
+  contentSha256: ContentSha256.make("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81"),
+  matterKey: MatterKey.make("1234.10001"),
+  destination: "uspto-incoming",
+  folderId: DocumentFolderId.make("9001"),
+  fileName: intendedName,
+  messageId: MailMessageId.make("msg-1"),
+  attachmentId: MailAttachmentId.make("att-1"),
+  byteLength: 3,
+  recordedAt: since,
+});
+
+const filingLine: (record: FilingLedgerRecord) => ReadonlyArray<string | boolean | null> = FilingLedgerRecord.match({
+  FilingIntended: (intent) => ["FilingIntended", intent.fileName],
+  FilingAbandoned: (abandoned) => ["FilingAbandoned", abandoned.fileName, abandoned.reason],
+  FilingCompleted: (entry) => ["FilingCompleted", entry.fileName, entry.fileId, entry.reconciled],
+});
+
 describe("MailTagging assembled service", () => {
   it.layer(Platform, { timeout: "60 seconds" })("one mailbox, four runs", (it) => {
     it.effect(
       "writes nothing on a dry run, tags, files, and meters on apply, is idempotent on rerun, and undoes",
       Effect.fnUntraced(function* () {
         const workspace = yield* makeWorkspace;
-        const providers = yield* makeProviders;
-        // A run builds the whole service in its own scope and releases it when it ends.
-        const serviceFor = (runLabel: string) =>
-          Layer.build(
-            MailTaggingServiceLive.pipe(
-              Layer.provide(
-                Layer.mergeAll(
-                  providers.layer,
-                  mailTaggingServiceConfigLayer(workspace.config(runLabel)),
-                  DuckDb.makeNodeLayer(
-                    DuckDbConnectionOptions.make({
-                      databaseOptions: { access_mode: "READ_ONLY" },
-                      databasePath: workspace.databasePath,
-                    })
-                  )
-                )
-              )
-            )
-          );
-        const tag = (mode: TaggingMode, runLabel: string) =>
-          oneRun(
-            Effect.flatMap(serviceFor(runLabel), (services) =>
-              Context.get(services, MailTaggingJob).run(
-                RunMailTaggingRequest.make({ mode, since, runId: TaggingRunId.make(runLabel) })
-              )
-            )
-          );
+        const providers = yield* makeProviders(() => Promise.resolve(boxFiles("7001")));
+        const serviceFor = serviceOver(workspace, providers.layer);
+        const tag = taggingOver(workspace, providers.layer);
         const files = Effect.all({
           tags: linesOf(workspace.tagLedgerPath),
           filings: linesOf(workspace.filingLedgerPath),
@@ -255,6 +302,53 @@ describe("MailTagging assembled service", () => {
         expect([undone.entries, undone.categoriesRemoved]).toStrictEqual([1, 2]);
         expect((yield* Ref.get(providers.outlook)).categories).toStrictEqual(["Personal"]);
         expect(yield* lineCounts).toStrictEqual([2, 2, 1, 1]);
+      })
+    );
+  });
+
+  it.layer(Platform, { timeout: "60 seconds" })("rerun after an interrupted upload", (it) => {
+    it.effect(
+      "abandons the held name Box identifies by id only and files under the short-hash name, in two metered calls",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* makeWorkspace;
+        // The earlier upload landed: Box holds the intended name and reports the holder's id, nothing else.
+        const providers = yield* makeProviders((requestBody) =>
+          requestBody.attributes.name === intendedName
+            ? Promise.reject(
+                boxRejection({
+                  statusCode: 409,
+                  code: "item_name_in_use",
+                  contextInfo: { conflicts: [{ id: "7001", type: "file", sha1: "never retained", size: 3 }] },
+                })
+              )
+            : Promise.resolve(boxFiles("7002"))
+        );
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.dirname(workspace.filingLedgerPath), { recursive: true });
+        yield* fs.writeFileString(workspace.filingLedgerPath, `${yield* encodeFilingRecord(interruptedIntent)}\n`);
+
+        const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
+        const records = yield* Effect.forEach(yield* linesOf(workspace.filingLedgerPath), (line) =>
+          decodeFilingRecord(line)
+        );
+
+        expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
+          1, 0, 0,
+        ]);
+        expect(A.map(records, filingLine)).toStrictEqual([
+          ["FilingIntended", intendedName],
+          ["FilingAbandoned", intendedName, "holder-mismatch"],
+          ["FilingIntended", "2026-07-02 office-action (039058c6).pdf"],
+          ["FilingCompleted", "2026-07-02 office-action (039058c6).pdf", "7002", false],
+        ]);
+        expect(providers.uploads).toStrictEqual([
+          `9001/${intendedName}`,
+          "9001/2026-07-02 office-action (039058c6).pdf",
+        ]);
+        expect(yield* linesOf(workspace.boxCallLedgerPath)).toStrictEqual([
+          '{"workstream":"email-tagging","runLabel":"run-0002","calls":2,"at":"1970-01-01T00:00:00.000Z","exact":true}',
+        ]);
       })
     );
   });

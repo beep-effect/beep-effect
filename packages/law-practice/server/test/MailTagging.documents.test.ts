@@ -53,8 +53,12 @@ const storeOver = (calls: Ref.Ref<number>, uploadFile: (requestBody: BoxUploadBo
 
 const outcomeOf: (result: DocumentUploadResult) => string = DocumentUploadResult.match({
   DocumentUploaded: ({ fileId }) => `created ${fileId}`,
-  DocumentNameTaken: ({ existingFileId }) =>
-    O.match(existingFileId, { onNone: () => "name taken", onSome: (fileId) => `name taken by ${fileId}` }),
+  DocumentNameTaken: ({ existing }) =>
+    O.match(existing, {
+      onNone: () => "name taken",
+      onSome: (holder) =>
+        `name taken by ${holder.fileId} size=${O.getOrNull(holder.byteLength)} sha1=${O.getOrNull(holder.contentSha1)}`,
+    }),
 });
 
 // The outcome of one upload Box refuses with a name conflict, and how many calls were metered.
@@ -150,7 +154,7 @@ describe("MailTagging Box document store", () => {
             ],
           },
         })
-      ).toStrictEqual(["name taken by 8001", 1]);
+      ).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
       expect(yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } })).toStrictEqual([
         "name taken",
         1,

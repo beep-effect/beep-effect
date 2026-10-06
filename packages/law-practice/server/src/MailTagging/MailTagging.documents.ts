@@ -13,6 +13,7 @@ import {
   DocumentStore,
   DocumentStoreShape,
   DocumentUploaded,
+  ExistingDocument,
   MailTaggingPortError,
 } from "@beep/law-practice-use-cases/MailTagging";
 import * as O from "@beep/utils/Option";
@@ -50,24 +51,6 @@ const isNameTaken = (error: BoxError): boolean =>
   hasStatus(error, conflictStatus) && O.getOrElse(error.code, () => nameInUseCode) === nameInUseCode;
 
 /**
- * What a Box name-conflict error says about the file that holds the name.
- *
- * **Details**
- *
- * `byteLength` and `contentSha1` are part of the shape because Box reports
- * them for a file name conflict. The `@beep/box` error keeps only each
- * conflict's `id` and `type`, so both are always none today.
- *
- * @category models
- * @since 0.0.0
- */
-export type BoxConflictingFile = {
-  readonly fileId: DocumentFileId;
-  readonly byteLength: O.Option<number>;
-  readonly contentSha1: O.Option<string>;
-};
-
-/**
  * Reads the file that holds a taken name out of a Box driver error.
  *
  * **Details**
@@ -76,6 +59,10 @@ export type BoxConflictingFile = {
  * driver error retains. It is none when the error has no summary, when the
  * summary lists no file, or when the id is not a usable document id. Nothing
  * is looked up and nothing is guessed.
+ *
+ * Box reports the holder's size and SHA-1 for a file name conflict, but the
+ * `@beep/box` error keeps only each conflict's `id` and `type`, so the
+ * answer's `byteLength` and `contentSha1` are always none today.
  *
  * **Example** (Read the conflicting file of a 409)
  *
@@ -96,17 +83,17 @@ export type BoxConflictingFile = {
  * @category use-cases
  * @since 0.0.0
  */
-export const boxConflictingFile = (error: BoxError): O.Option<BoxConflictingFile> =>
+export const boxConflictingFile = (error: BoxError): O.Option<ExistingDocument> =>
   pipe(
     error.context,
     O.flatMap((context) => A.findFirst(context.values.conflicts, (conflict) => conflict.type === conflictingFileType)),
     O.flatMap((conflict) => decodeFileId(conflict.id)),
-    O.map((fileId) => ({ fileId, byteLength: O.none(), contentSha1: O.none() }))
+    O.map((fileId) => ExistingDocument.make({ fileId, byteLength: O.none(), contentSha1: O.none() }))
   );
 
 // The one place the conflicting file becomes the port's outcome.
 const nameTaken = (error: BoxError): DocumentNameTaken =>
-  DocumentNameTaken.make({ existingFileId: O.map(boxConflictingFile(error), (file) => file.fileId) });
+  DocumentNameTaken.make({ existing: boxConflictingFile(error) });
 
 const failureKind = (error: BoxError) =>
   hasStatus(error, conflictStatus) ? MailTaggingPortError.conflict : MailTaggingPortError.during;
@@ -169,9 +156,13 @@ const makeDocumentStore = Effect.gen(function* () {
  *
  * A created file answers `DocumentUploaded`. A 409 whose Box error code is
  * `item_name_in_use`, or that carries no code, answers `DocumentNameTaken`:
- * the name exists and nothing was written. Its `existingFileId` is the id of
- * the first `file` conflict the driver's error retains, and none when the
- * driver retained no conflict; the adapter never looks the file up. A 409
+ * the name exists and nothing was written. Its `existing` document carries
+ * the id of the first `file` conflict the driver's error retains, without a
+ * size or a hash, and is none when the driver retained no conflict; the
+ * adapter never looks the file up. The filer adopts a held name only on a
+ * hash or size match, so with this adapter an upload interrupted before its
+ * ledger line is abandoned on the rerun and filed again under the short-hash
+ * name: two Box calls, and a second copy of the file in the folder. A 409
  * with any other code is a `conflict` port failure. A 429, or a Box error
  * code that names a limit or a quota, is a `throttled` port failure, which
  * ends the run. Any other driver failure is an `unavailable` port failure.
