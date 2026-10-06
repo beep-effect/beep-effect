@@ -1,35 +1,22 @@
 import { EffectFnRulesOptions, runEffectFnRules } from "@beep/repo-cli/test/Laws";
 import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
-import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
-
-const testLayer = Layer.mergeAll(NodeServices.layer, TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const temporaryWorkingDirectory = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const tmpDir = yield* fs.makeTempDirectoryScoped();
+    const previousCwd = process.cwd();
+    process.chdir(tmpDir);
+    yield* Effect.addFinalizer(() => Effect.sync(() => process.chdir(previousCwd)));
+  })
+);
+const nativeWorkingDirectory = temporaryWorkingDirectory.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = TSMorphServiceLive.pipe(Layer.provideMerge(nativeWorkingDirectory));
 const CLI_ENTRYPOINT = new URL("../src/bin.ts", import.meta.url).pathname;
-
-const withTempWorkingDirectory = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
-      const previousCwd = process.cwd();
-      process.chdir(tmpDir);
-      return { fs, previousCwd, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true });
-      })
-  );
 
 const writeProjectFile = Effect.fn(function* (relativePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -77,98 +64,98 @@ const runCliCommand = Effect.fn("effect-fn.test.runCliCommand")(function* (...ar
 });
 
 describe("effect fn laws", () => {
-  it("flags direct Effect.gen returns that tsgo effectFnOpportunity can miss", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeProjectScaffold;
-          yield* writeProjectFile(
-            "packages/demo/src/index.ts",
-            A.join(
-              [
-                'import { Effect } from "effect";',
-                "",
-                "declare const flag: boolean;",
-                "declare const effects: ReadonlyArray<Effect.Effect<string>>;",
-                "",
-                "export const annotatedExpression = (value: string): Effect.Effect<string> => Effect.gen(function* () {",
-                "  return yield* Effect.succeed(value);",
-                "});",
-                "",
-                "export const annotatedBlock = (value: string): Effect.Effect<string> => {",
-                "  const prefix = 'x';",
-                "  return Effect.gen(function* () {",
-                "    return `${prefix}${value}`;",
-                "  });",
-                "};",
-                "",
-                "export const conditional = (value: string): Effect.Effect<string> => {",
-                "  if (flag) return Effect.succeed(value);",
-                "  return Effect.gen(function* () {",
-                "    return yield* Effect.succeed(value);",
-                "  });",
-                "};",
-                "",
-                "export function declared(value: string): Effect.Effect<string> {",
-                "  return Effect.gen(function* () {",
-                "    return yield* Effect.succeed(value);",
-                "  });",
-                "}",
-                "",
-                "export const handlers = {",
-                "  method(value: string): Effect.Effect<string> {",
-                "    return Effect.gen(function* () {",
-                "      return yield* Effect.succeed(value);",
-                "    });",
-                "  },",
-                "};",
-                "",
-                "export const mapped = effects.map((effect) => {",
-                "  return Effect.gen(function* () {",
-                "    return yield* effect;",
-                "  });",
-                "});",
-                "",
-              ],
-              "\n"
-            )
-          );
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("flags direct Effect.gen returns that tsgo effectFnOpportunity can miss", () =>
+      Effect.gen(function* () {
+        yield* writeProjectScaffold;
+        yield* writeProjectFile(
+          "packages/demo/src/index.ts",
+          A.join(
+            [
+              'import { Effect } from "effect";',
+              "",
+              "declare const flag: boolean;",
+              "declare const effects: ReadonlyArray<Effect.Effect<string>>;",
+              "",
+              "export const annotatedExpression = (value: string): Effect.Effect<string> => Effect.gen(function* () {",
+              "  return yield* Effect.succeed(value);",
+              "});",
+              "",
+              "export const annotatedBlock = (value: string): Effect.Effect<string> => {",
+              "  const prefix = 'x';",
+              "  return Effect.gen(function* () {",
+              "    return `${prefix}${value}`;",
+              "  });",
+              "};",
+              "",
+              "export const conditional = (value: string): Effect.Effect<string> => {",
+              "  if (flag) return Effect.succeed(value);",
+              "  return Effect.gen(function* () {",
+              "    return yield* Effect.succeed(value);",
+              "  });",
+              "};",
+              "",
+              "export function declared(value: string): Effect.Effect<string> {",
+              "  return Effect.gen(function* () {",
+              "    return yield* Effect.succeed(value);",
+              "  });",
+              "}",
+              "",
+              "export const handlers = {",
+              "  method(value: string): Effect.Effect<string> {",
+              "    return Effect.gen(function* () {",
+              "      return yield* Effect.succeed(value);",
+              "    });",
+              "  },",
+              "};",
+              "",
+              "export const mapped = effects.map((effect) => {",
+              "  return Effect.gen(function* () {",
+              "    return yield* effect;",
+              "  });",
+              "});",
+              "",
+            ],
+            "\n"
+          )
+        );
 
-          const summary = yield* runEffectFnRules(
-            EffectFnRulesOptions.make({
-              strictCheck: true,
-              excludePaths: [],
-            })
-          );
+        const summary = yield* runEffectFnRules(
+          EffectFnRulesOptions.make({
+            strictCheck: true,
+            excludePaths: [],
+          })
+        );
 
-          expect(summary.scannedFiles).toBe(1);
-          expect(summary.touchedFiles).toBe(1);
-          expect(summary.violationCount).toBe(6);
-          expect(summary.strictFailure).toBe(true);
-          expect(summary.affectedFiles).toEqual(["packages/demo/src/index.ts"]);
-          expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.ownerName)).toEqual([
-            "annotatedExpression",
-            "annotatedBlock",
-            "conditional",
-            "declared",
-            "method",
-            "callback",
-          ]);
-          expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.recommendation)).toEqual([
-            "Effect.fn",
-            "Effect.fn",
-            "Effect.fn",
-            "Effect.fn",
-            "Effect.fn",
-            "Effect.fnUntraced",
-          ]);
-        })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+        expect(summary.scannedFiles).toBe(1);
+        expect(summary.touchedFiles).toBe(1);
+        expect(summary.violationCount).toBe(6);
+        expect(summary.strictFailure).toBe(true);
+        expect(summary.affectedFiles).toEqual(["packages/demo/src/index.ts"]);
+        expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.ownerName)).toEqual([
+          "annotatedExpression",
+          "annotatedBlock",
+          "conditional",
+          "declared",
+          "method",
+          "callback",
+        ]);
+        expect(A.map(summary.diagnostics, (diagnostic) => diagnostic.recommendation)).toEqual([
+          "Effect.fn",
+          "Effect.fn",
+          "Effect.fn",
+          "Effect.fn",
+          "Effect.fn",
+          "Effect.fnUntraced",
+        ]);
+      })
+    );
+  });
 
-  it("ignores one-off effects, existing Effect.fn wrappers, excluded paths, and non-direct Effect.gen composition", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "ignores one-off effects, existing Effect.fn wrappers, excluded paths, and non-direct Effect.gen composition",
+      () =>
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
@@ -226,75 +213,69 @@ describe("effect fn laws", () => {
           expect(summary.affectedFiles).toEqual([]);
           expect(summary.diagnostics).toEqual([]);
         })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
+    );
+  });
 
-  it("honors explicit exclude paths", () =>
-    Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeProjectScaffold;
-          yield* writeProjectFile(
-            "packages/demo/src/index.ts",
-            A.join(
-              [
-                'import { Effect } from "effect";',
-                "",
-                "export const ignored = (value: string): Effect.Effect<string> => Effect.gen(function* () {",
-                "  return yield* Effect.succeed(value);",
-                "});",
-                "",
-              ],
-              "\n"
-            )
-          );
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("honors explicit exclude paths", () =>
+      Effect.gen(function* () {
+        yield* writeProjectScaffold;
+        yield* writeProjectFile(
+          "packages/demo/src/index.ts",
+          A.join(
+            [
+              'import { Effect } from "effect";',
+              "",
+              "export const ignored = (value: string): Effect.Effect<string> => Effect.gen(function* () {",
+              "  return yield* Effect.succeed(value);",
+              "});",
+              "",
+            ],
+            "\n"
+          )
+        );
 
-          const summary = yield* runEffectFnRules(
-            EffectFnRulesOptions.make({
-              strictCheck: true,
-              excludePaths: ["packages/demo/src/index.ts"],
-            })
-          );
-
-          expect(summary.scannedFiles).toBe(0);
-          expect(summary.touchedFiles).toBe(0);
-          expect(summary.violationCount).toBe(0);
-          expect(summary.strictFailure).toBe(false);
-        })
-      ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-    ));
-
-  it(
-    "exits non-zero from the CLI command when strict check finds a violation",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            yield* writeProjectScaffold;
-            yield* writeProjectFile(
-              "packages/demo/src/index.ts",
-              A.join(
-                [
-                  'import { Effect } from "effect";',
-                  "",
-                  "export const loadDemo = (): Effect.Effect<string> => Effect.gen(function* () {",
-                  '  return "demo";',
-                  "});",
-                  "",
-                ],
-                "\n"
-              )
-            );
-
-            const result = yield* runCliCommand("laws", "effect-fn", "--check");
-
-            expect(result.exitCode).not.toBe(0);
-            expect(result.output).toContain("[effect-governance-effect-fn] violations=1");
-            expect(result.output).toContain("packages/demo/src/index.ts");
-            expect(result.output).toContain('Use named Effect.fn("loadDemo") instead');
+        const summary = yield* runEffectFnRules(
+          EffectFnRulesOptions.make({
+            strictCheck: true,
+            excludePaths: ["packages/demo/src/index.ts"],
           })
-        ).pipe(provideScopedLayer(testLayer), Effect.orDie)
-      ),
-    30_000
-  );
+        );
+
+        expect(summary.scannedFiles).toBe(0);
+        expect(summary.touchedFiles).toBe(0);
+        expect(summary.violationCount).toBe(0);
+        expect(summary.strictFailure).toBe(false);
+      })
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("exits non-zero from the CLI command when strict check finds a violation", () =>
+      Effect.gen(function* () {
+        yield* writeProjectScaffold;
+        yield* writeProjectFile(
+          "packages/demo/src/index.ts",
+          A.join(
+            [
+              'import { Effect } from "effect";',
+              "",
+              "export const loadDemo = (): Effect.Effect<string> => Effect.gen(function* () {",
+              '  return "demo";',
+              "});",
+              "",
+            ],
+            "\n"
+          )
+        );
+
+        const result = yield* runCliCommand("laws", "effect-fn", "--check");
+
+        expect(result.exitCode).not.toBe(0);
+        expect(result.output).toContain("[effect-governance-effect-fn] violations=1");
+        expect(result.output).toContain("packages/demo/src/index.ts");
+        expect(result.output).toContain('Use named Effect.fn("loadDemo") instead');
+      })
+    );
+  });
 });

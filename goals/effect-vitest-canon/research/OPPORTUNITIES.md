@@ -6818,3 +6818,45 @@ not start because the systemd user manager was unavailable. A REST fallback
 for PR creation and discovery, followed by an automatic attached monitor
 fallback, would keep an already-pushed Yeet run observable under these
 conditions.
+
+The same boundary recurred on PR #1467: Yeet's cheap gates passed and the branch
+was pushed, but GraphQL PR creation failed. The REST-created draft was visible
+at the exact pushed head, while attached `yeet monitor --until-ready` still
+reported no open PR. Detached monitoring also refused to start without a user
+systemd manager. This second occurrence confirms the need for REST discovery
+and a durable attached fallback; exact-head REST checks are the interim
+observation path, not a substitute for a merge-ready verdict.
+
+### Quick package check needs built dependency declarations in a fresh worktree (2026-10-06)
+
+While migrating `artifacts-io.test.ts` in a newly installed sibling worktree,
+`bun run beep quality package-verify @beep/repo-cli --quick` passed lint but
+failed check with `TS6305` for an unbuilt `@beep/utils` declaration and many
+cascading type diagnostics. Focused Node/Bun tests and the direct test-project
+typecheck had passed. The full package verifier was started to build its
+dependency graph before audit/check. A quick verifier preflight that either
+builds required declarations or reports the missing dependency build plainly
+would prevent this misleading wall of diagnostics.
+
+### PR merged before its Heavy coverage result (2026-10-06)
+
+PR #1460 merged at `e3b7a59320` at 05:30 UTC while its exact-head `Heavy /
+Coverage Regression` job was still running. The job completed red at 05:31
+UTC. Its ratchet named uncovered `PracticeKg.families.ts` units and coverage
+losses in Yeet/repo-cli files and the law-practice-server branch total. The
+merge timestamp and the completed job log establish this ordering; neither a
+structural mergeable state nor six green Heavy jobs proved the seventh gate.
+A server-side gate requiring every Heavy job to complete successfully before
+merge would have kept the red visible as a PR repair rather than a post-merge
+follow-up. The goal follow-up lane must restore coverage from actual tests and
+prove it against the current main floor.
+
+### Parallel Node/Bun Vitest startup collides on shared cache (2026-10-06)
+
+While qualifying the #1467 main merge, simultaneous Node and Bun Vitest runs
+against one checkout made the Node run fail at startup with `ENOTEMPTY:
+directory not empty, rmdir node_modules/.vitest-cache`. Bun's 37 cases passed;
+running Node alone immediately afterward passed the same 37 cases. The failure
+was cache cleanup contention, not a source assertion failure. Distinct cache
+paths per runtime or serialization in the qualification harness would prevent
+this false red.
