@@ -25,7 +25,7 @@ two. Slice 0 and slice 3 are their own PRs.
 | 0 | This packet and the registration runbook. | `goals/m365-agent-outbox`, `docs/runbooks` | Nothing |
 | 1 | `@beep/m365` mail-outbound verbs: create draft, add attachment (single request and upload session), get draft with `bccRecipients`, send draft, delete draft. Fixture tests. | `packages/drivers/m365`, `packages/drivers/m365-mcp` (test stubs) | Workstream A's slice 1 (`feat/m365-write-lane`) merged to `main` |
 | 2 | The outbox server: tool schemas, send guard, attachment source, audit log, handlers, server layer, `bin-outbox.ts`, `.mcp.json` entry, conformance and guard tests, the credential-gated live smoke. | `packages/drivers/m365-mcp`, `.mcp.json` | Slice 1 |
-| 3 | Reply, reply-all and forward drafts; draft update. | `packages/drivers/m365`, `packages/drivers/m365-mcp` | Slice 2 live |
+| 3 | Reply, reply-all and forward drafts; draft update; tests that raise the `@beep/m365-mcp` coverage rows recorded as a baseline in #1471. Next PR. | `packages/drivers/m365`, `packages/drivers/m365-mcp` | Slice 2 live (done: #1471, live smoke) |
 
 Slice 1 is developed on a branch cut from workstream A's commit and merges
 `main` once after A's PR lands. It is not published as a stacked PR: a stacked

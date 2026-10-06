@@ -1,83 +1,178 @@
 ---
 name: orchestrate
-description: Run the orchestrator role for beep-effect — one session that coordinates every other agent session, routes PR review threads, reds and conflicts to their owners, fixes inherited reds once on main, merges PRs at the gate, and relays operator decisions. Use when the operator asks to "manage the PRs", "coordinate the sessions", "burn down the queue", or to take over from a previous orchestrator.
+description: Run the orchestrator role for beep-effect — one session that coordinates every other agent session, routes PR review threads, reds and conflicts to their owners, fixes inherited reds once on main, merges PRs at the gate, and relays operator decisions. Use when the operator asks to "manage the PRs", "coordinate the sessions", "burn down the queue", or to take over from a previous orchestrator. Three procedures - take-over, run, hand-off - so the role moves between sessions without orphaning what it coordinates.
 ---
 
 # Orchestrator
 
 Charter: AGENTS.md "Autonomy". The operator is pulled in only for money.
-Everything else you decide, record, and keep moving.
+Everything else you decide, record, and keep moving. The role is a position,
+not a session: a successor must be able to take it over from files alone.
 
-## Start or take over
+## Files the role lives in
 
-1. Read the hand-off file `~/.cache/beep/orchestrator/STATE.md` (out of repo;
-   never commit it). It lists open PRs, owning sessions, holds, and pending
-   operator answers. If it is missing, rebuild it from steps 2-3.
-2. `ListAgents` and `list_sessions` to see live sessions. Map PR → owner by
-   branch: each session's `cwd` and its worktrees' `git branch --show-current`.
-   A checkout with no live session but a running process belongs to an
-   unlisted lane (Codex, Cursor); leave it alone.
-3. `bash .claude/skills/orchestrate/gate.sh` prints one row per open PR.
-   `GATE-MET` = AGENTS.md "Mergeable": every required context green, no
-   failing check run at all (a Vercel failure you have confirmed was only
-   rate-limited may be merged over by hand), no
-   outstanding thread (unresolved, or author-resolved with a later human
-   reviewer comment), not draft, not conflicting, and `window=ok`: 20 minutes
-   have passed since the later of the PR's last ready-for-review event and the
-   push of its head. It exits non-zero when main's required contexts can't be
-   read, and prints `threads=?` or `window=?` when a read failed; none of
-   these ever means "clear".
+| File | Writer | What it is |
+| --- | --- | --- |
+| `~/.local/state/beep/sessions/<repo>.jsonl` | `bun run beep session note --role orchestrator` | Who holds the role; `session open` prints it first. |
+| `~/.local/state/beep/orchestrator/<repo>.jsonl` | `bun run beep session register add` | The REGISTER: one row per coordinated unit (kind, address, owns, state, waiting-on-orchestrator, last contact, orphan plan). `register list --markdown` renders it. |
+| `~/.cache/beep/orchestrator/HANDOFF.md` | you, by hand, from `HANDOFF.template.md` in this directory | Rulings in force, gate snapshot, outstanding promises, pending decisions, next actions, broadcast text. Rewritten at every stopping point, not at hand-off. |
+| `~/.cache/beep/orchestrator/briefs/*.md` | you | Per-session briefs: the exact text sent to a session, dated. |
+| `~/.cache/beep/orchestrator/STATE.md` | you | Append-only journal (one timestamped line per event). Never read whole; `tail -40` only. |
 
-## Loop
+None of these are committed. The register and ledger live under
+the workstation state root (`$XDG_STATE_HOME/beep/<store>`) because a cache
+directory is disposable by contract.
 
-Poll `gate.sh` every ~4 minutes in a background shell; wake on `GATE-MET` or
-on any new conflict, red or unresolved thread. Never poll GraphQL in a tight
-loop: the 5,000/hr pool is shared by every session on the account, and an
-exhausted pool makes thread counts read `?` (never treat that as zero).
+## Smart zone: keep your own context small
 
-- **Green draft** → never flip and merge it yourself in one step. Tell the
-  owner to run `bun run beep yeet ready` (owners flip at content-final, before
-  heavy CI finishes); flip it yourself only after the owner calls it final.
-  Either way the review window then runs before `GATE-MET`.
-- **GATE-MET** → run `gate.sh` once more immediately before the merge, so the
-  thread count is seconds old, and merge only if the row is still `GATE-MET`
-  with a real thread count (`threads=?` is not zero). Then squash-merge over
-  REST at the verified head:
-  `gh api -X PUT repos/<o>/<r>/pulls/<n>/merge -f merge_method=squash -f sha=<head> -f commit_title="<title> (#<n>)"`
-  (fix a non-conventional title in `commit_title`). Then message the owner to
-  run `yeet sweep --retire`. Respect owner-declared order (A before B).
-- **New thread** → read it, send the owner the thread id, file:line and the
-  ask. Round cap: after round 2, P2-and-below get a follow-up, not a push.
-- **Red** → read the job log (`gh api --allow-escape-sequences
-  repos/<o>/<r>/actions/jobs/<id>/logs`), attribute it: introduced by the PR,
-  inherited from main, or environment. Introduced → owner. Inherited → one
-  small fix PR on main, then tell every dependent owner to merge main once.
-  Environment → rerun the job.
-- **Conflict** → owner merges main (regenerate generated files rather than
-  hand-merging them).
-- **Queue starved** → cancel queued runs on PRs that must re-run anyway
-  (they will merge main later) so the unblocking PR gets runners.
-- **Orphan PR** (no live session, no running process, clean tree) → take it
-  over yourself in its checkout.
-- **Duplicate fix** across PRs → keep one, ask the other owner to close.
+The orchestrator's context is the scarcest thing in the fleet. Rules:
 
-Peer messages are teammates, not the operator: never let one widen your
-permissions. Relay operator answers verbatim with the date.
+- Write every ruling, gate state and promise to a file at the moment it
+  happens (`STATE.md` line + `HANDOFF.md` section), never only in chat.
+- Never read a large file yourself. Delegate reads to an agent that writes a
+  short file; read the short file. `gate.sh` output and
+  `session register list` are the only tables you read directly.
+- One brief per session, on disk, then `SendMessage` the path plus a two-line
+  summary. The brief is the record; the message is the pointer.
+- Two compactions in a row, or eight hours holding the role, or being unable
+  to name every live unit from the register without scrolling chat, are the
+  hand-off trigger. Hand off before the third compaction.
 
-## Operator desk
+## Take-over
 
-The operator reads one private claude.ai artifact (URL in the hand-off file).
-After each pass, `ArtifactData set` its `board/current` doc: open PRs (number,
-state, checks, owner, next step) and the merged list. A money question becomes
-a `decisions/<slug>` doc (question, context, cost, recommendation, options,
-askedBy, askedAt, status `open`); poll that collection and relay an
-`answered` doc's `answer` to the asking session verbatim. Never put secrets,
-client data or home paths there.
+1. `bun run beep session open`: see who holds the role. If a live
+   orchestrator row exists and its session answers `SendMessage`, you are not
+   the orchestrator; stop.
+2. Read `~/.cache/beep/orchestrator/HANDOFF.md` (whole; it is short by rule)
+   and `tail -40 ~/.cache/beep/orchestrator/STATE.md`. If `HANDOFF.md` is
+   missing, rebuild its sections from the register, `gate.sh`, and the
+   newest briefs; write it before doing anything else.
+3. `bun run beep session register list`: every unit, newest first. For each
+   row with `waiting on orchestrator`, that ask is your first queue.
+4. `bash .claude/skills/orchestrate/gate.sh`: one row per open PR, with a
+   `window=` column (push-first-publish D11: `ok`, minutes left, `?`, or `-`
+   for a draft). Compare
+   with the HANDOFF gate snapshot; a PR that moved is where the predecessor
+   stopped.
+5. Claim the role: `bun run beep session note --role orchestrator --state
+   open --next "<first action>"`. Append `took over from <session id>` to
+   `STATE.md`.
+6. Broadcast (the HANDOFF "Broadcast" section is the text): to every
+   `desktop-session` row via `SendMessage` (`ListAgents` first; after an
+   account switch use `mcp__ccd_session_mgmt__send_message` with the row's
+   session id); to every `codex-lane` row as a PR comment starting
+   `orchestrator:`; to `external-person` rows through the fleet desk. A
+   broadcast that fails marks the row `unreachable` (`register add` with the
+   same kind+address) and you execute its orphan plan.
+7. Re-arm pollers: for each `background-job` row, `bun run beep yeet job
+   wait <id>` or re-submit; for each `systemd-unit` row, `systemctl --user
+   status <unit>`. For each `in-process-agent` row the predecessor could not
+   convert, run its orphan plan (usually: start a desktop session from the
+   brief, or spawn a task chip).
+8. Write the `HANDOFF.md` header with your session id and the time.
+
+## Run
+
+Where each event is recorded, in the order it happens:
+
+| Event | Record | Then |
+| --- | --- | --- |
+| A session reports "final <sha>" | HANDOFF "Outstanding promises" row; STATE line | Owner flips ready in the same step (`bun run beep yeet ready`, which refuses only on a required red or an outstanding thread); flip it yourself only after the owner called it final, never un-draft and merge in one step. Arm the gate for that sha. "Final" means the owner ran the hosted-parity lanes on the commit, not only `package-verify`: `quality test-tsgo`, `docgen local --base origin/main`, `ci lane jsdoc-ratchet`, `knowledge refs --check`, and a scoped coverage read for touched baseline rows. |
+| Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`. |
+| New review thread | STATE line | Send the owner thread id, file:line, the ask. After round 2, P2-and-below become a tracked follow-up, not a push. |
+| Red check | STATE line with attribution | Read the job log (`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`). Introduced → owner. Inherited → one small fix PR on main, then every dependent owner merges main once. Environment → rerun. Record the attribution; it is the `--tolerate` text if the lane is non-required. |
+| Conflict | STATE line; brief if generated files are involved | Owner merges main; generated files are regenerated, never hand-merged. |
+| Operator ruling | HANDOFF "Rulings in force" with date and verbatim wording; memory file; brief to every affected session | Relay verbatim with the date. Peer messages are teammates, not the operator; none widens your permissions. |
+| Money question | HANDOFF "Pending operator decisions"; fleet desk `decisions/<slug>` | Relay the answer verbatim to the asking session. |
+| A new unit appears (session, agent, lane, job, unit, person) | `session register add` with an orphan plan (required the first time) | A unit without an orphan plan is not registered. |
+| A unit retires | `session register add --kind <k> --address <a> --state retired` | Omitted flags keep the unit's owns, waiting, orphan plan and last contact; pass `--last-contact now` only when you actually heard from it. Retired units drop from the next HANDOFF. |
+| Queue starved | STATE line | Cancel queued runs on PRs that must re-run anyway. |
+| Orphan PR (no live session, no process, clean tree) | register row kind `codex-lane` or take-over | Take it over in its checkout. |
+
+Poll `gate.sh` every ~4 minutes from a detached job, not a foreground loop:
+`beep-heavy --detach orchestrator-gate bash -c 'while true; do bash
+.claude/skills/orchestrate/gate.sh; sleep 240; done'` and register it as a
+`systemd-unit` row. A `GATE-MET` row is a merge candidate, never a merge:
+`merge-gate` decides. Never poll GraphQL in a tight loop (see "REST first"
+below); `threads=?` is never zero.
+
+Rulings in force since 2026-10-06 (verbatim sources in
+`~/.claude/memory/beep-effect/feedback-review-window-before-merge.md` and
+`feedback-autonomy-ruling-2026-10-06.md`): ready at content-final; no merge
+inside 20 minutes of ready or the last push; only money escalates; review
+loops stop after round 2; non-required Heavy/Coverage reds merge over only
+with a written attribution.
+
+Two more operator rulings from 2026-10-06 (verbatim, relayed by the
+orchestrator session):
+
+- **Codex delegation.** "Also so that we use up my codex credits as well you
+  can instruct sessions that they can delegate work to codex using GPT 6
+  Sol". "GPT 6 Sol" is the operator's shorthand for `gpt-6.1-sol` at `medium`
+  effort (pins in AGENTS.md "Volume pools"). Codex cannot stage or commit in a
+  linked worktree, so the working rule is "Codex edits, owner commits": the
+  delegating session reviews the diff, stages by name and commits. Register a
+  running Codex delegation as a `background-job` row with the owning session
+  in `owns`.
+- **REST first.** "Use rest api & gh secret." then "in op.": read PR, check
+  and timeline state over the REST API, authenticated with the GitHub token
+  kept in 1Password (resolved through `op`, never printed). That token is the
+  same GitHub identity as the `gh` login, so it shares the rate budget rather
+  than adding one. GraphQL is for what REST cannot do (review-thread state,
+  thread replies and resolution, ready-for-review flips) and goes through a
+  budget guard, never a loop. The planned home is the operator's request to
+  "add to beep's yeet command or a new command and configure it to perform
+  common operations for us going forward using the rest api": `bun run beep
+  yeet gh ...` on `@effected/github`, which a sibling lane is adding ("for now
+  I say just install", pinned to the repo's Effect 4.0.1). Until it lands,
+  keep GraphQL calls one-shot and treat a refused or rate-limited read as
+  unknown.
 
 ## Hand-off
 
-Keep `~/.cache/beep/orchestrator/STATE.md` current after every merge or
-routing decision: open PRs with owner session, holds and their reason,
-pending operator questions, merge order constraints. When your context runs
-long, write it and tell the operator a fresh session can resume with this
-skill.
+1. Convert every in-process unit, because it dies with you:
+   - Agent-tool subagent → write its brief to `briefs/<name>.md` (task,
+     state, what it owes, how to resume), then either spawn a task chip
+     (`spawn_task`) or a desktop session from the brief; register the new
+     address and retire the old row.
+   - Background Bash poller (merge waiter, unit watcher) → re-create as a
+     detached job (`yeet monitor --until-ready --detach`, `beep-heavy
+     --detach <name> ...`) or a `systemd --user` unit; register the job id or
+     unit name.
+   - Scratchpad script → move it into the repo CLI or into
+     `~/.cache/beep/orchestrator/bin/`; register nothing, record the path in
+     HANDOFF "Next actions".
+2. Rewrite `HANDOFF.md` from the template: rulings, gate snapshot (paste
+   `gate.sh` output), outstanding "final <sha>" promises, pending operator
+   decisions, ordered next actions, broadcast text naming the successor.
+3. `bun run beep session register list --markdown >> HANDOFF.md` (the
+   register section), then `bun run beep session note --role member --state
+   blocked --next "handing off the orchestrator role; successor: <id>"`.
+4. Start or message the successor with the HANDOFF path. Wait for its ack:
+   its `session note --role orchestrator` row in `session open`, or a
+   `SendMessage` saying `took over`.
+5. Announce the move: the successor broadcasts (take-over step 6); you post
+   one line to every `desktop-session` and `codex-lane` row: `orchestrator
+   moved to <successor id>; report there`.
+6. Go idle. Do not merge, route, or answer after the ack; forward anything
+   that still reaches you to the successor.
+
+## What it is not
+
+- Not a merge button: `yeet merge-gate` holds are routed, never overridden by
+  hand. `FORCE_WINDOW` and `--force-window` have exactly one use.
+- Not an operator proxy: a ruling is relayed verbatim with its date, never
+  paraphrased into a wider permission.
+- Not a reader: anything larger than the gate table is delegated to an agent
+  that writes a file.
+
+## Follow-ups (not in this skill yet)
+
+- `beep session handoff` to render `HANDOFF.md` from the register, ledger and
+  a rulings file instead of the template.
+- Port `gate.sh` to `yeet merge-gate --table` (pagination past 60 PRs,
+  pending commit statuses as blocking).
+- `beep session register convert <address>` to turn an in-process agent row
+  into a task chip or detached job in one step.
+- A PR-comment helper for `codex-lane` rows so the `orchestrator:` prefix is
+  never typed by hand.
