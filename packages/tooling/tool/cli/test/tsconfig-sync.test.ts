@@ -1360,6 +1360,43 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "accepts a content-equal Vitest alias mirror whose keys are in another order",
+      () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+            const aliasesPath = path.join(rootDir, "vitest.aliases.generated.json");
+            const runMode = (mode: "check" | "sync") =>
+              syncTsconfigAtRoot(rootDir, { mode, filter: undefined, verbose: false });
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/core", "packages/app"],
+              references: [],
+              paths: {},
+              syncpackSources: ["package.json", "packages/app/package.json", "packages/core/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, { relativeDir: "packages/core", packageName: "@beep/core" });
+            yield* bootstrapWorkspace(rootDir, { relativeDir: "packages/app", packageName: "@beep/app" });
+            yield* writeTextFile(aliasesPath, "{}\n");
+            yield* runMode("sync");
+
+            // `beep quality tsgo-rules` compares the mirror with `Equal.equals`;
+            // a hand-placed entry (as #1470 did) must not red `config-sync:check`.
+            const rootPaths = yield* decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            const reversed = R.fromEntries(A.reverse(R.toEntries(rootPaths.compilerOptions.paths)));
+            expect(R.keys(reversed)).not.toEqual(R.keys(rootPaths.compilerOptions.paths));
+            yield* writeJsonFile(aliasesPath, reversed);
+
+            expect((yield* runMode("check")).changedFiles).toBe(0);
+            expect(yield* readJsonFile(aliasesPath)).toEqual(reversed);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      20_000
+    );
+
+    it.effect(
       "leaves a repository that commits neither generated file untouched",
       () =>
         Effect.andThen(

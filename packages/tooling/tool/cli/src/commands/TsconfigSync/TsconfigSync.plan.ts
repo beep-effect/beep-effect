@@ -684,8 +684,11 @@ const aliasPathEntriesEqual = (
 ): boolean => {
   const expectedKeys = R.keys(expected);
 
+  // Key order is not part of the contract: `beep quality tsgo-rules` compares
+  // the same two maps with `Equal.equals`, so a reordered but content-equal
+  // mirror must pass both gates.
   return (
-    arraysEqual(R.keys(current), expectedKeys) &&
+    arraysEqual(uniqueSorted(R.keys(current)), uniqueSorted(expectedKeys)) &&
     A.every(expectedKeys, (key) => {
       const expectedValue = expected[key];
       return (
