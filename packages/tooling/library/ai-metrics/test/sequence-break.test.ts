@@ -608,7 +608,7 @@ esac
       );
       yield* fs.writeFileString(
         `${store.fakeBin}/xdg-open`,
-        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
       );
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri));
@@ -703,7 +703,7 @@ esac
             );
             yield* fs.writeFileString(
               `${store.fakeBin}/xdg-open`,
-              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
             );
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             expectSilentSuccess(yield* runNotifier(store, "", "", "initial", "/workspace/clone", uri, "", "parent"));
@@ -788,7 +788,7 @@ esac
             );
             yield* fs.writeFileString(
               `${store.fakeBin}/xdg-open`,
-              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+              '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
             );
             yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
             expectSilentSuccess(
@@ -1059,7 +1059,7 @@ cat "$HOME/resolve.ndjson" >>'${store.hookPath}'
       );
       yield* fs.writeFileString(
         `${store.fakeBin}/xdg-open`,
-        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt"\n'
+        '#!/usr/bin/env bash\nprintf "%s\\n" "$@" >"$HOME/opened.txt.tmp"\nmv "$HOME/opened.txt.tmp" "$HOME/opened.txt"\n'
       );
       yield* fs.chmod(`${store.fakeBin}/xdg-open`, 0o755);
       yield* fs.writeFileString(`${store.fakeBin}/gdbus`, "#!/usr/bin/env bash\nexit 0\n");
