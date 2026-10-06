@@ -247,6 +247,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"$(git rev-parse --show-toplevel 2>/dev/null)\"; [ -n \"$d\" ] && [ -d \"$d/.claude/hooks\" ] || d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; export CLAUDE_PROJECT_DIR=\"$d\"; \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-ledger.sh\"",
+            "timeout": 5,
+            "statusMessage": "Reading the session ledger"
+          }
+        ]
       }
     ],
     "Stop": [

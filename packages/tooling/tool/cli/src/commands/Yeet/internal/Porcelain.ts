@@ -322,7 +322,9 @@ const retireThenSweep = Effect.fn("Yeet.retireThenSweep")(function* (
     return yield* printRetirePlan(options, retire, state, activePackets, yield* planSweep(cloneContext));
   }
   const receipt = yield* retireInvokingWorktree(retire, state);
-  yield* printRetireReport(options, retire, receipt, activePackets, yield* executeSweep(cloneContext));
+  // The lane is gone; the sweep closes the lane's ledger row, not the clone's.
+  const sweep = yield* executeSweep(cloneContext, { ledgerCheckout: retire.worktreePath });
+  yield* printRetireReport(options, retire, receipt, activePackets, sweep);
 });
 
 /**
