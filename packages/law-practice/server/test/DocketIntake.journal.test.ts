@@ -15,6 +15,7 @@ import {
   makeDocketFileJournalLayer,
   makeDocketRunId,
   readDocketJournal,
+  recordDocketRunCompleted,
   summarizeDocketRuns,
 } from "@beep/law-practice-server/DocketIntake";
 import {
@@ -23,6 +24,7 @@ import {
   DocketIntakeError,
   DocketMailbox,
   DocketMessage,
+  DocketPollReport,
   DocketWrittenEntry,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LocalDate } from "@beep/schema/LocalDate";
@@ -192,6 +194,38 @@ describe("@beep/law-practice-server DocketIntake journal", () => {
           A.head(Str.split("\n")(text)),
           '{"runId":"run-19700101T000000000Z","kind":"event-created","at":"1970-01-01T00:00:00.000Z","eventId":"event-0"}'
         );
+      })
+    );
+  });
+
+  it.layer(JournalLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "closes a run with its counts, and still reads a journal written before runs were closed",
+      Effect.fnUntraced(function* () {
+        const journal = yield* DocketIntakeJournal;
+        const fs = yield* FileSystem.FileSystem;
+        // A line as the journal wrote it before run-completed existed.
+        yield* fs.writeFileString(
+          JOURNAL,
+          '{"runId":"run-19691231T235959000Z","kind":"event-created","at":"1969-12-31T23:59:59.000Z","eventId":"event-old"}\n'
+        );
+        const runId = yield* journal.beginRun;
+
+        yield* recordDocketRunCompleted(
+          DocketPollReport.make({ entered: 0, failed: 0, needsReview: 0, notDocket: 2, processed: 2, seen: 3 })
+        );
+        const summaries = summarizeDocketRuns(yield* journalLines);
+
+        expect(
+          A.map(summaries, (summary) => [
+            summary.runId,
+            summary.eventsCreated,
+            O.getOrNull(O.map(summary.completed, (counts) => [counts.seen, counts.processed, counts.notDocket])),
+          ])
+        ).toStrictEqual([
+          [runId, 0, [3, 2, 2]],
+          ["run-19691231T235959000Z", 1, null],
+        ]);
       })
     );
   });
