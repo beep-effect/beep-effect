@@ -302,12 +302,13 @@ cd <clone> && bun run <lane>/packages/tooling/tool/cli/src/bin.ts -- yeet sweep 
 
   `--json` prints one document; `--branch` is refused with `--retire`. Both
   the plan and the report name every goal packet the retired branch touched
-  whose lifecycle is still `active` (`[yeet] packet still active after merge:
-  goals/<slug> …`, `activePackets` in JSON): that packet's lifecycle flip
-  belonged in the merged PR, so open the closeout PR before moving on.
-  `bun run beep goals doctor` keeps flagging it as `active-after-merge` while
-  a merge commit cites the slug, nobody touches the packet, and its manifest
-  carries no `statusNote` or `blockedBy` saying why it stays open.
+  whose lifecycle is still `active` and whose manifest carries no
+  `statusNote` or `blockedBy` saying why it stays open (`[yeet] packet still
+  active after merge: goals/<slug> …`, `activePackets` in JSON): that packet's
+  lifecycle flip belonged in the merged PR, so open the closeout PR before
+  moving on. `bun run beep goals doctor` applies the same deferral and keeps
+  flagging the packet as `active-after-merge` while a merge commit cites the
+  slug and nobody touches it.
 
 - Post and resolve the drafted review-thread replies for this branch's PR:
 
