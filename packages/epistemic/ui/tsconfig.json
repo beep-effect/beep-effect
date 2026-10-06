@@ -22,6 +22,9 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
