@@ -17,6 +17,7 @@ import {
 import {
   countOutstandingThreads,
   decideYeetGhMergeGate,
+  foldCommitMessage,
   latestCheckRunsByName,
   YeetGhGateFacts,
 } from "@beep/repo-cli/test/Yeet";
@@ -76,6 +77,7 @@ it.layer(
   restLayer({
     request: {
       "GET /repos/{owner}/{repo}/pulls/{pull_number}": pullPayload,
+      "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments": [],
       "DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}": GitHubError.notFound("DELETE label", "label"),
     },
     paginate: {
@@ -116,6 +118,8 @@ it.layer(
     Effect.gen(function* () {
       const rest = yield* GithubRest;
       yield* rest.removeLabel(1501, "absent");
+      // An empty one-item page of inline comments proves zero review threads.
+      expect(yield* rest.hasReviewComments(1501)).toBe(false);
     })
   );
 });
@@ -273,6 +277,14 @@ const facts = (overrides: Partial<ConstructorParameters<typeof YeetGhGateFacts>[
 const reasons = (input: YeetGhGateFacts) => A.map(decideYeetGhMergeGate(input).findings, (finding) => finding.reason);
 
 describe("REST merge gate", () => {
+  it("folds the squash body under the 100-character commitlint limit", () => {
+    const folded = foldCommitMessage(
+      `Squash-merged at ${"a".repeat(40)} by beep yeet gh merge. Tolerated: ${"Heavy / Coverage Regression; ".repeat(4)}`
+    );
+    expect(A.every(folded.split("\n"), (line) => line.length < 100)).toBe(true);
+    expect(folded.replaceAll("\n", " ")).toContain("by beep yeet gh merge.");
+  });
+
   it("is met when every required context is green, the window passed, and threads are zero", () => {
     const verdict = decideYeetGhMergeGate(facts());
     expect(verdict.met).toBe(true);

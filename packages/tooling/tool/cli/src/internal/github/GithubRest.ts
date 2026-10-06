@@ -266,10 +266,21 @@ export interface GithubRestShape {
   readonly commitCommittedAt: (sha: string) => Effect.Effect<DateTime.Utc, GitHubError>;
   /** Post an issue comment on a pull request; returns its URL. */
   readonly createIssueComment: (number: number, body: string) => Effect.Effect<string, GitHubError>;
+  /**
+   * Whether the pull request has any inline review comment (one-item REST page).
+   * No comment proves zero review threads; any comment says nothing about their
+   * resolution, which only GraphQL reports.
+   */
+  readonly hasReviewComments: (number: number) => Effect.Effect<boolean, GitHubError>;
   /** Squash-merge (or another method) pinned to a head sha. */
   readonly mergePullRequest: (
     number: number,
-    options: { readonly sha: string; readonly commitTitle: string; readonly method: "merge" | "squash" | "rebase" }
+    options: {
+      readonly sha: string;
+      readonly commitTitle: string;
+      readonly commitMessage: string;
+      readonly method: "merge" | "squash" | "rebase";
+    }
   ) => Effect.Effect<GithubMergeRecord, GitHubError>;
   /** The open pull request whose head is `owner:branch`, if any. */
   readonly openPullRequestForBranch: (
@@ -376,6 +387,15 @@ const makeGithubRest = Effect.gen(function* () {
       )
       .pipe(Effect.map(A.map((label) => label.name)));
 
+  const hasReviewComments = (number: number) =>
+    client
+      .requestDecoded(
+        "GET /repos/{owner}/{repo}/pulls/{pull_number}/comments",
+        { ...at, pull_number: number, per_page: 1 },
+        S.Array(S.Unknown)
+      )
+      .pipe(Effect.map(A.isReadonlyArrayNonEmpty));
+
   const removeLabel = (number: number, label: string) =>
     client
       .requestDecoded(
@@ -455,7 +475,12 @@ const makeGithubRest = Effect.gen(function* () {
 
   const mergePullRequest = (
     number: number,
-    options: { readonly sha: string; readonly commitTitle: string; readonly method: "merge" | "squash" | "rebase" }
+    options: {
+      readonly sha: string;
+      readonly commitTitle: string;
+      readonly commitMessage: string;
+      readonly method: "merge" | "squash" | "rebase";
+    }
   ) =>
     client
       .requestDecoded(
@@ -466,6 +491,7 @@ const makeGithubRest = Effect.gen(function* () {
           sha: options.sha,
           merge_method: options.method,
           commit_title: options.commitTitle,
+          commit_message: options.commitMessage,
         },
         MergeWire
       )
@@ -521,6 +547,7 @@ const makeGithubRest = Effect.gen(function* () {
     pullRequest,
     rateLimit,
     readyForReviewAt,
+    hasReviewComments,
     removeLabel,
     rerunFailedJobs,
     requiredStatusContexts,

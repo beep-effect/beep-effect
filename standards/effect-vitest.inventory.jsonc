@@ -41601,13 +41601,13 @@
       "reason": "This unchanged finite TestClock adjustment drives a forked fake child through the capture timeout, output-drain grace period, or cleanup deadline. Kill/unref counts, failure tags and output assertions prove the resulting state; real subprocess tests retain live clocks. See goals/effect-vitest-canon/research/step-capture-scope-proof.md."
     },
     {
-      "id": "EV015:packages/tooling/tool/cli/test/yeet-gh-rest-first.test.ts:227:TestClock.adjust@13#1",
+      "id": "EV015:packages/tooling/tool/cli/test/yeet-gh-rest-first.test.ts:231:TestClock.adjust@13#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-gh-rest-first.test.ts",
-      "line": 227,
-      "endLine": 227,
+      "line": 231,
+      "endLine": 231,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:3b442ccfb4f15cccd300c61cec4f5659a295f52e039d59ea50df7503eaf6ee09",
       "class": "shared-test-clock-adjustment",

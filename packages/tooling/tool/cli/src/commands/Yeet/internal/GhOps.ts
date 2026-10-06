@@ -251,6 +251,41 @@ export const latestCheckRunsByName = (
       : HashMap.set(latest, run.name, run)
   );
 
+const COMMIT_BODY_WIDTH = 99;
+
+/**
+ * Fold text into lines under 100 characters at word boundaries, the limit the
+ * server-side commitlint applies to squash-merge bodies.
+ *
+ * **Example** (Fold a long line)
+ *
+ * ```ts
+ * import { foldCommitMessage } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(foldCommitMessage("word ".repeat(40)).split("\n").every((line) => line.length < 100)) // true
+ * ```
+ *
+ * @param text - The message body.
+ * @returns The body with every line under 100 characters (a single word longer than that stays whole).
+ * @category formatting
+ * @since 0.0.0
+ */
+export const foldCommitMessage = (text: string): string =>
+  A.join(
+    A.flatMap(Str.split(text, "\n"), (line) =>
+      A.reduce(Str.split(Str.trim(line), " "), A.empty<string>(), (lines, word) =>
+        O.match(A.last(lines), {
+          onNone: () => [word],
+          onSome: (current) =>
+            Str.isEmpty(current) || Str.length(current) + 1 + Str.length(word) <= COMMIT_BODY_WIDTH
+              ? [...A.dropRight(lines, 1), Str.isEmpty(current) ? word : `${current} ${word}`]
+              : [...lines, word],
+        })
+      )
+    ),
+    "\n"
+  );
+
 const finding = (reason: YeetGhGateReason, detail: string) => YeetGhGateFinding.make({ reason, detail });
 
 const formatAge = (age: Duration.Duration): string => `${Math.floor(Duration.toMinutes(age))}m`;
@@ -484,7 +519,12 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * const program = withYeetGh(O.none())(Effect.flatMap(GithubRest.asEffect(), (rest) => rest.pullRequest(1)))
+ * const program = withYeetGh(O.none())(
+ *   Effect.gen(function* () {
+ *     const rest = yield* GithubRest
+ *     return yield* rest.pullRequest(1)
+ *   })
+ * )
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -548,20 +588,36 @@ const runGh = <A>(
   );
 
 /**
- * Read the outstanding thread count through the budget guard; any failure
- * (budget, network, decode) is none, never zero.
+ * Read the outstanding thread count through the budget guard. When GraphQL is
+ * unavailable, a REST page of inline review comments that comes back empty
+ * proves zero threads; anything else (comments exist, or REST failed too) is
+ * none, never zero.
  */
 const readOutstandingThreads = Effect.fn("YeetGh.readOutstandingThreads")(function* (
   number: number,
   policy: GraphqlBudgetPolicy
 ) {
   const budget = yield* GraphqlBudget;
+  const rest = yield* GithubRest;
   return yield* readGithubReviewThreads(number).pipe(
     budget.guard("pullRequestReviewThreads", policy),
     Effect.map((read) => O.some({ outstanding: countOutstandingThreads(read), total: A.length(read.threads) })),
     Effect.catch((error) =>
-      Console.error(`[gh] review threads unknown for #${number}: ${error.message}`).pipe(
-        Effect.as(O.none<{ readonly outstanding: number; readonly total: number }>())
+      rest.hasReviewComments(number).pipe(
+        Effect.flatMap((hasComments) =>
+          hasComments
+            ? Console.error(
+                `[gh] review threads unknown for #${number}: ${error.message}; review comments exist, so REST cannot prove zero`
+              ).pipe(Effect.as(O.none<{ readonly outstanding: number; readonly total: number }>()))
+            : Console.error(
+                `[gh] GraphQL thread read failed for #${number} (${error.message}); REST shows no review comments, so zero threads`
+              ).pipe(Effect.as(O.some({ outstanding: 0, total: 0 })))
+        ),
+        Effect.catch((restError) =>
+          Console.error(
+            `[gh] review threads unknown for #${number}: ${error.message}; REST fallback failed: ${restError.message}`
+          ).pipe(Effect.as(O.none<{ readonly outstanding: number; readonly total: number }>()))
+        )
       )
     )
   );
@@ -700,6 +756,13 @@ export const runYeetGhMerge = (
       const merged = yield* rest.mergePullRequest(options.number, {
         sha: facts.pullRequest.headSha,
         commitTitle: `${facts.pullRequest.title} (#${options.number})`,
+        // GitHub would default the squash body to the commit list, whose lines can
+        // break server-side commitlint (body lines under 100 characters).
+        commitMessage: foldCommitMessage(
+          `Squash-merged at ${facts.pullRequest.headSha} by beep yeet gh merge.${
+            A.isReadonlyArrayNonEmpty(options.tolerate) ? ` Tolerated: ${A.join(options.tolerate, "; ")}.` : ""
+          }`
+        ),
         method: "squash",
       });
       yield* Console.log(
