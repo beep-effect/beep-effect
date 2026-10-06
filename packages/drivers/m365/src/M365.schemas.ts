@@ -233,6 +233,92 @@ export class GraphSiteCollection extends S.Class<GraphSiteCollection>($I`GraphSi
 ) {}
 
 /**
+ * The plain-text attorney-authored portion of a message (Graph `uniqueBody`).
+ *
+ * **Details**
+ *
+ * `contentType` is the literal `text`: a response carrying an HTML
+ * `uniqueBody` fails to decode, so a caller can never fall back to stripping
+ * markup or to the full `body`.
+ *
+ * **Example** (Make a text body)
+ *
+ * ```ts
+ * import { GraphUniqueTextBody } from "@beep/m365"
+ *
+ * console.log(GraphUniqueTextBody.make({ contentType: "text", content: "Approved.\n" }).content)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphUniqueTextBody extends S.Class<GraphUniqueTextBody>($I`GraphUniqueTextBody`)(
+  {
+    contentType: S.Literal("text").annotateKey({ description: "Must be plain text; HTML is refused." }),
+    content: S.String.annotateKey({ description: "Text the sender wrote, without the quoted thread." }),
+  },
+  $I.annote("GraphUniqueTextBody", { description: "A plain-text Graph uniqueBody." })
+) {}
+
+/**
+ * A required Graph address wrapper (`{ emailAddress: { address } }`).
+ *
+ * **Example** (Make an address)
+ *
+ * ```ts
+ * import { GraphRequiredAddress } from "@beep/m365"
+ *
+ * console.log(GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }).emailAddress.address)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphRequiredAddress extends S.Class<GraphRequiredAddress>($I`GraphRequiredAddress`)(
+  {
+    emailAddress: S.Struct({ address: S.NonEmptyString }).annotateKey({ description: "The address." }),
+  },
+  $I.annote("GraphRequiredAddress", { description: "A Graph recipient whose address is required." })
+) {}
+
+/**
+ * The fields of a message needed to verify who wrote what: sender addresses,
+ * the plain-text `uniqueBody`, and the message identity.
+ *
+ * **Example** (Make an authored-text message)
+ *
+ * ```ts
+ * import { GraphMessageAuthoredText, GraphRequiredAddress, GraphUniqueTextBody } from "@beep/m365"
+ *
+ * const message = GraphMessageAuthoredText.make({
+ *   id: "AAMk",
+ *   internetMessageId: "<a@b>",
+ *   receivedDateTime: "2026-10-06T12:00:00Z",
+ *   from: GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }),
+ *   sender: GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }),
+ *   uniqueBody: GraphUniqueTextBody.make({ contentType: "text", content: "Approved." })
+ * })
+ * console.log(message.internetMessageId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphMessageAuthoredText extends S.Class<GraphMessageAuthoredText>($I`GraphMessageAuthoredText`)(
+  {
+    id: S.NonEmptyString.annotateKey({ description: "Graph message id." }),
+    internetMessageId: S.NonEmptyString.annotateKey({ description: "RFC 5322 Message-ID." }),
+    receivedDateTime: S.NonEmptyString.annotateKey({ description: "Receipt time." }),
+    from: GraphRequiredAddress.annotateKey({ description: "Graph `from`." }),
+    sender: GraphRequiredAddress.annotateKey({ description: "Graph `sender`." }),
+    uniqueBody: GraphUniqueTextBody.annotateKey({ description: "Plain-text unique body." }),
+  },
+  $I.annote("GraphMessageAuthoredText", {
+    description: "Sender addresses, identity, and plain-text uniqueBody of one message.",
+  })
+) {}
+
+/**
  * A Graph `emailAddress` (name + address pair).
  *
  * **Example** (Empty email address make)

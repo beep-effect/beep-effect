@@ -109,6 +109,9 @@ const createMockM365 = () =>
     getMessage: Effect.fn("M365Test.getMessage")(function* () {
       return message;
     }),
+    getMessageAuthoredText: Effect.fn("M365Test.getMessageAuthoredText")(function* () {
+      return yield* Effect.die("not used by the MCP server");
+    }),
     getSite: Effect.fn("M365Test.getSite")(function* () {
       return site;
     }),

@@ -6,6 +6,7 @@ import {
   GraphFolder,
   GraphListItem,
   GraphMessage,
+  GraphMessageAuthoredText,
   GraphQuota,
   GraphSite,
   M365,
@@ -447,6 +448,68 @@ describe("@beep/m365 service", () => {
         expect(A.every(graphCaptures, (capture) => capture.headers.authorization === `Bearer ${TOKEN}`)).toBe(true);
         expect(A.every(graphCaptures, (capture) => capture.headers.accept === "application/json")).toBe(true);
         expect(A.map(captures, (capture) => capture.url)).toContain(`${GRAPH_BASE_URL}/sites/${SITE_ID}/drives`);
+      })
+    );
+  });
+
+  it.layer(makeTestLayer(), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "reads a reply's plain-text uniqueBody through $select and a text Prefer header",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* M365TestHttp;
+        // recorded reply shape (Graph v1.0 message with $select'd uniqueBody, text preference)
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(
+            makeJsonResponse({
+              "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('me')/messages(...)/$entity",
+              "@odata.etag": 'W/"CQAAABYAAAA"',
+              id: "AAMkAGI2",
+              internetMessageId: "<CAF=reply@mail.example.com>",
+              receivedDateTime: "2026-10-06T12:00:00Z",
+              from: { emailAddress: { name: "Attorney", address: "attorney@example.com" } },
+              sender: { emailAddress: { name: "Attorney", address: "attorney@example.com" } },
+              uniqueBody: {
+                contentType: "text",
+                content: "Approved, see line below.\r\nI approve design-figure sheet set abc for filing.\r\n",
+              },
+            })
+          )
+        );
+        const m365 = yield* M365;
+        const message = yield* m365.getMessageAuthoredText(M365GetMessageRequest.make({ messageId: "message-id" }));
+        expect(message).toBeInstanceOf(GraphMessageAuthoredText);
+        expect(message.uniqueBody.content).toContain("I approve design-figure sheet set abc for filing.");
+        expect(message.from.emailAddress.address).toBe("attorney@example.com");
+        const [capture] = yield* testHttp.captures;
+        expect(capture?.url).toContain("/me/messages/message-id?");
+        expect(decodeURIComponent(capture?.url ?? "")).toContain(
+          "$select=id,internetMessageId,receivedDateTime,from,sender,uniqueBody"
+        );
+        expect(capture?.headers.prefer).toBe('outlook.body-content-type="text"');
+      })
+    );
+
+    it.effect(
+      "refuses an HTML uniqueBody instead of falling back",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* M365TestHttp;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(
+            makeJsonResponse({
+              id: "AAMkAGI2",
+              internetMessageId: "<CAF=reply@mail.example.com>",
+              receivedDateTime: "2026-10-06T12:00:00Z",
+              from: { emailAddress: { address: "attorney@example.com" } },
+              sender: { emailAddress: { address: "attorney@example.com" } },
+              uniqueBody: { contentType: "html", content: "<p>I approve</p>" },
+            })
+          )
+        );
+        const m365 = yield* M365;
+        const error = yield* Effect.flip(
+          m365.getMessageAuthoredText(M365GetMessageRequest.make({ messageId: "message-id" }))
+        );
+        expect(error.reason).toBe("response decoding");
       })
     );
   });

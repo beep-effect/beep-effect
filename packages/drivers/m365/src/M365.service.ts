@@ -32,6 +32,7 @@ import {
   GraphEvent,
   GraphListItem,
   GraphMessage,
+  GraphMessageAuthoredText,
   GraphSite,
 } from "./M365.schemas.ts";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -809,6 +810,9 @@ export type M365Shape = {
   readonly getEvent: (request: M365GetEventRequest) => Effect.Effect<GraphEvent, M365Error>;
   readonly getListItem: (request: M365GetListItemRequest) => Effect.Effect<GraphListItem, M365Error>;
   readonly getMessage: (request: M365GetMessageRequest) => Effect.Effect<GraphMessage, M365Error>;
+  readonly getMessageAuthoredText: (
+    request: M365GetMessageRequest
+  ) => Effect.Effect<GraphMessageAuthoredText, M365Error>;
   readonly getSite: (request: M365GetSiteRequest) => Effect.Effect<GraphSite, M365Error>;
   readonly listDriveItemVersions: (
     request: M365ListDriveItemVersionsRequest
@@ -852,15 +856,22 @@ const graphUrl = (config: ResolvedM365Config, path: string, params: ReadonlyArra
 
 const signedJsonGet = Effect.fnUntraced(function* (
   auth: M365AuthShape,
-  url: string
+  url: string,
+  headers: Readonly<Record<string, string>> = {}
 ): Effect.fn.Return<HttpClientRequest.HttpClientRequest, M365Error> {
   const token = yield* auth.acquireToken;
   return pipe(
     HttpClientRequest.get(url),
     HttpClientRequest.bearerToken(token),
-    HttpClientRequest.accept(REQUEST_ACCEPT)
+    HttpClientRequest.accept(REQUEST_ACCEPT),
+    HttpClientRequest.setHeaders(headers)
   );
 });
+
+// Graph returns `uniqueBody` only when `$select`ed, and as HTML unless the
+// caller prefers text.
+const AUTHORED_TEXT_SELECT = "id,internetMessageId,receivedDateTime,from,sender,uniqueBody";
+const PREFER_TEXT_BODY = { Prefer: 'outlook.body-content-type="text"' };
 
 const unsignedGet = (url: string): Effect.Effect<HttpClientRequest.HttpClientRequest, M365Error> =>
   Effect.succeed(HttpClientRequest.get(url));
@@ -928,14 +939,15 @@ const executeJson = Effect.fnUntraced(function* <Schema extends S.Top>(
   runtime: M365Runtime,
   url: string,
   schema: Schema,
-  resource: string
+  resource: string,
+  headers: Readonly<Record<string, string>> = {}
 ): Effect.fn.Return<Schema["Type"], M365Error, Schema["DecodingServices"]> {
   yield* Effect.annotateCurrentSpan({
     m365_resource: resource,
   });
   const response = yield* executeWithRetry(
     runtime.client,
-    signedJsonGet(runtime.auth, url),
+    signedJsonGet(runtime.auth, url, headers),
     resource,
     url,
     runtime.config.maxRetries
@@ -1122,6 +1134,13 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
     const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
     const url = graphUrl(runtime.config, mailboxPath(request.userId, `messages/${request.messageId}`));
     return yield* executeJson(runtime, url, GraphMessage, "messages");
+  }),
+  getMessageAuthoredText: Effect.fn("M365.getMessageAuthoredText")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
+    const url = graphUrl(runtime.config, mailboxPath(request.userId, `messages/${request.messageId}`), [
+      ["$select", O.some(AUTHORED_TEXT_SELECT)],
+    ]);
+    return yield* executeJson(runtime, url, GraphMessageAuthoredText, "messages", PREFER_TEXT_BODY);
   }),
   getSite: Effect.fn("M365.getSite")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetSiteRequest, "sites")(rawRequest);

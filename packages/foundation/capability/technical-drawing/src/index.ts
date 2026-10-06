@@ -8,6 +8,20 @@
  */
 
 /**
+ * Pure confirmation verification for sheet-set approval.
+ *
+ * @since 0.0.0
+ * @category approval
+ */
+export * from "./Approval.rules.ts";
+/**
+ * Sheet-set approval domain.
+ *
+ * @since 0.0.0
+ * @category approval
+ */
+export * from "./Approval.schemas.ts";
+/**
  * Figure-set renderer and validator service.
  *
  * @since 0.0.0
