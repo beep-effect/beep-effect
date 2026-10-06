@@ -16,13 +16,12 @@ name="${slug#*/}"
 root="${BEEP_SESSION_STATE_ROOT:-${XDG_STATE_HOME:-$HOME/.local/state}/beep/sessions}"
 file="$root/github.com__${owner}__${name}.jsonl"
 [ -s "$file" ] || exit 0
-# One row per line; a torn or corrupt line is dropped on its own instead of
-# hiding every other row the way a whole-file slurp would.
-while IFS= read -r line; do
-  [ -n "$line" ] || continue
-  printf '%s\n' "$line" | jq -c 'select(type == "object")' 2>/dev/null || true
-done < "$file" | jq -r -s '
-  group_by(.checkout)
+# One jq pass over the whole file: each line is parsed on its own with
+# `fromjson?`, so a torn or corrupt line drops only itself, and a long
+# uncompacted ledger still costs one process.
+jq -r -R -s '
+  [splits("\n") | select(length > 0) | (fromjson? // empty) | select(type == "object")]
+  | group_by(.checkout)
   | map(max_by(.recordedAt))
   | map(select(.state != "done"))
   | sort_by(.recordedAt) | reverse | .[:12]
@@ -30,5 +29,5 @@ done < "$file" | jq -r -s '
       "[session-ledger] \(length) live session(s) for this repository (bun run beep session open):",
       (.[] | "- \(.state) \(.lane) (\(.branch)\(if .pr then ", PR #\(.pr)" else "" end)) \(.recordedAt): \(.next)")
     end
-' 2>/dev/null || true
+' "$file" 2>/dev/null || true
 exit 0

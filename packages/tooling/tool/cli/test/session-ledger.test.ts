@@ -198,14 +198,21 @@ describe("session ledger rows", () => {
 });
 
 describe("sweep ledger gate", () => {
-  it("writes the done row only for an observed MERGED pull request", () => {
-    expect(sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("MERGED") }))).toBe(
-      true
-    );
-    expect(sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("OPEN") }))).toBe(
-      false
-    );
-    expect(sweepWritesLedgerDone(SweepGitState.make(gitStateBase))).toBe(false);
+  it("writes the done row only for an observed MERGED pull request on a checkout that held the branch", () => {
+    const merged = SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("MERGED") });
+    expect(sweepWritesLedgerDone(merged, O.none())).toBe(true);
+    expect(
+      sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("OPEN") }), O.none())
+    ).toBe(false);
+    expect(sweepWritesLedgerDone(SweepGitState.make(gitStateBase), O.none())).toBe(false);
+    // `yeet sweep --branch feat/lane` from a checkout parked on main.
+    const parked = SweepGitState.make({ ...merged, headBranch: "main" });
+    expect(sweepWritesLedgerDone(parked, O.none())).toBe(false);
+    // A retirement vouches for the lane it removed.
+    expect(sweepWritesLedgerDone(parked, O.some("/lanes/lane"))).toBe(true);
+    expect(
+      sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, headBranch: "main" }), O.some("/lanes/lane"))
+    ).toBe(false);
   });
 });
 
