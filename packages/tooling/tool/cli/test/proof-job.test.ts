@@ -61,6 +61,15 @@ const submission = (root: string) =>
     entrypoint: "/repo/cli.ts",
     maxRuntimeSeconds: O.some(3600),
   });
+const monitorSubmission = (root: string) =>
+  Job.ProofJobSubmission.make({
+    ...submission(root),
+    request: Job.ProofJobRequest.make({
+      ...submission(root).request,
+      mode: "monitor",
+      argv: ["monitor", "--until-ready"],
+    }),
+  });
 const writeExecutable = Effect.fnUntraced(function* (path: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(path, text);
@@ -533,6 +542,39 @@ describe("proof job launcher", () => {
           Job.ProofJobSystemdResult.make({ serviceResult: "signal", finalizedAt: stamp })
         );
         expect(O.getOrNull(result.record.terminationReason)).toBe("cancelled");
+      })
+    )
+  );
+  it.effect("rolls the cancel stamp back when the stop fails and the unit is still loaded", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(monitorSubmission(root));
+        yield* launcher.bindPullRequest(record.jobId, 1427);
+        // `systemctl --user stop` exits non-zero; `systemctl --user show -p LoadState` still says loaded.
+        yield* writeExecutable(
+          `${root}/systemctl`,
+          `#!/bin/sh\nprintf '%s\\n' "$@" >> '${root}/systemctl.argv'\n[ "$2" = stop ] && exit 1\nprintf 'loaded\\n'\n`
+        );
+        expect(yield* launcher.cancel(record.jobId)).toBe("stop-failed");
+        const saved = O.getOrThrow(yield* launcher.read(record.jobId));
+        assertNone(saved.cancelRequestedAt);
+        expect(saved.phase).toBe("submitted");
+        // Publish reuses the monitor again instead of submitting a second one for the same pull request.
+        expect(Job.isLiveReadyMonitorJob(saved, { branch: "feat/job", prNumber: 1427 })).toBe(true);
+      })
+    )
+  );
+  it.effect("keeps the cancel stamp when the stop fails because the unit is absent", () =>
+    fixture(
+      Effect.fnUntraced(function* (root) {
+        const launcher = yield* ProofJobLauncher.make(root);
+        const record = yield* launcher.submit(monitorSubmission(root));
+        yield* writeExecutable(`${root}/systemctl`, `#!/bin/sh\n[ "$2" = stop ] && exit 1\nprintf 'not-found\\n'\n`);
+        expect(yield* launcher.cancel(record.jobId)).toBe("unit-absent");
+        const saved = O.getOrThrow(yield* launcher.read(record.jobId));
+        saved.cancelRequestedAt.pipe(O.isSome, assertTrue);
+        expect(Job.isLiveReadyMonitorJob(saved, { branch: "feat/job", prNumber: 1427 })).toBe(false);
       })
     )
   );

@@ -56,7 +56,9 @@ const runGitText = Effect.fn("YeetRetireTest.runGitText")(function* (cwd: string
 });
 
 const encodePrView = S.encodeEffect(S.fromJsonString(GhPrView));
-const encodePacketLifecycle = S.encodeEffect(S.fromJsonString(S.Struct({ lifecycle: S.String })));
+const encodePacketLifecycle = S.encodeEffect(
+  S.fromJsonString(S.Struct({ lifecycle: S.String, statusNote: S.optionalKey(S.String) }))
+);
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
 
@@ -238,6 +240,7 @@ const RETIRE_FENCE_INVOKER = new URL("./support/RetireFenceInvoker.ts", import.m
 
 const RetireInvokerOutcome = S.Struct({ ok: S.Boolean, message: S.String });
 const decodeRetireInvokerOutcome = S.decodeUnknownEffect(S.fromJsonString(RetireInvokerOutcome));
+const encodeRetireInvokerOutcome = S.encodeEffect(S.fromJsonString(RetireInvokerOutcome));
 
 // The retirement step in its own process, with this test process as the agent
 // session above it: whatever CLAUDE_PID `env` carries lands in the invoker's
@@ -278,6 +281,17 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     }),
     { arbitrary: { runs: 20 } }
   );
+
+  it.effect.prop(
+    "generated retire-invoker outcomes round-trip through the JSON line the invoker prints",
+    { outcome: Arbitrary.schema(RetireInvokerOutcome) },
+    ({ outcome }) =>
+      Effect.gen(function* () {
+        const line = yield* encodeRetireInvokerOutcome(outcome);
+        expect(yield* decodeRetireInvokerOutcome(line)).toEqual(outcome);
+      })
+  );
+
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
       Effect.gen(function* () {
@@ -702,17 +716,18 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        // One packet the branch flipped (closed) and one it left active: only
-        // the open one is an advisory, and a non-packet path under goals/ is
-        // ignored.
-        for (const [slug, lifecycle] of [
-          ["open-packet", "active"],
-          ["closed-packet", "completed-retained"],
+        // One packet the branch flipped (closed), one it left active, and one
+        // left active with a statusNote saying why: only the unexplained open
+        // one is an advisory, and a non-packet path under goals/ is ignored.
+        for (const [slug, manifest] of [
+          ["open-packet", { lifecycle: "active" }],
+          ["closed-packet", { lifecycle: "completed-retained" }],
+          ["noted-packet", { lifecycle: "active", statusNote: "P8 is an operator gate." }],
         ] as const) {
           yield* fs.makeDirectory(path.join(lane, "goals", slug, "ops"), { recursive: true });
           yield* fs.writeFileString(
             path.join(lane, "goals", slug, "ops", "manifest.json"),
-            `${yield* encodePacketLifecycle({ lifecycle })}\n`
+            `${yield* encodePacketLifecycle(manifest)}\n`
           );
         }
         yield* fs.writeFileString(path.join(lane, "goals", "INDEX.md"), "# index\n");
@@ -764,6 +779,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         );
         expect(output).toContain("[yeet] packet still active after merge: goals/open-packet");
         expect(output).not.toContain("closed-packet");
+        expect(output).not.toContain("noted-packet");
         expect(yield* fs.exists(lane)).toBe(false);
       })
     )

@@ -1458,9 +1458,9 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
 });
 
 const STAGE_AND_PUBLISH_COMMAND =
-  'stage intended files, then run `bun run beep yeet publish --staged-only --pr --monitor --message "..."`';
+  'stage intended files, then run `bun run beep yeet publish --staged-only --message "..."`';
 const OPEN_PULL_REQUEST_COMMAND =
-  'run `bun run beep yeet publish --pr --monitor --message "..."` when ready for PR review';
+  'run `bun run beep yeet publish --message "..."` to open the draft PR and submit the readiness monitor';
 const MERGE_READY_COMMAND = "confirm GitHub mergeability, then merge the PR";
 const REPLY_COMMAND = "run `bun run beep yeet reply` to answer the outstanding review threads";
 // No review-bot gate here: which bots review a pull request rotates with the
@@ -1626,6 +1626,68 @@ export const deriveYeetMergeReady: {
   const failing = firstFailingCriterion(criteria);
   return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
 });
+
+// GitHub reports a draft pull request's merge state as `DRAFT`, so on a draft
+// the merge-state criterion fails for the same reason `not-draft` does and says
+// nothing about the base. Mergeability (`MERGEABLE` vs `CONFLICTING`) still
+// carries the base-conflict signal on a draft.
+const draftMaskedCriteria: ReadonlyArray<YeetMergeReadyCriterion> = ["not-draft", "merge-state-acceptable"];
+
+/**
+ * Whether a draft pull request is blocked by its draft flag alone.
+ *
+ * **Details**
+ *
+ * True when the pull request is a draft, its merge state is `DRAFT` or an
+ * accepted state, and every other hard criterion holds: the closeout bound the
+ * current head, the required checks are green, every review thread is answered,
+ * it is mergeable, and the review decision is acceptable. `monitor --until-ready`
+ * ends `ready-pending-flip` on it (push-first-publish D9) and leaves the flip to
+ * `yeet ready`.
+ *
+ * **Example** (A green draft is pending its flip)
+ *
+ * ```ts
+ * import { deriveYeetMergeReady, deriveYeetReadyPendingFlip, YeetStatusArtifact, YeetStatusRemote } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const remote = YeetStatusRemote.make({
+ *   available: true, checked: true, detail: "PR #42 OPEN", state: "OPEN", isDraft: true,
+ *   mergeable: "MERGEABLE", mergeStateStatus: "DRAFT", headSha: O.some("abc"),
+ *   requiredCheckCount: 3, failingRequiredCheckCount: 0, pendingRequiredCheckCount: 0, unresolvedReviewThreadCount: 0,
+ * })
+ * const closeout = YeetStatusArtifact.make({
+ *   detail: "closed", issueCount: 0, path: "pr-closeout.json", state: "present", reviewedHeadSha: O.some("abc"),
+ * })
+ * const ready = deriveYeetMergeReady(closeout, remote)
+ * console.log(O.exists(ready, (value) => deriveYeetReadyPendingFlip(remote, value))) // true
+ * ```
+ *
+ * @param remote - Live pull request summary the verdict was derived from.
+ * @param mergeReady - The merge-readiness verdict for the same read.
+ * @returns Whether only the draft flag keeps the pull request from readiness.
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const deriveYeetReadyPendingFlip: {
+  (mergeReady: YeetMergeReady): (remote: YeetStatusRemote) => boolean;
+  (remote: YeetStatusRemote, mergeReady: YeetMergeReady): boolean;
+} = dual(
+  2,
+  (remote: YeetStatusRemote, mergeReady: YeetMergeReady): boolean =>
+    remote.isDraft === true &&
+    !mergeReady.ready &&
+    O.exists(
+      O.fromUndefinedOr(remote.mergeStateStatus),
+      (status) =>
+        Str.toUpperCase(status) === "DRAFT" || A.contains(acceptableMergeStateStatuses, Str.toUpperCase(status))
+    ) &&
+    A.every(
+      YeetMergeReadyCriterion.literals,
+      (criterion) =>
+        A.contains(draftMaskedCriteria, criterion) || mergeReadyCriterionHolds(mergeReady.criteria, criterion)
+    )
+);
 
 // Threads are the one blocker with a command of its own, and it is suggested
 // only when posting those replies is what is left to do: live threads owe an

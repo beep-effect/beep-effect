@@ -66,6 +66,7 @@ export * from "../commands/Yeet/internal/PrSessionRegistry.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";
 export * from "../commands/Yeet/internal/PullRequest.ts";
 export * from "../commands/Yeet/internal/QualityIssueIndex.ts";
+export * from "../commands/Yeet/internal/ReadyGate.ts";
 export * from "../commands/Yeet/internal/Remediation.ts";
 export * from "../commands/Yeet/internal/Reply.schemas.ts";
 export * from "../commands/Yeet/internal/Reply.ts";
