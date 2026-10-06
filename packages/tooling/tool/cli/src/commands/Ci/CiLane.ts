@@ -1227,6 +1227,54 @@ export class CiLanePartitionArgs extends S.Class<CiLanePartitionArgs>($I`CiLaneP
 ) {}
 
 /**
+ * Render the log lines naming every executable package the curated table placed by default.
+ *
+ * **Details**
+ *
+ * One line per lane, listing `package -> partition` pairs, or no line when
+ * every executable package is already in the committed table. The lane
+ * prints these after the union proof so a hosted shard log says where a
+ * freshly created package ran.
+ *
+ * **Example** (Render the default-placement line)
+ *
+ * ```ts
+ * import { ciLaneDefaultPlacementLinesForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciLaneDefaultPlacementLinesForTesting("lint", ["@beep/repo-cli", "@beep/new-package"]))
+ * ```
+ *
+ * @param laneId - Partitioned lane being proved.
+ * @param taskPackageNames - Every current non-labs workspace package with the lane task.
+ * @returns Zero or one log lines.
+ * @category testing
+ * @since 0.0.0
+ */
+export const ciLaneDefaultPlacementLinesForTesting: {
+  (laneId: PartitionedCiLane, taskPackageNames: ReadonlyArray<string>): ReadonlyArray<string>;
+  (taskPackageNames: ReadonlyArray<string>): (laneId: PartitionedCiLane) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (laneId: PartitionedCiLane, taskPackageNames: ReadonlyArray<string>): ReadonlyArray<string> =>
+    pipe(
+      ciLaneDefaultPlacements(
+        A.filter(CI_LANE_PARTITIONS, (candidate) => candidate.lane === laneId),
+        taskPackageNames
+      ),
+      A.match({
+        onEmpty: A.empty<string>,
+        onNonEmpty: (placements) =>
+          A.of(
+            `[ci] ${laneId} default placements (absent from ${CI_LANE_PARTITION_TABLE_PATH}): ${A.join(
+              A.map(placements, (placement) => `${placement.packageName} -> ${placement.partition}`),
+              ", "
+            )}.`
+          ),
+      })
+    )
+);
+
+/**
  * Build the selection and execution argv used by a partitioned CI lane.
  *
  * **Example** (Inspect partition argv)
@@ -2090,18 +2138,9 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
   yield* Console.log(
     `[ci] ${laneId} partition union proved: ${taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
   );
-  const defaultPlacements = ciLaneDefaultPlacements(
-    A.filter(CI_LANE_PARTITIONS, (candidate) => candidate.lane === laneId),
-    taskPackageNames
-  );
-  if (A.isReadonlyArrayNonEmpty(defaultPlacements)) {
-    yield* Console.log(
-      `[ci] ${laneId} default placements (absent from ${CI_LANE_PARTITION_TABLE_PATH}): ${A.join(
-        A.map(defaultPlacements, (placement) => `${placement.packageName} -> ${placement.partition}`),
-        ", "
-      )}.`
-    );
-  }
+  yield* Effect.forEach(ciLaneDefaultPlacementLinesForTesting(laneId, taskPackageNames), Console.log, {
+    discard: true,
+  });
 
   if (options.dryRun) {
     if (A.isReadonlyArrayNonEmpty(proof.packages)) {

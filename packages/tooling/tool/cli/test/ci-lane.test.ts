@@ -7,6 +7,7 @@ import {
   CiLanePartitionShard,
   CiLaneRunOptions,
   CiLocalStepPlan,
+  ciLaneDefaultPlacementLinesForTesting,
   ciLaneDefaultPlacements,
   ciLanePartitionArgsForTesting,
   ciLaneStepsForTesting,
@@ -275,6 +276,13 @@ const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, 
 
 const partitionPackages = (partitionId: string): ReadonlyArray<string> =>
   O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === partitionId)).packages;
+
+const lanePackages = (laneId: "lint" | "test-unit"): ReadonlyArray<string> =>
+  pipe(
+    CI_LANE_PARTITIONS,
+    A.filter((partition) => partition.lane === laneId),
+    A.flatMap((partition) => partition.packages)
+  );
 
 // Executable non-labs packages of the live workspace, the inventory the lane
 // proves against. Deriving expectations from it keeps these tests green when a
@@ -548,6 +556,20 @@ describe("CI lane partitions", () => {
     ).toEqual(A.map(lintPartitions, (partition) => partition.packages));
     expect(A.length(A.flatMap(effective, (partition) => partition.packages))).toBe(A.length(listed) + 1);
     expect(withCiLaneDefaultPlacements(lintPartitions, listed)).toBe(lintPartitions);
+  });
+
+  it("logs default placements only when an executable package is absent from the table", () => {
+    const listed = lanePackages("lint");
+    expect(ciLaneDefaultPlacementLinesForTesting("lint", listed)).toEqual([]);
+
+    const lines = ciLaneDefaultPlacementLinesForTesting("lint", [...listed, "@beep/new-two", "@beep/new-one"]);
+    expect(A.length(lines)).toBe(1);
+    const line = firstOf(lines);
+    expect(line).toContain(
+      "[ci] lint default placements (absent from packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts): "
+    );
+    expect(line).toMatch(/@beep\/new-one -> lint-[ab], @beep\/new-two -> lint-[ab]\.$/u);
+    expect(ciLaneDefaultPlacementLinesForTesting(lanePackages("test-unit"))("test-unit")).toEqual([]);
   });
 
   it("never defaults a package into a sharded bin", () => {

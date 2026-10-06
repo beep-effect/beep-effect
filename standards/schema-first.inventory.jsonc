@@ -949,7 +949,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 47,
+      "line": 48,
       "owner": "@beep/repo-cli",
       "reason": "CI lane regression writes fixed JSON fixture documents through the compact S.fromJsonString(S.Unknown) codec; the codec calls serialize fixtures and assert no schema law, so schema-derived arbitrary coverage does not apply."
     },
