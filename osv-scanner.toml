@@ -69,3 +69,33 @@ reason = "No patched npm release. Same exception as the braces 3.0.3 package ove
 id = "GHSA-ch52-4w7c-c8xp"
 ignoreUntil = 2026-10-16T00:00:00Z
 reason = "No patched npm release. Same exception as the http-cache-semantics 4.2.0 package override; Pulumi install tooling only."
+
+# Published 2026-10-05; no in-range fix for these lockfile artifacts. katex
+# 0.16.47 comes only through mermaid 12 (^0.16.47) for diagram math rendering
+# and the fix (0.18.2) is a 0.x minor outside mermaid's range; sprintf-js 1.0.3
+# comes only through argparse 1.x (mammoth, remarkable) and has no patched 1.0.x.
+[[PackageOverrides]]
+name = "katex"
+version = "0.16.47"
+ecosystem = "npm"
+ignore = true
+effectiveUntil = 2026-10-19T00:00:00Z
+reason = "GHSA-238p-pmpm-9mq7 (CVSS 2.1) is fixed only in katex 0.18.2, outside mermaid 12's ^0.16.47 range; diagram math rendering only. Revisit when mermaid widens its katex range, by 2026-10-19."
+
+[[PackageOverrides]]
+name = "sprintf-js"
+version = "1.0.3"
+ecosystem = "npm"
+ignore = true
+effectiveUntil = 2026-10-19T00:00:00Z
+reason = "GHSA-hp3w-g68c-fv3c has no patched sprintf-js 1.0.x release; reached only via argparse 1.x in mammoth and remarkable CLI parsing. Revisit by 2026-10-19."
+
+[[IgnoredVulns]]
+id = "GHSA-238p-pmpm-9mq7"
+ignoreUntil = 2026-10-19T00:00:00Z
+reason = "Same exception as the katex 0.16.47 package override; mermaid diagram math rendering only."
+
+[[IgnoredVulns]]
+id = "GHSA-hp3w-g68c-fv3c"
+ignoreUntil = 2026-10-19T00:00:00Z
+reason = "Same exception as the sprintf-js 1.0.3 package override; argparse 1.x CLI parsing only."
