@@ -237,6 +237,28 @@ September 15, raised only by a time-boxed burst) limits concurrency, not a
 monthly budget: billing continues
 for each running VM until its ephemeral teardown completes.
 
+## Deployment evidence — 2026-10-06 (drop `r6a.2xlarge`)
+
+Source: PR #1422 removes `r6a.2xlarge` from `runnerInstanceTypes`, leaving
+seven 64 GiB shapes across the same five subnets. On 2026-10-05, 20 of the
+69 `r6a.2xlarge` launches ended `instance-terminated-no-capacity` across
+`us-east-1a`, `1b` and `1d` while the other seven shapes lost 6 of 86.
+
+- Applied 2026-10-06 02:21–02:22 UTC from a clean `main` checkout with a saved
+  plan (`pulumi preview --diff --refresh --save-plan`, then
+  `pulumi up --plan`): 2 updated (the runner module's `instance_types` and
+  the scale-up Lambda environment), 218 unchanged, no creates, deletions or
+  replacements. Duration 49 s.
+- The preview also showed `RUNNERS_MAXIMUM_COUNT` 8 to 2 because an active
+  burst cap was live as a Lambda edit. After the apply and the no-drift check
+  (`pulumi preview --refresh --expect-no-changes`: 220 unchanged), the burst's
+  own `set-cap.sh 8` restored the cap and its guard was left in place.
+- Live check: the scale-up Lambda environment carries `capacity-optimized`,
+  `spot`, and `INSTANCE_TYPES` `r7a.2xlarge,r7i.2xlarge,r6i.2xlarge,
+  m7a.4xlarge,m7i.4xlarge,m6a.4xlarge,m6i.4xlarge`.
+- Open: repeat the reclaim count over the following days against the
+  2026-10-05 baseline of 26 `no-capacity` terminations in 155 launches.
+
 ## Deployment evidence — 2026-10-01 (Spot pool spread)
 
 Source: `instance_allocation_strategy` `capacity-optimized`, eight 64 GiB
