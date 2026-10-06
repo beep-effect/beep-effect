@@ -201,12 +201,12 @@ Only packets that directly feed Lane 1:
   (3/5, untouched since 2026-07-14; `blockedBy: practice-kg-mcp`, resumes at
   the P8 handoff).
 - [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
-  (2/4) — the span-provenance substrate whose close unblocks the dormant
+  (4/4) — the span-provenance substrate whose close unblocks the dormant
   consumers `citation-extraction-engine` and `law-doc-structure-oa-slice`
   (independent of each other; the OA slice excludes citation parsing) and
   the paused `attributed-multi-claim-span`; the cheapest Lane 1 unlock in the
   portfolio (added 2026-09-12).
-- [`patent-document-schema`](../goals/patent-document-schema/README.md) (2/5)
+- [`patent-document-schema`](../goals/patent-document-schema/README.md) (5/5)
   — closes to unblock `document-ast-pattern-classification` →
   `spar-document-annotation-wire` → `folio-lynx-taxonomy-browse` (added
   2026-09-12).

@@ -39,6 +39,7 @@
     "@beep/architecture-lab-tables": "workspace:^",
     "@beep/documents-tables": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/law-practice-tables": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/workspace-tables": "workspace:^",
@@ -46,6 +47,9 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/documents-domain": "workspace:^",
+    "@beep/epistemic-domain": "workspace:^",
+    "@beep/law-practice-domain": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",

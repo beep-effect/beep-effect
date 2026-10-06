@@ -7,7 +7,7 @@
 
 import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
-import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
+import { classifySourceFormat, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
@@ -49,6 +49,8 @@ export const TikaFileProcessingEngineDescriptor = FileProcessingEngineDescriptor
     "html",
     "xhtml",
     "pdf-text-layer",
+    "eml",
+    "msg",
     "plain-text",
     "markdown",
     "image-metadata",
@@ -100,7 +102,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
     return DetectionResult.make({
       confidence: 0.95,
       engine: TikaFileProcessingEngineDescriptor.name,
-      format: classifyFormatFromExtension(operation.source.extension),
+      format: classifySourceFormat(operation.source.extension, operation.source.mediaType),
       operationId: operation.operationId,
       sourceArtifactId: operation.source.id,
       ...O.getSomesStruct({

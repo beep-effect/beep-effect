@@ -27,6 +27,9 @@
       "path": "../../packages/drivers/anthropic/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/box/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/cosmos/tsconfig.json"
     },
     {

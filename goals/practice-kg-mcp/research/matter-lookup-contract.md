@@ -3,7 +3,8 @@
 Stable surface for services that must turn a reference found in mail or a
 document into a practice matter (docket intake, email tagging, Box filing).
 Normative decision: `SPEC.md` D-12. This contract is versioned by the bundle's
-`schemaVersion.duckdb` (`2`); a breaking change bumps it.
+`schemaVersion.duckdb` (`3`); a breaking change bumps it. Version 3 added
+`client_name` to `matters` and two attribution sources (D-21).
 
 ## What a matter is
 
@@ -107,13 +108,41 @@ matter sequence. Never pass it to the lookup as a family and never store it as
 
 - `resolution` — `unique` (exactly one matter), `ambiguous` (several), `none`.
 - `matters[]` — `familyKey`, `family`, `client` (null for the unattributed
-  remainder), `attributionSource`, `epistemicStatus`, `docketCount`,
+  remainder), `clientName` (see below), `attributionSource`,
+  `epistemicStatus`, `docketCount`,
   `documentCount`, `matchedOn[]`, and `dockets[]` (`docketKey`, `docket`,
   `applicationNumbers[]`, `patentNumbers[]`, `documentCount`,
   `epistemicStatus`, `matched`).
 - `bundleVersion`, `reference`.
 
-The MCP tool returns the same data as one row per docket.
+The MCP tool returns the same data as one row per docket. `clientName` is in
+its balanced and complete tiers.
+
+### Client name
+
+`clientName` is the name the attorney's docket register gives the matter's
+client number. It is null when the register does not list the client, lists it
+without a name, or lists it under more than one name. `client` stays the key:
+file and tag by the number, and show the name only as a label.
+
+### Attribution source
+
+`attributionSource` says why a matter has its client. From strongest to
+weakest:
+
+| Source | Meaning |
+| --- | --- |
+| `folder-path` | the attorney's folder path names one client for the docket |
+| `text-reference` | the document's text names one `<client>.<docket>` for its family |
+| `client-map` | the organizer's source-label map |
+| `family-consensus` | every document of the family with one of the first two agrees |
+| `docket-register` | no document of the family has folder or text evidence, and the docket register lists exactly one client for the docket |
+| `filename`, `restored-name` | no client evidence; the matter is the bare family |
+
+The register is last on purpose: bare docket codes are reused across clients
+and the register lists only current dockets, so it never overrides what a
+document says about itself. A docket the register lists under two clients, or
+a path that names two dockets, is ambiguous and is not used.
 
 ## Rules for callers
 
@@ -149,6 +178,7 @@ matters(
   family_key VARCHAR PRIMARY KEY,   -- "12345.10008", or bare "10008" when unattributed
   family VARCHAR NOT NULL,          -- bare family number
   client VARCHAR,                   -- null when unattributed
+  client_name VARCHAR,              -- from the docket register; null when it gives no single name
   attribution_source VARCHAR NOT NULL,
   epistemic_status VARCHAR NOT NULL,
   docket_count BIGINT NOT NULL,
@@ -167,8 +197,12 @@ matter_dockets(
 
 ## Where the bundle is
 
-On the workstation: `<corpus>/staging/practice-kg-bundle-p6` (bundle version
-`2026-10-06-01`, store format pglite 2 / duckdb 2). Rebuild with
+This contract describes store format pglite 3 / duckdb 3, which the build
+writes from bundle version `2026-10-06-02` on. The bundle at
+`<corpus>/staging/practice-kg-bundle-p6` is the older `2026-10-06-01` (format
+2); the current host refuses it by name. Rebuild with
 `bun run apps/practice-kg-mcp/src/build.ts --corpus-root <corpus> --bundle-out <dir> --overwrite`,
-carry claims with `claims.ts --carry-from <old bundle>`, and prove it with
-`verify.ts --bundle-dir <dir>`.
+adding `--include-run <label>` for each later source run and
+`--docket-register <file>` for the register (see `bundle-contract.md` §5).
+Carry claims with `claims.ts --carry-from <old bundle>`, and prove the result
+with `verify.ts --bundle-dir <dir>`.

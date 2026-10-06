@@ -14,6 +14,8 @@ import {
   PracticeKgProvenanceKind,
 } from "@beep/law-practice-domain/values";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Order } from "effect";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -49,6 +51,73 @@ export {
 } from "@beep/law-practice-domain/values";
 
 const practiceKgOptionsMaxTextBytesDefault = PosInt.make(2_097_152);
+
+/**
+ * Label of one corpus source run, as written in the catalog's `run_label`.
+ *
+ * **Details**
+ *
+ * A run label also names the run's extraction tree
+ * (`staging/extract-<label>`), so it is limited to letters, digits, dots,
+ * underscores, and hyphens and cannot start with a separator.
+ *
+ * **Example** (Decode a run label)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PracticeKgRunLabel } from "@beep/law-practice-server"
+ *
+ * console.log(S.decodeUnknownSync(PracticeKgRunLabel)("2026-07-refresh")) // "2026-07-refresh"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PracticeKgRunLabel = S.String.check(
+  S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._-]*$/u, {
+    message: "Expected a run label of letters, digits, dots, underscores, or hyphens",
+  })
+).pipe(
+  $I.annoteSchema("PracticeKgRunLabel", {
+    description: "Corpus source-run label that also names the run's extraction tree.",
+  })
+);
+
+/**
+ * Runtime type for {@link PracticeKgRunLabel}.
+ *
+ * **Example** (Type a run label)
+ *
+ * ```ts
+ * import type { PracticeKgRunLabel } from "@beep/law-practice-server"
+ *
+ * const label: PracticeKgRunLabel = "2026-07-refresh"
+ * console.log(label) // "2026-07-refresh"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgRunLabel = typeof PracticeKgRunLabel.Type;
+
+/**
+ * Run label that `includeRefresh` stands for.
+ *
+ * **Example** (Read the refresh run label)
+ *
+ * ```ts
+ * import { PRACTICE_KG_REFRESH_RUN } from "@beep/law-practice-server"
+ *
+ * console.log(PRACTICE_KG_REFRESH_RUN) // "2026-07-refresh"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PRACTICE_KG_REFRESH_RUN = "2026-07-refresh";
+
+const emptyRunLabels = Effect.succeed(A.empty<string>());
+
 /**
  * Validated options used by `corpus graph`.
  *
@@ -60,6 +129,12 @@ const practiceKgOptionsMaxTextBytesDefault = PosInt.make(2_097_152);
  * construction and decode. `overwrite` is what distinguishes a rebuild from an
  * accidental clobber — without it a build refuses to run against an existing
  * bundle.
+ *
+ * `includeRuns` names source runs to fold in: each contributes the files the
+ * organizer never saw and its `staging/extract-<label>` text. `includeRefresh`
+ * is the older spelling of including run `2026-07-refresh`; use
+ * {@link PracticeKgOptions.includedRuns} to read the combined list.
+ * `docketRegisterPath` points at the attorney's docket register as JSONL.
  *
  * **Example** (Make options with defaults)
  *
@@ -84,7 +159,12 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
   {
     bundleOut: S.optionalKey(S.String),
     corpusRoot: S.String,
+    docketRegisterPath: S.optionalKey(S.String),
     includeRefresh: S.Boolean,
+    includeRuns: S.Array(PracticeKgRunLabel).pipe(
+      S.withConstructorDefault(emptyRunLabels),
+      S.withDecodingDefaultTypeKey(emptyRunLabels)
+    ),
     maxTextBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(practiceKgOptionsMaxTextBytesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(practiceKgOptionsMaxTextBytesDefault))
@@ -125,7 +205,53 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
     (options: PracticeKgBundleOutInput, path: Path.Path): string =>
       options.bundleOut ?? path.join(options.corpusRoot, "staging", "practice-kg-bundle")
   );
+
+  /**
+   * Source runs a build folds in, sorted and without repeats: `includeRuns`
+   * plus the refresh run when `includeRefresh` is set.
+   *
+   * **Example** (Combine both spellings)
+   *
+   * ```ts
+   * import { PracticeKgOptions } from "@beep/law-practice-server"
+   *
+   * const options = PracticeKgOptions.make({
+   *   corpusRoot: "/corpus",
+   *   includeRefresh: true,
+   *   includeRuns: ["2026-10-tom-pc"],
+   *   overwrite: false,
+   *   skipEmails: false
+   * })
+   *
+   * console.log(PracticeKgOptions.includedRuns(options)) // ["2026-07-refresh", "2026-10-tom-pc"]
+   * ```
+   *
+   * @category utilities
+   * @since 0.0.0
+   */
+  static readonly includedRuns = (options: PracticeKgIncludedRunsInput): ReadonlyArray<string> =>
+    A.sort(
+      A.dedupe(options.includeRefresh ? A.append(options.includeRuns, PRACTICE_KG_REFRESH_RUN) : options.includeRuns),
+      Order.String
+    );
 }
+
+/**
+ * Run-selection fields accepted by {@link PracticeKgOptions.includedRuns}.
+ *
+ * **Example** (Refresh only input)
+ *
+ * ```ts
+ * import type { PracticeKgIncludedRunsInput } from "@beep/law-practice-server"
+ *
+ * const input: PracticeKgIncludedRunsInput = { includeRefresh: true, includeRuns: [] }
+ * console.log(input.includeRuns.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgIncludedRunsInput = Pick<PracticeKgOptions, "includeRefresh" | "includeRuns">;
 
 /**
  * Corpus-root and optional bundle destination accepted by
@@ -308,16 +434,16 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  *
  * The two stores version independently, so a reader can support a new DuckDB
  * layout without re-reading every PGlite bundle. Both are currently pinned at
- * `"1"`; a change to either is a breaking change for bundle consumers.
+ * `"3"`; a change to either is a breaking change for bundle consumers.
  *
  * **Example** (Pin both store versions)
  *
  * ```ts
  * import { PracticeKgSchemaVersions } from "@beep/law-practice-server"
  *
- * const versions = PracticeKgSchemaVersions.make({ duckdb: "2", pglite: "2" })
+ * const versions = PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" })
  *
- * console.log(versions.duckdb) // "1"
+ * console.log(versions.duckdb) // "3"
  * ```
  *
  * @category models
@@ -325,8 +451,8 @@ export class PracticeKgEmailHeaderRow extends S.Class<PracticeKgEmailHeaderRow>(
  */
 export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>($I`PracticeKgSchemaVersions`)(
   {
-    duckdb: S.tag("2"),
-    pglite: S.tag("2"),
+    duckdb: S.tag("3"),
+    pglite: S.tag("3"),
   },
   $I.annote("PracticeKgSchemaVersions", {
     description: "Independent schema versions for the two embedded graph stores.",
@@ -340,7 +466,9 @@ export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>(
  *
  * Recording exclusion explicitly, rather than omitting the run, is what lets a
  * reader tell "the refresh was deliberately left out" from "this bundle predates
- * the refresh".
+ * the refresh". `includedRuns` lists every folded-in run by label, the refresh
+ * among them when it is included; `refresh202607` stays for readers that know
+ * only that field.
  *
  * **Example** (Record excluded refresh run)
  *
@@ -358,10 +486,11 @@ export class PracticeKgSchemaVersions extends S.Class<PracticeKgSchemaVersions>(
 export class PracticeKgSourceRuns extends S.Class<PracticeKgSourceRuns>($I`PracticeKgSourceRuns`)(
   {
     base: S.tag("included"),
+    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyRunLabels)),
     refresh202607: LiteralKit(["included", "excluded"]),
   },
   $I.annote("PracticeKgSourceRuns", {
-    description: "Explicit base and July 2026 refresh inclusion state for a graph bundle.",
+    description: "Base run, the folded-in source runs by label, and the July 2026 refresh inclusion state.",
   })
 ) {}
 
@@ -436,7 +565,7 @@ export class PracticeKgCounts extends S.Class<PracticeKgCounts>($I`PracticeKgCou
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "2", pglite: "2" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *
@@ -508,6 +637,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
     docketFamilies: S.Natural,
     familyAnchors: S.Natural,
     includeRefresh: S.Boolean,
+    includedRuns: S.Array(S.String).pipe(S.withConstructorDefault(emptyRunLabels)),
     sourceRows: S.Natural,
   },
   $I.annote("PracticeKgSummary", {
@@ -542,7 +672,7 @@ export class PracticeKgSummary extends S.Class<PracticeKgSummary>($I`PracticeKgS
  *     emails: S.Natural.make(2317),
  *     nodes: S.Natural.make(8421)
  *   }),
- *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "2", pglite: "2" }),
+ *   schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
  *   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "included" })
  * })
  *
