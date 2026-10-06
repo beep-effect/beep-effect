@@ -49,11 +49,13 @@ ORDER BY n.kind, n.natural_key`,
 SELECT
   c.snapshot->>'activityOperation' AS "activityOperation",
   c.snapshot->>'claimText' AS "claimText",
+  doc.client AS client,
   c.snapshot->>'digest' AS digest,
   c.snapshot->>'docket' AS docket,
   CAST(e.span->>'endChar' AS FLOAT8) AS "endChar",
   e.span->>'quote' AS "evidenceQuote",
   c.snapshot->>'family' AS family,
+  CASE WHEN doc.client IS NULL THEN NULL ELSE doc.client || '.' || doc.docket_family END AS "familyKey",
   'candidate — unreviewed' AS label,
   c.snapshot->>'sourceDocumentDigest' AS "sourceDocumentDigest",
   c.snapshot->>'sourceFile' AS "sourceFile",
@@ -61,8 +63,12 @@ SELECT
 FROM epistemic_candidate_claim c
 JOIN epistemic_evidence e
   ON e.span_fixture_key = c.snapshot->>'evidenceFixtureKey'
-WHERE (CAST($1 AS TEXT) IS NULL OR c.snapshot->>'docket' = CAST($1 AS TEXT))
-  AND (CAST($2 AS TEXT) IS NULL OR c.snapshot->>'family' = CAST($2 AS TEXT))
+LEFT JOIN kg_node doc
+  ON doc.kind = 'document' AND doc.natural_key = c.snapshot->>'sourceDocumentDigest'
+WHERE (CAST($1 AS TEXT) IS NULL OR c.snapshot->>'docket' = CAST($1 AS TEXT)
+    OR c.snapshot->>'docket' = split_part(CAST($1 AS TEXT), '.', 2))
+  AND (CAST($2 AS TEXT) IS NULL OR c.snapshot->>'family' = CAST($2 AS TEXT)
+    OR (doc.client IS NOT NULL AND doc.client || '.' || doc.docket_family = CAST($2 AS TEXT)))
   AND (CAST($3 AS TEXT) IS NULL OR c.snapshot->>'digest' = CAST($3 AS TEXT))
 ORDER BY c.snapshot->>'family', c.snapshot->>'docket', c.public_id`,
   claimsTableProbe: `
@@ -151,7 +157,8 @@ WHERE label ILIKE $1 OR natural_key ILIKE $1
 ORDER BY kind, natural_key
 LIMIT 100`,
   getDocument: `
-SELECT d.digest, d.docket, d.docket_family AS family, d.organized_relative_path AS "organizedPath",
+SELECT d.digest, d.docket, d.docket_family AS family, NULL::DOUBLE AS "matchOffset",
+  d.organized_relative_path AS "organizedPath",
   NULL::DOUBLE AS score, CASE WHEN t.text IS NULL THEN NULL ELSE left(t.text, 500) END AS snippet,
   d.source_origin_chain AS "sourceOriginChain", d.source_relative_path AS "sourceRelativePath",
   CASE WHEN t.text IS NULL THEN NULL ELSE substr(t.text, $3, $4) END AS text,
@@ -171,7 +178,8 @@ WHERE (CAST($1 AS TEXT) IS NOT NULL AND iri = CAST($1 AS TEXT))
    OR (CAST($3 AS TEXT) IS NOT NULL AND natural_key = CAST($3 AS TEXT))
 ORDER BY kind, natural_key`,
   provenanceDocument: `
-SELECT d.digest, d.docket, d.docket_family AS family, d.organized_relative_path AS "organizedPath",
+SELECT d.digest, d.docket, d.docket_family AS family, NULL::DOUBLE AS "matchOffset",
+  d.organized_relative_path AS "organizedPath",
   NULL::DOUBLE AS score, NULL::VARCHAR AS snippet,
   d.source_origin_chain AS "sourceOriginChain", d.source_relative_path AS "sourceRelativePath",
   NULL::VARCHAR AS text, NULL::BOOLEAN AS truncated, NULL::VARCHAR AS pointer
@@ -188,13 +196,18 @@ scores AS (
   WHERE b.doc_id LIKE 'document:%'
   GROUP BY b.doc_id
 )
-SELECT d.digest, d.docket, d.docket_family AS family, d.organized_relative_path AS "organizedPath",
-  s.score, left(t.text, 500) AS snippet, NULL::VARCHAR AS "sourceOriginChain",
+SELECT d.digest, d.docket, d.docket_family AS family, m.match_offset AS "matchOffset",
+  d.organized_relative_path AS "organizedPath",
+  s.score, substr(t.text, GREATEST(1, CAST(COALESCE(m.match_offset, 1) AS BIGINT) - 160), 500) AS snippet,
+  NULL::VARCHAR AS "sourceOriginChain",
   d.source_relative_path AS "sourceRelativePath", NULL::VARCHAR AS text,
   t.truncated, NULL::VARCHAR AS pointer
 FROM scores s
 JOIN documents d ON s.doc_id = 'document:' || d.digest
 LEFT JOIN document_text t ON t.digest = d.digest
+LEFT JOIN LATERAL (
+  SELECT CAST(MIN(NULLIF(instr(lower(t.text), q.term), 0)) AS DOUBLE) AS match_offset FROM query_terms q
+) m ON TRUE
 WHERE ($2 IS NULL OR d.docket_family = $2)
 ORDER BY s.score DESC, d.digest
 LIMIT $3`,
