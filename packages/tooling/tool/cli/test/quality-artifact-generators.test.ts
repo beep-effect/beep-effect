@@ -156,74 +156,72 @@ const acquireLabsFixtureRepo = Effect.fnUntraced(function* () {
 it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("quality artifact generators", (it) => {
   // The old bracket acquired the whole fixture before registering cleanup.
   // Inject into the real setup seam, then observe removal outside that shorter scope.
-  for (const labs of [false, true]) {
-    for (const interrupted of [false, true]) {
-      it.effect(
-        `removes the ${labs ? "labs" : "package"} root when setup ${interrupted ? "is interrupted" : "fails"}`,
-        Effect.fnUntraced(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          const allocated = yield* Ref.make("");
-          const attemptedDirectories = yield* Ref.make(A.empty<string>());
-          const injectedDirectories = yield* Ref.make(A.empty<string>());
-          const targetDirectory = labs ? "apps/labs/demo/src" : "packages/demo/src";
-          const isTargetDirectory = Str.endsWith(`/${targetDirectory}`);
-          const failure = PlatformError.systemError({
-            _tag: "PermissionDenied",
-            module: "FileSystem",
-            method: "makeDirectory",
-            pathOrDescriptor: "fixture setup",
-            description: "injected setup failure",
-          });
-          const failingFs = FileSystem.FileSystem.of({
-            ...fs,
-            makeTempDirectoryScoped: Effect.fn("FixtureSetup.makeTempDirectoryScoped")(
-              (options: Parameters<FileSystem.FileSystem["makeTempDirectoryScoped"]>[0]) =>
-                fs.makeTempDirectoryScoped(options).pipe(Effect.tap((root) => Ref.set(allocated, root)))
-            ),
-            makeDirectory: Effect.fnUntraced(function* (
-              directory: string,
-              options: Parameters<FileSystem.FileSystem["makeDirectory"]>[1]
-            ) {
-              const root = yield* Ref.get(allocated);
-              const relativeDirectory = path.relative(root, directory);
-              yield* Ref.update(attemptedDirectories, A.append(relativeDirectory));
-              if (isTargetDirectory(directory)) {
-                expect(directory).toBe(path.join(root, targetDirectory));
-                if (labs) {
-                  // Labs setup must reach its own mkdir after package setup has completed.
-                  expect(yield* fs.readFileString(path.join(root, "packages", "demo", "src", "index.ts"))).toBe(
-                    packageSource
-                  );
-                }
-                yield* Ref.update(injectedDirectories, A.append(relativeDirectory));
-                return yield* interrupted ? Effect.interrupt : Effect.fail(failure);
+  for (const [labs, interrupted] of A.cartesian([false, true], [false, true])) {
+    it.effect(
+      `removes the ${labs ? "labs" : "package"} root when setup ${interrupted ? "is interrupted" : "fails"}`,
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const allocated = yield* Ref.make("");
+        const attemptedDirectories = yield* Ref.make(A.empty<string>());
+        const injectedDirectories = yield* Ref.make(A.empty<string>());
+        const targetDirectory = labs ? "apps/labs/demo/src" : "packages/demo/src";
+        const isTargetDirectory = Str.endsWith(`/${targetDirectory}`);
+        const failure = PlatformError.systemError({
+          _tag: "PermissionDenied",
+          module: "FileSystem",
+          method: "makeDirectory",
+          pathOrDescriptor: "fixture setup",
+          description: "injected setup failure",
+        });
+        const failingFs = FileSystem.FileSystem.of({
+          ...fs,
+          makeTempDirectoryScoped: Effect.fn("FixtureSetup.makeTempDirectoryScoped")(
+            (options: Parameters<FileSystem.FileSystem["makeTempDirectoryScoped"]>[0]) =>
+              fs.makeTempDirectoryScoped(options).pipe(Effect.tap((root) => Ref.set(allocated, root)))
+          ),
+          makeDirectory: Effect.fnUntraced(function* (
+            directory: string,
+            options: Parameters<FileSystem.FileSystem["makeDirectory"]>[1]
+          ) {
+            const root = yield* Ref.get(allocated);
+            const relativeDirectory = path.relative(root, directory);
+            yield* Ref.update(attemptedDirectories, A.append(relativeDirectory));
+            if (isTargetDirectory(directory)) {
+              expect(directory).toBe(path.join(root, targetDirectory));
+              if (labs) {
+                // Labs setup must reach its own mkdir after package setup has completed.
+                expect(yield* fs.readFileString(path.join(root, "packages", "demo", "src", "index.ts"))).toBe(
+                  packageSource
+                );
               }
-              return yield* fs.makeDirectory(directory, options);
-            }),
-          });
-          const exit = yield* (labs ? acquireLabsFixtureRepo() : acquireFixtureRepo()).pipe(
-            Effect.provideService(FileSystem.FileSystem, failingFs),
-            Effect.scoped,
-            Effect.exit
-          );
-          if (interrupted) {
-            assertTrue(Exit.isFailure(exit));
-            assertTrue(Cause.hasInterrupts(exit.cause));
-            assertTrue(Cause.hasInterruptsOnly(exit.cause));
-          } else {
-            assertExitFailure(exit, Cause.fail(failure));
-          }
-          const root = yield* Ref.get(allocated);
-          expect(root).not.toBe("");
-          expect(yield* Ref.get(attemptedDirectories)).toEqual(
-            labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]
-          );
-          expect(yield* Ref.get(injectedDirectories)).toEqual([targetDirectory]);
-          expect(yield* fs.exists(root)).toBe(false);
-        })
-      );
-    }
+              yield* Ref.update(injectedDirectories, A.append(relativeDirectory));
+              return yield* interrupted ? Effect.interrupt : Effect.fail(failure);
+            }
+            return yield* fs.makeDirectory(directory, options);
+          }),
+        });
+        const exit = yield* (labs ? acquireLabsFixtureRepo() : acquireFixtureRepo()).pipe(
+          Effect.provideService(FileSystem.FileSystem, failingFs),
+          Effect.scoped,
+          Effect.exit
+        );
+        if (interrupted) {
+          assertTrue(Exit.isFailure(exit));
+          assertTrue(Cause.hasInterrupts(exit.cause));
+          assertTrue(Cause.hasInterruptsOnly(exit.cause));
+        } else {
+          assertExitFailure(exit, Cause.fail(failure));
+        }
+        const root = yield* Ref.get(allocated);
+        expect(root).not.toBe("");
+        expect(yield* Ref.get(attemptedDirectories)).toEqual(
+          labs ? ["packages/demo/src", "apps/labs/demo/src"] : ["packages/demo/src"]
+        );
+        expect(yield* Ref.get(injectedDirectories)).toEqual([targetDirectory]);
+        expect(yield* fs.exists(root)).toBe(false);
+      })
+    );
   }
 
   describe("inline schema annotations", () => {

@@ -1,5 +1,29 @@
 # @beep/repo-cli four-lens source audit
 
+## 2026-10-06 Laws, Quality and Yeet continuation
+
+Source `bd7a8e0301fc80ed7d1c466f9e79287b5c102724` repairs the selected
+nine-file resource/assertion/property/runner batch. Historical identity
+reconciliation fixes 56 existing rows: 50 at that source and six at their
+actual upstream commits (`678cf419…` for two Laws Turbo provider sites,
+`b1aa7e32…` for four synthetic codec sites). Nine historical judgments are
+reasoned native-resource/short PATH-scope exceptions; two newly exposed
+cleanup-subject/controlled-clock judgments are appended as exceptions.
+
+The live selected baseline changes 67 candidates to 11 reviewed judgments;
+whole-repository live findings remain 1,881. The historical inventory has
+253 open detector-directory rows and 50 actionable human rows (resource 20,
+property 21, flake 5, observability 4), after the separately attributed P1
+verdict-observability correction. All 3,861 no-findings coverage rows
+remain unchanged. These historical and current populations are distinct.
+
+Exact source/ID/commit correspondence is in
+[the lineage receipt](../../../research/cli-continuation-nine-lineage.json),
+and focused tests, independent review, package proof status and timings are
+in [the proof receipt](../../../research/cli-continuation-nine-proof.md).
+The full goal, final main delta, empty baseline and hosted acceptance remain
+open. Older receipts below retain their dated claims.
+
 ## 2026-09-28 runner import reconciliation
 
 Commit `ed7b494e14fb5b2e5890e1f790276ba9a9d95f63` fixes 56 existing EV011 rows.

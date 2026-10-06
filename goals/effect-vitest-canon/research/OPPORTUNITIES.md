@@ -6860,3 +6860,58 @@ running Node alone immediately afterward passed the same 37 cases. The failure
 was cache cleanup contention, not a source assertion failure. Distinct cache
 paths per runtime or serialization in the qualification harness would prevent
 this false red.
+# Continuation references outlived private cache files, 2026-10-06
+
+The full-goal handoff names an inventory-next worktree and two files under
+`~/.cache/beep/effect-vitest-canon/p1/` that no longer exist. Reading the named
+NEXT-SESSION-GOAL and consolidation handoff returned `No such file or directory`.
+The tracked packet, merged source and proof receipts recovered the boundary;
+PRs #1390, #1467 and #1468 were independently verified merged. A compact tracked
+continuation receipt with commit-qualified evidence and outstanding requirements
+would prevent private-cache retirement from obscuring what remains. The new
+receipt is `history/2026-10-06-continuation-provenance.md`; old missing receipts
+are not reconstructed as if their contents had been verified.
+
+
+### Focused runtime tests missed an ill-typed failure injector (2026-10-06)
+
+The continuation nine-file batch passed its selected Node/Bun tests, but the
+shared test-project typecheck found an incorrect `Str.endsWith` call in a new
+artifact setup failure control. The installed curried API made the condition
+truthy at an earlier mkdir, so the cleanup assertion did not prove failure at
+the intended package/labs stage. The compiler also found named Effect helper
+and repeated-provider diagnostics in the same batch. Focused green runtime
+results therefore remained provisional. Repair requires explicit acquisition
+stage assertions plus the correct API, followed by test-project typing and
+source-bound independent review. Running that type boundary before promoting
+a focused report, and checking the injection stage itself, would prevent the
+false-green interpretation. No production regression or completed acceptance
+is inferred from these provisional runs.
+
+
+### Strict row decoding does not validate graph-reference membership (2026-10-06)
+
+The continuation's 15,503-row public schema/ID check passed, while a separate
+primitive-graph membership probe found 135 inherited fixed rows using six
+non-graph replacement labels, including two spellings of a utils-module
+reference, the instrumented runner and native helpers. The selected 67
+changed/added rows all use graph IDs. This is a historical metadata/validator
+contract gap, not proof that the 135 source fixes failed. A retained public
+validator with explicit canonical graph mapping, historical aliases and
+controlled tests would prevent schema decoding from being mistaken for full
+inventory acceptance. The rows remain unchanged pending source-bound
+reconciliation; the missing private validator is not silently re-created.
+
+
+### Generic repair rewrites unrelated helpers; Fallow finds outer registration complexity (2026-10-06)
+
+The first continuation `yeet repair` ran whole-workspace terse-effect fixers
+and rewrote pre-existing empty-array thunks in Cache governance and Session
+commands, outside the nine-file source intent. Its cheap-gate audit also
+identified one introduced cognitive-complexity finding: the artifact suite
+registration callback has score 9 against 8 because its cleanup-control
+matrix uses nested registration loops. The correct repair is flattening
+that unchanged four-case matrix and retaining every control; no suppression
+or threshold change is justified. Unrelated autofixes will be removed from
+this lane after the fixer stops. A path-bounded repair mode and an early
+Fallow check would avoid unreviewed edits and late structural feedback.
