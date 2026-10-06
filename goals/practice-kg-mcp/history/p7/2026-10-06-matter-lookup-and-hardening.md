@@ -82,17 +82,23 @@ checklist against the staged hand-off set. As reported:
 This is the first run of this build on real Windows, and it covers the B-1
 cwd-independence regression on the target itself.
 
-**Correction to earlier packet notes:** this PC had no prior practice-KG
-install (no Claude extension, no KG entry in the Desktop config, empty target
-folder). The July gauntlet ran on a different Windows test target. There is
-therefore no old extension to disable, and "installed on the attorney's
-machine" was never true before this hand-off.
+**Existing install on that PC.** The July extension is installed there and was
+the running server (Claude Desktop → Developer shows it "managed by an
+extension", pointed at the July bundle). The scripted session could not see it:
+this Claude Desktop install keeps its data under a virtualized path, not the
+plain `%APPDATA%\Claude`, so a script-level edit of
+`claude_desktop_config.json` lands in a file the app does not read. Two
+consequences: the update path on this machine is **Settings → Extensions**
+(uninstall the old extension, install the new `.mcpb`, set the bundle folder),
+and the manifest version had to change, because the July package and the first
+2026-10-06 package both said `0.0.0` and the app could not tell them apart. The
+manifest version is now `0.2.0` and is bumped per hand-off.
 
 ## Not done here
 
-- **AC-6** needs people: the operator registers the server in the Claude
-  Desktop config with the app closed (a prepared script), and the attorney
-  asks his first questions with memory cleared. Server and bundle are already
+- **AC-6** needs people: the operator replaces the extension through
+  Settings → Extensions and points it at the new bundle folder, and the
+  attorney asks his first questions with memory cleared. Server and bundle are already
   on the PC and proven at the tool layer.
 - **P5 correctness calls** on G-1..G-5 remain the attorney's.
 - windows-latest CI packaging smoke (D-15 follow-up).

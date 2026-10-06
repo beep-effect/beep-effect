@@ -56,8 +56,8 @@ the server needs no network (AC-5, proved under enforced isolation), and the
 bundle exposes a stable matter-lookup contract for the docket-intake, email,
 and Box services (`research/matter-lookup-contract.md`). The server and bundle are on
 the attorney's PC and pass eleven of eleven tool-level checks there with zero
-network connections. What remains needs people: registering the server in his
-Claude Desktop config, his first questions (AC-6), and his correctness calls
+network connections. What remains needs people: replacing the July extension with
+the new package in Claude Desktop, his first questions (AC-6), and his correctness calls
 on G-1..G-5.
 
 ## Latest Evidence

@@ -27,6 +27,20 @@ administrator instead.
 
 ## Refresh
 
+## Updating an existing install
+
+Claude Desktop identifies an extension by name and version. Uninstall the
+existing **Beep Practice Knowledge Graph** extension in **Settings →
+Extensions** first, then install the new `.mcpb` and set **Practice KG data
+bundle** to the new bundle folder. Uninstalling removes only the extension;
+bundle folders are untouched. Confirm with `kg_provenance` (no arguments): it
+reports the bundle version, and the tool list includes `kg_matter_lookup`.
+
+Do not register this server by editing `claude_desktop_config.json` on a
+machine that uses the extension: some Claude Desktop installs keep their data
+under a virtualized path, so the file a script finds is not the one the app
+reads, and a second registration would duplicate the server.
+
 The server and the bundle ship as a pair: this server reads store format
 pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
 formats. Replace the extension and the bundle folder together.
