@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "effect-vitest-p1-timing-context/v1",
+  "package": "@beep/repo-cli",
+  "phase": "after",
+  "headBefore": "8c5e6d4c75e7c2318fa9981c3e15a55ac3d2c27b",
+  "headAfter": "8c5e6d4c75e7c2318fa9981c3e15a55ac3d2c27b",
+  "runtime": {
+    "node": "v24.20.0",
+    "bun": "1.4.2"
+  },
+  "vitest": "5.0.3",
+  "command": [
+    "bunx",
+    "vitest",
+    "run",
+    "--reporter=json",
+    "--outputFile=<private absolute raw report>"
+  ],
+  "commandQualification": "Run from the @beep/repo-cli package directory with the same Node Vitest reporter command shape as the P1 baseline. Raw reporter JSON and the wall-time log are retained in the ignored worktree proof directory.",
+  "rawReporterSha256": "96d6d0cc1d95b16cbc9fc9135cacf4302b9fb267434006d8012a67b23e54fe98",
+  "wholeCommandSeconds": 973.97,
+  "reporterTotalMsDefinition": "max(file.endTime) - reporter.startTime; excludes shutdown and report writing; wholeCommandSeconds measures elapsed process time separately",
+  "registeredTestStatuses": {
+    "passed": 5264
+  },
+  "comparability": "Intermediate observation at 8c5e6d4c, before the goals-doctor-path-security test change at 5e5a03c666; this does not measure the final PR head. Not comparable to the 2026-09-11 Node 22/Vitest 4.1.11 baseline: current Node 24/Vitest 5.0.3 has 5,264 tests versus 3,748, and package source changed across many main commits. This is current-contract evidence, not a causal speedup or regression claim."
+}

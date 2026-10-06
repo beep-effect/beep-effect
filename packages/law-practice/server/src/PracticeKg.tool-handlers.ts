@@ -255,6 +255,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           const hasKey = request.iri !== undefined || request.natural_key !== undefined || request.digest !== undefined;
           if (!hasKey) {
             const statusRow = PracticeKgGraphToolRow.make({
+              attributionSource: null,
               client: null,
               count: bundle.manifest.counts.nodes,
               docketFamily: null,

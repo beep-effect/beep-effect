@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ops-seat-timers",
+    "title": "Ops Seat Timers",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ops-seat-timers",
+  "lifecycle": "active",
+  "mission": "Create the ops seat and re-render every user timer against it through the agent-permitted `--refresh` forms so the three legacy infra clones become retirable.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-fleet-layout",
+    "graduated": "2026-10-05"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ops-seat-timers/README.md",
+    "goals/ops-seat-timers/SPEC.md",
+    "goals/ops-seat-timers/PLAN.md",
+    "goals/ops-seat-timers/GOAL.md",
+    "goals/ops-seat-timers/research/SOURCES.md",
+    "explorations/agent-fleet-layout/BRIEF.md",
+    "explorations/agent-fleet-layout/DECISIONS.md",
+    "explorations/agent-fleet-layout/MAP.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ops-seat-timers/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ops-seat-timers/GOAL.md)\" -le 4000",
+    "jq . goals/ops-seat-timers/ops/manifest.json",
+    "rg -n \"ops-seat-timers|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ops-seat-timers",
+    "git diff --check -- goals/ops-seat-timers",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "dependsOn": ["goals/fleet-root-registry"],
+  "provides": ["fleet/ops-seat"],
+  "requires": ["fleet/root-config"]
+}

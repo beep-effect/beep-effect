@@ -18,6 +18,8 @@ Operational guidance includes [recovering from local Graft configuration
 drift](runbooks/graft-local-recovery.md). Timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md). The 1Password `BEEP_SECRETS` item's section rule and rename debt: [BEEP_SECRETS layout](runbooks/onepassword-beep-secrets-layout.md).
 Which TypeScript compiler runs where, why `typescript@6` and `@typescript/native` coexist, and
 how to wire the Effect compiler into WebStorm: [TypeScript toolchain](runbooks/typescript-toolchain.md).
+Bootstrapping the repo inside Claude cloud sessions, Codex cloud, and Cursor Cloud Agents, with the
+per-account paste text and allowlists: [cloud environments](runbooks/cloud-environments.md).
 The strict `@shadcn/lint` policy for Tailwind classes and style props, its fix recipes, and how a
 new UI workspace joins it: [design-system lint](runbooks/design-system-lint.md). Statecharts with
 XState v6 and `@xstate/effect`, their tests, inspector, CLI, and MCP: [statecharts](runbooks/xstate-effect-statecharts.md).

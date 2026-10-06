@@ -49,7 +49,8 @@ export const KG_BUILD_TABLE_NAME = "kg_build" as const;
  *   bundleVersion: "2026.07.1",
  *   builtFromRuns: "base,refresh-2026-07",
  *   counts: { nodes: 8421, edges: 19233, documents: 6104, emails: 2317 },
- *   builtAt: "2026-07-27T18:04:11.000Z"
+ *   builtAt: "2026-07-27T18:04:11.000Z",
+ *   corpusSnapshotAt: "2026-07-03T09:12:44.000Z"
  * }
  *
  * console.log(getTableName(kgBuildTable)) // "kg_build"
@@ -64,4 +65,5 @@ export const kgBuildTable = pgTable(KG_BUILD_TABLE_NAME, {
   builtFromRuns: text("built_from_runs").notNull(),
   counts: jsonb("counts").notNull().$type<Readonly<Record<string, unknown>>>(),
   builtAt: text("built_at").notNull(),
+  corpusSnapshotAt: text("corpus_snapshot_at").notNull(),
 });

@@ -22,6 +22,10 @@ Spot and On-Demand; changing purchase model alone does not resolve total usage.
   availability zones to reduce Spot reclaims. It stays all-Spot with cap 2 and
   no On-Demand fallback. See the pending deployment evidence in
   [Heavy CI runner reliability](./ci-runner-reliability.md).
+- October 5, 2026 amendment (operator-approved): `r6a.2xlarge` leaves the
+  pool after absorbing most of that day's Spot capacity reclaims, so the
+  current policy is `capacity-optimized` allocation across seven 64 GiB
+  instance types. Cap, purchase model and fallback posture are unchanged.
 - Keep `beep-ci-scale-up` reserved concurrency at 1. A value of 0 prevents PR
   verification jobs from acquiring runners and must not be used as the normal
   budget policy.
