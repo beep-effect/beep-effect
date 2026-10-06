@@ -37,6 +37,11 @@ and `@beep/m365` adapters once workstream A's message-category verbs merge.
 
 ## Latest Evidence
 
+- 2026-10-06: live dry-run over mail since 2026-07-01 — 1,802 scanned, 323
+  matched across 27 matters, nothing written
+  ([record](history/2026-10-06-live-dry-run.md)). PRs #1464, #1480, #1495,
+  #1511 merged. Next: the attended bounded apply and undo drill, and the
+  attorney's contact overlay.
 - 2026-10-06: PR 3 adds the `apps/practice-mail-tagging` entrypoint, a sample
   user unit, and `docs/runbooks/practice-mail-tagging.md`; PR 1 (#1464) and
   PR 2 (#1480) are merged. Next: the live dry-run over mail since 2026-07-01.

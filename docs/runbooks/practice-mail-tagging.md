@@ -17,6 +17,35 @@ bun run apps/practice-mail-tagging/src/bin.ts <command>
 
 The examples shorten that to `practice-mail-tagging <command>`.
 
+## Operator checklist for the first apply
+
+One screen for the attended session. Details are in the sections below.
+
+- [ ] Operator slot agreed with the orchestrator; the attorney is present with
+      Outlook open.
+- [ ] The unit is not installed or is stopped:
+      `systemctl --user is-active practice-mail-tagging.service` is not `active`.
+- [ ] The environment file holds `op://` references only, mode `0600`; every
+      command runs as `op run --env-file=<file> -- practice-mail-tagging ...`.
+- [ ] `practice-mail-tagging report` succeeds and every count is zero.
+- [ ] A fresh `practice-mail-tagging dry-run` matches the spot-checked counts
+      within a day's new mail.
+- [ ] Bounded apply: `practice-mail-tagging apply --yes --max-pages 2`. Write
+      down the `run` id.
+- [ ] In Outlook, three tagged messages carry the expected `M: ...` category
+      and keep every category they had before.
+- [ ] Undo drill on that run: `undo --run <runId> --dry-run`, then
+      `undo --run <runId> --yes`, then `report` shows them under `undone`.
+- [ ] In Outlook, the same three messages are back to their earlier
+      categories.
+- [ ] Record both JSON lines (counts only) in
+      `goals/practice-mail-tagging/history/`.
+- [ ] Stop here unless the orchestrator gave the slot for the full backfill;
+      the full apply and the unit are step 6.
+
+Any exit code other than 0 stops the session: 2 means `--yes` was missing, 3
+means a provider throttled, 4 means another writer holds the state directory.
+
 ## 1. Prerequisites
 
 1. **Entra registration with mailbox write access.** The job shares the
@@ -59,6 +88,11 @@ The examples shorten that to `practice-mail-tagging <command>`.
 Optional: `matter-contacts.json` in the state directory, an attorney-curated
 list of contact addresses and domains per matter. Without it the job matches
 on application, patent, and docket numbers only, and files only USPTO mail.
+The file is a JSON array of `{ "familyKey": "<client>.<family>",
+"addresses": [...], "domains": [...] }` rows. One malformed row makes the
+whole file unreadable and the run stops, so check it before a run. An address
+listed under more than one matter is kept, but it never routes an attachment
+to "From Client" and never tags a message on its own.
 
 Load the environment for an attended shell session:
 
@@ -95,6 +129,19 @@ Do these in order. Do not enable the unit before step 6.
    per-category adds name the matters he expects mail for? A matter with a
    surprising count is checked in Outlook by searching for its application or
    docket number. Stop here if the numbers look wrong.
+
+   Two items for the attorney at the same sitting:
+
+   - **The review category.** Every `P: Unmatched - review` message is one the
+     job would not place on its own (a reference to a matter with no client
+     number, or two matters tied). He decides where each belongs.
+   - **The contact overlay.** Without `matter-contacts.json` no client
+     attachment is filed: in the first live dry-run every attachment on a
+     matched message was skipped as `sender-not-routable`. Ask him to confirm,
+     per active matter, the client addresses and domains that should count as
+     "from the client". Leave out shared addresses (a foreign associate or an
+     in-house counsel who writes about several matters); the job would not
+     route them anyway.
 
 4. **Attended apply on a bounded slice.** The attorney is present and Outlook
    is open.
