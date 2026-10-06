@@ -42,8 +42,8 @@ Use this command for execution-capable sessions:
 P1 Implement. Slices 0-2 are merged (#1455, #1456, #1458); slice 3 (adapters
 and the service app) is in review as #1475; slice 3b (the adversarial review
 loop, SPEC D-31 to D-39) is built on top of it. Slice 4 (the docket-sheet
-cross-check and the live practice-KG matter lookup) follows. The live smoke
-waits on the operator-attended registration.
+cross-check and the live practice-KG matter lookup, SPEC D-44 and D-45) is
+in review. The live smoke waits on the operator-attended registration.
 
 ## Latest Evidence
 

@@ -131,9 +131,10 @@ Every processed message ends in exactly one outcome:
 `DocketEntered` is written only when the review loop ends `accepted`. Both
 `DocketEntered` and `DocketNeedsReview` carry the review verdict (status,
 rounds used, final score, threshold) and flags: `dates-differ`, `matter-ambiguous`,
-`matter-not-found`, `matter-unverified`, `matter-lookup-failed`,
-`ladder-truncated`, `source-document-missing`, `due-date-past`,
-`junk-folder`, `deleted-folder`.
+`matter-suggested`, `matter-not-found`, `matter-unverified`,
+`matter-lookup-failed`, `ladder-truncated`, `source-document-missing`,
+`due-date-past`, `junk-folder`, `deleted-folder`, `tracked-date-differs`,
+`tracked-dates-unavailable`.
 
 ## Acceptance Criteria
 
@@ -307,6 +308,15 @@ rounds are read back, not run again.
   to the critic but not checked by code; only the entry's citation is.
 - Nothing has run against the live mailbox or a live model until the
   registration is done.
+- The docket sheet cross-check reads a CSV export of the sheet, not the
+  spreadsheet (D-44). An entry is compared with the sheet as of its last
+  export; edits the attorney has not exported are not seen.
+- Suggested matters come from the bundle's `documents` and `document_text`
+  tables: a docket document belongs to the family its catalog row names. The
+  bundle build attributes documents more carefully (it skips recycle-bin stubs
+  and can re-attribute a document by its text), so a suggestion can include a
+  family the practice KG would not list as mentioning the number. Suggestions
+  are shown to the attorney only, never used.
 
 ## Decision Log
 
@@ -356,6 +366,8 @@ autonomy charter.
 | D-38 | In-progress rounds are kept in the ledger under a placeholder outcome and dropped when the message settles; resumption does not consume the retry budget. | The loop must resume after a kill without repeating model calls, and an interruption is not a failed step. Settled records stay free of message text. |
 | D-39 | Review round 3 findings on slice 3 (#1496) are fixed in slice 3b: a lock that cannot be written reports `store` / `lock`, and reminder entries carry the Junk or Deleted folder line. | Round rule: after round 2, P2 findings get a tracked follow-up instead of another push. |
 | D-40 | The text the extractor quotes for each revised or defended field is checked in code (the field's value must appear in it and it must be in the source; a failure is a dispute on that field) and is never shown to the critic, which re-reads from its own earlier findings and the revised/defended actions only. The real-calendar-day check is removed from the gate: decoding the model's answer already rejects an impossible date. | Showing the extractor's quotes to the critic would let it copy them, the mirror of D-35. A gate check that decoding makes unreachable only looks like protection. |
+| D-44 | The docket sheet cross-check reads a CSV export of the sheet (UTF-8, the sheet's header row, comma-separated, RFC 4180 quoting) at a configured path. The operator exports the sheet; the service never writes to it (D-30). Only `File #`, `Tracked Date Name`, `Date Type` and `Tracked Date` are read; `Tracked Date` may be `YYYY-MM-DD`, `M/D/YYYY` or `YYYY-Mon-DD`, and other rows are skipped and counted on the span. | The workspace has no spreadsheet reader; adding an xlsx parser dependency for one file waits until the cross-check proves its value. The repository's CSV parser (`@beep/schema/CsvParser`) already reads RFC 4180. To reverse: replace the CSV adapter behind the `DocketTrackedDates` port. |
+| D-45 | Matter lookup (slice 4): each verbatim reference is read with `extractPracticeKgReferences`; one the extraction reads nothing in is looked up as written, except the attorney's own `<client>.<0NNNN>` matter number, which is skipped. A match on the client number alone is dropped. One matter that every uniquely resolving reference names, and that every multiply resolving reference includes, is `MatterUnique`; it is unverified without a client, on a `recycled-unverified` matter, or when it matched on the bare family only. Any other spread is `MatterAmbiguous`. When nothing resolves, matters whose docket documents mention an application or patent number of the references are `MatterSuggested` (flag `matter-suggested`, even with one candidate), else `MatterNotFound`. The live lookup replaces D-26's placeholder when `DOCKET_INTAKE_KG_BUNDLE_DIR` is set. Tracked-date rule: the sheet is asked about the matched dockets of a unique matter (all its dockets when the references named the family) and every docket the references name; its earliest `due-date` or `final-date` row dated on or after the receipt day minus 7 days is a third candidate, the entry goes on the earliest candidate, and a tracked date that differs from the entry's own date adds `tracked-date-differs`. A failing sheet adds `tracked-dates-unavailable`. | A new `MatterSuggested` case, not `MatterAmbiguous`: "several matters own this reference" and "no matter owns it, these cite it" ask different things of the attorney, and only the second can have one candidate. The sheet only ever moves an entry earlier and adds a flag, so it cannot turn a flagged item into an accepted one or hide a disagreement. The week before receipt keeps the step the message answers while dropping earlier, already settled steps. To reverse: wire `DocketMatterLookupUnavailableLive` and unset the sheet path. |
 
 ## Exception Ledger
 
