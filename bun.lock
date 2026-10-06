@@ -1240,9 +1240,12 @@
       "name": "@beep/m365-mcp",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/data": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "effect": "catalog:",
       },

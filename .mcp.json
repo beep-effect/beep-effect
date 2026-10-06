@@ -27,6 +27,18 @@
       "command": "bun",
       "args": ["run", "./packages/drivers/nlp-mcp/src/bin.ts"]
     },
+    "beep-m365-outbox": {
+      "type": "stdio",
+      "command": "op",
+      "args": [
+        "run",
+        "--env-file=./packages/drivers/m365-mcp/outbox.env",
+        "--",
+        "bun",
+        "run",
+        "./packages/drivers/m365-mcp/src/bin-outbox.ts"
+      ]
+    },
     "fallow": {
       "type": "stdio",
       "command": "./node_modules/.bin/fallow-mcp"

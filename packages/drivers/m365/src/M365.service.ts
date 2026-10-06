@@ -162,7 +162,29 @@ const PROTECTED_EXTENSIONS: ReadonlyArray<string> = [
 const isGraphPathSegment = (value: string): boolean =>
   !Str.isEmpty(value) && !Str.includes("/")(value) && !Str.includes("..")(value) && !Str.includes("%")(value);
 
-const GraphPathSegment = S.String.check(
+/**
+ * A Microsoft Graph id that is safe to put in a URL path.
+ *
+ * **Details**
+ *
+ * Every id-bearing request field of the driver uses this schema. A host that
+ * takes ids from an untrusted caller can use it for its own input schema, so a
+ * bad id fails at that boundary instead of when the request is built.
+ *
+ * **Example** (Guard a Graph id)
+ *
+ * ```ts
+ * import { GraphPathSegment } from "@beep/m365"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GraphPathSegment)("message-id")) // true
+ * console.log(S.is(GraphPathSegment)("../messages")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraphPathSegment = S.String.check(
   S.makeFilter(isGraphPathSegment, {
     identifier: $I`GraphPathSegment`,
     title: "Graph path segment",
@@ -174,6 +196,23 @@ const GraphPathSegment = S.String.check(
     description: "Microsoft Graph path identifier safe for URL path interpolation, excluding pre-encoded segments.",
   })
 );
+
+/**
+ * Type for {@link GraphPathSegment}.
+ *
+ * **Example** (Type a Graph id)
+ *
+ * ```ts
+ * import type { GraphPathSegment } from "@beep/m365"
+ *
+ * const length = (id: GraphPathSegment) => id.length
+ * console.log(length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GraphPathSegment = typeof GraphPathSegment.Type;
 
 /**
  * Decoded Graph drive collection.
@@ -2134,6 +2173,14 @@ const executeWrite = Effect.fnUntraced(function* (
     : execute(isThrottled);
 });
 
+const executeBodilessWrite = (
+  runtime: M365Runtime,
+  method: M365WriteMethod,
+  resource: string,
+  url: string
+): Effect.Effect<HttpClientResponse.HttpClientResponse, M365Error> =>
+  executeWrite(runtime, M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method, resource, url }));
+
 const executeJsonWrite = Effect.fnUntraced(function* <Schema extends S.Top>(
   runtime: M365Runtime,
   call: M365WriteCall,
@@ -2631,10 +2678,7 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   deleteDraftMessage: Effect.fn("M365.deleteDraftMessage")(function* (rawRequest) {
     const request = yield* decodeRequest(M365DeleteDraftMessageRequest, "messages")(rawRequest);
     const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages");
-    yield* executeWrite(
-      runtime,
-      M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method: "DELETE", resource: "messages", url })
-    );
+    yield* executeBodilessWrite(runtime, "DELETE", "messages", url);
   }),
   deleteEvent: Effect.fn("M365.deleteEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365DeleteEventRequest, "events")(rawRequest);
@@ -2811,10 +2855,7 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   sendDraftMessage: Effect.fn("M365.sendDraftMessage")(function* (rawRequest) {
     const request = yield* decodeRequest(M365SendDraftMessageRequest, "messages")(rawRequest);
     const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}/send`, "messages");
-    yield* executeWrite(
-      runtime,
-      M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method: "POST", resource: "messages", url })
-    );
+    yield* executeBodilessWrite(runtime, "POST", "messages", url);
   }),
   updateEvent: Effect.fn("M365.updateEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365UpdateEventRequest, "events")(rawRequest);

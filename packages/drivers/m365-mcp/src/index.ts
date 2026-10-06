@@ -7,6 +7,11 @@
  * tools. It intentionally delegates Graph auth, transport, decoding, and
  * redaction to `@beep/m365`.
  *
+ * A second server, the outbox (`bin-outbox.ts`), prepares and sends mail and
+ * writes calendar events for one configured mailbox. Its tools, send guard,
+ * attachment source and audit log are the `Outbox*` modules; the read-only
+ * toolkit gains no write tool.
+ *
  * **Example** (Launch M365 MCP server)
  *
  * ```ts
@@ -39,6 +44,62 @@ export * from "./M365Handlers.ts";
  * @since 0.1.0
  */
 export * from "./M365Tools.ts";
+/**
+ * Local attachment source of the outbox server.
+ *
+ * @category services
+ * @since 0.1.0
+ */
+export * from "./OutboxAttachmentSource.ts";
+/**
+ * Local audit log of the outbox server.
+ *
+ * @category services
+ * @since 0.1.0
+ */
+export * from "./OutboxAuditLog.ts";
+/**
+ * Outbox server configuration.
+ *
+ * @category configuration
+ * @since 0.1.0
+ */
+export * from "./OutboxConfig.ts";
+/**
+ * Outbox tool handlers.
+ *
+ * @category handlers
+ * @since 0.1.0
+ */
+export * from "./OutboxHandlers.ts";
+/**
+ * The outbox send guard.
+ *
+ * @category guards
+ * @since 0.1.0
+ */
+export * from "./OutboxSendGuard.ts";
+/**
+ * Outbox server layer constructors.
+ *
+ * @category layers
+ * @since 0.1.0
+ */
+export * from "./OutboxServer.ts";
+/**
+ * Summaries of a draft's stored attachments.
+ *
+ * @category services
+ * @since 0.1.0
+ */
+export * from "./OutboxStoredAttachments.ts";
+/**
+ * Schema-first outbox tool declarations.
+ *
+ * @category tools
+ * @since 0.1.0
+ */
+export * from "./OutboxTools.ts";
 /**
  * Microsoft 365 MCP server configuration and layer constructors.
  *

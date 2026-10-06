@@ -173,8 +173,12 @@ Role changes can take from 30 minutes to two hours to reach Microsoft Graph.
 
 Tell the orchestrator session that the outbox registration is done and how
 many rows step 5 showed in scope. Send no ids. The outbox live smoke then
-reads the values through `op run`, creates a draft from the mailbox to itself
-with one synthetic attachment, sends it, and records the audit ids.
+reads the values through `op run`. With the credentials alone it acquires a
+token and reads one page of drafts, writing nothing. With
+`M365_OUTBOX_LIVE_WRITE=1` it also creates a draft from the mailbox to itself
+with one synthetic attachment, reads it back and deletes it. With
+`M365_OUTBOX_LIVE_SEND=1` it creates such a draft, sends it, and records the
+audit ids.
 
 ## 7. Optional: the claude.ai connector's write tools
 
@@ -214,12 +218,23 @@ admin consent, or set every write tool to **Blocked**.
 
 The repository's `.mcp.json` registers `beep-m365-outbox` for sessions that
 run inside a checkout. For sessions started elsewhere, register it once at
-user level, after the outbox server has merged (its pull request confirms the
-exact command). `<clone>` is the primary checkout of this repository:
+user level. `<clone>` is the primary checkout of this repository:
 
 ```bash
 claude mcp add --scope user beep-m365-outbox -- op run --env-file=<clone>/packages/drivers/m365-mcp/outbox.env -- bun run <clone>/packages/drivers/m365-mcp/src/bin-outbox.ts
 ```
+
+Files to attach go in the staging directory
+`${XDG_DATA_HOME:-$HOME/.local/share}/beep/m365-outbox/attachments`, which the
+server creates on first start. Copy a file there before asking a session to
+attach it. To allow other directories instead, set
+`M365_OUTBOX_ATTACHMENT_ROOTS` to absolute directories separated by `:` (for a
+user-level registration, add `-e M365_OUTBOX_ATTACHMENT_ROOTS=<dirs>` before
+the `--`). Never list the home directory or a working tree.
+
+The audit log is under
+`${XDG_STATE_HOME:-$HOME/.local/state}/beep/m365-outbox/audit`, one
+`YYYY-MM.jsonl` file per month.
 
 ## Rotation and removal
 

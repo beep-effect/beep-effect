@@ -1,0 +1,19 @@
+{
+  "previous": "71785c118b418cfcef8eaa588212331488faab7a48ec4b12e7d68c41e4069d6f",
+  "review": {
+    "reviewer": "Claude m365-agent-outbox slice 2 review",
+    "reason": "Refresh the @beep/m365-mcp build, check, lint:deprecated-apis, test and test:property nodes after the outbox server added the workspace dependencies @beep/data, @beep/schema and @beep/utils. Commands, inputs, outputs and cache settings match the previous reviewed nodes; only the dependency edges changed. Other projection nodes and qualification state are preserved.",
+    "basis": {
+      "path": "packages/drivers/m365-mcp/package.json",
+      "sha256": "7049d6072ac91fca6d4d62a0e92fd90339c777c0c48fb78b07049be1e49928c5"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

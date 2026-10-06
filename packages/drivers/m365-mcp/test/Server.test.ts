@@ -153,8 +153,9 @@ const MockM365Layer = Layer.succeed(M365, createMockM365());
 
 // The stdio conversation is framed by the kit client's own helpers: every
 // request carries the 2026-07-28 `_meta` keys, and the host answers without
-// a session (D-posture). The conformance port below proves the legacy
-// `initialize` path is refused with `-32022`.
+// a session. The conformance port below runs the registrations on its own
+// 2026-07-28-only transport; the handshake test in OutboxServer.test.ts covers
+// the `initialize` path of the built servers.
 const clientMetadata = requestMetadata(McpClientOptions.make({}));
 const encodeFrame = S.encodeEffect(JsonRpcMessageFromLine);
 const requestFrame = Effect.fnUntraced(function* (id: number, method: string, params: Record<string, unknown>) {

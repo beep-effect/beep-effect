@@ -87,8 +87,9 @@ draft back is the existing `getMessage`, which returns `bccRecipients` too.
   leaves the draft in place; delete it with `deleteDraftMessage` if it should
   not stay.
 
-The write verbs are not exposed through the read-only `@beep/m365-mcp` server.
-The mail verbs are exposed by the outbox server in a later change.
+The write verbs are not exposed through the read-only `beep-m365` MCP server.
+The mail verbs and the event create and update verbs are exposed by the
+`beep-m365-outbox` server in `@beep/m365-mcp`.
 
 ## Token Cache Persistence
 
