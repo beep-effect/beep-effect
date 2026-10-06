@@ -97,6 +97,19 @@ const writeAtomically = Effect.fnUntraced(function* (
   yield* fs.rename(temporary, path).pipe(Effect.mapError(storeError("rename")));
 });
 
+// The saved state, or empty state when nothing has been saved. A file that does not decode fails.
+const loadState = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  statePath: string
+): Effect.fn.Return<DocketIntakeState, DocketIntakeError> {
+  const exists = yield* fs.exists(statePath).pipe(Effect.mapError(storeError("stat")));
+  if (!exists) {
+    return DocketIntakeState.make({});
+  }
+  const contents = yield* fs.readFileString(statePath).pipe(Effect.mapError(storeError("read")));
+  return yield* decodeState(contents).pipe(Effect.mapError(storeError("decode")));
+});
+
 type LockHolder = { readonly bootId: string; readonly pid: string; readonly startTime: string };
 
 const readBootId = (fs: FileSystem.FileSystem): Effect.Effect<string> =>
@@ -266,14 +279,7 @@ export const makeDocketFileStoreLayer = (
       yield* Effect.acquireRelease(acquireLock(fs, lockPath), () => discard(fs, lockPath));
 
       return DocketIntakeStore.of({
-        load: Effect.gen(function* () {
-          const exists = yield* fs.exists(statePath).pipe(Effect.mapError(storeError("stat")));
-          if (!exists) {
-            return DocketIntakeState.make({});
-          }
-          const contents = yield* fs.readFileString(statePath).pipe(Effect.mapError(storeError("read")));
-          return yield* decodeState(contents).pipe(Effect.mapError(storeError("decode")));
-        }).pipe(Effect.withSpan("DocketFileStore.load")),
+        load: loadState(fs, statePath).pipe(Effect.withSpan("DocketFileStore.load")),
         save: Effect.fn("DocketFileStore.save")(function* (state) {
           const contents = yield* encodeState(state).pipe(Effect.mapError(storeError("encode")));
           yield* writeAtomically(fs, statePath, contents);
@@ -317,4 +323,35 @@ export const writeDigestFile: (input: {
   yield* fs.makeDirectory(digests, { recursive: true }).pipe(Effect.mapError(storeError("directory")));
   yield* writeAtomically(fs, file, input.text);
   return file;
+});
+
+/**
+ * Read the saved state of a state directory without taking its lock, for a
+ * command that only looks.
+ *
+ * **Details**
+ *
+ * State is replaced by an atomic rename, so a read never sees a half-written
+ * file even while a running service holds the lock. A missing file reads as
+ * empty state; a file that does not decode fails at stage `store`.
+ *
+ * **Example** (Read the saved state)
+ *
+ * ```ts
+ * import { readDocketStateFile } from "@beep/law-practice-server/DocketIntake";
+ *
+ * console.log(readDocketStateFile("state/docket-intake"));
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readDocketStateFile: (
+  directory: string
+) => Effect.Effect<DocketIntakeState, DocketIntakeError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "DocketFileStore.readStateFile"
+)(function* (directory) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* loadState(fs, path.join(directory, STATE_FILE));
 });

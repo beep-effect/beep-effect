@@ -5,7 +5,12 @@
  * text. No real mail, sender, tenant, matter or client appears here.
  */
 import { DocketCategory } from "@beep/law-practice-domain/values/DocketDeadline";
-import { DocketGraphConfig, makeDocketGraphLayer, withDocketCategory } from "@beep/law-practice-server/DocketIntake";
+import {
+  DocketGraphConfig,
+  makeDocketGraphLayer,
+  makeDocketGraphReadOnlyLayer,
+  withDocketCategory,
+} from "@beep/law-practice-server/DocketIntake";
 import {
   DocketCalendar,
   DocketCalendarEntry,
@@ -726,6 +731,38 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           ["calendar", "event-without-id", false]
         );
         assertNone(found);
+      })
+    );
+  });
+
+  it.layer(makeDocketGraphReadOnlyLayer(graphConfig()).pipe(Layer.provideMerge(M365TestLayer)), {
+    timeout: "5 seconds",
+  })((it) => {
+    it.effect(
+      "builds read-only ports that create no category, refuse every write and still read",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GraphTestHttp;
+        const mailbox = yield* DocketMailbox;
+        const calendar = yield* DocketCalendar;
+        yield* testHttp.respondWith(() => succeed(jsonResponse({ value: [] })));
+
+        const marked = yield* failureOf(mailbox.markEntered(message("m1")));
+        const created = yield* failureOf(calendar.create(calendarEntry(true)));
+        const listed = yield* mailbox.receivedSince(O.none());
+        const found = yield* calendar.findByKey(KEY);
+
+        expect(A.filter(yield* testHttp.setup, isCategorySetup)).toStrictEqual([]);
+        assertSome(
+          O.map(marked, (error) => [error.stage, error.cause]),
+          ["mailbox", "read-only"]
+        );
+        assertSome(
+          O.map(created, (error) => [error.stage, error.cause]),
+          ["calendar", "read-only"]
+        );
+        expect(listed).toStrictEqual([]);
+        assertNone(found);
+        expect(A.map(yield* testHttp.calls, (capture) => capture.method)).toStrictEqual(["GET", "GET"]);
       })
     );
   });

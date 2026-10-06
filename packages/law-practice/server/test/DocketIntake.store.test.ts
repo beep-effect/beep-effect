@@ -7,6 +7,7 @@ import {
   DocketFileStoreOptions,
   DocketMatterLookupUnavailableLive,
   makeDocketFileStoreLayer,
+  readDocketStateFile,
   writeDigestFile,
 } from "@beep/law-practice-server/DocketIntake";
 import {
@@ -290,6 +291,22 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         expect(A.filter(yield* Ref.get(record.written), (path) => path === LOCK_PATH)).toStrictEqual([]);
         expect(yield* leftovers).toStrictEqual([]);
         expect(yield* Ref.get(record.opened)).toHaveLength(1);
+      })
+    );
+  });
+
+  it.layer(storeLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reads the saved state without the lock, and empty state from a directory with none",
+      Effect.fnUntraced(function* () {
+        const store = yield* DocketIntakeStore;
+
+        const empty = yield* readDocketStateFile("/fixture/state/elsewhere");
+        yield* store.save(state);
+        const read = yield* readDocketStateFile(DIRECTORY);
+
+        expect(R.keys(empty.ledger)).toStrictEqual([]);
+        assertTrue(sameState(read, state));
       })
     );
   });
