@@ -559,3 +559,17 @@ The detector ledger now contains 3,623 rows: 3,075 fixed, 228 exceptions, and
 docgen 24.0 seconds). The corrected session-ledger EV004 exception rationale
 keeps its existing identity and status. See
 `research/cli-artifacts-io-scope-proof.md` for the focused evidence and reversal.
+
+## 2026-10-06: Effect-fn native scratch-project runner migration
+
+Source `458ef7defe` replaces four manual runtime boundaries and two custom
+resource wrappers with fresh per-test runner layers. The scoped layer creates
+and cleans each real temporary cwd and builds NodeServices before TSMorph;
+the native CLI subprocess and project filesystem remain the subjects. Four
+tests pass on Node and Bun, direct test-project typechecking passes, and the
+detector reports 1,919 current findings with six resolved and none introduced.
+The six historical EV001/EV003 rows are fixed at that source commit. EV010 is
+reviewed as a native-platform exception. The detector ledger now contains
+3,623 rows: 3,081 fixed, 229 exceptions, and 313 open. See
+`research/cli-effect-fn-runner-proof.md`. Full package and hosted proof remain
+separate.
