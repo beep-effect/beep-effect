@@ -72,7 +72,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MANIFEST_ROWS="$(node -e '
   const manifest = JSON.parse(require("node:fs").readFileSync(0, "utf8"));
   const rows = [manifest.rootDefault, manifest.workspaceLink,
-    ...manifest.members.flatMap(({ name, url }) => [name, url])];
+    ...manifest.members.flatMap(({ name, url, branch = "main" }) => [name, url, branch])];
   if (rows.some(value => typeof value !== "string" || !value || /[\r\n]/.test(value))) {
     throw new Error("reference manifest fields must be nonempty single-line strings");
   }
@@ -107,13 +107,13 @@ link_reference() {
   REFERENCES_ROOT="${BEEP_REFERENCES_ROOT:-${ROOT_DEFAULT}}"
   REFERENCES_ROOT="$(resolve_existing_parent_path "${REFERENCES_ROOT}")" || die "cannot resolve BEEP_REFERENCES_ROOT '${REFERENCES_ROOT}' to an absolute path"
   mkdir -p "${REPO_ROOT}/.repos"
-  while IFS= read -r MEMBER_NAME && IFS= read -r MEMBER_URL; do
+  while IFS= read -r MEMBER_NAME && IFS= read -r MEMBER_URL && IFS= read -r MEMBER_BRANCH; do
     MEMBER_ROOT="${REFERENCES_ROOT}/${MEMBER_NAME}"
     # -e not -d: linked worktrees have a .git file.
     if [[ ! -e "${MEMBER_ROOT}/.git" ]]; then
       log "cloning ${MEMBER_NAME} reference into ${MEMBER_ROOT}"
       mkdir -p "${REFERENCES_ROOT}"
-      git clone --quiet "${MEMBER_URL}" "${MEMBER_ROOT}"
+      git clone --quiet --branch "${MEMBER_BRANCH}" -- "${MEMBER_URL}" "${MEMBER_ROOT}"
       # graft writes graft/, .graft/ and .ignore into the clone; exclude them per clone (R3).
       mkdir -p "${MEMBER_ROOT}/.git/info"
       printf 'graft/\n.graft/\n.ignore\n' >> "${MEMBER_ROOT}/.git/info/exclude"
