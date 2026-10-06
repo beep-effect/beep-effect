@@ -829,3 +829,27 @@ their own tier's series (P0 Ruling 2), so its hosted consequences stay in a cave
 nothing; W8 states that population shift as a confounder at that instant (a P4 hand-off). Pass 5
 batched its classifier lanes by path family (three lanes over ten PRs) with one criterion refuter and
 one facts refuter. Reversal: a later entry adds a hosted co-row or re-classifies.
+Recorded call (s) — engine stage 1 and the blinded seat shape (amends call (k)): stage 1 passed
+with no stop (the v15 self-test on CPython 3.12, the offline cache, the sandbox runner under the
+system interpreter 3.14.7 with the run-3 golden at 31 records, v15 ignoring `ONT/lanes/` and
+`ONT/ratification-package.yaml`, the launch gate holding from pinned bytes, both pins verifying),
+and the run-3 trees moved byte-identically (315 + 18 files, each equal to its committed blob; tree
+digests `4fe3bccbf243` and `87e15cfa6d99`), leaving exactly the one expected "NO records and no
+manifest" line. The canary refuted call (k)'s literal shape: with user settings loaded, user-level
+allow rules for shell commands let a seat read outside its root, so that shape never launches a
+seat. The blinded alternative seats launch from the isolated root with an environment of `HOME`,
+`PATH` and `TERM` only, as `claude -p --model claude-opus-5-5 --settings
+'{"effortLevel":"medium"}' --strict-mcp-config --mcp-config '{"mcpServers":{}}' --restricted --tools
+"Read,Write" --permission-mode acceptEdits --permission-prompts none --setting-sources project,local
+--no-session-persistence`, the shape the three-outcome canary proved (the inside read and write
+succeed; the outside read is denied by the harness, which confines the file tools to the working
+directory; the seat has no shell tool). The launcher asserts from the init event that the permission
+mode is `acceptEdits`, the tool list is exactly Read and Write and no MCP server is attached, hands
+the seat an explicit input manifest (it has no listing tool), checks that the harness's per-root
+memory directory is empty before launch, and records every permission denial as a blinding incident
+in the launch record. Ruling 8's Workflow-child fallback is not used. Also recorded: verification
+lanes (skeptics) may run at effort `high`, while seats and their manifest entries stay `medium`; the
+engine step's scratch root is `~/.cache/beep/run4-engine` as its brief names (call (l) covers the
+other lanes); the three empty directories left under `ONT/work/` stay; the system interpreter version
+is named in the run README as the adapter runtime. Reversal: a later entry before the first blinded
+seat launches; after it, a re-run of the blinded pass.
