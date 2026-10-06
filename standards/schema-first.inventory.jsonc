@@ -860,6 +860,22 @@
       "reason": "Inline input pairs in-memory block bytes with token allowances the rewriter computed in the same call; nothing crosses an IO boundary and the findings are transient strings consumed by quarantine reporting."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
+      "symbol": "SessionCheckoutFacts",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "In-process git probe result (repository, clone, checkout, lane, branch) assembled by readSessionCheckoutFacts and consumed by buildSessionRow in the same call; its repository member is the schema-backed PrRepository and the row it becomes is a schema class, so the intermediate is never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
+      "symbol": "SessionNoteInput",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "In-process command input carrying Option-typed fields from the already-decoded CLI flags to buildSessionRow and noteSession; its state and pr members are schema-backed (SessionLedgerState, PrNumber) and the ledger row it produces is a schema class, so the input has no decode or persistence boundary."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
@@ -902,6 +918,14 @@
       "line": 370,
       "owner": "@beep/repo-cli",
       "reason": "Test service adapter accepts a live ProcessTableShape implementation and returns closures that preserve its attachment operations while substituting schema-modeled lineage rows."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+      "symbol": "StateRepository",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Structural host/owner/name view that repositoryJsonLinesFileName reads to derive a state file name; callers pass the schema-backed PrRepository, and the view exists so the shared state module does not depend on the Yeet schemas. It is never decoded or persisted."
     },
     {
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
