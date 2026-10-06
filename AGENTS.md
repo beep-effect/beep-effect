@@ -180,8 +180,11 @@ needed only for the escalation list below.
   next, through closeout and the reflection. Do not stop at a phase boundary
   to ask permission.
 - Agents merge their own PRs once mergeable (see Quality Operator). An
-  orchestrator session may merge any PR that meets the same gate, and merges a
-  draft only after its owner calls it final.
+  orchestrator session may merge any PR that meets the same gate. A draft is
+  flipped by its owner, or by the orchestrator only after the owner calls it
+  final; nobody un-drafts and merges in one step. Whoever merges re-reads the
+  review threads immediately before merging: a failed or rate-limited thread
+  read is unknown, never zero.
 - Review loops stop after round 2: fix every P0/P1 in any round; from round 3,
   answer P2-and-below threads with a tracked follow-up and resolve them
   instead of pushing again.
@@ -212,7 +215,10 @@ needed only for the escalation list below.
   draft PR labelled `ready-for-heavy`, and submits the detached readiness
   monitor; hosted CI is the authoritative proof and `yeet verify` is
   on-demand. Never wait on a queued local full proof to publish. One push per
-  fully addressed wave, never per file or comment (push-first-publish D1–D10).
+  fully addressed wave, never per file or comment (push-first-publish D1–D11).
+- Draft means only "the owner is still pushing". Flip the PR ready with
+  `bun run beep yeet ready` as soon as its content is final and cheap gates
+  pass; do not wait for hosted heavy CI, which doubles as the review window.
 - Heavy admitted work runs in `agent-run-<ticket>.scope` under
   `agent-runs.slice` when the user manager allows it; `scheduler reap --apply`
   stops scopes backed by dead leases. A loaded scope without a dead lease is
@@ -238,15 +244,20 @@ needed only for the escalation list below.
   plain `gh api` prints nothing on ANSI output. Commands: yeet skill, "Read a
   failed job's log without waiting for the run".
 - “Mergeable” describes the complete PR state, not GitHub's structural
-  `MERGEABLE` field alone. It requires both of the following:
+  `MERGEABLE` field alone. It requires all of the following:
   - no outstanding review thread — one that is unresolved, or one the author
     resolved that carries a later human reviewer comment the author has not
     answered; a bot acknowledgement after the author resolved the thread and
     review-body nitpicks are advisory, and outdated threads still count until
-    they are explicitly resolved; and
+    they are explicitly resolved;
   - no failing CI jobs except Vercel deployments failing only because they were
-    rate limited.
-- PR closeout: from the checkout you are working in, run
+    rate limited; and
+  - the review window has elapsed: at least 20 minutes (`BEEP_YEET_REVIEW_WINDOW`)
+    since the later of the latest "marked ready for review" event and the
+    latest push to the head. No reviewer has to post (review bots never gate);
+    a window that cannot be read is unknown, never elapsed.
+- PR closeout: flip the PR ready at content-final, then, from the checkout you
+  are working in, run
   `bun run beep yeet monitor --until-ready --detach` and block on
   `bun run beep yeet job wait <jobId>` (attached `--until-ready` when the user
   manager is unreachable; re-submit after a reboot) until it exits 0 with

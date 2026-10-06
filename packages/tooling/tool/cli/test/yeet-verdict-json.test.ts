@@ -105,6 +105,7 @@ describe("YeetVerdictJson", () => {
               mergeable: true,
               mergeStateAcceptable: true,
               reviewDecisionAcceptable: true,
+              reviewWindowElapsed: true,
               greptileScore: O.some("5/5"),
             }),
           })
@@ -137,6 +138,7 @@ describe("YeetVerdictJson", () => {
       "mergeable",
       "merge-state-acceptable",
       "review-decision-acceptable",
+      "review-window-elapsed",
     ]);
   });
 });

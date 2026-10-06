@@ -9,6 +9,7 @@
 import { Box } from "@beep/box";
 import { DocumentFileId } from "@beep/law-practice-domain/values/MailTagging";
 import {
+  ContentSha1,
   DocumentNameTaken,
   DocumentStore,
   DocumentStoreShape,
@@ -34,6 +35,7 @@ const quotaCodePattern = /limit|quota/u;
 
 const oneUploadCall = ProviderCalls.make({ provider: "box", calls: 1 });
 const decodeFileId = S.decodeUnknownOption(DocumentFileId);
+const decodeContentSha1 = S.decodeUnknownOption(ContentSha1);
 
 const statusText = (error: BoxError): string =>
   O.match(error.status, {
@@ -60,20 +62,24 @@ const isNameTaken = (error: BoxError): boolean =>
  * summary lists no file, or when the id is not a usable document id. Nothing
  * is looked up and nothing is guessed.
  *
- * Box reports the holder's size and SHA-1 for a file name conflict, but the
- * `@beep/box` error keeps only each conflict's `id` and `type`, so the
- * answer's `byteLength` and `contentSha1` are always none today.
+ * Box reports the holder's size and SHA-1 for a file name conflict, and the
+ * `@beep/box` error keeps both when they are well formed. The answer's
+ * `byteLength` and `contentSha1` carry them, and are none when Box omits them,
+ * so a caller can tell a holder that is its own interrupted upload from a
+ * different file with the same name.
  *
  * **Example** (Read the conflicting file of a 409)
  *
  * ```ts
- * import { BoxApiFailureContext, BoxError } from "@beep/box"
+ * import { BoxApiFailureConflict, BoxApiFailureContext, BoxError } from "@beep/box"
  * import { boxConflictingFile } from "@beep/law-practice-server/MailTagging"
  * import * as O from "effect/Option"
  *
  * const error = BoxError.fromReason("response status", {
  *   status: 409,
- *   context: BoxApiFailureContext.make({ values: { conflictCount: 1, conflicts: [{ id: "8001", type: "file" }] } })
+ *   context: BoxApiFailureContext.make({
+ *     values: { conflictCount: 1, conflicts: [BoxApiFailureConflict.make({ id: "8001", type: "file" })] }
+ *   })
  * })
  * console.log(O.map(boxConflictingFile(error), (file) => file.fileId)) // Option.some("8001")
  * ```
@@ -87,8 +93,15 @@ export const boxConflictingFile = (error: BoxError): O.Option<ExistingDocument> 
   pipe(
     error.context,
     O.flatMap((context) => A.findFirst(context.values.conflicts, (conflict) => conflict.type === conflictingFileType)),
-    O.flatMap((conflict) => decodeFileId(conflict.id)),
-    O.map((fileId) => ExistingDocument.make({ fileId, byteLength: O.none(), contentSha1: O.none() }))
+    O.flatMap((conflict) =>
+      O.map(decodeFileId(conflict.id), (fileId) =>
+        ExistingDocument.make({
+          fileId,
+          byteLength: conflict.size,
+          contentSha1: O.flatMap(conflict.sha1, decodeContentSha1),
+        })
+      )
+    )
   );
 
 // The one place the conflicting file becomes the port's outcome.

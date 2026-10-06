@@ -16,11 +16,15 @@ import * as S from "effect/Schema";
 const $I = $M365Id.create("M365.schemas");
 
 /**
- * Build an optional Graph wire field that decodes a missing/`undefined` key to
- * `Option.none`, defaults to `none` on construction, and carries a description.
+ * Build an optional Graph wire field. Graph sends an absent value either as a
+ * missing key or as `null` (for example `seriesMasterId` on a single event),
+ * so both decode to `Option.none`; `none` encodes as a missing key. The field
+ * defaults to `none` on construction and carries a description.
  */
 const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
-  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
+  S.OptionFromOptionalNullOr(schema, { onNoneEncoding: "omit" })
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({ description });
 
 const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("GraphNonNegativeInt", {

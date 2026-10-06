@@ -20,6 +20,9 @@ import {
   YeetMonitorTerminalState,
   YeetPrCommentCapsule,
   YeetPrCommentRow,
+  YeetReviewWindowElapsed,
+  YeetReviewWindowOpen,
+  YeetReviewWindowUnknown,
   YeetRulesetRequiredContexts,
   YeetStatusArtifact,
   YeetStatusRemote,
@@ -49,7 +52,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import type { YeetPrCommentWindow } from "@beep/repo-cli/test/Yeet";
+import type { YeetPrCommentWindow, YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const at = "2026-09-16T00:00:00.000Z";
 const url = "https://github.com/beep/repo/pull/7";
@@ -88,6 +91,7 @@ const snapshot = (
     mergeable: true,
     mergeStateAcceptable: true,
     reviewDecisionAcceptable: true,
+    reviewWindowElapsed: true,
     greptileScore: O.none(),
   });
   const ready = criteria.prOpen && bound && criteria.requiredChecksGreen && threads;
@@ -936,6 +940,10 @@ it("uses one complete exit table and read-only automatic closeout options", () =
           : 1
     );
   expect(yeetMonitorExitFor("ready-pending-flip").summary).toContain("bun run beep yeet ready");
+  // A green draft is reported as the owner's flip to make, never as merge-ready.
+  expect(yeetMonitorExitFor("ready-pending-flip").summary).toContain("its owner must flip it");
+  expect(yeetMonitorExitFor("ready-pending-flip").summary).not.toContain("merge-ready: yes");
+  expect(yeetMonitorExitFor("ready").summary).toContain("the review window has elapsed");
   expect(yeetAutomaticCloseoutOptions).toMatchObject({ retriggerGreptile: false, replyThread: "", replyBody: "" });
   assertSome(O.some(yeetMonitorExitFor("ready").exitCode), 0);
 });
@@ -948,6 +956,8 @@ const asDraft = (base: YeetStatusSnapshot): YeetStatusSnapshot => {
     ...O.getOrThrow(base.mergeReady).criteria,
     notDraft: false,
     mergeStateAcceptable: false,
+    // The review window is never read on a draft: it starts at the flip.
+    reviewWindowElapsed: false,
   });
   return YeetStatusSnapshot.make({
     ...base,
@@ -964,6 +974,83 @@ const asDraft = (base: YeetStatusSnapshot): YeetStatusSnapshot => {
     ),
   });
 };
+
+// The same read as `snapshot`, with the review window as the read observed it.
+const withReviewWindow = (base: YeetStatusSnapshot, reviewWindow: YeetReviewWindow): YeetStatusSnapshot => {
+  const criteria = YeetMergeReadyCriteria.make({
+    ...O.getOrThrow(base.mergeReady).criteria,
+    reviewWindowElapsed: reviewWindow._tag === "elapsed",
+  });
+  const failing = A.findFirst(
+    YeetMergeReadyCriterion.literals,
+    (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
+  );
+  return YeetStatusSnapshot.make({
+    ...base,
+    remote: YeetStatusRemote.make({ ...base.remote, reviewWindow: O.some(reviewWindow) }),
+    mergeReady: O.some(YeetMergeReady.make({ ready: O.isNone(failing), criteria, failing })),
+  });
+};
+const openWindow = YeetReviewWindowOpen.make({
+  anchor: "ready-for-review",
+  anchoredAt: at,
+  remainingMs: 7 * 60_000,
+  windowMs: 20 * 60_000,
+});
+const elapsedWindow = YeetReviewWindowElapsed.make({
+  anchor: "ready-for-review",
+  anchoredAt: at,
+  windowMs: 20 * 60_000,
+});
+
+it.layer(platform, { timeout: "30 seconds" })("review window (push-first-publish D11)", (test) => {
+  test.effect("holds a green pull request while its review window is open, then ends ready once it has elapsed", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) => withReviewWindow(snapshot(root, [check()]), n < 2 ? openWindow : elapsedWindow))
+            ),
+          closeout: () => Effect.succeed(report()),
+        });
+        expect(terminal).toBe("ready");
+        expect(yield* Ref.get(calls)).toBeGreaterThanOrEqual(3);
+        const printed = yield* lines;
+        expect(printed).toContain(
+          "[yeet] not merge-ready: blocked on review-window-elapsed: review window open: 7 min left"
+        );
+        expect(printed).toContain("the review window has elapsed; re-read the review threads, then merge");
+      })
+    )
+  );
+
+  test.effect("never ends ready on a review window it could not read", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const unknown = YeetReviewWindowUnknown.make({ reason: "the timeline of pull request #7 could not be read" });
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n < 3
+                  ? withReviewWindow(snapshot(root, [check()]), unknown)
+                  : snapshot(root, [check()], true, head, "MERGED")
+              )
+            ),
+          closeout: () => Effect.succeed(report()),
+          onMerged: () => Effect.void,
+        });
+        expect(terminal).toBe("merged");
+        expect(yield* lines).toContain("review window unknown: the timeline of pull request #7 could not be read");
+      })
+    )
+  );
+});
 
 it.layer(platform, { timeout: "30 seconds" })("draft pull requests (push-first-publish D9)", (test) => {
   test.effect(

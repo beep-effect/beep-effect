@@ -152,9 +152,11 @@ bun run beep yeet publish --no-pr --message "type(scope): summary"
 bun run beep yeet publish --prove-first --message "type(scope): summary"
 ```
 
-- Flip this branch's draft PR to ready once every review thread is answered
-  and the required checks are green on the current head (refuses otherwise and
-  names the blocker; there is no `--force`):
+- Flip this branch's draft PR to ready as soon as its content is final: no
+  further push planned, cheap gates passed at publish, every review thread
+  answered. Hosted heavy CI may still be running; only a required check that
+  is already red holds the flip (it refuses and names the blocker; there is no
+  `--force`):
 
 ```bash
 bun run beep yeet ready
@@ -668,7 +670,8 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    so it ends itself with exit 2 on a wave (rows already in the inbox when it
    started end it only when a rerun of their check comes back red); re-run it
    after the fix push. Exit 0 with
-   `merge-ready: yes` means merge it yourself (`bun run beep yeet merge`), or
+   `merge-ready: yes` means the review window has elapsed too: re-read the
+   review threads, then merge it yourself (`bun run beep yeet merge`), or
    leave it to the orchestrator session at the gate; the monitor never merges on
    its own.
    On exit 1 or 3, read the summary line, fix the named blocker, publish, and
@@ -687,18 +690,24 @@ under the wave-exempt rule. Clear the answered ones once: list them with
    push-first path.
 9. Address failed checks or actionable review comments with follow-up commits
    through the same Yeet publish path.
-10. When the job ends `ready-pending-flip` (exit 0: threads answered, required
-    checks green, the draft flag is the only blocker) and no further push is
-    planned, run `bun run beep yeet ready`. It flips the draft only under that
-    gate on the current head and names the first blocker otherwise. Do not
-    flip while a fix wave is still coming: this account merges within minutes
-    of required-green, and a late push is dropped. Mergeable still means no
-    outstanding review thread — unresolved, or resolved by the author with a
-    later human reviewer comment nobody answered, outdated threads included
-    until they are explicitly resolved — and GitHub reports the branch as
-    mergeable or not conflicted. `bun run beep yeet status --remote` prints a `merge-ready:` line
-    that names the first failing criterion instead of making you read three
-    surfaces.
+10. Flip ready at content-final: as soon as no further push is planned and
+    the publish passed its cheap gates, run `bun run beep yeet ready`, without
+    waiting for hosted heavy CI. Draft means only "I am still pushing".
+    Reviewers start when the PR leaves draft and take 8–15 minutes, so the CI
+    run is the review window (review-window ruling, 2026-10-06). The flip
+    refuses only on a required check that is already red or an unanswered
+    thread. A job that ends `ready-pending-flip` (exit 0) means you left the
+    draft until green: flip it, then the full review window still has to run.
+    Mergeable means all of: required checks green; no outstanding review
+    thread — unresolved, or resolved by the author with a later human reviewer
+    comment nobody answered, outdated threads included until they are
+    explicitly resolved; GitHub reports the branch mergeable; and the review
+    window has elapsed — 20 minutes since the later of the last
+    ready-for-review event and the last push to the head, so a fix push
+    restarts it. Never flip and merge in one step, and re-read the threads
+    right before merging. `bun run beep yeet status --remote` prints a
+    `merge-ready:` line that names the first failing criterion, with
+    `review window open: N min left` when the window is the last one.
 11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
     worktree, `bun run beep yeet sweep --retire` — or let
     `monitor --until-merged` run the sweep on merged detection — so the next
@@ -841,13 +850,30 @@ is the accepted miss. Inline review comments reach the inbox as
 
 ## Ready
 
-`monitor --until-ready` ends `ready-pending-flip` (exit 0) when the PR is a
-draft and the draft flag is the only remaining readiness blocker. It prints
-`bun run beep yeet ready`. That command reads the PR with the monitor's own
-status read and runs `gh pr ready` only when, on the current head, every
-review thread is answered and the required checks are green; otherwise it
-refuses with the first blocker named. There is no `--force`. Flip only when no
-further push is planned.
+`bun run beep yeet ready` flips a draft at content-final (push-first-publish
+D11, which amends D10). It reads the PR with the monitor's own status read and
+runs `gh pr ready` when, on the current head, the PR is open, no required
+check is known to be failing, and every review thread is answered. Pending
+checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
+with the first blocker named (`pr-open`, `no-required-red`,
+`threads-resolved`). There is no `--force`. Flip only when no further push is
+planned: a push after the flip restarts the review window.
+
+The merge gate carries the wait instead. `merge-ready: yes` needs the
+`review-window-elapsed` criterion: 20 minutes since the later of the latest
+`ready_for_review` timeline event (the PR's creation when it was opened
+ready) and the push of the current head (the earliest check suite on the head
+commit). Both are read over REST, only once every other criterion holds, and
+the current time comes from the Effect `Clock`. A failed or unparsable read
+is `review window unknown`, which blocks exactly like an open window.
+`BEEP_YEET_REVIEW_WINDOW` overrides the length with an Effect duration string
+(`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
+`internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
+
+`monitor --until-ready` still ends `ready-pending-flip` (exit 0) when the PR
+is a draft and nothing but the draft flag blocks it. That now means the owner
+flipped late: the window starts at the flip, so submit a new monitor after
+`yeet ready` and wait for `merge-ready: yes`.
 
 ## Merge Loop
 
