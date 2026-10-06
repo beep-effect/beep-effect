@@ -6731,9 +6731,11 @@ in the law-practice projection, and one `effect/tsgo` diagnostic in this wave's
 atlas fixture test. The focused Node/Bun and package proofs did not cover
 these root lanes. The atlas diagnostic is fixed in this wave; the inherited
 docs and native error are repaired before resubmitting. A separate dependency
-branch resolves four patched packages and records a short-lived exact-version
-exception for the unpatched `sprintf-js`; it waits for the overlapping postcss
-PR before publication. Main-head root-gate preflight on each owning PR, with
+branch resolved four patched packages and recorded a short-lived exact-version
+exception for the unpatched `sprintf-js`; PR #1435 subsequently landed the
+shared security fixes on main, so that branch was not published. The merged
+lockfile passes the local Security lane. Main-head root-gate preflight on each
+owning PR, with
 OSV advisories refreshed at review time, would prevent this cross-PR repair.
 
 ### Shared test console hid an order-dependent assertion (2026-10-05)
@@ -6746,3 +6748,13 @@ creates its own test console, and a two-failure regression passes on Node and
 Bun; the full repo-cli package proof passes. A test fixture check that runs
 two output-producing cases within each shared layer would have exposed this
 before review.
+
+### Newly merged schema source failed the root law gate (2026-10-05)
+
+PR #1445's full local Yeet proof failed `quality:lint-policy` after the new
+Pattern Ontology module from main used `typeof value === "string"` in
+`PatternOntology.schema.ts`. The focused `@beep/schema` law command reported
+one native-runtime finding; replacing that guard with `P.isString` makes the
+law lane and full package verification pass. Running the package's generated
+`lint:laws` script on its owning PR before merge would have kept this repair
+out of the next unrelated goal wave.
