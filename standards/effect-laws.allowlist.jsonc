@@ -4,6 +4,38 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/effected/jsonl/Envelope.ts",
+      "kind": "new-map-set",
+      "reason": "The outer registry cache needs weak identity keys so unused registries and their compiled indexes can be collected. Effect HashMap does not provide weak keys. The cached tag index itself uses HashMap; the WeakMap only owns its lifetime.",
+      "owner": "@beep/scratchpad",
+      "issue": "JSONL-WEAK-REGISTRY-INDEX"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/effected/jsonl/Envelope.ts",
+      "kind": "object-method",
+      "reason": "Object.freeze prevents registry membership or order from changing after the cached HashMap of tag positions is compiled. TypeScript readonly alone cannot enforce this JavaScript boundary invariant.",
+      "owner": "@beep/scratchpad",
+      "issue": "JSONL-IMMUTABLE-REGISTRY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/effected/jsonl/Journal.ts",
+      "kind": "object-method",
+      "reason": "Object.assign augments the Context.Service constructor while retaining its constructor and inherited service protocol, including the caller's Self identity. Effect Struct.assign creates a plain spread object and loses that protocol. Service identity and layer construction are covered by the JSONL regression tests.",
+      "owner": "@beep/scratchpad",
+      "issue": "JSONL-CONTEXT-SERVICE-FACADE"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/effected/jsonl/internal/merge.ts",
+      "kind": "object-method",
+      "reason": "Object.create retains a decoded Schema.Class payload's prototype while assembling a transient shallow patch for re-encoding. Safe own-property definitions bypass inherited setters and exclude prototype-pollution keys. The merged object never escapes before schema validation and decoding create the returned instance.",
+      "owner": "@beep/scratchpad",
+      "issue": "JSONL-SCHEMA-CLASS-PATCH"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/utils/src/Schema.ts",
       "kind": "native-error",
       "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",
