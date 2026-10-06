@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "beep-references/v1",
+  "theme": "effect",
+  "rootDefault": "$HOME/YeeBois/references/effect",
+  "workspaceLink": ".repos/effect-workspace",
+  "members": [
+    {
+      "name": "effect",
+      "url": "git@github.com:Effect-TS/effect.git",
+      "tier": "deep"
+    },
+    {
+      "name": "effect-tsgo",
+      "url": "git@github.com:Effect-TS/tsgo.git",
+      "tier": "deep"
+    }
+  ]
+}
