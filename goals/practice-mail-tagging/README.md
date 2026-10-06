@@ -37,6 +37,8 @@ and `@beep/m365` adapters once workstream A's message-category verbs merge.
 
 ## Latest Evidence
 
+- 2026-10-06: PR 2 adds the Outlook, practice-KG, and Box adapters, tested
+  against driver fakes only (no live calls); decisions D-17..D-25 recorded.
 - 2026-10-06: packet opened from the operator-ratified solo-practice
   decisions; design and Decision Log D-1..D-8 recorded in `SPEC.md`.
 
