@@ -35,6 +35,7 @@ import * as Crypto from "effect/Crypto";
 import { Command } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process";
@@ -240,11 +241,21 @@ export const deadPid = 999;
 /** Process id of a live writer that is not this process. */
 export const otherWriterPid = 4242;
 
+/** Boot id the fake probe reports for the current boot. */
+export const currentBootId = "boot-0001";
+
+/** Start time the fake probe reports for the live writer at `otherWriterPid`. */
+const otherWriterStart = "500";
+
+// This process started at tick 100; the other writer at 500; the dead pid has no start time.
+const startTimes = HashMap.make([ownPid, "100"], [otherWriterPid, otherWriterStart]);
+
 const probe = Layer.succeed(
   ProcessProbe,
   ProcessProbe.of({
     pid: ownPid,
-    isAlive: Effect.fn("FakeProcessProbe.isAlive")((pid: number) => Effect.succeed(pid !== deadPid)),
+    bootId: Effect.succeedSome(currentBootId),
+    startTime: Effect.fn("FakeProcessProbe.startTime")((pid: number) => Effect.succeed(HashMap.get(startTimes, pid))),
   })
 );
 
@@ -257,8 +268,28 @@ export const writeLock = (text: string) =>
     Effect.andThen(fs.makeDirectory(stateDirectory, { recursive: true }), fs.writeFileString(lockPath, text))
   );
 
-/** A well-formed lock line naming a holder process. */
-export const lockOf = (pid: number) => `{"pid":${pid},"command":"apply","acquiredAt":"2026-07-01T00:00:00.000Z"}`;
+/**
+ * A well-formed lock line naming a holder process. By default it carries the
+ * current boot and the live other writer's start time; `null` leaves a field
+ * out, as a lock written before the identity fields existed would.
+ */
+export const lockOf = (holder: {
+  readonly pid: number;
+  readonly bootId?: string | null;
+  readonly startTime?: string | null;
+}) => {
+  const { pid } = holder;
+  const bootId = holder.bootId === undefined ? currentBootId : holder.bootId;
+  const startTime = holder.startTime === undefined ? otherWriterStart : holder.startTime;
+  const fields = [
+    `"pid":${pid}`,
+    `"command":"apply"`,
+    `"acquiredAt":"2026-07-01T00:00:00.000Z"`,
+    ...(bootId === null ? [] : [`"bootId":"${bootId}"`]),
+    ...(startTime === null ? [] : [`"startTime":"${startTime}"`]),
+  ];
+  return `{${A.join(fields, ",")}}`;
+};
 
 /** The lock file's text; none when no lock exists. */
 export const lockNow = Effect.flatMap(FileSystem.FileSystem, (fs) =>

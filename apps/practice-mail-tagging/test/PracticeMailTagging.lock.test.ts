@@ -7,6 +7,7 @@
 import { MailTaggingPortError } from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, Fiber, FileSystem, Layer, Runtime } from "effect";
@@ -18,14 +19,15 @@ import { PracticeMailTaggingError } from "@/PracticeMailTagging.errors";
 import {
   ProcessProbe,
   ProcessProbeLive,
+  procStatStartTime,
   StateDirectoryLocked,
   StateLock,
   StateLockHolder,
-  signalRefusalMeansAlive,
 } from "@/PracticeMailTagging.lock";
 import { StateLockLive } from "@/runtime/Layer";
 import {
   configOf,
+  currentBootId,
   deadPid,
   failNextListings,
   lockNow,
@@ -51,7 +53,7 @@ describe("state lock, held by another writer", () => {
   it.layer(World, { timeout: "30 seconds" })((it) => {
     it.effect("refuses apply, watch, and undo --yes with exit code 4 and builds no service", () =>
       Effect.gen(function* () {
-        yield* writeLock(lockOf(otherWriterPid));
+        yield* writeLock(lockOf({ pid: otherWriterPid }));
 
         const apply = yield* held(["apply", "--yes"]);
         const watch = yield* held(["watch", "--yes"]);
@@ -63,7 +65,7 @@ describe("state lock, held by another writer", () => {
         expect(watch.lockPath).toBe(lockPath);
         expect(undo.lockPath).toBe(lockPath);
         expect((yield* outlookNow).serviceBuilds).toBe(0);
-        assertSome(yield* lockNow, lockOf(otherWriterPid));
+        assertSome(yield* lockNow, lockOf({ pid: otherWriterPid }));
       })
     );
   });
@@ -84,13 +86,13 @@ describe("state lock, held by another writer", () => {
   it.layer(World, { timeout: "30 seconds" })((it) => {
     it.effect("lets dry-run, undo --dry-run, and report run without touching the lock", () =>
       Effect.gen(function* () {
-        yield* writeLock(lockOf(otherWriterPid));
+        yield* writeLock(lockOf({ pid: otherWriterPid }));
 
         yield* run(["dry-run"]);
         yield* run(["undo", "--run", "tag-0001", "--dry-run"]);
         yield* run(["report"]);
 
-        assertSome(yield* lockNow, lockOf(otherWriterPid));
+        assertSome(yield* lockNow, lockOf({ pid: otherWriterPid }));
         expect((yield* outlookNow).categoryWrites).toBe(0);
       })
     );
@@ -101,11 +103,59 @@ describe("state lock, taken and released", () => {
   it.layer(World, { timeout: "30 seconds" })((it) => {
     it.effect("takes over a lock whose process is gone and removes it after the run", () =>
       Effect.gen(function* () {
-        yield* writeLock(lockOf(deadPid));
+        yield* writeLock(lockOf({ pid: deadPid }));
 
         yield* run(["apply", "--yes"]);
 
         expect((yield* outlookNow).categoryWrites).toBe(1);
+        assertNone(yield* lockNow);
+      })
+    );
+  });
+
+  it.layer(World, { timeout: "30 seconds" })((it) => {
+    it.effect("takes over a lock recorded under this process's own pid", () =>
+      Effect.gen(function* () {
+        yield* writeLock(lockOf({ pid: ownPid, startTime: "100" }));
+
+        yield* run(["apply", "--yes"]);
+
+        assertNone(yield* lockNow);
+      })
+    );
+  });
+
+  it.layer(World, { timeout: "30 seconds" })((it) => {
+    it.effect("takes over a lock whose pid now belongs to a process with another start time", () =>
+      Effect.gen(function* () {
+        yield* writeLock(lockOf({ pid: otherWriterPid, startTime: "499" }));
+
+        yield* run(["apply", "--yes"]);
+
+        assertNone(yield* lockNow);
+      })
+    );
+  });
+
+  it.layer(World, { timeout: "30 seconds" })((it) => {
+    it.effect("takes over a lock written before the last reboot", () =>
+      Effect.gen(function* () {
+        yield* writeLock(lockOf({ pid: otherWriterPid, bootId: "boot-0000" }));
+
+        yield* run(["apply", "--yes"]);
+
+        assertNone(yield* lockNow);
+      })
+    );
+  });
+
+  it.layer(World, { timeout: "30 seconds" })((it) => {
+    it.effect("takes over a lock written without boot id and start time", () =>
+      Effect.gen(function* () {
+        yield* writeLock(lockOf({ pid: otherWriterPid, bootId: null, startTime: null }));
+
+        yield* run(["apply", "--yes"]);
+
         assertNone(yield* lockNow);
       })
     );
@@ -135,7 +185,11 @@ describe("state lock, taken and released", () => {
         yield* Fiber.join(fiber);
 
         expect(builds).toBe(1);
-        assertSome(O.map(betweenPasses, Str.includes(`"pid":${ownPid},"command":"watch"`)), true);
+        // The holder records this process's pid, boot id, and start time.
+        assertSome(
+          betweenPasses,
+          `{"pid":${ownPid},"command":"watch","acquiredAt":"1970-01-01T00:00:00.000Z","bootId":"${currentBootId}","startTime":"100"}`
+        );
         expect((yield* outlookNow).serviceBuilds).toBe(2);
         assertNone(yield* lockNow);
       })
@@ -185,22 +239,37 @@ describe("StateLockLive and the live process probe", () => {
     );
   });
 
-  it.layer(ProcessProbeLive, { timeout: "30 seconds" })((it) => {
-    it.effect("reports this process as alive and an unused process id as gone", () =>
+  it.layer(ProcessProbeLive.pipe(Layer.provideMerge(BunFileSystem.layer)), { timeout: "30 seconds" })((it) => {
+    it.effect("reads this machine's boot id and this process's start time, and none for an unused pid", () =>
       Effect.gen(function* () {
         const probe = yield* ProcessProbe;
 
         expect(probe.pid).toBe(process.pid);
-        expect(yield* probe.isAlive(process.pid)).toBe(true);
-        expect(yield* probe.isAlive(2_147_483_646)).toBe(false);
+        expect(O.getOrElse(yield* probe.bootId, () => "")).toMatch(/^[0-9a-f-]{36}$/u);
+        expect(O.getOrElse(yield* probe.startTime(process.pid), () => "")).toMatch(/^\d+$/u);
+        assertNone(yield* probe.startTime(2_147_483_646));
       })
     );
   });
 
-  it("reads a permission refusal as a live process and any other refusal as gone", () => {
-    expect(signalRefusalMeansAlive({ code: "EPERM" })).toBe(true);
-    expect(signalRefusalMeansAlive({ code: "ESRCH" })).toBe(false);
-    expect(signalRefusalMeansAlive("not an error")).toBe(false);
+  it.layer(ProcessProbeLive.pipe(Layer.provideMerge(Platform)), { timeout: "30 seconds" })((it) => {
+    it.effect("answers none for every identity when /proc cannot be read", () =>
+      Effect.gen(function* () {
+        const probe = yield* ProcessProbe;
+
+        assertNone(yield* probe.bootId);
+        assertNone(yield* probe.startTime(process.pid));
+      })
+    );
+  });
+
+  it("reads field 22 of a stat line, counting from the last closing parenthesis", () => {
+    assertSome(
+      procStatStartTime("42 (bun (worker)) S 1 42 42 0 -1 4194560 1 0 0 0 0 0 0 0 20 0 1 0 987654 0 0"),
+      "987654"
+    );
+    assertNone(procStatStartTime("no parenthesis here"));
+    assertNone(procStatStartTime("42 (bun) S 1"));
   });
 
   it("decodes every generated lock holder to itself", () => {

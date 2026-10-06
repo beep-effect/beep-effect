@@ -6,12 +6,15 @@
  */
 
 import { $PracticeMailTaggingId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer, Path, Runtime } from "effect";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import { flow, identity } from "effect/Function";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { PracticeMailTaggingError } from "./PracticeMailTagging.errors.ts";
 import type { PlatformError } from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
@@ -43,16 +46,28 @@ const ProcessId = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive
 /**
  * Who holds the state directory: the content of the lock file.
  *
+ * **Details**
+ *
+ * A process id alone does not identify a process: after a crash, a reboot, or
+ * in a container it can belong to another process, or to the one reading the
+ * lock. The boot id and the holder's start time pin it down. Both are
+ * optional so a lock written before they existed still decodes; such a lock
+ * is treated as stale.
+ *
  * **Example** (Describe a holder)
  *
  * ```ts
  * import * as DateTime from "effect/DateTime"
  * import { StateLockHolder } from "@/PracticeMailTagging.lock"
  *
+ * import * as O from "effect/Option"
+ *
  * const holder = StateLockHolder.make({
  *   pid: 4242,
  *   command: "watch",
- *   acquiredAt: DateTime.makeUnsafe("2026-07-01T09:00:00Z")
+ *   acquiredAt: DateTime.makeUnsafe("2026-07-01T09:00:00Z"),
+ *   bootId: O.some("boot-0001"),
+ *   startTime: O.some("123456")
  * })
  * console.log(holder.command) // "watch"
  * ```
@@ -71,6 +86,16 @@ export class StateLockHolder extends S.Class<StateLockHolder>($I`StateLockHolder
     acquiredAt: S.DateTimeUtcFromString.annotateKey({
       description: "When the lock was taken.",
     }),
+    bootId: S.OptionFromNullOr(S.NonEmptyString)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Kernel boot id when the lock was taken; none when it could not be read.",
+      }),
+    startTime: S.OptionFromNullOr(S.NonEmptyString)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Start time of the holder process in clock ticks since boot; none when it could not be read.",
+      }),
   },
   $I.annote("StateLockHolder", {
     description: "Content of the state-directory writer lock.",
@@ -152,36 +177,48 @@ export class StateDirectoryLocked extends S.TaggedError<StateDirectoryLocked>($I
     });
 }
 
-// `process.kill(pid, 0)` throws EPERM for a live process owned by another user.
-const PermissionDenied = S.Struct({ code: S.Literal("EPERM") });
+const bootIdPath = "/proc/sys/kernel/random/boot_id";
 
 /**
- * Whether a failed liveness signal still proves the process exists.
+ * Reads the start time of a process from the text of its `/proc/<pid>/stat`.
  *
- * **Example** (Read a permission refusal)
+ * **Details**
+ *
+ * The start time is field 22, counted in clock ticks since boot. The process
+ * name in field 2 may contain spaces and parentheses, so fields are counted
+ * from the last closing parenthesis.
+ *
+ * **Example** (Read a start time)
  *
  * ```ts
- * import { signalRefusalMeansAlive } from "@/PracticeMailTagging.lock"
+ * import * as O from "effect/Option"
+ * import { procStatStartTime } from "@/PracticeMailTagging.lock"
  *
- * console.log(signalRefusalMeansAlive({ code: "EPERM" })) // true
- * console.log(signalRefusalMeansAlive({ code: "ESRCH" })) // false
+ * const stat = "42 (bun (worker)) S 1 42 42 0 -1 4194560 1 0 0 0 0 0 0 0 20 0 1 0 987654 0 0"
+ * console.log(O.getOrElse(procStatStartTime(stat), () => "none")) // "987654"
  * ```
  *
- * @category predicates
+ * @param stat - Text of `/proc/<pid>/stat`.
+ * @returns The start time; none when the text is not a stat line.
+ * @category parsing
  * @since 0.0.0
  */
-export const signalRefusalMeansAlive: (cause: unknown) => boolean = S.is(PermissionDenied);
+export const procStatStartTime = (stat: string): O.Option<string> =>
+  O.flatMap(Str.lastIndexOf(")")(stat), (close) =>
+    A.get(A.filter(Str.split(Str.trim(Str.slice(close + 1)(stat)), /\s+/u), Str.isNonEmpty), 19)
+  );
 
 /**
- * The current process and a liveness probe for other processes.
+ * The current process and the identity of any process: the kernel boot id and
+ * a process's start time.
  *
- * **Example** (Ask whether a process runs)
+ * **Example** (Read this process's identity)
  *
  * ```ts
  * import * as Effect from "effect/Effect"
  * import { ProcessProbe } from "@/PracticeMailTagging.lock"
  *
- * const program = ProcessProbe.use((probe) => probe.isAlive(probe.pid))
+ * const program = ProcessProbe.use((probe) => probe.startTime(probe.pid))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -192,13 +229,20 @@ export class ProcessProbe extends Context.Service<
   ProcessProbe,
   {
     readonly pid: number;
-    readonly isAlive: (pid: number) => Effect.Effect<boolean>;
+    readonly bootId: Effect.Effect<O.Option<string>>;
+    readonly startTime: (pid: number) => Effect.Effect<O.Option<string>>;
   }
 >()($I`ProcessProbe`) {}
 
 /**
- * The probe over the running process: signal 0, which checks without
- * signalling.
+ * The probe over the running process and Linux `/proc`, read through the
+ * platform file system.
+ *
+ * **Details**
+ *
+ * A file that cannot be read, or holds no usable value, answers none: a
+ * process that no longer exists has no start time, and a machine without
+ * `/proc` has no identity at all.
  *
  * **Example** (Reference the live probe)
  *
@@ -212,16 +256,54 @@ export class ProcessProbe extends Context.Service<
  * @category layers
  * @since 0.0.0
  */
-export const ProcessProbeLive: Layer.Layer<ProcessProbe> = Layer.sync(ProcessProbe, () =>
-  ProcessProbe.of({
-    pid: process.pid,
-    isAlive: Effect.fn("ProcessProbe.isAlive")((pid: number) =>
-      Effect.try({ try: () => process.kill(pid, 0), catch: signalRefusalMeansAlive }).pipe(
-        Effect.match({ onFailure: identity, onSuccess: () => true })
-      )
-    ),
+export const ProcessProbeLive: Layer.Layer<ProcessProbe, never, FileSystem.FileSystem> = Layer.effect(
+  ProcessProbe,
+  Effect.map(FileSystem.FileSystem, (fs) =>
+    ProcessProbe.of({
+      pid: process.pid,
+      bootId: fs
+        .readFileString(bootIdPath)
+        .pipe(Effect.map(flow(Str.trim, O.liftPredicate(Str.isNonEmpty))), Effect.orElseSucceed(O.none)),
+      startTime: Effect.fn("ProcessProbe.startTime")((pid: number) =>
+        fs.readFileString(`/proc/${pid}/stat`).pipe(Effect.map(procStatStartTime), Effect.orElseSucceed(O.none))
+      ),
+    })
+  )
+);
+
+const StaleLockReason = LiteralKit(["own-pid", "identity-missing", "boot-changed", "process-changed"]).pipe(
+  $I.annoteSchema("StaleLockReason", {
+    description: "Why a lock no longer proves a live writer.",
   })
 );
+
+type StaleLockReason = typeof StaleLockReason.Type;
+
+type Observation = {
+  readonly holder: StateLockHolder;
+  readonly ownPid: number;
+  readonly bootId: O.Option<string>;
+  readonly startTime: O.Option<string>;
+};
+
+const sameValue = O.makeEquivalence(Str.Equivalence);
+
+// Checked in order; the first that holds names the reason. None of them holding means a live writer.
+const staleChecks: ReadonlyArray<readonly [StaleLockReason, (observed: Observation) => boolean]> = [
+  ["own-pid", (observed) => observed.holder.pid === observed.ownPid],
+  [
+    "identity-missing",
+    (observed) => O.isNone(O.all([observed.holder.bootId, observed.holder.startTime, observed.bootId])),
+  ],
+  ["boot-changed", (observed) => !sameValue(observed.holder.bootId, observed.bootId)],
+  ["process-changed", (observed) => !sameValue(observed.holder.startTime, observed.startTime)],
+];
+
+const staleReason = (observed: Observation): O.Option<StaleLockReason> =>
+  O.map(
+    A.findFirst(staleChecks, ([, holds]) => holds(observed)),
+    ([reason]) => reason
+  );
 
 /**
  * The writer lock of one state directory.
@@ -257,10 +339,12 @@ const isAlreadyExists = (error: PlatformError): boolean => P.isTagged(error.reas
  *
  * `hold` creates `writer.lock` with exclusive-create semantics and removes it
  * when the caller's scope closes, after success, failure, or interruption.
- * When the file exists, its recorded process is asked whether it still runs.
- * A dead holder's lock is stale: it is replaced once, with a warning naming
- * the old process id. A live holder, or a lock that cannot be read, fails
- * with {@link StateDirectoryLocked}.
+ * When the file exists, the lock is held only when its recorded process is
+ * another process, the machine has not rebooted since (same boot id), and
+ * the process at that id started when the recorded one did (same start
+ * time). Anything else, including a lock without those fields, is stale: it
+ * is replaced once, with a warning naming the old process id and the reason.
+ * A lock that cannot be read fails with {@link StateDirectoryLocked}.
  *
  * **Gotchas**
  *
@@ -296,16 +380,19 @@ export const makeStateLock = Effect.fn("StateLock.make")(function* (stateDirecto
 
   const readHolder = fs.readFileString(lockPath).pipe(Effect.flatMap(decodeHolder), Effect.option);
 
-  // Answers the holder when its process is gone; a live or unreadable holder is none.
-  const staleHolder = (holder: O.Option<StateLockHolder>) =>
-    O.match(holder, {
-      onNone: () => Effect.succeedNone,
-      onSome: (found) => Effect.map(probe.isAlive(found.pid), (alive) => O.liftPredicate(found, () => !alive)),
-    });
+  const observe = Effect.fn("StateLock.observe")(function* (holder: StateLockHolder) {
+    const bootId = yield* probe.bootId;
+    const startTime = yield* probe.startTime(holder.pid);
+    return staleReason({ holder, ownPid: probe.pid, bootId, startTime });
+  });
 
-  const takeOver = Effect.fn("StateLock.takeOver")(function* (command: string, stale: StateLockHolder) {
+  const takeOver = Effect.fn("StateLock.takeOver")(function* (
+    command: string,
+    stale: StateLockHolder,
+    reason: StaleLockReason
+  ) {
     yield* Effect.logWarning("taking over a stale state lock").pipe(
-      Effect.annotateLogs({ lockPath, stalePid: stale.pid })
+      Effect.annotateLogs({ lockPath, stalePid: stale.pid, reason })
     );
     yield* Effect.ignore(fs.remove(lockPath));
     return yield* acquire(command, false);
@@ -313,8 +400,11 @@ export const makeStateLock = Effect.fn("StateLock.make")(function* (stateDirecto
 
   const contend = Effect.fn("StateLock.contend")(function* (command: string, mayTakeOver: boolean) {
     const holder = yield* readHolder;
-    const stale = O.filter(yield* staleHolder(holder), () => mayTakeOver);
-    return yield* O.match(stale, {
+    const reason = O.filter(
+      yield* O.match(holder, { onNone: () => Effect.succeedNone, onSome: observe }),
+      () => mayTakeOver
+    );
+    return yield* O.match(O.all([holder, reason]), {
       onNone: () =>
         Effect.fail(
           StateDirectoryLocked.held(
@@ -322,7 +412,7 @@ export const makeStateLock = Effect.fn("StateLock.make")(function* (stateDirecto
             O.map(holder, (found) => found.pid)
           )
         ),
-      onSome: (found) => takeOver(command, found),
+      onSome: ([found, why]) => takeOver(command, found, why),
     });
   });
 
@@ -332,7 +422,11 @@ export const makeStateLock = Effect.fn("StateLock.make")(function* (stateDirecto
   ): Effect.Effect<void, StateDirectoryLocked | PracticeMailTaggingError> {
     return Effect.gen(function* () {
       const acquiredAt = yield* DateTime.now;
-      const text = yield* Effect.orDie(encodeHolder(StateLockHolder.make({ pid: probe.pid, command, acquiredAt })));
+      const bootId = yield* probe.bootId;
+      const startTime = yield* probe.startTime(probe.pid);
+      const text = yield* Effect.orDie(
+        encodeHolder(StateLockHolder.make({ pid: probe.pid, command, acquiredAt, bootId, startTime }))
+      );
       yield* Effect.mapError(fs.makeDirectory(stateDirectory, { recursive: true }), unwritable);
       yield* fs
         .writeFileString(lockPath, text, { flag: "wx" })

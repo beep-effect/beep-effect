@@ -23,7 +23,7 @@ Run from the repository root with `bun run apps/practice-mail-tagging/src/bin.ts
 
 `apply`, `watch`, and `undo` without `--dry-run` hold a lock file,
 `writer.lock`, in the state directory until they exit, so only one writer
-uses a state directory at a time. A lock whose process is gone is taken over.
+uses a state directory at a time. A lock left by a writer that crashed is taken over: the lock records the boot id and the process start time, so a reused process id never keeps it.
 `dry-run`, `undo --dry-run`, and `report` take no lock.
 
 `--since` only matters before the first checkpoint exists; after that a pass
