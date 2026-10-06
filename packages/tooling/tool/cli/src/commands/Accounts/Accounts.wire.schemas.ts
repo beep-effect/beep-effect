@@ -270,7 +270,7 @@ const codexWindow = (wire: typeof CodexWindow.Type | null | undefined): O.Option
 export const codexUsageWindows = (body: CodexUsageBody): ReadonlyArray<UsageWindow> =>
   O.fromNullishOr(body.rate_limit).pipe(
     O.map((limit) => A.getSomes([codexWindow(limit.primary_window), codexWindow(limit.secondary_window)])),
-    O.getOrElse(() => A.empty<UsageWindow>())
+    O.getOrElse(A.empty<UsageWindow>)
   );
 
 // Claude names its dollar pools with rotating code names, so every top-level
@@ -320,7 +320,7 @@ export const claudeCreditBalances = (body: string): ReadonlyArray<CreditBalance>
         )
       )
     ),
-    O.getOrElse(() => A.empty<CreditBalance>())
+    O.getOrElse(A.empty<CreditBalance>)
   );
 
 /**
@@ -452,7 +452,7 @@ const museWindow = (
 export const museUsageWindows = (body: MuseKeyBody): ReadonlyArray<UsageWindow> =>
   O.fromNullishOr(body.subs_usage).pipe(
     O.map((usage) => A.getSomes([museWindow("session", usage.window), museWindow("weekly", usage.weekly)])),
-    O.getOrElse(() => A.empty<UsageWindow>())
+    O.getOrElse(A.empty<UsageWindow>)
   );
 
 // Protobuf wire types: 0 varint, 1 fixed 64-bit, 2 length-delimited, 5 fixed 32-bit.

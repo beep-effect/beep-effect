@@ -417,10 +417,10 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
             HttpClientRequest.bearerToken(token),
             HttpClientRequest.setHeader("user-agent", "codex-cli"),
             HttpClientRequest.setHeaders(
-              O.match(O.fromNullishOr(login.account_id), {
-                onNone: () => ({}),
-                onSome: (accountId) => ({ "chatgpt-account-id": accountId }),
-              })
+              O.fromNullishOr(login.account_id).pipe(
+                O.map((accountId) => ({ "chatgpt-account-id": accountId })),
+                O.getOrElse(() => ({}))
+              )
             )
           ),
           identity,
