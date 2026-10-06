@@ -1,7 +1,7 @@
 # Round 4 JSDoc inventory — clean packs
 
 Independent editorial re-review of packs that closed at `accepted findings: 0`
-in round 3: glob, semver, schemastore, memfs, codemode, beep-docs, ontoskills,
+in round 3: glob, schemastore, memfs, codemode, beep-docs, ontoskills,
 metadata, microdata.
 
 Mechanical census is already `openModuleCount: 0` / `openOwningExportCount: 0`.
@@ -19,7 +19,7 @@ No source was edited.
 Binding law: `.patterns/jsdoc-documentation.md`.
 
 Slice owning counts from `scratchpad/.jsdoc-loop/packs.json` /
-pack READMEs: glob 34, semver 34, schemastore 47, memfs 18, codemode 353,
+pack READMEs: glob 34, schemastore 47, memfs 18, codemode 353,
 beep-docs 95, remainder (ontoskills + metadata + microdata) 334.
 
 ---
@@ -41,7 +41,7 @@ beep-docs 95, remainder (ontoskills + metadata + microdata) 334.
 | Round-2 memfs `makeInspectable` | **Closed.** Imports `../../memfs/internal/volume.ts`, destructures `{ fileSystem, entries }`, logs decoded `/out.txt` bytes. |
 | Round-2 beep-docs LiteralKit Enum logs | **Closed.** `CodeSnippetLanguage` / `DeclarationKind` / `SearchContentSource` `S.is` a member and a reject token. |
 | Round-2 OfficeParser nested `T["k"] = literal` placeholders | **Closed.** Parent Examples construct realistic objects. Nested primitive fences are gone. |
-| Unlifted implementation-comment Gotchas | **Clean** on the surfaces that previously had them (glob leading-`{}`, memfs unenforced modes / per-build layer memoization, semver trim vs `isValid` / dual `(version, range)` / caret 0.x / empty-range match-all, microdata unbounded lexemes, schemastore `$schema` trailing `#` / `compare: "bytes"`). |
+| Unlifted implementation-comment Gotchas | **Clean** on the surfaces that previously had them (glob leading-`{}`, memfs unenforced modes / per-build layer memoization, microdata unbounded lexemes, schemastore `$schema` trailing `#` / `compare: "bytes"`). |
 
 ---
 
@@ -63,7 +63,7 @@ beep-docs 95, remainder (ontoskills + metadata + microdata) 334.
 Do not reopen these; they were independently re-checked and still fail the
 caller-confusion bar:
 
-- Runtime `@effected/*` Context service ids (`VersionCache`, `SchemaFile`,
+- Runtime `@effected/*` Context service ids (`SchemaFile`,
   `SchemaValidator`, `MemoryFileSystem.Volume`) and kit-name mentions in prose
   (`assertCap` TypeError text included).
 - Glob / schemastore cap-constant Examples that observe the public compile /
@@ -92,8 +92,6 @@ caller-confusion bar:
   factory — that is the symbol's job; it is not a parser-entry Example miss.
 - `FromSpecResult` empty-`paths` fence that logs `skipped: []`. The skip-reason
   contract lives on `fromSpec` Gotchas; this is not a combine-is-identity defect.
-- Semver `$I.annote` / `$I.annoteSchema` (runtime schema identity; class schemas
-  already double as decoded types).
 - Schemastore `Schema.Defect()` without `includeStack: true` — runtime encoding.
 - StoreDocument `restoreDefsRefs` `__proto__` own-property comment: defense-in-depth
   on generated Draft-07 output that core already strips; not a caller-facing Gotcha.
@@ -109,7 +107,7 @@ caller-confusion bar:
   boundaries, callable embedding stub).
 - Taste-only category debates (`models` vs `type-level` on same-name aliases;
   OntoSkills LiteralKits at `@category models`; microdata `@category schemas`;
-  `SemVerBump` constructors; `AnnotationCarriers` combinators; `DocumentDiff`
+  `AnnotationCarriers` combinators; `DocumentDiff`
   utilities; `MemoryFileSystem` adapters).
 - Private `Interpreter` methods lacking `@category`. Docgen required
   description / Example / `@since`; those are present. Members are not owning
@@ -131,19 +129,6 @@ caller-confusion bar:
 Public `GlobPattern` / `GlobSet` bang semantics, noglobstar rewrite, escape
 default asymmetry, and compile-vs-match guard policy stay consistent across
 lead, Gotchas, and fences.
-
-## Pack verdict: semver
-
-- files reviewed: 10
-- owning exports reviewed: 34
-- confirmed mechanical items: 0
-- editorial items: 0
-- rejected false positives: 1 (`$I` identity on class schemas)
-- accepted findings: 0
-
-Dual `(version, range)`, caret 0.x, empty-range match-all, trim vs `isValid`,
-and internal relative-import Examples that invoke the named symbol remain
-compliant.
 
 ## Pack verdict: schemastore
 
@@ -224,11 +209,11 @@ clusters keep described `@see`. `DurationFromSeconds` round-trips seconds.
 
 ## Combined verdict
 
-- files reviewed: 88
-- owning exports reviewed: 915
+- files reviewed: 78
+- owning exports reviewed: 881
 - confirmed mechanical items: 0
 - editorial items: 0
-- rejected false positives: 20 (grouped above)
+- rejected false positives: 19 (grouped above)
 - accepted findings: 0
 
 Every exporting module and every owning export in these packs was reviewed.

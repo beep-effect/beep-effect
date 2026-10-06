@@ -1,14 +1,14 @@
-# Round 3 JSDoc inventory — glob, semver, schemastore, memfs
+# Round 3 JSDoc inventory — glob, schemastore, memfs
 
 Independent editorial re-review after round-2 fixes. Mechanical census is
 already `openModuleCount: 0` / `openOwningExportCount: 0`. Zero `@example` /
 `@remarks` / `@module` / `@template`. Runtime `@effected/*` service ids
-(`VersionCache`, `SchemaFile`, `SchemaValidator`, `MemoryFileSystem.Volume`)
+(`SchemaFile`, `SchemaValidator`, `MemoryFileSystem.Volume`)
 and kit-name mentions in prose are not findings.
 
 Pack files reviewed from `scratchpad/.jsdoc-loop/packs.json`. Slice owning
-counts: glob 34, semver 34, schemastore 47, memfs 18. Every exporting module
-in the four packs was read, including glob `internal/**` owning declarations.
+counts: glob 34, schemastore 47, memfs 18. Every exporting module
+in the three packs was read, including glob `internal/**` owning declarations.
 
 Round-2 closures verified on the live source (not re-opened):
 
@@ -27,15 +27,12 @@ or unlifted implementation-comment Gotchas met the open bar.
 ## Rejected / not opened
 
 - Runtime `@effected/*` Context service ids and JSDoc mentions of
-  `@effected/semver` / `@effected/workspaces` / `@effected/yaml` / `@effected/glob`
+  `@effected/workspaces` / `@effected/yaml` / `@effected/glob`
   as kit names (`assertCap` TypeError text included).
-- Semver `$I.annote` / `$I.annoteSchema` — round 1 explicitly did not open this
-  (runtime schema identity; class schemas already double as decoded types).
 - Schemastore `Schema.Defect()` without `includeStack: true` — runtime encoding,
   not JSDoc.
 - Extra titled Examples on class members when the owning class already has one
-  (`GlobPattern.compileResult`, `GlobSet.matches`, `MemoryFileSystem.layerFaulty`,
-  `Range.parseResult`, `SemVer.parseResult`, `VersionCache` error constructors).
+  (`GlobPattern.compileResult`, `GlobSet.matches`, `MemoryFileSystem.layerFaulty`).
 - Glob public `GlobPattern` / `GlobSet` sibling choice — Gotchas already use
   inline `{@link}` for bang semantics.
 - Glob cap constants (`MAX_PATTERN_LENGTH`, `EXPANSION_MAX`,
@@ -47,31 +44,28 @@ or unlifted implementation-comment Gotchas met the open bar.
   const — same class as the glob cap-constant reject.
 - Memfs `internal.make` / `internal.layer` Examples that go through
   `MemoryFileSystem.make` / `.layer` — those are the same bindings.
-- Glob/semver/memfs-internal two-level relative imports
+- Glob/memfs-internal two-level relative imports
   (`../../<kit>/internal/…`) vs toml's three-level extract-dir path. Round-1
   residual risk; glob/memfs internals are `@internal` (docgen `Parser.shouldIgnore`);
   round-2 treated the two-level convention as holding. No new compilation evidence.
 - StoreDocument `restoreDefsRefs` `__proto__` own-property comment. Unlike the
   jsonc parser, this walk is defense-in-depth on generated Draft-07 output that
   core already strips; not a caller-facing Gotcha.
-- Taste-only category debates (`SemVerBump` constructors, `AnnotationCarriers`
+- Taste-only category debates (`AnnotationCarriers`
   combinators, `DocumentDiff` utilities, `MemoryFileSystem` adapters).
 - Re-export graph edges (`glob/index.ts`, `minimatch.ts` `GLOBSTAR`, kit barrels).
 
 ## Pack verdict
 
-- files reviewed: 40 (glob 13, semver 10, schemastore 14, memfs 3)
-- owning exports reviewed: 133 slice-owning (glob 34, semver 34, schemastore 47,
+- files reviewed: 30 (glob 13, schemastore 14, memfs 3)
+- owning exports reviewed: 99 slice-owning (glob 34, schemastore 47,
   memfs 18), including glob internal owning declarations
 - confirmed mechanical items: 0
 - editorial items: 0
-- rejected false positives: 12 (grouped above)
+- rejected false positives: 11 (grouped above)
 - accepted findings: 0
 
-Every exporting module and every owning export in the four packs was reviewed.
-Round-2 glob/schemastore/memfs items are closed on the live source. Semver
-remains clean: module headers, kind-split Examples, described `@see`, Gotchas
-for trim vs `isValid`, dual `(version, range)`, caret 0.x, empty-range
-match-all, and internal relative-import Examples that invoke the named symbol.
+Every exporting module and every owning export in the three packs was reviewed.
+Round-2 glob/schemastore/memfs items are closed on the live source.
 
 accepted findings: 0.

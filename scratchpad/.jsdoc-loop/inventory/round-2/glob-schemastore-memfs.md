@@ -1,14 +1,14 @@
-# Round 2 JSDoc inventory — glob, semver, schemastore, memfs
+# Round 2 JSDoc inventory — glob, schemastore, memfs
 
 Independent editorial re-review after round-1 fixes. Mechanical census is
 already `openModuleCount: 0` / `openOwningExportCount: 0`. Zero `@example` /
 `@remarks` / `@module` / `@template`. Runtime `@effected/*` service ids
-(`VersionCache`, `SchemaFile`, `SchemaValidator`, `MemoryFileSystem.Volume`)
+(`SchemaFile`, `SchemaValidator`, `MemoryFileSystem.Volume`)
 are not findings.
 
 Pack files reviewed from `scratchpad/.jsdoc-loop/packs.json`. Census owning
-counts: glob 20, semver 34, schemastore 47, memfs 18. Every exporting module
-in the four packs was read; glob `internal/**` owning declarations were
+counts: glob 20, schemastore 47, memfs 18. Every exporting module
+in the three packs was read; glob `internal/**` owning declarations were
 reviewed even where the census slice is thinner than the raw `export` list.
 
 ---
@@ -25,9 +25,9 @@ reviewed even where the census slice is thinner than the raw `export` list.
 - `affectedFiles`: glob/internal/assertValidPattern.ts:26, glob/internal/ast.ts:213, glob/internal/balancedMatch.ts:62, glob/internal/balancedMatch.ts:98, glob/internal/braceExpansion.ts:145, glob/internal/braceExpressions.ts:74, glob/internal/escape.ts:47, glob/internal/unescape.ts:53, glob/internal/limits.ts:162, glob/internal/limits.ts:190, glob/internal/limits.ts:216, glob/internal/minimatch.ts:142, glob/internal/minimatch.ts:188, glob/internal/types.ts:121
 - `symbol`: assertValidPattern, AST, balanced, range, expand, parseClass, escape, unescape, GuardExceeded, isGuardExceeded, assertCap, braceExpand, Minimatch, GLOBSTAR
 - `kind`: value
-- `evidence`: Every listed Example imports `@beep/scratchpad/glob` and calls `GlobPattern.compileResult` / `GlobPattern.escape` / `GlobPatternOptions.make`. None of the fences mention or invoke the documented identifier. Worst cases: `balanced`/`range` never show delimiter offsets (`pre`/`body`/`post` or `[start,end]`); `isGuardExceeded` never calls the guard (it inspects `GlobPatternError.reason`); `assertCap` try/catches `GlobPatternOptions.make({ braceExpandMax: 0 })`; `GLOBSTAR` demonstrates `crossesSegments`; `Minimatch`'s title is literally “Match through the public facade”. Sibling kit `semver/internal/*` already compiles relative imports of the owning symbols (`../../semver/internal/grammar.ts`).
+- `evidence`: Every listed Example imports `@beep/scratchpad/glob` and calls `GlobPattern.compileResult` / `GlobPattern.escape` / `GlobPatternOptions.make`. None of the fences mention or invoke the documented identifier. Worst cases: `balanced`/`range` never show delimiter offsets (`pre`/`body`/`post` or `[start,end]`); `isGuardExceeded` never calls the guard (it inspects `GlobPatternError.reason`); `assertCap` try/catches `GlobPatternOptions.make({ braceExpandMax: 0 })`; `GLOBSTAR` demonstrates `crossesSegments`; `Minimatch`'s title is literally “Match through the public facade”.
 - `impact`: Hover/docs for engine helpers teach the public facade instead of the helper. A caller of `balanced("{", "}", "a{b,c}d")` or `isGuardExceeded(e)` cannot see the actual result shape. Placeholder-style Examples fail the quality bar even when they typecheck.
-- `suggestedFix`: Rewrite each fence to import the owning module relatively (same pattern as `scratchpad/semver/internal/grammar.ts`) and call the symbol with realistic inputs: `balanced`/`range` on `"a{b,c}d"`; `expand("a{b,c}d")` plus a budget trip; `parseClass("[a-z]", 0)` and `"[_]"`; `escape`/`unescape` with shared options; `assertValidPattern` TypeError vs `GuardExceeded`; `isGuardExceeded(new GuardExceeded(...))`; `assertCap("braceExpandMax", 0)` in try/catch; `braceExpand` with `nobrace: true`; `new Minimatch("**/*.ts", {})`; `GLOBSTAR` compared with `Minimatch.set`. Keep one titled fence and an observable `console.log` / `// =>`.
+- `suggestedFix`: Rewrite each fence to import the owning module relatively and call the symbol with realistic inputs: `balanced`/`range` on `"a{b,c}d"`; `expand("a{b,c}d")` plus a budget trip; `parseClass("[a-z]", 0)` and `"[_]"`; `escape`/`unescape` with shared options; `assertValidPattern` TypeError vs `GuardExceeded`; `isGuardExceeded(new GuardExceeded(...))`; `assertCap("braceExpandMax", 0)` in try/catch; `braceExpand` with `nobrace: true`; `new Minimatch("**/*.ts", {})`; `GLOBSTAR` compared with `Minimatch.set`. Keep one titled fence and an observable `console.log` / `// =>`.
 - `recommendedSkillOrAgent`: jsdoc-annotation-specialist
 - `fixerGroup`: glob
 - `acceptanceCommands`: bun scratchpad/.jsdoc-loop/census.ts
@@ -109,24 +109,21 @@ reviewed even where the census slice is thinner than the raw `export` list.
 
 ## Rejected / not opened
 
-- Runtime `@effected/*` Context service ids and JSDoc mentions of `@effected/semver` / `@effected/workspaces` / `@effected/yaml` as kit names.
-- Semver `$I.annote` / `$I.annoteSchema` — round 1 explicitly did not open this (runtime schema identity; class schemas already double as decoded types).
+- Runtime `@effected/*` Context service ids and JSDoc mentions of `@effected/workspaces` / `@effected/yaml` as kit names.
 - Schemastore `Schema.Defect()` without `includeStack: true` (R1-036) — runtime encoding, not JSDoc.
 - Extra titled Examples on class members when the owning class already has one.
 - Glob public `GlobPattern` / `GlobSet` sibling choice — Gotchas already use inline `{@link}` for bang semantics.
 - Glob cap constants (`MAX_PATTERN_LENGTH`, `EXPANSION_MAX`, …) whose Examples show the public compile failure at that numeric bound rather than naming the const.
 - Memfs `internal.make` / `internal.layer` Examples that go through `MemoryFileSystem.make` / `.layer` — those are the same bindings.
-- Taste-only category debates (`SemVerBump` constructors, `AnnotationCarriers` combinators, `DocumentDiff` utilities).
+- Taste-only category debates (`AnnotationCarriers` combinators, `DocumentDiff` utilities).
 
 ## Pack verdict
 
-- files reviewed: 40 (glob 13, semver 10, schemastore 14, memfs 3)
-- owning exports reviewed: 119 census-owning (glob 20, semver 34, schemastore 47, memfs 18), plus glob internal owning declarations listed in glob-R2-001
+- files reviewed: 30 (glob 13, schemastore 14, memfs 3)
+- owning exports reviewed: 85 census-owning (glob 20, schemastore 47, memfs 18), plus glob internal owning declarations listed in glob-R2-001
 - confirmed mechanical items: 0
 - editorial items: 4
-- rejected false positives: 8 (grouped above)
+- rejected false positives: 7 (grouped above)
 - accepted findings: 4
-
-semver is clean on this pass: module headers, kind-split Examples, described `@see`, Gotchas for trim vs `isValid`, dual `(version, range)`, caret 0.x, and internal relative-import Examples all hold.
 
 If the four items above are declined as out of round-2 scope, the residual risk is the glob internal facade-proxy Examples, the three schemastore Promise logs, and the memfs `makeInspectable` shape mismatch.

@@ -39,7 +39,6 @@ Round 1 read-only reviewers (jsdoc-annotation-specialist, write inventory only):
 | jsonl | 01a040e5-b2be-7873-925b-102ac111425a |
 | glob | 01a040e5-b2be-7873-925b-1033fe736295 |
 | schemastore | 01a040e5-b2be-7873-925b-10427242c0de |
-| semver | 01a040e5-b2be-7873-925b-105c2663e12d |
 | memfs | 01a040e5-b2bf-7fc2-84d6-9dd89b98fa4e |
 | beep-docs | 01a040e5-b2bf-7fc2-84d6-9deec66c741d |
 | codemode-interpreter | 01a040e5-b2bf-7fc2-84d6-9dff22c925d0 |
@@ -48,7 +47,7 @@ Round 1 read-only reviewers (jsdoc-annotation-specialist, write inventory only):
 | remainder-microdata | 01a040e5-b2bf-7fc2-84d6-9e2b752a63ce |
 | remainder-models | 01a040e5-b2bf-7fc2-84d6-9e3ef658c9d2 |
 
-Round 1 reviews completed so far: memfs (11 findings), glob (24), semver (24), jsonc (21), jsonl (26), toml (31), schemastore (36), yaml-public (24).
+Round 1 reviews completed so far: memfs (11 findings), glob (24), jsonc (21), jsonl (26), toml (31), schemastore (36), yaml-public (24).
 
 ## Phase 4 (pipelined)
 
@@ -58,7 +57,6 @@ Fixers launched on disjoint surfaces after pack review landed:
 | --- | --- |
 | memfs | 01a040eb-a7b3-7000-9748-7e868bc5c40f |
 | glob | 01a040ee-df6c-7082-bda7-f5869553a604 |
-| semver | 01a040ee-df6c-7082-bda7-f5919acadba7 |
 | jsonc | 01a040ee-df6d-7a61-b19d-5875a69a8962 |
 | jsonl | 01a040ee-df6d-7a61-b19d-588c35d53c56 |
 | toml | 01a040ee-df72-7dc1-9179-dc094f88fa48 |
