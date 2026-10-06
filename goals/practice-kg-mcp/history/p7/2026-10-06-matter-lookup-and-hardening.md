@@ -130,3 +130,19 @@ explains why the earlier script-level config edit was never read.
 - **P5 correctness calls** on G-1..G-5 remain the attorney's.
 - windows-latest CI packaging smoke (D-15 follow-up).
 - Scope calls A-8 / A-10 / A-13 stay with the operator.
+
+## Claude Desktop proof on the attorney's PC (2026-10-06)
+
+Relayed by the orchestrator session from a screenshot taken in a Claude Desktop
+chat on the attorney's PC. Extension 0.2.1, installed by file.
+
+- The chat loaded the practice knowledge-graph integration and listed 10 tools:
+  `kg_provenance`, `kg_clients`, `kg_find`, `kg_application_lookup`,
+  `kg_docket_family`, `kg_matter_lookup`, `kg_candidate_claims`,
+  `corpus_search_text`, `corpus_get_document`, `email_search`.
+- `kg_provenance` with no arguments returned bundle version `2026-10-06-01`,
+  built `2026-10-06T03:15:31.768Z`, manifest row count 8,240, epistemic status
+  `derived-from-official-records`, tier `complete`, not truncated.
+
+This closes the D-17 gap: the host answers Claude Desktop's classic
+`initialize` handshake in the real client, not only in the driver.

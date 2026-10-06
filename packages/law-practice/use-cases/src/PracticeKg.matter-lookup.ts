@@ -380,11 +380,12 @@ export const extractPracticeKgReferences = (text: string): ReadonlyArray<string>
  *
  * **Details**
  *
- * The working folders are laid out `<client name> <client number>/<docket> -
- * <client number>.<matter number>/...`. `clientNumber` is the five-digit number
- * that ends a folder name, `dockets` are the docket references in the path, and
- * `familyKeys` are the `<client>.<family>` matter keys those two give together
- * (a client-keyed docket in the path supplies its own client).
+ * The working folders are laid out
+ * `<client name> <client number>/<docket> - <client number>.<matter number>/...`.
+ * `clientNumber` is the five-digit number that ends a folder name, `dockets` are
+ * the docket references in the path, and `familyKeys` are the
+ * `<client>.<family>` matter keys those two give together (a client-keyed
+ * docket in the path supplies its own client).
  *
  * **Gotchas**
  *
