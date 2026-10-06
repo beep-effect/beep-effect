@@ -1023,7 +1023,7 @@ describe("practice KG projections", () => {
           }),
           provideScopedLayer(claimsLayer)
         );
-        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: 6 });
+        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: missingDuckDbSummary.claims });
 
         // An existing corrupt catalog must report source resolution failure instead of losing provenance.
         yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
