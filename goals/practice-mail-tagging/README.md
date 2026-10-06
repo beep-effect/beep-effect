@@ -31,9 +31,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — PR 1 (domain schemas, ports, tagger, tagging job, attachment
-filer, undo, file ledgers, synthetic tests). PR 2 adds the Box, practice-KG,
-and `@beep/m365` adapters once workstream A's message-category verbs merge.
+P2 Verify. All code is merged (#1464, #1480, #1495, #1511, #1518) and the live
+dry-run over mail since 2026-07-01 is recorded. Next: the attorney spot-check,
+then the attended bounded apply and undo drill (operator slot pending).
+Attachment filing runs switched off until the Box service account's storage
+allocation is raised (D-42); the attorney-confirmed contact overlay is not
+active yet.
 
 ## Latest Evidence
 
