@@ -125,6 +125,7 @@ const receiptDocument = {
 const journalDocument = { ...journalBase, actionKind: "file", failureKind: "provider-error", phase: "Failed" };
 
 const encodeJsonText = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
 /** Sentinel documents are plain JSON values, so serializing one cannot fail. */
 const encodeJson = (document: unknown) => Effect.orDie(encodeJsonText(document));
 const isPlan = S.is(S.toEncoded(BoxContentMigrationPlan));
@@ -180,7 +181,7 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
     "encodes a journal entry built from the documented example fields to the baseline shape",
     Effect.fnUntraced(function* () {
       const entry = BoxContentJournalStarted.make(makeExampleContentJournalFields());
-      const decoded = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(yield* encodeBoxContentJournalEntry(entry));
+      const decoded = yield* decodeJsonText(yield* encodeBoxContentJournalEntry(entry));
 
       expect(decoded).toEqual({ ...journalBase, actionKind: "file", phase: "Started", planDigest: "c".repeat(64) });
     })
