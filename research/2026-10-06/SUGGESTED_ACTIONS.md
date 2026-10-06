@@ -33,6 +33,6 @@ Proposals only. Human admits. Never auto-merge this research PR.
 17. `bun run beep research capture https://arxiv.org/abs/2610.04779 --tags agents,coding-agents,merge,arxiv`
 
 ## Ledger / process (no capture)
-- Apply TOMBSTONES (15) and WATCHLIST_PATCH; retire `w-effect-410-staging`, `w-jazz-alpha-58`, `w-evolu-8170` after admit.
+- Tombstones (15) and the watchlist edits land with this PR on admit (`research/ledger/tombstones/2026-10-06.jsonl` and `research/ledger/WATCHLIST.md`); then retire `w-effect-410-staging`, `w-jazz-alpha-58`, `w-evolu-8170`.
 - **Tombstone-leak fix:** prelude should hard-drop tombstoned URLs from refute candidates (5 leaked across 09-30/10-02/10-03).
 - **X enrollment** still blocks the social pool (client-not-enrolled) — attach the connector app to an X Project.

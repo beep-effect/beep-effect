@@ -13,7 +13,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-schema-binary | Effect SchemaBinary / cluster wire | SchemaBinary shipped in rc.113+; tip now effect@4.0.0 stable — watch cluster consumers | effect@4.0.0 | keep |
 | w-drizzle-taggederror | drizzle Schema.TaggedErrorClass | #6162 still OPEN (reconfirmed Oct 3) | drizzle-orm#6162 | keep |
 | w-uspto-odp-auth | USPTO ODP profile + API key | four fields still mandatory (govdelivery) | USPTO govdelivery 421c568 | keep |
-| w-skills-over-mcp | Agent Plugins vs SEP-2640 | vendor productization: Legora Skills; research: arXiv 2610.04832 | Legora; arXiv | keep |
+| w-skills-over-mcp | Agent Plugins vs SEP-2640 | **SEP-2640 MERGED Final on main** 2026-09-13; Tier-1 SDKs still OPEN; vendor productization: Legora Skills; research: arXiv 2610.04832 | mcp#2640 merged; sdk PRs OPEN; Legora; arXiv | keep |
 | w-trustshift | MCP TrustShift delayed defect | install-time scanners miss it; registry 48.8% initialize | arXiv 2609.10962 | keep |
 | w-instant-sunset | Instant Cloud sunset 2027-08-31 | still 2027-08-31 (reconfirmed Oct 3) | instantdb essay | keep |
 | w-legal-models-2026-08 | Thomson 1.0 / Harvey Tenet | competitor specialist models + MCP/verify | TR arXiv 2608.27147 | keep |
@@ -80,7 +80,7 @@ Routine-proposed. Human admits. Add-with-evidence only.
 | w-paypal-zt-mcp | PayPal zero-trust MCP extensions | dual-persona + permission-filtered discovery | arXiv 2609.22573 | add |
 | w-graphskillevo | GraphSkillEvo graph skills | structured skill IR beyond flat SKILL.md | arXiv 2609.21749 | add |
 | w-cimplifi-maestro | Cimplifi Maestro / CI Lake | Relativity aiR orchestration competitor | GlobeNewswire 2026-09-22 | add |
-| w-zero-head | Rocicorp Zero head dist-tag | tip **927c2ec6-20261002 → 311b05ae-20261006** | npm @rocicorp/zero head | keep |
+| w-zero-head | Rocicorp Zero head dist-tag | tip **927c2ec6-20261002 → 311b05ae-20261006** | npm @rocicorp/zero 1.11.0-head-311b05ae-20261006 | keep |
 | w-mcp-infra-wg | MCP Infrastructure WG | charter merged Sep 22 | mcp#3385 | add |
 | w-sep3371-sdk-ext | SEP-3371 SDK extension points | consistent extension hooks across SDKs | mcp#3371 OPEN | add |
 | w-legora-amlaw-cluster | Legora AmLaw / enterprise rollout cluster | Bradley firm-wide + Brodies Scotland HQ + Justice Connect + Veolia Group Legal in one ~47h window | Legora newsroom Sep 23–25 | add |
