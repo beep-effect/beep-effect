@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// fallow-ignore-file unused-file -- run by hand to rebuild the illustrated page; nothing in the workspace graph imports it
 // Builds the illustrated "The Agentic Yoyo" page from the canonical article
 // (THE_AGENTIC_YOYO.md at the repo root) plus the shell and data in this dir.
 // Node stdlib only; output is byte-deterministic for a given input set.
@@ -65,6 +66,7 @@ function beatButtons(slugKey) {
   return `<div class="beats">${out.join("")}</div>`;
 }
 
+// fallow-ignore-next-line complexity -- one-pass markdown renderer for a hand-run docs asset, not product code
 function renderMarkdown(src) {
   // article-level comment frame + any other HTML comments are not visible prose
   let text = src;
@@ -246,6 +248,7 @@ process.stdout.write(
 );
 
 /* ---------------- helpers ---------------- */
+// fallow-ignore-next-line complexity -- flat argv switch for a hand-run docs asset, not product code
 function parseArgs(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
