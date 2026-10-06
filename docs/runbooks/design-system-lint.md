@@ -271,7 +271,7 @@ anticipates the class (for example a `[.border-b]:pb-6` hook).
 | Where | What runs | Gate |
 | --- | --- | --- |
 | Hosted `check.yml` verify matrix, context **Shadcn Lint** | `bun run beep ci lane shadcn-lint` -> `turbo run lint:shadcn --summarize` | Non-required. Skipped on goals-only PRs. Promotion to the branch ruleset is a later ruleset action once the context has a stable green history. |
-| Yeet pre-push proof, lane `quality:shadcn-lint` | The same `beep ci lane shadcn-lint` argv, preflight wave | Blocks `yeet verify` / `yeet publish` locally. |
+| Yeet full proof, lane `quality:shadcn-lint` | The same `beep ci lane shadcn-lint` argv, preflight wave | Blocks `yeet verify` / `yeet publish --prove-first` locally; the default push-first publish leaves it to hosted CI. |
 | `Heavy / Lint Policy` and `bun run lint` | `lint:shadcn` in the lint-policy state battery, beside `lint:oxlint` | Required through the Lint Policy context. |
 
 The lane is CLI-runnable with exact replay: `bun run beep ci lane shadcn-lint`

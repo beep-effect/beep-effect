@@ -18,6 +18,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Console, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
@@ -232,6 +233,7 @@ const RETIRE_FENCE_INVOKER = new URL("./support/RetireFenceInvoker.ts", import.m
 
 const RetireInvokerOutcome = S.Struct({ ok: S.Boolean, message: S.String });
 const decodeRetireInvokerOutcome = S.decodeUnknownEffect(S.fromJsonString(RetireInvokerOutcome));
+const encodeRetireInvokerOutcome = S.encodeEffect(S.fromJsonString(RetireInvokerOutcome));
 
 // The retirement step in its own process, with this test process as the agent
 // session above it: whatever CLAUDE_PID `env` carries lands in the invoker's
@@ -261,6 +263,16 @@ const runRetireInvoker = Effect.fn("YeetRetireTest.runRetireInvoker")(function* 
 });
 
 describe("yeet sweep --retire", { concurrent: false }, () => {
+  it.effect.prop(
+    "generated retire-invoker outcomes round-trip through the JSON line the invoker prints",
+    { outcome: Arbitrary.schema(RetireInvokerOutcome) },
+    ({ outcome }) =>
+      Effect.gen(function* () {
+        const line = yield* encodeRetireInvokerOutcome(outcome);
+        expect(yield* decodeRetireInvokerOutcome(line)).toEqual(outcome);
+      })
+  );
+
   it.effect("retires the merged nested lane, deletes its branch, and fast-forwards the owning clone", () =>
     withScratchRepo(({ repoRoot, lane, tip, packetDir }) =>
       Effect.gen(function* () {

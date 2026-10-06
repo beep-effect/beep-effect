@@ -929,10 +929,107 @@ it("uses one complete exit table and read-only automatic closeout options", () =
   expect(A.map(yeetMonitorExitTable, (row) => row.terminal)).toEqual(YeetMonitorTerminalState.literals);
   for (const row of yeetMonitorExitTable)
     expect(row.exitCode).toBe(
-      row.terminal === "ready" || row.terminal === "merged" ? 0 : row.terminal === "wave" ? 2 : 1
+      row.terminal === "ready" || row.terminal === "ready-pending-flip" || row.terminal === "merged"
+        ? 0
+        : row.terminal === "wave"
+          ? 2
+          : 1
     );
+  expect(yeetMonitorExitFor("ready-pending-flip").summary).toContain("bun run beep yeet ready");
   expect(yeetAutomaticCloseoutOptions).toMatchObject({ retriggerGreptile: false, replyThread: "", replyBody: "" });
   assertSome(O.some(yeetMonitorExitFor("ready").exitCode), 0);
+});
+
+// The same read as `snapshot`, but the pull request is still a draft: GitHub
+// reports a draft's merge state as DRAFT, so both not-draft and the merge-state
+// criterion fail while everything else is whatever the base snapshot observed.
+const asDraft = (base: YeetStatusSnapshot): YeetStatusSnapshot => {
+  const criteria = YeetMergeReadyCriteria.make({
+    ...O.getOrThrow(base.mergeReady).criteria,
+    notDraft: false,
+    mergeStateAcceptable: false,
+  });
+  return YeetStatusSnapshot.make({
+    ...base,
+    remote: YeetStatusRemote.make({ ...base.remote, isDraft: true, mergeStateStatus: "DRAFT", mergeable: "MERGEABLE" }),
+    mergeReady: O.some(
+      YeetMergeReady.make({
+        ready: false,
+        criteria,
+        failing: A.findFirst(
+          YeetMergeReadyCriterion.literals,
+          (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
+        ),
+      })
+    ),
+  });
+};
+
+it.layer(platform, { timeout: "30 seconds" })("draft pull requests (push-first-publish D9)", (test) => {
+  test.effect(
+    "holds a draft with an open thread, then ends ready-pending-flip once the draft flag is the only blocker",
+    () =>
+      fixture((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+            ...options,
+            collectStatus: () =>
+              Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+                Effect.map((n) => asDraft(snapshot(root, [check()], true, head, "OPEN", n > 0)))
+              ),
+            closeout: () => Effect.succeed(report()),
+          });
+          expect(terminal).toBe("ready-pending-flip");
+          expect(yield* Ref.get(calls)).toBe(2);
+          expect(yeetMonitorExitFor(terminal).exitCode).toBe(0);
+        })
+      )
+  );
+
+  test.effect("keeps polling a draft whose required check is still pending", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n === 0
+                  ? asDraft(snapshot(root, [check("Lint", "pending")]))
+                  : snapshot(root, [check()], true, head, "MERGED")
+              )
+            ),
+          closeout: () => Effect.succeed(report()),
+          onMerged: () => Effect.void,
+        });
+        expect(terminal).toBe("merged");
+        expect(yield* Ref.get(calls)).toBe(2);
+      })
+    )
+  );
+
+  test.effect("an until-merged loop never ends on ready-pending-flip", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilMergedPolicy.make({}),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n === 0 ? asDraft(snapshot(root, [check()])) : snapshot(root, [check()], true, head, "MERGED")
+              )
+            ),
+          closeout: () => Effect.succeed(report()),
+          onMerged: () => Effect.void,
+        });
+        expect(terminal).toBe("merged");
+      })
+    )
+  );
 });
 
 it.layer(platform)("B7 remaining boundaries", (test) => {

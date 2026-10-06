@@ -6758,3 +6758,13 @@ one native-runtime finding; replacing that guard with `P.isString` makes the
 law lane and full package verification pass. Running the package's generated
 `lint:laws` script on its owning PR before merge would have kept this repair
 out of the next unrelated goal wave.
+
+### Concurrent goal baseline edits conflicted during main integration (2026-10-05)
+
+PR #1427 landed new Yeet test candidates in
+`standards/effect-vitest.inventory.jsonc` while PR #1445 removed reviewed CLI
+findings from the same generated inventory. The merge reported one content
+conflict. Regenerating from the combined source yielded 1,941 findings with
+zero ratchet drift and retained every reviewed exception reason. A merge-aware
+inventory writer keyed by stable occurrence and preserving human dispositions
+would avoid manual reconciliation when independent PRs touch the same baseline.
