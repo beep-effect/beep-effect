@@ -6799,3 +6799,10 @@ receipt, so the goal branch had to migrate runner-owned scopes and reconcile
 the historical and current identities before it could publish. An owning
 Effect/Vitest inventory check on the introducing PR would have made this
 delta visible before merge.
+
+The first Yeet publish attempt also found three untracked schema-first
+interfaces from #1444 (`SessionCheckoutFacts`, `SessionNoteInput`, and
+`StateRepository`) and an absent in-range changeset for this branch's
+law-practice and schema tests. It pushed nothing. The owning PR's schema-first
+lane and an early `quality changeset-status --since origin/main` check would
+have surfaced these before the combined publish gate.
