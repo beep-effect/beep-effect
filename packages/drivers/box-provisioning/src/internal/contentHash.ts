@@ -10,7 +10,7 @@ import * as Stream from "effect/Stream";
 const hashChunkBytes = 1024 * 1024;
 
 /** Content identity of one local file computed in a single streaming pass. */
-export type ContentHashes = {
+type ContentHashes = {
   /** Lowercase hex SHA-1, the content hash Box reports as a file's `sha1`. */
   readonly sha1: string;
   readonly sha256: Sha256Hex;

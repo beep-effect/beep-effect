@@ -1,20 +1,29 @@
+import { $BoxProvisioningId } from "@beep/identity";
 import { MutableHashMap, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { boxNameEquivalenceKey } from "../BoxProvisioningIntent.ts";
 import type { BoxContentMigrationFile, BoxContentMigrationMap } from "../BoxContentMigrationMap.ts";
 
+const $I = $BoxProvisioningId.create("internal/contentMigration");
+
 /** One distinct folder a migration map requires, declared or implied as an ancestor. */
-export type RequiredContentFolder = {
-  readonly depth: number;
-  /** Leaf name spelling used if the folder has to be created. */
-  readonly name: string;
-  readonly nameKey: string;
-  readonly parentPathKey: O.Option<string>;
-  readonly pathKey: string;
-  /** Provider-equivalent key of every segment, root-most first. */
-  readonly pathKeys: ReadonlyArray<string>;
-};
+export class RequiredContentFolder extends S.Class<RequiredContentFolder>($I`RequiredContentFolder`)(
+  {
+    depth: S.Natural,
+    /** Leaf name spelling used if the folder has to be created. */
+    name: S.String,
+    nameKey: S.String,
+    parentPathKey: S.Option(S.String),
+    pathKey: S.String,
+    /** Provider-equivalent key of every segment, root-most first. */
+    pathKeys: S.Array(S.String),
+  },
+  $I.annote("RequiredContentFolder", {
+    description: "Required destination folder with its provider-equivalent path keys and create spelling.",
+  })
+) {}
 
 export const contentPathKeys = (path: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.map(path, boxNameEquivalenceKey);
@@ -59,14 +68,18 @@ export const requiredContentFolders = (map: BoxContentMigrationMap): ReadonlyArr
       O.match(O.all({ name: A.last(prefix), nameKey: A.last(pathKeys) }), {
         onNone: () => undefined,
         onSome: ({ name, nameKey }) =>
-          MutableHashMap.set(byPathKey, pathKey, {
-            depth,
-            name,
-            nameKey,
-            parentPathKey: depth > 1 ? O.some(A.join(A.take(pathKeys, depth - 1), "/")) : O.none(),
+          MutableHashMap.set(
+            byPathKey,
             pathKey,
-            pathKeys,
-          }),
+            RequiredContentFolder.make({
+              depth,
+              name,
+              nameKey,
+              parentPathKey: depth > 1 ? O.some(A.join(A.take(pathKeys, depth - 1), "/")) : O.none(),
+              pathKey,
+              pathKeys,
+            })
+          ),
       });
     })
   );
