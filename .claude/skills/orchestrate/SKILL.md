@@ -103,21 +103,30 @@ inside 20 minutes of ready or the last push; only money escalates; review
 loops stop after round 2; non-required Heavy/Coverage reds merge over only
 with a written attribution.
 
-Two more operator rulings from 2026-10-06, relayed by the orchestrator
-session (paraphrased; no verbatim text was relayed):
+Two more operator rulings from 2026-10-06 (verbatim, relayed by the
+orchestrator session):
 
-- **Codex delegation.** Any session may delegate work to Codex
-  (`gpt-6.1-sol`, `medium` effort; pins in AGENTS.md "Volume pools"). Codex
-  cannot stage or commit in a linked worktree, so the rule is "Codex edits,
-  owner commits": the delegating session reviews the diff, stages by name and
-  commits. Register a running Codex delegation as a `background-job` row with
-  the owning session in `owns`.
-- **REST first.** Read PR, check and timeline state over REST (core quota).
-  GraphQL is for what REST cannot do: review-thread state, thread replies and
-  resolution, ready-for-review flips. Those calls go through a budget guard,
-  never a loop. The planned home is `bun run beep yeet gh ...` on
-  `@effected/github`, which a sibling lane is adding; until it lands, keep
-  GraphQL calls one-shot and treat a refused or rate-limited read as unknown.
+- **Codex delegation.** "Also so that we use up my codex credits as well you
+  can instruct sessions that they can delegate work to codex using GPT 6
+  Sol". "GPT 6 Sol" is the operator's shorthand for `gpt-6.1-sol` at `medium`
+  effort (pins in AGENTS.md "Volume pools"). Codex cannot stage or commit in a
+  linked worktree, so the working rule is "Codex edits, owner commits": the
+  delegating session reviews the diff, stages by name and commits. Register a
+  running Codex delegation as a `background-job` row with the owning session
+  in `owns`.
+- **REST first.** "Use rest api & gh secret." then "in op.": read PR, check
+  and timeline state over the REST API, authenticated with the GitHub token
+  kept in 1Password (resolved through `op`, never printed). That token is the
+  same GitHub identity as the `gh` login, so it shares the rate budget rather
+  than adding one. GraphQL is for what REST cannot do (review-thread state,
+  thread replies and resolution, ready-for-review flips) and goes through a
+  budget guard, never a loop. The planned home is the operator's request to
+  "add to beep's yeet command or a new command and configure it to perform
+  common operations for us going forward using the rest api": `bun run beep
+  yeet gh ...` on `@effected/github`, which a sibling lane is adding ("for now
+  I say just install", pinned to the repo's Effect 4.0.1). Until it lands,
+  keep GraphQL calls one-shot and treat a refused or rate-limited read as
+  unknown.
 
 ## Hand-off
 
