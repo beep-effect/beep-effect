@@ -1,56 +1,60 @@
-> Current work: Effect / Effect Vitest 4.0.0, Vitest 5.0.3, GPT-6.1-Sol medium.
-> Preserve older cohort receipts and D1–D14; see
-> history/2026-10-01-current-source-cohort.md.
-
-> Current operator instruction: remediate the existing legitimate inventory now;
-> inventory newer main changes after that backlog is exhausted. P2 is authorized
-> on this basis. See PLAN.md for the execution order and preserved proof limits.
-
-> Update, 2026-09-10: PR #1060 merged. Main is integrated at 92fcea6; the installed contract is Effect / @effect/vitest 4.0.0-rc.113 at immutable tag commit d3b837aee836f35d625d55205f7d6e61305fc198. Repair the breaking APIs, refresh affected contracts and proofs, and bring PR #1067 to merge-ready. Prior rc.112 evidence stays historical. See history/2026-09-10-pr1067-rc113-integration.md.
-
-> Resumed by Benjamin on 2026-09-09 to bring PR #1067 to verified mergeable state. Preserve the remaining phase and merge-authorization gates. See history/2026-09-09-pr1067-resume.md.
-
 # GOAL: Canonical Effect Vitest idioms across every test
 
-Operate in the effect-vitest-p1-reconcile sibling worktree on
-codex/effect-vitest-p1-reconcile. Preserve the original checkout and unrelated work.
-Read goals/effect-vitest-canon/{README,SPEC,PLAN,DECISIONS}.md and
-ops/manifest.json, then AGENTS.md and the required skills.
+Continue the full existing goal, not only its next PR. Read this packet's
+README.md, SPEC.md, PLAN.md, DECISIONS.md, ops/manifest.json, lens charters,
+inventory and history/2026-10-06-continuation-provenance.md before acting.
+Verify live checkout, source, jobs, receipts, PRs and inbox; preserve unrelated
+work. The continuation lane is the sibling effect-vitest-canon-continuation
+worktree on codex/effect-vitest-canon-continuation. Keep its owning clone intact.
 
-Outcome: every apps/packages/infra test and the named test support modules
-satisfy the pinned rc.113 contract, the lint baseline is empty, judgment rows
-are fixed or reasoned exceptions, and timing/package/hosted evidence is complete.
-The historical 955-file count is a dated anchor; reconcile live scope changes.
+Outcome: every apps/packages/infra test and named test support module satisfies
+the current pinned contract, the lint baseline is empty, every judgment is fixed
+or reasoned, and all timing/package/hosted evidence is complete. The historical
+955-file count is a dated anchor; reconcile current scope after the authorized
+existing backlog is exhausted. D1-D14 remain locked; do not re-grill them.
 
-D1-D14 are locked. Use the packet schemas, public Effect Vitest APIs and the
-verified tag, never upstream HEAD. Extend existing test-utils and lint patterns.
-Codex orchestrates this execution. Codex CLI lanes own bulk work; Grok owns web
-research and adversarial reviews. Use disjoint ownership, report-first lane
-outputs, gpt-6-astra with explicit medium effort, and no git in
-lanes. The orchestrator owns package verification and all git/publication work.
+Current source uses Effect and Effect Vitest 4.0.1, Vitest 5.0.3, and
+GPT-6.1-Sol medium. The graph's immutable adapter tag resolves to
+460272d30457f4697d8b8c52cad41caccbcace08. Verify installed source and runtime;
+version equality alone is insufficient. Older rc and 4.0.0 receipts retain their
+actual provenance. PRs #1390, #1467 and #1468 are merged; do not reapply their
+eight-suite, spawn-environment, artifact or Yeet discovery repairs.
 
-Proceed through PLAN.md gates. P0a and P0b overlap; later phases are sequential.
-Implement syntax-only detectors and their positive/negative fixtures, the
-complete primitives graph/version guard, charters, and instrumented it. Prove
-FileSystem conformance on Node, Bun and Memory before promotion. Run three Grok
-review rounds. Publish through Yeet and answer review threads. P0g ratification
-requires Benjamin's approval and merge before P1. P1 needs complete lens rows,
-Node Vitest baseline timings and Benjamin's acknowledgement before P2. Migrate
-in topological waves, scope then assertions/property/flake/observability, with
-per-package proofs, timings and about 150 changed files per PR. Modeling and
-tooling/tool ship alone. Never merge without Benjamin asking.
+P0a-P0g are complete. P1 inventory and P2 remediation remain in progress;
+P3 is pending. Benjamin authorized backlog-first P2 and production defect fixes
+identified by this goal. Work the existing legitimate inventory first. Check
+selected findings against current source; preserve IDs, original evidence,
+historical NONE coverage, exceptions and real fix SHAs. Complete the final main
+delta and phase-specific ratifications afterward. No merged checkpoint or local
+green run establishes full acceptance.
 
-Never delete tests, weaken schemas, add flakyTest, change global timeout/config,
-change property floors, promote without conformance, or write untouched-package
-coverage baselines without the packet's required authorization. Scratchpad
-copy deletion is pending Benjamin's answer. Do not treat waiting as consent.
-Record friction immediately in research/OPPORTUNITIES.md with public-safe paths.
+Codex orchestrates. Codex CLI lanes own bulk reading, audits and migrations;
+Grok owns the requested web research and independent adversarial reviews. Use
+disjoint ownership, report-first durable outputs, no git in source lanes,
+and GPT-6.1-Sol with explicit medium effort. The orchestrator owns integration,
+package proof and publication. The fleet orchestrator owns merges under the
+continuation handoff; this lane must not merge its own goal PRs.
 
-Acceptance requires the complete SPEC.md, including an empty lint baseline,
-zero new instances, judgment closure, every named proof and PR gate, the
-following-week timing report, reflection, and same-PR lifecycle closeout.
-Focused proof is not whole-repo or hosted proof. Do not mark complete early.
+Use the existing syntax-only detector, primitives graph, instrumented runner
+and MemoryFileSystem. Preserve Node/Bun/Memory conformance and public runner
+semantics. Migrate in topological waves and per-package lens order: scope,
+assertions, property, flake, observability. Keep tooling/tool and modeling
+separate, with about 150 changed files per PR. Capture before/after Node timings
+with source/runtime/settings and pressure; run required package verification.
 
-Keep packet state and lane reports durable. Verify launcher length <=4000 with
-wc -m; run goal doctor/index for packet changes. End status reports with the
-current gate and next action. Do not re-grill D1-D14.
+Do not delete tests, weaken schemas/assertions, add flakyTest, alter global
+configuration/timeouts/property floors, promote without conformance, or write
+untouched-package coverage baselines. Preserve packet-specific authorizations
+and ratification boundaries. Record decisions and reversal in SPEC.md and
+friction immediately in research/OPPORTUNITIES.md with public-safe paths.
+
+Publish through current Yeet, answer and resolve actionable reviews, enable
+ready-for-heavy, and obtain exact-head hosted proof plus canonical merge-ready
+closeout. Fix P0/P1 in every round; after round two track and resolve P2-or-lower
+feedback without another push, under the current operator policy.
+
+Completion requires every SPEC requirement: complete inventory/lens ledger,
+zero new instances and empty final baseline, requested independent reviews,
+all named proofs and ratifications, following-week timing report, reflection,
+and same-PR lifecycle closeout. Audit each requirement against current evidence
+before marking complete. Keep the goal active while required work remains.

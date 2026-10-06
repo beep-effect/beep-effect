@@ -11,6 +11,7 @@ import {
   MatterMatched,
   MatterUnmatched,
   SenderAddressRule,
+  TaggingPolicy,
   UnattributedMatter,
 } from "@beep/law-practice-domain/values/MailTagging";
 import {
@@ -20,6 +21,7 @@ import {
   senderRuleCategories,
 } from "@beep/law-practice-use-cases/MailTagging";
 import { EmailString } from "@beep/schema/Email";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -147,11 +149,28 @@ describe("MailTagging matter tagger", () => {
     expect(A.map(candidates, (candidate) => candidate.matterKey)).toStrictEqual([globex]);
   });
 
-  it("leaves a lone contact domain below the threshold", () => {
+  it("leaves a lone contact domain below the threshold without asking for review", () => {
     const decision = decide(envelope({ at: 1, sender: "paralegal@acme.example.test" }));
 
     expectUnmatched(envelope({ at: 1, sender: "paralegal@acme.example.test" }), "below-threshold");
-    expect(decisionCategories(decision)).toStrictEqual(["P: Unmatched - review"]);
+    expect(decisionCategories(decision)).toStrictEqual([]);
+  });
+
+  it("asks for review when a below-threshold best candidate carries identifier evidence", () => {
+    const strict = MatterTaggerContext.make({
+      index,
+      taxonomy,
+      policy: TaggingPolicy.make({ confidenceThreshold: UnitInterval.make(0.99) }),
+    });
+    const docketOnly = envelope({ at: 1, subject: "[ACME-10001-US] draft claims" });
+    const fromClient = envelope({ at: 2, sender: "counsel@acme.example.test" });
+    const docketDecision = decideMatterTagging(strict, docketOnly);
+    const clientDecision = decideMatterTagging(strict, fromClient);
+
+    expect(!isMatched(docketDecision) && docketDecision.reason).toBe("below-threshold");
+    expect(decisionCategories(docketDecision)).toStrictEqual(["P: Unmatched - review"]);
+    expect(!isMatched(clientDecision) && clientDecision.reason).toBe("below-threshold");
+    expect(decisionCategories(clientDecision)).toStrictEqual(["P: Client"]);
   });
 
   it("calls equal evidence for two matters ambiguous instead of picking one", () => {
@@ -200,7 +219,7 @@ describe("MailTagging matter tagger", () => {
       "contact-address",
     ]);
     expectUnmatched(sent, "below-threshold");
-    expect(decisionCategories(decide(sent))).toStrictEqual(["P: Unmatched - review"]);
+    expect(decisionCategories(decide(sent))).toStrictEqual([]);
   });
 
   it("leaves a reference to an unattributed matter for the attorney", () => {
