@@ -6,6 +6,7 @@ import {
   AccountUsageOutcome,
   ClaudeUsageBodyJson,
   CodexUsageBodyJson,
+  CreditBalance,
   claudeCreditBalances,
   claudeUsageOutcome,
   claudeUsageWindows,
@@ -21,7 +22,9 @@ import {
   museUsageOutcome,
   museUsageWindows,
   pollAccounts,
+  rankAccount,
   rankAccounts,
+  renderAccountRanking,
   renderAccountsStatus,
   renderHours,
   UsageWindow,
@@ -29,8 +32,9 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, DateTime, Effect, FileSystem, Path, Ref } from "effect";
+import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
 import * as A from "effect/Array";
+import { Command } from "effect/cli";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -314,34 +318,33 @@ describe("account report rendering", () => {
 const respond = (request: HttpClientRequest.HttpClientRequest, body: string, status = 200) =>
   HttpClientResponse.fromWeb(request, new Response(body, { status }));
 
-const runLive = <A, E>(
+const runLive = Effect.fn("runLive")(function* <A, E>(
   files: Readonly<Record<string, string>>,
   client: HttpClient.HttpClient,
   program: Effect.Effect<A, E, AccountsUsage>
-) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
-    yield* fs.makeDirectory(path.join(root, "snapshots"));
-    yield* Effect.forEach(
-      Object.entries(files),
-      ([name, content]) => fs.writeFileString(path.join(root, name), content),
-      {
-        discard: true,
-      }
-    );
-    return yield* program.pipe(
-      Effect.provide(layerAccountsUsageLive),
-      Effect.provideService(HttpClient.HttpClient, client),
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnv({
-          env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
-        })
-      )
-    );
-  }).pipe(Effect.provide(NodeServices.layer));
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
+  yield* fs.makeDirectory(path.join(root, "snapshots"));
+  yield* Effect.forEach(
+    Object.entries(files),
+    ([name, content]) => fs.writeFileString(path.join(root, name), content),
+    {
+      discard: true,
+    }
+  );
+  return yield* Layer.build(layerAccountsUsageLive).pipe(
+    Effect.flatMap((context) => Effect.provideContext(program, context)),
+    Effect.provideService(HttpClient.HttpClient, client),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnv({
+        env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
+      })
+    )
+  );
+});
 
 const authFiles = {
   "claude-me.json": `{"type":"claude","email":"me@example.com","access_token":"claude-token","disabled":false}`,
@@ -354,7 +357,7 @@ const authFiles = {
   "broken.json": "{",
 };
 
-describe("live account poller", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("live account poller", (it) => {
   it.effect("lists every supported login and polls each with its own token", () =>
     Effect.gen(function* () {
       const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
@@ -382,7 +385,12 @@ describe("live account poller", () => {
         ["grok", "me@example.com", "Ok"],
         ["muse", "me@example.com", "Ok"],
       ]);
-      expect(A.sort(yield* Ref.get(seen), (left, right) => (String(left[1]) < String(right[1]) ? -1 : 1))).toEqual([
+      expect(
+        A.sort(
+          yield* Ref.get(seen),
+          Order.mapInput(Order.String, (entry: ReadonlyArray<string | undefined>) => String(entry[1]))
+        )
+      ).toEqual([
         ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
         ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
         ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
@@ -423,7 +431,7 @@ describe("live account poller", () => {
   );
 });
 
-describe("local snapshots", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("local snapshots", (it) => {
   const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
 
   it.effect("shows a snapshot file as a row and skips one it cannot read", () =>
@@ -467,6 +475,115 @@ describe("local snapshots", () => {
       expect(outcome).toEqual(["Failed"]);
     })
   );
+});
+
+describe("credit and reset rendering", () => {
+  it("renders dollar pools with a limit and expiry, credit points, and unused resets", () => {
+    const usage = AccountUsage.make({
+      account: account("me@example.com", "codex"),
+      outcome: AccountUsageOutcome.cases.Ok.make({
+        identity: O.some("me@example.com"),
+        plan: O.some("pro"),
+        windows: [weekly(40, inHours(10))],
+        credits: [
+          CreditBalance.make({
+            label: "cloud session credits",
+            unit: "usd",
+            remaining: 246.5,
+            limit: O.some(250),
+            expiresAt: O.some(DateTime.makeUnsafe("2026-11-05T07:59:00.000Z")),
+          }),
+          CreditBalance.make({
+            label: "credits",
+            unit: "credits",
+            remaining: 62286.98,
+            limit: O.none(),
+            expiresAt: O.none(),
+          }),
+        ],
+        limitResets: O.some(1),
+        asOf: O.none(),
+      }),
+    });
+    expect(renderAccountRanking(rankAccount(usage, now))).toBe(
+      "codex me@example.com: ready · weekly 60% left, resets in 10h 0m · cloud session credits $247 of $250 left until 2026-11-05 · credits 62287 left · 1 limit reset(s) unused · plan pro"
+    );
+  });
+
+  it("leaves out a reset count of zero", () => {
+    const usage = AccountUsage.make({
+      account: account("me@example.com", "codex"),
+      outcome: AccountUsageOutcome.cases.Ok.make({
+        identity: O.none(),
+        plan: O.none(),
+        windows: [],
+        credits: [],
+        limitResets: O.some(0),
+        asOf: O.none(),
+      }),
+    });
+    expect(renderAccountRanking(rankAccount(usage, now))).toBe("codex me@example.com: ready");
+  });
+});
+
+const runAccounts = Command.runWith(accountsCommand, { version: "0.0.0" });
+
+const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
+  const current = yield* Console.Console;
+  let output = A.empty<string>();
+  yield* effect.pipe(
+    Effect.provideService(Console.Console, {
+      ...current,
+      log: (...values: ReadonlyArray<unknown>) => {
+        output = A.appendAll(
+          output,
+          A.map(values, (value) => `${value}`)
+        );
+      },
+    })
+  );
+  return A.join(output, "\n");
+});
+
+describe("accounts status command", () => {
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+    it.effect("prints the ranked report as text and as one JSON document", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-command-test-" });
+        const snapshots = path.join(root, "snapshots");
+        yield* fs.makeDirectory(snapshots);
+        yield* fs.writeFileString(
+          path.join(snapshots, "cursor.json"),
+          `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":null,"windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":null}]}`
+        );
+        const run = (args: ReadonlyArray<string>) =>
+          captureOutput(runAccounts(args)).pipe(
+            Effect.provideService(
+              HttpClient.HttpClient,
+              HttpClient.make((request) => Effect.succeed(respond(request, "{}")))
+            ),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromEnv({
+                env: {
+                  BEEP_ACCOUNTS_AUTH_DIR: path.join(root, "auth"),
+                  BEEP_ACCOUNTS_SNAPSHOT_DIR: snapshots,
+                  HOME: root,
+                },
+              })
+            )
+          );
+        const text = yield* run(["status"]);
+        expect(text).toContain("[accounts] use first: cursor me@example.com");
+        const json = yield* run(["status", "--json"]);
+        expect(json).toContain('"schemaVersion":"accounts-status/v1"');
+        expect(json).toContain('"provider":"cursor"');
+        expect(yield* run([])).toContain("bun run beep accounts status [--json]");
+      })
+    );
+  });
 });
 
 describe("accounts command", () => {

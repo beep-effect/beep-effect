@@ -31,17 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. Slices 1 and 2 (driver mail verbs, the `beep-m365-outbox`
-server) landed in [PR #1471](https://github.com/beep-effect/beep-effect/pull/1471)
-on 2026-10-06; its live smoke passed on the firm tenant. Slice 3 (reply and
-forward drafts) remains future work. The research D-28 reconciliation and
-versioned audit follow-up also remain unimplemented.
+P1 Implement. Slices 0, 1 and 2 are merged (#1454, #1471 as `fa90e642f1`) and
+the live smoke passed on the firm tenant. The next PR is slice 3: reply,
+reply-all and forward drafts plus draft update, and tests that raise the
+`@beep/m365-mcp` coverage rows #1471 recorded as a baseline (see #1471's
+"Coverage rows"). After slice 3: the closeout reflection and the flip to
+`completed-retained`.
+
+The research D-28 reconciliation and versioned audit follow-up remain
+unimplemented. Its attachment does not change the owner's slice 3 or closeout
+sequence.
 
 ## Latest Evidence
 
 - 2026-10-06: packet and registration runbook (slice 0).
-- 2026-10-06: slices 1 and 2. `bun run beep quality package-verify` passes for
-  `@beep/m365` and `@beep/m365-mcp`.
+- 2026-10-06: slices 1 and 2 merged as #1471 (`fa90e642f1`) after two review
+  rounds; `bun run beep quality package-verify` passed for `@beep/m365` and
+  `@beep/m365-mcp`.
 - 2026-10-06: live smoke passed on the firm tenant, read, write and one
   self-send (`history/2026-10-06-live-smoke.md`).
 

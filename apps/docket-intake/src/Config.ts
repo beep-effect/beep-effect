@@ -6,6 +6,8 @@
  */
 
 import { $DocketIntakeId } from "@beep/identity/packages";
+import { DocketReviewConfig, ReviewMaxRounds } from "@beep/law-practice-use-cases/DocketIntake";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Config } from "effect";
 import * as S from "effect/Schema";
 
@@ -13,6 +15,8 @@ const $I = $DocketIntakeId.create("Config");
 
 const PositiveCount = S.Int.check(S.isGreaterThan(0));
 const PositiveCountFromString = S.FiniteFromString.pipe(S.decodeTo(PositiveCount));
+const ReviewMaxRoundsFromString = S.FiniteFromString.pipe(S.decodeTo(ReviewMaxRounds));
+const UnitIntervalFromString = S.FiniteFromString.pipe(S.decodeTo(UnitInterval));
 
 /**
  * Resolved settings of the docket intake service.
@@ -41,6 +45,12 @@ export class DocketIntakeAppConfig extends S.Class<DocketIntakeAppConfig>($I`Doc
     maxConsecutiveFailures: PositiveCount.annotateKey({
       description: "Poll cycles that may fail in a row before the service exits non-zero.",
     }),
+    reviewAcceptThreshold: UnitInterval.annotateKey({
+      description: "Confidence score, from 0 to 1, a review round must reach for an item to be accepted.",
+    }),
+    reviewMaxRounds: ReviewMaxRounds.annotateKey({
+      description: "Review rounds, from 1 to 10, after which an item that was not accepted is flagged.",
+    }),
     reviewNegatives: S.Boolean.annotateKey({
       description: "Whether the secretary also reviews messages the paralegal found nothing to docket in.",
     }),
@@ -55,6 +65,9 @@ export class DocketIntakeAppConfig extends S.Class<DocketIntakeAppConfig>($I`Doc
 ) {}
 
 const DEFAULT_MAX_CONSECUTIVE_FAILURES = 6;
+
+// The review loop's own defaults (three rounds, a threshold of 0.85) apply when the variables are unset.
+const DEFAULT_REVIEW = DocketReviewConfig.make({});
 
 const STATE_SUFFIX = "beep/docket-intake";
 
@@ -86,6 +99,12 @@ export const DocketIntakeAppConfigFromEnv: Config.Config<DocketIntakeAppConfig> 
   mailbox: Config.NonEmptyString("DOCKET_INTAKE_MAILBOX"),
   maxConsecutiveFailures: Config.schema(PositiveCountFromString, "DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES").pipe(
     Config.withDefault(DEFAULT_MAX_CONSECUTIVE_FAILURES)
+  ),
+  reviewAcceptThreshold: Config.schema(UnitIntervalFromString, "DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD").pipe(
+    Config.withDefault(DEFAULT_REVIEW.acceptThreshold)
+  ),
+  reviewMaxRounds: Config.schema(ReviewMaxRoundsFromString, "DOCKET_INTAKE_REVIEW_MAX_ROUNDS").pipe(
+    Config.withDefault(DEFAULT_REVIEW.maxRounds)
   ),
   reviewNegatives: Config.Boolean("DOCKET_INTAKE_REVIEW_NEGATIVES").pipe(Config.withDefault(true)),
   startAt: Config.option(Config.schema(S.DateTimeUtcFromString, "DOCKET_INTAKE_START_AT")),

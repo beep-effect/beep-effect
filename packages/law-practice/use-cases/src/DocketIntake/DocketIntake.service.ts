@@ -1,13 +1,16 @@
 /**
- * The docket intake pipeline: classify, enter, review, resolve the date, look
- * the matter up, and make sure the tentative calendar entries exist.
+ * The docket intake pipeline: classify, enter, review in a bounded loop,
+ * resolve the date, look the matter up, and make sure the tentative calendar
+ * entries exist.
  *
  * **Details**
  *
  * The pipeline never guesses a date, puts an entry on the earlier of two
- * differing dates, and prefers a needs-review entry to silence. Re-processing
- * a message is harmless: every entry is looked up by its idempotency key
- * before it is created.
+ * differing dates, and prefers a needs-review entry to silence. An item the
+ * review loop does not accept is flagged for the attorney, never entered as
+ * an accepted deadline and never dropped. Re-processing a message is
+ * harmless: every entry is looked up by its idempotency key before it is
+ * created, and completed review rounds are read back from the ledger.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -15,18 +18,25 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
-  addDocketResponsePeriod,
   DOCKET_REMINDER_OFFSETS,
   DocketDueDateCandidates,
   docketDatesDiffer,
   docketReminderLadder,
   resolveDocketDueDate,
 } from "@beep/law-practice-domain/values/DocketDeadline";
-import { addDays, isAfter, isBefore, LocalDateFromString, equals as sameDate } from "@beep/schema/LocalDate";
+import {
+  addDays,
+  isAfter,
+  isBefore,
+  LocalDateFromString,
+  Order as LocalDateOrder,
+  equals as sameDate,
+} from "@beep/schema/LocalDate";
 import { Context, DateTime, Effect, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -47,12 +57,28 @@ import {
   DocketIntakeState,
   DocketLedgerRecord,
   DocketNeedsReview,
+  DocketNeedsReviewReason,
+  DocketReviewProgress,
   DocketSourceFolder,
   IntakeFailed,
   MatterLookupResult,
   NotDocketItem,
   ParalegalEntry,
 } from "./DocketIntake.schemas.ts";
+import {
+  assessReviewRound,
+  criticComputedDueDate,
+  extractorDueDate,
+  mergeRereading,
+  RereadMerge,
+  ReviewDecisionInput,
+  ReviewRoundDraft,
+  rereadFields,
+  reviewDisputes,
+  reviewGatePassed,
+  terminalStatus,
+} from "./DocketReview.policy.ts";
+import { DocketReviewConfig, ReviewSourceText, ReviewVerdict } from "./DocketReview.schemas.ts";
 import type {
   DocketDueDate,
   DocketReminderRung,
@@ -71,11 +97,13 @@ import type {
   DocketEntryFlag,
   DocketEntryKind,
   DocketMessage,
-  DocketNeedsReviewReason,
+  DocketSourceDocument,
   DocketWrittenEntry,
   ParalegalDocketEntry,
+  ReviewRound,
   SecretaryReview,
 } from "./DocketIntake.schemas.ts";
+import type { ReviewFinding, ReviewTerminalStatus } from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.service");
 
@@ -83,6 +111,7 @@ const PositiveAttempts = S.Int.check(S.isBetween({ maximum: 20, minimum: 1 }));
 
 const docketIntakeConfigMaxAttemptsDefault = 3;
 const docketIntakeConfigOverlapMinutesDefault = 120;
+const docketIntakeConfigReviewDefault = DocketReviewConfig.make({});
 
 /**
  * Settings of the docket intake pipeline.
@@ -93,7 +122,7 @@ const docketIntakeConfigOverlapMinutesDefault = 120;
  * import { DocketIntakeConfig } from "@beep/law-practice-use-cases/DocketIntake";
  *
  * const config = DocketIntakeConfig.make({ mailbox: "mailbox-id" });
- * console.log(config.reviewNegatives); // true
+ * console.log(config.reviewNegatives, config.review.maxRounds); // true 3
  * ```
  *
  * @category models
@@ -114,6 +143,10 @@ export class DocketIntakeConfig extends S.Class<DocketIntakeConfig>($I`DocketInt
       S.withConstructorDefault(Effect.succeed(docketIntakeConfigOverlapMinutesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(docketIntakeConfigOverlapMinutesDefault))
     ).annotateKey({ description: "How far behind the cursor each poll re-reads, to catch late-arriving mail." }),
+    review: DocketReviewConfig.pipe(
+      S.withConstructorDefault(Effect.succeed(docketIntakeConfigReviewDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(docketIntakeConfigReviewDefault))
+    ).annotateKey({ description: "Round limit and acceptance threshold of the review loop." }),
     reviewNegatives: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
       S.withDecodingDefaultTypeKey(Effect.succeed(true))
@@ -198,7 +231,11 @@ export class DocketDigest extends S.Class<DocketDigest>($I`DocketDigest`)(
 export interface DocketIntakeShape {
   /** Run one complete poll cycle. The cursor is saved only at its end. */
   readonly pollOnce: (today: LocalDate) => Effect.Effect<DocketPollReport, DocketIntakeError>;
-  /** Process one message to its typed outcome. A failed step becomes `IntakeFailed`, never a thrown error. */
+  /**
+   * Process one message to its typed outcome. A failed step becomes `IntakeFailed`, never a thrown error.
+   * Each completed review round is saved in the message's ledger record as it goes, and rounds already
+   * there are read back instead of asking the agents again.
+   */
   readonly processMessage: (message: DocketMessage, today: LocalDate) => Effect.Effect<DocketIntakeOutcome>;
   /** Write the digest entry for one day and record that the day is digested. */
   readonly writeDigest: (day: LocalDate) => Effect.Effect<DocketDigest, DocketIntakeError>;
@@ -280,18 +317,6 @@ const iso = (date: LocalDate): string => date.toISOString();
 
 const periodText = (period: DocketResponsePeriod): string => `${period.amount} ${period.unit}`;
 
-const computedFrom = (source: {
-  readonly mailDate: O.Option<LocalDate>;
-  readonly responsePeriod: O.Option<DocketResponsePeriod>;
-}): O.Option<LocalDate> =>
-  O.map(O.all({ mailDate: source.mailDate, period: source.responsePeriod }), (both) =>
-    addDocketResponsePeriod(both.mailDate, both.period)
-  );
-
-// The paralegal's date is the due date the message states, or failing that its own mail date plus period.
-const paralegalDate = (entry: ParalegalDocketEntry): O.Option<LocalDate> =>
-  O.orElse(entry.statedDueDate, () => computedFrom(entry));
-
 const basisText = (dueDate: DocketDueDate): string =>
   docketDatesDiffer(dueDate) ? "the earlier of two differing dates" : `basis: ${dueDate.basis}`;
 
@@ -306,6 +331,22 @@ const derivationText = (source: {
       onSome: (both) => ` (mail date ${iso(both.mailDate)} + ${periodText(both.period)})`,
     })
   );
+
+// A due date the message states outright has no derivation to show.
+const statedDerivation: (entry: ParalegalEntry) => string = ParalegalEntry.match({
+  ParalegalDocketEntry: (entry) => (O.isSome(entry.statedDueDate) ? "" : derivationText(entry)),
+  ParalegalNotDocketItem: () => "",
+});
+
+const titleOf: (entry: ParalegalEntry) => string = ParalegalEntry.match({
+  ParalegalDocketEntry: (entry) => entry.title,
+  ParalegalNotDocketItem: () => "Possible docket item",
+});
+
+const referencesOf: (entry: ParalegalEntry) => ReadonlyArray<string> = ParalegalEntry.match({
+  ParalegalDocketEntry: (entry) => entry.matterReferences,
+  ParalegalNotDocketItem: A.empty<string>,
+});
 
 const dateLine = (label: string, date: O.Option<LocalDate>, derivation: string): string =>
   pipe(
@@ -379,9 +420,9 @@ const bodyOf = (lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 const whenFlag = (condition: boolean, flag: DocketEntryFlag): ReadonlyArray<DocketEntryFlag> =>
   condition ? [flag] : [];
 
-const matterReferences = (entry: ParalegalDocketEntry, review: SecretaryReview): ReadonlyArray<string> =>
+const matterReferences = (entry: ParalegalEntry, review: SecretaryReview): ReadonlyArray<string> =>
   pipe(
-    entry.matterReferences,
+    referencesOf(entry),
     A.appendAll(review.matterReferences),
     A.map(Str.trim),
     A.filter(Str.isNonEmpty),
@@ -401,24 +442,47 @@ const needsReviewDate = (message: DocketMessage, today: LocalDate): LocalDate =>
   return isBefore(dayAfterReceipt, today) ? today : dayAfterReceipt;
 };
 
+type ReasonText = { readonly intro: string; readonly prefix: string };
+
+const UNDATED: ReasonText = {
+  intro: "A message looks like a docket item but no dated entry could be made. Please read it.",
+  prefix: "[NEEDS REVIEW]",
+};
+
+const FLAGGED_INTRO =
+  "A message looks like a docket item but the automatic review did not accept it. Nothing here is confirmed: please read the message and enter it yourself.";
+
+// What the attorney sees first: the subject prefix and the opening line say why the entry exists.
+const reasonText: (reason: DocketNeedsReviewReason) => ReasonText = DocketNeedsReviewReason.$match({
+  "agents-disagree": () => UNDATED,
+  "deterministic-failure": (): ReasonText => ({ intro: FLAGGED_INTRO, prefix: "[CHECK FAILED]" }),
+  "flagged-low-confidence": (): ReasonText => ({ intro: FLAGGED_INTRO, prefix: "[LOW CONFIDENCE]" }),
+  "flagged-max-rounds": (): ReasonText => ({ intro: FLAGGED_INTRO, prefix: "[REVIEW LIMIT REACHED]" }),
+  "no-usable-date": () => UNDATED,
+  "processing-failed": () => UNDATED,
+});
+
 const writeNeedsReview = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
   today: LocalDate,
   input: {
+    readonly date: O.Option<LocalDate>;
     readonly flags: ReadonlyArray<DocketEntryFlag>;
     readonly lines: ReadonlyArray<string>;
     readonly reason: DocketNeedsReviewReason;
+    readonly review: O.Option<ReviewVerdict>;
     readonly title: string;
   }
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
   const key = yield* entryKey(ports, messageIdentity(message), "needs-review", "0");
   const flags = A.appendAll(input.flags, folderFlags(message.sourceFolder));
+  const text = reasonText(input.reason);
   const entry = yield* ensureEntry(
     ports,
     DocketCalendarEntry.make({
       bodyText: bodyOf([
-        "A message looks like a docket item but no dated entry could be made. Please read it.",
+        text.intro,
         `Reason: ${input.reason}`,
         ...input.lines,
         flagsLine(flags),
@@ -426,15 +490,21 @@ const writeNeedsReview = Effect.fnUntraced(function* (
         sourceLine(message),
       ]),
       category: "Docket - needs review",
-      date: needsReviewDate(message, today),
+      date: O.getOrElse(input.date, () => needsReviewDate(message, today)),
       key,
       kind: "needs-review",
-      subject: S.NonEmptyString.make(`[NEEDS REVIEW] ${input.title}`),
+      subject: S.NonEmptyString.make(`${text.prefix} ${input.title}`),
       tentative: true,
     })
   );
   yield* Effect.ignore(ports.mailbox.markEntered(message));
-  return DocketNeedsReview.make({ entry, flags, messageId: message.messageId, reason: input.reason });
+  return DocketNeedsReview.make({
+    entry,
+    flags,
+    messageId: message.messageId,
+    reason: input.reason,
+    review: input.review,
+  });
 });
 
 const reminderEntry = Effect.fnUntraced(function* (
@@ -451,6 +521,7 @@ const reminderEntry = Effect.fnUntraced(function* (
       bodyText: bodyOf([
         `Reminder: ${rung.daysBefore} day(s) before a tentative docket date of ${iso(dueDate)}.`,
         NOMINAL_NOTE,
+        ...folderLines(message.sourceFolder),
         sourceLine(message),
       ]),
       category: "Docket - reminder",
@@ -463,34 +534,57 @@ const reminderEntry = Effect.fnUntraced(function* (
   );
 });
 
+// The reviewer's stated date is shown only when it read one; its computed date always has a line.
+const dateLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<string> => [
+  dateLine("Date from the email (paralegal entry)", extractorDueDate(entry), statedDerivation(entry)),
+  ...A.map(
+    A.fromOption(reading.statedDueDate),
+    (date) => `Due date the reviewer read stated in the source: ${iso(date)}`
+  ),
+  dateLine("Date recomputed by the reviewer", criticComputedDueDate(reading), derivationText(reading)),
+];
+
+const earliestDate = (dates: ReadonlyArray<LocalDate>): O.Option<LocalDate> =>
+  O.map(O.liftPredicate(dates, A.isReadonlyArrayNonEmpty), A.min(LocalDateOrder));
+
+// Both dates the reviewer has: the one it read stated and the one its mail date and period give.
+// When they differ the earlier one is the reviewer's candidate.
+const criticDates = (reading: SecretaryReview): ReadonlyArray<LocalDate> =>
+  A.getSomes([reading.statedDueDate, criticComputedDueDate(reading)]);
+
+const noteLines = (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<string> => [
+  `Paralegal note: ${entry.rationale}`,
+  `Reviewer note: ${reading.notes}`,
+];
+
+const sourceFlags = (reading: SecretaryReview, hasDocuments: boolean): ReadonlyArray<DocketEntryFlag> =>
+  whenFlag(!hasDocuments || !reading.readFromSourceDocument, "source-document-missing");
+
 const enterDocketItem = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
   today: LocalDate,
-  entry: ParalegalDocketEntry,
-  review: SecretaryReview,
-  hasDocuments: boolean
+  input: {
+    readonly entry: ParalegalDocketEntry;
+    readonly hasDocuments: boolean;
+    readonly review: SecretaryReview;
+    readonly verdict: ReviewVerdict;
+  }
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
-  const stated = paralegalDate(entry);
-  const computed = computedFrom(review);
+  const { entry, review, verdict } = input;
   const matter = yield* lookupMatter(ports, matterReferences(entry, review));
-  const sourceFlags = whenFlag(!hasDocuments || !review.readFromSourceDocument, "source-document-missing");
-  const dateLines = [
-    dateLine(
-      "Date from the email (paralegal entry)",
-      stated,
-      O.isSome(entry.statedDueDate) ? "" : derivationText(entry)
-    ),
-    dateLine("Date recomputed by the reviewer", computed, derivationText(review)),
-  ];
-  const noteLines = [`Paralegal note: ${entry.rationale}`, `Reviewer note: ${review.notes}`];
-  const resolved = resolveDocketDueDate(DocketDueDateCandidates.make({ computed, stated }));
+  const missingSource = sourceFlags(review, input.hasDocuments);
+  const resolved = resolveDocketDueDate(
+    DocketDueDateCandidates.make({ computed: earliestDate(criticDates(review)), stated: extractorDueDate(entry) })
+  );
 
   if (O.isNone(resolved)) {
     return yield* writeNeedsReview(ports, message, today, {
-      flags: A.appendAll(matterFlags(matter), sourceFlags),
-      lines: [...dateLines, matterLine(matter), ...noteLines],
+      date: O.none(),
+      flags: A.appendAll(matterFlags(matter), missingSource),
+      lines: [...dateLines(entry, review), matterLine(matter), ...noteLines(entry, review)],
       reason: "no-usable-date",
+      review: O.some(verdict),
       title: entry.title,
     });
   }
@@ -500,7 +594,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
   const flags = A.dedupe([
     ...whenFlag(docketDatesDiffer(dueDate), "dates-differ"),
     ...matterFlags(matter),
-    ...sourceFlags,
+    ...missingSource,
     ...whenFlag(ladder.truncated, "ladder-truncated"),
     ...whenFlag(isBefore(dueDate.date, today), "due-date-past"),
     ...folderFlags(message.sourceFolder),
@@ -513,7 +607,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
         TENTATIVE_NOTE,
         "",
         `Date used: ${iso(dueDate.date)} (${basisText(dueDate)})`,
-        ...dateLines,
+        ...dateLines(entry, review),
         NOMINAL_NOTE,
         "",
         matterLine(matter),
@@ -529,7 +623,7 @@ const enterDocketItem = Effect.fnUntraced(function* (
         )}`,
         ...folderLines(message.sourceFolder),
         sourceLine(message),
-        ...noteLines,
+        ...noteLines(entry, review),
       ]),
       category: "Docket - unverified",
       date: dueDate.date,
@@ -543,83 +637,373 @@ const enterDocketItem = Effect.fnUntraced(function* (
     reminderEntry(ports, message, entry.title, dueDate.date, rung)
   );
   yield* Effect.ignore(ports.mailbox.markEntered(message));
-  return DocketEntered.make({ dueDate, entry: written, flags, messageId: message.messageId, reminders });
+  return DocketEntered.make({
+    dueDate,
+    entry: written,
+    flags,
+    messageId: message.messageId,
+    reminders,
+    review: O.some(verdict),
+  });
 });
 
 const isDocketEntry = S.is(ParalegalEntry.cases.ParalegalDocketEntry);
 
-const verdict = (isDocketItem: boolean): string => (isDocketItem ? "docket item" : "not a docket item");
+const verdictText = (isDocketItem: boolean): string => (isDocketItem ? "docket item" : "not a docket item");
 
-// The agents disagree about whether this is a docket item at all. Missing one is worse
-// than a spurious entry, so the attorney gets to decide.
+// The review accepted the round although the agents still disagree about whether this is a
+// docket item at all. Missing one is worse than a spurious entry, so the attorney gets to decide.
 const escalateDisagreement = (
   ports: Ports,
   message: DocketMessage,
   today: LocalDate,
-  entry: ParalegalEntry,
-  review: SecretaryReview
+  round: ReviewRound,
+  verdict: ReviewVerdict
 ): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
   writeNeedsReview(ports, message, today, {
+    date: O.none(),
     flags: [],
     lines: [
-      `Paralegal: ${verdict(isDocketEntry(entry))} (${entry.rationale})`,
-      `Reviewer: ${verdict(review.isDocketItem)} (${review.notes})`,
+      `Paralegal: ${verdictText(isDocketEntry(round.entry))} (${round.entry.rationale})`,
+      `Reviewer: ${verdictText(round.reading.isDocketItem)} (${round.reading.notes})`,
     ],
     reason: "agents-disagree",
-    title: isDocketEntry(entry) ? entry.title : "Possible docket item",
+    review: O.some(verdict),
+    title: titleOf(round.entry),
   });
 
-const reviewOf = Effect.fnUntraced(function* (
+// Everything one review needs: the ports, the message, and the source documents with the text
+// citations are checked against. The documents are read once per processing run.
+type ReviewContext = {
+  readonly documents: ReadonlyArray<DocketSourceDocument>;
+  readonly message: DocketMessage;
+  readonly ports: Ports;
+  readonly source: ReviewSourceText;
+  readonly today: LocalDate;
+};
+
+// The text of the attached documents is usable only when every document has it: with part of it
+// missing, a citation of the unread part would fail for no reason.
+const sourceTextOf = (message: DocketMessage, documents: ReadonlyArray<DocketSourceDocument>): ReviewSourceText =>
+  ReviewSourceText.make({
+    documentText: O.map(O.all(A.map(documents, (document) => document.text)), A.join("\n")),
+    hasDocuments: A.isReadonlyArrayNonEmpty(documents),
+    messageText: `${O.getOrElse(message.subject, () => "")}\n${message.bodyText}`,
+  });
+
+const contextOf = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
-  entry: ParalegalEntry
-): Effect.fn.Return<{ readonly hasDocuments: boolean; readonly review: SecretaryReview }, DocketIntakeError> {
+  today: LocalDate
+): Effect.fn.Return<ReviewContext, DocketIntakeError> {
   const documents = yield* ports.mailbox.sourceDocuments(message);
-  const review = yield* ports.secretary.review({ documents, entry, message });
-  return { hasDocuments: A.isReadonlyArrayNonEmpty(documents), review };
+  return { documents, message, ports, source: sourceTextOf(message, documents), today };
 });
 
-const reviewEntered = Effect.fnUntraced(function* (
-  ports: Ports,
-  message: DocketMessage,
-  today: LocalDate,
-  entry: ParalegalDocketEntry
-): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
-  const { hasDocuments, review } = yield* reviewOf(ports, message, entry);
-  return yield* review.isDocketItem
-    ? enterDocketItem(ports, message, today, entry, review, hasDocuments)
-    : escalateDisagreement(ports, message, today, entry, review);
-});
+const bothDismiss = (entry: ParalegalEntry, reading: SecretaryReview): boolean =>
+  !isDocketEntry(entry) && !reading.isDocketItem;
 
-const reviewDismissed = Effect.fnUntraced(function* (
-  ports: Ports,
-  message: DocketMessage,
-  today: LocalDate,
+// When both agents find nothing to docket there is no entry to find fault with.
+const critiqueOf = (
+  context: ReviewContext,
+  entry: ParalegalEntry,
+  reading: SecretaryReview
+): Effect.Effect<ReadonlyArray<ReviewFinding>, DocketIntakeError> =>
+  bothDismiss(entry, reading)
+    ? Effect.succeed(A.empty<ReviewFinding>())
+    : context.ports.secretary.critique({ documents: context.documents, entry, message: context.message });
+
+// Round 1: the critic reads the message and its documents for itself, then says what is wrong
+// with what it is shown of the entry.
+const firstRound = Effect.fnUntraced(function* (
+  context: ReviewContext,
   entry: ParalegalEntry
-): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
-  const notDocketItem = NotDocketItem.make({ messageId: message.messageId });
-  if (!ports.config.reviewNegatives) {
-    return notDocketItem;
-  }
-  const { review } = yield* reviewOf(ports, message, entry);
-  return review.isDocketItem ? yield* escalateDisagreement(ports, message, today, entry, review) : notDocketItem;
+): Effect.fn.Return<ReviewRound, DocketIntakeError> {
+  const reading = yield* context.ports.secretary.review({
+    documents: context.documents,
+    entry,
+    message: context.message,
+  });
+  const findings = yield* critiqueOf(context, entry, reading);
+  return assessReviewRound(ReviewRoundDraft.make({ entry, findings, index: 1, reading, source: context.source }));
 });
 
-const processOrFail = Effect.fnUntraced(function* (
+// What the critic is shown of an entry. Its dates are deliberately not part of it.
+const criticView: (entry: ParalegalEntry) => ReadonlyArray<string> = ParalegalEntry.match({
+  ParalegalDocketEntry: (entry) => [entry._tag, entry.title, entry.rationale, ...entry.matterReferences],
+  ParalegalNotDocketItem: (entry) => [entry._tag, entry.rationale],
+});
+
+const sameCriticView = A.makeEquivalence(Str.Equivalence);
+
+// A later round: the extractor revises or defends the disputed fields, the critic reads the
+// fields it can read again, and it is asked for findings again only when what it is shown of the
+// entry changed. The same view would only get the same findings.
+const nextRound = Effect.fnUntraced(function* (
+  context: ReviewContext,
+  previous: ReviewRound
+): Effect.fn.Return<ReviewRound, DocketIntakeError> {
+  const { documents, message, ports } = context;
+  const disputes = reviewDisputes(previous);
+  const revision = yield* ports.paralegal.revise({ disputes, message, previous: previous.entry });
+  const reading = yield* A.match(rereadFields(disputes), {
+    onEmpty: () => Effect.succeed(previous.reading),
+    onNonEmpty: (fields) =>
+      ports.secretary
+        .reread({
+          documents,
+          extractorResponses: revision.responses,
+          fields,
+          findings: A.filter(previous.findings, (finding) => A.contains(fields, finding.field)),
+          message,
+        })
+        .pipe(Effect.map((reread) => mergeRereading(RereadMerge.make({ fields, previous: previous.reading, reread })))),
+  });
+  const findings = yield* sameCriticView(criticView(previous.entry), criticView(revision.entry))
+    ? Effect.succeed(previous.findings)
+    : critiqueOf(context, revision.entry, reading);
+  return assessReviewRound(
+    ReviewRoundDraft.make({
+      entry: revision.entry,
+      extractorConfidence: revision.selfReportedConfidence,
+      extractorResponse: revision.responses,
+      findings,
+      index: previous.index + 1,
+      reading,
+      source: context.source,
+    })
+  );
+});
+
+const storedRounds = (
+  ports: Ports,
+  message: DocketMessage
+): Effect.Effect<ReadonlyArray<ReviewRound>, DocketIntakeError> =>
+  ports.store.load.pipe(
+    Effect.map((state) =>
+      pipe(
+        R.get(state.ledger, message.messageId),
+        O.flatMap((record) => record.review),
+        O.match({ onNone: A.empty<ReviewRound>, onSome: (review) => review.rounds })
+      )
+    )
+  );
+
+// Each completed round is written to the message's ledger record before the next one starts, so a
+// restart continues from the next round. The record is a placeholder until the message settles:
+// it reads as "still failing", which is what keeps the cursor behind it.
+const persistRounds = Effect.fnUntraced(function* (
+  context: ReviewContext,
+  rounds: ReadonlyArray<ReviewRound>
+): Effect.fn.Return<void, DocketIntakeError> {
+  const { message, ports } = context;
+  const state = yield* ports.store.load;
+  yield* ports.store.save(
+    DocketIntakeState.make({
+      cursor: state.cursor,
+      digestedThrough: state.digestedThrough,
+      ledger: R.set(
+        state.ledger,
+        message.messageId,
+        DocketLedgerRecord.make({
+          attempts: O.getOrElse(
+            O.map(R.get(state.ledger, message.messageId), (record) => record.attempts),
+            () => 0
+          ),
+          outcome: IntakeFailed.make({ messageId: message.messageId, stage: "review" }),
+          processedOn: context.today,
+          receivedAt: message.receivedAt,
+          review: O.some(DocketReviewProgress.make({ rounds })),
+        })
+      ),
+    })
+  );
+});
+
+// How a review ended: both agents dismissed the message, or the loop reached a terminal status.
+type ReviewEnd = O.Option<ReviewTerminalStatus>;
+
+const reviewEnd = (config: DocketReviewConfig, rounds: A.NonEmptyReadonlyArray<ReviewRound>): O.Option<ReviewEnd> => {
+  const round = A.lastNonEmpty(rounds);
+  return bothDismiss(round.entry, round.reading)
+    ? O.some(O.none())
+    : O.map(
+        terminalStatus(
+          ReviewDecisionInput.make({
+            config,
+            earlier: A.initNonEmpty(rounds),
+            gatePassed: reviewGatePassed(round.checks),
+            isLastRound: round.index >= config.maxRounds,
+            round,
+          })
+        ),
+        O.some
+      );
+};
+
+const score = (value: number): string => `${Num.round(value, 2)}`;
+
+const findingLine = (finding: ReviewFinding): string => `- ${finding.severity} ${finding.field}: ${finding.reason}`;
+
+// What is still open after the last round: failed checks, fields the two readings differ on, and
+// the critic's findings.
+const openLines = (round: ReviewRound): ReadonlyArray<string> => [
+  ...A.map(
+    A.filter(round.checks, (check) => !check.passed),
+    (check) =>
+      `- failed check (${check.side}): ${check.check}${O.getOrElse(
+        O.map(check.field, (field) => ` for ${field}`),
+        () => ""
+      )}`
+  ),
+  ...A.map(
+    A.filter(round.agreement, (field) => !field.agreed),
+    (field) => `- the two readings differ on: ${field.field}`
+  ),
+  ...A.map(round.findings, findingLine),
+];
+
+// A flagged item is shown to the attorney, never entered as an accepted deadline: one
+// needs-review entry on the earliest date either agent read, with no reminder ladder.
+const writeFlagged = Effect.fnUntraced(function* (
+  context: ReviewContext,
+  round: ReviewRound,
+  verdict: ReviewVerdict,
+  reason: DocketNeedsReviewReason
+): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
+  const { message, ports, today } = context;
+  const { entry, reading } = round;
+  const candidates = [...A.fromOption(extractorDueDate(entry)), ...criticDates(reading)];
+  const date = earliestDate(candidates);
+  const matter = yield* lookupMatter(ports, matterReferences(entry, reading));
+  return yield* writeNeedsReview(ports, message, today, {
+    date,
+    flags: [
+      ...whenFlag(A.length(A.dedupeWith(candidates, sameDate)) > 1, "dates-differ"),
+      ...matterFlags(matter),
+      ...sourceFlags(reading, A.isReadonlyArrayNonEmpty(context.documents)),
+      ...whenFlag(
+        O.exists(date, (value) => isBefore(value, today)),
+        "due-date-past"
+      ),
+    ],
+    lines: [
+      `Review score: ${score(verdict.finalScore)}; needed ${score(verdict.threshold)}. Rounds used: ${verdict.rounds} of ${verdict.maxRounds}.`,
+      ...A.map(
+        A.fromOption(round.extractorConfidence),
+        (confidence) => `Paralegal's own confidence (not part of the score): ${score(confidence)}`
+      ),
+      "Open findings:",
+      ...openLines(round),
+      ...dateLines(entry, reading),
+      NOMINAL_NOTE,
+      matterLine(matter),
+      ...noteLines(entry, reading),
+    ],
+    reason,
+    review: O.some(verdict),
+    title: titleOf(entry),
+  });
+});
+
+const settleAccepted = (
+  context: ReviewContext,
+  round: ReviewRound,
+  verdict: ReviewVerdict
+): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
+  isDocketEntry(round.entry) && round.reading.isDocketItem
+    ? enterDocketItem(context.ports, context.message, context.today, {
+        entry: round.entry,
+        hasDocuments: A.isReadonlyArrayNonEmpty(context.documents),
+        review: round.reading,
+        verdict,
+      })
+    : escalateDisagreement(context.ports, context.message, context.today, round, verdict);
+
+const settleReviewed = (
+  context: ReviewContext,
+  round: ReviewRound,
+  status: ReviewTerminalStatus
+): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> => {
+  const config = context.ports.config.review;
+  const verdict = ReviewVerdict.make({
+    finalScore: round.score,
+    maxRounds: config.maxRounds,
+    rounds: round.index,
+    status,
+    threshold: config.acceptThreshold,
+  });
+  return Effect.annotateCurrentSpan({
+    docket_review_rounds: round.index,
+    docket_review_score: round.score,
+    docket_review_status: status,
+  }).pipe(
+    Effect.andThen(
+      status === "accepted" ? settleAccepted(context, round, verdict) : writeFlagged(context, round, verdict, status)
+    )
+  );
+};
+
+const settleReview = (
+  context: ReviewContext,
+  rounds: A.NonEmptyReadonlyArray<ReviewRound>,
+  end: ReviewEnd
+): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
+  O.match(end, {
+    onNone: () => Effect.succeed<DocketIntakeOutcome>(NotDocketItem.make({ messageId: context.message.messageId })),
+    onSome: (status) => settleReviewed(context, A.lastNonEmpty(rounds), status),
+  });
+
+// The bounded loop: decide after each round, and run another only while the review has not ended.
+const runReview = (
+  context: ReviewContext,
+  rounds: A.NonEmptyReadonlyArray<ReviewRound>
+): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
+  O.match(reviewEnd(context.ports.config.review, rounds), {
+    onNone: () =>
+      nextRound(context, A.lastNonEmpty(rounds)).pipe(
+        Effect.map((round) => A.append(rounds, round)),
+        Effect.tap((extended) => persistRounds(context, extended)),
+        Effect.flatMap((extended) => runReview(context, extended))
+      ),
+    onSome: (end) => settleReview(context, rounds, end),
+  });
+
+const startReview = Effect.fnUntraced(function* (
   ports: Ports,
   message: DocketMessage,
   today: LocalDate
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
   const entry = yield* ports.paralegal.enter(message);
-  return yield* isDocketEntry(entry)
-    ? reviewEntered(ports, message, today, entry)
-    : reviewDismissed(ports, message, today, entry);
+  if (!isDocketEntry(entry) && !ports.config.reviewNegatives) {
+    return NotDocketItem.make({ messageId: message.messageId });
+  }
+  const context = yield* contextOf(ports, message, today);
+  const rounds = A.of(yield* firstRound(context, entry));
+  yield* persistRounds(context, rounds);
+  return yield* runReview(context, rounds);
+});
+
+// Rounds already in the ledger are read back, not run again: the agents are asked only for the
+// rounds that are still missing.
+const processOrFail = Effect.fnUntraced(function* (
+  ports: Ports,
+  message: DocketMessage,
+  today: LocalDate
+): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
+  const stored = yield* storedRounds(ports, message);
+  return yield* A.match(stored, {
+    onEmpty: () => startReview(ports, message, today),
+    onNonEmpty: (rounds) =>
+      contextOf(ports, message, today).pipe(Effect.flatMap((context) => runReview(context, rounds))),
+  });
 });
 
 const isFailed = S.is(DocketIntakeOutcome.cases.IntakeFailed);
 
+// A record with review rounds still in it belongs to a review that has not finished.
 const isSettled = (record: O.Option<DocketLedgerRecord>): boolean =>
-  O.exists(record, (value) => !isFailed(value.outcome));
+  O.exists(record, (value) => !isFailed(value.outcome) && O.isNone(value.review));
 
 // After the retry budget, a message that still cannot be read gets a needs-review entry so it
 // is not silently dropped. A failing calendar cannot take that entry either, so it keeps retrying.
@@ -632,9 +1016,11 @@ const settleExhausted = (
 ): Effect.Effect<DocketIntakeOutcome> =>
   isFailed(outcome) && attempts >= ports.config.maxAttempts && outcome.stage !== "calendar"
     ? writeNeedsReview(ports, message, today, {
+        date: O.none(),
         flags: [],
         lines: [`The message could not be processed automatically (stage: ${outcome.stage}, ${attempts} attempts).`],
         reason: "processing-failed",
+        review: O.none(),
         title: "Message could not be processed",
       }).pipe(Effect.orElseSucceed(() => outcome))
     : Effect.succeed(outcome);
@@ -713,17 +1099,24 @@ const makeService = (ports: Ports): DocketIntakeShape => {
           const outcome = yield* processMessage(message, today).pipe(
             Effect.flatMap((processed) => settleExhausted(ports, message, today, processed, attempts))
           );
+          // The review wrote its rounds to the ledger while the message was processed. A message
+          // that failed keeps them, so the next attempt continues from the next round; a settled
+          // one drops them.
+          const latest = yield* ports.store.load;
           const state = DocketIntakeState.make({
-            cursor: accumulator.state.cursor,
-            digestedThrough: accumulator.state.digestedThrough,
+            cursor: latest.cursor,
+            digestedThrough: latest.digestedThrough,
             ledger: R.set(
-              accumulator.state.ledger,
+              latest.ledger,
               message.messageId,
               DocketLedgerRecord.make({
                 attempts,
                 outcome,
                 processedOn: today,
                 receivedAt: message.receivedAt,
+                review: isFailed(outcome)
+                  ? O.flatMap(R.get(latest.ledger, message.messageId), (record) => record.review)
+                  : O.none(),
               })
             ),
           });

@@ -27,6 +27,7 @@ import { Cause, Context, Effect, Exit, FileSystem, Layer, Path, Ref, Scope } fro
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -191,6 +192,31 @@ const openAs = Effect.fnUntraced(function* (scope: Scope.Scope, view: FileSystem
       scope
     )
   );
+});
+
+// A state directory that takes no hard link, as a read-only or full one would not. `from` is the
+// number of the first link call that fails; earlier ones reach the real file system.
+const refusingLinks = Effect.fnUntraced(function* (from: number) {
+  const fs = yield* FileSystem.FileSystem;
+  const calls = yield* Ref.make(0);
+  return {
+    ...fs,
+    link: (fromPath, toPath) =>
+      Ref.updateAndGet(calls, (count) => count + 1).pipe(
+        Effect.flatMap((call) =>
+          call < from
+            ? fs.link(fromPath, toPath)
+            : Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  description: "fixture directory takes no hard link",
+                  method: "link",
+                  module: "FileSystem",
+                })
+              )
+        )
+      ),
+  } satisfies FileSystem.FileSystem;
 });
 
 // Another starter's complete lock appears at the lock path.
@@ -493,6 +519,47 @@ describe("@beep/law-practice-server DocketIntake file store", () => {
         assertSome(afterReplaced, OTHER_HOLDER);
         assertSome(afterRetaken, OTHER_HOLDER);
         expect(yield* leftovers).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(FilesLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reports a state directory it cannot write the lock to as a lock failure, not as a held lock",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const scope = yield* Scope.make();
+
+        // No lock exists: the link fails for another reason.
+        const failure = yield* openAs(scope, yield* refusingLinks(1));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["store", "lock"]
+        );
+        expect(yield* fs.exists(LOCK_PATH)).toBe(false);
+        expect(yield* leftovers).toStrictEqual([]);
+        yield* Scope.close(scope, Exit.void);
+      })
+    );
+  });
+
+  it.layer(FilesLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reports the same failure when the lock cannot be written after a stale one was moved aside",
+      Effect.fnUntraced(function* () {
+        const scope = yield* Scope.make();
+        yield* leaveLock(OTHER);
+
+        // The first link fails because the stale lock exists; the second, in the takeover, cannot be written.
+        const failure = yield* openAs(scope, yield* refusingLinks(2));
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause]),
+          ["store", "lock"]
+        );
+        expect(yield* leftovers).toStrictEqual([]);
+        yield* Scope.close(scope, Exit.void);
       })
     );
   });
