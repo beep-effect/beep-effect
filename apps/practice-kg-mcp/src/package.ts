@@ -20,16 +20,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runEntrypoint } from "./entrypoint.ts";
 import { PackageFailure } from "./PracticeKgMcp.errors.ts";
+import { PRACTICE_KG_EXTENSION_VERSION } from "./Version.ts";
 
 const $I = $PracticeKgMcpId.create("package");
-
-/*
- * Version written into the .mcpb manifest. Claude Desktop identifies an
- * installed extension by name and version, so two packages with the same
- * version are indistinguishable to it. Bump this for every package that is
- * handed to a user; the July 2026 hand-off shipped as 0.0.0.
- */
-const ExtensionVersion = "0.2.1";
 
 const DuckDbVersion = "1.5.6-r.1";
 /*
@@ -201,7 +194,7 @@ const manifestFor = (platform: "linux" | "win32", executable: string): string =>
       manifest_version: "0.3",
       name: "beep-practice-kg",
       display_name: "Beep Practice Knowledge Graph",
-      version: ExtensionVersion,
+      version: PRACTICE_KG_EXTENSION_VERSION,
       description: "Read-only local practice knowledge-graph queries over a separately supplied data bundle.",
       author: { name: "Beep Effect contributors" },
       repository: { type: "git", url: "https://github.com/kriegcloud/beep-effect.git" },

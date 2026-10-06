@@ -17,6 +17,7 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PracticeKgHostError } from "../PracticeKgMcp.errors.ts";
+import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
 import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
 import { makePracticeKgPgliteLayer } from "./Pglite.ts";
 
@@ -126,7 +127,7 @@ export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
       return makePracticeKgServerLayer(
         PracticeKgMcpServerConfig.make({
           name: "beep-practice-kg",
-          version: "0.0.0",
+          version: PRACTICE_KG_EXTENSION_VERSION,
         })
       ).pipe(Layer.provide(resources));
     })
