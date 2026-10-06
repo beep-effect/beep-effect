@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import {
   currentRegisterRows,
   RegisterReport,
@@ -23,17 +22,12 @@ import {
   renderRegisterMarkdown,
 } from "./Register.schemas.ts";
 import { layerOrchestratorRegisterLive, noteRegister, OrchestratorRegister } from "./Register.service.ts";
-import { SessionLedgerError } from "./Session.errors.ts";
+import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
 import { sessionCheckoutFacts } from "./SessionLedger.service.ts";
 
 const decodeUnitKind = S.decodeUnknownResult(RegisterUnitKind);
 const decodeUnitState = S.decodeUnknownResult(RegisterUnitState);
 const decodeInstant = S.decodeUnknownResult(S.DateTimeUtcFromString);
-
-const usage = (message: string): SessionLedgerError => SessionLedgerError.make({ reason: "usage", message });
-
-const reportFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
-  effect.pipe(Effect.catchTag("SessionLedgerError", (error) => failWithReportedExit(`[session] ${error.message}`)));
 
 const jsonFlag = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit the report as JSON"));
 
@@ -109,21 +103,25 @@ export const sessionRegisterAddCommand = Command.make(
     const program = Effect.gen(function* () {
       const decodedKind = decodeUnitKind(kind);
       if (decodedKind._tag === "Failure") {
-        return yield* usage(`--kind must be one of ${A.join(RegisterUnitKind.literals, ", ")}; got "${kind}".`);
+        return yield* sessionUsageError(
+          `--kind must be one of ${A.join(RegisterUnitKind.literals, ", ")}; got "${kind}".`
+        );
       }
       const decodedState = decodeUnitState(state);
       if (decodedState._tag === "Failure") {
-        return yield* usage(`--state must be one of ${A.join(RegisterUnitState.literals, ", ")}; got "${state}".`);
+        return yield* sessionUsageError(
+          `--state must be one of ${A.join(RegisterUnitState.literals, ", ")}; got "${state}".`
+        );
       }
       if (Str.isEmpty(Str.trim(address))) {
-        return yield* usage("--address must say how the orchestrator reaches the unit.");
+        return yield* sessionUsageError("--address must say how the orchestrator reaches the unit.");
       }
       if (Str.isEmpty(Str.trim(orphanPlan))) {
-        return yield* usage("--orphan-plan must say what a successor does when it cannot reach the unit.");
+        return yield* sessionUsageError("--orphan-plan must say what a successor does when it cannot reach the unit.");
       }
       const contact = O.flatMap(O.map(lastContact, decodeInstant), Result.getSuccess);
       if (O.isSome(lastContact) && O.isNone(contact)) {
-        return yield* usage(`--last-contact must be an ISO instant; got "${lastContact.value}".`);
+        return yield* sessionUsageError(`--last-contact must be an ISO instant; got "${lastContact.value}".`);
       }
       const now = yield* DateTime.now;
       const row = yield* noteRegister(process.cwd(), {
@@ -139,7 +137,7 @@ export const sessionRegisterAddCommand = Command.make(
       });
       yield* Console.log(`[session] registered ${row.kind} ${row.address} (${row.state})`);
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription(
@@ -212,7 +210,7 @@ export const sessionRegisterListCommand = Command.make(
         { discard: true }
       );
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription("List every unit the orchestrator coordinates, newest first"),

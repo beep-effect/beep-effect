@@ -272,6 +272,11 @@ const stubHandle = (exitCode: number, output: string) =>
     unref: Effect.succeed(Effect.void),
   });
 
+interface ScriptedAnswer {
+  readonly exitCode: number;
+  readonly output: string;
+}
+
 interface GhScript {
   readonly mergeResponse: string;
   readonly rulesExit: number;
@@ -297,25 +302,35 @@ const context = RepoRunContext.make({
   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
 });
 
+// The recorded answer for each `gh` call, matched on a fragment of its argv, first match wins.
+const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAnswer]> => [
+  ["/merge", { exitCode: 0, output: script.mergeResponse }],
+  // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
+  [
+    "/timeline",
+    { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
+  ],
+  ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
+  ["graphql", { exitCode: script.threadsExit, output: JSON.stringify(threadsFixture) }],
+  ["rules/branches/", { exitCode: script.rulesExit, output: JSON.stringify(rulesFixture) }],
+  ["/check-runs", { exitCode: 0, output: JSON.stringify([checkRunsFixture]) }],
+  [`/pulls/${pullFixture.number}`, { exitCode: 0, output: JSON.stringify(pullFixture) }],
+];
+
+const answerFor = (script: GhScript, command: string, line: string): ScriptedAnswer =>
+  command === "git"
+    ? { exitCode: 0, output: "feat/gate\n" }
+    : A.findFirst(ghAnswers(script), ([fragment]) => Str.includes(fragment)(line)).pipe(
+        O.map(([, answer]) => answer),
+        O.getOrElse(() => ({ exitCode: 1, output: `unexpected command: ${line}` }))
+      );
+
 const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the gate never spawns a piped command");
     const line = A.join([command.command, ...command.args], " ");
-    return Ref.update(calls, A.append(line)).pipe(
-      Effect.map(() => {
-        if (command.command === "git") return stubHandle(0, "feat/gate\n");
-        if (Str.includes("/merge")(line)) return stubHandle(0, script.mergeResponse);
-        // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
-        if (Str.includes("/timeline")(line))
-          return stubHandle(script.windowExit, `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n`);
-        if (Str.includes("/check-suites")(line)) return stubHandle(script.windowExit, A.join(suiteInstants, "\n"));
-        if (Str.includes("graphql")(line)) return stubHandle(script.threadsExit, JSON.stringify(threadsFixture));
-        if (Str.includes("rules/branches/")(line)) return stubHandle(script.rulesExit, JSON.stringify(rulesFixture));
-        if (Str.includes("/check-runs")(line)) return stubHandle(0, JSON.stringify([checkRunsFixture]));
-        if (Str.includes(`/pulls/${pullFixture.number}`)(line)) return stubHandle(0, JSON.stringify(pullFixture));
-        return stubHandle(1, `unexpected command: ${line}`);
-      })
-    );
+    const answer = answerFor(script, command.command, line);
+    return Ref.update(calls, A.append(line)).pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
   });
 
 // Every scripted run records the argv it was asked for, so a test can prove the merge was or was not sent.

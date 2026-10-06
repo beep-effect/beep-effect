@@ -12,10 +12,9 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { PrNumber } from "../Yeet/internal/Provenance.ts";
 import { sessionRegisterCommand } from "./Register.command.ts";
-import { SessionLedgerError } from "./Session.errors.ts";
+import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
 import {
   openSessionRows,
   SessionLedgerState,
@@ -30,11 +29,6 @@ import type { SessionLedgerRow } from "./Session.schemas.ts";
 const decodeState = S.decodeUnknownResult(SessionLedgerState);
 const decodePrNumber = S.decodeUnknownResult(PrNumber);
 const decodeRole = S.decodeUnknownResult(SessionRole);
-
-const usage = (message: string): SessionLedgerError => SessionLedgerError.make({ reason: "usage", message });
-
-const reportFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
-  effect.pipe(Effect.catchTag("SessionLedgerError", (error) => failWithReportedExit(`[session] ${error.message}`)));
 
 /**
  * Render one live row as the operator reads it.
@@ -116,22 +110,26 @@ export const sessionNoteCommand = Command.make(
     const program = Effect.gen(function* () {
       const decodedState = decodeState(state);
       if (decodedState._tag === "Failure") {
-        return yield* usage(`--state must be one of ${A.join(SessionLedgerState.literals, ", ")}; got "${state}".`);
+        return yield* sessionUsageError(
+          `--state must be one of ${A.join(SessionLedgerState.literals, ", ")}; got "${state}".`
+        );
       }
       if (Str.isEmpty(Str.trim(next))) {
-        return yield* usage("--next must say what a resuming session should do.");
+        return yield* sessionUsageError("--next must say what a resuming session should do.");
       }
       const prNumber = O.flatMap(pr, (value) => {
         const decoded = decodePrNumber(value);
         return decoded._tag === "Success" ? O.some(decoded.success) : O.none();
       });
       if (O.isSome(pr) && O.isNone(prNumber)) {
-        return yield* usage(`--pr must be a positive integer; got ${pr.value}.`);
+        return yield* sessionUsageError(`--pr must be a positive integer; got ${pr.value}.`);
       }
       const decodedRole = O.map(role, decodeRole);
       const roleValue = O.flatMap(decodedRole, Result.getSuccess);
       if (O.isSome(role) && O.isNone(roleValue)) {
-        return yield* usage(`--role must be one of ${A.join(SessionRole.literals, ", ")}; got "${role.value}".`);
+        return yield* sessionUsageError(
+          `--role must be one of ${A.join(SessionRole.literals, ", ")}; got "${role.value}".`
+        );
       }
       const row = yield* noteSession({
         role: roleValue,
@@ -145,7 +143,7 @@ export const sessionNoteCommand = Command.make(
         `[session] noted ${row.state}${O.match(row.role, { onNone: () => "", onSome: (value) => ` [${value}]` })} for ${row.lane} (${row.branch}): ${row.next}`
       );
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription("Append where this session stopped and what comes next to the workstation ledger"),
@@ -204,7 +202,7 @@ export const sessionOpenCommand = Command.make(
       );
       yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { discard: true });
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription("List where every session on this machine stopped in this repository"),
