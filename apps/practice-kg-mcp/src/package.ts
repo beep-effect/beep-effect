@@ -180,6 +180,7 @@ const ManifestToolDescriptions: Readonly<Record<keyof typeof PracticeKgToolkit.t
   kg_application_lookup: "Resolve an application, patent, or docket.",
   kg_candidate_claims: "Read span-grounded candidate claims.",
   kg_clients: "List practice clients and docket-family counts.",
+  kg_correspondent_lookup: "Resolve an email address to the matters it corresponds about.",
   kg_docket_family: "Walk one docket-family spine.",
   kg_find: "Find knowledge-graph nodes.",
   kg_matter_lookup: "Resolve a reference to its practice matter.",

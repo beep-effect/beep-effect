@@ -26,8 +26,8 @@ const $I = $LawPracticeServerId.create("PracticeKg.verify");
  * `ok` is true only when every node decoded through the same projection the
  * `kg_provenance` tool serves, every `catalog-digest` reference names a
  * document in the bundle, every `uspto-anchor` reference names a USPTO record
- * the bundle carries, no edge dangles, and the matter tables agree with the
- * graph. This is the repeatable proof that every graph row resolves to
+ * the bundle carries, no edge dangles, the matter tables agree with the
+ * graph, and every `matter_correspondents` row names a matter in `matters`. This is the repeatable proof that every graph row resolves to
  * provenance.
  *
  * **Example** (Make a passing summary)
@@ -40,6 +40,8 @@ const $I = $LawPracticeServerId.create("PracticeKg.verify");
  *   catalogReferencesUnresolved: 0,
  *   claims: 0,
  *   claimsWithSourceDocument: 0,
+ *   correspondents: 0,
+ *   correspondentsWithoutMatter: 0,
  *   danglingEdges: 0,
  *   dockets: 0,
  *   edges: 0,
@@ -62,6 +64,8 @@ export class PracticeKgVerifySummary extends S.Class<PracticeKgVerifySummary>($I
     catalogReferencesUnresolved: S.Finite,
     claims: S.Finite,
     claimsWithSourceDocument: S.Finite,
+    correspondents: S.Finite,
+    correspondentsWithoutMatter: S.Finite,
     danglingEdges: S.Finite,
     dockets: S.Finite,
     edges: S.Finite,
@@ -103,6 +107,10 @@ const usptoRecordsSql = `
 SELECT application_number AS ref FROM enrichment WHERE application_number IS NOT NULL
 UNION
 SELECT patent_number FROM enrichment WHERE patent_number IS NOT NULL`;
+
+const correspondentsWithoutMatterSql = `
+SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_correspondents c
+WHERE NOT EXISTS (SELECT 1 FROM matters m WHERE m.family_key = c.family_key)`;
 
 const danglingEdgesSql = `
 SELECT COUNT(*)::FLOAT8 AS count FROM kg_edge e
@@ -170,6 +178,8 @@ export const verifyPracticeKgBundle: Effect.Effect<
   const usptoRecords = yield* duckdb.query(usptoRecordsSql).pipe(Effect.flatMap(decodeRefRows));
   const matters = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters");
   const matterDockets = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_dockets");
+  const correspondents = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_correspondents");
+  const correspondentsWithoutMatter = yield* duckCount(correspondentsWithoutMatterSql);
   const claimTables = yield* sql.unsafe(PracticeKgQueries.claimsTableProbe).pipe(Effect.flatMap(decodeTableRows));
   const claimsLoaded = A.length(claimTables) === 2;
   const claims = claimsLoaded
@@ -184,6 +194,8 @@ export const verifyPracticeKgBundle: Effect.Effect<
     catalogReferencesUnresolved,
     claims,
     claimsWithSourceDocument,
+    correspondents,
+    correspondentsWithoutMatter,
     danglingEdges,
     dockets,
     edges,
@@ -197,6 +209,7 @@ export const verifyPracticeKgBundle: Effect.Effect<
       catalogReferencesUnresolved === 0 &&
       anchorReferencesUnresolved === 0 &&
       danglingEdges === 0 &&
+      correspondentsWithoutMatter === 0 &&
       matters === families &&
       matterDockets === dockets,
   });

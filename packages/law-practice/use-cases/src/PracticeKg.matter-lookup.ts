@@ -255,7 +255,7 @@ export class PracticeKgMatter extends S.Class<PracticeKgMatter>($I`PracticeKgMat
  * import { PracticeKgMatterLookupResult } from "@beep/law-practice-use-cases/server"
  *
  * const result = PracticeKgMatterLookupResult.make({
- *   bundleVersion: "2026-10-06-02",
+ *   bundleVersion: "2026-10-07-01",
  *   matters: [],
  *   reference: "99999US01",
  *   resolution: "none"
