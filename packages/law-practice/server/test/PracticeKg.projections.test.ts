@@ -7,13 +7,17 @@ import {
   PatentApplicationDocument,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import {
+  attributeDocuments,
   buildPracticeKgBundle,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
+  PracticeKgAttributeDocumentsInput,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
+  PracticeKgCatalogRow,
   PracticeKgClaimsOptions,
+  PracticeKgDocketReferenceRow,
   PracticeKgOptions,
   PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
@@ -1340,5 +1344,54 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
       arguments: { query: "alpha" },
       invalidArguments: { query: 1 },
     },
+  });
+});
+
+describe("family attribution fallback contracts", () => {
+  const row = (digest: string, fields: Partial<PracticeKgCatalogRow> = {}) =>
+    PracticeKgCatalogRow.make({
+      category: "docket",
+      client: null,
+      digest,
+      docket: "20001US01",
+      docketFamily: "20001",
+      effectiveName: "fixture.txt",
+      mtimeIso: "2026-10-01T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "fixture.txt",
+      ...fields,
+    });
+  const reference = (digest: string, docket: string) =>
+    PracticeKgDocketReferenceRow.make({ digest, docket, client: "12345", family: "20001" });
+
+  it("inherits a unanimous client for an unreferenced family document", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a"), row("b", { docket: null })],
+        docketReferences: [reference("a", "20001US01")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "12345", attributionSource: "family-consensus" },
+    ]);
+  });
+
+  it("accepts all family-level references and isolates other-docket citations", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a", { docket: null }), row("b", { client: "67890" })],
+        docketReferences: [reference("a", "20001US02"), reference("b", "20001US010")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "67890", attributionSource: "client-map" },
+    ]);
   });
 });

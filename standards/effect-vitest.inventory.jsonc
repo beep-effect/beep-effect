@@ -39135,7 +39135,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "fixed",
+      "fixSha": "484a90e7d72dff63ad36b8c73603f9ff252f640e"
     },
     {
       "id": "EV014:packages/tooling/tool/cli/test/native-runtime.test.ts:29:it.layer@0#1",
@@ -42078,6 +42079,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "This planner dispatch block invokes the real CLI against the checkout under its existing scoped platform fixture. Added status and sweep calls use plan mode only; the scope closes after all dispatch assertions and introduces no longer-lived resource."
+    },
+    {
+      "id": "EV002:packages/tooling/tool/cli/test/models-manifest-errors.test.ts:113:provideScopedLayer@8#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/models-manifest-errors.test.ts",
+      "line": 113,
+      "endLine": 117,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:5d5f83e0d96b9a26d6c135ea063cb127753c7393a4f8bbcf6610ce0e1847e923",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer( Layer.fresh(ModelsManifestStoreLive).pipe( Layer.provide(Layer.mergeAll(Layer.succeed(FileSystem.FileSystem, failingFs), Path.layer)) ) )",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The atomic-replacement test creates its filesystem override from the body-owned temporary directory. A fresh manifest layer must capture the failing rename service rather than reuse the outer live store; the shorter scope closes before independent filesystem cleanup assertions."
     }
   ]
 }
