@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { AnthropicLanguageModelLive } from "@beep/anthropic";
+import { makeAnthropicLanguageModelLiveLayer } from "@beep/anthropic";
 import {
   DocketFileStoreOptions,
   DocketGraphConfig,
@@ -73,7 +73,8 @@ const makeDocketIntakeAppLayer = (options: {
       timeZone: config.timeZone,
     })
   ).pipe(Layer.provide(makeM365Layer(config)));
-  const agents = makeDocketAgentsLayer().pipe(Layer.provide(AnthropicLanguageModelLive));
+  // Temperature 0 for both agents, so a dry run and a live run read a message the same way (D-46).
+  const agents = makeDocketAgentsLayer().pipe(Layer.provide(makeAnthropicLanguageModelLiveLayer({ temperature: 0 })));
   const store = makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: config.stateDirectory }));
 
   return makeDocketIntakeLayer(
