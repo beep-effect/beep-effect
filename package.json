@@ -323,6 +323,7 @@
     "fast-uri": "^3.1.7",
     "hono": "4.13.7",
     "js-yaml": "5.4.1",
+    "katex": "^0.18.2",
     "lodash-es": "^4.18.1",
     "minimatch": "10.2.5",
     "nanoid": "^3.3.18",
@@ -336,6 +337,7 @@
     "proxy-addr": "^2.0.8",
     "protobufjs": "^7.6.6",
     "sharp": "catalog:",
+    "smol-toml": "^1.9.0",
     "source-map-js": "^1.2.2",
     "tar": "catalog:",
     "uuid": "^11.1.1"

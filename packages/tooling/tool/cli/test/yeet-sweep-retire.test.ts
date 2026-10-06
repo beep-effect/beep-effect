@@ -60,41 +60,40 @@ const encodePacketLifecycle = S.encodeEffect(S.fromJsonString(S.Struct({ lifecyc
 
 const encodePrFiles = S.encodeEffect(S.fromJsonString(S.Struct({ files: S.Array(S.Struct({ path: S.String })) })));
 
-const ghSpawner = (
+const ghSpawner = Effect.fn("YeetRetireTest.ghSpawner")(function* (
   headRefOid: string,
   state: "MERGED" | "OPEN",
   files: ReadonlyArray<string> = [],
   filesExitCode = ChildProcessSpawner.ExitCode(0)
-) =>
-  Effect.gen(function* () {
-    const real = yield* ChildProcessSpawner.ChildProcessSpawner;
-    // The fake answers with the same documents a real `gh pr view --json`
-    // prints, encoded through the schemas the sweep decodes them with: the
-    // pull request view, or its file list when `--json files` is asked for.
-    const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
-    const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
-    const handleFor = (text: string, exitCode = ChildProcessSpawner.ExitCode(0)) => {
-      const output = Stream.make(new TextEncoder().encode(text));
-      return ChildProcessSpawner.makeHandle({
-        all: output,
-        exitCode: Effect.succeed(exitCode),
-        getInputFd: () => Sink.drain,
-        getOutputFd: () => Stream.empty,
-        isRunning: Effect.succeed(false),
-        kill: () => Effect.void,
-        pid: ChildProcessSpawner.ProcessId(1),
-        stderr: Stream.empty,
-        stdin: Sink.drain,
-        stdout: output,
-        unref: Effect.succeed(Effect.void),
-      });
-    };
-    return ChildProcessSpawner.make((command) =>
-      ChildProcess.isStandardCommand(command) && command.command === "gh"
-        ? Effect.succeed(A.contains(command.args, "files") ? handleFor(filesText, filesExitCode) : handleFor(viewText))
-        : real.spawn(command)
-    );
-  });
+) {
+  const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // The fake answers with the same documents a real `gh pr view --json`
+  // prints, encoded through the schemas the sweep decodes them with: the
+  // pull request view, or its file list when `--json files` is asked for.
+  const viewText = yield* encodePrView(GhPrView.make({ number: 1, headRefName: "claude/lane", state, headRefOid }));
+  const filesText = yield* encodePrFiles({ files: A.map(files, (path) => ({ path })) });
+  const handleFor = (text: string, exitCode = ChildProcessSpawner.ExitCode(0)) => {
+    const output = Stream.make(new TextEncoder().encode(text));
+    return ChildProcessSpawner.makeHandle({
+      all: output,
+      exitCode: Effect.succeed(exitCode),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      stderr: Stream.empty,
+      stdin: Sink.drain,
+      stdout: output,
+      unref: Effect.succeed(Effect.void),
+    });
+  };
+  return ChildProcessSpawner.make((command) =>
+    ChildProcess.isStandardCommand(command) && command.command === "gh"
+      ? Effect.succeed(A.contains(command.args, "files") ? handleFor(filesText, filesExitCode) : handleFor(viewText))
+      : real.spawn(command)
+  );
+});
 
 const ghLayer = (headRefOid: string, state: "MERGED" | "OPEN", files: ReadonlyArray<string> = []) =>
   Layer.effect(ChildProcessSpawner.ChildProcessSpawner, ghSpawner(headRefOid, state, files));
@@ -274,7 +273,7 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
     Effect.fn(function* ([plan]) {
       const codec = S.fromJsonString(YeetRetirePlan);
       const encoded = yield* S.encodeEffect(codec)(plan);
-      const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
+      const decoded = yield* S.decodeEffect(codec)(encoded);
       expect(S.toEquivalence(YeetRetirePlan)(plan, decoded)).toBe(true);
     }),
     { arbitrary: { runs: 20 } }
