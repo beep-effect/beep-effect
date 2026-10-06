@@ -42147,6 +42147,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before a second validation or independent SQL read-back; the public outer fixture owns the temporary directories. Preserve this shorter scope and the exact claims/evidence assertions."
+    },
+    {
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1102:provideScopedLayer@15#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
+      "line": 1102,
+      "endLine": 1102,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:4b71edfeb3ebe5e47c6b5521c9760c85ef5f8ba5ff6fdb72cfb3ff8c5c9a46be",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(claimsLayer)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before validation or independent SQL read-back; the public outer fixture owns temporary directories. This occurrence includes the explicitly supplied source digest and preserves exact claims/evidence assertions."
     }
   ]
 }
