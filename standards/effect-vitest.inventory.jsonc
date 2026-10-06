@@ -18501,7 +18501,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "withScratchCheckout owns a real temporary Git clone and linked worktree, then closes its scope after the supplied callback. The public it.layer fixture provides NodeServices and TestConsole per test; this shorter scope is deliberate native cleanup."
+      "reason": "The it.layer block shares one NodeServices/TestConsole build (only the test Scope is fresh per test); neither case asserts TestConsole lines because captureOutput swaps Console; withScratchCheckout keeps its own shorter scope for native Git clone/worktree cleanup."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:161:scoped@28#1",
