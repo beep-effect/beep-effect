@@ -94,11 +94,11 @@ A first run on a real mailbox:
 
 ```bash
 docket-intake smoke                                   # the connection works
-docket-intake dry-run --since 2030-01-06T00:00:00Z --max-messages 5
-docket-intake poll --since 2030-01-06T00:00:00Z --max-messages 5
+docket-intake dry-run --since 2026-10-01T00:00:00Z --max-messages 5
+docket-intake poll --since 2026-10-01T00:00:00Z --max-messages 5
 docket-intake runs                                    # note the run id
-docket-intake undo --run latest --dry-run
-docket-intake undo --run latest --yes                 # the way back works
+docket-intake undo --run <runId> --dry-run
+docket-intake undo --run <runId> --yes                # the way back works
 ```
 
 `docket-intake` there stands for `bun run apps/docket-intake/src/bin.ts`.
