@@ -14,7 +14,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/acp": {
@@ -22,7 +22,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/agents-client": {
@@ -30,7 +30,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/agents-domain": {
@@ -38,7 +38,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/agents-server": {
@@ -46,7 +46,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/agents-tables": {
@@ -54,7 +54,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/agents-use-cases": {
@@ -62,7 +62,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ai-provider-cli": {
@@ -70,7 +70,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ai-sync": {
@@ -78,7 +78,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/anthropic": {
@@ -86,7 +86,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/api-docs": {
@@ -94,7 +94,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/api-transport": {
@@ -102,7 +102,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-client": {
@@ -110,7 +110,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-config": {
@@ -118,7 +118,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-domain": {
@@ -126,7 +126,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-proof": {
@@ -134,7 +134,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-server": {
@@ -142,7 +142,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-tables": {
@@ -150,7 +150,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-ui": {
@@ -158,7 +158,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/architecture-lab-use-cases": {
@@ -166,7 +166,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/box": {
@@ -174,7 +174,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/box-provisioning": {
@@ -182,7 +182,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/brand": {
@@ -190,7 +190,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/chalk": {
@@ -198,7 +198,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ciops": {
@@ -206,7 +206,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/codegen-kit": {
@@ -214,7 +214,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/colors": {
@@ -222,7 +222,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/cosmos": {
@@ -230,7 +230,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/data": {
@@ -238,7 +238,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/db-admin": {
@@ -246,7 +246,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/discord": {
@@ -254,7 +254,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/doc-text": {
@@ -262,7 +262,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/dock": {
@@ -270,7 +270,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/dock-react": {
@@ -278,7 +278,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/documents-domain": {
@@ -286,7 +286,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/documents-server": {
@@ -294,7 +294,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/documents-tables": {
@@ -302,7 +302,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/documents-use-cases": {
@@ -310,7 +310,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/drizzle": {
@@ -318,7 +318,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/duckdb": {
@@ -326,7 +326,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ecfr": {
@@ -334,7 +334,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/editor": {
@@ -342,7 +342,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/effect-drizzle": {
@@ -350,7 +350,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-client": {
@@ -358,7 +358,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-config": {
@@ -366,7 +366,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-domain": {
@@ -374,7 +374,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-server": {
@@ -382,7 +382,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-tables": {
@@ -390,7 +390,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-ui": {
@@ -398,7 +398,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/epistemic-use-cases": {
@@ -406,7 +406,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/exiftool": {
@@ -414,7 +414,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/face-detection": {
@@ -422,7 +422,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/fc-runs": {
@@ -430,7 +430,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ffmpeg": {
@@ -438,7 +438,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/file-processing": {
@@ -446,7 +446,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/firecrawl": {
@@ -454,7 +454,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/freshbooks": {
@@ -462,7 +462,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/gov-legal-mcp": {
@@ -470,7 +470,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/govinfo": {
@@ -478,7 +478,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/graph-3d": {
@@ -486,7 +486,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/html": {
@@ -494,7 +494,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/hubspot": {
@@ -502,7 +502,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/identity": {
@@ -510,7 +510,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/infra": {
@@ -518,7 +518,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/langextract": {
@@ -526,7 +526,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/law-practice-domain": {
@@ -534,7 +534,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/law-practice-server": {
@@ -542,7 +542,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/law-practice-tables": {
@@ -550,7 +550,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/law-practice-use-cases": {
@@ -558,7 +558,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -566,7 +566,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/lexical-schema": {
@@ -574,7 +574,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/libpff": {
@@ -582,7 +582,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/lint-rules": {
@@ -590,7 +590,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/m365": {
@@ -598,7 +598,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/m365-mcp": {
@@ -606,7 +606,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/mcp-kit": {
@@ -614,7 +614,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/md": {
@@ -622,7 +622,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/n3": {
@@ -630,7 +630,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/nlp": {
@@ -638,7 +638,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/nlp-mcp": {
@@ -646,7 +646,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/nlp-processing": {
@@ -654,7 +654,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/obs": {
@@ -662,7 +662,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/observability": {
@@ -670,7 +670,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/oip-web": {
@@ -678,7 +678,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/onepassword-cli": {
@@ -686,7 +686,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology": {
@@ -694,7 +694,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-client": {
@@ -702,7 +702,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-config": {
@@ -710,7 +710,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-domain": {
@@ -718,7 +718,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-server": {
@@ -726,7 +726,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-ui": {
@@ -734,7 +734,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ontology-use-cases": {
@@ -742,7 +742,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/openai": {
@@ -750,7 +750,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/openai-compat": {
@@ -758,7 +758,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/openclaw": {
@@ -766,7 +766,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/oxigraph": {
@@ -774,7 +774,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/pacer": {
@@ -782,7 +782,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/pandoc-ast": {
@@ -790,7 +790,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/pglite": {
@@ -798,7 +798,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/phoenix": {
@@ -806,7 +806,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/postgres": {
@@ -814,7 +814,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -822,7 +822,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/pretext": {
@@ -830,7 +830,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/professional-desktop": {
@@ -838,7 +838,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/provenance": {
@@ -846,7 +846,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/qa-capture": {
@@ -854,7 +854,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/rdf": {
@@ -862,7 +862,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/rdf-canonize": {
@@ -870,7 +870,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/repo-ai-metrics": {
@@ -878,7 +878,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/repo-cli": {
@@ -886,7 +886,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/repo-configs": {
@@ -894,7 +894,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/repo-docgen": {
@@ -902,7 +902,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/repo-utils": {
@@ -910,7 +910,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/runpod": {
@@ -918,7 +918,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/sanity": {
@@ -926,7 +926,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/schema": {
@@ -934,7 +934,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/scratchpad": {
@@ -942,7 +942,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/semantic-web": {
@@ -950,7 +950,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/semantica": {
@@ -958,7 +958,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/shacl": {
@@ -966,7 +966,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/shared-domain": {
@@ -974,7 +974,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/shared-tables": {
@@ -982,7 +982,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/shared-use-cases": {
@@ -990,7 +990,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/skill-contract": {
@@ -998,7 +998,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/storybook": {
@@ -1006,7 +1006,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/tailscale": {
@@ -1014,7 +1014,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/test-runner": {
@@ -1022,7 +1022,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/test-utils": {
@@ -1030,7 +1030,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/tika": {
@@ -1038,7 +1038,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/todox": {
@@ -1046,7 +1046,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/trustgraph-workbench": {
@@ -1054,7 +1054,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/types": {
@@ -1062,7 +1062,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/ui": {
@@ -1070,7 +1070,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/uspto": {
@@ -1078,7 +1078,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/uspto-mcp": {
@@ -1086,7 +1086,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/utils": {
@@ -1094,7 +1094,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/venice-ai": {
@@ -1102,7 +1102,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/wink": {
@@ -1110,7 +1110,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/workspace-domain": {
@@ -1118,7 +1118,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/workspace-server": {
@@ -1126,7 +1126,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/workspace-tables": {
@@ -1134,7 +1134,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/workspace-use-cases": {
@@ -1142,7 +1142,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/xai": {
@@ -1150,7 +1150,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     },
     "@beep/xstate": {
@@ -1158,7 +1158,7 @@
       "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "577cb8c40f14356f91aea4f63b1b2657269eac6ba79740ad5b58fe7244a92f74"
+        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
       }
     }
   },
@@ -46621,6 +46621,7 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#audit",
           "@beep/duckdb#audit",
           "@beep/epistemic-domain#audit",
           "@beep/epistemic-server#audit",
@@ -46633,6 +46634,7 @@
           "@beep/law-practice-tables#audit",
           "@beep/law-practice-use-cases#audit",
           "@beep/libpff#audit",
+          "@beep/m365#audit",
           "@beep/mcp-kit#audit",
           "@beep/md#audit",
           "@beep/nlp#audit",
@@ -46705,6 +46707,7 @@
         "command": "bun run beep:build",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#build",
           "@beep/duckdb#build",
           "@beep/epistemic-domain#build",
           "@beep/epistemic-server#build",
@@ -46717,6 +46720,7 @@
           "@beep/law-practice-tables#build",
           "@beep/law-practice-use-cases#build",
           "@beep/libpff#build",
+          "@beep/m365#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/nlp#build",
@@ -46776,6 +46780,7 @@
         "command": "bun run beep:check",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#build",
           "@beep/duckdb#build",
           "@beep/epistemic-domain#build",
           "@beep/epistemic-server#build",
@@ -46788,6 +46793,7 @@
           "@beep/law-practice-tables#build",
           "@beep/law-practice-use-cases#build",
           "@beep/libpff#build",
+          "@beep/m365#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/nlp#build",
@@ -46834,6 +46840,7 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#build",
           "@beep/duckdb#build",
           "@beep/epistemic-domain#build",
           "@beep/epistemic-server#build",
@@ -46846,6 +46853,7 @@
           "@beep/law-practice-tables#build",
           "@beep/law-practice-use-cases#build",
           "@beep/libpff#build",
+          "@beep/m365#build",
           "@beep/mcp-kit#build",
           "@beep/md#build",
           "@beep/nlp#build",
@@ -46979,6 +46987,7 @@
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
           "//#lint:policy-fingerprint",
+          "@beep/box#transit",
           "@beep/duckdb#transit",
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-server#transit",
@@ -46991,6 +47000,7 @@
           "@beep/law-practice-tables#transit",
           "@beep/law-practice-use-cases#transit",
           "@beep/libpff#transit",
+          "@beep/m365#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/nlp#transit",
@@ -47208,6 +47218,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#transit",
           "@beep/duckdb#transit",
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-server#transit",
@@ -47220,6 +47231,7 @@
           "@beep/law-practice-tables#transit",
           "@beep/law-practice-use-cases#transit",
           "@beep/libpff#transit",
+          "@beep/m365#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/nlp#transit",
@@ -47272,6 +47284,7 @@
         "command": "bun run beep:test",
         "commandDigest": "927888f71b99aa1f42cac1ce2f51961d8eeb231246011395c8830453d2ef032e",
         "dependencies": [
+          "@beep/box#transit",
           "@beep/duckdb#transit",
           "@beep/epistemic-domain#transit",
           "@beep/epistemic-server#transit",
@@ -47284,6 +47297,7 @@
           "@beep/law-practice-tables#transit",
           "@beep/law-practice-use-cases#transit",
           "@beep/libpff#transit",
+          "@beep/m365#transit",
           "@beep/mcp-kit#transit",
           "@beep/md#transit",
           "@beep/nlp#transit",

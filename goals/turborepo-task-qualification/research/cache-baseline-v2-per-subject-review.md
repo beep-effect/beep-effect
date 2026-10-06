@@ -15,7 +15,8 @@ The projection is re-observed from the current `main` census after merging
 `main` into this lane. Every subject is stamped with this review because the
 file format changed; no command text, input, output, environment key,
 dependency edge or cache flag is accepted beyond what the prior v1 baseline
-(recorded for #1459 on top of the #1452 baseline) already recorded, and no
+(recorded for #1459 on top of the #1452 baseline, then re-recorded by #1480 for
+the practice-mail-tagging adapters) already recorded, and no
 qualification is granted. Scope, profile (`local-linux-x64-bun1.4.2`) and
 epoch (`qualification-v2`) are unchanged.
 

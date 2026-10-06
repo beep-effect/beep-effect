@@ -3,10 +3,16 @@
   "extends": "./tsconfig.json",
   "references": [
     {
+      "path": "../../drivers/box/tsconfig.json"
+    },
+    {
       "path": "../../drivers/duckdb/tsconfig.json"
     },
     {
       "path": "../../drivers/libpff/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/m365/tsconfig.json"
     },
     {
       "path": "../../drivers/pglite/tsconfig.json"

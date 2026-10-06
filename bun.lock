@@ -2573,6 +2573,7 @@
       "name": "@beep/law-practice-server",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/box": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
@@ -2585,6 +2586,7 @@
         "@beep/law-practice-tables": "workspace:^",
         "@beep/law-practice-use-cases": "workspace:^",
         "@beep/libpff": "workspace:^",
+        "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
