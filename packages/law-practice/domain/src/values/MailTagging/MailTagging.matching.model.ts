@@ -95,6 +95,53 @@ export class MatterIndexEntry extends S.Class<MatterIndexEntry>($I`MatterIndexEn
 ) {}
 
 /**
+ * Identifiers of a matter that cannot be a tag target.
+ *
+ * **Details**
+ *
+ * A matter without a client number, or one whose family number was recycled
+ * and never verified, has no safe `MatterKey`. Mail that names one of its
+ * identifiers is never tagged to a matter; it is left for the attorney.
+ *
+ * **Example** (Describe an unattributed matter)
+ *
+ * ```ts
+ * import { UnattributedMatter } from "@beep/law-practice-domain/values"
+ * import { UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
+ *
+ * const matter = UnattributedMatter.make({
+ *   applicationNumbers: [UsptoNormalizedApplicationNumber.make("15000001")]
+ * })
+ * console.log(matter.docketNumbers.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UnattributedMatter extends S.Class<UnattributedMatter>($I`UnattributedMatter`)(
+  {
+    docketNumbers: S.Array(MatterDocketNumber)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description: "Docket numbers of the matter's filings.",
+      }),
+    applicationNumbers: S.Array(UsptoNormalizedApplicationNumber)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description: "Eight-digit USPTO application numbers in the matter.",
+      }),
+    patentNumbers: S.Array(PatentNumber)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description: "Digits-only patent numbers granted in the matter.",
+      }),
+  },
+  $I.annote("UnattributedMatter", {
+    description: "Identifiers of a matter that cannot be a tag target.",
+  })
+) {}
+
+/**
  * Snapshot of every taggable matter, as read from the practice KG.
  *
  * **Example** (Decode an index snapshot)
@@ -118,6 +165,11 @@ export class MatterIndex extends S.Class<MatterIndex>($I`MatterIndex`)(
     entries: S.Array(MatterIndexEntry).annotateKey({
       description: "One entry per taggable matter.",
     }),
+    unattributed: S.Array(UnattributedMatter)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description: "Identifier sets of matters that cannot be tagged; a hit needs the attorney.",
+      }),
     builtAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant the snapshot was read.",
     }),
@@ -197,6 +249,11 @@ export class MailEnvelope extends S.Class<MailEnvelope>($I`MailEnvelope`)(
     hasAttachments: S.Boolean.annotateKey({
       description: "Whether the message carries attachments.",
     }),
+    changeKey: S.OptionFromNullOr(S.String)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Provider version token of the message, when reported; guards category writes.",
+      }),
     bodyPreview: S.OptionFromNullOr(S.String)
       .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({
@@ -425,8 +482,10 @@ export class MatterCandidate extends S.Class<MatterCandidate>($I`MatterCandidate
   })
 ) {}
 
+const defaultMaxAttachmentBytes = 50 * 1024 * 1024;
+
 /**
- * Thresholds that turn candidates into a decision.
+ * Thresholds that turn candidates into a decision, plus the attachment size cap.
  *
  * **Example** (Decode the default policy)
  *
@@ -437,6 +496,7 @@ export class MatterCandidate extends S.Class<MatterCandidate>($I`MatterCandidate
  * const policy = S.decodeUnknownSync(TaggingPolicy)({})
  * console.log(policy.confidenceThreshold) // 0.8
  * console.log(policy.ambiguityMargin) // 0.15
+ * console.log(policy.maxAttachmentBytes) // 52428800
  * ```
  *
  * @category policies
@@ -456,9 +516,15 @@ export class TaggingPolicy extends S.Class<TaggingPolicy>($I`TaggingPolicy`)(
     ).annotateKey({
       description: "Minimum lead the best candidate needs over the runner-up.",
     }),
+    maxAttachmentBytes: S.Natural.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(defaultMaxAttachmentBytes)),
+      S.withConstructorDefault(Effect.succeed(defaultMaxAttachmentBytes))
+    ).annotateKey({
+      description: "Largest attachment, in bytes, the filer downloads and files; defaults to 50 MiB.",
+    }),
   },
   $I.annote("TaggingPolicy", {
-    description: "Thresholds that turn matter candidates into a tagging decision.",
+    description: "Thresholds that turn matter candidates into a tagging decision, plus the attachment size cap.",
   })
 ) {}
 
@@ -478,7 +544,7 @@ export class TaggingPolicy extends S.Class<TaggingPolicy>($I`TaggingPolicy`)(
  * @category schemas
  * @since 0.0.0
  */
-export const UnmatchedReason = LiteralKit(["no-signal", "below-threshold", "ambiguous"]).pipe(
+export const UnmatchedReason = LiteralKit(["no-signal", "below-threshold", "ambiguous", "needs-attorney"]).pipe(
   $I.annoteSchema("UnmatchedReason", {
     description: "Why a message was not assigned to a matter.",
   })
@@ -624,6 +690,7 @@ const unmatchedCategories = (decision: MatterUnmatched): ReadonlyArray<MailCateg
     "no-signal": () => signalCategories(decision.practiceCategories),
     "below-threshold": () => nearMissCategories(decision.practiceCategories),
     ambiguous: () => nearMissCategories(decision.practiceCategories),
+    "needs-attorney": () => nearMissCategories(decision.practiceCategories),
   });
 
 /**

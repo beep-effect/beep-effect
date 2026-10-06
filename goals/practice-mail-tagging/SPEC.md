@@ -64,12 +64,16 @@ Order: schema → `Context.Service` contract → implementation.
   domain or address → assign category; never a move). Rules are rendered into
   the attorney how-to; they are not applied by the service in v1.
 - `MailTaxonomy`: practice categories + matter categories + rule intents,
-  with `masterCategories` as the single derived list the applier ensures.
+  with `masterCategories` deriving the master-list intents. A matter's
+  master category is created the first time a message is tagged to it (D-9).
 
 ### Matching (schema + pure function)
 
 - `MatterIndexEntry`: `matterKey`, `clientKey`, docket numbers, application
   numbers, patent numbers, contact email addresses, contact domains.
+- `MatterIndex.unattributed`: identifier sets of matters that cannot be
+  tagged (no client number, or `recycled-unverified`). A hit on one of these
+  without a taggable match is `MatterUnmatched needs-attorney` (D-11).
 - `MailEnvelope`: the message subset the tagger reads — ids, subject, sender,
   recipients, received instant, conversation id, current categories,
   `hasAttachments`, body preview. Bodies are never persisted.
@@ -81,8 +85,8 @@ Order: schema → `Context.Service` contract → implementation.
   (default 0.15).
 - `TaggingDecision` (tagged union):
   - `MatterMatched { matterKey, confidence, evidence }`
-  - `MatterUnmatched { reason: no-signal | below-threshold | ambiguous,
-    candidates }` — never forced into a matter.
+  - `MatterUnmatched { reason: no-signal | below-threshold | ambiguous |
+    needs-attorney, candidates }` — never forced into a matter.
   Practice-level categories ride alongside either outcome.
 
 ### Ledgers (schema)
@@ -90,9 +94,12 @@ Order: schema → `Context.Service` contract → implementation.
 - `TagLedgerEntry { runId, messageId, internetMessageId, addedCategories,
   decision summary, recordedAt }` — append-only JSONL. Undo removes only
   `addedCategories` that are still present, and appends a `TagUndoEntry`.
-- `FilingLedgerEntry { contentSha256, matterKey, folderId, fileId, fileName,
-  messageId, attachmentId, byteLength, recordedAt }` — dedupe key is
-  `(contentSha256, matterKey)`.
+- `FilingDestination` (`LiteralKit`): `uspto-incoming`
+  (`05 USPTO Correspondence/01 Incoming`) and `from-client`
+  (`90 Client Exchange/01 From Client`) inside the matter folder (D-10).
+- `FilingLedgerEntry { contentSha256, matterKey, destination, folderId,
+  fileId, fileName, messageId, attachmentId, byteLength, recordedAt }` —
+  dedupe key is `(contentSha256, matterKey)`.
 - `BackfillCheckpoint { since, lastReceivedAt, lastMessageId, processed }`.
 - `TaggingRunReport`: counts only — scanned, matched, unmatched by reason,
   per-category adds, already-tagged skips, attachments filed / deduped /
@@ -103,7 +110,8 @@ Order: schema → `Context.Service` contract → implementation.
 Ports (`Context.Service`, implemented by adapters or test fakes):
 `Mailbox` (page messages since an instant; set a message's categories; ensure
 master categories; list and download attachments), `MatterDirectory`
-(index snapshot), `MatterFolderDirectory` (matter → Box folder id),
+(index snapshot), `MatterFolderDirectory` (matter + destination → Box folder
+id, resolved by family key and never by client name),
 `DocumentStore` (upload bytes into a folder; never overwrite or delete),
 `TagLedger`, `FilingLedger`, `BackfillCheckpointStore`.
 
@@ -116,9 +124,23 @@ with `mode: dry-run | apply`, `AttachmentFiler.file`, `MailTaggingUndo.run`.
   each page, and skips messages the tag ledger already covers. Live mode is
   the same job resuming from the checkpoint.
 - Category writes are read-modify-write on the full category list: existing
-  categories are preserved in order, ours are appended.
-- Attachments are filed only for `MatterMatched` messages. Inline parts,
-  non-file attachments, and zero-byte parts are skipped with a counted reason.
+  categories are preserved in order, ours are appended. The ledger entry is
+  written before the category write; a message counts as already tagged only
+  when its ledgered categories are present, so an interrupted write is
+  repaired on the next run without a second ledger entry.
+  Repair applies only to messages received after the checkpoint the run
+  started from: a ledgered message the checkpoint already covers is never
+  rewritten, so a category the attorney removed by hand stays removed.
+- The `Mailbox` port covers the inbox, its subfolders, and Sent Items; Drafts,
+  Deleted Items, and Junk are excluded by the adapter (D-12).
+- Live `Layer` values for the use-cases live in `law-practice/server`; the
+  use-cases package stops at contracts and constructors
+  (`standards/architecture/05-layer-composition.md`).
+- Attachments are filed only for `MatterMatched` messages, and only from
+  routable senders: a `uspto.gov` sender files to `uspto-incoming`, a known
+  contact address of that matter files to `from-client`, and any other sender
+  is tagged but not filed (`sender-not-routable`). Inline parts, non-file
+  attachments, and zero-byte parts are skipped with a counted reason.
   A name collision with different content gets a short-hash suffix.
 
 ## Constraints
@@ -141,6 +163,14 @@ with `mode: dry-run | apply`, `AttachmentFiler.file`, `MailTaggingUndo.run`.
 | D-6 | 2026-10-06 | Ledgers and checkpoint are append-only JSONL files in private operator state. | Single-writer service on one workstation; JSONL is inspectable and diffable for undo audits; nothing client-derived enters the public repo. |
 | D-7 | 2026-10-06 | Unmatched mail with no practice-level signal receives no category. `P: Unmatched - review` is added only for `ambiguous` and `below-threshold` outcomes. | Tagging every newsletter "unmatched" turns the review category into noise; only near-misses deserve the attorney's eye. |
 | D-8 | 2026-10-06 | Attachment dedupe is by SHA-256 of content per matter, recorded in the filing ledger. | The same office-action PDF arrives in forwards and replies; a ledger lookup is exact and costs no Box API calls. |
+| D-9 | 2026-10-06 | A matter's master category is created on its first tagged message; practice categories are created up front. Operator-ratified. | 143 taggable matters would make the Outlook category picker unusable; most matters have no mail since 2026-07-01. |
+| D-10 | 2026-10-06 | File attachments only from USPTO senders and known contacts of the matched matter, into the two destination subfolders named by the Box onboarding workstream. Operator-ratified. | Filing opposing-counsel or third-party attachments under "From Client" mislabels documents; a tagged-but-unfiled message is recoverable, a misfiled one is not obvious. |
+| D-11 | 2026-10-06 | Matters with no client number (27) and `recycled-unverified` matters (4) are never tag targets; a reference to one yields `needs-attorney` and `P: Unmatched - review`. A message that names both a taggable matter and one of these also goes to review. | The practice-KG matter-lookup contract: bare family numbers are recycled across clients, so only the client-keyed family key is a safe identity. |
+| D-12 | 2026-10-06 | Tag the inbox, its subfolders, and Sent Items; skip Drafts, Deleted Items, and Junk. Operator-ratified. | Tagging the attorney's replies keeps a conversation's category consistent in Outlook's conversation view. |
+| D-13 | 2026-10-06 | Ledger-first category writes with presence-checked idempotency. | A category write that succeeds before a failed ledger append would be outside undo's reach; writing the ledger first makes the worst case a harmless entry that the next run completes. |
+| D-14 | 2026-10-06 | Adapter rules adopted from the Box onboarding workstream (PR 2): resolve folders by family key through the private onboarding map or by Box folder id, never by building a path from a client number or name; check an attachment's SHA-256 against the private index of files already in Box before uploading; one upload call per new attachment with cached folder ids and no listing sweeps; matters without a provisioned folder are not auto-filed. | Client folders are being renamed in place, the migration already placed files in the tree, and Box API calls are a watched monthly budget. |
+| D-15 | 2026-10-06 | Reference extraction in the practice-KG adapter goes through `extractPracticeKgReferences` and the `PracticeKgMatterLookup` contract; the tagger's own identifier extraction stays as the port-level fallback for tests and for mail the KG helper does not cover. | One owner for the attorney's docket reference grammar (`<client>.<family><CC><nn>`, national-stage suffixes, foreign-agent references). |
+| D-16 | 2026-10-06 | Every run that calls Box appends one line to the shared private Box API-call ledger (workstream, run label, call count, UTC time, exact flag), and stops on any 429 or quota response. | Box usage is not visible in the console on this plan; the orchestrator meters all workstreams against a shared monthly ceiling, and no extra volume is purchased. |
 
 ## Acceptance Criteria
 

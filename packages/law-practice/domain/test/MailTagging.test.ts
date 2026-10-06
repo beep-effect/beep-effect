@@ -1,11 +1,14 @@
 import {
+  AttachmentSkipReason,
   CategoryAddCount,
   ContentSha256,
   combineTaggingRunReports,
   decisionCategories,
   defaultMailTaxonomy,
   emptyTaggingRunReport,
+  FilingDestination,
   isMailCategoryName,
+  MailConversationId,
   MailEnvelope,
   MailMessageId,
   MailTaxonomy,
@@ -13,6 +16,7 @@ import {
   MatterEvidence,
   MatterEvidenceKind,
   MatterEvidenceToken,
+  MatterIndex,
   MatterIndexEntry,
   MatterKey,
   MatterMatched,
@@ -30,6 +34,7 @@ import {
   TaggingPolicy,
   TaggingRunId,
   TaggingRunReport,
+  TaggingUndoReport,
   TagLedgerEntry,
   TagLedgerRecord,
   TagLedgerRecordJsonLine,
@@ -39,6 +44,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Effect, pipe } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -53,6 +59,8 @@ const runId = TaggingRunId.make("run-0001");
 const messageId = MailMessageId.make("msg-0001");
 const recordedAt = DateTime.makeUnsafe("2026-07-01T12:00:00.000Z");
 const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+const defaultPolicy = { confidenceThreshold: 0.8, ambiguityMargin: 0.15, maxAttachmentBytes: 52_428_800 };
 
 const patentEvidence = MatterEvidence.make({
   kind: "patent-number",
@@ -74,19 +82,15 @@ describe("MailTagging taxonomy", () => {
 
     expect(name).toBe("M: acme.10001");
     expect(S.is(MatterCategoryName)(name)).toBe(true);
-    expect(matterKeyFromCategoryName(name)).toStrictEqual(O.some(acme));
-    expect(O.map(matterKeyFromCategoryName("M: globex.20002"), matterCategoryName)).toStrictEqual(
-      O.some("M: globex.20002")
-    );
+    assertSome(matterKeyFromCategoryName(name), acme);
+    assertSome(matterKeyFromCategoryName("M: globex.20002"), globex);
   });
 
   it("recovers no matter key from practice, foreign, or malformed category names", () => {
-    expect(
-      A.every(
-        ["P: USPTO", "Docket - unverified", "M: 10001", "M:acme.10001", "m: acme.10001", "M: acme.10001 ", ""],
-        (name) => O.isNone(matterKeyFromCategoryName(name))
-      )
-    ).toBe(true);
+    A.forEach(
+      ["P: USPTO", "Docket - unverified", "M: 10001", "M:acme.10001", "m: acme.10001", "M: acme.10001 ", ""],
+      (name) => assertNone(matterKeyFromCategoryName(name))
+    );
   });
 
   it("owns matter and practice categories and nothing else", () => {
@@ -188,7 +192,7 @@ describe("MailTagging matching", () => {
 
       expect(envelope.categories).toStrictEqual(categories);
       expect(encoded.categories).toStrictEqual(categories);
-      expect(O.isNone(envelope.conversationId)).toBe(true);
+      assertNone(envelope.conversationId);
       expect(encoded.bodyPreview).toBeNull();
       expect(encoded.receivedAt).toBe("2026-07-01T12:00:00.000Z");
     })
@@ -215,8 +219,8 @@ describe("MailTagging matching", () => {
     Effect.fnUntraced(function* () {
       const decoded = yield* S.decodeEffect(TaggingPolicy)({});
 
-      expect({ ...decoded }).toStrictEqual({ confidenceThreshold: 0.8, ambiguityMargin: 0.15 });
-      expect({ ...TaggingPolicy.make({}) }).toStrictEqual({ confidenceThreshold: 0.8, ambiguityMargin: 0.15 });
+      expect({ ...decoded }).toStrictEqual(defaultPolicy);
+      expect({ ...TaggingPolicy.make({}) }).toStrictEqual(defaultPolicy);
     })
   );
 
@@ -255,6 +259,7 @@ describe("MailTagging ledgers", () => {
   const applied = TagLedgerEntry.make({
     runId,
     messageId,
+    conversationId: O.some(MailConversationId.make("conv-0001")),
     addedCategories: [matterCategoryName(acme), "P: USPTO"],
     decision: summarizeDecision(
       MatterMatched.make({ matterKey: acme, confidence: UnitInterval.make(0.95), evidence: [patentEvidence] })
@@ -283,6 +288,7 @@ describe("MailTagging ledgers", () => {
         runId: "run-0001",
         messageId: "msg-0001",
         internetMessageId: null,
+        conversationId: "conv-0001",
         addedCategories: ["M: acme.10001", "P: USPTO"],
         decision: { outcome: "MatterMatched", matterKey: "acme.10001", confidence: 0.95, reason: null },
         recordedAt: "2026-07-01T12:00:00.000Z",
@@ -314,7 +320,7 @@ describe("MailTagging ledgers", () => {
       const name = matterCategoryName(key);
 
       expect(isMailCategoryName(name)).toBe(true);
-      expect(matterKeyFromCategoryName(name)).toStrictEqual(O.some(key));
+      assertSome(matterKeyFromCategoryName(name), key);
       expect(S.is(OutlookCategoryPreset)(matterCategoryPreset(key))).toBe(true);
     },
     { arbitrary: fcRuns(50) }
@@ -323,24 +329,87 @@ describe("MailTagging ledgers", () => {
   it("rejects ledger lines that are not ours", () => {
     const decode = S.decodeUnknownOption(TagLedgerRecordJsonLine);
 
-    expect(O.isNone(decode("not json"))).toBe(true);
-    expect(O.isNone(decode('{"_tag":"TagMoved","runId":"run-0001"}'))).toBe(true);
-    expect(
-      O.isNone(
-        decode(
-          '{"_tag":"TagUndone","runId":"undo-0001","originalRunId":"run-0001","messageId":"msg-0001","removedCategories":["Docket - unverified"],"recordedAt":"2026-07-01T12:00:00.000Z"}'
-        )
+    assertNone(decode("not json"));
+    assertNone(decode('{"_tag":"TagMoved","runId":"run-0001"}'));
+    assertNone(
+      decode(
+        '{"_tag":"TagUndone","runId":"undo-0001","originalRunId":"run-0001","messageId":"msg-0001","removedCategories":["Docket - unverified"],"recordedAt":"2026-07-01T12:00:00.000Z"}'
       )
-    ).toBe(true);
+    );
   });
+
+  it.effect(
+    "defaults a missing conversation id to none when decoding an older ledger line",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* S.decodeEffect(TagLedgerRecordJsonLine)(
+        '{"_tag":"TagApplied","runId":"run-0001","messageId":"msg-0001","addedCategories":["P: USPTO"],"decision":{"outcome":"MatterUnmatched","reason":"no-signal"},"recordedAt":"2026-07-01T12:00:00.000Z"}'
+      );
+
+      assertTrue(TagLedgerRecord.guards.TagApplied(decoded));
+      assertNone(decoded.conversationId);
+    })
+  );
+
+  it("counts a matter without a folder as its own attachment skip reason", () => {
+    expect(AttachmentSkipReason.literals).toStrictEqual([
+      "inline",
+      "not-a-file",
+      "empty",
+      "too-large",
+      "no-folder",
+      "sender-not-routable",
+    ]);
+    expect(emptyTaggingRunReport("apply", runId).attachmentsSkipped["no-folder"]).toBe(0);
+  });
+
+  it.effect(
+    "round-trips an undo report",
+    Effect.fnUntraced(function* () {
+      const report = TaggingUndoReport.make({
+        mode: "apply",
+        runId: TaggingRunId.make("undo-0001"),
+        originalRunId: runId,
+        entries: 2,
+        messagesRestored: 1,
+        messagesMissing: 1,
+        categoriesRemoved: 2,
+        wrote: true,
+      });
+      const encoded = yield* S.encodeEffect(TaggingUndoReport)(report);
+
+      expect(encoded.originalRunId).toBe("run-0001");
+      expect(S.toEquivalence(TaggingUndoReport)(yield* S.decodeEffect(TaggingUndoReport)(encoded), report)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "defaults the unattributed matters and the change key, and routes needs-attorney to review",
+    Effect.fnUntraced(function* () {
+      const index = yield* S.decodeEffect(MatterIndex)({ entries: [], builtAt: "2026-07-01T12:00:00.000Z" });
+      const envelope = yield* S.decodeEffect(MailEnvelope)({
+        messageId: "msg-0001",
+        subject: "",
+        receivedAt: "2026-07-01T12:00:00.000Z",
+        hasAttachments: false,
+      });
+
+      expect(index.unattributed).toStrictEqual([]);
+      assertNone(envelope.changeKey);
+      expect(decisionCategories(MatterUnmatched.make({ reason: "needs-attorney" }))).toStrictEqual([
+        "P: Unmatched - review",
+      ]);
+      expect(FilingDestination.literals).toStrictEqual(["uspto-incoming", "from-client"]);
+      expect(emptyTaggingRunReport("apply", runId).repaired).toBe(0);
+    })
+  );
 
   it("summarizes an unmatched decision by reason only", () => {
     const summary = summarizeDecision(MatterUnmatched.make({ reason: "ambiguous" }));
 
     expect(summary.outcome).toBe("MatterUnmatched");
-    expect(summary.reason).toStrictEqual(O.some("ambiguous"));
-    expect(O.isNone(summary.matterKey)).toBe(true);
-    expect(O.isNone(summary.confidence)).toBe(true);
+    assertSome(summary.reason, "ambiguous");
+    assertNone(summary.matterKey);
+    assertNone(summary.confidence);
   });
 
   it("accepts only 64 lowercase hex characters as a content hash", () => {
@@ -369,12 +438,20 @@ describe("MailTagging run report", () => {
       ...empty,
       scanned,
       matched: scanned,
-      unmatched: { "no-signal": scanned, "below-threshold": 1, ambiguous: 0 },
+      unmatched: { "no-signal": scanned, "below-threshold": 1, ambiguous: 0, "needs-attorney": 0 },
       alreadyTagged: 1,
+      repaired: 0,
       categoryAdds: adds,
       attachmentsFiled: scanned,
       attachmentsDeduped: 2,
-      attachmentsSkipped: { inline: scanned, "not-a-file": 0, empty: 1, "too-large": 0 },
+      attachmentsSkipped: {
+        inline: scanned,
+        "not-a-file": 0,
+        empty: 1,
+        "too-large": 0,
+        "no-folder": 0,
+        "sender-not-routable": 0,
+      },
       wrote,
     });
   const count = (category: CategoryAddCount["category"], value: number): CategoryAddCount =>
@@ -389,12 +466,20 @@ describe("MailTagging run report", () => {
       runId,
       scanned: 0,
       matched: 0,
-      unmatched: { "no-signal": 0, "below-threshold": 0, ambiguous: 0 },
+      unmatched: { "no-signal": 0, "below-threshold": 0, ambiguous: 0, "needs-attorney": 0 },
       alreadyTagged: 0,
+      repaired: 0,
       categoryAdds: [],
       attachmentsFiled: 0,
       attachmentsDeduped: 0,
-      attachmentsSkipped: { inline: 0, "not-a-file": 0, empty: 0, "too-large": 0 },
+      attachmentsSkipped: {
+        inline: 0,
+        "not-a-file": 0,
+        empty: 0,
+        "too-large": 0,
+        "no-folder": 0,
+        "sender-not-routable": 0,
+      },
       wrote: false,
     });
     expect(emptyTaggingRunReport(runId)("dry-run")).toStrictEqual(emptyTaggingRunReport("dry-run", runId));
@@ -404,8 +489,15 @@ describe("MailTagging run report", () => {
     const total = combineTaggingRunReports(a, b);
 
     expect(total.scanned).toBe(3);
-    expect(total.unmatched).toStrictEqual({ "no-signal": 3, "below-threshold": 2, ambiguous: 0 });
-    expect(total.attachmentsSkipped).toStrictEqual({ inline: 3, "not-a-file": 0, empty: 2, "too-large": 0 });
+    expect(total.unmatched).toStrictEqual({ "no-signal": 3, "below-threshold": 2, ambiguous: 0, "needs-attorney": 0 });
+    expect(total.attachmentsSkipped).toStrictEqual({
+      inline: 3,
+      "not-a-file": 0,
+      empty: 2,
+      "too-large": 0,
+      "no-folder": 0,
+      "sender-not-routable": 0,
+    });
     expect(total.categoryAdds).toStrictEqual([count(matterCategoryName(acme), 1), count("P: USPTO", 3)]);
     expect(total.wrote).toBe(true);
     expect(total.mode).toBe("apply");

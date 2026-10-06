@@ -2030,6 +2030,12 @@
       ],
       "@beep/law-practice-domain/values/MailTagging": [
         "./packages/law-practice/domain/src/values/MailTagging/index.ts"
+      ],
+      "@beep/law-practice-server/MailTagging": [
+        "./packages/law-practice/server/src/MailTagging/index.ts"
+      ],
+      "@beep/law-practice-use-cases/MailTagging": [
+        "./packages/law-practice/use-cases/src/MailTagging/index.ts"
       ]
     }
   }

@@ -132,12 +132,13 @@ const sumCounts = <K extends string>(
  *   runId: "run-0001",
  *   scanned: 3,
  *   matched: 1,
- *   unmatched: { "no-signal": 1, "below-threshold": 1, ambiguous: 0 },
+ *   unmatched: { "no-signal": 1, "below-threshold": 1, ambiguous: 0, "needs-attorney": 0 },
  *   alreadyTagged: 0,
+ *   repaired: 0,
  *   categoryAdds: [{ category: "M: acme.10001", count: 1 }],
  *   attachmentsFiled: 0,
  *   attachmentsDeduped: 0,
- *   attachmentsSkipped: { inline: 0, "not-a-file": 0, empty: 0, "too-large": 0 },
+ *   attachmentsSkipped: { inline: 0, "not-a-file": 0, empty: 0, "too-large": 0, "no-folder": 0, "sender-not-routable": 0 },
  *   wrote: false
  * })
  * console.log(report.unmatched["below-threshold"]) // 1
@@ -165,7 +166,10 @@ export class TaggingRunReport extends S.Class<TaggingRunReport>($I`TaggingRunRep
       description: "Unmatched messages per reason.",
     }),
     alreadyTagged: S.Natural.annotateKey({
-      description: "Messages skipped because the tag ledger already covers them.",
+      description: "Messages skipped because the tag ledger covers them and its categories are present.",
+    }),
+    repaired: S.Natural.annotateKey({
+      description: "Messages whose ledgered categories were missing and were written again.",
     }),
     categoryAdds: S.Array(CategoryAddCount).annotateKey({
       description: "Category adds per owned category, sorted by category name.",
@@ -188,13 +192,20 @@ export class TaggingRunReport extends S.Class<TaggingRunReport>($I`TaggingRunRep
   })
 ) {}
 
-const zeroUnmatched: TaggingRunReport["unmatched"] = { "no-signal": 0, "below-threshold": 0, ambiguous: 0 };
+const zeroUnmatched: TaggingRunReport["unmatched"] = {
+  "no-signal": 0,
+  "below-threshold": 0,
+  ambiguous: 0,
+  "needs-attorney": 0,
+};
 
 const zeroAttachmentsSkipped: TaggingRunReport["attachmentsSkipped"] = {
   inline: 0,
   "not-a-file": 0,
   empty: 0,
   "too-large": 0,
+  "no-folder": 0,
+  "sender-not-routable": 0,
 };
 
 /**
@@ -230,6 +241,7 @@ export const emptyTaggingRunReport: {
       matched: 0,
       unmatched: zeroUnmatched,
       alreadyTagged: 0,
+      repaired: 0,
       categoryAdds: [],
       attachmentsFiled: 0,
       attachmentsDeduped: 0,
@@ -283,6 +295,7 @@ export const combineTaggingRunReports: {
       matched: self.matched + that.matched,
       unmatched: sumCounts(self.unmatched, that.unmatched),
       alreadyTagged: self.alreadyTagged + that.alreadyTagged,
+      repaired: self.repaired + that.repaired,
       categoryAdds: combineCategoryAdds(self.categoryAdds, that.categoryAdds),
       attachmentsFiled: self.attachmentsFiled + that.attachmentsFiled,
       attachmentsDeduped: self.attachmentsDeduped + that.attachmentsDeduped,
@@ -290,3 +303,65 @@ export const combineTaggingRunReports: {
       wrote: self.wrote || that.wrote,
     })
 );
+
+/**
+ * Counts-only outcome of one undo run.
+ *
+ * **Details**
+ *
+ * `entries` counts the active tag-ledger lines of the original run the undo
+ * considered. `messagesRestored` counts the messages that lost at least one
+ * category, `messagesMissing` the ones the mailbox no longer has.
+ *
+ * **Example** (Report a dry-run undo)
+ *
+ * ```ts
+ * import { TaggingRunId, TaggingUndoReport } from "@beep/law-practice-domain/values"
+ *
+ * const report = TaggingUndoReport.make({
+ *   mode: "dry-run",
+ *   runId: TaggingRunId.make("undo-0001"),
+ *   originalRunId: TaggingRunId.make("run-0001"),
+ *   entries: 2,
+ *   messagesRestored: 2,
+ *   messagesMissing: 0,
+ *   categoriesRemoved: 3,
+ *   wrote: false
+ * })
+ * console.log(report.categoriesRemoved) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TaggingUndoReport extends S.Class<TaggingUndoReport>($I`TaggingUndoReport`)(
+  {
+    mode: TaggingMode.annotateKey({
+      description: "Whether the undo only reported or also wrote.",
+    }),
+    runId: TaggingRunId.annotateKey({
+      description: "Undo run the report describes.",
+    }),
+    originalRunId: TaggingRunId.annotateKey({
+      description: "Run whose additions were undone.",
+    }),
+    entries: S.Natural.annotateKey({
+      description: "Active tag-ledger lines of the original run that were considered.",
+    }),
+    messagesRestored: S.Natural.annotateKey({
+      description: "Messages that had at least one owned category removed.",
+    }),
+    messagesMissing: S.Natural.annotateKey({
+      description: "Messages the mailbox no longer has.",
+    }),
+    categoriesRemoved: S.Natural.annotateKey({
+      description: "Owned categories removed across all messages.",
+    }),
+    wrote: S.Boolean.annotateKey({
+      description: "Whether the undo performed any write.",
+    }),
+  },
+  $I.annote("TaggingUndoReport", {
+    description: "Counts-only outcome of one undo run.",
+  })
+) {}

@@ -19,6 +19,7 @@ import {
   DocumentFolderId,
   InternetMessageId,
   MailAttachmentId,
+  MailConversationId,
   MailMessageId,
   TaggingRunId,
 } from "./MailTagging.ids.model.ts";
@@ -220,6 +221,11 @@ export class TagLedgerEntry extends S.TaggedClass<TagLedgerEntry>($I`TagLedgerEn
       .annotateKey({
         description: "RFC 5322 Message-ID of the tagged message, when known.",
       }),
+    conversationId: S.OptionFromNullOr(MailConversationId)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({
+        description: "Conversation the tagged message belongs to, when known; later replies carry the matter over.",
+      }),
     addedCategories: S.Array(MailCategoryName).annotateKey({
       description: "Owned categories this run added to the message.",
     }),
@@ -355,6 +361,42 @@ export const TagLedgerRecordJsonLine = S.fromJsonString(TagLedgerRecord).pipe(
 export type TagLedgerRecordJsonLine = typeof TagLedgerRecordJsonLine.Type;
 
 /**
+ * Subfolder of a matter's document folder an attachment is filed into.
+ *
+ * **Details**
+ *
+ * `uspto-incoming` is `05 USPTO Correspondence/01 Incoming` and `from-client`
+ * is `90 Client Exchange/01 From Client`. The sender picks the destination; a
+ * sender that is neither the USPTO nor a known contact of the matter has none.
+ *
+ * **Example** (Guard a filing destination)
+ *
+ * ```ts
+ * import { FilingDestination } from "@beep/law-practice-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(FilingDestination)("from-client")) // true
+ * console.log(S.is(FilingDestination)("from-opposing-counsel")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingDestination = LiteralKit(["uspto-incoming", "from-client"]).pipe(
+  $I.annoteSchema("FilingDestination", {
+    description: "Subfolder of a matter's document folder an attachment is filed into.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingDestination}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingDestination = typeof FilingDestination.Type;
+
+/**
  * SHA-256 of an attachment's bytes: 64 lowercase hex characters.
  *
  * **Example** (Reject a malformed content hash)
@@ -405,6 +447,7 @@ export type ContentSha256 = typeof ContentSha256.Type;
  * const entry = S.decodeUnknownSync(FilingLedgerEntry)({
  *   contentSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   matterKey: "acme.10001",
+ *   destination: "uspto-incoming",
  *   folderId: "100001",
  *   fileId: "200001",
  *   fileName: "office-action.pdf",
@@ -426,6 +469,9 @@ export class FilingLedgerEntry extends S.Class<FilingLedgerEntry>($I`FilingLedge
     }),
     matterKey: MatterKey.annotateKey({
       description: "Matter the attachment was filed under.",
+    }),
+    destination: FilingDestination.annotateKey({
+      description: "Subfolder of the matter the sender routed the attachment to.",
     }),
     folderId: DocumentFolderId.annotateKey({
       description: "Document-store folder the file was uploaded into.",
@@ -502,7 +548,14 @@ export type FilingLedgerEntryJsonLine = typeof FilingLedgerEntryJsonLine.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AttachmentSkipReason = LiteralKit(["inline", "not-a-file", "empty", "too-large"]).pipe(
+export const AttachmentSkipReason = LiteralKit([
+  "inline",
+  "not-a-file",
+  "empty",
+  "too-large",
+  "no-folder",
+  "sender-not-routable",
+]).pipe(
   $I.annoteSchema("AttachmentSkipReason", {
     description: "Why an attachment was not filed.",
   })

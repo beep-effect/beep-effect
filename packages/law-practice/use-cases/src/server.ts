@@ -22,6 +22,22 @@
  */
 export * as IrToLaw from "./IrToLaw/index.ts";
 /**
+ * Mail-tagging ports, pure matter tagger, tagging job, attachment filer, and
+ * undo exports.
+ *
+ * **Example** (Verify the tagger export)
+ *
+ * ```ts
+ * import * as MailTagging from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * console.log(Object.keys(MailTagging).includes("decideMatterTagging")) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * as MailTagging from "./MailTagging/index.ts";
+/**
  * Office-action review loop service contract exports.
  *
  * **Example** (Verify review factory export)

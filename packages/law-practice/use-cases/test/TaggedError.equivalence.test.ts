@@ -3,10 +3,12 @@ import { CandorRecordRepositoryUnavailable } from "@beep/law-practice-use-cases/
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { LegalPositionRecordRepositoryUnavailable } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import { LegalPositionRelatorAdmissionError } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy";
+import { MailTaggingPortError, MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { pipe } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const expectDeclaredEquivalence = <A>(same: (self: A, that: A) => boolean, first: A, second: A, different: A) => {
@@ -79,5 +81,30 @@ describe("law-practice use-case tagged-error declared equivalence", () => {
     const different = LegalPositionRelatorAdmissionError.make({ message: "Relator admission was rejected." });
 
     expectDeclaredEquivalence(same, first, second, different);
+  });
+
+  it("ignores MailTaggingPortError cause and compares diagnostic fields", () => {
+    const same = S.toEquivalence(MailTaggingPortError);
+    const first = MailTaggingPortError.during("Mailbox", "setCategories", "HTTP 503", { diagnostic: "first" });
+    const second = MailTaggingPortError.during("Mailbox", "setCategories", "HTTP 503", { diagnostic: "second" });
+    const different = MailTaggingPortError.during("DocumentStore", "upload", "HTTP 503", { diagnostic: "first" });
+
+    expectDeclaredEquivalence(same, first, second, different);
+  });
+
+  it("compares MailTaggingStateError by store, file, and line", () => {
+    const same = S.toEquivalence(MailTaggingStateError);
+    const first = MailTaggingStateError.corrupt("tag-ledger", "tag-ledger.jsonl", O.some(3));
+    const second = MailTaggingStateError.corrupt("tag-ledger", "tag-ledger.jsonl", O.some(3));
+    const different = MailTaggingStateError.corrupt("tag-ledger", "tag-ledger.jsonl", O.some(4));
+
+    expectDeclaredEquivalence(same, first, second, different);
+    pipe(
+      same(
+        MailTaggingStateError.unavailable("checkpoint", "checkpoint.json", "save", { diagnostic: "first" }),
+        MailTaggingStateError.unavailable("checkpoint", "checkpoint.json", "save", { diagnostic: "second" })
+      ),
+      assertTrue
+    );
   });
 });

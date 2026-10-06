@@ -43,6 +43,7 @@
     "./IrToLaw": "./src/IrToLaw/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
+    "./MailTagging": "./src/MailTagging/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
     "./test": "./src/test.ts",
