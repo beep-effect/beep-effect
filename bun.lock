@@ -890,6 +890,7 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@effect/platform-node-shared": "catalog:",
+        "@noble/hashes": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {

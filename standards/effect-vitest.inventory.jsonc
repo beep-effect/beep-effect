@@ -24958,6 +24958,27 @@
       "reason": "Native Bun child spawning, piped stdio and real termination/exit-code behavior are the test subjects; NodeServices supplies native process/path services. MemoryFileSystem is not a substitute."
     },
     {
+      "id": "EV010:packages/drivers/box-provisioning/test/BoxContentMigration.test.ts:12:@effect/platform-node-shared/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/box-provisioning",
+      "file": "packages/drivers/box-provisioning/test/BoxContentMigration.test.ts",
+      "line": 12,
+      "endLine": 12,
+      "symbol": "@effect/platform-node-shared/NodeFileSystem",
+      "occurrence": "v2:0e05763e5fcc752e4625053fb9f88b418835ccbb36c9b1342d9f817e582b0679",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node-shared/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/drivers/duckdb/test/DuckDb.service.test.ts:15:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
