@@ -21,6 +21,10 @@ const $I = $LawPracticeDomainId.create("values/KgAttributionSource");
  * - `filename` — docket parsed from the catalogued file name or path.
  * - `restored-name` — docket parsed from a recycle-bin restoration record's
  *   original name, so the file name itself was a `$R` stub.
+ * - `docket-register` — client supplied by the attorney's docket register, which
+ *   lists exactly one client for the document's docket.
+ * - `folder-path` — client number read from the attorney's own folder path
+ *   (`<client name> <client number>/<docket> - ...`).
  * - `text-reference` — client prefix read from a `<client>.<docket>` reference
  *   in the document's own extracted text.
  * - `family-consensus` — client inherited because every attributed document of
@@ -50,6 +54,8 @@ const $I = $LawPracticeDomainId.create("values/KgAttributionSource");
 export const KgAttributionSource = LiteralKit([
   "filename",
   "restored-name",
+  "docket-register",
+  "folder-path",
   "text-reference",
   "family-consensus",
   "client-map",

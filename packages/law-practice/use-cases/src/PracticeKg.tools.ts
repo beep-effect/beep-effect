@@ -741,6 +741,7 @@ export class PracticeKgMatterToolRow extends S.Class<PracticeKgMatterToolRow>($I
     applications: S.String,
     attributionSource: KgAttributionSource,
     client: S.NullOr(S.String),
+    clientName: S.NullOr(S.String),
     docket: S.NullOr(S.String),
     docketKey: S.NullOr(S.String),
     docketMatched: S.Boolean,
@@ -782,6 +783,7 @@ export const practiceKgMatterFieldTiers = defineFieldTiers({
     applications: PracticeKgMatterToolRow.fields.applications,
     attributionSource: PracticeKgMatterToolRow.fields.attributionSource,
     client: PracticeKgMatterToolRow.fields.client,
+    clientName: PracticeKgMatterToolRow.fields.clientName,
     docketKey: PracticeKgMatterToolRow.fields.docketKey,
     docketMatched: PracticeKgMatterToolRow.fields.docketMatched,
     epistemicStatus: PracticeKgMatterToolRow.fields.epistemicStatus,
@@ -834,7 +836,7 @@ const readTool = <Name extends string, Parameters extends S.Top, Success extends
  */
 export const KgClientsTool = readTool(
   "kg_clients",
-  "List client attribution. Attribution is sparse; docket families are the primary practice spine.",
+  "List client attribution. naturalKey is the client number; label is the client name when the attorney's docket register names the client, otherwise the number. Attribution is sparse; docket families are the primary practice spine.",
   BudgetParams,
   PracticeKgToolResult
 );
@@ -994,7 +996,7 @@ export const KgCandidateClaimsTool = readTool(
  */
 export const KgMatterLookupTool = readTool(
   "kg_matter_lookup",
-  "Resolve one reference from mail or a document to the practice matter it belongs to: client, client-keyed family, dockets, and the applications and patents filed from them. resolution is unique, ambiguous, or none; only unique is safe to act on, and a matter with no client or with recycled-unverified status needs a person to confirm it.",
+  "Resolve one reference from mail or a document to the practice matter it belongs to: client number, client name where the docket register gives one, client-keyed family, dockets, and the applications and patents filed from them. resolution is unique, ambiguous, or none; only unique is safe to act on, and a matter with no client or with recycled-unverified status needs a person to confirm it.",
   MatterLookupParams,
   PracticeKgToolResult
 );

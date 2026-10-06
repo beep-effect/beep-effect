@@ -1,10 +1,12 @@
 import {
+  applyPracticeKgPathEvidence,
   attributeDocuments,
   buildMatterTables,
   isRecycleStubPath,
   PracticeKgAttributeDocumentsInput,
   PracticeKgCatalogRow,
   PracticeKgDocketReferenceRow,
+  PracticeKgDocketRegisterRow,
   PracticeKgEdgeRow,
   PracticeKgEnrichmentRow,
   PracticeKgMatterGraph,
@@ -61,8 +63,25 @@ const enrichment = (
 
 const attribute = (
   rows: ReadonlyArray<PracticeKgCatalogRow>,
-  references: ReadonlyArray<PracticeKgDocketReferenceRow>
-) => attributeDocuments(PracticeKgAttributeDocumentsInput.make({ catalogRows: rows, docketReferences: references }));
+  references: ReadonlyArray<PracticeKgDocketReferenceRow>,
+  registerRows: ReadonlyArray<PracticeKgDocketRegisterRow> = []
+) =>
+  attributeDocuments(
+    PracticeKgAttributeDocumentsInput.make({ catalogRows: rows, docketReferences: references, registerRows })
+  );
+
+const registerRow = (client: string, docket: string, clientName: string | null = null): PracticeKgDocketRegisterRow =>
+  PracticeKgDocketRegisterRow.make({ client, clientName, docket });
+
+// A row as the catalog query returns it for a folded-in run: unsorted, no docket, no family.
+const runRow = (digest: string, path: string): PracticeKgCatalogRow =>
+  PracticeKgCatalogRow.make({
+    ...catalogRow(digest, { path }),
+    category: "unsorted",
+    docketFamily: null,
+    runFolded: true,
+    runLabel: "2026-10-working-files",
+  });
 
 describe("practice KG family attribution", () => {
   it("recognises recycle-bin stubs by file name under either path separator", () => {
@@ -106,6 +125,79 @@ describe("practice KG family attribution", () => {
       "restored-name",
       null,
       "20001US04",
+    ]);
+  });
+
+  it("reads one docket and one client from a folded-in run row's folder path", () => {
+    const rows = applyPracticeKgPathEvidence([
+      runRow("keyed", "Clients/Example Client 11111/20001US01 - 11111.00012/Filing receipt.txt"),
+      runRow("no-client", "Loose files/40004ZA01/Notice.txt"),
+      runRow("cited-elsewhere", "Clients/Example Client 11111/20001US01 - 11111.00012/re 22222.30002US01.txt"),
+      runRow("two-dockets", "Clients/Example Client 11111/20001US01 and 20001US02/Combined.txt"),
+      runRow("no-docket", "Clients/Example Client 11111/General/Engagement letter.txt"),
+    ]);
+    expect(
+      A.map(rows, (row) => [row.digest, row.category, row.docket, row.docketFamily, row.folderClient])
+    ).toStrictEqual([
+      ["keyed", "docket", "20001US01", "20001", "11111"],
+      ["no-client", "docket", "40004ZA01", "40004", null],
+      // the file name cites another client's matter: the folder's docket stands, no client is taken
+      ["cited-elsewhere", "docket", "20001US01", "20001", null],
+      // ambiguous paths are left exactly as they were
+      ["two-dockets", "unsorted", null, null, null],
+      ["no-docket", "unsorted", null, null, null],
+    ]);
+  });
+
+  it("leaves organizer rows and rows that already carry a docket or family untouched", () => {
+    const path = "Clients/Example Client 11111/20001US01 - 11111.00012/Filing receipt.txt";
+    const organized = PracticeKgCatalogRow.make({ ...runRow("organized", path), runFolded: false });
+    const docketed = PracticeKgCatalogRow.make({ ...runRow("docketed", path), docket: "30002US01" });
+    const familied = PracticeKgCatalogRow.make({ ...runRow("familied", path), docketFamily: "30002" });
+    expect(applyPracticeKgPathEvidence([organized, docketed, familied])).toStrictEqual([organized, docketed, familied]);
+  });
+
+  it("ranks the docket register over the folder path, and the folder path over text references", () => {
+    const folder = (digest: string, docket: string, folderClient: string): PracticeKgCatalogRow =>
+      PracticeKgCatalogRow.make({ ...catalogRow(digest, { docket }), folderClient });
+    const attributions = attribute(
+      [
+        folder("register-wins", "20001US01", "22222"),
+        folder("folder-wins", "20001US02", "22222"),
+        catalogRow("text-wins", { client: "mapped-client", docket: "20001US03" }),
+        catalogRow("register-shared", { docket: "20001US04" }),
+        catalogRow("national-stage", { docket: "20001WO05-US1" }),
+        // a family-level document has no docket for the register to name
+        PracticeKgCatalogRow.make({ ...catalogRow("family-level"), docketFamily: "30002" }),
+        PracticeKgCatalogRow.make({ ...catalogRow("consensus", { docket: "40004US02" }), docketFamily: "40004" }),
+        PracticeKgCatalogRow.make({
+          ...catalogRow("consensus-voter", { docket: "40004US01" }),
+          docketFamily: "40004",
+          folderClient: "44444",
+        }),
+      ],
+      [
+        reference("register-wins", "33333", "20001US01"),
+        reference("folder-wins", "33333", "20001US02"),
+        reference("text-wins", "33333", "20001US03"),
+      ],
+      [
+        registerRow("11111", "20001us01 "),
+        // listed under two clients: the register cannot decide this docket
+        registerRow("11111", "20001US04"),
+        registerRow("55555", "20001US04"),
+        registerRow("66666", "20001WO05"),
+      ]
+    );
+    expect(A.map(attributions, (row) => [row.digest, row.attributionSource, row.familyKey])).toStrictEqual([
+      ["consensus", "family-consensus", "44444.40004"],
+      ["consensus-voter", "folder-path", "44444.40004"],
+      ["family-level", "filename", "30002"],
+      ["folder-wins", "folder-path", "22222.20001"],
+      ["national-stage", "docket-register", "66666.20001"],
+      ["register-shared", "filename", "20001"],
+      ["register-wins", "docket-register", "11111.20001"],
+      ["text-wins", "text-reference", "33333.20001"],
     ]);
   });
 
@@ -208,6 +300,8 @@ describe("practice KG matter tables", () => {
 
   it("derives matters, bare dockets, and filed numbers from membership edges only", () => {
     const keyed = node("docket_family", "11111.20001", { client: "11111", docketFamily: "20001" });
+    const renamed = node("docket_family", "22222.20001", { client: "22222", docketFamily: "20001" });
+    const unnamed = node("docket_family", "33333.20001", { client: "33333", docketFamily: "20001" });
     const bare = node("docket_family", "20001", { docketFamily: "20001" });
     const empty = node("docket_family", "30002");
     const keyedDocket = node("docket", "11111.20001US01", { client: "11111", docketFamily: "20001" });
@@ -228,9 +322,37 @@ describe("practice KG matter tables", () => {
           edge(keyed, "family_document", document),
           edge(application, "mentioned_in_family", bare),
         ],
-        nodes: [keyed, bare, empty, keyedDocket, bareDocket, application, patent, directPatent, document],
+        nodes: [
+          keyed,
+          renamed,
+          unnamed,
+          bare,
+          empty,
+          keyedDocket,
+          bareDocket,
+          application,
+          patent,
+          directPatent,
+          document,
+        ],
+        registerRows: [
+          registerRow("11111", "20001US01", " Example Client "),
+          registerRow("11111", "20001US02", "Example Client"),
+          registerRow("11111", "20001US03"),
+          // one client number under two names is left unnamed rather than guessed
+          registerRow("22222", "20001US04", "Second Client"),
+          registerRow("22222", "20001US05", "Second Client LLC"),
+          registerRow("33333", "20001US06", "  "),
+        ],
       })
     );
+    expect(A.map(tables.matters, (matter) => [matter.familyKey, matter.clientName])).toStrictEqual([
+      ["11111.20001", "Example Client"],
+      ["20001", null],
+      ["22222.20001", null],
+      ["30002", null],
+      ["33333.20001", null],
+    ]);
     expect(
       A.map(tables.matters, (matter) => [
         matter.familyKey,
@@ -242,7 +364,9 @@ describe("practice KG matter tables", () => {
     ).toStrictEqual([
       ["11111.20001", "20001", "11111", 1, 2],
       ["20001", "20001", null, 1, 0],
+      ["22222.20001", "20001", "22222", 0, 0],
       ["30002", "30002", null, 0, 0],
+      ["33333.20001", "20001", "33333", 0, 0],
     ]);
     expect(
       A.map(tables.dockets, (docket) => [

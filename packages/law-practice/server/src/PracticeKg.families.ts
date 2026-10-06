@@ -9,11 +9,13 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { KgAttributionSource } from "@beep/law-practice-domain/values";
+import { extractPracticeKgPathEvidence } from "@beep/law-practice-use-cases/server";
 import * as O from "@beep/utils/Option";
-import { HashSet, MutableHashMap, Order, pipe } from "effect";
+import { Effect, flow, HashSet, MutableHashMap, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { PracticeKgDocketRegisterRow, practiceKgRegisterDocketClients } from "./PracticeKg.register.ts";
 import { PracticeKgCatalogRow, PracticeKgDocketReferenceRow, PracticeKgNumberMentionRow } from "./PracticeKg.rows.ts";
 import type { PracticeKgEnrichmentRow } from "./PracticeKg.rows.ts";
 
@@ -202,8 +204,10 @@ export const isRecycleStubPath = (relativePath: string): boolean => recycleStubP
 
 const keyedWithClient = (client: string | null, bare: string): string => (client === null ? bare : `${client}.${bare}`);
 
-const uniqueMember = (values: HashSet.HashSet<string>): O.Option<string> =>
-  pipe(values, A.fromIterable, (members) => (A.length(members) === 1 ? A.head(members) : O.none()));
+const soleOf = (values: ReadonlyArray<string>): O.Option<string> =>
+  A.length(values) === 1 ? A.head(values) : O.none();
+
+const uniqueMember: (values: HashSet.HashSet<string>) => O.Option<string> = flow(A.fromIterable, soleOf);
 
 const sortedUnique = (values: Iterable<string>): ReadonlyArray<string> =>
   A.sort(A.dedupe(A.fromIterable(values)), Order.String);
@@ -278,8 +282,8 @@ const clientsByDigestFor = (
 };
 
 /**
- * Input to {@link attributeDocuments}: the catalog rows and the client-prefixed
- * references scanned from them.
+ * Input to {@link attributeDocuments}: the catalog rows, the client-prefixed
+ * references scanned from them, and the attorney's docket register.
  *
  * **Example** (Make an empty attribution input)
  *
@@ -288,7 +292,7 @@ const clientsByDigestFor = (
  *
  * const input = PracticeKgAttributeDocumentsInput.make({ catalogRows: [], docketReferences: [] })
  *
- * console.log(input.catalogRows.length) // 0
+ * console.log(input.registerRows.length) // 0
  * ```
  *
  * @category models
@@ -300,9 +304,12 @@ export class PracticeKgAttributeDocumentsInput extends S.Class<PracticeKgAttribu
   {
     catalogRows: S.Array(PracticeKgCatalogRow),
     docketReferences: S.Array(PracticeKgDocketReferenceRow),
+    registerRows: S.Array(PracticeKgDocketRegisterRow).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<PracticeKgDocketRegisterRow>()))
+    ),
   },
   $I.annote("PracticeKgAttributeDocumentsInput", {
-    description: "Catalog rows plus the client-prefixed docket references scanned from their text.",
+    description: "Catalog rows, the client-prefixed docket references scanned from their text, and register rows.",
   })
 ) {}
 
@@ -336,6 +343,171 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
   })
 ) {}
 
+const afterFamilyPattern = /[^0-9].*$/u;
+
+// `<client>.<family>` gives its client only when it names the row's own family:
+// a file name can cite another client's matter beside the folder's docket.
+const folderClientFor = (familyKeys: ReadonlyArray<string>, family: string): string | null =>
+  pipe(
+    soleOf(familyKeys),
+    O.filter(Str.endsWith(`.${family}`)),
+    O.map((familyKey) => Str.slice(0, Str.length(familyKey) - Str.length(family) - 1)(familyKey)),
+    O.getOrNull
+  );
+
+const withPathEvidence = (row: PracticeKgCatalogRow): PracticeKgCatalogRow => {
+  const evidence = extractPracticeKgPathEvidence(row.sourceRelativePath);
+  return pipe(
+    soleOf(evidence.dockets),
+    O.match({
+      onNone: () => row,
+      onSome: (docket) => {
+        const docketFamily = docket.replace(afterFamilyPattern, "");
+        return PracticeKgCatalogRow.make({
+          ...row,
+          category: "docket",
+          docket,
+          docketFamily,
+          folderClient: folderClientFor(evidence.familyKeys, docketFamily),
+        });
+      },
+    })
+  );
+};
+
+/**
+ * Read docket and client evidence from the folder paths of folded-in run rows.
+ *
+ * **Details**
+ *
+ * Only rows flagged `runFolded` that carry no docket and no family are read;
+ * organizer rows are never touched. The row's source path goes through
+ * `extractPracticeKgPathEvidence`:
+ *
+ * - exactly one docket in the path becomes the row's docket, its leading
+ *   digits become the family, and the row is filed as a `docket` document so
+ *   the reference scans read it;
+ * - exactly one `<client>.<family>` key for that family becomes the row's
+ *   `folderClient`;
+ * - a path naming several dockets is ambiguous and the row is left as it was,
+ *   and several client keys leave `folderClient` null. Nothing is guessed.
+ *
+ * **Example** (Read a working-folder path)
+ *
+ * ```ts
+ * import { applyPracticeKgPathEvidence } from "../../src/PracticeKg.families.ts"
+ * import { PracticeKgCatalogRow } from "../../src/PracticeKg.rows.ts"
+ *
+ * const [row] = applyPracticeKgPathEvidence([
+ *   PracticeKgCatalogRow.make({
+ *     category: "unsorted",
+ *     client: null,
+ *     digest: "sha256:9f2c",
+ *     docket: null,
+ *     docketFamily: null,
+ *     effectiveName: "Filing.pdf",
+ *     mtimeIso: "2026-01-02T03:04:05.000Z",
+ *     organizedRelativePath: null,
+ *     restored: false,
+ *     runFolded: true,
+ *     runLabel: "2026-10-working-files",
+ *     sizeBytes: 1,
+ *     sourceLabel: "source-b",
+ *     sourceOriginChain: "2026-10-working-files:source-b:Clients/Example Client 12345/10008US01 - 12345.00053/Filing.pdf",
+ *     sourceRelativePath: "Clients/Example Client 12345/10008US01 - 12345.00053/Filing.pdf"
+ *   })
+ * ])
+ *
+ * console.log(row?.docket, row?.docketFamily, row?.folderClient) // "10008US01" "10008" "12345"
+ * ```
+ *
+ * @param catalogRows - Catalog rows as read from the corpus catalog.
+ * @returns The same rows, in order, with path evidence filled in where it is unambiguous.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const applyPracticeKgPathEvidence = (
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>
+): ReadonlyArray<PracticeKgCatalogRow> =>
+  A.map(catalogRows, (row) =>
+    row.runFolded && row.docket === null && row.docketFamily === null ? withPathEvidence(row) : row
+  );
+
+type DirectClient = { readonly client: string; readonly source: KgAttributionSource };
+
+type ClientLookup = (row: PracticeKgCatalogRow) => O.Option<string>;
+
+// The register is keyed by docket code; a national-stage docket such as
+// `10109WO02-US1` also answers to its base code, as text references do.
+const registerClientLookup = (registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>): ClientLookup => {
+  const clientOf = practiceKgRegisterDocketClients(registerRows);
+  return (row) =>
+    pipe(
+      O.fromNullishOr(row.docket),
+      O.flatMap((docket) =>
+        pipe(
+          clientOf(docket),
+          O.orElse(() => pipe(Str.split(docket, "-"), A.head, O.flatMap(clientOf)))
+        )
+      )
+    );
+};
+
+const folderClientOf: ClientLookup = (row) => O.fromNullishOr(row.folderClient);
+
+const tagged =
+  (source: KgAttributionSource) =>
+  (client: string): DirectClient => ({ client, source });
+
+/*
+ * Attribution precedence, strongest first. The first three are a document's
+ * own direct evidence and are what votes in family consensus:
+ *
+ *   1. docket-register  - the register lists exactly one client for the docket
+ *   2. folder-path      - the attorney's folder path names one client
+ *   3. text-reference   - the document's text names one client for its family
+ *   4. client-map       - the organizer's source-label map
+ *   5. family-consensus - every direct-evidence document of the family agrees
+ *   6. filename / restored-name - no client; the bare family
+ */
+const directClientLookup =
+  (registerClient: ClientLookup, textClient: ClientLookup) =>
+  (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+    pipe(
+      O.map(registerClient(row), tagged("docket-register")),
+      O.orElse(() => O.map(folderClientOf(row), tagged("folder-path"))),
+      O.orElse(() => O.map(textClient(row), tagged("text-reference")))
+    );
+
+const familyVotes = (
+  catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
+  directClient: (row: PracticeKgCatalogRow) => O.Option<DirectClient>
+): MutableHashMap.MutableHashMap<string, HashSet.HashSet<string>> => {
+  const votes = MutableHashMap.empty<string, HashSet.HashSet<string>>();
+  const voters = A.filter(catalogRows, (row) => !isRecycleStubPath(row.sourceRelativePath));
+  A.forEach(voters, (row) => {
+    const vote = O.all({ direct: directClient(row), family: O.fromNullishOr(row.docketFamily) });
+    if (O.isSome(vote)) {
+      const { direct, family } = vote.value;
+      MutableHashMap.set(
+        votes,
+        family,
+        HashSet.add(
+          pipe(
+            MutableHashMap.get(votes, family),
+            O.getOrElse(() => HashSet.empty<string>())
+          ),
+          direct.client
+        )
+      );
+    }
+  });
+  return votes;
+};
+
+const fallbackClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+  O.map(O.fromNullishOr(row.client), tagged("client-map"));
+
 /**
  * Attribute every catalogued document to a client-keyed family and docket.
  *
@@ -343,20 +515,24 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
  *
  * The organizer keys families on the bare docket number parsed from file names,
  * which collapses two clients sharing a docket number into one family. This pass
- * restores the client dimension deterministically, with no model in the loop:
+ * restores the client dimension deterministically, with no model in the loop.
+ * The first source that answers wins:
  *
- * 1. a document whose own text names exactly one `<client>.<family>` for its
- *    family takes that client (`text-reference`); for a document with a
- *    docket code only references naming that exact docket count, so citing
- *    another client's matter under the same family number never moves it;
- * 2. otherwise an organizer client-map value is used (`client-map`);
- * 3. otherwise, when every text-attributed, non-recycled document of the bare
- *    family agrees on one client, the document inherits it
- *    (`family-consensus`);
- * 4. otherwise the document stays in the bare, unattributed family with its
+ * 1. the attorney's docket register lists exactly one client for the
+ *    document's docket (`docket-register`);
+ * 2. the document's folder path in the attorney's working files names one
+ *    client (`folder-path`);
+ * 3. the document's own text names exactly one `<client>.<family>` for its
+ *    family (`text-reference`); for a document with a docket code only
+ *    references naming that exact docket count, so citing another client's
+ *    matter under the same family number never moves it;
+ * 4. an organizer client-map value (`client-map`);
+ * 5. every non-recycled document of the bare family that has evidence from
+ *    steps 1 to 3 agrees on one client (`family-consensus`);
+ * 6. otherwise the document stays in the bare, unattributed family with its
  *    file-name source (`filename` or `restored-name`).
  *
- * Recycle-bin `$R` stubs never vote in step 3. Output is ordered by digest.
+ * Recycle-bin `$R` stubs never vote in step 5. Output is ordered by digest.
  *
  * **Example** (Attribute an empty catalog)
  *
@@ -368,7 +544,7 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
  * console.log(attributeDocuments(PracticeKgAttributeDocumentsInput.make({ catalogRows: [], docketReferences: [] })).length) // 0
  * ```
  *
- * @param input - Digest-deduplicated catalog rows and the client-prefixed references scanned from them.
+ * @param input - Digest-deduplicated catalog rows, the client-prefixed references scanned from them, and register rows.
  * @returns One attribution per catalog row, ordered by digest.
  * @category use-cases
  * @since 0.0.0
@@ -376,55 +552,39 @@ export class PracticeKgResolveAnchorsInput extends S.Class<PracticeKgResolveAnch
 export const attributeDocuments = (
   input: PracticeKgAttributeDocumentsInput
 ): ReadonlyArray<PracticeKgDocumentAttribution> => {
-  const { catalogRows, docketReferences } = input;
+  const { catalogRows, docketReferences, registerRows } = input;
   const rowsByDigest = MutableHashMap.fromIterable(A.map(catalogRows, (row) => [row.digest, row] as const));
   const clientsByDigest = clientsByDigestFor(rowsByDigest, docketReferences);
-  const ownClient = (row: PracticeKgCatalogRow): O.Option<string> =>
+  const textClient: ClientLookup = (row) =>
     pipe(MutableHashMap.get(clientsByDigest, row.digest), O.flatMap(uniqueMember));
-
-  const votesByFamily = MutableHashMap.empty<string, HashSet.HashSet<string>>();
-  A.forEach(catalogRows, (row) => {
-    const own = ownClient(row);
-    if (row.docketFamily !== null && O.isSome(own) && !isRecycleStubPath(row.sourceRelativePath)) {
-      MutableHashMap.set(
-        votesByFamily,
-        row.docketFamily,
-        HashSet.add(
-          pipe(
-            MutableHashMap.get(votesByFamily, row.docketFamily),
-            O.getOrElse(() => HashSet.empty<string>())
-          ),
-          own.value
-        )
-      );
-    }
-  });
-  const consensusFor = (family: string): O.Option<string> =>
-    pipe(MutableHashMap.get(votesByFamily, family), O.flatMap(uniqueMember));
+  const directClient = directClientLookup(registerClientLookup(registerRows), textClient);
+  const votesByFamily = familyVotes(catalogRows, directClient);
+  const consensusClient = (row: PracticeKgCatalogRow): O.Option<DirectClient> =>
+    pipe(
+      O.fromNullishOr(row.docketFamily),
+      O.flatMap((family) => MutableHashMap.get(votesByFamily, family)),
+      O.flatMap(uniqueMember),
+      O.map(tagged("family-consensus"))
+    );
 
   const attributeRow = (row: PracticeKgCatalogRow): PracticeKgDocumentAttribution => {
-    const fallbackSource: KgAttributionSource = row.restored ? "restored-name" : "filename";
-    const own = ownClient(row);
-    const resolved: { readonly client: string | null; readonly source: KgAttributionSource } = O.isSome(own)
-      ? { client: own.value, source: "text-reference" }
-      : row.client !== null
-        ? { client: row.client, source: "client-map" }
-        : pipe(
-            O.fromNullishOr(row.docketFamily),
-            O.flatMap(consensusFor),
-            O.match({
-              onNone: () => ({ client: null, source: fallbackSource }),
-              onSome: (client) => ({ client, source: "family-consensus" as const }),
-            })
-          );
+    const resolved = pipe(
+      directClient(row),
+      O.orElse(() => fallbackClient(row)),
+      O.orElse(() => consensusClient(row))
+    );
+    const client = O.getOrNull(O.map(resolved, (direct) => direct.client));
     return PracticeKgDocumentAttribution.make({
-      attributionSource: resolved.source,
-      client: resolved.client,
+      attributionSource: pipe(
+        O.map(resolved, (direct) => direct.source),
+        O.getOrElse((): KgAttributionSource => (row.restored ? "restored-name" : "filename"))
+      ),
+      client,
       digest: row.digest,
       docket: row.docket,
-      docketKey: row.docket === null ? null : keyedWithClient(resolved.client, row.docket),
+      docketKey: row.docket === null ? null : keyedWithClient(client, row.docket),
       family: row.docketFamily,
-      familyKey: row.docketFamily === null ? null : keyedWithClient(resolved.client, row.docketFamily),
+      familyKey: row.docketFamily === null ? null : keyedWithClient(client, row.docketFamily),
       recycled: isRecycleStubPath(row.sourceRelativePath),
     });
   };
