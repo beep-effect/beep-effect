@@ -129,6 +129,7 @@ import {
   yeetRedSetKey,
   yeetWaveRedSetKey,
 } from "./Remediation.ts";
+import { renderYeetReviewWindowHold } from "./ReviewWindow.ts";
 import {
   deriveSettleVerdict,
   readYeetChangedPaths,
@@ -170,6 +171,7 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
 import type { YeetBaseConflictWalk } from "./Remediation.ts";
+import type { YeetReviewWindow } from "./ReviewWindow.ts";
 import type { YeetStatusReviewThread } from "./Status.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
@@ -1252,10 +1254,12 @@ const defaultWaveRerunCommand = "bun run beep yeet monitor --until-ready";
 const bindMonitorJobPullRequest = (context: RepoRunContext, prNumber: number) =>
   updateProofJobBookkeeping(context.repoRoot, (launcher, jobId) => launcher.bindPullRequest(jobId, prNumber));
 
-const renderMergeReadyGateDetail = (mergeReady: YeetMergeReady): string =>
+const renderMergeReadyGateDetail = (mergeReady: YeetMergeReady, reviewWindow: O.Option<YeetReviewWindow>): string =>
   O.match(mergeReady.failing, {
-    onNone: () => "[yeet] merge-ready: yes; every hard criterion is green; awaiting the operator's merge",
-    onSome: (failing) => `[yeet] not merge-ready: blocked on ${failing}`,
+    onNone: () =>
+      "[yeet] merge-ready: yes; every hard criterion is green and the review window has elapsed; re-read the review threads, then merge",
+    onSome: (failing) =>
+      `[yeet] not merge-ready: blocked on ${failing}${renderYeetReviewWindowHold(mergeReady.failing, reviewWindow)}`,
   });
 
 const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
@@ -1263,7 +1267,7 @@ const renderMergeReadyGate = (snapshot: YeetStatusSnapshot): string =>
     snapshot.mergeReady,
     O.match({
       onNone: () => "[yeet] merge readiness is unknown; the PR could not be read",
-      onSome: renderMergeReadyGateDetail,
+      onSome: (mergeReady) => renderMergeReadyGateDetail(mergeReady, snapshot.remote.reviewWindow),
     })
   );
 

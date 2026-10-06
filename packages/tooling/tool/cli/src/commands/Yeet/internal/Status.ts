@@ -40,6 +40,13 @@ import {
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
 import {
+  readYeetReviewWindow,
+  renderYeetReviewWindowHold,
+  YeetReviewWindow,
+  yeetReviewWindowDue,
+  yeetReviewWindowElapsed,
+} from "./ReviewWindow.ts";
+import {
   mergeReadyCriterionHolds,
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -309,6 +316,9 @@ export class YeetStatusRemote extends S.Class<YeetStatusRemote>($I`YeetStatusRem
     rerunFailedCommand: S.optionalKey(S.String),
     rerunFailedDecision: S.optionalKey(S.String),
     reviewDecision: S.optionalKey(S.String),
+    // The review window of the merge gate, read only once it is the last
+    // criterion standing; absent means unread, which never counts as elapsed.
+    reviewWindow: YeetReviewWindow.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     state: S.optionalKey(S.String),
     url: S.optionalKey(S.String),
   },
@@ -1461,7 +1471,9 @@ const STAGE_AND_PUBLISH_COMMAND =
   'stage intended files, then run `bun run beep yeet publish --staged-only --message "..."`';
 const OPEN_PULL_REQUEST_COMMAND =
   'run `bun run beep yeet publish --message "..."` to open the draft PR and submit the readiness monitor';
-const MERGE_READY_COMMAND = "confirm GitHub mergeability, then merge the PR";
+const MERGE_READY_COMMAND = "re-read the review threads, confirm GitHub mergeability, then merge the PR";
+const REVIEW_WINDOW_COMMAND =
+  "wait for the review window, then re-run `bun run beep yeet status --remote`; never merge while it is open or unknown";
 const REPLY_COMMAND = "run `bun run beep yeet reply` to answer the outstanding review threads";
 // No review-bot gate here: which bots review a pull request rotates with the
 // operator's quota, so the suggested closeout gates only on review threads.
@@ -1562,7 +1574,9 @@ const firstFailingCriterion = (criteria: YeetMergeReadyCriteria): O.Option<YeetM
  * Status already fetches everything the protocol asks a human to read, so the
  * only thing missing was a name for the answer. Pull request state, draft state,
  * current-head closeout, required checks, threads, mergeability, merge state,
- * and review decision are hard criteria. A missing closeout artifact is its own
+ * review decision, and the review window are hard criteria. The review window
+ * holds only when `remote.reviewWindow` carries an elapsed read; an unread or
+ * unknown window blocks. A missing closeout artifact is its own
  * blocker while the live thread criterion continues to report only the state it
  * knows. A present closeout satisfies `closeout-run` only when its recorded
  * reviewed head equals the current remote head; legacy headless and stale
@@ -1621,17 +1635,43 @@ export const deriveYeetMergeReady: {
     mergeable: remote.mergeable === "MERGEABLE",
     mergeStateAcceptable: mergeStateIsAcceptable(remote),
     reviewDecisionAcceptable: reviewDecisionIsAcceptable(remote),
+    reviewWindowElapsed: yeetReviewWindowElapsed(remote.reviewWindow),
     greptileScore: closeout.greptileScore,
   });
   const failing = firstFailingCriterion(criteria);
   return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
 });
 
+// The review window is read lazily, once it is the only criterion left: the
+// read costs REST calls on every poll, and the window is named as the blocker
+// only when nothing else blocks. A read that fails comes back `unknown`, which
+// holds the gate exactly as an open window does.
+const withReviewWindow = Effect.fn("YeetStatus.withReviewWindow")(function* (
+  context: RepoRunContext,
+  closeout: YeetStatusArtifact,
+  remote: YeetStatusRemote
+) {
+  const target = pipe(
+    deriveYeetMergeReady(closeout, remote),
+    O.filter((ready) => yeetReviewWindowDue(ready.criteria)),
+    O.flatMap(() => O.all({ prNumber: O.fromUndefinedOr(remote.number), headSha: remote.headSha }))
+  );
+  if (O.isNone(target)) return remote;
+  const reviewWindow = yield* readYeetReviewWindow(context, target.value);
+  return YeetStatusRemote.make({ ...remote, reviewWindow: O.some(reviewWindow) });
+});
+
 // GitHub reports a draft pull request's merge state as `DRAFT`, so on a draft
 // the merge-state criterion fails for the same reason `not-draft` does and says
 // nothing about the base. Mergeability (`MERGEABLE` vs `CONFLICTING`) still
 // carries the base-conflict signal on a draft.
-const draftMaskedCriteria: ReadonlyArray<YeetMergeReadyCriterion> = ["not-draft", "merge-state-acceptable"];
+// The review window starts when the draft is flipped, so on a draft it has not
+// begun and cannot be the reason the flip is withheld.
+const draftMaskedCriteria: ReadonlyArray<YeetMergeReadyCriterion> = [
+  "not-draft",
+  "merge-state-acceptable",
+  "review-window-elapsed",
+];
 
 /**
  * Whether a draft pull request is blocked by its draft flag alone.
@@ -1641,9 +1681,11 @@ const draftMaskedCriteria: ReadonlyArray<YeetMergeReadyCriterion> = ["not-draft"
  * True when the pull request is a draft, its merge state is `DRAFT` or an
  * accepted state, and every other hard criterion holds: the closeout bound the
  * current head, the required checks are green, every review thread is answered,
- * it is mergeable, and the review decision is acceptable. `monitor --until-ready`
- * ends `ready-pending-flip` on it (push-first-publish D9) and leaves the flip to
- * `yeet ready`.
+ * it is mergeable, and the review decision is acceptable. The review window is
+ * not asked of a draft: it starts at the flip. `monitor --until-ready` ends
+ * `ready-pending-flip` on it (push-first-publish D9) and leaves the flip to
+ * `yeet ready`; the owner should have flipped at content-final, before the
+ * checks finished (review-window ruling, 2026-10-06).
  *
  * **Example** (A green draft is pending its flip)
  *
@@ -1699,13 +1741,16 @@ export const deriveYeetReadyPendingFlip: {
 // reviewers on a branch that cannot merge either way. A `threads-resolved`
 // failure carried only by the closeout artifact's own thread issues is
 // answered by re-running closeout, not by posting replies nobody is owed.
+// The review window is not read while a thread blocks, so it is left out too.
 const repliesAreTheNextStep = (mergeReady: O.Option<YeetMergeReady>, remote: YeetStatusRemote): boolean =>
   outstandingThreadCount(remote) > 0 &&
   O.exists(mergeReady, (value) =>
     A.every(
       YeetMergeReadyCriterion.literals,
       (criterion) =>
-        YeetMergeReadyCriterion.is["threads-resolved"](criterion) || mergeReadyCriterionHolds(value.criteria, criterion)
+        YeetMergeReadyCriterion.is["threads-resolved"](criterion) ||
+        YeetMergeReadyCriterion.is["review-window-elapsed"](criterion) ||
+        mergeReadyCriterionHolds(value.criteria, criterion)
     )
   );
 
@@ -1723,6 +1768,9 @@ const nextCommandForRemote = (
   }
   if (repliesAreTheNextStep(mergeReady, remote)) {
     return REPLY_COMMAND;
+  }
+  if (O.exists(mergeReady, (value) => O.contains(value.failing, "review-window-elapsed"))) {
+    return REVIEW_WINDOW_COMMAND;
   }
   if (remote.rerunFailedCommand !== undefined && verdict.outcome === "success") {
     return `${remote.rerunFailedCommand} # ${remote.rerunFailedDecision ?? "same-SHA failed workflow"}`;
@@ -1775,7 +1823,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
   const verdictPath = yield* runArtifactPathForContext(context, "verdict.json");
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const statusPath = yield* statusPathForContext(context);
-  const [worktree, verdict, closeout, remoteStatus, gateVerdicts, createdAt] = yield* Effect.all(
+  const [worktree, verdict, closeout, unwindowedRemote, gateVerdicts, createdAt] = yield* Effect.all(
     [
       collectWorktreeStatus(context),
       readVerdictArtifact(verdictPath),
@@ -1786,6 +1834,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
     ],
     { concurrency: "unbounded" }
   );
+  const remoteStatus = yield* withReviewWindow(context, closeout, unwindowedRemote);
   return YeetStatusSnapshot.make({
     base: context.base,
     branch: context.branch,
@@ -1913,14 +1962,15 @@ export const renderYeetReviewThreadBlock = (remote: YeetStatusRemote): string =>
   );
 };
 
-const renderMergeReadyDetail = (mergeReady: YeetMergeReady): string => {
+const renderMergeReadyDetail = (mergeReady: YeetMergeReady, reviewWindow: O.Option<YeetReviewWindow>): string => {
   const greptile = O.match(mergeReady.criteria.greptileScore, {
     onNone: () => Str.empty,
     onSome: (score) => ` (greptile ${score})`,
   });
   return O.match(mergeReady.failing, {
     onNone: () => `merge-ready: yes${greptile}`,
-    onSome: (failing) => `merge-ready: no, blocked on ${failing}${greptile}`,
+    onSome: (failing) =>
+      `merge-ready: no, blocked on ${failing}${renderYeetReviewWindowHold(mergeReady.failing, reviewWindow)}${greptile}`,
   });
 };
 
@@ -1929,7 +1979,7 @@ const renderMergeReadyLine = (snapshot: YeetStatusSnapshot): string =>
     snapshot.mergeReady,
     O.match({
       onNone: () => "merge-ready: not checked",
-      onSome: renderMergeReadyDetail,
+      onSome: (mergeReady) => renderMergeReadyDetail(mergeReady, snapshot.remote.reviewWindow),
     })
   );
 
