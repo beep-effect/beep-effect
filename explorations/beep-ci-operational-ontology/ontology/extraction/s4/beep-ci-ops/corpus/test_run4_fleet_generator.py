@@ -1804,7 +1804,7 @@ class LiveFamilyAndPinTests(FixtureWorld):
             (b"captured_files: 3", b"captured_files: 4"), (b"exit: 0", b"exit: 1"),
             (b"since_cut: 2", b"since_cut: 3"), (b"released_only_chains: 1", b"released_only_chains: 2"),
             (b"last_merged_preview_start: '2026-09-09", b"last_merged_preview_start: '2026-09-08"),
-            (b"hex12: 2", b"hex12: 3"), (b"file existence only in this pin", b"file existance only in this pin"),
+            (b"hex12: 2", b"hex12: 3"), (b"file existence only in this pin", b"file existence only in that pin"),
             (lineage.encode(), (flip + lineage[1:]).encode()), (b"- parentLaneId", b"- parentLaneIx"),
             (b"capture_head: " + head.encode(), b"capture_head: z" + head[1:].encode()), (b"value: 200", b"value: 201"),
             (b"provider sk- prefix requires", b"provider sk- prefix demands "),

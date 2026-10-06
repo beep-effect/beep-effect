@@ -6,7 +6,7 @@
     "title": "CI-Ops Ontology Pipeline",
     "status": "active",
     "created": "2026-10-01",
-    "updated": "2026-10-05",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ciops-ontology-pipeline",
@@ -81,7 +81,7 @@
     {
       "id": "P1",
       "name": "Stage C capture and proof-ledger capture (W3-W4)",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",

@@ -823,3 +823,18 @@
   had started; the five notes were already on disk). Handling: resumed with `resumeFromRunId`, the
   five cached lanes replayed and only the critic re-ran. Prevention: keep every lane's deliverable
   on disk (the notes were), and resume rather than relaunch.
+- The gitleaks `generic-api-key` rule has a 3.5-bit Shannon-entropy cut, so a 12-hex prefix whose
+  twelve digits are all distinct (log2 12 = 3.585) is flagged while most 12-hex values pass; the
+  W4 lane measured 64 findings over its dry root at 12 hex and 0 at 11. Handling: P1 Ruling 3
+  amended to 11 hex. Prevention: probe a projection width with a full dry root, not a sample value.
+- `origin/main` moved four times during the P1 lanes (#1427, #1429, #1440, #1447) and rewrote a
+  cited file, so every plain dry run failed the Ruling 4 byte-equality guard until the orchestrator
+  merged main; the lanes proved their changes through a scratch runner pinned to the merged
+  commit. Prevention: merge `origin/main` into the capture branch right before each dry run that
+  must pass the guard, and treat the guard's message as the instruction it is.
+- Two Workflow runs were lost to desktop-session restarts (account switches) mid-lane; both
+  resumed from the run id with the finished lanes cached. Prevention: keep every lane deliverable
+  on disk and resume rather than relaunch (the same receipt as the survey loss).
+- A same-length mutation fixture in a generator test misspelled a word on purpose and tripped
+  `typos` on the authored files, and the receipt that quoted it tripped it again; the fixture now
+  swaps a whole word. Prevention: mutate a word, never a spelling, and never quote the misspelling.

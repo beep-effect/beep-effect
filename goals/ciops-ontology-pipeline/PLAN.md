@@ -3,7 +3,8 @@
 ## Status
 
 Status: `in-progress`. Graduated 2026-10-01; P0 complete 2026-10-05 (W1 landed, W2 declined; P0 Rulings 1–7 in
-[`research/decisions.md`](./research/decisions.md)). Next: P1 Stage C capture (W3–W4). Workstreams W1–W9 come from the
+[`research/decisions.md`](./research/decisions.md)); P1 complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger`
+pinned under P1 Rulings 1–8). Next: P2 projection on live data (W6 seam first, then W5 + W6). Workstreams W1–W9 come from the
 exploration's [`MAP.md`](../../explorations/beep-ci-operational-ontology/MAP.md), and each
 row's capability cites are in its Capability Check. "Graduation Ruling n" is Ruling n of the
 exploration's 2026-10-01 graduation sitting.
@@ -13,7 +14,7 @@ exploration's 2026-10-01 graduation sitting.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Inheritance and change events (W1); optional seat launcher (W2) | complete | Carry SOURCES forward and backfill the change-event ledger. W2 runs only if chosen. | `research/SOURCES.md` §4 refreshed against HEAD; every post-iv-870 lever under the admission criterion is a row; W2 landed or recorded as not chosen. |
-| P1 Stage C capture and proof-ledger capture (W3-W4) | in-progress | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
+| P1 Stage C capture and proof-ledger capture (W3-W4) | complete | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
 | P2 Projection on live data and planEpisode body (W5-W6) | pending | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | pending | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
 | P4 KPI reading and verdict (W8-W9) | pending | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
@@ -44,7 +45,13 @@ exploration's 2026-10-01 graduation sitting.
 
 ### P1 — Stage C capture
 
-- [ ] **W3 `run4-fleet` pin.** A NEW sibling generator on the run3b ETL mechanics with
+- [x] **W3 `run4-fleet` pin.** Done 2026-10-06: `etl_run4_fleet_corpus.py` pinned
+      `corpus/run4-fleet/` (937 files, 11,179 events; 260 checkouts under the public-origin
+      filter; the canonical admission root with quarantine as one payload; the Queue D projection
+      read by path and sha256 with 0 reconciliation conflicts; citations tree-pinned against
+      `origin/main` `26269bb0ec`), verified by its own replay, a corruption proof and gitleaks under
+      main's config; lane report `research/run4-lanes/stage-c-w3-report.md` in the exploration.
+      As specified: a NEW sibling generator on the run3b ETL mechanics with
       tree-pinned citation replay (graduation Ruling 8): citations resolve against the
       manifest's recorded `corpus_tree`, current-tree resolution is advisory, synthetic labels
       are retained, `corpus_tree`/`corpus_base` are recorded, residue is zero. Read the
@@ -53,7 +60,11 @@ exploration's 2026-10-01 graduation sitting.
       beside the live re-census, after `research/scripts/redact_journal_snapshot.py --check`
       passes; a missing or mismatched projection fails Queue D closed (no fallback to the
       `run3b-fleet` pin).
-- [ ] **W4 proof-ledger capture.** A NEW sibling generator that reads ledger contents from
+- [x] **W4 proof-ledger capture.** Done 2026-10-06: `etl_run4_proof_ledger.py` pinned
+      `corpus/run4-ledger/` (9 owning-clone ledgers, 8,082 rows, 4,041 pairs, 0 torn; gate holds
+      with 3,628 post-cut pre-push facts and the merged-preview stage dormant; 125 hits as
+      hypothetical would-reuse edges), same proofs; lane report
+      `research/run4-lanes/stage-c-w4-report.md`. As specified: a NEW sibling generator that reads ledger contents from
       the owning clone (`proofLedgerPathForCheckout`, time-to-certainty ruling 71): facts and
       shadow rows, `originKey` mapped to corpus-local tokens, run and attempt ids kept as join
       keys, run-3 Ruling 11 surrogates, run-3 Ruling 22 residue scan. Gate: C4.1 checked and

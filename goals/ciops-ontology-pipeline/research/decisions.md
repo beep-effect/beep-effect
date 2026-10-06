@@ -336,3 +336,16 @@ a path component (the knowledge-refs gate's class); a branch-derived lane name t
 (t) Ruling 8's "post-cut count" is a count of merged-preview FACTS: the reading is "dormant" when
 no post-cut merged-preview fact exists, and a lone post-cut merged-preview shadow whose fact
 tore stays under the tear receipts.
+
+**Pin recorded (2026-10-06T03:19Z–03:21Z, orchestrator).** Both roots pinned from the lane at
+capture head `28d962ec6b` with citations against `origin/main` `26269bb0ec` (tree `edc79dd7b6`):
+`run4-fleet` 937 files, 260 checkouts, 11,179 events, Queue D reconciliation 0 conflicts;
+`run4-ledger` 9 ledgers, 8,082 rows, 4,041 pairs, 0 torn, gate holds (C4.1 checked, 3,628 post-cut
+pre-push facts), merged-preview dormant (0 facts, 0 shadows after the cut; last merged-preview
+attempt start in the retained journals 2026-09-09). Every gate in the lane reports is green; the
+hosted knowledge-refs observations are inherited from other packets. P1 is complete; W3/W4 are
+ticked in PLAN and the manifest reads `complete`. Tracked follow-ups (not blocking, per the round
+cap): the `released_only_chains` member name needs a ruling to rename; the `-home-` scan's
+percent-encoding gap is covered by the verbatim label; the W4 reading wording paraphrases Ruling 8;
+one long docstring line. Reversal: a committed pin is never refreshed; a defect found later is
+repaired under run-3 Ruling 22 (unratified pin) or re-captured under a new sibling root.
