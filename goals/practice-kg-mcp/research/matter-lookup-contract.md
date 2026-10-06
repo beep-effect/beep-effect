@@ -3,8 +3,9 @@
 Stable surface for services that must turn a reference found in mail or a
 document into a practice matter (docket intake, email tagging, Box filing).
 Normative decision: `SPEC.md` D-12. This contract is versioned by the bundle's
-`schemaVersion.duckdb` (`3`); a breaking change bumps it. Version 3 added
-`client_name` to `matters` and two attribution sources (D-21).
+`schemaVersion.duckdb` (`4`); a breaking change bumps it. Version 3 added
+`client_name` to `matters` and two attribution sources (D-21); version 4 added
+the correspondent tables and `kg_correspondent_lookup` (D-24).
 
 ## What a matter is
 
@@ -155,8 +156,56 @@ a path that names two dockets, is ambiguous and is not used.
 4. Application and patent numbers match only **membership** (filed from one of
    the matter's dockets). A number that a matter's documents merely cite is not
    returned here; `kg_application_lookup` shows those as `mentioned_in_family`.
+   Membership is `filename` or `text-reference` when every citing document sits
+   in the matter, and `mention-dominance` (D-23) when the matter holds at least
+   3 citing documents and at least 80% of them, and no file name elsewhere
+   carries the number. A dominance member still resolves `unique`; act on
+   `unique` only, exactly as before, and treat `mention-dominance` as the
+   reason to show the other citing matters to a person when the stakes call
+   for it.
 5. The bundle is a snapshot of the corpus at `corpusSnapshotAt`. A matter opened
    after that date returns `none` until the bundle is rebuilt.
+
+## Correspondent lookup
+
+Turns an email address from a From, To, or Cc header into the matters it
+writes about. Normative decision: `SPEC.md` D-24.
+
+| Caller | Use | Where |
+| --- | --- | --- |
+| Effect code in this repo | `lookupPracticeKgCorrespondents({ address })` over the bundle DuckDB and `PracticeKgBundle` | `@beep/law-practice-server` |
+| Any MCP client | tool `kg_correspondent_lookup` (`address`, optional `budgetBytes`) | the `practice-kg-mcp` host |
+| Anything that reads DuckDB | `matter_correspondents`, `contact_client_links`, `contact_addresses` | `<bundle>/practice.duckdb` |
+
+Request, result, and decision schemas, the link-source domain
+(`PracticeKgContactLinkSource`, split into `PracticeKgAttorneyLinkSource` and
+`PracticeKgInferredLinkSource`), and the pure `resolvePracticeKgCorrespondent`
+live in `@beep/law-practice-use-cases/server`
+(`PracticeKg.correspondent-lookup.ts`).
+
+**Evidence ladder.** The attorney's own links for a contact
+(`attorney-answer`, `attorney-pc-folder`, `attorney-docket-sheet`,
+`attorney-filed-email`) outrank everything. Message counts from filed email,
+and the inferred links `org-name-match` and `email-subject-ref`, rank
+candidates for a person and never decide.
+
+**Resolution.**
+
+- `unique` only when the address belongs to exactly one contact, the contact
+  is not a role mailbox, the address is not on a practice domain, and every
+  attorney-sourced link of the contact names the same client-keyed matter.
+  `familyKey` is that matter.
+- `ambiguous` whenever there is any candidate or link but no unique answer.
+- `none` when the address appears nowhere.
+
+The tool returns one row per matter the address is tied to: the filed-mail
+candidates first (by message count, then most recent message), then matters
+and clients named only by contact links, with message counts zero. `decided`
+marks the row a `unique` resolution chose.
+
+**Rules for callers.** Act on `unique` only. A role mailbox (`docketing@`,
+`info@`) and the practice's own addresses never resolve uniquely however many
+messages they carry; show their candidates instead.
 
 ## Where unresolved files go in Box
 
@@ -193,12 +242,45 @@ matter_dockets(
   application_numbers VARCHAR[] NOT NULL,   -- digits only
   patent_numbers VARCHAR[] NOT NULL         -- digits only
 )
+matter_correspondents(              -- one row per matter and address in filed email
+  family_key VARCHAR NOT NULL,      -- -> matters.family_key
+  address VARCHAR NOT NULL,         -- lower-cased
+  contact_id VARCHAR,               -- when exactly one contact owns the address
+  display_name VARCHAR,             -- contact's name, else the first header name
+  role_address BOOLEAN NOT NULL,
+  is_practice_address BOOLEAN NOT NULL,   -- on a --practice-domain
+  message_count BIGINT NOT NULL,    -- distinct email documents
+  from_count BIGINT NOT NULL,
+  to_count BIGINT NOT NULL,
+  cc_count BIGINT NOT NULL,
+  first_at VARCHAR,                 -- dcterms:created, earliest
+  last_at VARCHAR,                  -- dcterms:created, latest
+  epistemic_status VARCHAR NOT NULL,      -- always mention-derived
+  PRIMARY KEY (family_key, address)
+)
+contact_client_links(               -- the contacts table's links, verbatim
+  contact_id VARCHAR NOT NULL,
+  client_number VARCHAR NOT NULL,
+  family_key VARCHAR,
+  source VARCHAR NOT NULL,          -- PracticeKgContactLinkSource
+  evidence VARCHAR NOT NULL         -- opaque producer note
+)
+contact_addresses(                  -- which contact owns an address
+  address VARCHAR NOT NULL,
+  contact_id VARCHAR NOT NULL,
+  display_name VARCHAR NOT NULL,
+  organization VARCHAR,
+  role_address BOOLEAN NOT NULL,
+  is_practice_address BOOLEAN NOT NULL,
+  PRIMARY KEY (address, contact_id)
+)
 ```
 
 ## Where the bundle is
 
-This contract describes store format pglite 3 / duckdb 3, which the build
-writes from bundle version `2026-10-06-02` on. The current bundle is
+This contract describes store format pglite 4 / duckdb 4, which the build
+writes from bundle version `2026-10-07-01` on; extension `0.4.0` reads it and
+refuses format 3 and older by name. The last format 3 bundle is
 `<corpus>/staging/practice-kg-bundle-2026-10-06-03`; `practice-kg-bundle-p9`
 is `2026-10-06-02` (same matters, fewer documents with text, and a wrong
 `run_label` on documents that exist in two runs). The bundle at
@@ -207,6 +289,8 @@ is `2026-10-06-02` (same matters, fewer documents with text, and a wrong
 `--bundle-version <version>`. Rebuild with
 `bun run apps/practice-kg-mcp/src/build.ts --corpus-root <corpus> --bundle-out <dir> --overwrite`,
 adding `--include-run <label>` for each later source run and
-`--docket-register <file>` for the register (see `bundle-contract.md` §5).
+`--docket-register <file>` for the register, `--contacts <file>` and
+`--practice-domain <domain>` for the correspondent tables (see
+`bundle-contract.md` §5).
 Carry claims with `claims.ts --carry-from <old bundle>`, and prove the result
 with `verify.ts --bundle-dir <dir>`.
