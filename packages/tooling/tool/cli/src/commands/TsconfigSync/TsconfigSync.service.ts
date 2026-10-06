@@ -9,6 +9,7 @@ import { buildRepoDependencyIndex, detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Effect, HashMap } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
 import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
 import { TsconfigSyncRender } from "./TsconfigSync.render.ts";
@@ -26,8 +27,10 @@ const {
   planPackageDocgenSync,
   planPackageReferenceSync,
   planRootAliasSync,
+  planRootFallowBoundarySync,
   planRootReferenceSync,
   planRootSyncpackSync,
+  planRootVitestAliasSync,
   sortChanges,
   toReportedChange,
   writeFileString,
@@ -116,7 +119,23 @@ export const syncTsconfigAtRoot: {
     const rootReferenceChange = yield* planRootReferenceSync(rootDir, workspaces);
     const rootAliasChange = yield* planRootAliasSync(rootDir, workspaces);
     const rootSyncpackChange = yield* planRootSyncpackSync(rootDir);
-    A.appendAllInPlace(plannedChanges, A.getSomes([rootReferenceChange, rootAliasChange, rootSyncpackChange]));
+    // The Vitest alias mirror is planned against the alias content scheduled
+    // above, so one sync never leaves it a run behind the root tsconfig.
+    const rootVitestAliasChange = yield* planRootVitestAliasSync(
+      rootDir,
+      O.map(rootAliasChange, (change) => change.content)
+    );
+    const rootFallowBoundaryChange = yield* planRootFallowBoundarySync(rootDir);
+    A.appendAllInPlace(
+      plannedChanges,
+      A.getSomes([
+        rootReferenceChange,
+        rootAliasChange,
+        rootSyncpackChange,
+        rootVitestAliasChange,
+        rootFallowBoundaryChange,
+      ])
+    );
 
     const packageChanges = yield* planPackageReferenceSync(
       rootDir,

@@ -9,9 +9,11 @@ import { FileProcessingFailureRecord, SourceProcessingRecord } from "@beep/file-
 import { SelectedStrategy } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
+import { CorpusExtractOcrCounts } from "./Ocr.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Extract.schemas");
 
@@ -50,10 +52,15 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
     includeDuplicates: S.Boolean,
     javaPath: S.optionalKey(S.String),
     maxFiles: S.optionalKey(S.Finite),
+    ocr: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    ocrPageTimeoutMillis: S.optionalKey(PosInt),
     outLabel: S.optionalKey(S.String),
     overwrite: S.Boolean,
+    pdfinfoPath: S.optionalKey(S.NonEmptyString),
+    pdftoppmPath: S.optionalKey(S.NonEmptyString),
     pffexportPath: S.optionalKey(S.String),
     sourceLabel: S.optionalKey(S.String),
+    tesseractPath: S.optionalKey(S.NonEmptyString),
     tikaJarPath: S.String,
     tikaTimeoutMillis: S.optionalKey(PosInt),
   },
@@ -75,7 +82,8 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  * engines deferred, never resumed ones. `noEngineFailedCount` is the part of
  * `failedCount` that no engine routes: those failures are settled and are not
  * retried until the engine routing changes, while every other failure is
- * retried by the next run.
+ * retried by the next run. `ocrUncountedSourceCount` counts PDFs whose pages
+ * the OCR pass could not count, so none were read.
  *
  * **Example** (Make extract summary counts)
  *
@@ -90,6 +98,10 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  *   extractedCount: S.Natural.make(1),
  *   failedCount: S.Natural.make(0),
  *   noEngineFailedCount: S.Natural.make(0),
+ *   ocrFailedPageCount: S.Natural.make(0),
+ *   ocrPageCount: S.Natural.make(0),
+ *   ocrSourceCount: S.Natural.make(0),
+ *   ocrUncountedSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(2),
  *   succeededCount: S.Natural.make(2),
@@ -109,6 +121,10 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
     extractedCount: S.Natural,
     failedCount: S.Natural,
     noEngineFailedCount: S.Natural,
+    ocrFailedPageCount: S.Natural,
+    ocrPageCount: S.Natural,
+    ocrSourceCount: S.Natural,
+    ocrUncountedSourceCount: S.Natural,
     skippedCount: S.Natural,
     sourceCount: S.Natural,
     succeededCount: S.Natural,
@@ -128,7 +144,7 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  * ```ts
  * import * as S from "effect/Schema"
  * import { CorpusExtractSummary, encodeCorpusExtractSummaryJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const summary = CorpusExtractSummary.make({
  *   alreadyCompleteCount: S.Natural.make(0),
@@ -137,6 +153,10 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  *   extractedCount: S.Natural.make(1),
  *   failedCount: S.Natural.make(0),
  *   noEngineFailedCount: S.Natural.make(0),
+ *   ocrFailedPageCount: S.Natural.make(0),
+ *   ocrPageCount: S.Natural.make(0),
+ *   ocrSourceCount: S.Natural.make(0),
+ *   ocrUncountedSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(1),
  *   succeededCount: S.Natural.make(1),
@@ -164,15 +184,19 @@ export const encodeCorpusExtractSummaryJson = JsonStringCodec(CorpusExtractSumma
  * recorded: succeeded, deferred, and failures that no engine routes. The last
  * carry `routingKey`, a fingerprint of the engine routing and the source's
  * format, and are reused only while it still matches; every other failure
- * carries no marker and is retried. `exportChildren` and the source record's
- * relative path are stored so a resumed run reuses a marker only for the same
- * inputs.
+ * carries no marker and is retried. `exportChildren`, `ocrEnabled` and the
+ * source record's relative path are stored so a resumed run reuses a marker
+ * only for the same inputs. `ocrEnabled` says whether the OCR pass actually
+ * ran, not whether `--ocr` was passed: a run whose pass was turned off by a
+ * missing tool writes it as false. A run that does make the pass reads again
+ * every source settled without it, since nothing looked at those pages.
+ * Markers from before `ocrEnabled` existed decode as written without OCR.
  *
  * **Example** (Decode an extract outcome marker)
  *
  * ```ts
  * import { CorpusExtractOutcomeRecordJson } from "@beep/repo-cli/commands/Corpus"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const sha256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * const sourceRecord = `{"artifactId":"artifact:${sha256}","digest":"sha256:${sha256}","format":"unknown","operationId":"operation:${sha256}","relativePath":"source-a/empty.bin","sizeBytes":0,"skipReason":"unsupported-format","status":"skipped"}`
@@ -192,6 +216,11 @@ export class CorpusExtractOutcomeRecord extends S.Class<CorpusExtractOutcomeReco
     childArtifactCount: S.Natural,
     exportChildren: S.Boolean,
     failure: S.OptionFromOptionalKey(FileProcessingFailureRecord),
+    ocr: S.OptionFromOptionalKey(CorpusExtractOcrCounts),
+    ocrEnabled: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     routingKey: S.OptionFromOptionalKey(Sha256Hex),
     sha256: Sha256Hex,
     sourceRecord: SourceProcessingRecord,

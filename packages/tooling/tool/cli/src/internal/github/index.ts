@@ -7,4 +7,8 @@
 
 export * from "./GhCommand.ts";
 export * from "./GhSchema.ts";
+export * from "./GithubGraphql.ts";
+export * from "./GithubIdentity.ts";
+export * from "./GithubRest.ts";
+export * from "./GraphqlBudget.ts";
 export * from "./JobShape.ts";

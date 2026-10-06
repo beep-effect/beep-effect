@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Effect, pipe, Ref } from "effect";
+import { Console, Effect, pipe, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -151,22 +151,22 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
 export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  // REST first: its budget is separate from the shared GraphQL budget that
+  // `gh pr view` spends. `gh pr view` stays as the fallback for a REST failure.
+  const viaRest = yield* findOpenPullRequestViaRest(context).pipe(Effect.option, Effect.map(O.flatten));
+  if (O.isSome(viaRest)) return viaRest.value;
   return yield* ghPullRequestViewOutput(context).pipe(
     Effect.matchEffect({
       onFailure: (failure) =>
-        graphQlRateLimited(failure)
-          ? findOpenPullRequestViaRest(context).pipe(
-              Effect.flatMap((view) =>
-                Effect.fromOption(view, () =>
-                  YeetCommandError.make({
-                    message: "yeet monitor requires an open pull request for the current branch.",
-                    command: "gh api repos/{owner}/{repo}/pulls",
-                    exitCode: 1,
-                  })
-                )
-              )
-            )
-          : Effect.fail(ghPullRequestViewFailure(failure)),
+        Effect.fail(
+          graphQlRateLimited(failure)
+            ? YeetCommandError.make({
+                message: "yeet monitor requires an open pull request for the current branch.",
+                command: "gh api repos/{owner}/{repo}/pulls",
+                exitCode: 1,
+              })
+            : ghPullRequestViewFailure(failure)
+        ),
       onSuccess: (output) =>
         decodeGhPullRequestView(output).pipe(
           Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
@@ -207,11 +207,15 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  // REST first (separate budget); `gh pr view` only when the REST read failed,
+  // and a spent GraphQL budget then reports the REST failure, never "no PR".
+  const viaRest = yield* Effect.result(findOpenPullRequestViaRest(context));
+  if (Result.isSuccess(viaRest)) return viaRest.success;
   return yield* ghPullRequestViewOutput(context).pipe(
     Effect.matchEffect({
       onFailure: (failure) =>
         graphQlRateLimited(failure)
-          ? findOpenPullRequestViaRest(context)
+          ? Effect.fail(viaRest.failure)
           : failure._tag === "spawn"
             ? Effect.fail(YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause))
             : Effect.succeedNone,
@@ -435,7 +439,8 @@ export const recordPrProvenanceStampLane = Effect.fn("Yeet.recordPrProvenanceSta
       YeetExecutedStep.make({
         result: RepoStepRunResult.make({
           stepId: stampStep.value.id,
-          commandText: "gh pr edit <number> --body-file <run-artifacts>/pr-provenance-body.md",
+          commandText:
+            "gh api -X PATCH repos/{owner}/{repo}/pulls/<number> -F body=@<run-artifacts>/pr-provenance-body.md",
           exitCode: failed ? 1 : 0,
           output,
         }),
@@ -820,7 +825,7 @@ const recordPrLabelLane = (
       YeetExecutedStep.make({
         result: RepoStepRunResult.make({
           stepId: labelStep.id,
-          commandText: `gh pr edit <number> --add-label ${HEAVY_ADMISSION_LABEL}`,
+          commandText: `gh api -X POST repos/{owner}/{repo}/issues/<number>/labels -f labels[]=${HEAVY_ADMISSION_LABEL}`,
           exitCode: status === "failed" ? 1 : 0,
           output,
         }),
@@ -897,9 +902,19 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
     yield* recordPrLabelLane(recorder, labelStep.value, "skipped", "skipped: docs-only diff needs no heavy matrix");
     return;
   }
-  const args = ["pr", "edit", `${pullRequest.number}`, "--add-label", HEAVY_ADMISSION_LABEL];
+  // REST, not `gh pr edit` (GraphQL): labelling must not fail when the shared GraphQL budget is spent.
+  const args = [
+    "api",
+    "-X",
+    "POST",
+    `repos/{owner}/{repo}/issues/${pullRequest.number}/labels`,
+    "-f",
+    `labels[]=${HEAVY_ADMISSION_LABEL}`,
+    "--jq",
+    'map(.name) | join(",")',
+  ];
   const result = yield* (dependencies.capture ?? runRepoCommandCapture)("gh", args, context.repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to run gh pr edit --add-label."))
+    Effect.mapError(YeetCommandError.new("Failed to add the heavy admission label through GitHub REST."))
   );
   if (result.exitCode !== 0) {
     yield* Console.error(
