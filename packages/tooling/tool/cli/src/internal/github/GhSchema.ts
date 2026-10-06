@@ -125,6 +125,9 @@ export class GhComment extends S.Class<GhComment>($I`GhComment`)(
  * and `url` are optional so the narrower monitor payload also decodes; callers
  * that request the wider `--json` set always receive them.
  *
+ * `title` is optional too: only the publish view asks for it, so a re-publish
+ * can replace a merge-commit subject left as the title.
+ *
  * `author` is optional for the same reason and nullable besides: `gh pr view`
  * reports a null author for a pull request opened by a deleted account. It is
  * the login every review thread's `resolvedBy` is compared against, so a
@@ -150,6 +153,7 @@ export class GhPrView extends S.Class<GhPrView>($I`GhPrView`)(
     isDraft: S.optionalKey(S.Boolean),
     number: S.Finite,
     state: S.String,
+    title: S.optionalKey(S.String),
     url: S.optionalKey(S.String),
   },
   $I.annote("GhPrView", {
