@@ -168,7 +168,10 @@ const readWith = Effect.fn("readWith")(function* (answers: Answers) {
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (it) => {
   it.effect("reads the window open on the test clock, then elapsed once the clock passes it", () =>
     Effect.gen(function* () {
-      const answers = { timeline: "2026-10-06T09:00:00Z\n", suites: "2026-10-06T10:00:05Z\n2026-10-06T10:00:00Z\n" };
+      const answers = {
+        timeline: "ready_for_review\t2026-10-06T09:00:00Z",
+        suites: "2026-10-06T10:00:05Z\n2026-10-06T10:00:00Z\n",
+      };
       yield* TestClock.setTime(millis("2026-10-06T10:07:00Z"));
       const first = yield* readWith(answers);
       expect(first.window).toMatchObject({ _tag: "open", anchor: "head-push", remainingMs: 13 * 60_000 });
@@ -184,10 +187,46 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
   it.effect("a new push to the head restarts a window that had elapsed", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(millis("2026-10-06T10:21:00Z"));
-      const before = yield* readWith({ timeline: "2026-10-06T09:00:00Z", suites: "2026-10-06T10:00:00Z" });
+      const before = yield* readWith({
+        timeline: "ready_for_review\t2026-10-06T09:00:00Z",
+        suites: "2026-10-06T10:00:00Z",
+      });
       expect(before.window._tag).toBe("elapsed");
-      const after = yield* readWith({ timeline: "2026-10-06T09:00:00Z", suites: "2026-10-06T10:15:00Z" });
+      const after = yield* readWith({
+        timeline: "ready_for_review\t2026-10-06T09:00:00Z",
+        suites: "2026-10-06T10:15:00Z",
+      });
       expect(after.window).toMatchObject({ _tag: "open", anchor: "head-push", remainingMs: 14 * 60_000 });
+    }).pipe(noOverride)
+  );
+
+  it.effect("a force-push back to a commit GitHub already knew restarts the window", () =>
+    Effect.gen(function* () {
+      // Flip 10:00, A first received 10:05, B 10:10, A force-pushed again 10:30:
+      // A's check suites still say 10:05, so the force-push event is the push.
+      yield* TestClock.setTime(millis("2026-10-06T10:40:00Z"));
+      const forced = yield* readWith({
+        timeline: "ready_for_review\t2026-10-06T10:00:00Z\nhead_ref_force_pushed\t2026-10-06T10:30:00Z",
+        suites: "2026-10-06T10:05:00Z",
+      });
+      expect(forced.window).toMatchObject({
+        _tag: "open",
+        anchor: "head-push",
+        anchoredAt: "2026-10-06T10:30:00.000Z",
+        remainingMs: 10 * 60_000,
+      });
+      // A force-push older than the head's first receipt never moves the push back.
+      const older = yield* readWith({
+        timeline: "ready_for_review\t2026-10-06T10:00:00Z\nhead_ref_force_pushed\t2026-10-06T09:50:00Z",
+        suites: "2026-10-06T10:05:00Z",
+      });
+      expect(older.window).toMatchObject({ _tag: "elapsed", anchoredAt: "2026-10-06T10:05:00.000Z" });
+      // A timeline line naming any other event voids the read: unknown, never elapsed.
+      const other = yield* readWith({
+        timeline: "ready_for_review\t2026-10-06T10:00:00Z\nlabeled\t2026-10-06T10:35:00Z",
+        suites: "2026-10-06T10:05:00Z",
+      });
+      expect(other.window._tag).toBe("unknown");
     }).pipe(noOverride)
   );
 
@@ -195,7 +234,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
     Effect.gen(function* () {
       yield* TestClock.setTime(millis("2026-10-06T10:25:00Z"));
       const { window } = yield* readWith({
-        timeline: "2026-10-06T08:00:00Z\n2026-10-06T10:10:00Z\n",
+        timeline: "ready_for_review\t2026-10-06T08:00:00Z\nready_for_review\t2026-10-06T10:10:00Z",
         suites: "2026-10-06T10:00:00Z",
       });
       expect(window).toMatchObject({ _tag: "open", anchor: "ready-for-review", remainingMs: 5 * 60_000 });
@@ -222,9 +261,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
       { timeline: "clipped", suites: "2026-10-06T10:00:00Z" },
       "timeline of pull request #42",
     ],
-    ["a timeline line that is not an instant", { timeline: "not-a-date", suites: "2026-10-06T10:00:00Z" }, "timeline"],
-    ["a failed check-suite query", { timeline: "2026-10-06T09:00:00Z" }, `check suites of head ${headSha}`],
-    ["a head with no check suite", { timeline: "2026-10-06T09:00:00Z", suites: "" }, "no check suite yet"],
+    [
+      "a timeline line that is not an instant",
+      { timeline: "ready_for_review\tnot-a-date", suites: "2026-10-06T10:00:00Z" },
+      "timeline",
+    ],
+    [
+      "a failed check-suite query",
+      { timeline: "ready_for_review\t2026-10-06T09:00:00Z" },
+      `check suites of head ${headSha}`,
+    ],
+    [
+      "a head with no check suite",
+      { timeline: "ready_for_review\t2026-10-06T09:00:00Z", suites: "" },
+      "no check suite yet",
+    ],
     [
       "an unreadable creation time",
       { timeline: "", suites: "2026-10-06T10:00:00Z" },
@@ -243,7 +294,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
 
   it.effect("honours the environment override and refuses one that is not a duration", () =>
     Effect.gen(function* () {
-      const answers = { timeline: "2026-10-06T09:00:00Z", suites: "2026-10-06T10:00:00Z" };
+      const answers = { timeline: "ready_for_review\t2026-10-06T09:00:00Z", suites: "2026-10-06T10:00:00Z" };
       const withWindow = (value: string) =>
         Effect.provideService(
           ConfigProvider.ConfigProvider,
@@ -413,7 +464,7 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
   it.effect("holds a green, thread-free pull request until its review window has elapsed", () =>
     Effect.gen(function* () {
       yield* writeBoundCloseout;
-      const answers = { timeline: "2026-10-06T10:00:00Z", suites: "2026-10-06T09:30:00Z" };
+      const answers = { timeline: "ready_for_review\t2026-10-06T10:00:00Z", suites: "2026-10-06T09:30:00Z" };
       yield* TestClock.setTime(millis("2026-10-06T10:07:00Z"));
       const held = yield* statusWith(answers);
       assertFalse(O.getOrThrow(held.snapshot.mergeReady).ready);
@@ -448,7 +499,10 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
   it.effect("does not spend the REST reads while another criterion still blocks", () =>
     Effect.gen(function* () {
       yield* writeBoundCloseout;
-      const { snapshot, restCalls } = yield* statusWith({ timeline: "2026-10-06T10:00:00Z" }, "pending");
+      const { snapshot, restCalls } = yield* statusWith(
+        { timeline: "ready_for_review\t2026-10-06T10:00:00Z" },
+        "pending"
+      );
       assertSome(O.getOrThrow(snapshot.mergeReady).failing, "required-checks-green");
       assertNone(snapshot.remote.reviewWindow);
       expect(restCalls).toEqual([]);
