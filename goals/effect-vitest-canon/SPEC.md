@@ -479,3 +479,9 @@ false-positive escape hatch (`status: exception` + `reason`), and the KG `replac
   `.patterns/jsdoc-documentation.md` (titled **Example** sections, never `@example`).
 - Every workspace package a lane edits gets `bun run beep quality package-verify <@beep/pkg>`
   before handoff.
+
+## 9. Decision Log
+
+| Date | Decision | Evidence and reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-06 | Migrate `changeset-status.test.ts` to per-case `it.layer` fixtures with `MemoryFileSystem`, `Path`, `TestConsole`, and a stubbed child-process spawner. Use each `it.effect` scope for its temporary directory and a 30-second layer timeout. | The subject consumes abstract filesystem/path services and captured Git output; all 19 focused tests pass with the memory layer, and the current scanner reports zero findings in this file (eight fewer than its accepted detector ledger). This avoids the old custom scoped-layer wrapper while preserving per-case command capture and cleanup. Full package and ledger gates remain pending. | Revert the source, detector-ledger, and baseline changes together in a follow-up PR; restore the prior Node-backed fixture only if a platform-specific behavior is demonstrated. Preserve the original detector IDs and evidence when reversing. |
