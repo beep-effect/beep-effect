@@ -36,6 +36,7 @@ import type { DriftKind } from "@beep/repo-cli/commands/Models";
 const decodeUpstream = S.decodeEffect(UpstreamCatalog);
 const decodeCodex = S.decodeEffect(CodexModelsCache);
 const encodeReportJson = S.encodeUnknownEffect(S.fromJsonString(ModelsCheckReport));
+const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const encodeReport = S.encodeUnknownEffect(ModelsCheckReport);
 const decodeReport = S.decodeUnknownEffect(ModelsCheckReport);
@@ -159,6 +160,65 @@ layer(Layer.mergeAll(platform, models), { timeout: "30 seconds" })((it) => {
         "gpt-6-astra"
       );
     })
+  );
+
+  it.effect("checks the Claude effort through the bound model, never a literal pointer key", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const check = yield* ModelsCheck;
+      const root = yield* fs.makeTempDirectoryScoped({ directory: process.cwd(), prefix: ".models-check-effort-" });
+      const manifestPath = path.join(root, "models.yaml");
+      const settingsPath = path.join(root, "settings.json");
+      yield* fs.writeFileString(
+        manifestPath,
+        [
+          "version: beep-models/v1",
+          "bindings:",
+          "  - role: orchestrator",
+          "    surface: claude-code",
+          "    modelId: claude-opus-5",
+          "    effort: medium",
+          "targets:",
+          "  - id: claude.settings",
+          "    root: repo",
+          "    path: settings.json",
+          "    optional: false",
+          "    locators:",
+          "      - _tag: json-key",
+          "        binding: { role: orchestrator, surface: claude-code, field: effort }",
+          "        render: { _tag: verbatim }",
+          '        pointer: [modelSettings, "{model}", effortLevel]',
+          "        fallbacks: [[effortLevel]]",
+          "superseded: []",
+          "",
+        ].join("\n")
+      );
+      const effortFindings = Effect.fnUntraced(function* (settings: unknown) {
+        yield* fs.writeFileString(settingsPath, yield* encodeJsonText(settings));
+        const report = yield* check.run(
+          ModelsCheckOptions.make({ home: root, repo: root, manifestPath, offline: false })
+        );
+        return A.filter(report.findings, (entry) => entry.targetId === "claude.settings");
+      });
+
+      // The bound model's own entry is medium while the top-level effort is
+      // high. Reading through the binding passes; a check that skipped the
+      // binding would miss the literal `{model}` key, fall back to the
+      // top-level `high`, and report drift.
+      expect(
+        yield* effortFindings({ effortLevel: "high", modelSettings: { "claude-opus-5": { effortLevel: "medium" } } })
+      ).toHaveLength(0);
+
+      // The reverse: the bound model's entry is low while the top-level effort
+      // is medium. Only a check that reads the bound entry reports the drift.
+      const drift = yield* effortFindings({
+        effortLevel: "medium",
+        modelSettings: { "claude-opus-5": { effortLevel: "low" } },
+      });
+      expect(A.map(drift, (entry) => entry.kind)).toEqual(["stale"]);
+      assertSome(drift[0]!.current, "low");
+    }).pipe(Effect.scoped)
   );
 
   it.effect("reports routable unbound Codex candidates without proposing hidden or already-bound slugs", () =>
