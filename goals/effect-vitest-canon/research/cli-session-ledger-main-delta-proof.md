@@ -30,3 +30,10 @@ class-preference exceptions are recorded in the schema-first inventory.
 The JSON Lines decoder now returns an internal annotated `S.Class` for its
 row/count result, eliminating the new inline-contract advisory. A full
 package audit passed on this exact source with the combined CLI changes.
+
+PR #1460 review found two service-case temporary directories that survived
+their test scopes. Both now use `makeTempDirectoryScoped()`; the focused
+nine-case suite passes on Node and Bun. The inventory location review was
+answered without changing source-bound identities: the recorded host
+`provideScopedLayer` remains at line 1239 and the session `assertTrue`
+remains at line 199. The other read-back call is a separate occurrence.

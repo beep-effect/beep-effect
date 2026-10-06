@@ -230,7 +230,7 @@ describe("session ledger service", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectory();
+        const root = yield* fs.makeTempDirectoryScoped();
         const ledger = yield* makeSessionLedgerLive().pipe(
           Effect.provideService(
             ConfigProvider.ConfigProvider,
@@ -253,7 +253,7 @@ describe("session ledger service", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectory();
+        const root = yield* fs.makeTempDirectoryScoped();
         const xdg = yield* makeSessionLedgerLive().pipe(
           Effect.provideService(
             ConfigProvider.ConfigProvider,
