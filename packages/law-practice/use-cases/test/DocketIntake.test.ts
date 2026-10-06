@@ -351,7 +351,9 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         });
 
         const outcome = yield* intake.processMessage(message(id), TODAY);
-        const due = A.findFirst(kinds(yield* entriesOf, "due"), (entry) => Str.includes(`/mail/${id}`)(entry.bodyText));
+        const due = A.findFirst(kinds(yield* entriesOf, "due"), (entry) =>
+          Str.includes(`/mail/${id}\n`)(entry.bodyText)
+        );
 
         assertTrue(O.exists(due, (entry) => !isAfter(entry.date, stated) && !isAfter(entry.date, computed)));
         assertTrue(O.exists(due, (entry) => sameDate(entry.date, stated) || sameDate(entry.date, computed)));
