@@ -29,7 +29,16 @@ const digest = ContentDigest.make(`sha256:${hex}`);
 
 const tsvHeader = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext";
 const tsvWord = (block: number, paragraph: number, line: number, confidence: string, text: string): string =>
-  `5\t1\t${block}\t${paragraph}\t${line}\t1\t0\t0\t9\t9\t${confidence}\t${text}`;
+  tsvWordOnPage(1, block, paragraph, line, confidence, text);
+
+const tsvWordOnPage = (
+  page: number,
+  block: number,
+  paragraph: number,
+  line: number,
+  confidence: string,
+  text: string
+): string => `5\t${page}\t${block}\t${paragraph}\t${line}\t1\t0\t0\t9\t9\t${confidence}\t${text}`;
 
 // Stands in for the tesseract binary. The page image's bytes pick the
 // behavior, so one stub covers a clean page, a blank page, a low-confidence
@@ -159,6 +168,10 @@ it("rebuilds lines, paragraphs and the mean confidence from TSV", () => {
         tsvWord(1, 1, 2, "70", "second"),
         tsvWord(1, 1, 2, "96.5", "   "),
         tsvWord(1, 2, 1, "not-a-number", "next\tparagraph"),
+        // A second frame of a multi-frame image repeats block 1, paragraph 1,
+        // line 1: it must land on its own line, not join the first frame's.
+        tsvWordOnPage(2, 1, 1, 1, "88", "second"),
+        tsvWordOnPage(2, 1, 1, 1, "88", "frame"),
         "5\ttruncated",
       ],
       "\n"
@@ -166,9 +179,10 @@ it("rebuilds lines, paragraphs and the mean confidence from TSV", () => {
   );
   const blank = parseTesseractTsv(`${tsvHeader}\n`);
 
-  expect(reading.text).toBe("First line\nsecond\n\nnext\tparagraph");
-  expect(reading.wordCount).toBe(4);
-  expect(reading.meanConfidence).toBeCloseTo(0.6, 10);
+  expect(reading.text).toBe("First line\nsecond\n\nnext\tparagraph\n\nsecond frame");
+  expect(reading.wordCount).toBe(6);
+  // (90 + 80 + 70 + 0 + 88 + 88) / 6 / 100
+  expect(reading.meanConfidence).toBeCloseTo(0.6933333333, 9);
   expect(blank.text).toBe("");
   expect(blank.wordCount).toBe(0);
   expect(blank.meanConfidence).toBeUndefined();

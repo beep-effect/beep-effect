@@ -82,7 +82,8 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  * engines deferred, never resumed ones. `noEngineFailedCount` is the part of
  * `failedCount` that no engine routes: those failures are settled and are not
  * retried until the engine routing changes, while every other failure is
- * retried by the next run.
+ * retried by the next run. `ocrUncountedSourceCount` counts PDFs whose pages
+ * the OCR pass could not count, so none were read.
  *
  * **Example** (Make extract summary counts)
  *
@@ -100,6 +101,7 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
  *   ocrFailedPageCount: S.Natural.make(0),
  *   ocrPageCount: S.Natural.make(0),
  *   ocrSourceCount: S.Natural.make(0),
+ *   ocrUncountedSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(2),
  *   succeededCount: S.Natural.make(2),
@@ -122,6 +124,7 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
     ocrFailedPageCount: S.Natural,
     ocrPageCount: S.Natural,
     ocrSourceCount: S.Natural,
+    ocrUncountedSourceCount: S.Natural,
     skippedCount: S.Natural,
     sourceCount: S.Natural,
     succeededCount: S.Natural,
@@ -153,6 +156,7 @@ export class CorpusExtractSummary extends S.Class<CorpusExtractSummary>($I`Corpu
  *   ocrFailedPageCount: S.Natural.make(0),
  *   ocrPageCount: S.Natural.make(0),
  *   ocrSourceCount: S.Natural.make(0),
+ *   ocrUncountedSourceCount: S.Natural.make(0),
  *   skippedCount: S.Natural.make(0),
  *   sourceCount: S.Natural.make(1),
  *   succeededCount: S.Natural.make(1),

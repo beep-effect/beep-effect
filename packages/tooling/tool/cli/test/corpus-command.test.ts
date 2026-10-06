@@ -1211,6 +1211,7 @@ exit 0
 // faintly. The rendered "PNG" is just the behavior word, which the tesseract
 // stub reads back, so each page fails or succeeds on its own.
 const pdfinfoStub = `#!/usr/bin/env bash
+if [ "$1" = "-v" ]; then exit 0; fi
 pages="$(grep -o 'pages=[0-9]*' "$1" | cut -d= -f2)"
 [ -n "$pages" ] || exit 1
 printf 'Pages:          %s\\n' "$pages"
@@ -1218,6 +1219,7 @@ exit 0
 `;
 
 const pdftoppmStub = `#!/usr/bin/env bash
+if [ "$1" = "-v" ]; then exit 0; fi
 page=""
 prev=""
 for arg in "$@"; do
@@ -1313,7 +1315,28 @@ const summaryCountKeys = [
   "succeededCount",
 ] as const;
 
-const ocrSummaryCountKeys = [...summaryCountKeys, "ocrFailedPageCount", "ocrPageCount", "ocrSourceCount"] as const;
+const ocrSummaryCountKeys = [
+  ...summaryCountKeys,
+  "ocrFailedPageCount",
+  "ocrPageCount",
+  "ocrSourceCount",
+  "ocrUncountedSourceCount",
+] as const;
+
+// Classic little-endian TIFF with the given number of frames: a header and a
+// chain of empty image file directories. Enough for the frame counter; the
+// tesseract stub never decodes it.
+const syntheticTiff = (frames: number): string => {
+  const bytes = new Uint8Array(8 + frames * 6);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(0, 0x4949, false);
+  view.setUint16(2, 42, true);
+  view.setUint32(4, 8, true);
+  for (let index = 0; index < frames; index += 1) {
+    view.setUint32(8 + index * 6 + 2, index === frames - 1 ? 0 : 8 + (index + 1) * 6, true);
+  }
+  return new TextDecoder("latin1").decode(bytes);
+};
 
 // Synthetic corpus for the extract resume tests: every source is a small file
 // under raw/source-a whose manifest digest is the real digest of its content.
@@ -1398,6 +1421,7 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
         readonly ocr?: boolean;
         readonly ocrPageTimeoutMillis?: number;
         readonly overwrite?: boolean;
+        readonly pdfinfoPath?: string;
         readonly tesseractPath?: string;
         readonly tikaTimeoutMillis?: number;
       } = {}
@@ -1411,7 +1435,7 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
           javaPath,
           ocr: overrides.ocr ?? false,
           overwrite: overrides.overwrite ?? false,
-          pdfinfoPath,
+          pdfinfoPath: overrides.pdfinfoPath ?? pdfinfoPath,
           pdftoppmPath,
           pffexportPath,
           tesseractPath: overrides.tesseractPath ?? tesseractPath,
@@ -2007,6 +2031,7 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
         ocrFailedPageCount: 0,
         ocrPageCount: 4,
         ocrSourceCount: 2,
+        ocrUncountedSourceCount: 1,
         skippedCount: 0,
         sourceCount: 6,
         succeededCount: 6,
@@ -2078,6 +2103,7 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
         ocrFailedPageCount: 4,
         ocrPageCount: 4,
         ocrSourceCount: 3,
+        ocrUncountedSourceCount: 0,
         skippedCount: 0,
         sourceCount: 4,
         succeededCount: 3,
@@ -2141,6 +2167,57 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
       expect(modellessSummary.ocrSourceCount).toBe(0);
       expect(modellessSummary.succeededCount).toBe(1);
       expect(modellessReport).toContain('"missing":["chi_sim","chi_tra","eng"]');
+    })
+  );
+
+  it.effect(
+    "turns OCR off when a Poppler tool is missing and counts PDFs it cannot count",
+    Effect.fnUntraced(function* () {
+      const sources = [
+        { content: "pages=2", name: "scan.pdf" },
+        { content: "no page count here", name: "unreadable.pdf" },
+      ];
+      const withoutPdfinfo = yield* makeExtractResumeFixture(sources);
+      const healthy = yield* makeExtractResumeFixture(sources);
+
+      const disabled = yield* withoutPdfinfo.run({ ocr: true, pdfinfoPath: "/nonexistent/beep-test-pdfinfo" });
+      const disabledReport = yield* withoutPdfinfo.exists("ocr/languages.json");
+      const counted = yield* healthy.run({ ocr: true });
+      const unreadableRows = yield* healthy.exists(`ocr/pages/${operationIdFor("no page count here")}.jsonl`);
+
+      // A missing tool disables the pass up front, as a missing tesseract does.
+      expect(disabled.ocrSourceCount).toBe(0);
+      expect(disabled.ocrUncountedSourceCount).toBe(0);
+      expect(disabledReport).toBe(false);
+
+      // With the tools present, the PDF pdfinfo cannot read is counted, not passed over.
+      expect(counted.ocrSourceCount).toBe(1);
+      expect(counted.ocrPageCount).toBe(2);
+      expect(counted.ocrUncountedSourceCount).toBe(1);
+      expect(counted.succeededCount).toBe(2);
+      expect(unreadableRows).toBe(false);
+    })
+  );
+
+  it.effect(
+    "reads a single-frame TIFF and leaves a multi-frame TIFF on its first reading",
+    Effect.fnUntraced(function* () {
+      const single = syntheticTiff(1);
+      const multi = syntheticTiff(3);
+      const fixture = yield* makeExtractResumeFixture([
+        { content: single, name: "single.tif" },
+        { content: multi, name: "fax.tiff" },
+      ]);
+
+      const summary = yield* fixture.run({ ocr: true });
+      const singleRows = yield* fixture.pageRows(single);
+      const multiRows = yield* fixture.exists(`ocr/pages/${operationIdFor(multi)}.jsonl`);
+
+      expect(summary.ocrSourceCount).toBe(1);
+      expect(summary.ocrPageCount).toBe(1);
+      expect(summary.succeededCount).toBe(2);
+      expect(A.map(singleRows, (row) => [row.pageNumber, row.pageCount, row.status])).toEqual([[1, 1, "read"]]);
+      expect(multiRows).toBe(false);
     })
   );
 

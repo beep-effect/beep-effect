@@ -15,6 +15,7 @@ import {
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../../internal/schema/PosInt.ts";
@@ -212,10 +213,15 @@ export const CorpusPageReadingRecordJson = JsonStringCodec(CorpusPageReadingReco
 export class CorpusExtractOcrCounts extends S.Class<CorpusExtractOcrCounts>($I`CorpusExtractOcrCounts`)(
   {
     failedPageCount: S.Natural,
+    pageCountFailed: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     readPageCount: S.Natural,
   },
   $I.annote("CorpusExtractOcrCounts", {
-    description: "How many pages of one source the OCR pass read and how many it failed.",
+    description:
+      "How many pages of one source the OCR pass read and how many it failed; pageCountFailed marks a PDF whose pages could not be counted, so none were read.",
   })
 ) {}
 

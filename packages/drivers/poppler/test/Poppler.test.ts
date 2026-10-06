@@ -1,9 +1,11 @@
-import { makePopplerRasterizer, PopplerConfig, PopplerError, VERSION } from "@beep/poppler";
+import { makePopplerRasterizer, PopplerConfig, PopplerError, tiffFrameCount, VERSION } from "@beep/poppler";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -58,7 +60,53 @@ const fixture = Effect.fn("PopplerTest.fixture")(function* (stubs: {
   };
 });
 
+// Classic TIFF header plus a directory chain. Each directory has zero entries
+// and a next-directory offset; a zero offset ends the chain.
+const tiffBytes = (littleEndian: boolean, directoryCount: number, loop = false): Uint8Array => {
+  const bytes = new Uint8Array(8 + directoryCount * 6);
+  const view = new DataView(bytes.buffer);
+  view.setUint16(0, littleEndian ? 0x4949 : 0x4d4d, false);
+  view.setUint16(2, 42, littleEndian);
+  view.setUint32(4, directoryCount === 0 ? 0 : 8, littleEndian);
+  for (let index = 0; index < directoryCount; index += 1) {
+    const offset = 8 + index * 6;
+    view.setUint16(offset, 0, littleEndian);
+    const last = index === directoryCount - 1;
+    view.setUint32(offset + 2, last ? (loop ? 8 : 0) : offset + 6, littleEndian);
+  }
+  return bytes;
+};
+
+it("counts TIFF frames from the directory chain without decoding", () => {
+  expect(tiffFrameCount(tiffBytes(true, 1))).toEqual(O.some(1));
+  expect(tiffFrameCount(tiffBytes(false, 1))).toEqual(O.some(1));
+  expect(tiffFrameCount(tiffBytes(true, 3))).toEqual(O.some(3));
+  assertNone(tiffFrameCount(tiffBytes(true, 0)));
+  assertNone(tiffFrameCount(tiffBytes(true, 2, true)));
+  assertNone(tiffFrameCount(new Uint8Array([0x49, 0x49, 42, 0, 200, 0, 0, 0])));
+  assertNone(tiffFrameCount(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0])));
+  assertNone(tiffFrameCount(new Uint8Array([1, 2, 3])));
+});
+
 it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (it) => {
+  it.effect(
+    "probes both tools once and fails when either is missing",
+    Effect.fnUntraced(function* () {
+      const both = yield* fixture({ pdfinfo: silentStub, pdftoppm: silentStub });
+      const onlyInfo = yield* fixture({ pdfinfo: silentStub });
+
+      yield* (yield* makePopplerRasterizer(
+        PopplerConfig.make({ pdfinfoPath: both.pdfinfoPath, pdftoppmPath: both.pdftoppmPath })
+      )).probe;
+      const missing = yield* (yield* makePopplerRasterizer(
+        PopplerConfig.make({ pdfinfoPath: onlyInfo.pdfinfoPath, pdftoppmPath: onlyInfo.pdftoppmPath })
+      )).probe.pipe(Effect.flip);
+
+      expect(missing.reason).toBe("engine-unavailable");
+      expect(missing.message).toBe(`${onlyInfo.pdftoppmPath} could not be started.`);
+    })
+  );
+
   it.effect(
     "applies the documented configuration defaults",
     Effect.fnUntraced(function* () {

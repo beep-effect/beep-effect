@@ -297,7 +297,7 @@ const groupAdjacent = <T>(
  *
  * **Details**
  *
- * Only word rows (level 5) with non-blank text count. Words of one line are joined by a space, lines by a newline, and a blank line separates paragraphs. The mean confidence is Tesseract's per-word score averaged and scaled from 0-100 to 0-1; a page with no words has none.
+ * Only word rows (level 5) with non-blank text count. Words of one line are joined by a space, lines by a newline, and a blank line separates paragraphs; the page number is part of every grouping key, so the frames of a multi-frame image never merge into one line. The mean confidence is Tesseract's per-word score averaged and scaled from 0-100 to 0-1; a page with no words has none.
  *
  * **Example** (Parse two words on one line)
  *
@@ -321,11 +321,13 @@ export const parseTesseractTsv = (tsv: string): TesseractPageReading => {
     A.map((line) => Str.split(line, "\t")),
     A.filter((fields) => A.length(fields) >= 12 && A.headNonEmpty(fields) === wordLevel),
     A.map((fields) => {
-      const [block, paragraph, line] = A.take(A.drop(fields, 2), 3);
+      // The page number leads every key: a multi-frame image yields one TSV
+      // with the same block, paragraph and line numbers on every frame.
+      const [page, block, paragraph, line] = A.take(A.drop(fields, 1), 4);
       return {
         confidence: O.getOrElse(O.flatMap(A.get(fields, 10), Num.parse), () => 0),
-        line: `${block}.${paragraph}.${line}`,
-        paragraph: `${block}.${paragraph}`,
+        line: `${page}.${block}.${paragraph}.${line}`,
+        paragraph: `${page}.${block}.${paragraph}`,
         text: A.join(A.drop(fields, 11), "\t"),
       };
     }),

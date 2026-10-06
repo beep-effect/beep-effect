@@ -39,7 +39,7 @@ import {
 } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
-import { makePopplerRasterizer, PopplerConfig } from "@beep/poppler";
+import { makePopplerRasterizer, PopplerConfig, tiffFrameCount } from "@beep/poppler";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTesseractPageOcrEngine, planTesseractLanguages, TesseractConfig } from "@beep/tesseract";
@@ -50,6 +50,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import {
   Console,
+  Data,
   DateTime,
   Effect,
   FileSystem,
@@ -1195,6 +1196,14 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       }),
     })
   );
+  // Both Poppler tools are probed once, like the Tesseract binary: a missing
+  // pdfinfo would otherwise leave every PDF on its first reading with no row,
+  // count or line saying why.
+  const popplerProbe = yield* Effect.result(rasterizer.probe);
+  if (Result.isFailure(popplerProbe)) {
+    yield* Console.log(`corpus extract: OCR disabled: ${popplerProbe.failure.message}`);
+    return O.none();
+  }
   const scriptDetection = A.contains(engine.installedLanguages, "osd");
   const missingLanguagesRef = yield* Ref.make(HashSet.empty<string>());
   yield* Console.log(
@@ -1207,6 +1216,32 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     readonly render: (pageNumber: number) => Effect.Effect<PageImage, PopplerError>;
   }
 
+  // What the OCR pass decided for one source: pages to read, nothing to do, or
+  // a PDF whose pages could not be counted (an encrypted or corrupt file, or a
+  // pdfinfo failure), which is recorded rather than passed over in silence.
+  type OcrPlan = Data.TaggedEnum<{
+    readonly Read: { readonly pages: OcrPages };
+    readonly Keep: {};
+    readonly PageCountFailed: { readonly message: string };
+  }>;
+  const OcrPlan = Data.taggedEnum<OcrPlan>();
+
+  // A single-frame TIFF is one page. A multi-frame TIFF would be read whole by
+  // Tesseract under one page timeout and one digest, so it keeps its first
+  // reading until frames are rendered one by one.
+  const imagePages = (extension: string | undefined, sourceBytes: Uint8Array, digest: ContentDigest) =>
+    pipe(
+      ocrImageMediaType(extension),
+      O.filter((mediaType) => mediaType !== "image/tiff" || O.contains(tiffFrameCount(sourceBytes), 1)),
+      O.map(
+        (mediaType): Omit<OcrPages, "format"> => ({
+          pageCount: 1,
+          render: (_pageNumber: number): Effect.Effect<PageImage, PopplerError> =>
+            Effect.succeed(PageImage.make({ bytes: sourceBytes, digest, mediaType })),
+        })
+      )
+    );
+
   // Only PDFs and images whose first reading failed in a driver, or produced
   // no text or too little of it, are read again. Deferred sources and sources
   // no engine routes keep their outcome.
@@ -1216,28 +1251,10 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     record,
     sourceBytes,
     sourcePath,
-  }: ExtractOcrSourceInput): Effect.fn.Return<O.Option<OcrPages>> {
+  }: ExtractOcrSourceInput): Effect.fn.Return<OcrPlan> {
     const extension = extensionOf(basenameOf(record.relativePath));
     const format = classifySourceFormat(extension, undefined);
     const eligible = first.sourceRecord.status !== "skipped" && O.isNone(first.routingKey);
-    const pages = !eligible
-      ? O.none<Omit<OcrPages, "format">>()
-      : format === "pdf-text-layer"
-        ? yield* rasterizer.pageCount(sourcePath).pipe(
-            Effect.map((pageCount) => ({
-              pageCount,
-              render: (pageNumber: number) => rasterizer.renderPage(sourcePath, pageNumber),
-            })),
-            Effect.option
-          )
-        : O.map(
-            format === "image-metadata" ? ocrImageMediaType(extension) : O.none<PageImageMediaType>(),
-            (mediaType) => ({
-              pageCount: 1,
-              render: (_pageNumber: number): Effect.Effect<PageImage, PopplerError> =>
-                Effect.succeed(PageImage.make({ bytes: sourceBytes, digest: ids.digest, mediaType })),
-            })
-          );
     const firstTextBytes = yield* O.match(firstReadingPath(first), {
       onNone: () => Effect.succeed(0),
       onSome: (textPath) =>
@@ -1246,9 +1263,29 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
           Effect.orElseSucceed(() => 0)
         ),
     });
-    return O.filter(
-      O.map(pages, (found) => ({ ...found, format })),
-      ({ pageCount }) => firstTextBytes < usableTextBytesPerPage * pageCount
+    const plan = (pages: O.Option<Omit<OcrPages, "format">>): OcrPlan =>
+      pipe(
+        pages,
+        O.filter(({ pageCount }) => firstTextBytes < usableTextBytesPerPage * pageCount),
+        O.match({
+          onNone: () => OcrPlan.Keep(),
+          onSome: (found) => OcrPlan.Read({ pages: { ...found, format } }),
+        })
+      );
+    if (!eligible) {
+      return OcrPlan.Keep();
+    }
+    if (format === "image-metadata") {
+      return plan(imagePages(extension, sourceBytes, ids.digest));
+    }
+    if (format !== "pdf-text-layer") {
+      return OcrPlan.Keep();
+    }
+    return yield* rasterizer.pageCount(sourcePath).pipe(
+      Effect.map((pageCount) =>
+        plan(O.some({ pageCount, render: (pageNumber: number) => rasterizer.renderPage(sourcePath, pageNumber) }))
+      ),
+      Effect.catchTag("PopplerError", (error) => Effect.succeed(OcrPlan.PageCountFailed({ message: error.message })))
     );
   });
 
@@ -1447,9 +1484,22 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
   const readSource = Effect.fn("CorpusCommandService.ocrSource")(function* (
     input: ExtractOcrSourceInput
   ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
-    return yield* O.match(yield* pagesToRead(input), {
-      onNone: () => Effect.succeed(input.first),
-      onSome: (pages) => readPages(input, pages),
+    return yield* OcrPlan.$match(yield* pagesToRead(input), {
+      Keep: () => Effect.succeed(input.first),
+      PageCountFailed: ({ message }) =>
+        Console.log(`corpus extract: OCR could not count the pages of "${input.ids.relativePath}": ${message}`).pipe(
+          Effect.as({
+            ...input.first,
+            ocr: O.some(
+              CorpusExtractOcrCounts.make({
+                failedPageCount: S.Natural.make(0),
+                pageCountFailed: true,
+                readPageCount: S.Natural.make(0),
+              })
+            ),
+          })
+        ),
+      Read: ({ pages }) => readPages(input, pages),
     });
   });
 
@@ -2017,6 +2067,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
     ocrFailedPageCount: S.Natural.make(A.reduce(ocrCounts, 0, (total, counts) => total + counts.failedPageCount)),
     ocrPageCount: S.Natural.make(A.reduce(ocrCounts, 0, (total, counts) => total + counts.readPageCount)),
     ocrSourceCount: S.Natural.make(A.length(A.filter(ocrCounts, (counts) => counts.readPageCount > 0))),
+    ocrUncountedSourceCount: S.Natural.make(A.length(A.filter(ocrCounts, (counts) => counts.pageCountFailed))),
     skippedCount: coverage.skippedCount,
     sourceCount: coverage.sourceCount,
     succeededCount: coverage.succeededCount,
@@ -2028,7 +2079,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   yield* writeExtractArtifact(path.join(outDir, "extract-summary.json"), `${summaryJson}\n`);
 
   yield* Console.log(
-    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} noEngine=${summary.noEngineFailedCount} ocrSources=${summary.ocrSourceCount} ocrPages=${summary.ocrPageCount} ocrFailedPages=${summary.ocrFailedPageCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
+    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} noEngine=${summary.noEngineFailedCount} ocrSources=${summary.ocrSourceCount} ocrPages=${summary.ocrPageCount} ocrFailedPages=${summary.ocrFailedPageCount} ocrUncounted=${summary.ocrUncountedSourceCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
   );
   yield* Console.log(`corpus extract: output "${outDir}"`);
 
