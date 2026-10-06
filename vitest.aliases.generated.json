@@ -784,9 +784,6 @@
   "@beep/file-processing/Operation": [
     "./packages/foundation/capability/file-processing/src/Operation/index.ts"
   ],
-  "@beep/file-processing/PageOcr": [
-    "./packages/foundation/capability/file-processing/src/PageOcr/index.ts"
-  ],
   "@beep/file-processing/Service": [
     "./packages/foundation/capability/file-processing/src/Service/index.ts"
   ],
@@ -1856,6 +1853,9 @@
   ],
   "@beep/schema/PatternOntology": [
     "./packages/foundation/modeling/schema/src/PatternOntology/index.ts"
+  ],
+  "@beep/file-processing/PageOcr": [
+    "./packages/foundation/capability/file-processing/src/PageOcr/index.ts"
   ],
   "@beep/law-practice-domain/values/DocketDeadline": [
     "./packages/law-practice/domain/src/values/DocketDeadline/index.ts"
