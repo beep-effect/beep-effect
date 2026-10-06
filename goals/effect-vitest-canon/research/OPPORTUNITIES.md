@@ -6768,3 +6768,13 @@ conflict. Regenerating from the combined source yielded 1,941 findings with
 zero ratchet drift and retained every reviewed exception reason. A merge-aware
 inventory writer keyed by stable occurrence and preserving human dispositions
 would avoid manual reconciliation when independent PRs touch the same baseline.
+
+### Main-side test move left a stale schema inventory entry (2026-10-05)
+
+After integrating PR #1427, Yeet cheap gates blocked publication because the
+schema-first inventory still named the previous location of the fixed-fixture
+codec test in `yeet-sweep-retire.test.ts`. The live scan reported one stale
+entry and no missing or enforced candidates. Regenerating the inventory
+removed only that stale exception, and `lint schema-first` returned to zero
+drift. An owning PR check for schema-first inventory freshness would have
+caught the mismatch before another branch tried to publish.
