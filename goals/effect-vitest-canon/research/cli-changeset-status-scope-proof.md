@@ -1,9 +1,9 @@
 # Changeset-status fixture scope migration — 2026-10-06
 
-Source commit after rebasing on merged main: `3abc4e042794de1f7e6adc79b922cfd6ef598f35`.
+Source commit after rebasing on merged main: `bb101c62e3bbed1124438c3a03d0cfe06aa0be40`.
 Pre-stack source commit: `b8432779e9813d6b2b2024bf2c5516a07858f165`.
 Starting base: `26269bb0ec0094b1c255bab0a0451bd47415f22c` (`origin/main` at branch creation).
-Current base: `788dda66b5`, containing the merged #1445 and #1448 charter.
+Current base: `6f0cbeb021`, containing the merged #1445 and #1448 charter.
 
 The five integration cases in `packages/tooling/tool/cli/test/changeset-status.test.ts`
 now use `it.effect` inside per-case `it.layer` registrations. The layer provides
@@ -32,6 +32,7 @@ baseline rows, and this wave subtracted exactly eight (1,933). A second
 current-main model-test repair removes seven more to 1,926, with separate
 lineage in `cli-models-main-delta-proof.md`. The detector ratchet passed on
 the intermediate 1,933-row head and at the 1,926-row combined CLI head. The
-combined `@beep/repo-cli` package verification passed (audit 821.8 seconds,
-docgen 28.5 seconds). Hosted checks and a new whole-package after-timing cohort
-remain outstanding. This local branch is not yet published or merge-ready.
+pre-#1444 combined `@beep/repo-cli` package verification passed (audit 821.8
+seconds, docgen 28.5 seconds). The exact current base is under a new package
+proof; hosted checks and a new whole-package after-timing cohort remain
+outstanding. This local branch is not yet published or merge-ready.

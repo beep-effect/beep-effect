@@ -8,7 +8,7 @@ and two unbounded `it.layer` registrations. Main also carried a
 `Heavy / Lint Policy` fail its `lint:tsgo-rules` step. After integrating main,
 Yeet cheap gates identified six new Effect/Vitest findings in the model tests.
 
-Source fix: `1bcd9211d7e7b205286289011dad3b78aaaa94e6`. The repair deletes
+Source fix: `74f3b6dece8394bd4f4177a4b70ff9b6fdfda031`. The repair deletes
 the nested scopes, adds 30-second layer setup timeouts, and projects the one
 missing alias. It leaves the Node-backed command boundary and fresh
 TestConsole behavior in place. The two model files and the previously migrated
@@ -25,6 +25,7 @@ repo-cli ledger without changing their IDs or source evidence: five EV004 and
 two EV014 rows are fixed at the source SHA above; two EV010 platform-provenance
 rows remain open for the full current-main lens review. This is a bounded
 repair receipt, not a claim that P1's new-main delta or every human lens is
-complete. The combined CLI source passed full `@beep/repo-cli` package
-verification (audit 821.8 seconds, docgen 28.5 seconds). Hosted checks remain
+complete. The pre-#1444 combined CLI source passed full `@beep/repo-cli` package
+verification (audit 821.8 seconds, docgen 28.5 seconds). The exact current
+base includes #1444 and is under a new package proof; hosted checks remain
 a separate gate.

@@ -6789,3 +6789,13 @@ branch. The goal branch's local fixes were not pushed before the merge. A
 server-side required-check gate that holds the exact head until all Heavy jobs
 settle green would prevent this closeout gap; the next goal PR must carry and
 prove the repairs rather than treating the merge as proof.
+
+### New main test entered without an Effect/Vitest inventory row (2026-10-06)
+
+After rebasing the goal follow-up over #1444, `bun run beep lint
+effect-vitest` reported ten new rows in `session-ledger.test.ts`. The new
+test entered main without a matching generated baseline or reviewed lens
+receipt, so the goal branch had to migrate runner-owned scopes and reconcile
+the historical and current identities before it could publish. An owning
+Effect/Vitest inventory check on the introducing PR would have made this
+delta visible before merge.

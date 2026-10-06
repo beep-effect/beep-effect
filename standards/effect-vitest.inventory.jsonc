@@ -14565,6 +14565,28 @@
       "reason": "Per-invocation native temporary root brackets manifest/report work and has visible cleanup failure. The public runner now supplies platform services outside this helper; preserve the shorter callback lifetime. See goals/effect-vitest-canon/research/runners-bake-scope-proof.md."
     },
     {
+      "id": "EV003:packages/tooling/tool/cli/test/session-ledger.test.ts:100:withCwd@16#1",
+      "lens": "detector",
+      "ruleId": "EV003",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
+      "line": 100,
+      "endLine": 112,
+      "symbol": "withCwd",
+      "occurrence": "v2:c55984fbcf10c081484c5805aa7166d6e13183c57231d3ada98dc1debb5ca046",
+      "class": "resource-wrapper",
+      "evidence": "<A, E, R>(cwd: string, effect: Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.sync(() => { const previous = process.cwd; process.cwd = () => cwd; return previous; }), () => effect, (previ",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The CLI command reads process.cwd directly. withCwd acquires and releases a narrow override around one command call, restoring the original function even on failure; native Git checkout behavior is the test subject."
+    },
+    {
       "id": "EV003:packages/tooling/tool/cli/test/skills-command.test.ts:139:withTempRepoCommand@28#1",
       "lens": "detector",
       "ruleId": "EV003",
@@ -18480,6 +18502,28 @@
       "reason": "This shorter scope owns one dynamically built RunnersService with test-local Ref, spawner and filesystem overrides. It closes before subsequent command assertions; moving ownership to a shared suite layer would widen state lifetime. See goals/effect-vitest-canon/research/runners-bake-scope-proof.md."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/session-ledger.test.ts:70:scoped@2#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
+      "line": 70,
+      "endLine": 98,
+      "symbol": "scoped",
+      "occurrence": "v2:716d8692617c3f9f69fbff2c344d2e5a96821cca401fbf3b833f00323b383ff7",
+      "class": "helper-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmp = yield* fs.makeTempDirectoryScoped({ prefix: \"session-ledger-test-\" }); cons",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "withScratchCheckout owns a real temporary Git clone and linked worktree, then closes its scope after the supplied callback. The public it.layer fixture provides NodeServices and TestConsole per test; this shorter scope is deliberate native cleanup."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:161:scoped@28#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -21468,6 +21512,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV006:packages/tooling/tool/cli/test/session-ledger.test.ts:199:assertTrue@6#1",
+      "lens": "detector",
+      "ruleId": "EV006",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
+      "line": 199,
+      "endLine": 199,
+      "symbol": "assertTrue",
+      "occurrence": "v2:271b4028b141a0c610d64192eb5dcbd961400d75025c8038993c8c75d119ba33",
+      "class": "hand-rolled-data-assertion",
+      "evidence": "assertTrue(O.isNone(unknown.sessionId))",
+      "replacement": {
+        "primitive": "utils.assertNone",
+        "sketch": "Assert the original Option is None; preserve the existing predicate polarity. utils.deepStrictEqual: Use as explicit review navigation for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when the assertion is ambiguous or compound. Preserve the complete original assertion, matcher and all expected values during review. Structural equality is appropriate only when the original matcher actually requires recursive structural equality; this fallback does not establish a canonical structural-helper migration. utils.assertTrue: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly true. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertFalse: Use as Boolean-predicate review guidance for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an ambiguous or compound Boolean expression must be exactly false. Preserve the entire original Boolean expression and its expected polarity; this fallback does not prove canonical structural-helper migration. utils.assertNone: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be None. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSome: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when an Option must be Some with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertSuccess: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertFailure: Use for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion) when a genuine Result must fail with an expected error. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitFailure: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must fail with an expected Cause. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion. utils.assertExitSuccess: Use for result-outcome-assertion findings (EV005, candidate class result-outcome-assertion) after replacing Effect.result with Effect.exit, or for hand-rolled-data-assertion findings (EV006, candidate class hand-rolled-data-assertion), when an Exit must succeed with an expected value. Review assertion polarity and preserve every existing payload/error/Cause expectation. A Boolean branch assertion alone does not supply an expected payload, error or Cause; do not invent one or rewrite a compound predicate as a single structural assertion."
+      },
+      "severity": "minor",
+      "confidence": 0.95,
+      "mechanization": "detector",
+      "status": "exception",
+      "reason": "The direct Option.None assertion verifies the absent environment variable result. It does not reconstruct domain data or compare a hand-built object; the harness and session ID fields are asserted separately."
     },
     {
       "id": "EV006:packages/tooling/tool/cli/test/turbo-lane-digest.test.ts:102:expect@6#1",
@@ -29474,6 +29540,28 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/session-ledger.test.ts:16:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/session-ledger.test.ts",
+      "line": 16,
+      "endLine": 16,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "NodeServices is required for native git subprocesses, linked worktrees, chmod/stat, and real path semantics in this suite. MemoryFileSystem would change the command subject."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/setup-effect-ref.test.ts:2:@effect/platform-node@0#1",
