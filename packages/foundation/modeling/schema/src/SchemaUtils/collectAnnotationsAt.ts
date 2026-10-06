@@ -57,11 +57,7 @@ const collect = (schema: S.Top, key: string): ReadonlyArray<unknown> => {
     visitChecks(ast.checks ?? A.empty());
     collectFrom(ast.context?.annotations);
 
-    visitStructuralChildren(ast, visit);
-
-    if (ast.encoding !== undefined) {
-      A.forEach(ast.encoding, (link) => visit(link.to));
-    }
+    visitChildren(ast, visit);
   };
 
   visit(schema.ast);
@@ -81,7 +77,7 @@ const pipeAstObjects = (ast: SchemaAST.Objects, visit: (ast: SchemaAST.AST) => v
   });
 };
 
-const visitStructuralChildren = (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST) => void): void =>
+const visitStructure = (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST) => void): void =>
   Match.typeTags<SchemaAST.AST, void>()({
     Declaration: ({ typeParameters }) => A.forEach(typeParameters, visit),
     Null: () => undefined,
@@ -105,6 +101,55 @@ const visitStructuralChildren = (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST)
     Union: ({ types }) => A.forEach(types, visit),
     Suspend: ({ thunk }) => visit(thunk()),
   })(ast);
+
+// Structural children first, then the targets of every encoding link.
+const visitChildren = (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST) => void): void => {
+  visitStructure(ast, visit);
+  if (ast.encoding !== undefined) {
+    A.forEach(ast.encoding, (link) => visit(link.to));
+  }
+};
+
+/**
+ * Visits the direct structural children and encoding targets of one schema AST node.
+ *
+ * **Details**
+ *
+ * Children are visited in declaration order: declaration type parameters,
+ * template parts, tuple elements then rest elements, property types then index
+ * signatures, union members, and the evaluated thunk of a suspended schema,
+ * followed by the target of each encoding link.
+ * Leaf nodes have no children. The traversal does not recurse and tracks no
+ * visited set, so recursive schemas need the caller's own identity guard.
+ *
+ * **Example** (Collect the direct children of a struct)
+ *
+ * ```ts import.meta.vitest name="Collect the direct children of a struct"
+ * import { visitStructuralChildren } from "@beep/schema/SchemaUtils/collectAnnotationsAt"
+ * import * as S from "effect/Schema"
+ * import type * as SchemaAST from "effect/SchemaAST"
+ *
+ * const tags: Array<SchemaAST.AST["_tag"]> = []
+ * visitStructuralChildren(S.Struct({ name: S.String, age: S.Number }).ast, (child) => {
+ *   tags.push(child._tag)
+ * })
+ *
+ * tags // => ["String", "Number"]
+ * ```
+ *
+ * Supports both call styles: `visitStructuralChildren(ast, visit)` and
+ * `visitStructuralChildren(visit)(ast)`.
+ *
+ * @param ast - Node whose direct children are visited.
+ * @param visit - Callback invoked once per direct child.
+ * @throws When evaluation of a user-supplied `Suspend` thunk throws.
+ * @category getters
+ * @since 0.0.0
+ */
+export const visitStructuralChildren: {
+  (visit: (ast: SchemaAST.AST) => void): (ast: SchemaAST.AST) => void;
+  (ast: SchemaAST.AST, visit: (ast: SchemaAST.AST) => void): void;
+} = dual(2, visitChildren);
 
 /**
  * Collect every defined value for an annotation key across a schema AST.
