@@ -604,6 +604,39 @@ export class AdoptionTableRow extends S.Class<AdoptionTableRow>($I`AdoptionTable
 ) {}
 
 /**
+ * One ancestry probe the adoption table must answer: a change event's merge commit against a resolved head.
+ *
+ * **Details**
+ *
+ * The fold emits one probe per local-series change event and per resolved
+ * head of an in-window episode that opened at or after the event's
+ * `landedAt`; the local generator answers each with an {@link AncestryVerdict}.
+ *
+ * **Example** (Construct a probe)
+ *
+ * ```ts
+ * import { AdoptionProbe } from "@/kpi/Schemas"
+ *
+ * const probe = AdoptionProbe.make({
+ *   changeEventId: "iv-1427-push-first-publish",
+ *   mergeCommit: "01d8c18f314661a7957ef6420b2180ffb29804d1",
+ *   resolvedHeadSha: "28d962ec6b8d721430ed4d84ca8ff0f7c9715b74"
+ * })
+ * console.log(probe.changeEventId) // "iv-1427-push-first-publish"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdoptionProbe extends S.Class<AdoptionProbe>($I`AdoptionProbe`)(
+  { changeEventId: ChangeEventId, mergeCommit: GitCommitSha, resolvedHeadSha: GitCommitSha },
+  $I.annote("AdoptionProbe", {
+    description:
+      "A change event's merge commit and an in-window episode's resolved head, awaiting an ancestry verdict.",
+  })
+) {}
+
+/**
  * Bounds of one window slice: `[start, end)`, membership by episode start.
  *
  * **Example** (Bound the post-baseline window)
@@ -864,13 +897,156 @@ export const Cq012Decomposition = S.Union([Cq012Shares, Cq012Void]).pipe(
 export type Cq012Decomposition = typeof Cq012Decomposition.Type;
 
 /**
+ * The committed adoption table, schema id `ciops-kpi-adoption-table/v1` (launch sitting Ruling 8).
+ *
+ * **Details**
+ *
+ * A local generator writes it with `git merge-base --is-ancestor` from a clone
+ * with full history; it is never part of a CI check. The lab reads it by path
+ * and SHA-256 and never spawns git. The header names the generator, the probe,
+ * how it was generated, the window it covers and every pin its probes were
+ * derived from (each role but `adoption-table`); `rows` are sorted by
+ * change-event id, then resolved head.
+ *
+ * **Example** (Construct an empty table)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { DateTime } from "effect"
+ * import { AdoptionTable, PinnedKpiInput } from "@/kpi/Schemas"
+ *
+ * const table = AdoptionTable.make({
+ *   schemaVersion: "ciops-kpi-adoption-table/v1",
+ *   generator: "apps/labs/ciops/scripts/generate-adoption-table.ts",
+ *   probe: "git merge-base --is-ancestor <mergeCommit> <resolvedHeadSha>",
+ *   generation: "local clone with full history; never a CI check",
+ *   windowStart: DateTime.makeUnsafe("2026-09-03T06:29:33.572Z"),
+ *   windowEnd: DateTime.makeUnsafe("2026-10-06T03:19:28.440Z"),
+ *   pins: [
+ *     PinnedKpiInput.make({
+ *       role: "change-event-ledger",
+ *       path: "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
+ *       sha256: Sha256Hex.make("f520b302424f871804c050d9698dcb8e10f19c081fd3dc48a9a19932308d724d")
+ *     })
+ *   ],
+ *   rows: []
+ * })
+ * console.log(table.rows.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdoptionTable extends S.Class<AdoptionTable>($I`AdoptionTable`)(
+  {
+    schemaVersion: S.Literal("ciops-kpi-adoption-table/v1"),
+    generator: RepoRelativePath,
+    probe: S.NonEmptyString,
+    generation: S.NonEmptyString,
+    windowStart: S.DateTimeUtcFromString,
+    windowEnd: S.DateTimeUtcFromString,
+    pins: S.NonEmptyArray(PinnedKpiInput),
+    rows: S.Array(AdoptionTableRow),
+  },
+  $I.annote("AdoptionTable", {
+    description: "Committed ancestry probes of change-event merge commits against in-window resolved heads.",
+  })
+) {}
+
+/**
+ * One tier's populations on either side of one change event, over the window `W`.
+ *
+ * **Details**
+ *
+ * `pre` and `postAdopted` are law-cut sets (censored episodes excluded);
+ * the censored counts sit beside them. `postUnadopted` and `unknown` are
+ * counted outside the post-period. Every comparison is observational.
+ *
+ * **Example** (Record an empty partition)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ChangeEventTierPartition, PercentileSet } from "@/kpi/Schemas"
+ *
+ * const empty = PercentileSet.make({ n: S.Natural.make(0), p50Ms: O.none(), p95Ms: O.none() })
+ * const partition = ChangeEventTierPartition.make({
+ *   tier: "repair-green",
+ *   pre: empty,
+ *   preCensored: S.Natural.make(0),
+ *   postAdopted: empty,
+ *   postAdoptedCensored: S.Natural.make(0),
+ *   postUnadopted: S.Natural.make(0),
+ *   unknown: S.Natural.make(0)
+ * })
+ * console.log(partition.tier) // "repair-green"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ChangeEventTierPartition extends S.Class<ChangeEventTierPartition>($I`ChangeEventTierPartition`)(
+  {
+    tier: KpiTier,
+    pre: PercentileSet,
+    preCensored: S.Natural,
+    postAdopted: PercentileSet,
+    postAdoptedCensored: S.Natural,
+    postUnadopted: S.Natural,
+    unknown: S.Natural,
+  },
+  $I.annote("ChangeEventTierPartition", {
+    description: "Pre and adoption-qualified post populations of one tier around one change event.",
+  })
+) {}
+
+/**
+ * Observational partition of the reading at one change event (launch sitting Ruling 8).
+ *
+ * **Details**
+ *
+ * `tiers` carries the local tiers and the unassigned bucket for a `local`
+ * row, and the unmeasured TierCiMergeGreen for a `hosted` row. `inWindow`
+ * says whether `landedAt` falls inside `W`.
+ *
+ * **Example** (Record a partition with no tiers)
+ *
+ * ```ts
+ * import { ChangeEventPartition } from "@/kpi/Schemas"
+ *
+ * const partition = ChangeEventPartition.make({
+ *   changeEventId: "iv-1427-push-first-publish",
+ *   label: "observational",
+ *   inWindow: true,
+ *   tiers: []
+ * })
+ * console.log(partition.label) // "observational"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ChangeEventPartition extends S.Class<ChangeEventPartition>($I`ChangeEventPartition`)(
+  {
+    changeEventId: ChangeEventId,
+    label: S.Literal("observational"),
+    inWindow: S.Boolean,
+    tiers: S.Array(ChangeEventTierPartition),
+  },
+  $I.annote("ChangeEventPartition", {
+    description: "Observational, adoption-qualified pre/post populations of the reading at one change event.",
+  })
+) {}
+
+/**
  * The KPI reading document, schema id `ciops-kpi-reading/v1` (launch sitting Ruling 10).
  *
  * **Details**
  *
  * Generated check-by-default as `research/kpi-reading.json`. It names every
  * pinned input with its digest, the estimator, the declared starvation bound
- * and the window slices, and carries no A-Box term.
+ * and the window slices, and carries no A-Box term. `changeEventPartitions`
+ * holds one observational partition per change-event row.
  *
  * **Example** (Construct a minimal reading)
  *
@@ -907,7 +1083,8 @@ export type Cq012Decomposition = typeof Cq012Decomposition.Type;
  *     decomposedEpisodes: S.Natural.make(0),
  *     windowEpisodes: S.Natural.make(0)
  *   }),
- *   changeEvents: []
+ *   changeEvents: [],
+ *   changeEventPartitions: []
  * })
  * console.log(reading.schemaVersion) // "ciops-kpi-reading/v1"
  * ```
@@ -929,6 +1106,7 @@ export class KpiReading extends S.Class<KpiReading>($I`KpiReading`)(
     m1Replica: S.Array(M1ReplicaRow),
     decomposition: Cq012Decomposition,
     changeEvents: S.Array(ChangeEventRow),
+    changeEventPartitions: S.Array(ChangeEventPartition),
   },
   $I.annote("KpiReading", {
     description: "The W8 KPI reading: pinned inputs, windows, per-tier percentiles, starvation and change events.",
@@ -1054,7 +1232,7 @@ export class KpiAdmissionJoinMismatchError extends S.TaggedError<KpiAdmissionJoi
 ) {}
 
 /**
- * The KPI service contract exists but its implementation has not landed.
+ * The KPI contract stub layer was called; the live layer implements every operation.
  *
  * **Example** (Construct the not-implemented failure)
  *
@@ -1070,8 +1248,8 @@ export class KpiAdmissionJoinMismatchError extends S.TaggedError<KpiAdmissionJoi
  */
 export class KpiNotImplementedError extends S.TaggedError<KpiNotImplementedError>($I`KpiNotImplementedError`)(
   "KpiNotImplementedError",
-  { operation: S.Literal("read") },
+  { operation: S.Literals(["read", "probes"]) },
   $I.annoteError<KpiNotImplementedError>("KpiNotImplementedError", {
-    description: "The CiOpsKpi contract stub was called before the reading fold landed.",
+    description: "The CiOpsKpi contract stub layer was called; it implements no operation.",
   })
 ) {}

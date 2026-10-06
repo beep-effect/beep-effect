@@ -1525,3 +1525,64 @@ measurement instant inclusive, and W-b spans the canonical root's first to last 
 joins an attempt by attempt id and branch only; the checkout check applies where both rows carry the
 same field. (d) CQ-012 is reported as the queue-wait share only; the other shares have no pinned
 decomposition source.
+
+## 2026-10-06 — P4 W8 implementation sitting (orchestrator under the autonomy charter)
+
+The W8 implementation seat returned the fold, the two tables, the evidence script, the tests and the
+generated reading (PR-A), with every proof green. Three of its findings need rulings, and the data forced
+additive contract changes beyond the committed contract. Each ruling is the orchestrator's call under the
+operator autonomy charter and is listed in the P4 closing entry; its reversal is a later entry before PR-A
+merges, then a follow-up PR.
+
+**Ruling 13 — the seat-request clock opens no episode on these pins; Ruling 5's premise is restated.**
+In all 132 pinned ticket joins the ticket's enqueue follows its attempt's `startedAt` by 90 ms to 54 s
+(the reading's inputs, listed in `research/kpi-reading.md` "Inputs"), consistent with Yeet recording
+`attempt-started` before it requests admission. Under KPI law v1.2 §7.4 "Opening" (the earlier of the
+first attempt's start and a joined ticket's enqueue) every episode therefore opens at attempt start, and
+the `seat-request` count is 0 in every row. The label and its counts stay in the contract and the reading
+(an honest zero, not a removed column); queue wait stays inside the KPI because it lies inside the attempt
+span; and Ruling 5's clause "where the seat-request clock is complete" is read as "where the admission
+journal is complete (every joined ticket's enqueue and resolution retained)", which is what makes W-b the
+slice for starvation and CQ-012. A dated note under §7.4 "Label" says the same. W9 states the finding
+beside the episode-definition mapping. Rejected: dropping the label (the law names it), and opening at the
+enqueue alone (it would open no episode).
+
+**Ruling 14 — the CQ-012 decomposition rule (Ruling 12d made operational).** An episode decomposes when
+every attempt in it joins at least one admission ticket and every such ticket resolved (admitted,
+withdrawn or evicted); its queue wait is the sum of enqueue-to-resolution over those tickets; the
+denominator is the episode's uncut duration; a share above 1 voids the row; and the W-b row is void unless
+every W-b episode decomposes (Ruling 7). On the pin: void, 7 of 21 episodes decompose. Rejected: the
+first seat's rule (an episode decomposes only when it opened on the seat-request clock), vacuous under
+Ruling 13.
+
+**Ruling 15 — survivorship is one count on this pin.** Law §7.5 counts survivorship "by reason". The pin
+carries no compaction receipts, so the only observable reason is "the enqueue names an attempt with no
+pinned journal": one count (228 in W), reported as `survivorshipUnjoinedRequests`. Enqueues carrying no
+attempt id (the review-fix and full-proof ticket kinds) are ticket kinds without attempts, not losses, and
+sit outside the count. A by-reason split (lane retired, journal at cap, unknown) is a contract addition for
+a pin that carries receipts: a tracked follow-up, never imputed here.
+
+**Ruling 16 — additive contract changes the data forced (reported, not re-ratified).** (a) `CiOpsKpi`
+gains `probes`: the adoption-table generator needs the fold's in-window episode heads, so the fold
+publishes its ancestry probes (`AdoptionProbe`) instead of the generator re-deriving episodes;
+`KpiNotImplementedError.operation` widens to `read | probes`. (b) `AdoptionTable`
+(`ciops-kpi-adoption-table/v1`) is a new schema carrying all four source pins and a generation note
+rather than two digest fields, because the probes depend on the admission sources too; the live layer
+refuses a table generated from other pins. (c) `ChangeEventPartition`, `ChangeEventTierPartition` and
+`KpiReading.changeEventPartitions` carry Ruling 8's partitions. (d) `EvidenceWriteScript` gains
+`evidence:kpi:write` and `evidence:kpi-adoption:write`, and `topLevelBlock` is exported from
+`projection/Evidence.ts` for the sources reader. (e) The adoption table reproduces only in a clone whose
+object stores hold the fleet's heads (58 of 215 resolved heads exist only in sibling clones, reached
+through git's `GIT_ALTERNATE_OBJECT_DIRECTORIES`), which is what Ruling 8 means by a local generator: CI
+never runs it and verifies the table by sha256 only; the table header records the method and the pins.
+
+**Findings for W9 (no ruling).** Left-censored and possibly-truncated are 0 for pin reasons: the pin has
+no receipts, and the six at-cap journals open with August attempts that carry no `stage`, so no tiered
+streak opens at a first retained attempt. Six change events land before W (iv-870, iv-929, iv-874,
+iv-871, iv-891, iv-894): their partitions report `inWindow: false` and class every W episode post-adopted,
+so W9 reads them as context, not as partitions. The M1-replica gives 57/60 closed episodes and 122
+right-censored streaks against M1's 58/61 and 129, with P50 and P95 equal except the uncut P50; the
+likely cause is the later capture and the retired lanes' lost journals, and the row keeps its label. The
+#1427 post-period holds 8 episodes, 1 post-unadopted; the hosted series stays unmeasured. The normative
+starvation count (165 of 473 requests in W beyond 120000 ms) makes the reading a failing report, which is
+a lawful verdict (Ruling 9).

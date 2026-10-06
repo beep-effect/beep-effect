@@ -36,10 +36,19 @@ the gate PASSED at the pin before and after the scribe (#1490), and the lab's CQ
 verdict (the same-checkout arm holds with 0 pairs; the legacy-origin-drain arm is unobservable in the
 journal) under P3 close Rulings 33–35. P0–P2 complete. P4, the KPI reading and verdict (W8–W9), opened
 2026-10-06 under its launch sitting (Rulings 1–12, from `research/p4-survey.md`): the KPI ETL lands in
-`apps/labs/ciops/src/kpi/` (PR-A), then the verdict beside time-to-certainty's M1 (PR-B).
+`apps/labs/ciops/src/kpi/` (PR-A), then the verdict beside time-to-certainty's M1 (PR-B). W8 landed
+2026-10-06 (PR-A, Rulings 13–16): `research/kpi-reading.md` is the generated reading; its normative
+starvation count is nonzero (a lawful failing report), the seat-request clock opens no episode on the
+pins, and TierCiMergeGreen is unmeasured.
 
 ## Latest Evidence
 
+- 2026-10-06, W8: `apps/labs/ciops/src/kpi/` folds the `run4-fleet` pin, the two admission sources, the
+  change-event ledger and the committed adoption table (each by path and sha256) into
+  `research/kpi-reading.{json,md}` (`ciops-kpi-reading/v1`): nearest-rank P50/P95 cut and uncut per
+  slice and tier, censoring counts, the declared 120000 ms starvation bound (165 of 473 requests in W
+  beyond it: a lawful failing report), the M1-replica on W-a, CQ-012 void (7 of 21 decompose) and the
+  change-event partitions with #1427 on the local series. P4 Rulings 13–16 in `research/decisions.md`.
 - 2026-10-06, P3 close: `apps/labs/ciops` reports CQ-009 as a typed `Cq009Verdict` over the replayed
   active set (same-checkout arm holds, 0 pairs across 200 grants; legacy arm unobservable with its census;
   censorship line) in `research/s7-live-replay-evidence.md`; CQ-009's same-checkout branch is scoped to

@@ -228,6 +228,12 @@ with `proofTier` as a guard:
 - **Label.** Each episode carries its clock label, `seat-request` when a joined ticket
   set the opening, else `attempt-start`; the counts per label sit beside every
   percentile set.
+  *Note of 2026-10-06 (the W8 reading; P4 Ruling 13).* On the pinned inputs every joined
+  ticket's enqueue follows its attempt's `startedAt` (132 of 132 joins), so every episode
+  opens at attempt start and the `seat-request` count is 0 in every row; the label is
+  reported as that zero. W-b's role in §7.5 rests on the admission journal's completeness
+  (every joined ticket's enqueue and resolution retained), not on this clock setting any
+  opening.
 - **Stop.** An episode stops at the closing attempt's `attempt-finished.recordedAt`,
   else its `startedAt` (M1's convention, TTC-D:999-1000). A reconciler-stamped
   termination (`legacy-unowned-start`, `owner-dead`, `stale-unverifiable-owner`) never
@@ -252,7 +258,10 @@ with `proofTier` as a guard:
   (the canonical admission root's retained window, FLEET:2976-2978, where the
   seat-request clock is complete for joined episodes), and are printed as void, with
   the `(decomposedEpisodes, windowEpisodes)` pair, unless every episode in the slice
-  decomposes (§2).
+  decomposes (§2). An episode decomposes (P4 Ruling 14) when every attempt in it joins at
+  least one admission ticket and every such ticket resolved; its queue wait is the sum of
+  enqueue-to-resolution over those tickets, over the episode's uncut duration; a share
+  above 1 voids the row.
 
 ### 7.6 The starvation bound (declared before computing)
 

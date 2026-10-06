@@ -125,11 +125,17 @@ exploration's 2026-10-01 graduation sitting.
 
 ### P4 — KPI reading and verdict
 
-- [ ] **W8 KPI ETL.** Lab-side only: a module in `apps/labs/ciops` once S7 §6 is amended by
+- [x] **W8 KPI ETL.** Lab-side only: a module in `apps/labs/ciops` once S7 §6 is amended by
       ruling, or its own lab. Seat-request clock from v3 `admission-enqueued`; tier
       partitions with merged preview as a sub-partition of `TierLocalFullProof`; cut and
       uncut reports with censored counts; starvation beside percentiles; change-event
       partitions.
+      Landed 2026-10-06 (PR-A; P4 Rulings 13–16): `apps/labs/ciops/src/kpi/` behind `CiOpsKpi`
+      under S7 §9, the change-event constant table asserted against the ledger's sha256, the
+      committed adoption table (`research/kpi-adoption-table.json`) with its local generator, and
+      the check-by-default reading `research/kpi-reading.{json,md}` (`ciops-kpi-reading/v1`). On
+      the pins the seat-request clock opens no episode (Ruling 13), TierCiMergeGreen is unmeasured,
+      and the normative starvation count is nonzero: a lawful failing report.
 - [ ] **W9 verdict.** Fleet P50/P95 for a ratified post-baseline window beside
       `economics-close.json` M1 with the episode-definition mapping; improvement reported,
       not required (graduation Ruling 3); the S9 statement of projected versus deployed route.

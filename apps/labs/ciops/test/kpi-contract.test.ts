@@ -16,8 +16,10 @@ import {
   AncestryVerdict,
   CensorClass,
   ChangeEventId,
+  ChangeEventPartition,
   ChangeEventRow,
   ChangeEventSeries,
+  ChangeEventTierPartition,
   Cq012Decomposition,
   EpisodeAdoption,
   EpisodeClock,
@@ -132,6 +134,24 @@ const reading = KpiReading.make({
       landedAt: DateTime.makeUnsafe("2026-10-06T01:36:13.000Z"),
       mergeCommit: pushFirstMerge,
       tiers: ["local"],
+    }),
+  ],
+  changeEventPartitions: [
+    ChangeEventPartition.make({
+      changeEventId: pushFirstId,
+      label: "observational",
+      inWindow: true,
+      tiers: [
+        ChangeEventTierPartition.make({
+          tier: "unassigned",
+          pre: set(3, 1_000, 4_000),
+          preCensored: S.Natural.make(1),
+          postAdopted: emptySet,
+          postAdoptedCensored: S.Natural.make(0),
+          postUnadopted: S.Natural.make(2),
+          unknown: S.Natural.make(0),
+        }),
+      ],
     }),
   ],
 });
@@ -280,12 +300,15 @@ describe("@beep/ciops KPI contract", () => {
   );
 
   it.layer(CiOpsKpiNotImplemented, { timeout: "10 seconds" })((it) => {
-    it.effect("the contract stub fails typed with KpiNotImplementedError", () =>
+    it.effect("the contract stub fails both operations typed with KpiNotImplementedError", () =>
       Effect.gen(function* () {
         const service: CiOpsKpiShape = yield* CiOpsKpi;
         const failure: CiOpsKpiError = yield* Effect.flip(service.read(readingInput));
         assertInstanceOf(failure, KpiNotImplementedError);
         expect(failure.operation).toBe("read");
+        const probes: CiOpsKpiError = yield* Effect.flip(service.probes(readingInput));
+        assertInstanceOf(probes, KpiNotImplementedError);
+        expect(probes.operation).toBe("probes");
       })
     );
   });
