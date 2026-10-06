@@ -118,6 +118,7 @@ const passSettings = (settings: PracticeMailTaggingConfig, runId: TaggingRunId) 
       knownDocumentsPath: settings.knownDocumentsPath,
       boxCallLedgerPath: settings.boxCallLedgerPath,
       pageSize: settings.pageSize,
+      contactEvidence: settings.contactEvidence,
       runLabel: `${settings.runLabel}:${runId}`,
     })
   );

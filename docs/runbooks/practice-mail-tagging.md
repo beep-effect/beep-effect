@@ -107,14 +107,26 @@ means a provider throttled, 4 means another writer holds the state directory.
    each `\n` back into a line break. Durations with a space, such as
    `"5 minutes"`, need quotes for the same reason.
 
-Optional: `matter-contacts.json` in the state directory, an attorney-curated
-list of contact addresses and domains per matter. Without it the job matches
-on application, patent, and docket numbers only, and files only USPTO mail.
-The file is a JSON array of `{ "familyKey": "<client>.<family>",
-"addresses": [...], "domains": [...] }` rows. One malformed row makes the
-whole file unreadable and the run stops, so check it before a run. An address
-listed under more than one matter is kept, but it never routes an attachment
-to "From Client" and never tags a message on its own.
+Contact evidence: `PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE`, `off` (default)
+or `kg`. With `off` the job matches on application, patent, and docket numbers
+only, reads no contact file, and files only USPTO mail. With `kg` a matter's
+contact addresses are the ones the practice knowledge graph resolves `unique`
+to it: the address belongs to one contact, the contact is not a role mailbox,
+the address is not the practice's own, and every one of the attorney's own
+links for that contact names that matter. A `candidate` (a matter the address
+only writes about) never counts. `kg` needs a bundle of store format 4 or later
+(`2026-10-07-01` on); against an older bundle the pass stops with
+`correspondent tables unreadable`.
+
+Optional, with `kg` only: `matter-contacts.json` in the state directory, an
+attorney-curated addition for a confirmed address the graph lacks and for
+client sender domains, which the graph never supplies. Its addresses come
+after the graph's for the same matter. The file is a JSON array of
+`{ "familyKey": "<client>.<family>", "addresses": [...], "domains": [...] }`
+rows. One malformed row makes the whole file unreadable and the run stops, so
+check it before a run. An address listed under more than one matter is kept,
+but it never routes an attachment to "From Client" and never tags a message on
+its own.
 
 Load the environment for an attended shell session:
 
@@ -159,12 +171,15 @@ Do these in order. Do not enable the unit before step 6.
      number, two matters tied, or a matter number with too little support).
      Mail that only comes from a known contact is not in it. He decides where
      each belongs.
-   - **The contact overlay.** Without `matter-contacts.json` no client
-     attachment is filed: in the first live dry-run every attachment on a
-     matched message was skipped as `sender-not-routable`. Ask him to confirm,
-     per active matter, the client addresses and domains that should count as
-     "from the client". Leave out shared addresses (a foreign associate or an
-     in-house counsel who writes about several matters); the job would not
+   - **Contact evidence.** With `PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE=off`
+     no client attachment is filed: in the first live dry-run every attachment
+     on a matched message was skipped as `sender-not-routable`. Run one dry run
+     with `kg` (one shell, `PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE=kg
+     practice-mail-tagging dry-run`) and go through the matched and filed
+     counts with him. Switch the environment file to `kg` only after he agrees.
+     A confirmed client address the graph lacks goes into
+     `matter-contacts.json`; leave out shared addresses (a foreign associate or
+     an in-house counsel who writes about several matters), the job would not
      route them anyway.
 
 4. **Attended apply on a bounded slice.** The attorney is present and Outlook
