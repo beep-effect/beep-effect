@@ -81,7 +81,7 @@ const counted = (report: TaggingUndoReport, restoration: Restoration): TaggingUn
  *
  * ```ts
  * import { makeMailTaggingUndo } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeMailTaggingUndo)) // true
  * ```

@@ -131,7 +131,7 @@ const makeCheckpointStore = Effect.gen(function* () {
  *
  * ```ts
  * import { TagLedgerFile } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(TagLedgerFile)) // true
  * ```
@@ -164,7 +164,7 @@ export const TagLedgerFile: Layer.Layer<TagLedger, never, StateRequirements> = L
  *
  * ```ts
  * import { FilingLedgerFile } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(FilingLedgerFile)) // true
  * ```
@@ -198,7 +198,7 @@ export const FilingLedgerFile: Layer.Layer<FilingLedger, never, StateRequirement
  *
  * ```ts
  * import { BackfillCheckpointStoreFile } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(BackfillCheckpointStoreFile)) // true
  * ```
@@ -222,7 +222,7 @@ export const BackfillCheckpointStoreFile: Layer.Layer<BackfillCheckpointStore, n
  *   MailTaggingStateFile,
  *   MailTaggingStateLocation
  * } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * const State = MailTaggingStateFile.pipe(
  *   Layer.provide(

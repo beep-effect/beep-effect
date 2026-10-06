@@ -231,7 +231,7 @@ const hasPagesLeft = (pagesLeft: O.Option<number>): boolean =>
  *
  * ```ts
  * import { makeMailTaggingJob } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeMailTaggingJob)) // true
  * ```

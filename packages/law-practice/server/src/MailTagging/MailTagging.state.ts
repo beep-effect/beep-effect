@@ -50,7 +50,7 @@ export class MailTaggingStateConfig extends S.Class<MailTaggingStateConfig>($I`M
  *
  * ```ts
  * import { MailTaggingStateConfig, MailTaggingStateLocation } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * const Location = Layer.succeed(
  *   MailTaggingStateLocation,

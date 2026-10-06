@@ -178,7 +178,7 @@ const decodeContentHash = S.decodeEffect(Sha256HexFromBytes);
  *
  * ```ts
  * import { makeAttachmentFiler } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * console.log(Effect.isEffect(makeAttachmentFiler)) // true
  * ```

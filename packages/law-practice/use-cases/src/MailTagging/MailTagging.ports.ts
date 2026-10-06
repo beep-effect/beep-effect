@@ -64,7 +64,7 @@ const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.ports");
  *
  * ```ts
  * import { MailboxShape, MailPage } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const mailbox = MailboxShape.make({
  *   listMessagesSince: () => Effect.succeed(MailPage.make({ envelopes: [] })),
@@ -132,7 +132,8 @@ export class MailboxShape extends S.Class<MailboxShape>($I`MailboxShape`)(
  *
  * ```ts
  * import { Mailbox, MailboxShape, MailPage } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect, Layer } from "effect"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
  * const MailboxEmpty = Layer.succeed(
  *   Mailbox,
@@ -162,7 +163,7 @@ export class Mailbox extends Context.Service<Mailbox, MailboxShape>()($I`Mailbox
  * ```ts
  * import { MatterIndex } from "@beep/law-practice-domain/values/MailTagging"
  * import { MatterDirectoryShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  * import * as DateTime from "effect/DateTime"
  *
  * const directory = MatterDirectoryShape.make({
@@ -194,7 +195,7 @@ export class MatterDirectoryShape extends S.Class<MatterDirectoryShape>($I`Matte
  *
  * ```ts
  * import { MatterDirectory } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const matterCount = Effect.gen(function* () {
  *   const directory = yield* MatterDirectory
@@ -217,7 +218,7 @@ export class MatterDirectory extends Context.Service<MatterDirectory, MatterDire
  *
  * ```ts
  * import { MatterFolderDirectoryShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const folders = MatterFolderDirectoryShape.make({ folderFor: () => Effect.succeedNone })
  * console.log(typeof folders.folderFor) // "function"
@@ -248,7 +249,7 @@ export class MatterFolderDirectoryShape extends S.Class<MatterFolderDirectorySha
  * ```ts
  * import { MatterKey } from "@beep/law-practice-domain/values/MailTagging"
  * import { MatterFolderDirectory, MatterFolderRequest } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const folder = Effect.gen(function* () {
  *   const folders = yield* MatterFolderDirectory
@@ -280,7 +281,7 @@ export class MatterFolderDirectory extends Context.Service<MatterFolderDirectory
  * ```ts
  * import { DocumentFileId } from "@beep/law-practice-domain/values/MailTagging"
  * import { DocumentStoreShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const store = DocumentStoreShape.make({
  *   upload: () => Effect.succeed(DocumentFileId.make("file-0001"))
@@ -313,7 +314,7 @@ export class DocumentStoreShape extends S.Class<DocumentStoreShape>($I`DocumentS
  * ```ts
  * import { DocumentFolderId } from "@beep/law-practice-domain/values/MailTagging"
  * import { DocumentStore, UploadDocumentRequest } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const upload = Effect.gen(function* () {
  *   const store = yield* DocumentStore
@@ -346,7 +347,7 @@ export class DocumentStore extends Context.Service<DocumentStore, DocumentStoreS
  *
  * ```ts
  * import { TagLedgerShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const ledger = TagLedgerShape.make({ append: () => Effect.void, records: Effect.succeed([]) })
  * console.log(Effect.isEffect(ledger.records)) // true
@@ -379,7 +380,7 @@ export class TagLedgerShape extends S.Class<TagLedgerShape>($I`TagLedgerShape`)(
  *
  * ```ts
  * import { TagLedger } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const lineCount = Effect.gen(function* () {
  *   const ledger = yield* TagLedger
@@ -401,7 +402,7 @@ export class TagLedger extends Context.Service<TagLedger, TagLedgerShape>()($I`T
  *
  * ```ts
  * import { FilingLedgerShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const ledger = FilingLedgerShape.make({ append: () => Effect.void, entries: Effect.succeed([]) })
  * console.log(Effect.isEffect(ledger.entries)) // true
@@ -434,7 +435,7 @@ export class FilingLedgerShape extends S.Class<FilingLedgerShape>($I`FilingLedge
  *
  * ```ts
  * import { FilingLedger } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const filedCount = Effect.gen(function* () {
  *   const ledger = yield* FilingLedger
@@ -456,7 +457,7 @@ export class FilingLedger extends Context.Service<FilingLedger, FilingLedgerShap
  *
  * ```ts
  * import { BackfillCheckpointStoreShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const store = BackfillCheckpointStoreShape.make({ load: Effect.succeedNone, save: () => Effect.void })
  * console.log(typeof store.save) // "function"
@@ -491,7 +492,7 @@ export class BackfillCheckpointStoreShape extends S.Class<BackfillCheckpointStor
  *
  * ```ts
  * import { BackfillCheckpointStore } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const checkpoint = Effect.gen(function* () {
  *   const store = yield* BackfillCheckpointStore
@@ -515,7 +516,7 @@ export class BackfillCheckpointStore extends Context.Service<BackfillCheckpointS
  * ```ts
  * import { emptyTaggingRunReport } from "@beep/law-practice-domain/values/MailTagging"
  * import { AttachmentFilerShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const filer = AttachmentFilerShape.make({
  *   file: (request) => Effect.succeed(emptyTaggingRunReport(request.mode, request.runId))
@@ -547,7 +548,7 @@ export class AttachmentFilerShape extends S.Class<AttachmentFilerShape>($I`Attac
  *
  * ```ts
  * import { AttachmentFiler } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const hasFiler = Effect.map(AttachmentFiler, (filer) => typeof filer.file === "function")
  * console.log(Effect.isEffect(hasFiler)) // true
@@ -567,7 +568,7 @@ export class AttachmentFiler extends Context.Service<AttachmentFiler, Attachment
  * ```ts
  * import { emptyTaggingRunReport } from "@beep/law-practice-domain/values/MailTagging"
  * import { MailTaggingJobShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const job = MailTaggingJobShape.make({
  *   run: (request) => Effect.succeed(emptyTaggingRunReport(request.mode, request.runId))
@@ -599,7 +600,7 @@ export class MailTaggingJobShape extends S.Class<MailTaggingJobShape>($I`MailTag
  *
  * ```ts
  * import { MailTaggingJob } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const hasJob = Effect.map(MailTaggingJob, (job) => typeof job.run === "function")
  * console.log(Effect.isEffect(hasJob)) // true
@@ -619,7 +620,7 @@ export class MailTaggingJob extends Context.Service<MailTaggingJob, MailTaggingJ
  * ```ts
  * import { TaggingUndoReport } from "@beep/law-practice-domain/values/MailTagging"
  * import { MailTaggingUndoShape } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const undo = MailTaggingUndoShape.make({
  *   run: (request) =>
@@ -663,7 +664,7 @@ export class MailTaggingUndoShape extends S.Class<MailTaggingUndoShape>($I`MailT
  *
  * ```ts
  * import { MailTaggingUndo } from "@beep/law-practice-use-cases/MailTagging"
- * import { Effect } from "effect"
+ * import * as Effect from "effect/Effect"
  *
  * const hasUndo = Effect.map(MailTaggingUndo, (undo) => typeof undo.run === "function")
  * console.log(Effect.isEffect(hasUndo)) // true

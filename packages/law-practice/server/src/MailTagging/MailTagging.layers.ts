@@ -33,7 +33,7 @@ import type * as Crypto from "effect/Crypto";
  *
  * ```ts
  * import { AttachmentFilerLive } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(AttachmentFilerLive)) // true
  * ```
@@ -55,7 +55,7 @@ export const AttachmentFilerLive: Layer.Layer<
  *
  * ```ts
  * import { MailTaggingJobLive } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(MailTaggingJobLive)) // true
  * ```
@@ -77,7 +77,7 @@ export const MailTaggingJobLive: Layer.Layer<
  *
  * ```ts
  * import { MailTaggingUndoLive } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(MailTaggingUndoLive)) // true
  * ```
@@ -105,7 +105,7 @@ export const MailTaggingUndoLive: Layer.Layer<MailTaggingUndo, never, Mailbox | 
  *
  * ```ts
  * import { MailTaggingUseCasesLive } from "@beep/law-practice-server/MailTagging"
- * import { Layer } from "effect"
+ * import * as Layer from "effect/Layer"
  *
  * console.log(Layer.isLayer(MailTaggingUseCasesLive)) // true
  * ```
