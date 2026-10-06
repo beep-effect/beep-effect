@@ -54,6 +54,50 @@ export class DocketAttachmentRef extends S.Class<DocketAttachmentRef>($I`DocketA
 ) {}
 
 /**
+ * Where in the mailbox a message was found.
+ *
+ * **Details**
+ *
+ * `mailbox` is anywhere a message normally sits. `junk` and `deleted` are the
+ * Junk Email and Deleted Items folders: mail there is still processed, because
+ * a deadline that a filter or a stray click put away is still a deadline, and
+ * every entry written for it says where it was found.
+ *
+ * **Example** (Guard a source folder)
+ *
+ * ```ts
+ * import { DocketSourceFolder } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DocketSourceFolder.is.junk("junk")); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DocketSourceFolder = LiteralKit(["mailbox", "junk", "deleted"]).pipe(
+  $I.annoteSchema("DocketSourceFolder", { description: "Where in the mailbox a message was found." })
+);
+
+/**
+ * Type for {@link DocketSourceFolder}.
+ *
+ * **Example** (Type a source folder)
+ *
+ * ```ts
+ * import type { DocketSourceFolder } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const folder: DocketSourceFolder = "deleted";
+ * console.log(folder);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DocketSourceFolder = typeof DocketSourceFolder.Type;
+
+const docketMessageSourceFolderDefault: DocketSourceFolder = "mailbox";
+
+/**
  * A mailbox message as the docket intake pipeline sees it.
  *
  * **Example** (Make a message)
@@ -87,6 +131,10 @@ export class DocketMessage extends S.Class<DocketMessage>($I`DocketMessage`)(
       description: "Calendar day of receipt in the practice time zone.",
     }),
     sender: opt(S.String, "Sender address (never logged)."),
+    sourceFolder: DocketSourceFolder.pipe(
+      S.withConstructorDefault(Effect.succeed(docketMessageSourceFolderDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(docketMessageSourceFolderDefault))
+    ).annotateKey({ description: "Where in the mailbox the message was found; `mailbox` unless stated." }),
     subject: opt(S.String, "Subject line (never logged)."),
     webLink: opt(S.String, "Link that opens the message in Outlook."),
   },
@@ -380,6 +428,8 @@ export const DocketEntryFlag = LiteralKit([
   "ladder-truncated",
   "source-document-missing",
   "due-date-past",
+  "junk-folder",
+  "deleted-folder",
 ]).pipe($I.annoteSchema("DocketEntryFlag", { description: "A reason the attorney should check a tentative entry." }));
 
 /**
