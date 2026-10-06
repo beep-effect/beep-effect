@@ -55,4 +55,6 @@ literal and conformance test, live ledger rows tagged `cursor-cli` from a real h
 
 - Cursor's sandbox write-protects `.cursor/*.json`; lanes cannot author the deny list or hooks.json.
 - Never pin a `-fast` id; `composer-2.5-fast` is the product default at 6x input price.
-- No usage scraper, ever (D17).
+- No Cursor usage scraper, ever (D17). D17 covers Cursor's private endpoints only (operator ruling
+  2026-10-06): `bun run beep accounts status` reads the Claude and Codex plan-limit endpoints that
+  their own CLIs call, through the logins the local proxy already holds.
