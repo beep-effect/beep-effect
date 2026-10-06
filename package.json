@@ -44,6 +44,7 @@
     "@effect/tsgo-win32-x64": "0.47.2",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@effect/vitest": "4.0.1",
+    "@effected/github": "0.15.1",
     "@electric-sql/pglite": "0.5.8",
     "@elevenlabs/client": "^1.26.0",
     "@emotion/react": "^11.14.0",
