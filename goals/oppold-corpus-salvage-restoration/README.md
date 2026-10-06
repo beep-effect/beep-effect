@@ -9,10 +9,10 @@ digests while retaining the originals.
 
 ## Next action
 
-Start P0 with the archive-object and ledger schemas, then define the streaming
-hasher and archive-runner services. The existing `corpus salvage` command is
-not the P0 runner: it hashes a whole source in memory before copying and fails
-closed when the destination exists.
+Finish the resumed P0 archive run (`beep corpus restore-preserve`, lane E,
+2026-10-06), verify it with `restore-verify`, then land the P4 provenance
+index tooling and run it on the corpus home. P1-P2 ceilings are recorded in
+the decision log before the live mail slice.
 
 ## Launcher
 
@@ -38,6 +38,14 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-06 — P0 resumed and P4 opened (lane E, corpus provenance completion).
+The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;
+the source tree had since lost 1,818 operator-deleted noise files (recorded
+as inherited loss, see `SPEC.md` decision log). The run resumed under
+re-measured denominators on a USB 3 link. P4 schemas and service contracts
+landed (`ProvenanceIndex.schemas.ts`, `ProvenanceIndex.contracts.ts`).
+
 
 2026-08-27 — P0 in progress. Bar-v2 preservation schemas landed in the repo
 CLI Corpus command family (`Preservation.schemas.ts`): occurrence identity,

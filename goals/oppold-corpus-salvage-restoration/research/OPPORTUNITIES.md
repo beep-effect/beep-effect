@@ -142,3 +142,38 @@ the preflight's install window, and the PR + hosted checks start even while
 a sibling proof runs. Until then the workaround is camp-and-fire: poll the
 lock path and invoke publish the instant it clears, retrying on lost races
 because the coordinator has no queue.
+
+## 2026-10-06 — A stalled preservation writer went unnoticed for six weeks
+
+- **Doing:** resuming the P0 archive (lane E) from the 2026-08-27 run.
+- **Evidence:** `payload/root-archive.zip.partial` stopped growing at 90.25 GB
+  on 2026-08-27 12:15; the writer claim named a pid from a previous boot and
+  nothing alarmed. In the meantime the source lost 1,818 files (operator
+  cleanup), which voided the approved denominators and forced a re-measure.
+- **Prevented by:** a liveness row or heartbeat on long archive runs surfaced
+  by the session ledger / orchestrator gate, so a dead writer appears within
+  hours instead of at the next audit.
+
+## 2026-10-06 — A reconciliation denominator had no flag
+
+- **Doing:** rerunning `restore-preserve` after the source changed.
+- **Evidence:** `Collector present successful row denominator mismatch:
+  expected 21489, observed 19370.` The expected value was a schema
+  constructor default with no CLI flag, so the run could not be re-measured
+  without a code change (`--expected-collector-present-rows` added). The
+  verifier likewise hard-coded "exactly four inherited-loss rows".
+- **Prevented by:** every frozen denominator the run checks gets a flag and
+  the verifier checks the ratified class set, not a row count.
+
+## 2026-10-06 — The archive hasher was pure JavaScript
+
+- **Doing:** watching the resumed P0 run re-hash the promoted 147.7 GB root
+  archive before its PASS row.
+- **Evidence:** the process sat at 97% CPU on one core reading ~25 MB/s with
+  no writes; `hashOpenedRestorationFile` used `@noble/hashes` `sha256.create()`.
+  A 2 GB benchmark on the same file under Bun: noble 187 MB/s, `node:crypto`
+  1,917 MB/s, identical digest. At the observed rate the remaining ~350 GB of
+  hashing would have taken the rest of the day.
+- **Prevented by:** a shared streaming hasher primitive on the platform hash
+  (now `createStreamingSha256` in `Restoration.ts`), and a throughput line in
+  the run log so a slow hasher is visible in minutes.

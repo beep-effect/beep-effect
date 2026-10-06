@@ -183,6 +183,17 @@ The packet inherits both binding predecessor debt ledgers:
 - [ ] Measured disk/time amplification stays within the approved expansion
       ceiling.
 
+### P4 provenance index
+
+- [ ] Every pffexport tree has `messages-<tree>.jsonl` plus a counts-only
+      summary; every item directory yields exactly one record.
+- [ ] Attachment repair proposals come from byte signatures; `apply` journals
+      every rename and `undo` restores a synthetic tree byte-for-byte.
+- [ ] The metadata census covers the named roots with per-file status and a
+      counts-only summary.
+- [ ] `beep corpus provenance` is covered by package tests on synthetic
+      fixtures only.
+
 ### P2 transformation wave
 
 - [ ] The full mail estate closes store by store with terminal store and child
@@ -278,6 +289,47 @@ configuration adds no new policy gate.
 
 Source:
 [`DECISIONS.md`](../../explorations/oppold-corpus-overhaul/DECISIONS.md).
+
+### 2026-10-06: P0 source mutated after the approved preflight
+
+The 2026-08-27 run (runId `t7-salvage-2026-08-10:1787848829400:0`) stalled at
+a 90.25 GB root-archive partial when its writer process died. On resume the
+source tree measured 10,695 files / 200,874,564,858 bytes / 755 directories
+against the approved 12,157 / 207,772,579,526 / 755. 1,818 collector
+destinations (5,026,517,567 bytes; by type .jpg 1,242, .download 192, .png
+130, .txt 91, no-extension 48, .mp4 32; by tree f-recyclebin-E 1,043,
+b-profile 652, f-recyclebin-C 114, e-onedrive 9) were deleted from the drive
+on 2026-09-09, 09-14 and 09-23. The operator confirmed removing them
+deliberately ("less than desirable things"). Ruling: record them as a new
+inherited-loss class `operator-deleted-noise`, attempt no recovery, and do not
+surface any S4 copies in the practice corpus. Collector reconciliation now
+observes 19,370 present successful rows (was 21,489) and 3,140 mutated
+destinations (was 1,021); `restore-preserve` gained
+`--expected-collector-present-rows` because that denominator had only a
+schema default. The new class is a fifth, optional inherited-loss category
+(`--expected-operator-deleted-destinations`); for the already-running resume
+it is recorded beside the main ledger in
+`raw/t7-salvage-2026-08-10/inherited-loss-amendments.jsonl` under the same
+schema and runId, and the verifier now checks the four ratified classes by
+name instead of a row count. Reversal: none needed; the ledger keeps both
+runs.
+
+### 2026-10-06: free-space floor lowered for the resumed run
+
+The approved 1.8 TB `minimum-free-after-bytes` floor was set when 2.37 TB was
+free. With 1,009 GB free and about 265 GB left to archive, the resumed run
+uses a 600 GB floor and the unchanged 400 GB capacity ceiling. Reversal:
+re-run preflight with the original floor once disk is reclaimed.
+
+### 2026-10-06: P4 provenance index added
+
+The salvage coverage audit found no normalized header index, the attachment
+extension repair proposed but unapplied (115,402 rows for the base tree,
+none for the refresh tree's ~185K clipped files), and no document or
+attachment metadata census. P4 adds them as `beep corpus provenance`
+tooling with schemas and service contracts first. The attachment repair is
+reversible through its journal. Reversal: `beep corpus provenance attachments
+--mode undo --journal <path>`.
 
 ## Exception ledger
 

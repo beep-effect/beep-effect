@@ -3487,6 +3487,21 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const duplicateDestination = yield* reseal(
         A.map(withoutSeal, (record) => (record === secondTerminal ? duplicateDestinationTerminal : record))
       );
+      const firstInheritedLoss = A.findFirst(withoutSeal, (record) => record.recordType === "inherited-loss");
+      if (O.isNone(firstInheritedLoss) || firstInheritedLoss.value.recordType !== "inherited-loss") {
+        return yield* Effect.die("Expected an inherited-loss fixture row.");
+      }
+      const duplicateInheritedLossClass = yield* reseal(A.append(withoutSeal, firstInheritedLoss.value));
+      const withOperatorDeletedClass = yield* reseal(
+        A.append(
+          withoutSeal,
+          ArchiveLedgerRecord.cases["inherited-loss"].make({
+            ...firstInheritedLoss.value,
+            category: "operator-deleted-noise",
+            count: S.Natural.make(1818),
+          })
+        )
+      );
       const variants: ReadonlyArray<ReadonlyArray<ArchiveLedgerRecord>> = [
         withoutSeal,
         A.append(records, seal.value),
@@ -3494,6 +3509,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         duplicateTerminal,
         withoutTerminal,
         withoutInheritedLoss,
+        duplicateInheritedLossClass,
         duplicatePreflight,
         unapprovedPreflight,
         withFailure,
@@ -3516,6 +3532,18 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
           }),
         { discard: true }
       );
+
+      // The optional fifth class (operator-deleted-noise) beside the four
+      // ratified classes verifies; the verifier checks classes by name.
+      const encodedFifth = yield* Effect.forEach(withOperatorDeletedClass, encodeArchiveLedgerRecordJson);
+      yield* fs.writeFileString(manifestPath, `${A.join(encodedFifth, "\n")}\n`);
+      const verifiedWithFifth = yield* verifyRestorationArchive(
+        RestorationVerifyOptions.make({
+          corpusRoot: fixture.corpusRoot,
+          runLabel: "synthetic-restoration",
+        })
+      );
+      expect(verifiedWithFifth.unapprovedCount).toBe(0);
     })
   );
 

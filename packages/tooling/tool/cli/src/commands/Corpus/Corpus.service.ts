@@ -75,6 +75,24 @@ import type {
  */
 export { extractCorpusDocket } from "./internal/Docket.ts";
 
+import {
+  AttachmentMagicSnifferLive,
+  AttachmentRepairJournalLive,
+  FileMetadataCensusReaderLive,
+  indexMailExportTrees as indexMailExportTreesImpl,
+  MailExportTreeIndexerLive,
+  repairAttachmentExtensions as repairAttachmentExtensionsImpl,
+  runMetadataCensus as runMetadataCensusImpl,
+} from "./internal/ProvenanceIndex.ts";
+import type {
+  AttachmentRepairOptions,
+  AttachmentRepairSummary,
+  MailMessageIndexSummary,
+  MetadataCensusOptions,
+  MetadataCensusSummary,
+  ProvenanceMessagesOptions,
+} from "./internal/ProvenanceIndex.schemas.ts";
+
 const $I = $RepoCliId.create("commands/Corpus/Corpus.service");
 
 type CorpusCommandServiceRequirements =
@@ -137,6 +155,10 @@ export interface CorpusCommandServiceShape {
    * @since 0.0.0
    */
   readonly extractCorpus: (options: CorpusExtractOptions) => Effect.Effect<CorpusExtractSummary, CorpusCommandError>;
+  /** Index mail export trees. @since 0.0.0 */
+  readonly indexMailExportTrees: (
+    options: ProvenanceMessagesOptions
+  ) => Effect.Effect<ReadonlyArray<MailMessageIndexSummary>, CorpusCommandError>;
 
   /**
    * Build the organized/ client, docket, and email-archive taxonomy.
@@ -167,6 +189,10 @@ export interface CorpusCommandServiceShape {
   readonly reconcileRestorationAcceptance: (
     options: RestorationVerifyOptions
   ) => Effect.Effect<ReadonlyArray<RestorationAcceptanceRecord>, CorpusCommandError>;
+  /** Repair clipped attachment names. @since 0.0.0 */
+  readonly repairAttachmentExtensions: (
+    options: AttachmentRepairOptions
+  ) => Effect.Effect<AttachmentRepairSummary, CorpusCommandError>;
 
   /**
    * Convert every distinct legacy-Word digest through the pinned sandboxed fidelity pipeline.
@@ -192,6 +218,10 @@ export interface CorpusCommandServiceShape {
   readonly restoreRecycle: (
     options: RestorationRecycleOptions
   ) => Effect.Effect<RestorationRunSummary, CorpusCommandError>;
+  /** Census document metadata. @since 0.0.0 */
+  readonly runMetadataCensus: (
+    options: MetadataCensusOptions
+  ) => Effect.Effect<MetadataCensusSummary, CorpusCommandError>;
 
   /** Run the approved T7 preservation archive operation. @since 0.0.0 */
   readonly runT7Preservation: (
@@ -253,6 +283,32 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
   const runtimeContext = yield* Effect.context<CorpusCommandServiceRequirements>();
 
   return CorpusCommandService.of({
+    indexMailExportTrees: Effect.fn("CorpusCommandService.indexMailExportTrees")(function* (options) {
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const services = yield* Layer.build(MailExportTreeIndexerLive);
+          return yield* indexMailExportTreesImpl(options).pipe(Effect.provide(services));
+        })
+      ).pipe(Effect.provide(runtimeContext));
+    }),
+    repairAttachmentExtensions: Effect.fn("CorpusCommandService.repairAttachmentExtensions")(function* (options) {
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const services = yield* Layer.build(
+            Layer.mergeAll(AttachmentMagicSnifferLive(options.fileCommand), AttachmentRepairJournalLive)
+          );
+          return yield* repairAttachmentExtensionsImpl(options).pipe(Effect.provide(services));
+        })
+      ).pipe(Effect.provide(runtimeContext));
+    }),
+    runMetadataCensus: Effect.fn("CorpusCommandService.runMetadataCensus")(function* (options) {
+      return yield* Effect.scoped(
+        Effect.gen(function* () {
+          const services = yield* Layer.build(FileMetadataCensusReaderLive(options.exiftoolCommand));
+          return yield* runMetadataCensusImpl(options).pipe(Effect.provide(services));
+        })
+      ).pipe(Effect.provide(runtimeContext));
+    }),
     approveT7Preservation: Effect.fn("CorpusCommandService.approveT7Preservation")(
       (corpusRoot, ceilingBytes, approvedBy) =>
         approveT7PreservationImpl(corpusRoot, ceilingBytes, approvedBy).pipe(Effect.provide(runtimeContext))
@@ -859,3 +915,42 @@ export const printCorpusIndex = printLines([
   "- BEEP_OPPOLD_CORPUS_ROOT=/path/to/corpus BEEP_T7_ROOT=/path/to/t7 bun run beep corpus preserve run",
   "- BEEP_OPPOLD_CORPUS_ROOT=/path/to/corpus bun run beep corpus preserve verify",
 ]);
+
+/**
+ * Delegate indexMailExportTrees to the corpus service.
+ * **Example** (Reference the operation) `const operation = indexMailExportTrees`
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const indexMailExportTrees = Effect.fn("Corpus.indexMailExportTrees")(function* (
+  options: ProvenanceMessagesOptions
+): Effect.fn.Return<ReadonlyArray<MailMessageIndexSummary>, CorpusCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).indexMailExportTrees(options);
+});
+
+/**
+ * Delegate repairAttachmentExtensions to the corpus service.
+ * **Example** (Reference the operation) `const operation = repairAttachmentExtensions`
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const repairAttachmentExtensions = Effect.fn("Corpus.repairAttachmentExtensions")(function* (
+  options: AttachmentRepairOptions
+): Effect.fn.Return<AttachmentRepairSummary, CorpusCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).repairAttachmentExtensions(options);
+});
+
+/**
+ * Delegate runMetadataCensus to the corpus service.
+ * **Example** (Reference the operation) `const operation = runMetadataCensus`
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runMetadataCensus = Effect.fn("Corpus.runMetadataCensus")(function* (
+  options: MetadataCensusOptions
+): Effect.fn.Return<MetadataCensusSummary, CorpusCommandError, CorpusCommandService> {
+  return yield* (yield* CorpusCommandService).runMetadataCensus(options);
+});

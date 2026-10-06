@@ -62,3 +62,10 @@ export {
   PreservationVerifierLive,
   StreamingHasherLive,
 } from "./internal/Preservation.ts";
+export * from "./internal/ProvenanceIndex.contracts.ts";
+export {
+  AttachmentMagicSnifferLive,
+  AttachmentRepairJournalLive,
+  FileMetadataCensusReaderLive,
+  MailExportTreeIndexerLive,
+} from "./internal/ProvenanceIndex.ts";

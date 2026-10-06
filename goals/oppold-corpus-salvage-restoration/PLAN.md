@@ -10,9 +10,13 @@ Status: `active`
 
 Current phase state:
 
-- **P0 Preservation gate:** tooling, exact writer ownership, interrupted-tail
-  repair, and synthetic crash proofs are implemented; the archive operation
-  awaits approved numeric ceilings.
+- **P0 Preservation gate:** tooling is implemented. The approved archive run
+  started 2026-08-27 (`restore-preserve`, 400 GB ceiling) and stalled the same
+  day at a 90.25 GB `root-archive.zip.partial` when its writer process died;
+  the tree payload was never started. Resumed 2026-10-06 (lane E) under
+  re-measured denominators after the source changed: see the 2026-10-06
+  decision-log entries in `SPEC.md`. Independent verification follows the
+  run.
 - **P1 Mail vertical slice:** run-bound source-path extraction, child
   reconciliation, attachment repair, sandboxing, hard resource ceilings, and
   synthetic exception lanes are implemented; the live slice follows P0.
@@ -21,6 +25,12 @@ Current phase state:
   coverage; the single live wave follows the passing slice.
 - **P3 Close:** reconcile every ledger, write the reflection, drive the final
   PR to mergeable through Yeet, and flip packet state in that same PR.
+- **P4 Provenance index:** normalized per-message header index over every
+  pffexport tree, attachment clipped-extension repair with an undo journal,
+  and an exiftool metadata census over base files and attachments, shipped as
+  `beep corpus provenance` tooling and run on the corpus home. Opened
+  2026-10-06 from the salvage coverage audit; runs alongside P1-P2 and
+  precedes P3.
 
 ## P0 — Preservation gate (this week)
 
@@ -82,6 +92,33 @@ Run the remaining work in this order:
 **Exit:** all three family ledgers reconcile, the wave stays within approved
 disk/time ceilings, and no more than one full transformation run occurs.
 
+## P4 — Provenance index
+
+Opened 2026-10-06 from the read-only salvage coverage audit, which found no
+normalized header index on disk (only pffexport sidecars), the attachment
+extension repair proposed but never applied, and no per-attachment or
+document metadata census. Schema → service → implementation order applies
+(`internal/ProvenanceIndex.schemas.ts`, `internal/ProvenanceIndex.contracts.ts`).
+
+1. Header index: walk `staging/<tree>/children/*.export`, emit one
+   `MailMessageIndexRecord` per item (MAPI headers, RFC 5322 headers where
+   `InternetHeaders.txt` exists, recipients, body, attachments, embedded
+   items) to `staging/provenance/messages-<tree>.jsonl` with a counts-only
+   summary. Both the base and the 2026-07-refresh trees are indexed.
+2. Attachment repair: sniff every file directly under `Attachments/` by magic
+   bytes (`file --mime-type`/`--extension`), classify against the clipped
+   name remnant, write proposals, then `apply` with an append-only rename
+   journal and a tested `undo`. Never infer a type from the name alone.
+3. Metadata census: `exiftool` (magic-identified, batched) over `raw/`,
+   `incoming/`, `organized/`, and every `Attachments/` file; normalized
+   fields plus the raw tag set to `staging/provenance/metadata.jsonl`.
+4. Hand the summaries to workstream C (pass-3 identification) and the
+   practice-kg bundle; record counts only in the packet.
+
+**Exit:** both mail trees indexed with summaries, the repair journal applied
+and its undo proven on a synthetic tree, the census complete over the named
+roots, and `beep corpus provenance` covered by package tests.
+
 ## P3 — Close
 
 1. Reconcile preservation plus mail, recycle, DOC, warning, failure, mapping,
@@ -102,9 +139,12 @@ disk/time ceilings, and no more than one full transformation run occurs.
 
 ## Current blockers
 
-Live P0-P2 mutation is blocked until the operator approves the numeric
-capacity, retained-output, elapsed-time, and fidelity ceilings. Repository
-tooling and synthetic proof work may continue while that approval is pending.
+P0 runs under the 2026-10-06 re-measured denominators (decision log). P1-P2
+transformation ceilings (retained output, elapsed time, fidelity) are still
+agent-decided per the 2026-10-06 autonomy charter and must be recorded in the
+decision log before the live slice. The T7 exFAT volume carries a dirty flag;
+an unmounted `fsck.exfat` is an operator decision and is not required for the
+read-only archive run.
 
 ## Execution notes
 

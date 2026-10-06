@@ -12,6 +12,7 @@
 
 import { A, O, R, Str } from "@beep/utils";
 import * as Base64 from "effect/encoding/Base64";
+import * as S from "effect/Schema";
 
 const CRLF = "\r\n";
 const base64LineLength = 76;
@@ -467,4 +468,88 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
 
   sections.push(`--${input.boundary}--`);
   return A.join(sections, CRLF);
+};
+
+/** Parsed transport headers, keyed by lowercase field name.
+ * **Example** (Describe a header map)
+ * ```ts
+ * import type { InternetHeaderMap } from "@beep/libpff"
+ * const headers: InternetHeaderMap = { to: ["a@example.com"] }
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const InternetHeaderMap = S.Record(S.String, S.Array(S.String));
+/** @category models
+ * @since 0.0.0 */
+export type InternetHeaderMap = typeof InternetHeaderMap.Type;
+
+const splitAddresses = (value: string): ReadonlyArray<string> => {
+  const parts: Array<string> = [];
+  let quoted = false;
+  let escaped = false;
+  let angleDepth = 0;
+  let commentDepth = 0;
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (c === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (c === '"' && commentDepth === 0) quoted = !quoted;
+    if (!quoted) {
+      if (c === "(") commentDepth++;
+      if (c === ")") commentDepth = Math.max(0, commentDepth - 1);
+      if (commentDepth === 0) {
+        if (c === "<") angleDepth++;
+        if (c === ">") angleDepth = Math.max(0, angleDepth - 1);
+        if (c === "," && angleDepth === 0) {
+          parts.push(Str.trim(value.slice(start, i)));
+          start = i + 1;
+        }
+      }
+    }
+  }
+  parts.push(Str.trim(value.slice(start)));
+  return A.filter(parts, Str.isNonEmpty);
+};
+
+/** Unfold RFC 5322 headers and retain repeated fields in input order.
+ * **Example** (Read folded addresses)
+ * ```ts
+ * import { parseInternetHeaders } from "@beep/libpff"
+ * console.log(parseInternetHeaders("To: a@example.com,\n b@example.com").to)
+ * ```
+ * @category parsers
+ * @since 0.0.0
+ */
+export const parseInternetHeaders = (text: string): InternetHeaderMap => {
+  const lines: Array<string> = [];
+  for (const line of Str.split(text, /\r?\n/)) {
+    if (Str.isEmpty(line)) break;
+    if (/^[ \t]/.test(line)) {
+      const last = lines.pop();
+      if (last !== undefined) lines.push(`${last} ${Str.trim(line)}`);
+    } else lines.push(line);
+  }
+  const headers: Record<string, ReadonlyArray<string>> = {};
+  for (const line of lines) {
+    const colon = line.indexOf(":");
+    if (colon <= 0) continue;
+    const key = Str.toLowerCase(Str.trim(line.slice(0, colon)));
+    const value = Str.trim(line.slice(colon + 1));
+    const values =
+      key === "to" || key === "cc"
+        ? splitAddresses(value)
+        : key === "references"
+          ? A.filter(Str.split(value, /\s+/), Str.isNonEmpty)
+          : [value];
+    headers[key] = [...(headers[key] ?? []), ...values];
+  }
+  return headers;
 };
