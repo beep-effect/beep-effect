@@ -594,6 +594,7 @@
     "packages/drivers/poppler",
     "apps/docket-intake",
     "packages/drivers/occt",
-    "packages/drivers/pdf-tools"
+    "packages/drivers/pdf-tools",
+    "apps/practice-mail-tagging"
   ]
 }
