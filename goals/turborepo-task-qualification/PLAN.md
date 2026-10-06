@@ -5,7 +5,21 @@
 Status: `completed-retained`
 Lifecycle: `completed-retained`
 
-## Current acceptance checkpoint: 2026-10-02
+## Current disposition: accepted closeout, recovered 2026-10-06
+
+PR #1389 merged at `28b28fa551a4aa30c3cfd5b5a3a899a739328aa2` from final head
+`a532dffc6536796b3b9dea6460f68540f358c9c2`. Final verification completed after
+the external merge. The operator explicitly accepted that ordering exception
+on October 2, and the implementation lane was retired. Completion is retained.
+
+The [October 6 recovery audit](research/recovery-audit-2026-10-06.md) verifies
+fourteen published native/operational hashes and a byte-identical adoption
+rebuild. Original private proof and acceptance/trust stores remain unavailable;
+the report distinguishes recovered bytes from historical tool output and
+records the limits of independent revalidation. No new runtime qualification
+or ordinary-profile activation is claimed.
+
+## Historical pre-final-publication checkpoint: 2026-10-02
 
 PR #1389 contains the source repairs and public adoption handoff at
 `466ecffcf940001714e62a565ef409076922b8af`. Older checkpoints below retain
@@ -60,13 +74,13 @@ goal closes only after merge verification and lane retirement.
 | P2 Local pilot and shadow | complete | Exercise one synthetic fixture and @beep/identity#lint in one named profile; record reads, writes, logs and semantic perturbations. | Fresh comparisons and shadow evidence are attributable; legacy settings remain visibly unassessed. |
 | P3 Signed replay integration | complete | Consume conformance/trust receipts and run the full isolated signed-replay protocol for the real pilot. | A real pilot qualifies with the required comparisons and shadow sample; unsupported profiles remain excluded. |
 | P4 Verify and hand off | complete | Run package gates, command/fixture tests and the qualification replay suite; hand the population and policy API to adoption. | Acceptance and negative cases pass with versioned receipts and no unexplained divergence. |
-| P5 Yeet: PR to mergeable | complete | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Yeet monitor reports merge-ready: yes on the final head. |
+| P5 Yeet: PR to mergeable | complete | Publish the scoped work through Yeet and resolve hosted failures and review threads. | Final-head verification passed after merge; the operator accepted that ordering exception on October 2. |
 | P6 Close | complete | Land final evidence, reflection and completed-retained lifecycle in the final implementation PR. | Same-PR closeout and all evidence links are present. |
 
 ## Historical checkpoints
 
 The following entries preserve the evidence and remaining work at their dated
-revisions. Use the current acceptance checkpoint above for present status.
+revisions. Use the current disposition and recovery audit above for present status.
 
 ### Resumed recovery and review repairs: 2026-10-01
 

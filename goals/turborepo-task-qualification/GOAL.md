@@ -12,8 +12,8 @@ Read AGENTS.md, then:
 - explorations/turborepo-quality-cache/MAP.md
 
 The user approved the brief, first slice and four-goal map on 2026-09-08.
-Implementation and retained pilot acceptance are recorded in PLAN and the
-current acceptance audit. Inspect those records and the manifest before acting;
+The accepted October 2 closeout and October 6 recovery limits are recorded in
+PLAN and research/recovery-audit-2026-10-06.md. Inspect those records and the manifest before acting;
 do not restart completed phases or relabel historical evidence. During final
 publication, preserve the full acceptance contract and verify the actual PR
 head before merge. Broad adoption remains a separate goal.
