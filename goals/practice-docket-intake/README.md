@@ -39,12 +39,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. Slice 1 (the `@beep/m365` app-only lane and write verbs) is in
-progress; slices 2 and 3 follow it.
+P1 Implement. Slices 0-2 are open as draft pull requests (#1455, #1456,
+#1458). Slice 3 (adapters and `apps/docket-intake`) is built and follows once
+slices 1 and 2 merge. The live smoke waits on the operator-attended
+registration.
 
 ## Latest Evidence
 
-Not started.
+Package handoffs pass for `@beep/m365`, `@beep/m365-mcp`,
+`@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
+`@beep/law-practice-server` and `@beep/docket-intake`. No live run yet.
 
 ## Notes
 

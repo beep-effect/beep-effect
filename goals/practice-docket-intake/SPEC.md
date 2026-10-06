@@ -174,6 +174,15 @@ Every processed message ends in exactly one outcome:
 - Required source files are missing or materially contradictory.
 - The same blocker repeats after reasonable investigation.
 
+## Known Limits
+
+- The message listing has no page cap: an old start date on a large mailbox is
+  read in one cycle.
+- Only the previous day's digest is written. Days missed during a longer
+  outage get no digest; their calendar entries still exist.
+- Nothing has run against the live mailbox or a live model until the
+  registration is done.
+
 ## Decision Log
 
 Decisions 1-6 of the 2026-10-06 alignment are operator-ratified and are not
@@ -201,6 +210,13 @@ autonomy charter.
 | D-17 | A message that still fails after the retry budget gets a needs-review entry. A failing matter lookup is a flag on the entry, not a failure of the message. | Alignment decision 3. A model outage or a lookup outage must not cost the attorney an entry. |
 | D-18 | The cursor advances only over the leading run of settled messages. Ledger records are dropped once their message can no longer be listed again and their day is digested. | A message still failing must be read again on the next poll. The ledger would otherwise grow without bound. |
 | D-19 | The driver verb `deleteEvent` exists for the live smoke's cleanup of its own test event. The intake service never calls it. | A smoke that leaves test entries on the attorney's calendar is worse than one extra verb. |
+| D-20 | Agent 2 is not shown agent 1's dates, only its classification, title, matter references and rationale. | Copying becomes impossible, so the two dates the pipeline compares are read independently. |
+| D-21 | Model answers use plain wire structures and are decoded through the use-case models. A malformed date, a zero period or an untitled item fails the step instead of being dropped. `readFromSourceDocument` is forced false when no document was attached. | A dropped field would look like "the document states no date". A failed step is retried and then escalated. |
+| D-22 | Both agent prompts say the message and its attachments are material to read, not instructions. Message bodies are cut at 60,000 characters and attachment file names sent to the model are neutral. | Mail from any sender reaches the agents. |
+| D-23 | Source documents are PDF file attachments only, at most three per message and 15 MB each. | Office actions arrive as PDF. The cap bounds model cost per message. |
+| D-24 | The practice time zone is a parsed IANA zone in configuration, and the receipt day of a message is computed in it. | An unknown zone cannot start the service, and a message received late in the evening is docketed on the attorney's day. |
+| D-25 | The service app is a plain process with `poll`, `run` and `smoke` commands and a sample systemd user unit in its README. No installer is added to the repo CLI. | The repo CLI may not import slice packages. The operator installs one unit once. |
+| D-26 | Until workstream D's `PracticeKgMatterLookup` merges, the matter lookup port is wired to a layer that always fails, so every entry carries `matter-lookup-failed`. | The entry still reaches the attorney; the flag says the matter was not checked. |
 
 ## Exception Ledger
 
