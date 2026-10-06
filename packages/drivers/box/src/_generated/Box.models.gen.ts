@@ -601,7 +601,7 @@ export type CollaborationAccessGrantee = typeof CollaborationAccessGrantee.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CollaborationItem = S.Union([S.suspend(() => File), S.suspend(() => Folder), S.suspend(() => WebLink)]).pipe($I.annoteSchema("CollaborationItem", {
+export const CollaborationItem = S.Union([S.suspend(() => FileMini), S.suspend(() => FolderMini), S.suspend(() => WebLinkMini)]).pipe($I.annoteSchema("CollaborationItem", {
     description: "Generated Box SDK schema for CollaborationItem."
   }));
 
@@ -3361,7 +3361,7 @@ export class File extends FileMini.extend<File>($I`File`)(
     createdBy: S.suspend(() => UserMini).pipe(S.optionalKey),
     modifiedBy: S.suspend(() => UserMini).pipe(S.optionalKey),
     ownedBy: S.suspend(() => UserMini).pipe(S.optionalKey),
-    sharedLink: S.suspend(() => FileSharedLinkField).pipe(S.optionalKey),
+    sharedLink: S.suspend(() => FileSharedLinkField).pipe(S.NullOr, S.optionalKey),
     parent: S.suspend(() => FolderMini).pipe(S.NullOr, S.optionalKey),
     itemStatus: S.suspend(() => FileItemStatusField).pipe(S.optionalKey),
   },
@@ -3436,7 +3436,7 @@ export class FileFull extends File.extend<FileFull>($I`FileFull`)(
     metadata: S.suspend(() => FileFullMetadataField).pipe(S.optionalKey),
     expiresAt: BoxSdkDateTime.pipe(S.NullOr, S.optionalKey),
     representations: S.suspend(() => FileFullRepresentationsField).pipe(S.optionalKey),
-    classification: S.suspend(() => FileFullClassificationField).pipe(S.optionalKey),
+    classification: S.suspend(() => FileFullClassificationField).pipe(S.NullOr, S.optionalKey),
     uploaderDisplayName: S.String.pipe(S.optionalKey),
     dispositionAt: BoxSdkDateTime.pipe(S.NullOr, S.optionalKey),
     sharedLinkPermissionOptions: S.suspend(() => FileFullSharedLinkPermissionOptionsField).pipe(S.Array, S.NullOr, S.optionalKey),
@@ -13104,7 +13104,7 @@ export class WebLink extends WebLinkMini.extend<WebLink>($I`WebLink`)(
     createdBy: S.suspend(() => UserMini).pipe(S.optionalKey),
     modifiedBy: S.suspend(() => UserMini).pipe(S.optionalKey),
     ownedBy: S.suspend(() => UserMini).pipe(S.optionalKey),
-    sharedLink: S.suspend(() => WebLinkSharedLinkField).pipe(S.optionalKey),
+    sharedLink: S.suspend(() => WebLinkSharedLinkField).pipe(S.NullOr, S.optionalKey),
     itemStatus: S.suspend(() => WebLinkItemStatusField).pipe(S.optionalKey),
     collections: S.suspend(() => Collection).pipe(S.Array, S.optionalKey),
     allowedSharedLinkAccessLevels: S.suspend(() => WebLinkAllowedSharedLinkAccessLevelsField).pipe(S.Array, S.optionalKey),
