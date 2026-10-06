@@ -3267,6 +3267,28 @@
       "reason": "Native filesystem behavior is the test subject: the file-backed mail-tagging ledgers and checkpoint are proven through real appends, fsync, whole-file reads, and a temp-file rename inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/MailTagging.layers.test.ts:47:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/MailTagging.layers.test.ts",
+      "line": 47,
+      "endLine": 47,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem behavior is the test subject: the live mail-tagging use-case layers are proven end to end over the file-backed ledgers and checkpoint (real appends, fsync, temp-file rename) inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
+    },
+    {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1023:provideScopedLayer@28#1",
       "lens": "resource",
       "ruleId": "EV002",

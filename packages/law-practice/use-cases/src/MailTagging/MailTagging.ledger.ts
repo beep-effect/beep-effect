@@ -51,7 +51,7 @@ const conversationMatter = (entry: TagLedgerEntry): O.Option<readonly [MailConve
  *
  * @param records - Every tag-ledger line in append order.
  * @returns The applied entries no undo line retires.
- * @category ledger
+ * @category read-models
  * @since 0.0.0
  */
 export const activeTagEntries = (records: ReadonlyArray<TagLedgerRecord>): ReadonlyArray<TagLedgerEntry> => {
@@ -97,7 +97,7 @@ const withLedgered = (
  *
  * @param records - Every tag-ledger line in append order.
  * @returns The ledgered categories of every message with an active entry.
- * @category ledger
+ * @category read-models
  * @since 0.0.0
  */
 export const ledgeredCategoriesOf = (
@@ -124,7 +124,7 @@ export const ledgeredCategoriesOf = (
  *
  * @param records - Every tag-ledger line in append order.
  * @returns The conversation-to-matter carryover map.
- * @category ledger
+ * @category read-models
  * @since 0.0.0
  */
 export const conversationMattersOf = (
@@ -147,7 +147,7 @@ export const conversationMattersOf = (
  * @param records - Every tag-ledger line in append order.
  * @param runId - Run whose entries are wanted.
  * @returns The run's applied entries no undo line retires.
- * @category ledger
+ * @category read-models
  * @since 0.0.0
  */
 export const activeTagEntriesOfRun: {

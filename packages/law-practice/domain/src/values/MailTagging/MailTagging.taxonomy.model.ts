@@ -12,6 +12,7 @@ import { LiteralKit } from "@beep/schema";
 import { EmailString } from "@beep/schema/Email";
 import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -368,7 +369,8 @@ export class MasterCategoryIntent extends S.Class<MasterCategoryIntent>($I`Maste
 const fnvOffsetBasis = 2166136261;
 const fnvPrime = 16777619;
 
-const codeUnit = (character: string): number => O.getOrElse(Str.charCodeAt(character, 0), () => 0);
+// `Str.split(text, "")` yields one-unit strings, so the fallback is never taken.
+const codeUnit = (character: string): number => O.getOrElse(Str.charCodeAt(character, 0), constant(0));
 
 const fnv1a32 = (text: string): number =>
   A.reduce(
@@ -403,7 +405,8 @@ const fnv1a32 = (text: string): number =>
 export const matterCategoryPreset = (key: MatterKey): OutlookCategoryPreset =>
   pipe(
     A.get(OutlookCategoryPreset.literals, fnv1a32(key) % A.length(OutlookCategoryPreset.literals)),
-    O.getOrElse(() => OutlookCategoryPreset.Enum.preset0)
+    // The index is a remainder of the literal count, so the fallback is never taken.
+    O.getOrElse(constant(OutlookCategoryPreset.Enum.preset0))
   );
 
 /**

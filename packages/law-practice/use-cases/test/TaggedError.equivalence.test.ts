@@ -99,6 +99,12 @@ describe("law-practice use-case tagged-error declared equivalence", () => {
     const different = MailTaggingStateError.corrupt("tag-ledger", "tag-ledger.jsonl", O.some(4));
 
     expectDeclaredEquivalence(same, first, second, different);
+    pipe(first.message === "tag-ledger.jsonl line 3 did not decode", assertTrue);
+    pipe(
+      MailTaggingStateError.corrupt("checkpoint", "checkpoint.json", O.none()).message ===
+        "checkpoint.json did not decode",
+      assertTrue
+    );
     pipe(
       same(
         MailTaggingStateError.unavailable("checkpoint", "checkpoint.json", "save", { diagnostic: "first" }),

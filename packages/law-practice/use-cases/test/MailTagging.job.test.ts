@@ -316,6 +316,41 @@ describe("MailTagging undo", () => {
     );
   });
 
+  it.layer(world(), { timeout: "30 seconds" })("deleted and already corrected messages", (it) => {
+    it.effect(
+      "counts a deleted message as missing and writes nothing to a message that lost its tags already",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* run("apply", runId);
+        yield* Ref.update(
+          state.messages,
+          A.filter((message) => message.messageId !== "msg-3")
+        );
+        yield* state.mailbox.setCategories(
+          SetCategoriesRequest.make({ messageId: envelope({ at: 5 }).messageId, categories: ["Follow up"] })
+        );
+        const categoryWrites = yield* state.writesOf("setCategories:");
+        const report = yield* undo("apply", "undo-0001");
+
+        expect({ ...report }).toMatchObject({
+          entries: 4,
+          messagesRestored: 2,
+          messagesMissing: 1,
+          categoriesRemoved: 3,
+          wrote: true,
+        });
+        expect(yield* state.writesOf("setCategories:")).toStrictEqual([
+          ...categoryWrites,
+          "setCategories:msg-1",
+          "setCategories:msg-2",
+        ]);
+        expect(yield* state.categoriesOf(5)).toStrictEqual(["Follow up"]);
+        expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toStrictEqual([]);
+        expect((yield* undo("apply", "undo-0002")).entries).toBe(0);
+      })
+    );
+  });
+
   it.layer(world(), { timeout: "30 seconds" })("second undo", (it) => {
     it.effect(
       "does nothing when the run is undone again",

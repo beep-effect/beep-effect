@@ -56,6 +56,7 @@ import * as DateTime from "effect/DateTime";
 import * as HashMap from "effect/HashMap";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 import type {
   BackfillCheckpoint,
@@ -169,6 +170,8 @@ type WorldOptions = {
   readonly envelopes: ReadonlyArray<MailEnvelope>;
   readonly attachments?: ReadonlyArray<readonly [MailMessageId, ReadonlyArray<FakeAttachment>]>;
   readonly pageSize?: number;
+  /** Makes every SHA-256 digest fail, as an unavailable platform would. */
+  readonly digestFails?: boolean;
 };
 
 type WorldShape = {
@@ -200,16 +203,26 @@ type WorldShape = {
 /** The synthetic world of one test: mutable state plus the port fakes over it. */
 export class World extends Context.Service<World, WorldShape>()($I`World`) {}
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, Uint8Array.from(data))).pipe(
-        Effect.map((buffer) => new Uint8Array(buffer))
-      ),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+const digestUnavailable = PlatformError.systemError({
+  _tag: "Unknown",
+  module: "Crypto",
+  method: "digest",
+  description: "digest unavailable",
+});
+
+const testCrypto = (digestFails: boolean) =>
+  Layer.succeed(
+    Crypto.Crypto,
+    Crypto.make({
+      digest: (algorithm, data) =>
+        digestFails
+          ? Effect.fail(digestUnavailable)
+          : Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, Uint8Array.from(data))).pipe(
+              Effect.map((buffer) => new Uint8Array(buffer))
+            ),
+      randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
+    })
+  );
 
 const noSuchAttachment = MailTaggingPortError.during("Mailbox", "downloadAttachment", "no such attachment");
 
@@ -346,7 +359,6 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
 });
 
 const Ports = Layer.mergeAll(
-  TestCrypto,
   Layer.effect(
     Mailbox,
     Effect.map(World, (world) => world.mailbox)
@@ -387,4 +399,9 @@ const UseCases = Layer.merge(
  * fakes. Only the acme matter has document folders.
  */
 export const scenario = (options: WorldOptions) =>
-  Layer.fresh(UseCases.pipe(Layer.provideMerge(Ports), Layer.provideMerge(Layer.effect(World, makeWorld(options)))));
+  Layer.fresh(
+    UseCases.pipe(
+      Layer.provideMerge(Layer.merge(Ports, testCrypto(options.digestFails === true))),
+      Layer.provideMerge(Layer.effect(World, makeWorld(options)))
+    )
+  );

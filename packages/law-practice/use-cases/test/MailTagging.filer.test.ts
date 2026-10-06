@@ -1,6 +1,11 @@
-import { AttachmentFiler, FileAttachmentsRequest } from "@beep/law-practice-use-cases/MailTagging";
+import {
+  AttachmentFiler,
+  FileAttachmentsRequest,
+  MailTaggingPortError,
+} from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import {
@@ -144,6 +149,60 @@ describe("MailTagging attachment filer", () => {
           [1, 2, 3],
           [4, 5, 6],
         ]);
+      })
+    );
+  });
+
+  it.layer(
+    scenario({
+      envelopes: [usptoMail],
+      attachments: [
+        [
+          usptoMail.messageId,
+          [
+            attachment({ id: "att-1", name: "README", bytes: [1] }),
+            attachment({ id: "att-2", name: "README", bytes: [2] }),
+            attachment({ id: "att-3", name: "   ", bytes: [3] }),
+          ],
+        ],
+      ],
+    }),
+    { timeout: "30 seconds" }
+  )("unusual names", (it) => {
+    it.effect(
+      "appends the short hash to a name without an extension and names a blank attachment",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const report = yield* file({ mode: "apply", message: usptoMail });
+
+        expect(report.attachmentsFiled).toBe(3);
+        expect(A.map(yield* Ref.get(state.uploads), (upload) => upload.fileName)).toStrictEqual([
+          "2026-07-01 README",
+          "2026-07-01 README (dbc1b4c9)",
+          "2026-07-01 attachment",
+        ]);
+      })
+    );
+  });
+
+  it.layer(
+    scenario({
+      envelopes: [usptoMail],
+      attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "notice.pdf", bytes: pdf })]]],
+      digestFails: true,
+    }),
+    { timeout: "30 seconds" }
+  )("hash failure", (it) => {
+    it.effect(
+      "fails with a typed content-hasher error and files nothing",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const error = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(error, MailTaggingPortError);
+        expect([error.port, error.operation]).toStrictEqual(["ContentHasher", "sha256"]);
+        assertNone(error.cause);
+        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
       })
     );
   });

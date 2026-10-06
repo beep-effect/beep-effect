@@ -304,7 +304,7 @@ const verdict = (
  * @param context - Matter index, taxonomy, policy, and conversation carryover map.
  * @param envelope - Message to score.
  * @returns One candidate per matter with evidence, best first.
- * @category matching
+ * @category use-cases
  * @since 0.0.0
  */
 export const matterCandidates: {
@@ -368,7 +368,7 @@ export const matterCandidates: {
  * @param context - Matter index, taxonomy, policy, and conversation carryover map.
  * @param envelope - Message to decide.
  * @returns The matched matter, or an explicit unmatched outcome with its reason.
- * @category matching
+ * @category use-cases
  * @since 0.0.0
  */
 export const decideMatterTagging: {
@@ -418,7 +418,7 @@ export const decideMatterTagging: {
  * @param taxonomy - Taxonomy whose rule intents are evaluated.
  * @param envelope - Message whose sender is tested.
  * @returns The categories of every rule intent the sender satisfies, in rule order.
- * @category matching
+ * @category use-cases
  * @since 0.0.0
  */
 export const senderRuleCategories: {

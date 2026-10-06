@@ -1,10 +1,18 @@
 import {
   decisionCategories,
   MailConversationId,
+  MailTaxonomy,
   MatterMatched,
   MatterUnmatched,
+  SenderAddressRule,
 } from "@beep/law-practice-domain/values/MailTagging";
-import { decideMatterTagging, MatterTaggerContext, matterCandidates } from "@beep/law-practice-use-cases/MailTagging";
+import {
+  decideMatterTagging,
+  MatterTaggerContext,
+  matterCandidates,
+  senderRuleCategories,
+} from "@beep/law-practice-use-cases/MailTagging";
+import { EmailString } from "@beep/schema/Email";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -125,6 +133,24 @@ describe("MailTagging matter tagger", () => {
     expect(!isMatched(decision) && A.map(decision.candidates, (candidate) => candidate.matterKey)).toStrictEqual([
       acme,
     ]);
+  });
+
+  it("applies a sender-address rule intent only to that exact sender", () => {
+    const withBillingRule = MatterTaggerContext.make({
+      index,
+      taxonomy: MailTaxonomy.make({
+        ruleIntents: [
+          SenderAddressRule.make({ address: EmailString.make("invoices@vendor.example.test"), category: "P: Billing" }),
+        ],
+      }),
+    });
+    const invoice = envelope({ at: 1, sender: "invoices@vendor.example.test" });
+    const colleague = envelope({ at: 2, sender: "sales@vendor.example.test" });
+
+    expect(senderRuleCategories(withBillingRule.taxonomy, invoice)).toStrictEqual(["P: Billing"]);
+    expect(senderRuleCategories(colleague)(withBillingRule.taxonomy)).toStrictEqual([]);
+    expect(decisionCategories(decideMatterTagging(withBillingRule, invoice))).toStrictEqual(["P: Billing"]);
+    expect(decisionCategories(decideMatterTagging(colleague)(withBillingRule))).toStrictEqual([]);
   });
 
   it("carries a tagged conversation's matter over to a reply", () => {

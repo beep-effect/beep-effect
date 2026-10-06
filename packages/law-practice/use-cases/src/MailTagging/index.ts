@@ -25,7 +25,7 @@ export * from "./MailTagging.job.ts";
 /**
  * Pure read models over the tag ledger.
  *
- * @category ledger
+ * @category read-models
  * @since 0.0.0
  */
 export * from "./MailTagging.ledger.ts";
@@ -39,7 +39,7 @@ export * from "./MailTagging.ports.ts";
 /**
  * Pure matter tagger.
  *
- * @category matching
+ * @category use-cases
  * @since 0.0.0
  */
 export * from "./MailTagging.tagger.ts";

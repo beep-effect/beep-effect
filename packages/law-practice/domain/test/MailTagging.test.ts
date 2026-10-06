@@ -62,6 +62,8 @@ const emptyDigest = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b785
 
 const defaultPolicy = { confidenceThreshold: 0.8, ambiguityMargin: 0.15, maxAttachmentBytes: 52_428_800 };
 
+const decodeJsonText = S.decodeEffect(S.fromJsonString(S.Unknown));
+
 const patentEvidence = MatterEvidence.make({
   kind: "patent-number",
   matched: MatterEvidenceToken.make("10000001"),
@@ -283,7 +285,7 @@ describe("MailTagging ledgers", () => {
       const undoneLine = yield* encode(undone);
 
       expect(Str.includes("\n")(appliedLine)).toBe(false);
-      expect(yield* S.decodeEffect(S.fromJsonString(S.Unknown))(appliedLine)).toStrictEqual({
+      expect(yield* decodeJsonText(appliedLine)).toStrictEqual({
         _tag: "TagApplied",
         runId: "run-0001",
         messageId: "msg-0001",

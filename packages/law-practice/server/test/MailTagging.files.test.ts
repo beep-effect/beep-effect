@@ -35,11 +35,12 @@ import { it } from "@beep/test-runner";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -163,6 +164,52 @@ describe("MailTagging file-backed state", () => {
         assertSome(error.line, 2);
         expect(error.message).toBe("tag-ledger.jsonl line 2 did not decode");
         assertNone(error.cause);
+      })
+    );
+  });
+
+  it.layer(state(), { timeout: "30 seconds" })("unwritable state", (it) => {
+    it.effect(
+      "refuses a record that does not satisfy its schema and writes nothing",
+      Effect.fnUntraced(function* () {
+        const ledger = yield* TagLedger;
+        const fs = yield* FileSystem.FileSystem;
+        const malformed = TagUndoEntry.make(
+          { ...undone, runId: TaggingRunId.make("undo 0001", { disableChecks: true }) },
+          { disableChecks: true }
+        );
+        const error = yield* Effect.flip(ledger.append(malformed));
+
+        assertInstanceOf(error, MailTaggingStateError);
+        expect([error.failure, error.file, error.message]).toStrictEqual([
+          "unavailable",
+          "tag-ledger.jsonl",
+          "tag-ledger.jsonl encode failed",
+        ]);
+        assertNone(error.cause);
+        expect(yield* fs.exists(yield* stateFile("tag-ledger.jsonl"))).toBe(false);
+      })
+    );
+
+    it.effect(
+      "reports a ledger file that cannot be opened or read, with the platform cause",
+      Effect.fnUntraced(function* () {
+        const ledger = yield* FilingLedger;
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(yield* stateFile("filing-ledger.jsonl"), { recursive: true });
+        const appendError = yield* Effect.flip(ledger.append(filing));
+        const readError = yield* Effect.flip(ledger.entries);
+
+        expect([appendError.failure, appendError.store, appendError.message]).toStrictEqual([
+          "unavailable",
+          "filing-ledger",
+          "filing-ledger.jsonl append failed",
+        ]);
+        expect(A.map(O.toArray(appendError.cause), PlatformError.isPlatformError)).toStrictEqual([true]);
+        expect([readError.failure, readError.message]).toStrictEqual([
+          "unavailable",
+          "filing-ledger.jsonl read failed",
+        ]);
       })
     );
   });
