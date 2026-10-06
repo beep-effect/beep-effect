@@ -240,6 +240,7 @@ const StubM365Layer = Layer.effect(
         yield* called("getMessage", request);
         return (yield* Ref.get(state)).draft;
       }),
+      getMessageAuthoredText: notScripted,
       getSite: notScripted,
       listDriveItemVersions: notScripted,
       listDrives: notScripted,

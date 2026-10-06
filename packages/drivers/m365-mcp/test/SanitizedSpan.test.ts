@@ -41,6 +41,7 @@ const MockM365Layer = Layer.succeed(
     getListItem: notUsedInThisTest,
     getMailFolder: notUsedInThisTest,
     getMessage: notUsedInThisTest,
+    getMessageAuthoredText: notUsedInThisTest,
     getSite: Effect.fn("MockM365.getSite")(function* () {
       return site;
     }),

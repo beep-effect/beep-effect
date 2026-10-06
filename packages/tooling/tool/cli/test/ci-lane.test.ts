@@ -417,11 +417,11 @@ describe("CI lane partitions", () => {
         weightSeconds: partition.weightSeconds,
       }))
     ).toEqual([
-      { id: "lint-a", packages: 70, weightSeconds: 1132 },
+      { id: "lint-a", packages: 73, weightSeconds: 1132 },
       { id: "lint-b", packages: 70, weightSeconds: 1134 },
       { id: "repo-cli-1", packages: 1, weightSeconds: 440 },
       { id: "repo-cli-2", packages: 1, weightSeconds: 440 },
-      { id: "unit-a", packages: 70, weightSeconds: 1214 },
+      { id: "unit-a", packages: 73, weightSeconds: 1214 },
       { id: "unit-b", packages: 69, weightSeconds: 1214 },
     ]);
   });

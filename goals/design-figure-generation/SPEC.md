@@ -42,13 +42,19 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/drivers/<occt-or-replicad>` — geometry kernel + HLR wrapper (shared with agentic-cad; create via `bun run beep create-package`).
-- `packages/drivers/<pdf-tools>` — `rsvg-convert` / `qpdf` / `pdftoppm` wrappers in the `@beep/ffmpeg` shape (`effect/process`).
-- `packages/law-practice/domain` (+ `use-cases`, `server`) — `Matter`, `ModelSpec`, `Figure`, view-name `LiteralKit`, validator findings, sign-off event; pipeline service composition.
-- `packages/tooling/tool/cli/src/commands/Drawings/` — `render`, `validate`, `judge`, `sign`.
+Amended 2026-10-05 (operator decision, see Amendments): the pipeline is a
+product-neutral foundation capability, not law-practice slice code, because
+`standards/ARCHITECTURE.md` forbids `packages/tooling/*` from depending on a
+product slice and the operator command lives in the tooling CLI.
+
+- `packages/drivers/occt` (`@beep/occt`) — replicad / opencascade.js solid construction and exact hidden-line projection, orthographic and perspective (shared with agentic-cad per its D7).
+- `packages/drivers/pdf-tools` (`@beep/pdf-tools`) — `rsvg-convert` and poppler `pdftoppm` wrappers in the `@beep/ffmpeg` shape (`effect/process`), pdf-lib page merge at a pinned version and date, structure inspection, non-anti-aliased raster metrics.
+- `packages/foundation/capability/technical-drawing` (`@beep/technical-drawing`) — `ModelSpec`, `FigureSetSpec`, view-name `LiteralKit`, omission claims, sheet rules and composition, validator findings, render manifest, and (slice 2) the approval record keyed to the sheet-set hash, behind a `GeometryEngine` port and a `PdfBackend` port.
+- `packages/law-practice/domain` — only Matter-bound meaning, when a slice flow needs it (slice 1 touches no law-practice package).
+- `packages/tooling/tool/cli/src/commands/Drawings/` — `render`, `validate` (slice 1); `judge`, `sign` (slice 2); the port adapters over the two drivers live here.
 - `packages/tooling/tool/cli/src/commands/Qa/` — drawing rubric extension of the qa-inventory/v1 judge.
 - `packages/drivers/m365` — a dedicated read-only verb for sign-off verification (slice 2; no intake). Graph returns `uniqueBody` only when it is explicitly `$select`ed, and `getMessage` (`M365.service.ts`) sends no query parameters, so the new verb requests `messages/{id}?$select=uniqueBody,from,sender,internetMessageId,receivedDateTime` and decodes its own response schema. Graph returns `uniqueBody` as HTML by default, so the verb also sends `Prefer: outlook.body-content-type="text"` (the driver's request builder sets only the bearer token today) and refuses any response whose `uniqueBody.contentType` is not `text`; the whole-line match is defined over that plain text only, never over stripped HTML. `getMessage` and the `GraphMessage` schema stay untouched, because `GraphMessage` is also the success schema of the `@beep/m365-mcp` read tool (`M365Tools.ts`) and `$select` would shrink that payload.
-- Synthetic fixture article + golden sheets under the owning package's `test/`.
+- Synthetic fixture article under `packages/foundation/capability/technical-drawing/test/fixtures/`; golden SVG hashes and the live end-to-end test under `packages/tooling/tool/cli/test/` (the adapters live there). PDF bytes depend on the installed cairo, so the PDF golden is two-run equality, not a committed hash.
 
 ## Constraints
 
@@ -65,13 +71,13 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] P1 spike result recorded in `research/`: perspective HLR via replicad works, or the build123d fallback is wired for perspective figures.
-- [ ] `beep drawings render` on the synthetic fixture produces eight sheets whose hashes match committed goldens on two consecutive runs.
-- [ ] `beep drawings validate` returns zero findings on those sheets and non-zero findings on a deliberately broken fixture (margin, gray pixel, PDF 1.7).
-- [ ] The live matter's eight unshaded sheets render from a spec under the corpus root and pass the validator (evidence: validator report hash in `history/`, no sheets committed).
-- [ ] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read, and `drawings sign` refuses both a confirmation artifact without the sheet-set hash and one that quotes the hash without the verbatim approval line, such as a rejection; a rejection reply or plain forward that quotes a request containing the statement, so the line appears only below the reply/forward boundary; a PDF whose statement is not on the initialed page; and a reply whose sender is not the recorded attorney (negative tests); plus one positive fixture, a recorded attorney reply shape that decodes a non-empty text `uniqueBody` and passes.
-- [ ] `bun run beep quality package-verify` passes for every touched package.
-- [ ] No unrelated refactors or formatting churn.
+- [x] P1 spike result recorded in `research/`: perspective HLR via replicad works, or the build123d fallback is wired for perspective figures.
+- [x] `beep drawings render` on the synthetic fixture produces eight sheets whose hashes match committed goldens on two consecutive runs.
+- [x] `beep drawings validate` returns zero findings on those sheets and non-zero findings on a deliberately broken fixture (margin, gray pixel, PDF 1.7).
+- [x] The live matter's eight unshaded sheets render from a spec under the corpus root and pass the validator (evidence: validator report hash in `history/`, no sheets committed).
+- [x] Slice 2: shaded sheets pass the validator; the judge rubric produces a schema-valid qa-inventory; a sign-off event is written and re-read, and `drawings sign` refuses both a confirmation artifact without the sheet-set hash and one that quotes the hash without the verbatim approval line, such as a rejection; a rejection reply or plain forward that quotes a request containing the statement, so the line appears only below the reply/forward boundary; a PDF whose statement is not on the initialed page; and a reply whose sender is not the recorded attorney (negative tests); plus one positive fixture, a recorded attorney reply shape that decodes a non-empty text `uniqueBody` and passes.
+- [x] `bun run beep quality package-verify` passes for every touched package.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -92,6 +98,32 @@ Higher sources outrank lower sources when they conflict.
 - Verification requires credentials, cost, destructive side effects, or policy approval not named in this spec.
 - The same blocker repeats after reasonable investigation.
 - Any step would commit real article geometry, photos, or renders to the repo.
+
+## Amendments
+
+| Date | Change | Owner | Rationale |
+| --- | --- | --- | --- |
+| 2026-10-05 | Target Surfaces: pipeline schemas/services move from `packages/law-practice/*` to the new `@beep/technical-drawing` foundation capability; law-practice keeps only Matter-bound meaning | Operator (asked in session, answered "foundation/capability package") | `standards/ARCHITECTURE.md` (source 3) outranks this spec (source 4): tooling packages never depend on product slices, and no tooling package does today; a ledgered exception and a non-`beep` command were the rejected alternatives |
+
+## Decision Log
+
+Recorded under the operator autonomy charter (AGENTS.md "Autonomy", PR #1448; relayed by the
+orchestrator 2026-10-06): decide, record the reason and how to reverse, keep going.
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-06 | PR #1439 is final for the code of both slices and flips ready once its head is green apart from inherited reds. | Every code criterion is met on the synthetic fixture: eight sheets, byte-stable across two runs; validator negatives; shaded sheets clean; judge inventory schema-valid; sign-off written and re-read; all six refusal cases plus the recorded-reply positive. The live-matter render produces no repository diff beyond a validator-report hash, so holding the code back does not advance it. | `gh pr ready 1439 --undo` before merge; after merge, a follow-up PR. |
+| 2026-10-06 | The live matter's sheets stay the goal's open acceptance item, delivered later as an operational step: spec, renders, and sign-off under `BEEP_OPPOLD_CORPUS_ROOT`, plus one small PR adding the validator-report hash to `history/`. | The inputs are physical (caliper dimensions, photos saved under the corpus root) and cannot be produced by an agent. Inventing dimensions would make the figures wrong and the filing defective. | None needed; the item closes when the inputs arrive. |
+| 2026-10-06 | Shading covers planar faces only. Cylindrical-face shading is a tracked follow-up; drawing-judge round 2 finding R2-01 (P2) is carried rather than fixed. | The exploration decision scopes the generator to planar faces. The charter stops review loops after round 2, with P2 findings becoming follow-ups. The vendor shading-only pass remains the filing fallback for curved articles. | Implement cylinder hatching in `@beep/occt` `internal/shading.ts` and re-run the judge. |
+| 2026-10-06 | Default minimum shading pitch is 1.2 mm, not 0.8 mm. | Drawing-judge round 1 finding R1-02 (P2): at 0.8 mm the largest dark face approached a solid tone, and it would close up at two-thirds reduction. Round 2 confirmed the fix. | `SheetOptions.shadingMinPitchMm` default; the goldens' `shadedSegments` move with it. |
+| 2026-10-06 | Live-matter inputs are the operator's 2026-10-02 request email (sender: the requesting attorney; attachments: description `.docx`, sketch `Drawings.jpeg`, two photos), not a separate measurement email. The description was read through the M365 connector and carries no dimensions (it states the design is scale-independent); the three image attachments could not be fetched (connector refuses binary; `@beep/m365` has no attachment verb and no workstation auth). | Verified by reading the message and its attachment list; the relayed note said the measurements were "on the email", but only the images could hold them. The files go to `~/data-home/oppold-corpus/ops/patent-drawing-pipeline/matter/inputs/` (created). If the sketch or photos carry no dimensions, the spec takes proportions from them, since design drawings need not be to scale. Ruled yes on 2026-10-05 by the orchestrating session under the autonomy charter: the description states the design is scale-independent, so caliper dimensions are not required for this matter. | Reverse by re-modelling from measured dimensions if any arrive. |
+| 2026-10-06 | The live article is modelled from the request sketch's assembled figure with nominal proportions: two open-ended triangular sleeves with board thickness, and a lid whose flap depth follows from the lid blank (an equilateral flap hinged on the lid edge). The bottom is open. | Drawing-judge round 1 (live) found the first model's closed bottom wrong (P1) and its flap depth arbitrary (P2). The sketch shows no bottom panel, and the blank fixes the flap geometry, so neither is a free parameter. | Re-model from measured dimensions if any arrive. |
+| 2026-10-06 | Interior fastening features (wall slits and locking tabs) are left out of the live figures as unclaimed. | Drawing-judge round 2 (live) raised their absence as P1. They are functional joinery inside the article, and whether they are claimed is claim scope, which belongs to the attorney. The sign-off step is where that is confirmed or reversed; the figures are not filed without it. | Add the slits and tabs to the spec and re-render if the attorney wants them shown. |
+| 2026-10-06 | The live judge loop stopped after round 2. Carried as follow-ups: flat-surface shading on faces square to the view, a sparse hatch on lit oblique faces, one light rule for bottom views, lid board thickness, and a conventional label font. | The charter stops review loops after round 2. Both round-2 P1 findings are closed (one fixed in `@beep/occt`, one decided above); the rest are P2. | Each follow-up is a change to `@beep/occt` `internal/shading.ts`, `Sheet.compose.ts`, or the matter spec, followed by a judge re-run. |
+| 2026-10-06 | PR #1439 also carries the live-matter closeout: two `@beep/occt` fixes found by the live render (coplanar seams merged after booleans; hatch pitch widened by a face's foreshortening, with a level-edge tie-break), the hash-only evidence in `history/live-matter/`, and the packet flip. This replaces the separate evidence PR planned on 2026-10-06. | #1439 was still a draft when the inputs arrived, and the fixes change its goldens. The repo law wants the packet flip and reflection in the same PR as the final work. | None. |
+| 2026-10-06 | Coverage baseline rows are recorded for the three new `Drawings` command files at the hosted measured values (47–62 % statements), instead of raising them to full coverage. | The command and layer wiring is exercised by `drawings-live.test.ts`, which skips on hosted runners because they lack `rsvg-convert` and poppler. The capability, driver, and judge logic those commands call are covered in their own packages. | Install the PDF tools on the runner image so the live test runs there, then raise the rows. |
+| 2026-10-06 | Review round 1 on #1439: the approver is a field of the matter spec (`approver`), carried into the render manifest, and `drawings sign` takes it only from there; the `--approver` flag is removed. A set rendered from a spec without an approver cannot be signed. The PDF route takes the deliverer from a new `--delivered-by` flag. | The first implementation compared the reply's sender with an address the operator typed at sign time, so the operator could name anyone, including themselves. That did not meet this spec's "attorney address recorded in the matter spec". The PDF route passed the approver in as the deliverer, so its mismatch check could never fire. | Re-render the live matter with `approver` in its spec before requesting the sign-off; manifests written earlier carry no approver and are refused. |
+| 2026-10-06 | Review round 1 on #1439: each PDF tool run has a timeout (`timeoutMillis`, two minutes by default); an empty PDF is reported as a `page-count` finding; the pdf-tools live test runs in the hosted integration lane and skips when a tool is missing. | A hung tool blocked every `drawings` command without limit. `A.range(1, 0)` is `[1]`, so an empty document was rasterised and failed. The live test had no CI lane and failed outright on machines without librsvg. | None. |
 
 ## Exception Ledger
 

@@ -160,6 +160,9 @@
       "path": "packages/drivers/obs"
     },
     {
+      "path": "packages/drivers/occt"
+    },
+    {
       "path": "packages/drivers/onepassword-cli"
     },
     {
@@ -176,6 +179,9 @@
     },
     {
       "path": "packages/drivers/pacer"
+    },
+    {
+      "path": "packages/drivers/pdf-tools"
     },
     {
       "path": "packages/drivers/pglite"
@@ -281,6 +287,9 @@
     },
     {
       "path": "packages/foundation/capability/semantic-web"
+    },
+    {
+      "path": "packages/foundation/capability/technical-drawing"
     },
     {
       "path": "packages/foundation/modeling/html"

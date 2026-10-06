@@ -199,7 +199,10 @@ const generatedComposers = $I.compose(
   "xstate",
   "tesseract",
   "poppler",
-  "docket-intake"
+  "docket-intake",
+  "occt",
+  "pdf-tools",
+  "technical-drawing"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2734,3 +2737,54 @@ export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.
  * @since 0.0.0
  */
 export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> = composers.$DocketIntakeId;
+
+/**
+ * Identity composer for `@beep/occt`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $OcctId } from "@beep/identity/packages"
+ *
+ * const id = $OcctId.make("Occt")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = composers.$OcctId;
+
+/**
+ * Identity composer for `@beep/pdf-tools`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PdfToolsId } from "@beep/identity/packages"
+ *
+ * const id = $PdfToolsId.make("PdfTools")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = composers.$PdfToolsId;
+
+/**
+ * Identity composer for `@beep/technical-drawing`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $TechnicalDrawingId } from "@beep/identity/packages"
+ *
+ * const id = $TechnicalDrawingId.make("TechnicalDrawing")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-drawing"> = composers.$TechnicalDrawingId;
