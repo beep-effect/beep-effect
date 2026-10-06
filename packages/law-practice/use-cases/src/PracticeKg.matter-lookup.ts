@@ -8,8 +8,9 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { KgAttributionSource, PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Order, pipe } from "effect";
+import { flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -301,8 +302,38 @@ export class PracticeKgMatterLookupError extends S.TaggedError<PracticeKgMatterL
   })
 ) {}
 
-const docketReferencePattern =
-  /(?<![0-9.])(?:[0-9]{4,6}\.)?[0-9]{5,6}(?:US|WO|EP|CA|AU|CN|JP|PCT)[0-9]{0,3}(?:-US[0-9]+)?(?![0-9])/giu;
+const docketCountryCodes = [
+  "US",
+  "WO",
+  "EP",
+  "CA",
+  "AU",
+  "CN",
+  "JP",
+  "PCT",
+  "BR",
+  "ZA",
+  "UA",
+  "AR",
+  "EA",
+  "IN",
+  "IL",
+  "GB",
+  "DE",
+  "RU",
+  "KR",
+  "ID",
+  "NZ",
+  "MX",
+];
+const docketBody = `[0-9]{5,6}(?:${A.join(docketCountryCodes, "|")})[0-9]{0,3}(?:-[A-Z]{2}[0-9]+)?(?![0-9A-Z])`;
+const docketReferencePattern = new RegExp(`(?<![0-9.A-Z])(?:[0-9]{4,6}\\.)?${docketBody}`, "giu");
+const keyedDocketPattern = new RegExp(`(?<![0-9.A-Z])([0-9]{4,6})\\.(${docketBody})`, "giu");
+const clientPrefixPattern = /^[0-9]{4,6}\./u;
+const attorneyMatterNumberPattern = /(?<![0-9.])[0-9]{4,6}\.0[0-9]{4}(?![0-9A-Z])/giu;
+const clientFolderPattern = /(?:^|\s)([0-9]{5})$/u;
+const familyOfDocketPattern = /^[0-9]{5,6}/u;
+const pathSeparatorPattern = /[\\/]+/u;
 const applicationReferencePattern = /(?<![0-9/])[0-9]{2}\/[0-9]{3},?[0-9]{3}(?![0-9])/gu;
 const patentReferencePattern = /(?<![0-9,])(?:US[ -]?)?[0-9]{1,2},[0-9]{3},[0-9]{3}(?![0-9,])/giu;
 
@@ -316,7 +347,8 @@ const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<string> =>
  * **Details**
  *
  * Finds docket references in the practice's `<client>.<docket><country><seq>`
- * and bare `<docket><country><seq>` forms, USPTO application numbers written
+ * and bare `<docket><country><seq>` forms (any country stage the practice
+ * files in, with an optional national-phase suffix such as `-CA1`), USPTO application numbers written
  * `NN/NNN,NNN`, and patent numbers written with comma groups. Bare digit runs
  * are deliberately ignored: a five-digit number alone is as likely a postcode
  * as a family. The result is de-duplicated, upper-cased, and sorted, and every
@@ -337,13 +369,142 @@ const matchesOf = (pattern: RegExp, text: string): ReadonlyArray<string> =>
  * @since 0.0.0
  */
 export const extractPracticeKgReferences = (text: string): ReadonlyArray<string> =>
+  distinctSorted([
+    ...matchesOf(docketReferencePattern, text),
+    ...matchesOf(applicationReferencePattern, text),
+    ...matchesOf(patentReferencePattern, text),
+  ]);
+
+/**
+ * Matter evidence read from a file path in the attorney's working folders.
+ *
+ * **Details**
+ *
+ * The working folders are laid out `<client name> <client number>/<docket> -
+ * <client number>.<matter number>/...`. `clientNumber` is the five-digit number
+ * that ends a folder name, `dockets` are the docket references in the path, and
+ * `familyKeys` are the `<client>.<family>` matter keys those two give together
+ * (a client-keyed docket in the path supplies its own client).
+ *
+ * **Gotchas**
+ *
+ * `attorneyMatterNumbers` holds the dotted `<client>.<0NNNN>` suffix of a matter
+ * folder. It is the attorney's own per-client matter sequence, not a docket
+ * family: never look it up as a `familyKey`, and never build one from it.
+ *
+ * **Example** (Make path evidence)
+ *
+ * ```ts
+ * import { PracticeKgPathEvidence } from "@beep/law-practice-use-cases/server"
+ *
+ * const evidence = PracticeKgPathEvidence.make({
+ *   attorneyMatterNumbers: ["12345.00053"],
+ *   clientNumber: "12345",
+ *   dockets: ["10008US01"],
+ *   familyKeys: ["12345.10008"]
+ * })
+ * console.log(evidence.familyKeys) // ["12345.10008"]
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class PracticeKgPathEvidence extends S.Class<PracticeKgPathEvidence>($I`PracticeKgPathEvidence`)(
+  {
+    attorneyMatterNumbers: S.Array(S.String).annotateKey({
+      description: "Dotted client.matter-number folder suffixes; the attorney's own sequence, never a family key.",
+    }),
+    clientNumber: S.NullOr(S.String),
+    dockets: S.Array(S.String),
+    familyKeys: S.Array(S.String),
+  },
+  $I.annote("PracticeKgPathEvidence", {
+    description: "Client number, dockets, matter keys, and attorney matter numbers read from a file path.",
+  })
+) {}
+
+const distinctSorted: (values: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
+  A.map(Str.toUpperCase),
+  A.dedupe,
+  A.sort(Order.String)
+);
+
+const familyOfDocket = (docket: string): O.Option<string> =>
   pipe(
-    [
-      ...matchesOf(docketReferencePattern, text),
-      ...matchesOf(applicationReferencePattern, text),
-      ...matchesOf(patentReferencePattern, text),
-    ],
-    A.map(Str.toUpperCase),
-    A.dedupe,
-    A.sort(Order.String)
+    O.fromNullishOr(familyOfDocketPattern.exec(docket)),
+    O.map((match) => match[0])
   );
+
+const clientOfFolder = (folder: string): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(clientFolderPattern.exec(Str.trim(folder))),
+    O.flatMap((match) => O.fromNullishOr(match[1]))
+  );
+
+const bareDocketsOf = (text: string): ReadonlyArray<string> =>
+  A.map(matchesOf(docketReferencePattern, text), Str.replace(clientPrefixPattern, ""));
+
+const keyedFamilyKeys = (path: string): ReadonlyArray<string> =>
+  A.getSomes(
+    A.map(A.fromIterable(path.matchAll(keyedDocketPattern)), (match) =>
+      pipe(
+        familyOfDocket(match[2] ?? ""),
+        O.map((family) => `${match[1]}.${family}`)
+      )
+    )
+  );
+
+const clientFamilyKeys = (client: O.Option<string>, dockets: ReadonlyArray<string>): ReadonlyArray<string> =>
+  O.match(client, {
+    onNone: A.empty<string>,
+    onSome: (number) =>
+      A.getSomes(
+        A.map(
+          dockets,
+          flow(
+            familyOfDocket,
+            O.map((family) => `${number}.${family}`)
+          )
+        )
+      ),
+  });
+
+/**
+ * Read matter evidence from a file path in the attorney's working folders.
+ *
+ * **Details**
+ *
+ * Accepts `/` or `\\` separators. A client-keyed docket anywhere in the path
+ * decides the matter key by itself; only when the path has none is the client
+ * folder's number joined to the bare dockets. The file name is ignored when a
+ * folder already names a docket, because file names often cite other matters.
+ *
+ * **Example** (Read a matter folder path)
+ *
+ * ```ts
+ * import { extractPracticeKgPathEvidence } from "@beep/law-practice-use-cases/server"
+ *
+ * const evidence = extractPracticeKgPathEvidence("Clients/Acme Corp 12345/10008US01 - 12345.00053/Filing.pdf")
+ * console.log(evidence.familyKeys) // ["12345.10008"]
+ * console.log(evidence.attorneyMatterNumbers) // ["12345.00053"]
+ * ```
+ *
+ * @param path - Relative path of one file.
+ * @returns Client number, dockets, matter keys, and attorney matter numbers.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const extractPracticeKgPathEvidence = (path: string): PracticeKgPathEvidence => {
+  const segments = Str.split(path, pathSeparatorPattern);
+  const folders = A.join(A.dropRight(segments, 1), "/");
+  const folderDockets = bareDocketsOf(folders);
+  const dockets = A.isReadonlyArrayNonEmpty(folderDockets) ? folderDockets : bareDocketsOf(path);
+  const client = A.findFirst(A.dropRight(segments, 1), clientOfFolder);
+  const keyed = keyedFamilyKeys(path);
+  return PracticeKgPathEvidence.make({
+    attorneyMatterNumbers: distinctSorted(matchesOf(attorneyMatterNumberPattern, path)),
+    clientNumber: O.getOrNull(client),
+    dockets: distinctSorted(dockets),
+    familyKeys: distinctSorted(A.isReadonlyArrayNonEmpty(keyed) ? keyed : clientFamilyKeys(client, dockets)),
+  });
+};

@@ -1,4 +1,5 @@
 import {
+  extractPracticeKgPathEvidence,
   extractPracticeKgReferences,
   PracticeKgMatterLookupRequest,
   PracticeKgMatterLookupResult,
@@ -30,6 +31,39 @@ describe("practice KG matter-lookup contract", () => {
 
   it("keeps the national-stage suffix on a docket reference", () => {
     expect(extractPracticeKgReferences("File 10109WO02-US1 today")).toStrictEqual(["10109WO02-US1"]);
+  });
+
+  it("extracts every country stage the practice files in", () => {
+    expect(
+      extractPracticeKgReferences("Annuities: 11111.20001BR01, 20001ZA01, 20001ea01 and 20001WO01-CA1; not 20001INCH")
+    ).toStrictEqual(["11111.20001BR01", "20001EA01", "20001WO01-CA1", "20001ZA01"]);
+  });
+
+  it("never reads the attorney's dotted matter number as a reference", () => {
+    expect(extractPracticeKgReferences("20001US01 - 11111.00053")).toStrictEqual(["20001US01"]);
+  });
+
+  it("joins the client folder to the docket and keeps the matter number apart", () => {
+    const evidence = extractPracticeKgPathEvidence(
+      "Clients\\Example Client 11111\\20001US01 - 11111.00053\\OA re 20002EP01.pdf"
+    );
+    expect(evidence.clientNumber).toBe("11111");
+    expect(evidence.dockets).toStrictEqual(["20001US01"]);
+    expect(evidence.familyKeys).toStrictEqual(["11111.20001"]);
+    expect(evidence.attorneyMatterNumbers).toStrictEqual(["11111.00053"]);
+  });
+
+  it("lets a client-keyed docket decide the matter key", () => {
+    const evidence = extractPracticeKgPathEvidence("Clients/Example Client 11111/Misc/22222.20003WO01 filing.pdf");
+    expect(evidence.dockets).toStrictEqual(["20003WO01"]);
+    expect(evidence.familyKeys).toStrictEqual(["22222.20003"]);
+  });
+
+  it("returns no matter key for a matter-number folder without a docket", () => {
+    const evidence = extractPracticeKgPathEvidence("Clients/Example Client 11111/Trade Mark - 11111.00008/notes.docx");
+    expect(evidence.familyKeys).toStrictEqual([]);
+    expect(evidence.attorneyMatterNumbers).toStrictEqual(["11111.00008"]);
+    expect(extractPracticeKgPathEvidence("Firm/20001US01 memo.pdf").clientNumber).toBeNull();
   });
 
   it.effect(

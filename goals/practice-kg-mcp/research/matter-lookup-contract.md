@@ -79,7 +79,27 @@ matter still resolves; the returned dockets then all have `matched: false`.
 
 `extractPracticeKgReferences(text)` finds dockets (both forms), applications
 written `NN/NNN,NNN`, and patents written with comma groups. It ignores bare
-digit runs on purpose.
+digit runs on purpose. Dockets are recognised for every country stage the
+practice files in (US, WO, EP, CA, AU, CN, JP, PCT, BR, ZA, UA, AR, EA, IN, IL,
+GB, DE, RU, KR, ID, NZ, MX), with an optional national-phase suffix such as
+`-CA1`.
+
+### File paths from the attorney's folders
+
+His folders are laid out
+`<client name> <client number>/<docket> - <client number>.<0NNNN>/...`.
+`extractPracticeKgPathEvidence(path)` returns:
+
+- `clientNumber` — the five-digit number that ends a folder name, or null.
+- `dockets` — bare dockets named by the folders (the file name is read only
+  when no folder names one).
+- `familyKeys` — `<client>.<family>` keys to look up: from a client-keyed
+  docket in the path if there is one, otherwise client folder plus docket.
+- `attorneyMatterNumbers` — the dotted `<client>.<0NNNN>` folder suffix.
+
+**The dotted suffix is not a matter key.** It is the attorney's own per-client
+matter sequence. Never pass it to the lookup as a family and never store it as
+`family_key`; keep it as its own field.
 
 ## Output
 
