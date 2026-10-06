@@ -7,12 +7,12 @@
 
 import { docketDayInZone, writeDigestFile } from "@beep/law-practice-server/DocketIntake";
 import { DocketIntake, DocketIntakeState, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
-import { DateTime, Effect, Schedule } from "effect";
+import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
 import { digestDayDue } from "./Digest.ts";
 import type { DocketIntakeError } from "@beep/law-practice-use-cases/DocketIntake";
 import type { LocalDate } from "@beep/schema/LocalDate";
-import type { Duration } from "effect";
+import type { Schedule } from "effect";
 import type { DocketIntakeAppConfig } from "./Config.ts";
 
 /**
@@ -86,18 +86,13 @@ const logCycleFailure = (error: DocketIntakeError) =>
   Effect.logError("docket intake cycle failed", { cause: error.cause, stage: error.stage });
 
 /**
- * Repeat the poll cycle forever, one interval apart. A cycle that fails is
- * logged with its stage and the loop goes on to the next one.
+ * Repeat the poll cycle on a schedule. A cycle that fails is logged with its
+ * stage and the loop goes on to the next one.
  *
  * @category utilities
  * @since 0.0.0
  */
-export const pollForever = (options: {
+export const pollOnSchedule = <Out, R>(options: {
   readonly config: DocketIntakeAppConfig;
-  readonly interval: Duration.Duration;
-}) =>
-  pollCycle(options.config).pipe(
-    Effect.catch(logCycleFailure),
-    Effect.repeat(Schedule.spaced(options.interval)),
-    Effect.asVoid
-  );
+  readonly schedule: Schedule.Schedule<Out, unknown, never, R>;
+}) => pollCycle(options.config).pipe(Effect.catch(logCycleFailure), Effect.repeat(options.schedule), Effect.asVoid);

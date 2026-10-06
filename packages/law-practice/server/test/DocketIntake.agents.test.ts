@@ -11,6 +11,7 @@ import {
   DocketSecretary,
   DocketSourceDocument,
   ParalegalDocketEntry,
+  ParalegalNotDocketItem,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { it } from "@beep/test-runner";
@@ -143,6 +144,15 @@ const paralegalEntry = ParalegalDocketEntry.make({
   statedDueDate: O.some(LocalDate.make({ year: 2031, month: 7, day: 19 })),
   title: "Fixture response due",
 });
+
+const bareMessage = DocketMessage.make({
+  bodyText: "Synthetic fixture newsletter body.",
+  messageId: "m2",
+  receivedAt: "2030-01-09T11:00:00.000Z",
+  receivedDate: LocalDate.make({ year: 2030, month: 1, day: 9 }),
+});
+
+const dismissedEntry = ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." });
 
 const userParts = (prompt: Prompt.Prompt): ReadonlyArray<Prompt.UserMessagePart> =>
   A.flatMap(prompt.content, (entry) => (entry.role === "user" ? entry.content : []));
@@ -365,6 +375,63 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         assertNone(review.mailDate);
         assertNone(review.responsePeriod);
         assertTrue(O.exists(prompt, mentions("No source document is attached.")));
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "tells the secretary when the paralegal dismissed the message, and accepts a review that agrees",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondWith(
+          json(
+            secretaryWire({
+              isDocketItem: false,
+              mailDate: null,
+              matterReferences: [],
+              notes: "Read the whole message. It sets no date and asks for nothing.",
+              readFromSourceDocument: false,
+              responsePeriod: null,
+            })
+          )
+        );
+
+        const review = yield* secretary.review({ documents: [], entry: dismissedEntry, message: bareMessage });
+        const prompt = A.last(yield* scripted.prompts);
+
+        expect(review.isDocketItem).toBe(false);
+        expect(review.matterReferences).toStrictEqual([]);
+        assertNone(review.mailDate);
+        assertTrue(O.exists(prompt, mentions("The paralegal found nothing to docket in this message.")));
+        assertTrue(O.exists(prompt, mentions("Rationale: Fixture newsletter.")));
+        assertTrue(!O.exists(prompt, mentions("Title:")));
+        // A message with no sender or subject says so instead of leaving the line blank.
+        assertTrue(O.exists(prompt, mentions("From: (not given)")));
+        assertTrue(O.exists(prompt, mentions("Subject: (not given)")));
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "fails the review instead of guessing when the secretary's date or period is unusable",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+
+        yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
+        const badDate = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
+        yield* scripted.respondWith(json(secretaryWire({ responsePeriod: { amount: -1, unit: "days" } })));
+        const badPeriod = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
+
+        for (const failure of [badDate, badPeriod]) {
+          assertSome(
+            O.map(failure, (error) => [error.stage, error.cause]),
+            ["review", "wire-decode"]
+          );
+        }
       })
     );
   });

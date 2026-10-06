@@ -258,6 +258,8 @@ const calendarEntry = (tentative: boolean) =>
     tentative,
   });
 
+const decodeGraphConfig = S.decodeUnknownOption(DocketGraphConfig);
+
 const CategoryNames = S.Array(S.String.check(S.isMaxLength(24)));
 
 const decodeColorBody = S.decodeUnknownOption(S.Struct({ color: S.String }));
@@ -573,14 +575,35 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
     );
   });
 
+  it.layer(graphLayer(), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "refuses to report an entry as written when the created event comes back without an id",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* GraphTestHttp;
+        const calendar = yield* DocketCalendar;
+        yield* testHttp.respondWith((capture) =>
+          succeed(capture.method === "POST" ? jsonResponse({ id: "" }, 201) : jsonResponse({ value: [{ id: "" }] }))
+        );
+
+        const failure = yield* failureOf(calendar.create(calendarEntry(true)));
+        const found = yield* calendar.findByKey(KEY);
+
+        assertSome(
+          O.map(failure, (error) => [error.stage, error.cause, error.ambiguousWrite]),
+          ["calendar", "event-without-id", false]
+        );
+        assertNone(found);
+      })
+    );
+  });
+
   it("cannot be configured with a time zone it cannot resolve", () => {
-    const decode = S.decodeUnknownOption(DocketGraphConfig);
     const encoded = { initialSince: INITIAL_SINCE, mailbox: MAILBOX };
 
-    assertNone(decode({ ...encoded, timeZone: "Fixture/Nowhere" }));
-    assertNone(decode(encoded));
+    assertNone(decodeGraphConfig({ ...encoded, timeZone: "Fixture/Nowhere" }));
+    assertNone(decodeGraphConfig(encoded));
     assertSome(
-      O.map(decode({ ...encoded, timeZone: "America/Chicago" }), (config) => [
+      O.map(decodeGraphConfig({ ...encoded, timeZone: "America/Chicago" }), (config) => [
         DateTime.zoneToString(config.timeZone),
         config.pageSize,
         config.maxDocuments,

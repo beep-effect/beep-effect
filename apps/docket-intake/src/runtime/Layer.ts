@@ -20,14 +20,8 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Layer } from "effect";
 import type { DocketIntakeAppConfig } from "../Config.ts";
 
-/**
- * The app-only Microsoft Graph layer for the configured tenant and
- * certificate.
- *
- * @category layers
- * @since 0.0.0
- */
-export const makeM365Layer = (config: DocketIntakeAppConfig) =>
+// The app-only Microsoft Graph layer for the configured tenant and certificate.
+const makeM365Layer = (config: DocketIntakeAppConfig) =>
   M365.makeAppOnlyLiveLayer(
     M365AppOnlyConfigInput.make({
       clientId: config.clientId,
@@ -39,15 +33,10 @@ export const makeM365Layer = (config: DocketIntakeAppConfig) =>
     })
   );
 
-/**
- * The docket intake pipeline over its live ports: Graph mailbox and calendar,
- * the two Anthropic-backed agents, the file store and the matter lookup. The
- * store is exposed beside the pipeline so the service can seed its cursor.
- *
- * @category layers
- * @since 0.0.0
- */
-export const makeDocketIntakeAppLayer = (options: {
+// The docket intake pipeline over its live ports: Graph mailbox and calendar, the two
+// Anthropic-backed agents, the file store and the matter lookup. The store is exposed beside the
+// pipeline so the service can seed its cursor.
+const makeDocketIntakeAppLayer = (options: {
   readonly config: DocketIntakeAppConfig;
   readonly initialSince: string;
 }) => {
@@ -68,4 +57,15 @@ export const makeDocketIntakeAppLayer = (options: {
     Layer.provideMerge(Layer.mergeAll(graph, agents, store, DocketMatterLookupUnavailableLive)),
     Layer.provide(BunCrypto.layer)
   );
+};
+
+/**
+ * The live wiring of the service's commands.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const liveWiring = {
+  intake: makeDocketIntakeAppLayer,
+  mailbox: (config: DocketIntakeAppConfig) => Layer.merge(makeM365Layer(config), BunCrypto.layer),
 };
