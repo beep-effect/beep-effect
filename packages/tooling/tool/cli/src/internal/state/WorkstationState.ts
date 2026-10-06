@@ -7,23 +7,42 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $RepoCliId } from "@beep/identity/packages";
 import { Config, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { PlatformError } from "effect";
+
+const $I = $RepoCliId.create("internal/state/WorkstationState");
 
 /**
  * The repository identity a state file is partitioned by.
  *
+ * **Example** (Check a state repository)
+ *
+ * ```ts
+ * import { StateRepository } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StateRepository)({ host: "github.com", owner: "beep-effect", name: "beep-effect" })) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface StateRepository {
-  readonly host: string;
-  readonly name: string;
-  readonly owner: string;
-}
+export const StateRepository = S.Struct({ host: S.String, name: S.String, owner: S.String }).pipe(
+  $I.annoteSchema("StateRepository", { description: "Repository identity used to partition workstation state files." })
+);
+
+/**
+ * Repository identity accepted by workstation state file helpers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StateRepository = typeof StateRepository.Type;
 
 /**
  * Resolve a store's directory: an explicit override variable first, then

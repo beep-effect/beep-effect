@@ -13,9 +13,9 @@ import {
   sessionLedgerFileName,
 } from "@beep/repo-cli/test/Session";
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
-import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
@@ -177,7 +177,7 @@ describe("session ledger rows", () => {
     expect(decoded.corruptLineCount).toBe(2);
   });
 
-  it("reads the harness from the environment", () =>
+  it.effect("reads the harness from the environment", () =>
     Effect.gen(function* () {
       const claude = yield* sessionHarness.pipe(
         Effect.provideService(
@@ -185,16 +185,20 @@ describe("session ledger rows", () => {
           ConfigProvider.fromEnv({ env: { CLAUDE_CODE_SESSION_ID: "s1" } })
         )
       );
-      expect(claude).toStrictEqual({ harness: "claude-code", sessionId: O.some("s1") });
+      expect(claude.harness).toBe("claude-code");
+      expect(O.getOrThrow(claude.sessionId)).toBe("s1");
       const codex = yield* sessionHarness.pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { CODEX_THREAD_ID: "t1" } }))
       );
-      expect(codex).toStrictEqual({ harness: "codex", sessionId: O.some("t1") });
+      expect(codex.harness).toBe("codex");
+      expect(O.getOrThrow(codex.sessionId)).toBe("t1");
       const unknown = yield* sessionHarness.pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: {} }))
       );
-      expect(unknown).toStrictEqual({ harness: "unknown", sessionId: O.none() });
-    }).pipe(Effect.runPromise));
+      expect(unknown.harness).toBe("unknown");
+      assertNone(unknown.sessionId);
+    })
+  );
 });
 
 describe("sweep ledger gate", () => {
@@ -221,144 +225,148 @@ describe("sweep ledger gate", () => {
 });
 
 describe("session ledger service", () => {
-  it.effect("appends with private modes, lists, tolerates corrupt lines, and treats a missing file as empty", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectory();
-      const ledger = yield* makeSessionLedgerLive().pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root, HOME: root } })
-        )
-      );
-      expect(yield* ledger.list(repository)).toStrictEqual([]);
-      yield* ledger.append(row({ next: "first" }));
-      yield* ledger.append(row({ next: "second", recordedAt: 1 }));
-      const file = path.join(root, sessionLedgerFileName(repository));
-      yield* fs.writeFileString(file, "not-json\n", { flag: "a" });
-      const listed = yield* ledger.list(repository);
-      expect(A.map(listed, (item) => item.next)).toStrictEqual(["first", "second"]);
-      expect((yield* fs.stat(file)).mode & 0o777).toBe(0o600);
-      expect((yield* fs.stat(root)).mode & 0o777).toBe(0o700);
-    }).pipe(provideScopedLayer(testLayer))
-  );
-
-  it.effect("resolves XDG and HOME fallback roots and fails typed when the root is a file", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectory();
-      const xdg = yield* makeSessionLedgerLive().pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({ env: { XDG_STATE_HOME: path.join(root, "xdg"), HOME: root } })
-        )
-      );
-      yield* xdg.append(row());
-      expect(yield* fs.exists(path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)))).toBe(
-        true
-      );
-      const home = yield* makeSessionLedgerLive().pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: root } }))
-      );
-      yield* home.append(row());
-      expect(
-        yield* fs.exists(path.join(root, ".local", "state", "beep", "sessions", sessionLedgerFileName(repository)))
-      ).toBe(true);
-      const blocked = yield* makeSessionLedgerLive().pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({
-            env: {
-              BEEP_SESSION_STATE_ROOT: path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)),
-            },
-          })
-        )
-      );
-      const error = yield* blocked.append(row()).pipe(Effect.flip);
-      assert.instanceOf(error, SessionLedgerError);
-      const unreadable = yield* makeSessionLedgerLive().pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root } })
-        )
-      );
-      yield* fs.makeDirectory(path.join(root, sessionLedgerFileName(repository)));
-      const listError = yield* unreadable.list(repository).pipe(Effect.flip);
-      assert.instanceOf(listError, SessionLedgerError);
-    }).pipe(provideScopedLayer(testLayer))
-  );
-});
-
-describe("beep session", () => {
-  it.effect("notes a lane, lists it, supersedes it, and retires it on sweep-done", () =>
-    withScratchCheckout(({ clone, lane, stateRoot }) =>
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("appends with private modes, lists, tolerates corrupt lines, and treats a missing file as empty", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const facts = yield* sessionCheckoutFacts(lane);
-        expect(facts.repository).toStrictEqual(repository);
-        expect(facts.lane).toBe("lane");
-        expect(facts.branch).toBe("feat/lane");
-        expect(facts.clone).toBe(path.resolve(clone));
-
-        const noted = yield* captureOutput(
-          withCwd(
-            lane,
-            runSession([
-              "note",
-              "--state",
-              "blocked",
-              "--next",
-              " operator merges ",
-              "--summary",
-              "PR green",
-              "--pr",
-              "7",
-            ])
+        const root = yield* fs.makeTempDirectoryScoped();
+        const ledger = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root, HOME: root } })
           )
         );
-        expect(noted).toContain("[session] noted blocked for lane (feat/lane): operator merges");
-        const file = path.join(stateRoot, sessionLedgerFileName(repository));
-        expect(decodeSessionLedger(yield* fs.readFileString(file)).rows[0]?.harness).toBe("codex");
-
-        const open = yield* captureOutput(withCwd(clone, runSession(["open"])));
-        expect(open).toContain("1 live session(s) for beep-effect/beep-effect");
-        expect(open).toContain("- blocked lane (feat/lane, PR #7)");
-        expect(open).toContain("  summary: PR green");
-
-        yield* captureOutput(withCwd(lane, runSession(["note", "--next", "publish"])));
-        const json = yield* captureOutput(withCwd(clone, runSession(["open", "--json"])));
-        expect(json).toContain('"schemaVersion":"session-open/v1"');
-        expect(json).toContain('"next":"publish"');
-        expect(json).not.toContain("operator merges");
-
-        yield* recordSweepDone({ gitCwd: clone, checkout: path.resolve(lane), branch: "feat/lane" });
-        const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
-        expect(after).toContain("no live sessions recorded");
-        // A checkout git cannot read is ignored by the best-effort sweep row.
-        yield* recordSweepDone({ gitCwd: path.join(clone, "missing"), checkout: lane, branch: "x" });
+        expect(yield* ledger.list(repository)).toStrictEqual([]);
+        yield* ledger.append(row({ next: "first" }));
+        yield* ledger.append(row({ next: "second", recordedAt: 1 }));
+        const file = path.join(root, sessionLedgerFileName(repository));
+        yield* fs.writeFileString(file, "not-json\n", { flag: "a" });
+        const listed = yield* ledger.list(repository);
+        expect(A.map(listed, (item) => item.next)).toStrictEqual(["first", "second"]);
+        expect((yield* fs.stat(file)).mode & 0o777).toBe(0o600);
+        expect((yield* fs.stat(root)).mode & 0o777).toBe(0o700);
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
 
-  it.effect("rejects a bad state, an empty next step, and a non-positive pr", () =>
-    withScratchCheckout(({ lane }) =>
+    it.effect("resolves XDG and HOME fallback roots and fails typed when the root is a file", () =>
       Effect.gen(function* () {
-        for (const args of [
-          ["note", "--state", "paused", "--next", "x"],
-          ["note", "--next", "   "],
-          ["note", "--next", "x", "--pr", "0"],
-        ]) {
-          const exit = yield* Effect.exit(withCwd(lane, runSession(args)));
-          expect(exit._tag).toBe("Failure");
-        }
-        const outside = yield* Effect.exit(withCwd("/", runSession(["open"])));
-        expect(outside._tag).toBe("Failure");
-        const usage = yield* captureOutput(runSession([]));
-        expect(usage).toContain("Session commands:");
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const xdg = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { XDG_STATE_HOME: path.join(root, "xdg"), HOME: root } })
+          )
+        );
+        yield* xdg.append(row());
+        expect(yield* fs.exists(path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)))).toBe(
+          true
+        );
+        const home = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env: { HOME: root } }))
+        );
+        yield* home.append(row());
+        expect(
+          yield* fs.exists(path.join(root, ".local", "state", "beep", "sessions", sessionLedgerFileName(repository)))
+        ).toBe(true);
+        const blocked = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({
+              env: {
+                BEEP_SESSION_STATE_ROOT: path.join(root, "xdg", "beep", "sessions", sessionLedgerFileName(repository)),
+              },
+            })
+          )
+        );
+        const error = yield* blocked.append(row()).pipe(Effect.flip);
+        assert.instanceOf(error, SessionLedgerError);
+        const unreadable = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: root } })
+          )
+        );
+        yield* fs.makeDirectory(path.join(root, sessionLedgerFileName(repository)));
+        const listError = yield* unreadable.list(repository).pipe(Effect.flip);
+        assert.instanceOf(listError, SessionLedgerError);
       })
-    ).pipe(provideScopedLayer(testLayer))
-  );
+    );
+  });
+});
+
+describe("beep session", () => {
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("notes a lane, lists it, supersedes it, and retires it on sweep-done", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const facts = yield* sessionCheckoutFacts(lane);
+          expect(facts.repository).toStrictEqual(repository);
+          expect(facts.lane).toBe("lane");
+          expect(facts.branch).toBe("feat/lane");
+          expect(facts.clone).toBe(path.resolve(clone));
+
+          const noted = yield* captureOutput(
+            withCwd(
+              lane,
+              runSession([
+                "note",
+                "--state",
+                "blocked",
+                "--next",
+                " operator merges ",
+                "--summary",
+                "PR green",
+                "--pr",
+                "7",
+              ])
+            )
+          );
+          expect(noted).toContain("[session] noted blocked for lane (feat/lane): operator merges");
+          const file = path.join(stateRoot, sessionLedgerFileName(repository));
+          expect(decodeSessionLedger(yield* fs.readFileString(file)).rows[0]?.harness).toBe("codex");
+
+          const open = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(open).toContain("1 live session(s) for beep-effect/beep-effect");
+          expect(open).toContain("- blocked lane (feat/lane, PR #7)");
+          expect(open).toContain("  summary: PR green");
+
+          yield* captureOutput(withCwd(lane, runSession(["note", "--next", "publish"])));
+          const json = yield* captureOutput(withCwd(clone, runSession(["open", "--json"])));
+          expect(json).toContain('"schemaVersion":"session-open/v1"');
+          expect(json).toContain('"next":"publish"');
+          expect(json).not.toContain("operator merges");
+
+          yield* recordSweepDone({ gitCwd: clone, checkout: path.resolve(lane), branch: "feat/lane" });
+          const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(after).toContain("no live sessions recorded");
+          // A checkout git cannot read is ignored by the best-effort sweep row.
+          yield* recordSweepDone({ gitCwd: path.join(clone, "missing"), checkout: lane, branch: "x" });
+        })
+      )
+    );
+
+    it.effect("rejects a bad state, an empty next step, and a non-positive pr", () =>
+      withScratchCheckout(({ lane }) =>
+        Effect.gen(function* () {
+          for (const args of [
+            ["note", "--state", "paused", "--next", "x"],
+            ["note", "--next", "   "],
+            ["note", "--next", "x", "--pr", "0"],
+          ]) {
+            const exit = yield* Effect.exit(withCwd(lane, runSession(args)));
+            expect(exit._tag).toBe("Failure");
+          }
+          const outside = yield* Effect.exit(withCwd("/", runSession(["open"])));
+          expect(outside._tag).toBe("Failure");
+          const usage = yield* captureOutput(runSession([]));
+          expect(usage).toContain("Session commands:");
+        })
+      )
+    );
+  });
 });

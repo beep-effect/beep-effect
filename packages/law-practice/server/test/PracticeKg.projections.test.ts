@@ -48,7 +48,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";
-import { Config, ConfigProvider, Effect, Exit, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
+import { Config, ConfigProvider, Effect, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import { McpServerClient } from "effect/ai/McpSchema";
@@ -1067,6 +1067,13 @@ describe("practice KG projections", () => {
           Layer.succeed(OfficeActionReview, forbiddenReview),
           Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })
         );
+        const deniedDuckDbCheckFileSystem = {
+          ...fs,
+          exists: (filePath: string) =>
+            Equal.equals(filePath, path.join(bundleOut, "practice.duckdb"))
+              ? fs.stat(path.join(bundleOut, "missing-duckdb")).pipe(Effect.as(true))
+              : fs.exists(filePath),
+        };
 
         const summary = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
@@ -1110,6 +1117,23 @@ describe("practice KG projections", () => {
           )
         );
         expect(bareSummary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
+        const missingDuckDbSummary = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({
+            bundleOut,
+            inputs,
+            patentDocuments: [
+              PracticeKgPatentDocumentInput.make({
+                docket: "20001US10",
+                document,
+                sourceFile: "20001US10-patent.md",
+              }),
+            ],
+          })
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, deniedDuckDbCheckFileSystem),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(missingDuckDbSummary).toMatchObject({ claims: 9, failedFiles: 0, files: 1 });
         const rows = yield* Effect.gen(function* () {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           return yield* Effect.forEach(["20001US05", "20001US06"], (docket) =>
@@ -1131,6 +1155,7 @@ describe("practice KG projections", () => {
             A.map(document.claims, ({ claimText }) => claimText)
           )
         );
+        expect(O.getOrThrow(A.head(rows)).sourceDocumentDigest).toBe(fixtureDigests.beta);
         pipe(
           A.every(
             rows,
@@ -1260,6 +1285,41 @@ describe("practice KG projections", () => {
         expect(A.map(recarriedRows, (row) => [row.client, row.familyKey, row.sourceDocumentDigest])).toStrictEqual([
           [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, fixtureDigests.docket],
         ]);
+        const duckDbPath = path.join(bundleOut, "practice.duckdb");
+        const duckDbBackupPath = path.join(bundleOut, "practice.duckdb.backup");
+        yield* fs.rename(duckDbPath, duckDbBackupPath);
+        yield* fs.writeFileString(duckDbPath, "invalid DuckDB fixture");
+        const sourceLookupFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.flip,
+          provideScopedLayer(claimsLayer),
+          Effect.ensuring(
+            Effect.gen(function* () {
+              yield* fs.remove(duckDbPath);
+              yield* fs.rename(duckDbBackupPath, duckDbPath);
+            }).pipe(Effect.orDie)
+          )
+        );
+        expect(sourceLookupFailure.message).toContain("Failed resolving the source document");
+        const oversizedReadPath = path.join(inputs, "00_Response OA - 20001US09.txt");
+        yield* fs.writeFileString(oversizedReadPath, OFFICE_ACTION_FIXTURE);
+        const oversizedReadFileSystem = {
+          ...fs,
+          readFile: (filePath: string) =>
+            Equal.equals(filePath, oversizedReadPath)
+              ? Effect.succeed(new Uint8Array(2 * 1024 * 1024 + 1))
+              : fs.readFile(filePath),
+        };
+        const oversizedReadFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, oversizedReadFileSystem),
+          Effect.flip,
+          provideScopedLayer(claimsLayer),
+          Effect.ensuring(fs.remove(oversizedReadPath).pipe(Effect.orDie))
+        );
+        expect(oversizedReadFailure.message).toContain("Claims input exceeds 2097152 bytes");
         const invalidClaimsPath = path.join(inputs, "00_Response OA - 20001US09.pdf");
         yield* fs.writeFileString(invalidClaimsPath, "unsupported extension");
         const unsupportedExtensionFailure = yield* runPracticeKgClaimsBatch(

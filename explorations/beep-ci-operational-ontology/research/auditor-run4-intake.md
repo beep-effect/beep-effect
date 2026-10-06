@@ -45,6 +45,26 @@ and custody legs read those rows through a NEW sibling proof-ledger capture gene
 pattern; Rulings 11 and 22). Every realization, copy or correction leg waits for time-to-certainty
 C4.2.
 
+**2026-10-05 addendum (goal P1 sitting, Rulings 1–2,
+`goals/ciops-ontology-pipeline/research/decisions.md`).** The pin lane's census found 3,442
+post-#1321 `ProofFact` rows in eight fleet clones, every one `pre-push`, and no `merged-preview`
+fact or attempt since 2026-09-09. The gate's ledger half now reads: C4.1 checked AND post-#1321
+pre-push facts in the fleet's owning-clone ledgers, each clone read once and no lane `.beep/`
+tree read. Issuance and custody discharge against those rows; the merged-preview legs of
+rat-047/048/051/052 stay flagged on the first post-#1321 merged-preview fact, beside the C4.2
+legs.
+
+**2026-10-06 addendum (goal P1 complete).** The Stage C capture exists: `CORPUS/run4-fleet/`
+(generator `CORPUS/etl_run4_fleet_corpus.py`) and the proof-ledger capture `CORPUS/run4-ledger/`
+(generator `CORPUS/etl_run4_proof_ledger.py`), both with tree-pinned citations against
+`origin/main` `26269bb0ec` (`corpus_tree` `edc79dd7b6`), under P1 Rulings 1–8 and the recorded
+calls in `goals/ciops-ontology-pipeline/research/decisions.md`. Queue D's organic input is the
+`run4-fleet` canonical root beside the 2026-10-01 snapshot projection (reconciliation receipt in the
+manifest: 22 nonces in both, 0 conflicts); Queue B's issuance and custody legs read `run4-ledger`
+(4,041 pairs, 125 hypothetical would-reuse hits, merged-preview dormant); Queue F's tree-pinned
+convention is the one both manifests carry. Lane reports:
+`research/run4-lanes/stage-c-{w3,w4}-report.md`.
+
 ## Prior-run chain (validator-enforced)
 
 The run manifest must carry exactly:
