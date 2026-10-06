@@ -12,6 +12,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Runtime from "effect/Runtime";
@@ -245,4 +246,19 @@ describe("@beep/practice-kg-mcp self-check", () => {
       })
     );
   });
+});
+
+const encodeReportLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
+
+describe("practice KG self-check report line", () => {
+  it.effect.prop(
+    "round-trips every generated report through its one-line JSON form",
+    [Arbitrary.schema(PracticeKgSelfCheckReport)],
+    ([report]) =>
+      Effect.gen(function* () {
+        const line = yield* encodeReportLine(report);
+        expect(line).not.toContain("\n");
+        expect(yield* decodeReportLine(line)).toStrictEqual(report);
+      })
+  );
 });
