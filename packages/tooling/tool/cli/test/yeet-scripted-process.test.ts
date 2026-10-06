@@ -647,7 +647,7 @@ describe("yeet plan step models", () => {
       ...overrides,
     });
 
-  it("plans the default publish with a draft pull request create in either call form", () => {
+  it("plans the default publish identically in either call form", () => {
     const context = contextAt("/repo");
     const message = O.some("feat(repo-cli): ship");
     const plan = buildYeetRunPlan(context, message);
