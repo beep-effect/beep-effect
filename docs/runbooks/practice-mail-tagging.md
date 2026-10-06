@@ -17,6 +17,26 @@ bun run apps/practice-mail-tagging/src/bin.ts <command>
 
 The examples shorten that to `practice-mail-tagging <command>`.
 
+## Current status: attachment filing is blocked on Box storage
+
+Box refuses every new upload from the service account with HTTP 403: the
+account's storage allocation is smaller than what it already holds. Moves and
+renames still work, and Outlook categories do not use Box at all, so tagging
+is unaffected. Filing stays blocked until the operator raises the allocation
+in the Box Admin Console.
+
+Until then, run the job with filing switched off by data, not by code: point
+`PRACTICE_MAIL_TAGGING_FOLDER_MAP_PATH` at a file that contains only `[]`.
+Every attachment is then skipped as `no-folder` before any download or Box
+call, and the run report says how many were skipped. Do not run with the real
+folder map while the block stands: the job treats a 403 on upload as a failed
+run, so the first routable attachment stops the pass before its message is
+tagged.
+
+When the allocation is raised, point the setting back at the real map. The
+skipped attachments are not filed retroactively by the job; a later pass only
+sees new mail.
+
 ## Operator checklist for the first apply
 
 One screen for the attended session. Details are in the sections below.
@@ -25,6 +45,8 @@ One screen for the attended session. Details are in the sections below.
       Outlook open.
 - [ ] The unit is not installed or is stopped:
       `systemctl --user is-active practice-mail-tagging.service` is not `active`.
+- [ ] While filing is blocked on Box storage, the folder-map setting points at
+      a file containing `[]` (see the status note above).
 - [ ] The environment file holds `op://` references only, mode `0600`; every
       command runs as `op run --env-file=<file> -- practice-mail-tagging ...`.
 - [ ] `practice-mail-tagging report` succeeds and every count is zero.
