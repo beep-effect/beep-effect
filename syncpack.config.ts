@@ -114,9 +114,9 @@ const config = {
     "packages/drivers/tesseract/package.json",
     "packages/drivers/poppler/package.json",
     "apps/docket-intake/package.json",
-    "apps/practice-mail-tagging/package.json",
     "packages/drivers/occt/package.json",
     "packages/drivers/pdf-tools/package.json",
+    "apps/practice-mail-tagging/package.json",
   ],
   customTypes: {
     catalog: {
