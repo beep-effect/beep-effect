@@ -15217,15 +15217,15 @@
     },
     "@beep/m365-mcp": {
       "path": "packages/drivers/m365-mcp",
-      "lines": 62,
-      "statements": 62,
-      "branches": 0,
-      "functions": 38.88,
+      "lines": 88.94,
+      "statements": 89.25,
+      "branches": 88.23,
+      "functions": 75.73,
       "uncovered": {
-        "lines": 19,
-        "statements": 19,
-        "branches": 2,
-        "functions": 11
+        "lines": 46,
+        "statements": 46,
+        "branches": 10,
+        "functions": 33
       },
       "files": {
         "packages/drivers/m365-mcp/src/M365Handlers.ts": {
@@ -15252,6 +15252,102 @@
             "functions": 0
           }
         },
+        "packages/drivers/m365-mcp/src/OutboxAttachmentSource.ts": {
+          "lines": 92.1,
+          "statements": 92.4,
+          "branches": 90.62,
+          "functions": 77.27,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 3,
+            "functions": 5
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxAuditLog.ts": {
+          "lines": 95.74,
+          "statements": 96,
+          "branches": 100,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxConfig.ts": {
+          "lines": 96.15,
+          "statements": 96.29,
+          "branches": 100,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxHandlers.ts": {
+          "lines": 93.75,
+          "statements": 93.87,
+          "branches": 80,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 5,
+            "functions": 6
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxSendGuard.ts": {
+          "lines": 90,
+          "statements": 90.62,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 3
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxServer.ts": {
+          "lines": 77.77,
+          "statements": 77.77,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxStoredAttachments.ts": {
+          "lines": 94.44,
+          "statements": 94.44,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/drivers/m365-mcp/src/OutboxTools.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/drivers/m365-mcp/src/Server.ts": {
           "lines": 100,
           "statements": 100,
@@ -15262,6 +15358,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/drivers/m365-mcp/src/bin-outbox.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/drivers/m365-mcp/src/bin.ts": {
@@ -15277,6 +15385,30 @@
           }
         },
         "packages/drivers/m365-mcp/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/m365-mcp/src/internal/McpProtocols.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/m365-mcp/src/internal/OutboxFields.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
