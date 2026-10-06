@@ -31,111 +31,6 @@
       "reason": "The fixture default samples the real clock only for browser/FormData and entrypoints that own their runtime. Native contact tests pass explicit TestClock timestamps; freezing browser timers would change the subject. The too-fast control crosses the unchanged 3000 ms threshold and fails."
     },
     {
-      "id": "EV001:packages/tooling/tool/cli/test/artifacts-io.test.ts:119:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 119,
-      "endLine": 136,
-      "symbol": "runPromise",
-      "occurrence": "v2:5baaf42f7f9497997545e55b277e63837e0669be5a4b9b55af6429c7ebee1e27",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const fs = yield* FileSystem.FileSystem; const filePath = path.join(dir, \"generated\", \"catalog.jsonc\"",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/artifacts-io.test.ts:139:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 139,
-      "endLine": 180,
-      "symbol": "runPromise",
-      "occurrence": "v2:3296d4505247183cfdde8101d57458d9b6a6fedd8e63a1ae627fdf38abddf785",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const fs = yield* FileSystem.FileSystem; const filePath = path.join(dir, \"catalog.jsonc\"); const cont",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/artifacts-io.test.ts:183:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 183,
-      "endLine": 204,
-      "symbol": "runPromise",
-      "occurrence": "v2:d4f0ae08cbaff4004c3d9b26d0516ed35af215ffe88cf2a2a9e49f35a1d6a346",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const fs = yield* FileSystem.FileSystem; const filePath = path.join(dir, \"boundaries.jsonc\"); yield*",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/artifacts-io.test.ts:44:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 44,
-      "endLine": 71,
-      "symbol": "runPromise",
-      "occurrence": "v2:b4852bbc8930fb555e24877778ac07736dac5b8b788a1d0d17973024ddff1f5c",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const fs = yield* FileSystem.FileSystem; const filePath = path.join(dir, \"nested\", \"artifact.jsonc\");",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV001:packages/tooling/tool/cli/test/artifacts-io.test.ts:74:runPromise@4#1",
-      "lens": "detector",
-      "ruleId": "EV001",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 74,
-      "endLine": 94,
-      "symbol": "runPromise",
-      "occurrence": "v2:8d516130f4cce4e22cf49a38c6a2257b27fe2e5aacfe112f46ac7624b6818c38",
-      "class": "runtime-boundary-in-test",
-      "evidence": "Effect.runPromise( withTempDir( Effect.fnUntraced(function* (dir) { const path = yield* Path.Path; const exit = yield* readArtifact({ path: path.join(dir, \"missing.jsonc\"), schema: ExampleDocument, on",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
       "id": "EV001:packages/tooling/tool/cli/test/codegen-command.test.ts:20:runPromise@4#1",
       "lens": "detector",
       "ruleId": "EV001",
@@ -12730,27 +12625,6 @@
       "occurrence": "v2:c331d656b88fa139d2fe5d58d4dcd5d123d8a624a2ed36145a29be5d08ee4084",
       "class": "resource-wrapper",
       "evidence": "<A, E, R>(binDir: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => Effect.acquireUseRelease( Effect.sync(() => { const previousPath = Bun.env.PATH; Bun.env.PATH = previousPath === undef",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.95,
-      "mechanization": "detector",
-      "status": "open"
-    },
-    {
-      "id": "EV003:packages/tooling/tool/cli/test/artifacts-io.test.ts:23:withTempDir@20#1",
-      "lens": "detector",
-      "ruleId": "EV003",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 23,
-      "endLine": 28,
-      "symbol": "withTempDir",
-      "occurrence": "v2:f664b95fa4c79b60145c12bff2cab1844e620096e05ff263a5c57fb8bcaafbe8",
-      "class": "resource-wrapper",
-      "evidence": "<A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) => Effect.acquireUseRelease( Effect.flatMap(FileSystem.FileSystem, (fs) => fs.makeTempDirectory()), use, (dir) => Effect.flatMap(FileSystem.File",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -26607,27 +26481,6 @@
       "replacement": {
         "primitive": "it.layer",
         "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/artifacts-io.test.ts:11:@effect/platform-node/NodeFileSystem@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/artifacts-io.test.ts",
-      "line": 11,
-      "endLine": 11,
-      "symbol": "@effect/platform-node/NodeFileSystem",
-      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
-      "class": "platform-filesystem-candidate",
-      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
       },
       "severity": "info",
       "confidence": 0.55,
