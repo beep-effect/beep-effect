@@ -7,10 +7,12 @@ import {
   ModelsManifestError,
   ModelsManifestStore,
   ModelsManifestStoreLive,
+  seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as PlatformError from "effect/PlatformError";
 
 // Every `beep models` error carries a `mapError` that wraps the upstream cause
 // with a message and an optional origin; the command-boundary error folds the
@@ -119,3 +121,41 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer))("models manifest store fai
     }).pipe(Effect.scoped)
   );
 });
+
+const renameFailureLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return FileSystem.make({
+      ...fs,
+      rename: () =>
+        Effect.fail(
+          PlatformError.badArgument({
+            module: "FileSystem",
+            method: "rename",
+            description: "fixture rename failure",
+          })
+        ),
+    });
+  })
+).pipe(Layer.provideMerge(NodeServices.layer));
+
+layer(Layer.provideMerge(ModelsManifestStoreLive, renameFailureLayer), { timeout: "10 seconds" })(
+  "models atomic write failures",
+  (it) => {
+    it.effect("removes the temporary manifest after rename fails", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const store = yield* ModelsManifestStore;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "models-write-failure-" });
+        const file = path.join(directory, "models.yaml");
+        const error = yield* Effect.flip(store.init(file, seedModelsManifest));
+        expect(error).toMatchObject({ _tag: "ModelsManifestError", path: file });
+        expect(error.message).toContain("Failed to write");
+        expect(yield* fs.readDirectory(directory)).toEqual([]);
+        expect(yield* fs.exists(file)).toBe(false);
+      })
+    );
+  }
+);

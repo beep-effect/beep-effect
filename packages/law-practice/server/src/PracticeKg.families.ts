@@ -258,14 +258,13 @@ const clientsByDigestFor = (
   });
   const clients = MutableHashMap.empty<string, HashSet.HashSet<string>>();
   MutableHashMap.forEach(referencesByDigest, (references, digest) => {
-    const row = MutableHashMap.get(rowsByDigest, digest);
-    if (O.isSome(row)) {
-      MutableHashMap.set(
-        clients,
-        digest,
-        HashSet.fromIterable(A.map(ownReferences(row.value, references), (reference) => reference.client))
-      );
-    }
+    // Only catalogued digests enter referencesByDigest above.
+    const row = O.getOrThrow(MutableHashMap.get(rowsByDigest, digest));
+    MutableHashMap.set(
+      clients,
+      digest,
+      HashSet.fromIterable(A.map(ownReferences(row, references), (reference) => reference.client))
+    );
   });
   return clients;
 };
@@ -603,12 +602,8 @@ export const resolveAnchors = (input: PracticeKgResolveAnchorsInput): ReadonlyAr
     );
     const memberAttributions = O.match(member, {
       onNone: A.empty<PracticeKgDocumentAttribution>,
-      onSome: ({ familyKey }) =>
-        A.getSomes(
-          A.map(mentions, (mention) =>
-            mention.attribution.familyKey === familyKey ? O.some(mention.attribution) : O.none()
-          )
-        ),
+      // A member exists only when every mention belongs to its sole family.
+      onSome: () => A.map(mentions, (mention) => mention.attribution),
     });
     const memberHead = A.head(memberAttributions);
     return PracticeKgAnchorResolution.make({

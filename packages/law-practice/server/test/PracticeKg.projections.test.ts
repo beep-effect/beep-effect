@@ -18,11 +18,15 @@ import {
   PracticeKgCatalogRow,
   PracticeKgClaimsOptions,
   PracticeKgDocketReferenceRow,
+  PracticeKgEnrichmentRow,
+  PracticeKgNumberMentionRow,
   PracticeKgOptions,
   PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
   PracticeKgQueries,
   PracticeKgToolkitLayer,
+  reconcileAnchors,
+  resolveAnchors,
   runPracticeKgClaimsBatch,
 } from "@beep/law-practice-server";
 import { DbSchema } from "@beep/law-practice-tables";
@@ -1353,6 +1357,75 @@ describe("practice KG family attribution", () => {
     assertTrue(isRecycleStubPath("recycle\\$R123.docx"));
     assertFalse(isRecycleStubPath("$R123/response.docx"));
     assertFalse(isRecycleStubPath(""));
+  });
+
+  it("keeps client-map placement and resolves patent-only filename anchors", () => {
+    const row = PracticeKgCatalogRow.make({
+      category: "document",
+      client: "12345",
+      digest: "mapped",
+      docket: "10008US01",
+      docketFamily: "10008",
+      effectiveName: "patent.pdf",
+      mtimeIso: "2026-10-05T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "patent.pdf",
+    });
+    const attributions = attributeDocuments({
+      catalogRows: [row],
+      docketReferences: [
+        PracticeKgDocketReferenceRow.make({
+          digest: "absent",
+          client: "99999",
+          docket: "10008US01",
+          family: "10008",
+        }),
+      ],
+    });
+    expect(attributions).toEqual([
+      expect.objectContaining({ attributionSource: "client-map", familyKey: "12345.10008" }),
+    ]);
+    const enrichment = PracticeKgEnrichmentRow.make({
+      applicationNumber: null,
+      candidate: "1234567",
+      docketFamilies: "10008",
+      firstApplicantName: null,
+      firstInventorName: null,
+      inventionTitle: null,
+      parentApplicationNumbers: "",
+      patentNumber: "1234567",
+      status: "resolved",
+    });
+    const anchors = reconcileAnchors([
+      enrichment,
+      PracticeKgEnrichmentRow.make({ ...enrichment, candidate: "7654321", patentNumber: null }),
+    ]);
+    expect(anchors).toHaveLength(2);
+    expect(anchors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ applicationNumber: null, patentNumber: null, numbers: ["7654321"] }),
+      ])
+    );
+    const resolutions = resolveAnchors({
+      anchors,
+      attributions,
+      numberMentions: [PracticeKgNumberMentionRow.make({ digest: "mapped", number: "1234567", source: "filename" })],
+    });
+    expect(resolutions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          attributionSource: "filename",
+          memberFamilyKey: "12345.10008",
+          memberDocketKeys: ["12345.10008US01"],
+        }),
+        expect.objectContaining({ attributionSource: "mention", memberFamilyKey: null }),
+      ])
+    );
   });
 
   it("uses family-wide references for undocketed rows and preserves restored-name fallback", () => {
