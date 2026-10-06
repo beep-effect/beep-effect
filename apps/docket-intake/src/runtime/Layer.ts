@@ -9,10 +9,13 @@ import { AnthropicLanguageModelLive } from "@beep/anthropic";
 import {
   DocketFileStoreOptions,
   DocketGraphConfig,
+  DocketJournalingPortsLive,
   DocketMatterLookupUnavailableLive,
   makeDocketAgentsLayer,
+  makeDocketFileJournalLayer,
   makeDocketFileStoreLayer,
   makeDocketGraphLayer,
+  makeDocketGraphReadOnlyLayer,
 } from "@beep/law-practice-server/DocketIntake";
 import {
   DocketIntakeConfig,
@@ -22,6 +25,7 @@ import {
 import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Layer } from "effect";
+import { DocketDryRunPortsLive } from "../DryRun.ts";
 import type { DocketIntakeAppConfig } from "../Config.ts";
 
 // The app-only Microsoft Graph layer for the configured tenant and certificate.
@@ -37,26 +41,23 @@ const makeM365Layer = (config: DocketIntakeAppConfig) =>
     })
   );
 
-// The docket intake pipeline over its live ports: Graph mailbox and calendar, the two
-// Anthropic-backed agents, the file store and the matter lookup, with the review loop's round
-// limit and threshold taken from the configuration. The store is exposed beside the pipeline so
-// the service can seed its cursor.
-const makeDocketIntakeAppLayer = (options: {
+type IntakeOptions = {
   readonly config: DocketIntakeAppConfig;
   readonly initialSince: string;
-}) => {
-  const { config, initialSince } = options;
-  const graph = makeDocketGraphLayer(
-    DocketGraphConfig.make({
-      initialSince,
-      mailbox: config.mailbox,
-      timeZone: config.timeZone,
-    })
-  ).pipe(Layer.provide(makeM365Layer(config)));
-  const agents = makeDocketAgentsLayer().pipe(Layer.provide(AnthropicLanguageModelLive));
-  const store = makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: config.stateDirectory }));
+};
 
-  return makeDocketIntakeLayer(
+const graphConfig = (options: IntakeOptions) =>
+  DocketGraphConfig.make({
+    initialSince: options.initialSince,
+    mailbox: options.config.mailbox,
+    timeZone: options.config.timeZone,
+  });
+
+// The pipeline over the given mailbox and calendar ports, the two Anthropic-backed agents, the
+// store and the matter lookup, with the review loop's round limit and threshold taken from the
+// configuration.
+const pipelineOver = <ROut, E, R>(config: DocketIntakeAppConfig, ports: Layer.Layer<ROut, E, R>) =>
+  makeDocketIntakeLayer(
     DocketIntakeConfig.make({
       mailbox: config.mailbox,
       review: DocketReviewConfig.make({
@@ -66,8 +67,41 @@ const makeDocketIntakeAppLayer = (options: {
       reviewNegatives: config.reviewNegatives,
     })
   ).pipe(
-    Layer.provideMerge(Layer.mergeAll(graph, agents, store, DocketMatterLookupUnavailableLive)),
+    Layer.provideMerge(
+      Layer.mergeAll(
+        ports,
+        makeDocketAgentsLayer().pipe(Layer.provide(AnthropicLanguageModelLive)),
+        DocketMatterLookupUnavailableLive
+      )
+    ),
     Layer.provide(BunCrypto.layer)
+  );
+
+// The docket intake pipeline over the live Graph ports, with every calendar create and message
+// mark recorded in the write journal. The store and the journal are exposed beside the pipeline
+// so the service can seed its cursor and start a run each cycle.
+const makeDocketIntakeAppLayer = (options: IntakeOptions) => {
+  const storeOptions = DocketFileStoreOptions.make({ directory: options.config.stateDirectory });
+  const journal = makeDocketFileJournalLayer(storeOptions).pipe(
+    Layer.provideMerge(makeDocketFileStoreLayer(storeOptions))
+  );
+  const graph = makeDocketGraphLayer(graphConfig(options)).pipe(Layer.provide(makeM365Layer(options.config)));
+  return pipelineOver(
+    options.config,
+    DocketJournalingPortsLive.pipe(Layer.provide(graph), Layer.provideMerge(journal))
+  );
+};
+
+// The same pipeline for a dry run: read-only Graph ports under recording ones, and a throwaway
+// store in the dry-run directory. Nothing reaches the calendar, the mailbox or the real state.
+const makeDocketDryRunAppLayer = (options: IntakeOptions & { readonly directory: string }) => {
+  const graph = makeDocketGraphReadOnlyLayer(graphConfig(options)).pipe(Layer.provide(makeM365Layer(options.config)));
+  return pipelineOver(
+    options.config,
+    Layer.merge(
+      DocketDryRunPortsLive.pipe(Layer.provide(graph)),
+      makeDocketFileStoreLayer(DocketFileStoreOptions.make({ directory: options.directory }))
+    )
   );
 };
 
@@ -86,6 +120,7 @@ const makeDocketIntakeAppLayer = (options: {
  * @since 0.0.0
  */
 export const liveWiring = {
+  dryRun: makeDocketDryRunAppLayer,
   intake: makeDocketIntakeAppLayer,
   mailbox: (config: DocketIntakeAppConfig) => Layer.merge(makeM365Layer(config), BunCrypto.layer),
 };
