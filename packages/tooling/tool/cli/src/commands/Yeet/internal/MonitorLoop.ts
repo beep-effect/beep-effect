@@ -149,6 +149,7 @@ import {
 import {
   collectRemoteWorkflowRuns,
   collectYeetStatus,
+  deriveYeetReadyPendingFlip,
   renderYeetStatusSummary,
   writeYeetStatusSnapshot,
   YeetStatusSnapshot,
@@ -2083,18 +2084,27 @@ const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(
   return MonitorPoll.make({ ...poll, head: O.some(MonitorHeadState.make({ ...current, announcedRow: O.some(id) })) });
 });
 
-const monitorReadyTerminal = (observation: MonitorObservation, policy: YeetMonitorLoopPolicy) =>
-  O.filter(
-    O.some(YeetMonitorTerminalState.Enum.ready),
-    () =>
-      HashSet.has(yeetMonitorPolicyTerminals(policy), "ready") &&
-      O.isSome(observation.snapshot.remote.headSha) &&
-      O.exists(
-        O.flatMap(observation.poll.head, (head) => head.verdict),
-        (verdict) => O.isNone(verdict.reason)
-      ) &&
-      O.exists(observation.snapshot.mergeReady, (ready) => ready.ready)
-  );
+// A settled head ends an until-ready loop on readiness, or — while the pull
+// request is still a draft and the draft flag is its only blocker — on
+// `ready-pending-flip` (push-first-publish D9). The loop never flips the draft.
+const monitorReadyTerminal = (
+  observation: MonitorObservation,
+  policy: YeetMonitorLoopPolicy
+): O.Option<YeetMonitorTerminalState> =>
+  HashSet.has(yeetMonitorPolicyTerminals(policy), "ready") &&
+  O.isSome(observation.snapshot.remote.headSha) &&
+  O.exists(
+    O.flatMap(observation.poll.head, (head) => head.verdict),
+    (verdict) => O.isNone(verdict.reason)
+  )
+    ? O.flatMap(observation.snapshot.mergeReady, (ready) =>
+        ready.ready
+          ? O.some(YeetMonitorTerminalState.Enum.ready)
+          : deriveYeetReadyPendingFlip(observation.snapshot.remote, ready)
+            ? O.some(YeetMonitorTerminalState.Enum["ready-pending-flip"])
+            : O.none()
+      )
+    : O.none();
 
 // One head's red set as triage sees it: each failing check's name, job link and
 // completion stamp. A rerun, a new red, or a re-reported result changes it. The

@@ -24,6 +24,7 @@ import {
   TurboPlanSnapshot,
 } from "../../../internal/repo-run/RepoRun.models.ts";
 import { repoProofStepDefinition } from "../../../internal/repo-run/RepoRun.proofs.ts";
+import { HEAVY_ADMISSION_LABEL } from "../../Ci/HeavyAdmission.ts";
 import {
   githubCheckChangesetStatusLane,
   githubCheckCheapGateLanes,
@@ -111,12 +112,10 @@ export type YeetRunMode = typeof YeetRunMode.Type;
  * console.log(
  *   YeetRunPlanModeOptions.make({
  *     amend: false,
- *     fast: false,
  *     mode: "verify",
  *     monitor: false,
  *     noEdit: false,
  *     pushOnly: false,
- *     startPrEarly: false,
  *     tier: "full"
  *   }).mode
  * )
@@ -136,7 +135,6 @@ export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`Y
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
-    fast: S.Boolean,
     mode: YeetRunMode,
     monitor: S.Boolean,
     noEdit: S.Boolean,
@@ -145,7 +143,10 @@ export class YeetRunPlanModeOptions extends S.Class<YeetRunPlanModeOptions>($I`Y
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefault(Effect.succeed(false))
     ),
-    startPrEarly: S.Boolean,
+    proveFirst: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
     tier: YeetProofTier,
     pr: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefault(Effect.succeed(false))),
     forceTurbo: S.Boolean.pipe(
@@ -503,13 +504,12 @@ const commitStep = (
   );
 
 /**
- * Stable plan-step identifier for the branch push, shared by both publish paths.
+ * Stable plan-step identifier for the branch push, shared by every publish path.
  *
  * **Details**
  *
- * The early-publish and ordinary publish phases both carry `publish` work, so
- * this id — not the phase — is what proves the branch actually reached the
- * remote.
+ * The publish phase also carries the preflight and pull-request steps, so this
+ * id — not the phase — is what proves the branch actually reached the remote.
  *
  * **Example** (Recognize the push step)
  *
@@ -532,25 +532,17 @@ const publishPushRefspec = (): string => {
   return configured !== undefined && Str.startsWith("HEAD:refs/heads/")(configured) ? configured : "HEAD";
 };
 
-// Keep local pre-push hooks (secret scanning, SAST, policy gates) active on the
-// early push: --no-verify would publish unverified content to the remote before
-// any hook could block secrets or policy violations.
-const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, GIT_PUSH_STEP_ID, "early-publish:git:push", "early-publish", [
-    "push",
-    "-u",
-    "origin",
-    publishPushRefspec(),
-  ]);
-
-const pushStep = (context: RepoRunContext): RepoPlanStep =>
+// The prove-first push carries the proof-reuse marker it always carried, so its
+// plan stays byte-identical to the pre-push-first default; the push-first path
+// has no full proof to reuse and pushes without it.
+const pushStep = (context: RepoRunContext, reuseProof: boolean): RepoPlanStep =>
   gitStep(
     context,
     GIT_PUSH_STEP_ID,
     "publish:git:push",
     "publish",
     ["push", "-u", "origin", publishPushRefspec()],
-    O.some({ BEEP_YEET_REUSE_PRE_PUSH_PROOF: "1" })
+    reuseProof ? O.some({ BEEP_YEET_REUSE_PRE_PUSH_PROOF: "1" }) : O.none()
   );
 
 const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["phase"]): RepoPlanStep =>
@@ -567,24 +559,72 @@ const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["
     verification: "detached-clean-temp-worktree-of-HEAD",
   });
 
-const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
+// Every publish path opens the pull request as a draft (push-first-publish
+// D4); the flag stays so a plan can still describe a ready create.
+const prCreateStep = (context: RepoRunContext, draft: boolean): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:02-pr-create",
     label: "publish:pr-create",
-    phase,
+    phase: "publish",
     command: "gh",
-    args: ["pr", "create", "--title", "<head-commit-subject>", "--body-file", "<run-artifacts>/pr-body.md"],
+    args: [
+      "pr",
+      "create",
+      ...(draft ? ["--draft"] : []),
+      "--title",
+      "<head-commit-subject>",
+      "--body-file",
+      "<run-artifacts>/pr-body.md",
+    ],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "publish",
     resume: "never",
   });
 
-const prProvenanceStampStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
+/**
+ * Stable plan-step identifier for the heavy-admission label applied when the
+ * push-first publish creates its draft pull request.
+ *
+ * **Details**
+ *
+ * The id sorts between the create and the provenance stamp, so the label lands
+ * on the pull request the create just opened. The handler skips the edit when
+ * every changed path is docs-only, because the heavy matrix already treats such
+ * a diff as satisfied.
+ *
+ * **Example** (Recognize the label step)
+ *
+ * ```ts
+ * import { PR_HEAVY_ADMISSION_LABEL_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(PR_HEAVY_ADMISSION_LABEL_STEP_ID) // "publish:02-pr-ready-for-heavy-label"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PR_HEAVY_ADMISSION_LABEL_STEP_ID = "publish:02-pr-ready-for-heavy-label" as const;
+
+const prHeavyAdmissionLabelStep = (context: RepoRunContext): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: PR_HEAVY_ADMISSION_LABEL_STEP_ID,
+    label: "publish:pr-ready-for-heavy-label",
+    phase: "publish",
+    command: "gh",
+    args: ["pr", "edit", "<number>", "--add-label", HEAVY_ADMISSION_LABEL],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "publish",
+    resume: "never",
+    verification: "skipped-on-docs-only-diff",
+  });
+
+const prProvenanceStampStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
     id: "publish:03-pr-provenance-stamp",
     label: "publish:pr-provenance-stamp",
-    phase,
+    phase: "publish",
     command: "gh",
     args: ["pr", "edit", "<number>", "--body-file", "<run-artifacts>/pr-provenance-body.md"],
     cwd: context.repoRoot,
@@ -630,6 +670,54 @@ const monitorSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
   monitorContextStep(context),
   monitorChecksStep(context),
 ];
+
+/**
+ * Stable plan-step identifier for the detached readiness monitor the push-first
+ * publish submits before it exits.
+ *
+ * **Details**
+ *
+ * The step runs the ordinary `monitor --until-ready --detach` submit as a child
+ * process, so the job is the same durable unit an operator would submit by
+ * hand. Publish reads the job id from the child's JSON record and prints it.
+ * Before running it, publish reads the checkout's job registry (the records
+ * `yeet job list` prints); when a `submitted` or `running` readiness monitor
+ * already follows the pull request, the step is recorded as skipped and that
+ * job's id and `job wait` command are printed instead, because a running
+ * monitor keeps polling across fix pushes.
+ *
+ * **Example** (Recognize the submit step)
+ *
+ * ```ts
+ * import { MONITOR_READY_SUBMIT_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MONITOR_READY_SUBMIT_STEP_ID) // "monitor:00-until-ready-submit"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const MONITOR_READY_SUBMIT_STEP_ID = "monitor:00-until-ready-submit" as const;
+
+// A publish that itself runs inside a proof job still submits the monitor as a
+// sibling job: the child would otherwise refuse a recursive --detach.
+const monitorReadySubmitStep = (context: RepoRunContext): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: MONITOR_READY_SUBMIT_STEP_ID,
+    label: "monitor:until-ready:submit",
+    phase: "monitor",
+    command: "bun",
+    args: ["run", "beep", "yeet", "monitor", "--until-ready", "--detach", "--json"],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "readonly",
+    resume: "never",
+    verification: "detached-until-ready-job",
+    env: {
+      BEEP_YEET_JOB_ID: undefined,
+      BEEP_YEET_JOB_UNIT: undefined,
+    },
+  });
 
 const closeoutPrContextStep = (context: RepoRunContext): RepoPlanStep =>
   RepoPlanStep.make({
@@ -735,6 +823,59 @@ const statusSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): 
   ...(options.remote ? [statusRemoteStep(context), statusRemoteChecksStep(context)] : []),
 ];
 
+// The pull-request tail every publish path shares (push-first-publish D4, D7):
+// a draft pull request with the heavy-admission label and provenance stamp,
+// then the detached readiness monitor unless the operator stays attached.
+const pullRequestTailSteps = (
+  context: RepoRunContext,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [
+  ...(options.pr
+    ? [prCreateStep(context, true), prHeavyAdmissionLabelStep(context), prProvenanceStampStep(context)]
+    : []),
+  ...(options.monitor ? monitorSteps(context) : options.pr ? [monitorReadySubmitStep(context)] : []),
+];
+
+// The push of an already-proven commit, shared by `--prove-first` and
+// `--push-only`: preflight, push carrying the proof-reuse marker, then the
+// same draft-and-monitor tail as the push-first default.
+const provenPushSteps = (context: RepoRunContext, options: YeetRunPlanModeOptions): ReadonlyArray<RepoPlanStep> => [
+  headInstallPreflightStep(context, "publish"),
+  pushStep(context, true),
+  ...pullRequestTailSteps(context, options),
+];
+
+// The pre-push-first default, kept byte-identical behind `--prove-first`: the
+// full proof and CI parity hold the push.
+const proveFirstPublishSteps = (
+  context: RepoRunContext,
+  message: O.Option<string>,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [
+  fallowAdvisoryFeedbackStep(context),
+  commitStep(context, message, options),
+  ...fullProofSteps(context, options.collectAll),
+  ciParityStep(context),
+  ...provenPushSteps(context, options),
+];
+
+// Push-first (push-first-publish D1-D8): only the cheap-gates tier and the
+// head-install preflight hold the push. The pull request opens as a draft with
+// the heavy-admission label, and the detached readiness monitor is submitted
+// unless the operator asked to stay attached with `--monitor`.
+const pushFirstPublishSteps = (
+  context: RepoRunContext,
+  message: O.Option<string>,
+  options: YeetRunPlanModeOptions
+): ReadonlyArray<RepoPlanStep> => [
+  fallowAdvisoryFeedbackStep(context),
+  commitStep(context, message, options),
+  proofStep(context, "cheap-gates", true),
+  headInstallPreflightStep(context, "publish"),
+  pushStep(context, false),
+  ...pullRequestTailSteps(context, options),
+];
+
 const publishSteps = (
   context: RepoRunContext,
   message: O.Option<string>,
@@ -743,39 +884,13 @@ const publishSteps = (
   Match.value(options).pipe(
     Match.when(
       ({ pushOnly }) => pushOnly,
-      () => [
-        headInstallPreflightStep(context, "publish"),
-        pushStep(context),
-        ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
-        ...(options.monitor ? monitorSteps(context) : []),
-      ]
+      () => provenPushSteps(context, options)
     ),
     Match.when(
-      ({ startPrEarly }) => startPrEarly,
-      () => [
-        fallowAdvisoryFeedbackStep(context),
-        commitStep(context, message, options),
-        headInstallPreflightStep(context, "early-publish"),
-        earlyPushStep(context),
-        ...(options.pr
-          ? [prCreateStep(context, "early-publish"), prProvenanceStampStep(context, "early-publish")]
-          : []),
-        ...fullProofSteps(context, options.collectAll),
-        ciParityStep(context),
-        ...(options.monitor ? monitorSteps(context) : []),
-      ]
+      ({ proveFirst }) => proveFirst,
+      () => proveFirstPublishSteps(context, message, options)
     ),
-    Match.orElse(() => [
-      fallowAdvisoryFeedbackStep(context),
-      commitStep(context, message, options),
-      ...(options.fast && options.monitor
-        ? []
-        : [...fullProofSteps(context, options.collectAll), ciParityStep(context)]),
-      headInstallPreflightStep(context, "publish"),
-      pushStep(context),
-      ...(options.pr ? [prCreateStep(context), prProvenanceStampStep(context)] : []),
-      ...(options.monitor ? monitorSteps(context) : []),
-    ])
+    Match.orElse(() => pushFirstPublishSteps(context, message, options))
   );
 
 const stepsForMode = (
@@ -842,12 +957,10 @@ const withTurboForce = (steps: ReadonlyArray<RepoPlanStep>, forceTurbo: boolean)
  *     O.none(),
  *     YeetRunPlanModeOptions.make({
  *       amend: false,
- *       fast: false,
  *       mode: "verify",
  *       monitor: false,
  *       noEdit: false,
  *       pushOnly: false,
- *       startPrEarly: false,
  *       tier: "full"
  *     })
  *   ).steps
@@ -915,12 +1028,10 @@ export const buildYeetRunPlan: {
       message,
       YeetRunPlanModeOptions.make({
         amend: false,
-        fast: false,
         mode: "publish",
         monitor: false,
         noEdit: false,
         pushOnly: false,
-        startPrEarly: false,
         tier: "full",
       })
     )
