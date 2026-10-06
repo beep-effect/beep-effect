@@ -268,7 +268,7 @@ const PRE_CHANGE_SNAPSHOT_JSON = [
   '/feature_chain-<run>/verdict.json","state":"missing"},"worktree":{"clean":true,"staged":0,"unstaged"',
   ':0,"untracked":0},"mergeReady":{"ready":false,"failing":"closeout-run","criteria":{"prOpen":true,"',
   'notDraft":true,"closeoutRun":false,"requiredChecksGreen":false,"threadsResolved":false,"mergeable":',
-  'true,"mergeStateAcceptable":false,"reviewDecisionAcceptable":true}},"staleGates":[],"unprovenGates":',
+  'true,"mergeStateAcceptable":false,"reviewDecisionAcceptable":true,"reviewWindowElapsed":false}},"staleGates":[],"unprovenGates":',
   '[{"status":"unproven","gateId":"coverage-regression","detail":"standards/coverage.regression-',
   'baseline.jsonc does not exist"},{"status":"unproven","gateId":"jsdoc-totals-ratchet","detail":"',
   'standards/jsdoc-totals.regression-baseline.jsonc does not exist"},{"status":"unproven","gateId":"',
