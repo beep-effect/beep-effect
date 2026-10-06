@@ -226,6 +226,32 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
           binding: binding("model"),
           render: verbatim,
           pointer: ["nested", "model"],
+          fallbacks: [],
+        } as Locator),
+        "gpt-5.6-luna"
+      );
+      // An absent primary pointer falls through to the first fallback that
+      // resolves; a present primary pointer wins over every fallback.
+      assertSome(
+        yield* readFixture("locators.json", {
+          _tag: "json-key",
+          binding: binding("model"),
+          render: verbatim,
+          pointer: ["absent", "model"],
+          fallbacks: [
+            ["also", "absent"],
+            ["nested", "model"],
+          ],
+        } as Locator),
+        "gpt-5.6-luna"
+      );
+      assertSome(
+        yield* readFixture("locators.json", {
+          _tag: "json-key",
+          binding: binding("model"),
+          render: verbatim,
+          pointer: ["nested", "model"],
+          fallbacks: [["absent", "model"]],
         } as Locator),
         "gpt-5.6-luna"
       );

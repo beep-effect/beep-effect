@@ -29,12 +29,6 @@ const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
 // ── Manifest store ──────────────────────────────────────────────────────────
 
 /**
- * Loads and seeds the operator manifest.
- *
- * @category services
- * @since 0.0.0
- */
-/**
  * Where `adopt` left the manifest and the copy it preserved first.
  *
  * **Example** (Read an adoption record)

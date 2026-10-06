@@ -3,7 +3,7 @@ import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { expect, layer } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Console, Effect, FileSystem, Layer, Path } from "effect";
 import { Command } from "effect/cli";
 import { FetchHttpClient } from "effect/http";
 import * as P from "effect/Predicate";
@@ -15,7 +15,12 @@ import * as TestConsole from "effect/testing/TestConsole";
 // driven end to end against a temporary home without a network.
 const runModelsCommand = Command.runWith(modelsCommand, { version: "0.0.0" });
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer, TestConsole.layer);
+const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
+
+// Each test gets its own TestConsole: a layer-wide one would carry log lines
+// from earlier tests and let a console assertion pass by accident.
+const withFreshConsole = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  effect.pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
 layer(testLayer)("models init command", (it) => {
   it.effect("seeds the routing manifest under the explicit home", () =>
@@ -30,7 +35,7 @@ layer(testLayer)("models init command", (it) => {
       expect(yield* fs.exists(manifestPath)).toBe(true);
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
-    }).pipe(Effect.scoped)
+    }).pipe(Effect.scoped, withFreshConsole)
   );
 
   it.effect("adopt rewrites an existing manifest and keeps a timestamped backup", () =>
@@ -52,7 +57,7 @@ layer(testLayer)("models init command", (it) => {
       expect(yield* fs.readFileString(path.join(path.dirname(manifestPath), backups[0]!))).toContain("bindings: []");
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: adopted the seed into"))).toBe(true);
-    }).pipe(Effect.scoped)
+    }).pipe(Effect.scoped, withFreshConsole)
   );
 
   it.effect("repeated adoptions keep distinct backups and leave no temporary files", () =>
@@ -74,7 +79,7 @@ layer(testLayer)("models init command", (it) => {
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(2);
       expect(A.filter(siblings, Str.startsWith("models.yaml.tmp-"))).toHaveLength(0);
       expect(yield* fs.readFileString(manifestPath)).toContain("gpt-6.1-sol");
-    }).pipe(Effect.scoped)
+    }).pipe(Effect.scoped, withFreshConsole)
   );
 
   it.effect("adopt on an empty slot behaves like init", () =>
@@ -91,6 +96,6 @@ layer(testLayer)("models init command", (it) => {
       expect(A.filter(siblings, Str.startsWith("models.yaml.bak-"))).toHaveLength(0);
       const lines = A.filter(yield* TestConsole.logLines, P.isString);
       expect(A.some(lines, Str.startsWith("models: seeded"))).toBe(true);
-    }).pipe(Effect.scoped)
+    }).pipe(Effect.scoped, withFreshConsole)
   );
 });

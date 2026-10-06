@@ -362,12 +362,16 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
       binding: at("orchestrator", "claude-code", "model"),
       render: verbatim,
       pointer: ["model"],
+      fallbacks: [],
     },
     {
       _tag: "json-key",
       binding: at("orchestrator", "claude-code", "effort"),
       render: verbatim,
       pointer: ["modelSettings", "claude-opus-5-5", "effortLevel"],
+      // Claude Code applies the per-model entry when present, else the
+      // top-level `effortLevel`; the check reads the same effective value.
+      fallbacks: [["effortLevel"]],
     },
   ]),
   target("home.beep-graft.env", "home", "$HOME/.config/beep-graft/env", true, [

@@ -287,11 +287,15 @@ const makeLocatorReader = (): ModelsLocatorReaderShape => ({
             }),
         }).pipe(Effect.map(scalarText))
       ),
-      Match.tag("json-key", ({ pointer }) =>
+      Match.tag("json-key", ({ pointer, fallbacks }) =>
         Effect.succeed(
           pipe(
             parseJsonText(file.content),
-            O.flatMap((json) => walkPointer(json, pointer))
+            O.flatMap((json) =>
+              A.reduce(fallbacks, walkPointer(json, pointer), (found, fallback) =>
+                O.orElse(found, () => walkPointer(json, fallback))
+              )
+            )
           )
         )
       ),
