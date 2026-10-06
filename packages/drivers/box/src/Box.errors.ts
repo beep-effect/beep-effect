@@ -86,14 +86,72 @@ const BoxProviderResourceId = S.String.check(
   })
 );
 
-const BoxApiFailureConflict = S.Struct({
-  id: BoxProviderResourceId,
-  type: BoxConflictResourceType,
-}).pipe(
-  $I.annoteSchema("BoxApiFailureConflict", {
-    description: "Safe identity-only projection of a Box conflict resource.",
+const BoxContentSha1 = S.String.check(
+  S.isPattern(/^[0-9a-f]{40}$/u, {
+    identifier: $I`BoxContentSha1Pattern`,
+    title: "Box content SHA-1",
+    description: "Forty lowercase hexadecimal digits: the content hash Box reports for a file.",
+    message: "Expected a lowercase hexadecimal SHA-1",
+  })
+).pipe(
+  $I.annoteSchema("BoxContentSha1", {
+    description: "Lowercase hexadecimal SHA-1 content hash safe to retain in driver diagnostics.",
   })
 );
+
+/**
+ * Sanitized projection of one item named by a Box `item_name_in_use` conflict.
+ *
+ * **Details**
+ *
+ * Only the provider id, the resource type, and, for files, the content `sha1`
+ * and byte `size` are retained. The item name, etag, sequence id, file version,
+ * path, and every other provider field are dropped. `sha1` and `size` are
+ * `None` for folders and whenever Box omits them or sends a value that is not a
+ * lowercase 40-digit hexadecimal hash or a non-negative integer.
+ *
+ * Box sends `context_info.conflicts` as an array for a folder-create conflict
+ * and documents a single object for a file-upload conflict. The SDK does not
+ * normalize either: `box-node-sdk` 10.17.0 `lib/networking/boxNetworkClient.js`
+ * lines 302-304 copy the raw `context_info` map onto
+ * `BoxApiError.responseInfo.contextInfo` without deserializing it (line 353),
+ * so the camel-cased `contextInfo` holds the wire payload with its original
+ * keys. The SDK's own `ConflictErrorContextInfoField`
+ * (`lib/schemas/conflictError.d.ts` lines 4-9) types `conflicts` as an array
+ * and its deserializer (`lib/schemas/conflictError.js` lines 32-36) rejects
+ * anything else, but that deserializer is never applied on the error path. The
+ * driver therefore accepts both shapes and always exposes an array.
+ *
+ * **Example** (Describe a conflicting file)
+ *
+ * ```ts
+ * import { BoxApiFailureConflict } from "@beep/box"
+ * import * as O from "effect/Option"
+ *
+ * const conflict = BoxApiFailureConflict.make({
+ *   id: "123",
+ *   sha1: O.some("da39a3ee5e6b4b0d3255bfef95601890afd80709"),
+ *   size: O.some(0),
+ *   type: "file"
+ * })
+ * console.log(O.isSome(conflict.sha1))
+ * ```
+ *
+ * @see {@link https://developer.box.com/reference/post-files-content} for the upload conflict response.
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxApiFailureConflict extends S.Class<BoxApiFailureConflict>($I`BoxApiFailureConflict`)(
+  {
+    id: BoxProviderResourceId,
+    type: BoxConflictResourceType,
+    sha1: S.OptionFromOptionalKey(BoxContentSha1).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    size: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
+  },
+  $I.annote("BoxApiFailureConflict", {
+    description: "Safe id, type, content hash, and size projection of a Box conflict resource.",
+  })
+) {}
 
 const BoxApiFailureContextValues = S.Struct({
   conflictCount: S.Natural,
@@ -107,14 +165,24 @@ const BoxApiFailureContextValues = S.Struct({
 /**
  * Sanitized context copied from Box API failures.
  *
+ * **Details**
+ *
+ * `conflicts` is always an array: a single-object `context_info.conflicts`
+ * (the documented file-upload shape) is normalized to a one-element list.
+ * `conflictCount` counts the entries Box sent; `conflicts` holds those that
+ * carried a usable id and type, each as a {@link BoxApiFailureConflict}.
+ *
  * **Example** (Make failure context values)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { BoxApiFailureContext } from "@beep/box"
+ * import { BoxApiFailureConflict, BoxApiFailureContext } from "@beep/box"
  *
  * const context = BoxApiFailureContext.make({
- *   values: { conflictCount: S.Natural.make(1), conflicts: [{ id: "123", type: "file" }] }
+ *   values: {
+ *     conflictCount: S.Natural.make(1),
+ *     conflicts: [BoxApiFailureConflict.make({ id: "123", type: "file" })]
+ *   }
  * })
  * console.log(context.values.conflictCount)
  * ```
@@ -483,17 +551,40 @@ const readHttpStatusCode =
 const responseInfoFromUnknown = (cause: unknown): O.Option<unknown> => readProperty("responseInfo")(cause);
 
 const decodeApiFailureConflict = S.decodeUnknownResult(BoxApiFailureConflict);
+const isBoxContentSha1 = S.is(BoxContentSha1);
+const isNatural = S.is(S.Natural);
+
+/**
+ * Copies only the approved conflict fields, so a provider name, etag, or any
+ * other key can never reach the decoder. An unusable `sha1` or `size` drops
+ * that field alone; an unusable `id` or `type` drops the whole entry.
+ */
+const readApiFailureConflict = (conflict: unknown) =>
+  decodeApiFailureConflict({
+    ...O.getSomesStruct({
+      id: readProperty("id")(conflict),
+      type: readProperty("type")(conflict),
+    }),
+    ...O.getSomesStruct({
+      sha1: pipe(readString("sha1")(conflict), O.filter(isBoxContentSha1)),
+      size: pipe(readNumber("size")(conflict), O.filter(isNatural)),
+    }),
+  });
+
+/** Folder-create conflicts arrive as an array, upload conflicts as one object; anything else is no conflict list. */
+const conflictEntries = (conflicts: unknown): O.Option<ReadonlyArray<unknown>> =>
+  A.isArray(conflicts) ? O.some(conflicts) : P.isObject(conflicts) ? O.some(A.of(conflicts)) : O.none();
 
 const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
   pipe(
     readProperty("contextInfo")(value),
     O.flatMap(readProperty("conflicts")),
-    O.filter((conflicts): conflicts is ReadonlyArray<unknown> => A.isArray(conflicts)),
+    O.flatMap(conflictEntries),
     O.map((conflicts) =>
       BoxApiFailureContext.make({
         values: {
           conflictCount: S.Natural.make(A.length(conflicts)),
-          conflicts: A.filterMap(conflicts, (conflict) => decodeApiFailureConflict(conflict)),
+          conflicts: A.filterMap(conflicts, readApiFailureConflict),
         },
       })
     )

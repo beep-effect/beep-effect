@@ -61,3 +61,9 @@ stdio smoke coverage.
   `failureMode: "return"` → `AiToolError`.
 - This package owns no Graph logic; it delegates to `@beep/m365`. Read-only tools
   in v1; spans annotate counts/sizes, never raw content.
+- 2026-10-06 (post-closeout, additive): the server contract gained the
+  handshake-era MCP protocol versions `2025-11-25`, `2025-06-18`, `2025-03-26`
+  and `2024-11-05` after `2026-07-28`, because Claude clients open every server
+  with `initialize` and a host that lists only `2026-07-28` refuses it. Tools,
+  instructions and handlers are unchanged. Decision:
+  `goals/m365-agent-outbox/SPEC.md` D-12.

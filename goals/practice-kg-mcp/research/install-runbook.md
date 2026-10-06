@@ -25,6 +25,50 @@ your PC**, select **More info → Run anyway** after confirming the file came
 from the expected handoff. A hardened company policy may require an
 administrator instead.
 
+## Verify an install without the chat window
+
+The host checks itself from a terminal, so an install can be confirmed over
+SSH with nobody at the PC. From the folder that holds the unpacked extension,
+point it at the bundle folder:
+
+```
+practice-kg-mcp.exe --self-check --bundle-dir "<path to practice-kg-bundle>"
+```
+
+**Close Claude Desktop first.** The graph store allows one process at a time,
+and the running extension already holds it; a second process on the same
+bundle is unproven on Windows and may fail or damage the store. Run the check
+before Claude Desktop starts, or after quitting it.
+
+It opens the bundle the same way the server does, counts one table in each
+store, prints one line and exits. It does not start the MCP server and does
+not read input. A working install prints this shape and exits with code 0:
+
+```json
+{"ok":true,"extensionVersion":"0.3.1","bundleVersion":"2026-10-06-02","schemaVersion":{"duckdb":"3","pglite":"3"},"nodes":4,"matters":1,"tools":10}
+```
+
+Check that `extensionVersion` and `bundleVersion` are the pair that was handed
+over and that `nodes` and `matters` are not zero. Anything else prints
+`{"ok":false,"message":"…"}` and exits with a non-zero code. When a store is
+the problem the line also carries `"cause"`, the underlying error text, and
+the message is one of two kinds:
+
+- **"could not be opened"**: the store named in the message is held by another
+  process, unreadable or corrupt. Close Claude Desktop and run the check again;
+  if it still fails, read `cause`. Do not replace the bundle for this alone.
+- **"does not answer the queries this server's tools run"**: the store opened,
+  but its tables are not the ones this server reads. Install the bundle that
+  was handed over with this extension version.
+
+Other messages name their own cause, such as a manifest for another store
+format or a store missing from the folder. A `--bundle-dir` that does not
+exist is rejected before the check starts, with usage text instead of the
+JSON line.
+
+This proves the files and the executable. The tool call from a chat described
+below is still the proof that Claude Desktop itself loaded the extension.
+
 ## Refresh
 
 ## Updating an existing install
@@ -62,7 +106,7 @@ After any install, proof that it works is a tool call from a chat
 only a running process.
 
 The server and the bundle ship as a pair: this server reads store format
-pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
+pglite 3 / duckdb 3 and refuses any other bundle with a message naming both
 formats. Replace the extension and the bundle folder together.
 
 Refresh always means full replacement; never merge database files. Close

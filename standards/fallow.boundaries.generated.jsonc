@@ -204,6 +204,12 @@
         ]
       },
       {
+        "name": "@beep/docket-intake",
+        "patterns": [
+          "apps/docket-intake/src/**"
+        ]
+      },
+      {
         "name": "@beep/documents-domain",
         "patterns": [
           "packages/documents/domain/src/**"
@@ -1577,6 +1583,33 @@
         ]
       },
       {
+        "from": "@beep/docket-intake",
+        "allow": [
+          "@beep/anthropic",
+          "@beep/docket-intake",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/docket-intake",
+          "@beep/identity",
+          "@beep/law-practice-domain",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/m365",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils"
+        ]
+      },
+      {
         "from": "@beep/documents-domain",
         "allow": [
           "@beep/documents-domain",
@@ -2525,20 +2558,26 @@
       {
         "from": "@beep/m365-mcp",
         "allow": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/data",
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
+          "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
