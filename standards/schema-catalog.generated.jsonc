@@ -52,6 +52,30 @@
       "description": "Service health snapshot returned by GET /health."
     },
     {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "EvidenceMode",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "EvidenceMode",
+      "description": "Replay-evidence run mode: read-only check (default) or opt-in regeneration."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "EvidencePaths",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "EvidencePaths",
+      "description": "Policy A-Box, admission journal and evidence report paths for one replay run."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Evidence.ts",
+      "symbol": "EvidenceRun",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "EvidenceRun",
+      "description": "Mode and rendered Markdown of a replay-evidence run that passed the differential replay."
+    },
+    {
       "file": "apps/labs/ciops/src/projection/Replay.ts",
       "symbol": "InferredLeaseEviction",
       "kind": "schema-class",
@@ -132,6 +156,83 @@
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "GateOrderHandoffRef",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "GateOrderHandoffRef",
+      "description": "Repo-relative path and pinned SHA-256 of the gate-order handoff document."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "GateOrderHandoffView",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "GateOrderHandoffView",
+      "description": "Lab-local subset view of a gate-order-handoff/v1 document; excess members are ignored."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "HandoffDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/ciops",
+      "identity": "HandoffDecodeError"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "HandoffDigestMismatchError",
+      "kind": "tagged-error",
+      "owner": "@beep/ciops",
+      "identity": "HandoffDigestMismatchError"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "HandoffLane",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "HandoffLane",
+      "description": "Rank, lane id and declaration index of one gate-order handoff lane."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "HandoffReadError",
+      "kind": "tagged-error",
+      "owner": "@beep/ciops",
+      "identity": "HandoffReadError"
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "LaneOrderRule",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "LaneOrderRule",
+      "description": "Gate-order rule named by the handoff document and carried by its lane plan."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "LanePlanProposal",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LanePlanProposal",
+      "description": "Ordered lane steps planned from one sha256-pinned gate-order handoff, with its read path."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "LaneScope",
+      "kind": "literal-kit",
+      "owner": "@beep/ciops",
+      "identity": "LaneScope",
+      "description": "Pre-push scope of a gate-order handoff and the lane plan derived from it."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
+      "symbol": "LaneStep",
+      "kind": "schema-class",
+      "owner": "@beep/ciops",
+      "identity": "LaneStep",
+      "description": "One 0-based lane position in a lane plan; distinct from an admission ScheduleStep."
+    },
+    {
+      "file": "apps/labs/ciops/src/projection/Schemas.ts",
       "symbol": "PendingRequest",
       "kind": "schema-class",
       "owner": "@beep/ciops",
@@ -144,7 +245,7 @@
       "kind": "schema-class",
       "owner": "@beep/ciops",
       "identity": "PlanEpisodeInput",
-      "description": "Minimal typed carrier preserving the v2 lane-DAG planning seam."
+      "description": "Caller-owned episode key plus the repo root and pinned handoff the lane planner reads."
     },
     {
       "file": "apps/labs/ciops/src/projection/Schemas.ts",

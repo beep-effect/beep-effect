@@ -8,7 +8,10 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import { Effect, HashMap, HashSet } from "effect";
+import * as A from "effect/Array";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { PosInt } from "./PosInt.ts";
 
@@ -518,7 +521,14 @@ export class PolicyDecodeError extends S.TaggedError<PolicyDecodeError>($I`Polic
 ) {}
 
 /**
- * Reserved typed failure for a cyclic future lane-DAG episode plan.
+ * Typed failure for a lane precedence graph that contains a cycle.
+ *
+ * **Details**
+ *
+ * The lane planner runs `Graph.findCycle` before `Graph.topo`, so a cycle in
+ * explicit precedence input surfaces here instead of as a `GraphError` defect.
+ * `cycleNodes` carries the witness's lane ids. The handoff's rank chain cannot
+ * be cyclic; a duplicate `laneId` is a decode failure, not a cycle.
  *
  * **Example** (Construct a cyclic-plan failure)
  *
@@ -536,7 +546,94 @@ export class CyclicPlanError extends S.TaggedError<CyclicPlanError>($I`CyclicPla
   "CyclicPlanError",
   { cycleNodes: S.Array(S.NonEmptyString) },
   $I.annoteError<CyclicPlanError>("CyclicPlanError", {
-    description: "Future lane-DAG planning failed because the episode graph contains a cycle.",
+    description: "Lane planning failed because the lane precedence graph contains a cycle.",
+  })
+) {}
+
+/**
+ * Failure to read the gate-order handoff bytes at the supplied location.
+ *
+ * **Example** (Construct a handoff read failure)
+ *
+ * ```ts
+ * import { HandoffReadError } from "@/projection/Schemas"
+ *
+ * const error = HandoffReadError.make({
+ *   path: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *   message: "No such file"
+ * })
+ * console.log(error._tag) // "HandoffReadError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HandoffReadError extends S.TaggedError<HandoffReadError>($I`HandoffReadError`)(
+  "HandoffReadError",
+  { path: S.String, message: S.String },
+  $I.annoteError<HandoffReadError>("HandoffReadError", {
+    description: "The gate-order handoff document could not be read at its repo-relative path.",
+  })
+) {}
+
+/**
+ * Failure raised when the handoff bytes do not hash to the pinned SHA-256.
+ *
+ * **Details**
+ *
+ * The digest is taken over the raw file bytes and compared before any decode,
+ * so a drifted document never reaches the subset decoder.
+ *
+ * **Example** (Construct a digest mismatch)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { HandoffDigestMismatchError } from "@/projection/Schemas"
+ *
+ * const error = HandoffDigestMismatchError.make({
+ *   path: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *   expectedSha256: Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198"),
+ *   actualSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ * })
+ * console.log(error._tag) // "HandoffDigestMismatchError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HandoffDigestMismatchError extends S.TaggedError<HandoffDigestMismatchError>(
+  $I`HandoffDigestMismatchError`
+)(
+  "HandoffDigestMismatchError",
+  { path: S.String, expectedSha256: Sha256Hex, actualSha256: Sha256Hex },
+  $I.annoteError<HandoffDigestMismatchError>("HandoffDigestMismatchError", {
+    description: "The gate-order handoff bytes do not hash to the SHA-256 pinned by the planner input.",
+  })
+) {}
+
+/**
+ * Failure to decode the gate-order handoff subset the lane planner reads.
+ *
+ * **Example** (Construct a handoff decode failure)
+ *
+ * ```ts
+ * import { HandoffDecodeError } from "@/projection/Schemas"
+ *
+ * const error = HandoffDecodeError.make({
+ *   path: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *   message: "Lane ids must be unique"
+ * })
+ * console.log(error._tag) // "HandoffDecodeError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HandoffDecodeError extends S.TaggedError<HandoffDecodeError>($I`HandoffDecodeError`)(
+  "HandoffDecodeError",
+  { path: S.String, message: S.String },
+  $I.annoteError<HandoffDecodeError>("HandoffDecodeError", {
+    description: "The pinned gate-order handoff bytes did not match the lab's subset view.",
   })
 ) {}
 
@@ -837,24 +934,340 @@ export const AdmissionJournalEvent = S.Union([
 export type AdmissionJournalEvent = typeof AdmissionJournalEvent.Type;
 
 /**
- * V1 lane-planner input reserved for the future DAG implementation.
+ * Pre-push scope a gate-order handoff and its lane plan apply to.
  *
- * **Example** (Construct a reserved planner request)
+ * **Details**
+ *
+ * This is the handoff's `scope` member, kept separate from the admission-only
+ * {@link ScheduleScope}. Any other scope fails the subset decode.
+ *
+ * **Example** (Recognize the handoff scope)
  *
  * ```ts
- * import { PlanEpisodeInput } from "@/projection/Schemas"
+ * import { LaneScope } from "@/projection/Schemas"
  *
- * const input = PlanEpisodeInput.make({ episodeId: "episode-1" })
- * console.log(input.episodeId) // "episode-1"
+ * console.log(LaneScope.is["pre-push:non-main"]("pre-push:non-main")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LaneScope = LiteralKit(["pre-push:non-main"]).pipe(
+  $I.annoteSchema("LaneScope", {
+    description: "Pre-push scope of a gate-order handoff and the lane plan derived from it.",
+  })
+);
+
+/**
+ * Decoded lane scope accepted by {@link LaneScope}.
+ *
+ * @see {@link LaneScope} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type LaneScope = typeof LaneScope.Type;
+
+/**
+ * Order rule under which the handoff's lane ranks were computed.
+ *
+ * **Details**
+ *
+ * The lab never recomputes this order; it only reads the ranks the rule
+ * produced. A new rule is a new literal (time-to-certainty ruling 76) and
+ * fails the subset decode until a ruling admits it here.
+ *
+ * **Example** (Recognize the lexicographic gate order)
+ *
+ * ```ts
+ * import { LaneOrderRule } from "@/projection/Schemas"
+ *
+ * console.log(LaneOrderRule.is["gate-order-lexicographic/v1"]("gate-order-lexicographic/v1")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LaneOrderRule = LiteralKit(["gate-order-lexicographic/v1"]).pipe(
+  $I.annoteSchema("LaneOrderRule", {
+    description: "Gate-order rule named by the handoff document and carried by its lane plan.",
+  })
+);
+
+/**
+ * Decoded order rule accepted by {@link LaneOrderRule}.
+ *
+ * @see {@link LaneOrderRule} for runtime decoding and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type LaneOrderRule = typeof LaneOrderRule.Type;
+
+// Ruling-28 lane ids are `family:name` segments; the set stays open, so this is a pattern, not a kit.
+const LaneId = S.NonEmptyString.check(
+  S.isPattern(/^[a-z0-9-]+(:[a-z0-9-]+)+$/, {
+    message: "Lane ids must be lowercase colon-separated segments such as quality:secrets",
+  })
+).pipe(
+  $I.annoteSchema("LaneId", {
+    description: "Colon-separated verification lane id named by the gate-order handoff.",
+  })
+);
+
+// Normalized repo-relative path: no absolute root, no `./`, no empty and no `..` segment (P2 Ruling 5).
+const RepoRelativePath = S.NonEmptyString.check(
+  S.isPattern(/^(?:[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)(?:\/[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)*$/, {
+    message: "Handoff paths must be normalized repo-relative paths (no leading '/', './', empty or '..' segments)",
+  })
+).pipe(
+  $I.annoteSchema("RepoRelativePath", {
+    description: "Repo-relative file path that cannot escape the caller-supplied repo root.",
+  })
+);
+
+/**
+ * Location and pinned SHA-256 of a `gate-order-handoff/v1` document.
+ *
+ * **Details**
+ *
+ * The path is a repo-relative locator and never enters plan identity; the
+ * SHA-256 is the document's identity and is checked against the raw bytes
+ * before any decode.
+ *
+ * **Example** (Reference the pinned handoff)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { GateOrderHandoffRef } from "@/projection/Schemas"
+ *
+ * const handoff = GateOrderHandoffRef.make({
+ *   path: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *   sha256: Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198")
+ * })
+ * console.log(handoff.sha256.length) // 64
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderHandoffRef extends S.Class<GateOrderHandoffRef>($I`GateOrderHandoffRef`)(
+  { path: RepoRelativePath, sha256: Sha256Hex },
+  $I.annote("GateOrderHandoffRef", {
+    description: "Repo-relative path and pinned SHA-256 of the gate-order handoff document.",
+  })
+) {}
+
+/**
+ * Lane-planner input: the caller's episode key and the pinned handoff to plan from.
+ *
+ * **Details**
+ *
+ * `repoRoot` is the caller-supplied root the handoff path resolves under;
+ * like the path it is a locator and never enters plan identity.
+ *
+ * **Example** (Construct a lane-planner request)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { GateOrderHandoffRef, PlanEpisodeInput } from "@/projection/Schemas"
+ *
+ * const input = PlanEpisodeInput.make({
+ *   episodeId: "lane-plan-episode-1",
+ *   repoRoot: ".",
+ *   handoff: GateOrderHandoffRef.make({
+ *     path: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *     sha256: Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198")
+ *   })
+ * })
+ * console.log(input.episodeId) // "lane-plan-episode-1"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class PlanEpisodeInput extends S.Class<PlanEpisodeInput>($I`PlanEpisodeInput`)(
-  { episodeId: S.NonEmptyString },
+  { episodeId: S.NonEmptyString, repoRoot: S.NonEmptyString, handoff: GateOrderHandoffRef },
   $I.annote("PlanEpisodeInput", {
-    description: "Minimal typed carrier preserving the v2 lane-DAG planning seam.",
+    description: "Caller-owned episode key plus the repo root and pinned handoff the lane planner reads.",
+  })
+) {}
+
+/**
+ * One lane row of the handoff subset the planner decodes.
+ *
+ * **Example** (Construct a handoff lane)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HandoffLane } from "@/projection/Schemas"
+ *
+ * const lane = HandoffLane.make({
+ *   rank: S.Natural.make(0),
+ *   laneId: "fallow:audit",
+ *   declarationIndex: S.Natural.make(26)
+ * })
+ * console.log(lane.laneId) // "fallow:audit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HandoffLane extends S.Class<HandoffLane>($I`HandoffLane`)(
+  { rank: S.Natural, laneId: LaneId, declarationIndex: S.Natural },
+  $I.annote("HandoffLane", {
+    description: "Rank, lane id and declaration index of one gate-order handoff lane.",
+  })
+) {}
+
+const hasUniqueLaneIds = (lanes: ReadonlyArray<HandoffLane>): boolean =>
+  HashSet.size(HashSet.fromIterable(A.map(lanes, (lane) => lane.laneId))) === A.length(lanes);
+
+const hasUniqueDeclarationIndexes = (lanes: ReadonlyArray<HandoffLane>): boolean =>
+  HashSet.size(HashSet.fromIterable(A.map(lanes, (lane) => lane.declarationIndex))) === A.length(lanes);
+
+// Contract §8.1: the rank set is exactly 0..n-1 (no gap, no duplicate), whatever the array order.
+const hasCoherentRanks = (lanes: ReadonlyArray<HandoffLane>): boolean =>
+  A.every(
+    A.sort(
+      A.map(lanes, (lane) => lane.rank),
+      Order.Number
+    ),
+    (rank, index) => rank === index
+  );
+
+/**
+ * Subset view of `gate-order-handoff/v1` that the lane planner reads.
+ *
+ * **Details**
+ *
+ * Only `schemaVersion`, `scope`, `orderRule` and each lane's `rank`, `laneId`
+ * and `declarationIndex` are decoded; every other member is ignored, so the lab
+ * never mirrors the repo-cli `GateOrderHandoff` schema. The decode fails on an
+ * empty lane array, a duplicate `laneId`, a duplicate `declarationIndex`, or a
+ * rank set other than exactly `0..n-1`.
+ *
+ * **Example** (Decode a one-lane handoff from JSON text)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GateOrderHandoffView } from "@/projection/Schemas"
+ *
+ * const view = S.decodeSync(S.fromJsonString(GateOrderHandoffView))(
+ *   JSON.stringify({
+ *     schemaVersion: "gate-order-handoff/v1",
+ *     scope: "pre-push:non-main",
+ *     orderRule: "gate-order-lexicographic/v1",
+ *     seed: { ignored: true },
+ *     lanes: [{ rank: 0, laneId: "quality:secrets", declarationIndex: 0, decidedBy: null }]
+ *   })
+ * )
+ * console.log(view.lanes.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GateOrderHandoffView extends S.Class<GateOrderHandoffView>($I`GateOrderHandoffView`)(
+  {
+    schemaVersion: S.Literal("gate-order-handoff/v1"),
+    scope: LaneScope,
+    orderRule: LaneOrderRule,
+    lanes: S.NonEmptyArray(HandoffLane).check(
+      S.makeFilter(hasUniqueLaneIds, { message: "Handoff lane ids must be unique" }),
+      S.makeFilter(hasUniqueDeclarationIndexes, { message: "Handoff declaration indexes must be unique" }),
+      S.makeFilter(hasCoherentRanks, { message: "Handoff lane ranks must be exactly 0..n-1" })
+    ),
+  },
+  $I.annote("GateOrderHandoffView", {
+    description: "Lab-local subset view of a gate-order-handoff/v1 document; excess members are ignored.",
+  })
+) {}
+
+/**
+ * One 0-based position in a lane plan, naming the lane ordered there.
+ *
+ * **Example** (Construct a lane step)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LaneStep } from "@/projection/Schemas"
+ *
+ * const step = LaneStep.make({ laneStepIndex: S.Natural.make(0), laneId: "fallow:audit" })
+ * console.log(step.laneStepIndex) // 0
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export class LaneStep extends S.Class<LaneStep>($I`LaneStep`)(
+  { laneStepIndex: S.Natural, laneId: LaneId },
+  $I.annote("LaneStep", {
+    description: "One 0-based lane position in a lane plan; distinct from an admission ScheduleStep.",
+  })
+) {}
+
+const lanePlanIdPrefix = "lane-plan-";
+
+// Contract §8.3: planId is minted from the handoff digest, never chosen by the caller.
+const hasDerivedPlanId = (plan: { readonly planId: string; readonly handoffSha256: string }): boolean =>
+  plan.planId === `${lanePlanIdPrefix}${plan.handoffSha256}`;
+
+const hasPositionalLaneSteps = (plan: { readonly laneSteps: ReadonlyArray<LaneStep> }): boolean =>
+  A.every(plan.laneSteps, (step, index) => step.laneStepIndex === index);
+
+/**
+ * Lane-order plan derived from one pinned gate-order handoff.
+ *
+ * **Details**
+ *
+ * This is its own proposal type, never a widened `ScheduleProposal`: lane
+ * steps are not admitted seat requests. `handoffPath` records where the
+ * handoff was read (P2 Ruling 3) but stays outside identity: `planId` is
+ * content-derived from the handoff SHA-256 alone and reads no clock.
+ *
+ * **Gotchas**
+ *
+ * Decoding and `make` both fail unless `planId` is exactly
+ * `lane-plan-${handoffSha256}` and every step's `laneStepIndex` equals its
+ * array position. The `lane-plan-` prefix keeps plan nodes disjoint from the
+ * `schedule-` admission proposal nodes.
+ *
+ * **Example** (Construct an empty lane plan)
+ *
+ * ```ts
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { LanePlanProposal } from "@/projection/Schemas"
+ *
+ * const handoffSha256 = Sha256Hex.make("705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198")
+ * const plan = LanePlanProposal.make({
+ *   episodeId: "lane-plan-episode-1",
+ *   planId: `lane-plan-${handoffSha256}`,
+ *   handoffPath: "goals/time-to-certainty/research/gate-order-handoff.json",
+ *   handoffSha256,
+ *   orderRule: "gate-order-lexicographic/v1",
+ *   scope: "pre-push:non-main",
+ *   laneSteps: []
+ * })
+ * console.log(plan.laneSteps.length) // 0
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export class LanePlanProposal extends S.Class<LanePlanProposal>($I`LanePlanProposal`)(
+  S.Struct({
+    episodeId: S.NonEmptyString,
+    planId: S.NonEmptyString,
+    handoffPath: RepoRelativePath,
+    handoffSha256: Sha256Hex,
+    orderRule: LaneOrderRule,
+    scope: LaneScope,
+    laneSteps: S.Array(LaneStep),
+  }).check(
+    S.makeFilter(hasDerivedPlanId, { message: "Lane plan ids must be lane-plan- followed by the handoff SHA-256" }),
+    S.makeFilter(hasPositionalLaneSteps, { message: "Lane step indexes must equal their 0-based positions" })
+  ),
+  $I.annote("LanePlanProposal", {
+    description: "Ordered lane steps planned from one sha256-pinned gate-order handoff, with its read path.",
   })
 ) {}
 

@@ -490,3 +490,24 @@ run after the last test edit; `bun run beep quality package-verify @beep/ciops`,
 schema-first, knip, fallow (cognitive ≤ 8, unit ≤ 60: keep the planner and decoder small) and the
 packet validators and CQ suite run before the flip; no changeset (labs are exempt); every new
 export carries the titled JSDoc the law requires even though the lab has no docgen.
+
+**P2 seam lane recorded (2026-10-06, orchestrator).** The W6 seam landed as CT §8 with the widened
+schemas, reviewed by a rulings-and-ontology lens (with the ontology-foundational-auditor skill) and an
+Effect-v4 mechanics lens, fixed and skeptic-checked (33 lab tests, every lane gate green). Calls taken
+on the lane's deviations, all reversible by a later entry: (u) `PlanEpisodeInput` carries `repoRoot`
+beside `episodeId` and `handoff`, the caller-supplied root Ruling 5 names, and `LanePlanProposal`
+records `handoffPath` outside its identity (Ruling 3 lists the path); (v) `HandoffReadError` carries
+`{path, message}` and `HandoffDigestMismatchError` spells `expectedSha256`/`actualSha256`, as CT §8.3
+records; the spelling is ratified; (w) Biome's import order moved `projection.test.ts`'s
+`BunFileSystem` import from line 4 to line 5 when `BunCrypto` was added, and the existing effect-vitest
+inventory row was re-keyed to line 5 with its reason intact; the ratchet key ignores the line, the
+live rows equal the inventory, and the move is accepted; (x) the provisional vocabulary recorded in
+CT §8.3 (`LanePlan`, `LaneStep`, `hasLanePlan`, `hasLaneStep`, `hasLanePlanSpecification`,
+`LanePlanSpecification`, `laneStepIndex`, `laneIdRef`, `precedesLaneStep`, `handoffDigest`,
+`laneOrderRule`) is the body's vocabulary; `hasCurrentLanePlan` and `scheduledLaneRef` were rejected
+by the auditor lens (current-selection semantics; the unratified lane-scheduling relation);
+(y) `standards/schema-catalog.generated.jsonc` is regenerated for the lab's entries only (other
+packages' staleness is inherited from main and left to its owners); (z) the body lane also carries
+the tests CT §8 assigns it: episode-node disjointness between an admission and a lane-plan document,
+the `planLanes` self-check defect on a non-chain acyclic precedence list, the `cycleNodes` closing-
+repeat and self-loop shape, the pure-core permutation test, and `LanePlanProposal.make` enforcement.

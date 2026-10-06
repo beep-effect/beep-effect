@@ -1,9 +1,10 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
-import { assertExitFailure, assertNone } from "@effect/vitest/utils";
+import { assertExitFailure, assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Cause, Context, Effect, Exit, Fiber, FileSystem, Layer } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -31,6 +32,7 @@ import {
   emptyTokenLedger,
   PendingRequest,
   PlanEpisodeInput,
+  PlannerNotImplementedError,
   PolicyDecodeError,
   ProjectionInput,
   ScheduleProposal,
@@ -62,7 +64,9 @@ const readPolicy = Effect.fn("CiOpsProjectionTest.readPolicy")(function* (): Eff
 
 const $I = $CiopsId.create("test/projection.test");
 class TestPolicy extends Context.Service<TestPolicy, AdmissionPolicyParams>()($I`TestPolicy`) {}
-const TestPolicyLive = Layer.effect(TestPolicy, readPolicy()).pipe(Layer.provideMerge(BunFileSystem.layer));
+const TestPolicyLive = Layer.effect(TestPolicy, readPolicy()).pipe(
+  Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer))
+);
 
 const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);
 const proposalEquivalent = S.toEquivalence(ScheduleProposal);
@@ -646,9 +650,15 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
 
         expect(Eq.equals(projected, awaited)).toBe(true);
         expect(Eq.equals(projected, queued)).toBe(true);
-        expect((yield* Effect.flip(service.planEpisode(PlanEpisodeInput.make({ episodeId: "episode-1" }))))._tag).toBe(
-          "PlannerNotImplementedError"
-        );
+        const planInput = yield* S.decodeEffect(PlanEpisodeInput)({
+          episodeId: "episode-1",
+          repoRoot: "../../..",
+          handoff: {
+            path: "goals/time-to-certainty/research/gate-order-handoff.json",
+            sha256: "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198",
+          },
+        });
+        assertInstanceOf(yield* Effect.flip(service.planEpisode(planInput)), PlannerNotImplementedError);
       })
     );
   });

@@ -6,13 +6,17 @@
  */
 
 import { $CiopsId } from "@beep/identity/packages";
-import { Context, Effect, Layer, TxQueue, TxRef } from "effect";
+import { Context, Crypto, Effect, FileSystem, Layer, TxQueue, TxRef } from "effect";
 import * as O from "effect/Option";
 import { projectSchedule } from "./Engine.ts";
 import { plannerNotImplemented } from "./Schemas.ts";
 import { emitScheduleAbox } from "./Turtle.ts";
 import type {
   CyclicPlanError,
+  HandoffDecodeError,
+  HandoffDigestMismatchError,
+  HandoffReadError,
+  LanePlanProposal,
   PlanEpisodeInput,
   PlannerNotImplementedError,
   PolicyDecodeError,
@@ -24,6 +28,25 @@ import type {
 const $I = $CiopsId.create("projection/CiOpsProjection");
 
 /**
+ * Typed failures the lane planner can return.
+ *
+ * **Details**
+ *
+ * Read, digest and decode failures cover the pinned handoff; `CyclicPlanError`
+ * covers explicit precedence input. `PlannerNotImplementedError` remains only
+ * while `planEpisode` is the stub and leaves the union with the body.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type PlanEpisodeError =
+  | HandoffReadError
+  | HandoffDigestMismatchError
+  | HandoffDecodeError
+  | CyclicPlanError
+  | PlannerNotImplementedError;
+
+/**
  * Operations exposed by the S7 projection service and its in-process shell.
  *
  * **Details**
@@ -33,6 +56,10 @@ const $I = $CiopsId.create("projection/CiOpsProjection");
  * `emitAbox` uses that identity for the typed current-proposal subject.
  * `projectCurrent` is the explicit stateful boundary that records the latest
  * proposal and publishes it to the transactional change queue.
+ * `planEpisode` is the S7-v2 lane planner (contract §8): it reads the pinned
+ * gate-order handoff through the layer's captured file system and crypto, and
+ * never touches the current-proposal shell. Until the body lands it fails
+ * `PlannerNotImplementedError`.
  *
  * @category services
  * @since 0.0.0
@@ -42,7 +69,7 @@ export interface CiOpsProjectionShape {
   readonly currentProposal: Effect.Effect<O.Option<ScheduleProposal>>;
   readonly emitAbox: (proposal: ScheduleProposal) => Effect.Effect<TurtleDocument>;
   readonly nextProposal: Effect.Effect<ScheduleProposal>;
-  readonly planEpisode: (input: PlanEpisodeInput) => Effect.Effect<never, PlannerNotImplementedError | CyclicPlanError>;
+  readonly planEpisode: (input: PlanEpisodeInput) => Effect.Effect<LanePlanProposal, PlanEpisodeError>;
   readonly project: (input: ProjectionInput) => Effect.Effect<ScheduleProposal, PolicyDecodeError>;
   readonly projectCurrent: (input: ProjectionInput) => Effect.Effect<ScheduleProposal, PolicyDecodeError>;
 }
@@ -65,7 +92,16 @@ export interface CiOpsProjectionShape {
  */
 export class CiOpsProjection extends Context.Service<CiOpsProjection, CiOpsProjectionShape>()($I`CiOpsProjection`) {}
 
-const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<CiOpsProjectionShape> {
+const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<
+  CiOpsProjectionShape,
+  never,
+  FileSystem.FileSystem | Crypto.Crypto
+> {
+  // Contract §8: the layer captures the platform services at construction so
+  // planEpisode keeps a requirement-free signature; the body commit reads and
+  // digests the handoff through them.
+  yield* FileSystem.FileSystem;
+  yield* Crypto.Crypto;
   const current = yield* TxRef.make<O.Option<ScheduleProposal>>(O.none());
   const proposals = yield* TxQueue.unbounded<ScheduleProposal>();
 
@@ -110,18 +146,30 @@ const makeCiOpsProjection = Effect.fnUntraced(function* (): Effect.fn.Return<CiO
 /**
  * In-process layer with transactional current-proposal and change-queue state.
  *
+ * **Details**
+ *
+ * The layer captures `FileSystem` and `Crypto` at construction for the lane
+ * planner, so providers add the platform layers (for Bun, `BunFileSystem.layer`
+ * and `BunCrypto.layer`) while every service method stays requirement-free.
+ *
  * **Example** (Provide the projection service)
  *
  * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
  * import { CiOpsProjection, CiOpsProjectionLive } from "@/projection/CiOpsProjection"
- * import { Effect } from "effect"
+ * import { Effect, Layer } from "effect"
  *
+ * const ProjectionLive = CiOpsProjectionLive.pipe(
+ *   Layer.provide(Layer.merge(BunFileSystem.layer, BunCrypto.layer))
+ * )
  * const current = Effect.flatMap(CiOpsProjection, (service) => service.currentProposal)
- * const program = Effect.provide(current, CiOpsProjectionLive)
+ * const program = Effect.provide(current, ProjectionLive)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @category layers
  * @since 0.0.0
  */
-export const CiOpsProjectionLive: Layer.Layer<CiOpsProjection> = Layer.effect(CiOpsProjection, makeCiOpsProjection());
+export const CiOpsProjectionLive: Layer.Layer<CiOpsProjection, never, FileSystem.FileSystem | Crypto.Crypto> =
+  Layer.effect(CiOpsProjection, makeCiOpsProjection());

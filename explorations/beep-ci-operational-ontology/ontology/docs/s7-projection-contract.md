@@ -76,6 +76,9 @@ event exists); recorded, not modeled.
   `activeTokenTotal`; reconstructed from admitted/released deltas.
 - `ScheduleStep` — stepIndex, scheduled unit ref, scope tag (v1: the
   admission act itself; the planner seam widens this in v2).
+  *(2026-10-06: superseded by §8. Lane steps are `LaneStep` in
+  `LanePlanProposal`; `ScheduleStep` stays admission-only and is never
+  widened.)*
 - `ScheduleProposal` — proposal id, projection instant, ordered steps,
   deferred tail, required episode id, and input digests (policy digest +
   journal-prefix digest) for provenance.
@@ -84,7 +87,8 @@ event exists); recorded, not modeled.
   The caller supplies the occurrence identity; there is no singleton default.
 - `ProjectionMismatch` / typed errors — `S.TaggedError` family
   (`CyclicPlanError` reserved for the planner seam, `PolicyDecodeError`,
-  `ReplayMismatchError`).
+  `ReplayMismatchError`). *(2026-10-06: `CyclicPlanError` is no longer
+  reserved, and the planner adds three handoff errors; see §8.3.)*
 
 ### 3.2 Service contract (`Context.Service`, effect v4)
 
@@ -100,6 +104,7 @@ event exists); recorded, not modeled.
 - `planEpisode` — the lane-DAG planner SEAM: typed signature reserved
   (`Effect<never, PlannerNotImplementedError>` or equivalent honest
   stub), documented as v2; `Graph.topo` + `isAcyclic` pre-check territory.
+  *Superseded by §8 (2026-10-06).*
 - A `TxRef`-backed live wrapper (the `DrainableWorker` idiom:
   `TxQueue`/`TxRef` + `Effect.txRetry` inside `Effect.tx`) holding the
   current proposal — the `hasCurrentProposal` re-pointing precedent — is the
@@ -113,6 +118,8 @@ event exists); recorded, not modeled.
 - `Graph` construction (planner seam, v2) inserts nodes in canonical order —
   `Graph.topo` (Kahn's over CSR) is deterministic only for a fixed insertion
   order; cyclic input fails typed after an `isAcyclic` pre-check.
+  *(2026-10-06: superseded; see §8.3. Nodes go in `declarationIndex` order,
+  not canonical order, and `Graph.findCycle` replaces `isAcyclic`.)*
 - Emission is byte-deterministic: same input → byte-equal Turtle.
 - `stepIndex` stays **0-based**. Only admitted actions get steps; the
   deferred tail never extends or renumbers that sequence (run-3 ruling 14).
@@ -241,7 +248,10 @@ and episode binding in memory; they do not certify vocabulary ratification.
   `research/s7-replay-evidence.md` — generated content marked as such.
   For read-only verification, run `bun run evidence:s7 --check` from
   `apps/labs/ciops`; it prints the replay report without overwriting frozen
-  packet evidence. The v2 emission golden is compared byte-for-byte with
+  packet evidence. *(2026-10-06 note: the bare `bun run evidence:s7` is
+  already check-by-default, so the extra `--check` is redundant; only
+  `evidence:s7:write` rewrites the frozen file. See §8 for the live-evidence
+  file.)* The v2 emission golden is compared byte-for-byte with
   current emitter output by the package tests, then queried with amended
   CQ-020 by `apps/labs/ciops/scripts/check-emission-cq.py`.
 - `bun run beep quality package-verify @beep/ciops` green before handoff;
@@ -253,6 +263,7 @@ and episode binding in memory; they do not certify vocabulary ratification.
 ## 6. Non-goals (admission v1 / emission v2)
 
 - No lane-DAG planner implementation (seam only).
+  *Superseded by §8 (2026-10-06).*
 - No scheduler replacement or repo-cli integration — the deployed
   `QualityScheduler` stays the only writer of real admissions.
 - No T-Box changes, no vocabulary ratification (run 3's job), no IRI-scheme
@@ -277,7 +288,10 @@ Sections 1–6 record the 2026-08-30 baseline; emission stays `s7-emission/v2`.
   decoded and folded as no-ops: queue-entry censorship is closed at the data
   level for v3 writers and stays recorded, not modeled, in the lab. The replay
   corpus is still the v1 golden journal; the lab test suite runs 19 tests at
-  `04993ae26a`.
+  `04993ae26a`. *(2026-10-06 note: that count is stale. At `af48ef4080`, the
+  P2 branch base, the suite ran 25 tests in three files: `projection` 18,
+  `evidence` 6, `health` 1. The §8 seam commit adds `lane-plan.test.ts` with 8,
+  for 33 in four files. Counts are measurements, not contract terms.)*
 - **§3.4 deployed skip set.** Since #929 the deployed scheduler skips on
   same-checkout lease, legacy same-origin drain, fresh origin stamp, or
   saturated review-fix class cap, and hosts below the memory envelope keep an
@@ -287,7 +301,10 @@ Sections 1–6 record the 2026-08-30 baseline; emission stays `s7-emission/v2`.
   `cf30b993…`. `research/s7-replay-evidence.md` is the 2026-08-31 render; the
   generator prose has folded v2 lease-eviction rows since #964. The bare
   `evidence:s7` script rewrites that frozen file; re-rendering it needs a
-  DECISIONS entry.
+  DECISIONS entry. *(2026-10-06 correction: the bare `evidence:s7` checks; it
+  runs the generator with `--check` and prints the report without writing.
+  Only `evidence:s7:write` rewrites the frozen file, and that still needs a
+  DECISIONS entry.)*
 - **Seam (§3.2, §6).** Ruling 11 authorizes widening the S7-v2 seam as goal
   scope, design first: the amendment of §3.2 and §6 and the `PlanEpisodeInput`
   widening are the first deliverable of workstream W6 in goal phase P2
@@ -301,4 +318,226 @@ Sections 1–6 record the 2026-08-30 baseline; emission stays `s7-emission/v2`.
   relation; `schedulesWorkUnit` stays unratified until run 4
   (`research/auditor-run4-intake.md` Queue E item 2). Until that amendment
   lands, §3.2 and §6 bind as written and `planEpisode` stays the
-  `PlannerNotImplementedError` stub.
+  `PlannerNotImplementedError` stub. *(2026-10-06: the amendment landed as §8.)*
+
+## 8. 2026-10-06 amendment — the S7-v2 planner seam (W6)
+
+Authority: `goals/ciops-ontology-pipeline/research/decisions.md`,
+"2026-10-06 — P2 design sitting" (Rulings 1–6), and DECISIONS.md,
+"2026-10-01 — graduation sitting" (Ruling 11). This section supersedes the
+§3.2 `planEpisode` bullet and the first §6 bullet. It lands in the first
+commit of the projection PR, while `planEpisode` is still the stub; the body
+lands in a later commit of the same PR (Ruling 1). Admission v1 and emission
+`s7-emission/v2` are unchanged, and their golden stays byte-equal.
+
+### 8.1 §3.2 `planEpisode` (replaces the bullet)
+
+- `planEpisode(input: PlanEpisodeInput): Effect<LanePlanProposal,
+  HandoffReadError | HandoffDigestMismatchError | HandoffDecodeError |
+  CyclicPlanError>` is the lane-order planner.
+  - `PlanEpisodeInput` is `{ episodeId, repoRoot, handoff: { path, sha256 } }`.
+    `episodeId` is the caller-owned occurrence key (§3.5). `repoRoot` is the
+    caller-supplied root. `handoff` locates a `gate-order-handoff/v1`
+    document (today `goals/time-to-certainty/research/gate-order-handoff.json`,
+    time-to-certainty ruling 78) and pins its SHA-256. `path` is repo-relative:
+    the schema rejects an absolute path and any `..` segment.
+  - The planner reads the raw bytes at `repoRoot/path` through `FileSystem`
+    (`HandoffReadError`) and digests them through `Crypto` with
+    `Sha256HexFromBytes`, never a re-encoded string. A digest that differs from
+    `handoff.sha256` fails `HandoffDigestMismatchError` before any decode.
+  - Only then does it decode the subset it reads (`HandoffDecodeError`):
+    `schemaVersion`, `scope`, `orderRule`, and each lane's `rank`, `laneId`
+    and `declarationIndex`. Every other member is ignored. The lab never
+    imports repo-cli and never mirrors `GateOrderHandoff`. A duplicate
+    `laneId` is a decode failure, not a cycle. So are an empty lane array, a
+    duplicate `declarationIndex`, and a rank set other than exactly `0..n−1`
+    (a gap or a duplicate rank). `GateOrderHandoffView` enforces all of these
+    in the seam commit.
+  - It builds a directed `Graph` with one node per lane, keyed by `laneId`
+    and inserted in ascending `declarationIndex` order. The handoff carries a
+    total order and no edges, and the deployed pre-push runs one single-lane
+    wave per lane in rank order. So the only edges are the rank chain: one
+    edge from the lane at rank `r` to the lane at rank `r+1`. That edge is
+    provisional precedence, never a dependency claim. No edge is ever derived
+    from `firstRedSourceLane`.
+  - The exported pure core `planLanes(lanes, precedences)` takes an explicit
+    precedence list, so a cyclic must-fail input is a hand-built precedence
+    set. `Graph.findCycle` runs before `Graph.topo`, because `topo` throws a
+    `GraphError` on a cycle. A found cycle fails `CyclicPlanError`, whose
+    `cycleNodes` are the witness path's lane ids. The installed
+    `CycleResult.path` repeats its first node at the end; `cycleNodes` drops
+    that closing repeat, so each lane on the cycle appears once, in path
+    order from the witness's first node. A self-loop is rendered as the
+    one-element `[laneId]`. The test asserts a typed `Fail`, never a defect.
+  - `Graph.topo` order becomes 0-based lane steps. Nodes are inserted in
+    declaration order, not rank order, so a topological order equal to the
+    handoff's rank order is a real agreement check on the insertion and
+    traversal, not a tautology. Over a decoded, coherent rank set the rank
+    chain admits exactly one topological order, so from `planEpisode` the
+    check cannot fail on handoff data. It can only fail when `planLanes` is
+    called with an acyclic precedence list that is not the rank chain and
+    forces another order. That is a self-check defect (`Effect.die`), not a
+    typed failure and not `HandoffDecodeError`, whose `path` would name the
+    wrong cause; the body test reaches it through `planLanes`. The planner
+    orders existing lanes only: no
+    reordering, no new order literal, no recomputation of
+    `gate-order-lexicographic/v1` (time-to-certainty rulings 76–78).
+  - Success is a `LanePlanProposal`, never a widened `ScheduleProposal`.
+    Lane steps are not admitted seat requests, and §3.3 "Only admitted
+    actions get steps" binds.
+- `CiOpsProjectionLive` captures `FileSystem` and `Crypto` at construction:
+  `Layer<CiOpsProjection, never, FileSystem | Crypto>`. Every service method
+  stays requirement-free, and providers add the platform layers (for Bun,
+  `BunFileSystem.layer` and `BunCrypto.layer`).
+- `planEpisode` is pure apart from reading and digesting the handoff bytes.
+  It never touches the `TxRef` current-proposal shell or the change queue.
+- Transitional: in the seam commit the stub still fails
+  `PlannerNotImplementedError`, so that member rides the error union until
+  the body commit retires it with `plannerNotImplemented`.
+
+### 8.2 §6 first bullet (replaces "No lane-DAG planner implementation")
+
+- The lane-order planner orders the handoff's existing lanes only. There is
+  no reseed from live economics, no lane admission and no lane execution. The
+  deployed `orderWaveLanes` stays the only writer of real pre-push order.
+- Lane plans, lane steps and their relations are provisional `ciops-prov:`
+  instrumentation until an auditor run ratifies a lane-scheduling relation.
+  `schedulesWorkUnit` is never emitted, in either namespace. It stays the
+  unratified CQ-019 arm-3 carrier until run 4 (graduation Ruling 11;
+  `research/auditor-run4-intake.md` Queue E item 2).
+
+### 8.3 Consequential notes
+
+**§3.1 schemas.** New: `GateOrderHandoffRef` `{path, sha256}`, where `sha256`
+is `Sha256Hex` from `@beep/schema/Sha256`. The widened `PlanEpisodeInput`
+`{episodeId, repoRoot, handoff}`. `HandoffLane` `{rank, laneId,
+declarationIndex}`, with `laneId` pattern-checked
+(`^[a-z0-9-]+(:[a-z0-9-]+)+$`). `GateOrderHandoffView` `{schemaVersion,
+scope, orderRule, lanes}`, decoded from JSON text as a subset view.
+`LaneScope` = `LiteralKit(["pre-push:non-main"])`, separate from the
+admission-only `ScheduleScope`, which stays `["admission"]`. `LaneOrderRule`
+= `LiteralKit(["gate-order-lexicographic/v1"])`. `LaneStep` `{laneStepIndex,
+laneId}`. `LanePlanProposal` `{episodeId, planId, handoffPath, handoffSha256,
+orderRule, scope, laneSteps}`, with `planId` = `lane-plan-${handoffSha256}`:
+content derived, no clock. `handoffPath` is the repo-relative path the
+handoff was read from (Ruling 3 lists it); it is recorded but stays outside
+`planId` and specification identity. Class-level checks fail decode and
+`make` unless `planId` is exactly `lane-plan-${handoffSha256}` and every
+step's `laneStepIndex` equals its array position. New tagged errors:
+`HandoffReadError {path, message}`, `HandoffDigestMismatchError {path,
+expectedSha256, actualSha256}`, `HandoffDecodeError {path, message}`.
+`CyclicPlanError` is no longer "reserved": it is the planner's cycle failure.
+Two field shapes differ from Ruling 5's text: `HandoffReadError` adds
+`message` to `{path}` (the platform error's description), and
+`HandoffDigestMismatchError` spells Ruling 5's `expected`/`actual` as
+`expectedSha256`/`actualSha256` (both typed `Sha256Hex`). The authority for
+both is the P2 W6 seam brief that commissioned this lane; neither changes
+meaning, and a GD note may ratify or reverse them.
+
+**§3.3 determinism.** `Graph` construction inserts nodes in ascending
+`declarationIndex` order and edges in rank order. `Graph.findCycle` replaces
+the `isAcyclic` pre-check named above: it runs before `Graph.topo` and also
+supplies the cycle witness. The lane plan, and its emitted Turtle, is
+byte-deterministic over `(episodeId, handoff bytes)`. Permuting the lane
+array changes the document bytes, so its digest, `planId` and specification
+IRI change too, and through `planEpisode` the pinned digest fails
+`HandoffDigestMismatchError` before planning. The permutation claim is
+therefore scoped to the pure core: for a fixed supplied `handoffSha256`,
+`planLanes` and the lane-plan emitter over a permutation of the decoded lane
+array with the same ranks yield byte-equal Turtle. The body's permutation
+test targets that core, not `planEpisode`. Lane step
+indexes are 0-based, like `stepIndex`. Counts always come from the decoded
+document, never from a literal: the pinned handoff `705f3e75…` carries 33
+lanes, and PLAN's "32" predates #1380 (Ruling 2).
+
+**§3.4 delta.** Since #929 the deployed scheduler skips a request whose
+checkout already holds a lease. Admission v1 does not model that
+same-checkout skip, and it is the attribution class for first-choice
+disagreements in the live replay. The engine is unchanged: disagreements are
+reported with that diagnostic attribution, never modelled (Ruling 9).
+
+**§3.5 lane-plan vocabulary and identity.** A lane plan is emitted only in
+`ciops-prov:`, with a vocabulary fully disjoint from the ratified ordering
+cluster. The names below are proposed by W6 and recorded as **provisional**.
+An `ontology-foundational-auditor` review checks them before the body lands,
+and the run-4 Queue E/G intake decides ratification.
+
+| Proposed term | Role | Subject → object / value |
+| --- | --- | --- |
+| `LanePlan` | lane-plan class | Class of one sha256-pinned lane-order plan |
+| `LaneStep` | lane-step class | Class of one ordered lane position in a lane plan; never `ScheduleStep`, and its identity (tuple versus component) is undecided |
+| `hasLanePlan` | episode → plan edge | `VerificationEpisode` → `LanePlan`; no current-selection reading |
+| `hasLaneStep` | plan → step edge | `LanePlan` → `LaneStep` |
+| `hasLanePlanSpecification` | plan → specification edge | `LanePlan` → `LanePlanSpecification` |
+| `LanePlanSpecification` | lane-plan specification class | Class of the governing lane-plan specification |
+| `laneStepIndex` | step index | `LaneStep` → 0-based ordinal (`xsd:integer`) |
+| `laneIdRef` | lane reference | `LaneStep` → `laneId` (`xsd:string`); lane-grain evidence with no lane IRI |
+| `precedesLaneStep` | consecutive-step precedence edge | `LaneStep` at index `i` → `LaneStep` at `i+1`; derived from `laneStepIndex`, provisional precedence, not dependency |
+| `handoffDigest` | handoff digest | `LanePlanSpecification` → supplied handoff SHA-256 (`xsd:string`) |
+| `laneOrderRule` | order rule | `LanePlanSpecification` → `gate-order-lexicographic/v1` (`xsd:string`) |
+
+Never used for a lane plan: `hasCurrentProposal`, `hasProjectionSpecification`,
+`hasStep`, `hasScopeTag`, `stepIndex`, `ScheduleStep`, `ciops:ScheduleProposal`
+typing, `ciops:VerificationLane` typing, `schedulesWorkUnit`, and `hasScope` or
+`Scope` in any namespace. The lane scope stays a member of the specification
+tuple below, not an emitted scope term. The episode node keeps the §3.5 rule
+(`ciops-prov:episode-${pnLocalSlug(episodeId)}`, typed
+`ciops-prov:VerificationEpisode`). That class carries run 3's episode-unity
+flag (rat-065) into the run-4 intake, so a lane-plan caller **must** use an
+episode id distinct from every admission episode id. Reusing one would assert
+that a single occurrence is both an admission verification and a lane-planned
+run, deciding the deferred unity flag, and the two documents would each
+replace the other under §3.5's replace-the-document rule. The lane-plan
+episode stays typed; the body test emits an admission document and a
+lane-plan document with distinct episode ids and asserts that their episode
+nodes are disjoint.
+
+**Derived edges.** `precedesLaneStep` is derived from `laneStepIndex`: one
+edge from index `i` to index `i+1`, emitted for each consecutive pair. It is
+a second encoding of the same order (rat-062 kept precedence as a flagged
+rival of the index), never independent evidence for it. A CQ must not count
+the two as separate witnesses of one order.
+
+**Relation to ratified terms.** `LanePlan` is a candidate instance, or a
+candidate subclass, of the ratified `VerificationPlanSpecification`
+(`ic:yeet-planner:002`). Which one stays undecided for run 4, because rat-049
+defers the plan-identity contract (content, contextual copy, replacement,
+revision) and names the yeet planner and lane plans as what it will observe.
+No `subClassOf`, `rdf:type` or equivalence to `VerificationPlanSpecification`
+is emitted. `planId` and the plan IRI are a minting convention for a
+content-derived node, not an identity criterion, and they do not answer
+rat-049. `LanePlanSpecification` binds the handoff digest, so it is an
+input-bound application context, not the `gate-order-lexicographic/v1` rule;
+it carries rat-056's rule-versus-application flag, with no equation of the
+rule with its applications. `LaneStep` is not `ScheduleStep`: no
+`subClassOf` or equivalence is emitted, and the
+`${planNode}-lane-${laneStepIndex}` IRI is a minting convention, not a
+decision on rat-060's tuple-versus-component flag. `hasLanePlan` is a plain
+episode-to-plan edge; it makes no claim of rat-054's current-proposal
+selection at a reference instant, has no re-pointing semantics, and leaves
+the selection-situation deferral with `hasCurrentProposal`. The run-4 intake
+should list `LanePlan` beside `VerificationPlanSpecification` under rat-049.
+
+- **Plan IRI.** `ciops-prov:${pnLocalSlug(planId)}`.
+- **Lane-step IRI.** `${planNode}-lane-${laneStepIndex}`. `pnLocalSlug`
+  escapes `-` in `planId`, so the structural `-lane-` suffix cannot be forged,
+  by the same argument as `-step-` and `-request-`.
+- **Specification IRI.** `ciops-prov:specification-` followed by the ordered
+  tuple `(s7-lane-plan/v1, handoffSha256, orderRule, scope)`. Each component
+  is encoded with `pnLocalSlug`, and a literal `-` separates them. The first
+  component keeps lane-plan specifications disjoint from admission
+  `s7-emission/v2` specifications.
+- **Identity.** Authority is this contract. The lane-plan emission version is
+  `s7-lane-plan/v1`. Any tuple member change changes specification identity.
+  The handoff path (`LanePlanProposal.handoffPath`), `repoRoot`, `episodeId`
+  and `planId` do not. Plan nodes stay disjoint from admission proposal nodes
+  because `planId` must start `lane-plan-` (a decode check) while admission
+  proposal ids start `schedule-`. The new suffix
+  and tuple stay inside the existing `pnLocalSlug` scheme; they are not S8
+  IRI-scheme work. Admission `s7-emission/v2` bytes are unchanged.
+
+**§5 live evidence.** The W5 live replay over the `run4-fleet` pin is
+rendered to `goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md`
+by `apps/labs/ciops/scripts/generate-live-replay-evidence.ts`. Like
+`evidence:s7`, it is check-by-default: only `--write` renders. The frozen
+`research/s7-replay-evidence.md` is never re-rendered.
