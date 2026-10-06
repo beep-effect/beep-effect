@@ -13,6 +13,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as PlatformError from "effect/PlatformError";
 
 // Every `beep models` error carries a `mapError` that wraps the upstream cause
@@ -156,3 +157,48 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "10 seconds" })
     );
   }
 );
+
+// The platform file system with a rename that always fails: the manifest's
+// temporary sibling is written, then cannot be moved onto the live path.
+const renameRefused = Effect.fail(
+  PlatformError.systemError({
+    _tag: "PermissionDenied",
+    module: "ModelsManifestErrorsTest",
+    method: "rename",
+    pathOrDescriptor: "models.yaml",
+  })
+);
+const renameRefusedLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.map(FileSystem.FileSystem, (fs) =>
+    FileSystem.FileSystem.of({
+      ...fs,
+      rename: Effect.fnUntraced(function* () {
+        return yield* renameRefused;
+      }),
+    })
+  )
+).pipe(Layer.provide(NodeServices.layer));
+
+layer(
+  Layer.mergeAll(
+    Layer.provide(ModelsManifestStoreLive, Layer.merge(NodeServices.layer, renameRefusedLayer)),
+    NodeServices.layer
+  ),
+  { timeout: "30 seconds" }
+)("models manifest store interrupted write", (it) => {
+  it.effect("removes the temporary manifest when it cannot be moved into place", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const store = yield* ModelsManifestStore;
+      const home = yield* fs.makeTempDirectoryScoped({ prefix: "models-manifest-" });
+      const file = path.join(home, "models.yaml");
+
+      const error = yield* Effect.flip(store.init(file, seedModelsManifest));
+      expect(error).toMatchObject({ _tag: "ModelsManifestError", path: file });
+      expect(error.message).toContain(`Failed to write ${file}`);
+      expect(A.fromIterable(yield* fs.readDirectory(home))).toEqual([]);
+    })
+  );
+});
