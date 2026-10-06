@@ -258,3 +258,14 @@ refreshed. (m) For P2: the lab's v3 admission decoders (`AdmissionJournalV3Ident
 `procStart`, which run-3 Ruling 11 custody removes, and `releaseFromLedger` fails on ring-trimmed
 released-only chains; W5 must widen the decoder to surrogate rows and skip released-only chains, and the
 W3 manifest records each root's window boundaries for that purpose.
+
+**Ruling 2 addendum — PR #1434 review (2026-10-05).** A review finding, accepted: "the way the
+run3b generator does" named a discovery with no origin check, so a duplicate clone of another
+repository would count as an owning clone and its ledger would reach the public pin. Ruling 2 is
+read with Ruling 5(1): W4 discovers checkouts the run3b way AND admits an owning clone only when
+its origin canonicalizes to `github.com/beep-effect/beep-effect`; excluded clones are counted by
+reason and never labelled (orchestrator note h records the same). Today that excludes exactly one
+fleet-root clone, whose ledger holds pre-cut rows only. The pairing rule of the W4 brief is
+likewise amended (brief addendum W4-A6): pairing is computed over decoded rows, an orphan adjacent
+to a torn line or the unterminated tail is counted and kept but never paired, and only an orphan
+with intact neighbours fails the capture.

@@ -93,9 +93,12 @@ Carried from the brief's rabbit holes:
   records the census and stops. Realization and copy legs stay flagged on C4.2, and the
   merged-preview issuance and custody legs stay flagged on the first post-#1321
   merged-preview fact (graduation Ruling 1; P1 Ruling 1).
-- **Ledger population.** Only facts written inside a clone, or after #1321, survive in the
-  owning clone. Shadow facts are issued, not realized; seats never read a would-reuse hit as
-  a realized claim.
+- **Ledger population.** Facts recorded before #1321 survived only where they were written
+  into the owning clone's ledger: by a clone-root checkout, or by the #1321 lane itself running
+  the ruling-71 writer before its merge (28 pre-cut lane-origin facts in one clone, P1 Ruling 6,
+  2026-10-05); lane-local ledgers written before #1321 died with their lanes. Facts recorded
+  after #1321 all land in the owning clone. Shadow facts are issued, not realized; seats never
+  read a would-reuse hit as a realized claim.
 - **Owning-clone capture.** Resolve the owning clone the way time-to-certainty ruling 71
   does, without git; every fleet clone is an owning clone and is read once (P1 Ruling 2);
   never walk sibling lanes' `.beep/` trees; never leak run ids that encode host paths.
