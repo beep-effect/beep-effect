@@ -1,6 +1,7 @@
 /**
  * Docket intake server adapters: the Graph mailbox and calendar, the two
- * language-model agents, the file-backed store and the matter lookup.
+ * language-model agents, the file-backed store, the matter lookup and the
+ * docket sheet's tracked dates.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -34,3 +35,10 @@ export * from "./DocketIntake.matters.ts";
  * @since 0.0.0
  */
 export * from "./DocketIntake.store.ts";
+/**
+ * Tracked dates of the attorney's docket sheet, from its CSV export.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./DocketIntake.trackedDates.ts";
