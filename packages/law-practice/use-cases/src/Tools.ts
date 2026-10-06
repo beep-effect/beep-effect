@@ -13,6 +13,7 @@ import {
   KgApplicationLookupTool,
   KgCandidateClaimsTool,
   KgClientsTool,
+  KgCorrespondentLookupTool,
   KgDocketFamilyTool,
   KgFindTool,
   KgMatterLookupTool,
@@ -20,14 +21,14 @@ import {
 } from "./PracticeKg.tools.ts";
 
 /**
- * Complete ten-tool read-only practice KG toolkit declaration.
+ * Complete eleven-tool read-only practice KG toolkit declaration.
  *
  * **Example** (Count toolkit tools)
  *
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 10
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 11
  * ```
  *
  * @category tools
@@ -43,7 +44,8 @@ export const PracticeKgToolkit = Toolkit.make(
   EmailSearchTool,
   KgCandidateClaimsTool,
   KgProvenanceTool,
-  KgMatterLookupTool
+  KgMatterLookupTool,
+  KgCorrespondentLookupTool
 );
 
 /**

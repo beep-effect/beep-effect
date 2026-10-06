@@ -97,7 +97,12 @@
     {
       "id": "P9",
       "name": "Working-files bundle",
-      "status": "pending"
+      "status": "complete"
+    },
+    {
+      "id": "P10",
+      "name": "Anchor dominance + correspondents",
+      "status": "complete"
     }
   ],
   "verificationCommands": [
