@@ -135,6 +135,7 @@ const emptyRunLabels = Effect.succeed(A.empty<string>());
  * is the older spelling of including run `2026-07-refresh`; use
  * {@link PracticeKgOptions.includedRuns} to read the combined list.
  * `docketRegisterPath` points at the attorney's docket register as JSONL.
+ * `bundleVersion` stamps the bundle; omit it for the build's default version.
  *
  * **Example** (Make options with defaults)
  *
@@ -158,6 +159,7 @@ const emptyRunLabels = Effect.succeed(A.empty<string>());
 export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgOptions`)(
   {
     bundleOut: S.optionalKey(S.String),
+    bundleVersion: S.optionalKey(S.NonEmptyString),
     corpusRoot: S.String,
     docketRegisterPath: S.optionalKey(S.String),
     includeRefresh: S.Boolean,
