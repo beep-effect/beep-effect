@@ -3259,6 +3259,12 @@
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native filesystem behavior is the test subject: the file-backed mail-tagging ledgers and checkpoint are proven through real appends, fsync, whole-file reads, and a temp-file rename inside a scoped temporary directory. Effect v4 core has no in-memory FileSystem (only layerNoop), so BunFileSystem is retained through it.layer with a thirty-second hook budget."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1023:provideScopedLayer@28#1",
