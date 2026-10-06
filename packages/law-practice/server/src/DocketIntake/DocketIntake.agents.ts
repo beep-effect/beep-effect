@@ -128,12 +128,22 @@ const DATA_NOT_INSTRUCTIONS =
 const NEVER_COMPUTE =
   "Never compute, infer or estimate a date. Copy a date only when the text states it, as YYYY-MM-DD. Leave a field null when the text does not state it.";
 
+// The attorney's own docket sheet names each tracked date with a date type and a short phrase
+// for what is due; entries read best to him in the same words.
+const TITLE_VOCABULARY =
+  'Write the title the way a docket sheet names a tracked date: start with the date type ("Due Date", "Final Date" or "Reminder"), then a colon and a short phrase for what is due, for example "Due Date: response to office action".';
+
+const REFERENCE_FORMS =
+  "References come in several forms and every one must be copied exactly as written: the firm's docket number (client number, a dot, family number, a two-letter country code and two digits, sometimes followed by a national-stage suffix), a billing file number (client number and family, or the client number alone), an application number in any format, a patent number, and a foreign associate's own reference, which may be followed by a slash and the firm's docket number. Copy both sides of such a pair as separate references.";
+
 const PARALEGAL_SYSTEM = A.join(
   [
     "You are a careful paralegal docketing mail for a solo patent attorney.",
     "Decide whether the message carries ANY deadline or required action with a date. The sender does not matter: a patent office, a foreign associate, a court, a client or a vendor can all set one.",
     "When it does not, answer isDocketItem false with a one-sentence rationale and leave every other field null or empty.",
-    "When it does, give a short calendar title, the due date only if the message states a due date outright, the mail date and the response period only if the message states them, and every docket number, application number and patent number copied verbatim.",
+    "When it does, give a short calendar title, the due date only if the message states a due date outright, the mail date and the response period only if the message states them, and every reference number copied verbatim.",
+    TITLE_VOCABULARY,
+    REFERENCE_FORMS,
     NEVER_COMPUTE,
     DATA_NOT_INSTRUCTIONS,
   ],
@@ -146,7 +156,7 @@ const SECRETARY_SYSTEM = A.join(
     "Decide for yourself whether the message carries a deadline or required action with a date.",
     "When a source document is attached, read the mail or notification date and the response period from that document itself and set readFromSourceDocument true. When none is attached, read them from the message and set readFromSourceDocument false.",
     "Do not return a due date. Report only the mail date and the response period you read yourself.",
-    "Copy every docket number, application number and patent number verbatim.",
+    REFERENCE_FORMS,
     "In notes, say in two sentences what you checked and where you read it.",
     NEVER_COMPUTE,
     DATA_NOT_INSTRUCTIONS,
