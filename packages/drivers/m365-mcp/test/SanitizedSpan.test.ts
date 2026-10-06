@@ -36,6 +36,7 @@ const MockM365Layer = Layer.succeed(
     findEventsByIdempotencyKey: notUsedInThisTest,
     getEvent: notUsedInThisTest,
     getListItem: notUsedInThisTest,
+    getMailFolder: notUsedInThisTest,
     getMessage: notUsedInThisTest,
     getMessageAuthoredText: notUsedInThisTest,
     getSite: Effect.fn("MockM365.getSite")(function* () {
