@@ -92,7 +92,7 @@ const conflictError = (conflicts: ReadonlyArray<{ readonly id: string; readonly 
   });
 
 describe("MailTagging Box conflicting file", () => {
-  it("reads the first file conflict's id and reports no size or hash, which the driver error does not keep", () => {
+  it("reads the first file conflict's id and reports no size or hash when the conflict carries none", () => {
     const found = boxConflictingFile(
       conflictError([
         { id: "8000", type: "folder" },
@@ -160,6 +160,14 @@ describe("MailTagging Box document store", () => {
           },
         })
       ).toStrictEqual(["name taken by 8001 size=null sha1=null", 1]);
+      // Box reports the holder's size and SHA-1 for a file; both reach the outcome when well formed.
+      expect(
+        yield* taken({
+          contextInfo: {
+            conflicts: { id: "8002", type: "file", sha1: "7037807198c22a7d2b0807371d763779a84fdfcf", size: 3 },
+          },
+        })
+      ).toStrictEqual(["name taken by 8002 size=3 sha1=7037807198c22a7d2b0807371d763779a84fdfcf", 1]);
       expect(yield* taken({ contextInfo: { conflicts: [{ id: "8000", type: "folder" }] } })).toStrictEqual([
         "name taken",
         1,
