@@ -260,6 +260,9 @@ const calendarEntry = (tentative: boolean) =>
 
 const CategoryNames = S.Array(S.String.check(S.isMaxLength(24)));
 
+const decodeColorBody = S.decodeUnknownOption(S.Struct({ color: S.String }));
+const decodeShowAsBody = S.decodeUnknownOption(S.Struct({ showAs: S.String }));
+
 describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
   it.prop(
     "adds a docket category once, after every existing category, and never reorders or drops one",
@@ -284,9 +287,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
         const setup = yield* testHttp.setup;
         const created = A.filter(setup, (capture) => capture.method === "POST");
         const colors = A.getSomes(
-          A.map(created, (capture) =>
-            O.map(O.flatMap(capture.body, S.decodeUnknownOption(S.Struct({ color: S.String }))), (body) => body.color)
-          )
+          A.map(created, (capture) => O.map(O.flatMap(capture.body, decodeColorBody), (body) => body.color))
         );
 
         expect(A.map(setup, (capture) => capture.method)).toStrictEqual(["GET", ...A.replicate("POST", 6)]);
@@ -541,9 +542,7 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
           }
         );
         assertSome(
-          O.flatMap(A.get(calls, 1), (capture) =>
-            O.flatMap(capture.body, S.decodeUnknownOption(S.Struct({ showAs: S.String })))
-          ),
+          O.flatMap(A.get(calls, 1), (capture) => O.flatMap(capture.body, decodeShowAsBody)),
           { showAs: "free" }
         );
         assertTrue(O.exists(O.flatMap(A.get(calls, 2), filterOf), Str.includes(KEY)));
