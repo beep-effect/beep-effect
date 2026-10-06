@@ -40,6 +40,9 @@ active yet.
 
 ## Latest Evidence
 
+- 2026-10-06: first live apply and undo drill on the operator's IT mailbox:
+  `P: USPTO` written on 5 messages and undone, verified server-side
+  ([record](history/2026-10-06-first-apply-it-mailbox.md)).
 - 2026-10-06: live dry-run over mail since 2026-07-01 — 1,802 scanned, 323
   matched across 27 matters, nothing written
   ([record](history/2026-10-06-live-dry-run.md)). PRs #1464, #1480, #1495,
