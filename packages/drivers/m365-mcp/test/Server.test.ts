@@ -104,6 +104,7 @@ const createMockM365 = () =>
     downloadMessageAttachment: notExposedByMcp,
     ensureMasterCategories: notExposedByMcp,
     findEventsByIdempotencyKey: notExposedByMcp,
+    getMailFolder: notExposedByMcp,
     listMasterCategories: notExposedByMcp,
     listMessageAttachments: notExposedByMcp,
     sendDraftMessage: notExposedByMcp,
