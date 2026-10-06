@@ -361,6 +361,44 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
       })
     );
 
+    it.effect("uses REST to discover the branch PR when GraphQL is rate limited", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const context = contextAt("/repo");
+        const replies: ReadonlyArray<Reply> = [
+          ["gh pr view", 1, "GraphQL: API rate limit already exceeded"],
+          ["gh api repos/{owner}/{repo}/pulls?head={owner}:feat%2Fcoverage-restore&state=open", 0, `[${prView()}]`],
+        ];
+        const view = yield* runGhPullRequestView(context).pipe(withProcesses(replies, commands));
+        expect(view.number).toBe(7);
+        const found = yield* findOpenPullRequest(context).pipe(withProcesses(replies, commands));
+        assertSome(
+          O.map(found, (pr) => pr.number),
+          7
+        );
+      })
+    );
+
+    it.effect("distinguishes a missing REST PR from a failed REST lookup", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const context = contextAt("/repo");
+        const absent = (restExit: number, restOutput: string) =>
+          findOpenPullRequest(context).pipe(
+            withProcesses(
+              [
+                ["gh pr view", 1, "GraphQL: API rate limit already exceeded"],
+                ["gh api repos/{owner}/{repo}/pulls?head=", restExit, restOutput],
+              ],
+              commands
+            )
+          );
+        assertNone(yield* absent(0, "[]"));
+        const failed = yield* Effect.flip(absent(1, "GitHub REST unavailable"));
+        expect(failed.message).toBe("Failed to inspect current branch pull request through GitHub REST.");
+      })
+    );
+
     it.effect("validates that the branch pull request is open and heads the branch", () =>
       Effect.gen(function* () {
         const commands = yield* makeCommands;
@@ -486,6 +524,61 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet pull request lifec
         );
         assertSome(pullRequest.url, PR_URL);
         expect(laneRows(yield* Ref.get(recorder))).toEqual([[draftCreateStep.id, undefined, 0, ""]]);
+      })
+    );
+
+    it.effect("creates a draft through REST after GraphQL rate limiting and a confirmed absent PR", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const pullRequest = yield* ensurePullRequest(contextAt(root), recorder, O.some(draftCreateStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+        }).pipe(
+          withProcesses(
+            [
+              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
+              ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
+              ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
+              ["gh pr view", 0, prView()],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.created).toBe(true);
+        assertSome(pullRequest.url, PR_URL);
+        expect(A.some(yield* Ref.get(commands), Str.includes("draft=true"))).toBe(true);
+        expect(A.some(yield* Ref.get(commands), Str.includes("base=main"))).toBe(true);
+        expect(A.some(yield* Ref.get(commands), Str.includes("body=@"))).toBe(true);
+        const recorded = yield* Ref.get(recorder);
+        expect(recorded[0]?.result.commandText).toBe("gh api -X POST repos/{owner}/{repo}/pulls");
+      })
+    );
+
+    it.effect("reuses the existing PR when REST finds one after a GraphQL creation failure", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-existing-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const pullRequest = yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+        }).pipe(
+          withProcesses(
+            [
+              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --reverse", 0, "## feat(repo-cli): ship\n"],
+              ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
+              ["gh api repos/{owner}/{repo}/pulls?head=", 0, `[${prView({ url: PR_URL })}]`],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.created).toBe(false);
+        expect(A.some(yield* Ref.get(commands), Str.includes("-X POST"))).toBe(false);
       })
     );
 

@@ -38,6 +38,44 @@ const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
 const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url"] as const;
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
+const decodeGhPullRequestList = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhPrView)));
+const graphQlRateLimited = (failure: GhCommandFailure) =>
+  failure._tag === "nonzero-exit" && Str.includes("GraphQL: API rate limit already exceeded")(failure.output);
+const ghPullRequestViewOutput = (context: RepoRunContext) =>
+  ghOutput({
+    args: ghPullRequestViewArgs,
+    cwd: context.repoRoot,
+    label: ghPullRequestViewCommand,
+    onFailure: (failure) => failure,
+  });
+
+const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestViaRest")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const endpoint = `repos/{owner}/{repo}/pulls?head={owner}:${encodeURIComponent(context.branch)}&state=open&per_page=100`;
+  const output = yield* ghOutput({
+    args: [
+      "api",
+      endpoint,
+      "--jq",
+      "map({number, headRefName: .head.ref, state: (.state | ascii_upcase), url: .html_url, headRefOid: .head.sha, isDraft: .draft})",
+    ],
+    cwd: context.repoRoot,
+    label: `gh api ${endpoint}`,
+    onFailure: (failure) =>
+      failure._tag === "spawn"
+        ? YeetCommandError.new("Failed to inspect current branch pull request through GitHub REST.")(failure.cause)
+        : YeetCommandError.make({
+            message: "Failed to inspect current branch pull request through GitHub REST.",
+            command: `gh api ${endpoint}`,
+            exitCode: failure._tag === "truncated" ? 1 : failure.exitCode,
+          }),
+  });
+  const views = yield* decodeGhPullRequestList(output).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to decode GitHub REST pull request JSON."))
+  );
+  return A.findFirst(views, (view) => view.state === "OPEN" && view.headRefName === context.branch);
+});
 
 const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError => {
   if (failure._tag === "spawn") {
@@ -90,15 +128,27 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
 export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* ghOutput({
-    args: ghPullRequestViewArgs,
-    cwd: context.repoRoot,
-    label: ghPullRequestViewCommand,
-    onFailure: ghPullRequestViewFailure,
-  });
-
-  return yield* decodeGhPullRequestView(output).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
+  return yield* ghPullRequestViewOutput(context).pipe(
+    Effect.matchEffect({
+      onFailure: (failure) =>
+        graphQlRateLimited(failure)
+          ? findOpenPullRequestViaRest(context).pipe(
+              Effect.flatMap((view) =>
+                Effect.fromOption(view, () =>
+                  YeetCommandError.make({
+                    message: "yeet monitor requires an open pull request for the current branch.",
+                    command: "gh api repos/{owner}/{repo}/pulls",
+                    exitCode: 1,
+                  })
+                )
+              )
+            )
+          : Effect.fail(ghPullRequestViewFailure(failure)),
+      onSuccess: (output) =>
+        decodeGhPullRequestView(output).pipe(
+          Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
+        ),
+    })
   );
 });
 
@@ -134,27 +184,23 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* ghOutput({
-    args: ghPullRequestViewArgs,
-    cwd: context.repoRoot,
-    label: ghPullRequestViewCommand,
-    onFailure: (failure) => failure,
-  }).pipe(
-    Effect.asSome,
-    Effect.catch((failure) =>
-      failure._tag === "spawn"
-        ? Effect.fail(YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause))
-        : Effect.succeed(O.none<string>())
-    )
+  return yield* ghPullRequestViewOutput(context).pipe(
+    Effect.matchEffect({
+      onFailure: (failure) =>
+        graphQlRateLimited(failure)
+          ? findOpenPullRequestViaRest(context)
+          : failure._tag === "spawn"
+            ? Effect.fail(YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause))
+            : Effect.succeedNone,
+      onSuccess: (output) =>
+        decodeGhPullRequestView(output).pipe(
+          Effect.map((view) =>
+            view.state === "OPEN" && view.headRefName === context.branch ? O.some(view) : O.none()
+          ),
+          Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
+        ),
+    })
   );
-  if (O.isNone(output)) {
-    return O.none();
-  }
-
-  const view = yield* decodeGhPullRequestView(output.value).pipe(
-    Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
-  );
-  return view.state === "OPEN" && view.headRefName === context.branch ? O.some(view) : O.none();
 });
 
 /**
@@ -285,6 +331,7 @@ interface EnsurePullRequestDependencies {
  * @param recorder - Mutable Ref of executed Yeet lanes.
  * @param prStep - Optional planned PR creation step to append.
  * @param output - GitHub CLI output, usually the created PR URL.
+ * @param commandText - Command that created the PR when REST was used as a fallback.
  * @returns An Effect that updates the recorder when `prStep` is present.
  * @category diagnostics
  * @since 0.0.0
@@ -292,7 +339,8 @@ interface EnsurePullRequestDependencies {
 export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function* (
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
-  output: string
+  output: string,
+  commandText = "gh pr create"
 ): Effect.fn.Return<void> {
   if (O.isNone(prStep)) {
     return;
@@ -303,7 +351,7 @@ export const recordPrCreateLane = Effect.fn("Yeet.recordPrCreateLane")(function*
       YeetExecutedStep.make({
         result: RepoStepRunResult.make({
           stepId: prStep.value.id,
-          commandText: "gh pr create",
+          commandText,
           exitCode: 0,
           output,
         }),
@@ -392,6 +440,83 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
   yield* recordPrProvenanceStampLane(recorder, stampStep, O.some(number), outcome);
 });
 
+const finishCreatedPullRequest = Effect.fn("Yeet.finishCreatedPullRequest")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  prStep: O.Option<RepoPlanStep>,
+  view: NonNullable<EnsurePullRequestDependencies["view"]>,
+  printed: string,
+  draft: boolean,
+  throughRest: boolean
+): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  yield* Console.log(
+    `[yeet] --pr: created ${draft ? "draft " : ""}pull request${throughRest ? " through REST" : ""} -> ${printed}`
+  );
+  yield* recordPrCreateLane(
+    recorder,
+    prStep,
+    printed,
+    throughRest ? "gh api -X POST repos/{owner}/{repo}/pulls" : "gh pr create"
+  );
+  const created = yield* view(context);
+  return YeetEnsuredPullRequest.make({
+    number: created.number,
+    url: O.orElse(O.liftPredicate(printed, Str.isNonEmpty), () => O.fromUndefinedOr(created.url)),
+    created: true,
+  });
+});
+
+const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  prStep: O.Option<RepoPlanStep>,
+  capture: typeof runRepoCommandCapture,
+  view: NonNullable<EnsurePullRequestDependencies["view"]>,
+  input: { readonly title: string; readonly bodyPath: string; readonly draft: boolean }
+): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const existing = yield* findOpenPullRequestViaRest(context);
+  if (O.isSome(existing)) {
+    yield* Console.log(`[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}`);
+    yield* recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`);
+    return YeetEnsuredPullRequest.make({
+      number: existing.value.number,
+      url: O.fromUndefinedOr(existing.value.url),
+      created: false,
+    });
+  }
+  const base = Str.replace(/^origin\//, "")(context.base);
+  const rest = yield* capture(
+    "gh",
+    [
+      "api",
+      "-X",
+      "POST",
+      "repos/{owner}/{repo}/pulls",
+      "-f",
+      `title=${input.title}`,
+      "-f",
+      `head=${context.branch}`,
+      "-f",
+      `base=${base}`,
+      "-F",
+      `body=@${input.bodyPath}`,
+      "-F",
+      `draft=${input.draft}`,
+      "--jq",
+      ".html_url",
+    ],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to create pull request through GitHub REST.")));
+  if (rest.exitCode !== 0) {
+    return yield* YeetCommandError.make({
+      message: `GitHub REST pull request creation failed:\n${rest.output}`,
+      command: "gh api -X POST repos/{owner}/{repo}/pulls",
+      exitCode: rest.exitCode,
+    });
+  }
+  return yield* finishCreatedPullRequest(context, recorder, prStep, view, Str.trim(rest.output), input.draft, true);
+});
+
 // Run `gh pr create` (draft when the planned step says so) and return the
 // created pull request with the URL `gh` printed.
 const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
@@ -415,21 +540,16 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to run gh pr create.")));
   if (result.exitCode !== 0) {
+    if (Str.includes("GraphQL: API rate limit already exceeded")(result.output)) {
+      return yield* createPullRequestViaRest(context, recorder, prStep, capture, view, { title, bodyPath, draft });
+    }
     return yield* YeetCommandError.make({
       message: `gh pr create failed:\n${result.output}`,
       command: `gh pr create --title <subject> --body-file ${bodyPath}`,
       exitCode: result.exitCode,
     });
   }
-  const printed = Str.trim(result.output);
-  yield* Console.log(`[yeet] --pr: created ${draft ? "draft " : ""}pull request -> ${printed}`);
-  yield* recordPrCreateLane(recorder, prStep, printed);
-  const created = yield* view(context);
-  return YeetEnsuredPullRequest.make({
-    number: created.number,
-    url: O.orElse(O.liftPredicate(printed, Str.isNonEmpty), () => O.fromUndefinedOr(created.url)),
-    created: true,
-  });
+  return yield* finishCreatedPullRequest(context, recorder, prStep, view, Str.trim(result.output), draft, false);
 });
 
 /**
