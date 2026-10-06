@@ -67,6 +67,11 @@ export class PracticeKgSelfCheckReport extends S.Class<PracticeKgSelfCheckReport
 /**
  * The single line a failing `--self-check` prints.
  *
+ * **Details**
+ *
+ * `message` is the stable operator-facing sentence. `cause`, when present, is
+ * the underlying error text on one line with no stack trace.
+ *
  * **Example** (Make a failing line)
  *
  * ```ts
@@ -78,11 +83,6 @@ export class PracticeKgSelfCheckReport extends S.Class<PracticeKgSelfCheckReport
  * })
  * console.log(refusal.ok) // false
  * ```
- *
- * **Details**
- *
- * `message` is the stable operator-facing sentence. `cause`, when present, is
- * the underlying error text on one line with no stack trace.
  *
  * @category models
  * @since 0.0.0
