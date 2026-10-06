@@ -102,6 +102,9 @@ const agreeingReview = SecretaryReview.make({
 
 type Script = {
   readonly ambiguousCreates: number;
+  readonly ambiguousLost: boolean;
+  readonly calendarDown: boolean;
+  readonly entryLinks: boolean;
   readonly documents: boolean;
   readonly enter: (messageId: string) => Effect.Effect<ParalegalEntry, DocketIntakeError>;
   readonly matter: Effect.Effect<MatterLookupResult, DocketIntakeError>;
@@ -111,6 +114,9 @@ type Script = {
 
 const defaultScript: Script = {
   ambiguousCreates: 0,
+  ambiguousLost: false,
+  calendarDown: false,
+  entryLinks: true,
   documents: true,
   enter: () => Effect.succeed(docketEntry({ mailDate: O.some(mailDate), responsePeriod: O.some(threeMonths) })),
   matter: Effect.succeed(MatterUnique.make({ client: O.some("0000"), familyKey: "0000.0001", verified: true })),
@@ -132,10 +138,10 @@ class Harness extends Context.Service<Harness, HarnessShape>()(
   "@beep/law-practice-use-cases/test/DocketIntake.test/Harness"
 ) {}
 
-const written = (key: string): DocketWrittenEntry =>
+const written = (key: string, withLink = true): DocketWrittenEntry =>
   DocketWrittenEntry.make({
     eventId: S.NonEmptyString.make(`event:${key}`),
-    webLink: O.some(`https://outlook.fixture.invalid/calendar/${key}`),
+    webLink: withLink ? O.some(`https://outlook.fixture.invalid/calendar/${key}`) : O.none(),
   });
 
 const harnessLayer = (script: Script) =>
@@ -162,13 +168,20 @@ const portsLayer = Layer.mergeAll(
       return DocketCalendar.of({
         create: Effect.fn("FakeCalendar.create")(function* (entry) {
           const attempt = yield* Ref.updateAndGet(harness.creates, (count) => count + 1);
-          yield* Ref.update(harness.entries, HashMap.set(entry.key, entry));
           const script = yield* Ref.get(harness.script);
+          if (script.calendarDown) {
+            return yield* DocketIntakeError.make({ cause: "unavailable", stage: "calendar" });
+          }
+          // The request never reached the calendar, and the caller cannot tell that either.
+          if (script.ambiguousLost) {
+            return yield* DocketIntakeError.make({ ambiguousWrite: true, cause: "transport", stage: "calendar" });
+          }
+          yield* Ref.update(harness.entries, HashMap.set(entry.key, entry));
           // The write lands, but its response is lost: the caller cannot tell.
           if (attempt <= script.ambiguousCreates) {
             return yield* DocketIntakeError.make({ ambiguousWrite: true, cause: "transport", stage: "calendar" });
           }
-          return written(entry.key);
+          return written(entry.key, script.entryLinks);
         }),
         findByKey: Effect.fn("FakeCalendar.findByKey")(function* (key) {
           const entries = yield* Ref.get(harness.entries);
@@ -250,13 +263,46 @@ const portsLayer = Layer.mergeAll(
   )
 );
 
+const FailingCrypto = Layer.succeed(
+  Crypto.Crypto,
+  Crypto.make({
+    digest: () =>
+      Effect.fail(
+        PlatformError.systemError({
+          _tag: "Unknown",
+          description: "digest unavailable",
+          method: "digest",
+          module: "Crypto",
+        })
+      ),
+    randomBytes: (size) => new Uint8Array(size),
+  })
+);
+
+const oldMessage = (id: string): DocketMessage =>
+  DocketMessage.make({
+    bodyText: "Synthetic fixture body.",
+    messageId: id,
+    receivedAt: "2029-12-20T09:00:00Z",
+    receivedDate: LocalDate.make({ year: 2029, month: 12, day: 20 }),
+  });
+
+const messageAt = (id: string, receivedAt: string): DocketMessage =>
+  DocketMessage.make({
+    bodyText: "Synthetic fixture body.",
+    messageId: id,
+    receivedAt,
+    receivedDate: RECEIVED,
+  });
+
 const testLayer = (
   script: Partial<Script> = {},
-  config: Partial<ConstructorParameters<typeof DocketIntakeConfig>[0]> = {}
+  config: Partial<ConstructorParameters<typeof DocketIntakeConfig>[0]> = {},
+  crypto: Layer.Layer<Crypto.Crypto> = TestCrypto
 ) =>
   makeDocketIntakeLayer(DocketIntakeConfig.make({ mailbox: "fixture-mailbox", ...config })).pipe(
     Layer.provide(portsLayer),
-    Layer.provide(TestCrypto),
+    Layer.provide(crypto),
     Layer.provideMerge(harnessLayer({ ...defaultScript, ...script }))
   );
 
@@ -541,6 +587,181 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
             (day) => sameDate(day, addDays(TODAY, 1))
           )
         );
+      })
+    );
+  });
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(docketEntry({ statedDueDate: O.some(addDays(TODAY, 1)) })),
+      matter: Effect.succeed(
+        MatterUnique.make({
+          applications: ["00/000,001"],
+          client: O.some("0000"),
+          dockets: ["0000.0001US01"],
+          familyKey: "0000.0001",
+          patents: ["0,000,001"],
+          verified: false,
+        })
+      ),
+      review: () => Effect.succeed(SecretaryReview.make({ isDocketItem: true, notes: "No period stated." })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "describes an unverified matter in full, notes a missing link, and places no reminder for a date that is tomorrow",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(oldMessage("m-old"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([
+          "matter-unverified",
+          "source-document-missing",
+          "ladder-truncated",
+        ]);
+        expect(kinds(yield* entriesOf, "reminder")).toHaveLength(0);
+        for (const fragment of [
+          "family 0000.0001 (unverified; needs attorney)",
+          "client 0000",
+          "dockets 0000.0001US01",
+          "applications 00/000,001",
+          "patents 0,000,001",
+          "Source email: link unavailable",
+          "Reminders: none ahead",
+        ]) {
+          assertTrue(O.exists(due, (entry) => Str.includes(fragment)(entry.bodyText)));
+        }
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(docketEntry()),
+      review: () => Effect.succeed(SecretaryReview.make({ isDocketItem: false, notes: "No deadline here." })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "escalates when the reviewer dismisses the paralegal's entry, dated today for a message from a past day",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(oldMessage("m-old"), TODAY);
+        const entry = A.head(kinds(yield* entriesOf, "needs-review"));
+
+        expect(outcome._tag === "DocketNeedsReview" ? outcome.reason : "unexpected").toBe("agents-disagree");
+        assertTrue(O.exists(entry, (value) => sameDate(value.date, TODAY)));
+        assertTrue(O.exists(entry, (value) => Str.includes("Fixture response due")(value.subject)));
+      })
+    );
+  });
+
+  it.layer(testLayer({ ambiguousLost: true }), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "fails the message when an ambiguous create cannot be found afterwards",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+
+        expect(outcome._tag === "IntakeFailed" ? outcome.stage : "unexpected").toBe("calendar");
+        expect(yield* entriesOf).toHaveLength(0);
+      })
+    );
+  });
+
+  it.layer(testLayer({}, {}, FailingCrypto), { timeout: "5 seconds" })((it) => {
+    it.effect(
+      "fails the message at the calendar stage when no idempotency key can be derived",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+
+        expect(outcome._tag === "IntakeFailed" ? outcome.stage : "unexpected").toBe("calendar");
+        expect(yield* Ref.get(harness.creates)).toBe(0);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      {
+        calendarDown: true,
+        enter: (messageId) =>
+          messageId === "m-news"
+            ? Effect.succeed(ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." }))
+            : Effect.succeed(docketEntry()),
+        messages: [messageAt("m-news", "0-not-a-timestamp"), messageAt("m-broken", "2030-01-09T10:01:00Z")],
+        review: (messageId) =>
+          messageId === "m-news"
+            ? Effect.succeed(SecretaryReview.make({ isDocketItem: false, notes: "Agreed." }))
+            : Effect.fail(DocketIntakeError.make({ cause: "timeout", stage: "review" })),
+      },
+      { maxAttempts: 1 }
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "keeps a message failing when even its needs-review entry cannot be written, and says so in the digest",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const first = yield* intake.pollOnce(TODAY);
+        const second = yield* intake.pollOnce(TODAY);
+        const digest = yield* intake.writeDigest(TODAY).pipe(Effect.flip);
+        const sinceSeen = yield* Ref.get(harness.sinceSeen);
+
+        expect([first.notDocket, first.failed, first.needsReview]).toStrictEqual([1, 1, 0]);
+        expect([second.processed, second.failed]).toStrictEqual([1, 1]);
+        expect(digest.stage).toBe("calendar");
+        // A cursor that is not a timestamp is passed through unchanged rather than dropped.
+        assertSome(pipe(A.get(sinceSeen, 1), O.flatten), "0-not-a-timestamp");
+      })
+    );
+  });
+
+  it.layer(testLayer({ entryLinks: false, matter: Effect.succeed(MatterNotFound.make({})) }), {
+    timeout: "5 seconds",
+  })((it) => {
+    it.effect(
+      "drops a digested ledger record once its message is behind the poll window, and digests entries without links by id",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        yield* intake.pollOnce(TODAY);
+        const digest = yield* intake.writeDigest(TODAY);
+        yield* Ref.update(harness.script, (script) => ({
+          ...script,
+          messages: [messageAt("m-later", "2030-01-10T15:00:00Z")],
+        }));
+        yield* intake.pollOnce(addDays(TODAY, 1));
+        const ledger = O.map(A.last(yield* Ref.get(harness.saves)), (state) => Object.keys(state.ledger));
+
+        assertTrue(Str.includes("event event:docket:")(digest.bodyText));
+        assertSome(ledger, ["m-later"]);
+      })
+    );
+  });
+
+  it.layer(testLayer({ matter: Effect.succeed(MatterUnique.make({ familyKey: "0000.0002", verified: true })) }), {
+    timeout: "5 seconds",
+  })((it) => {
+    it.effect(
+      "names a verified matter that has no client number by its family alone",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(outcome._tag === "DocketEntered" ? outcome.flags : ["unexpected"]).toStrictEqual([]);
+        assertTrue(O.exists(due, (entry) => Str.includes("Matter: family 0000.0002\n")(entry.bodyText)));
       })
     );
   });

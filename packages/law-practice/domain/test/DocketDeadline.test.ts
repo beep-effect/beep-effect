@@ -21,7 +21,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { Result } from "effect";
+import { pipe, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -77,6 +77,27 @@ describe("@beep/law-practice-domain DocketDeadline", () => {
     },
     { arbitrary: fcRuns(200) }
   );
+
+  it("adds a period in days and resolves each ordering of two candidates", () => {
+    const early = LocalDate.make({ year: 2030, month: 4, day: 15 });
+    const late = LocalDate.make({ year: 2030, month: 4, day: 16 });
+    const resolve = (stated: LocalDate, computed: LocalDate) =>
+      O.map(
+        resolveDocketDueDate(DocketDueDateCandidates.make({ computed: O.some(computed), stated: O.some(stated) })),
+        (due) => `${due.date.toISOString()} ${due.basis}`
+      );
+
+    expect(addDocketResponsePeriod(early, DocketResponsePeriod.make({ amount: 30, unit: "days" })).toISOString()).toBe(
+      "2030-05-15"
+    );
+    expect(
+      pipe(early, addDocketResponsePeriod(DocketResponsePeriod.make({ amount: 1, unit: "months" }))).toISOString()
+    ).toBe("2030-05-15");
+    assertSome(resolve(early, late), "2030-04-15 earlier-of-differing");
+    assertSome(resolve(late, early), "2030-04-15 earlier-of-differing");
+    assertSome(resolve(early, early), "2030-04-15 agreed");
+    expect(pipe(late, docketReminderLadder(early)).rungs).toHaveLength(0);
+  });
 
   it("resolves no date when neither candidate exists", () => {
     assertNone(resolveDocketDueDate(DocketDueDateCandidates.make({ computed: O.none(), stated: O.none() })));

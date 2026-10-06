@@ -362,12 +362,9 @@ const bodyOf = (lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 const whenFlag = (condition: boolean, flag: DocketEntryFlag): ReadonlyArray<DocketEntryFlag> =>
   condition ? [flag] : [];
 
-const matterReferences = (entry: ParalegalEntry, review: SecretaryReview): ReadonlyArray<string> =>
+const matterReferences = (entry: ParalegalDocketEntry, review: SecretaryReview): ReadonlyArray<string> =>
   pipe(
-    ParalegalEntry.match(entry, {
-      ParalegalDocketEntry: (docket) => docket.matterReferences,
-      ParalegalNotDocketItem: (): ReadonlyArray<string> => [],
-    }),
+    entry.matterReferences,
     A.appendAll(review.matterReferences),
     A.map(Str.trim),
     A.filter(Str.isNonEmpty),
@@ -640,28 +637,19 @@ const laterTimestamp = (left: O.Option<string>, right: O.Option<string>): O.Opti
 const count = (outcomes: ReadonlyArray<DocketIntakeOutcome>, tag: DocketIntakeOutcome["_tag"]): number =>
   A.length(A.filter(outcomes, (outcome) => outcome._tag === tag));
 
+const entryReference = (entry: DocketWrittenEntry): string =>
+  O.getOrElse(entry.webLink, () => `event ${entry.eventId}`);
+
 const digestLine: (outcome: DocketIntakeOutcome) => O.Option<string> = DocketIntakeOutcome.match({
   DocketEntered: (outcome) =>
     O.some(
       A.join(
-        [
-          `- ${iso(outcome.dueDate.date)} tentative entry`,
-          flagsLine(outcome.flags),
-          O.getOrElse(outcome.entry.webLink, () => `event ${outcome.entry.eventId}`),
-        ],
+        [`- ${iso(outcome.dueDate.date)} tentative entry`, flagsLine(outcome.flags), entryReference(outcome.entry)],
         " · "
       )
     ),
   DocketNeedsReview: (outcome) =>
-    O.some(
-      A.join(
-        [
-          `- NEEDS REVIEW (${outcome.reason})`,
-          O.getOrElse(outcome.entry.webLink, () => `event ${outcome.entry.eventId}`),
-        ],
-        " · "
-      )
-    ),
+    O.some(A.join([`- NEEDS REVIEW (${outcome.reason})`, entryReference(outcome.entry)], " · ")),
   IntakeFailed: (outcome) => O.some(`- still failing at stage ${outcome.stage}; will be retried`),
   NotDocketItem: () => O.none(),
 });
