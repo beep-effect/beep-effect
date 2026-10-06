@@ -8,6 +8,7 @@ import { Console, DateTime, Effect } from "effect";
 import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { AccountsError } from "./Accounts.errors.ts";
 import {
@@ -17,7 +18,7 @@ import {
   rankAccounts,
 } from "./Accounts.schemas.ts";
 import { layerAccountsUsageLive, pollAccounts } from "./AccountsUsage.service.ts";
-import type { AccountRanking, UsageWindow } from "./Accounts.schemas.ts";
+import type { AccountRanking, CreditBalance, UsageWindow } from "./Accounts.schemas.ts";
 
 const reportFailure = <A, R>(effect: Effect.Effect<A, AccountsError, R>) =>
   effect.pipe(Effect.catchTag("AccountsError", (error) => failWithReportedExit(`[accounts] ${error.message}`)));
@@ -58,6 +59,20 @@ const otherWindows = (windows: ReadonlyArray<UsageWindow>): ReadonlyArray<string
     (window) => `${windowLabel(window)} ${percent(window.usedPercent)}`
   );
 
+const amount = (unit: CreditBalance["unit"], value: number): string =>
+  unit === "usd" ? `$${Math.round(value)}` : `${Math.round(value)}`;
+
+const renderCredit = (credit: CreditBalance): string =>
+  A.join(
+    [
+      `${credit.label} ${amount(credit.unit, credit.remaining)}`,
+      ...O.toArray(O.map(credit.limit, (limit) => `of ${amount(credit.unit, limit)}`)),
+      "left",
+      ...O.toArray(O.map(credit.expiresAt, (at) => `until ${Str.slice(0, 10)(DateTime.formatIso(at))}`)),
+    ],
+    " "
+  );
+
 const weeklySummary = (row: AccountRanking): O.Option<string> =>
   O.zipWith(
     row.weeklyRemainingPercent,
@@ -92,12 +107,19 @@ export const renderAccountRanking = (row: AccountRanking): string => {
   return AccountUsageOutcome.match(row.usage.outcome, {
     NeedsLogin: ({ detail }) => `${name}: needs login (${detail})`,
     Failed: ({ detail }) => `${name}: unreadable (${detail})`,
-    Ok: ({ plan, windows }) =>
+    Ok: ({ plan, windows, credits, limitResets }) =>
       A.join(
         [
           `${name}: ${row.availability}`,
           ...O.toArray(weeklySummary(row)),
           ...otherWindows(windows),
+          ...A.map(credits, renderCredit),
+          ...O.toArray(
+            O.map(
+              O.filter(limitResets, (count) => count > 0),
+              (count) => `${count} limit reset(s) unused`
+            )
+          ),
           ...O.toArray(O.map(plan, (value) => `plan ${value}`)),
         ],
         " · "
@@ -113,7 +135,7 @@ export const renderAccountRanking = (row: AccountRanking): string => {
  * ```ts
  * import { renderAccountsStatus } from "@beep/repo-cli/test/Accounts"
  *
- * console.log(renderAccountsStatus([])) // "[accounts] the proxy holds no Claude or Codex login"
+ * console.log(renderAccountsStatus([])) // "[accounts] the proxy holds no supported login"
  * ```
  *
  * @param rows - Ranked accounts, most urgent first.
@@ -122,7 +144,7 @@ export const renderAccountRanking = (row: AccountRanking): string => {
  * @since 0.0.0
  */
 export const renderAccountsStatus = (rows: ReadonlyArray<AccountRanking>): string => {
-  if (!A.isReadonlyArrayNonEmpty(rows)) return "[accounts] the proxy holds no Claude or Codex login";
+  if (!A.isReadonlyArrayNonEmpty(rows)) return "[accounts] the proxy holds no supported login";
   const first = A.headNonEmpty(rows);
   const headline =
     first.availability === "ready"
@@ -194,6 +216,6 @@ export const accountsStatusCommand = Command.make(
 export const accountsCommand = Command.make("accounts", {}, () =>
   Console.log(A.join(["Accounts commands:", "- bun run beep accounts status [--json]"], "\n"))
 ).pipe(
-  Command.withDescription("Show which Claude or Codex subscription account to use next"),
+  Command.withDescription("Show which Claude, Codex, Muse, or Grok subscription account to use next"),
   Command.withSubcommands([accountsStatusCommand])
 );

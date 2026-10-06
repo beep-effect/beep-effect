@@ -6,11 +6,20 @@ import {
   AccountUsageOutcome,
   ClaudeUsageBodyJson,
   CodexUsageBodyJson,
+  claudeCreditBalances,
   claudeUsageOutcome,
   claudeUsageWindows,
+  codexCreditBalances,
+  codexLimitResets,
   codexUsageOutcome,
   codexUsageWindows,
+  dedupeAccountUsages,
+  grokUsageOutcome,
+  grokUsageWindows,
   layerAccountsUsageLive,
+  MuseKeyBodyJson,
+  museUsageOutcome,
+  museUsageWindows,
   pollAccounts,
   rankAccounts,
   renderAccountsStatus,
@@ -42,7 +51,13 @@ const session = (usedPercent: number) =>
 const ok = (label: string, windows: ReadonlyArray<UsageWindow>) =>
   AccountUsage.make({
     account: account(label),
-    outcome: AccountUsageOutcome.cases.Ok.make({ identity: O.some(label), plan: O.none(), windows }),
+    outcome: AccountUsageOutcome.cases.Ok.make({
+      identity: O.some(label),
+      plan: O.none(),
+      windows,
+      credits: [],
+      limitResets: O.none(),
+    }),
   });
 
 const claudeBody = `{
@@ -116,6 +131,95 @@ describe("account usage wire mapping", () => {
   it("carries the plan and windows of a good Codex response", () => {
     const outcome = codexUsageOutcome({ identity: O.some("work@example.com"), status: 200, body: codexBody });
     expect(outcome._tag === "Ok" ? [O.getOrNull(outcome.plan), A.length(outcome.windows)] : []).toEqual(["pro", 1]);
+  });
+});
+
+// A gRPC-web frame holding a credits config: 8% used (float32) and a billing
+// period that ends at Unix second 1791630240.
+const grokReply = new Uint8Array([
+  0x00, 0x00, 0x00, 0x00, 0x0f, 0x0a, 0x0d, 0x0d, 0x00, 0x00, 0x00, 0x41, 0x2a, 0x06, 0x08, 0xa0, 0xb7, 0xa8, 0xd6,
+  0x06,
+]);
+
+describe("credits, resets, and the Muse and Grok providers", () => {
+  it("reads every Claude dollar pool and labels the known one", () => {
+    const pools = claudeCreditBalances(
+      `{"seven_day":null,"iguana_necktie":{"utilization":1.4,"resets_at":"2026-11-05T07:59:00+00:00","limit_dollars":250,"used_dollars":3.5,"remaining_dollars":246.5},"harbor_lantern":{"resets_at":null,"limit_dollars":100,"remaining_dollars":98.4}}`
+    );
+    expect(A.map(pools, (pool) => [pool.label, pool.unit, pool.remaining, O.getOrNull(pool.limit)])).toEqual([
+      ["cloud session credits", "usd", 246.5, 250],
+      ["harbor_lantern", "usd", 98.4, 100],
+    ]);
+    expect(claudeCreditBalances("not json")).toEqual([]);
+  });
+
+  it.effect("reads a Codex credit balance and its unused limit resets", () =>
+    Effect.gen(function* () {
+      const body = yield* CodexUsageBodyJson.decode(
+        `{"credits":{"has_credits":true,"balance":"62286.98"},"rate_limit_reset_credits":{"available_count":1,"applicable_available_count":0}}`
+      );
+      expect(A.map(codexCreditBalances(body), (credit) => [credit.unit, credit.remaining])).toEqual([
+        ["credits", 62286.98],
+      ]);
+      assertSome(codexLimitResets(body), 1);
+      const none = yield* CodexUsageBodyJson.decode(`{"credits":{"has_credits":false,"balance":"0"}}`);
+      expect(codexCreditBalances(none)).toEqual([]);
+    })
+  );
+
+  it.effect("reads Muse windows when Meta reports them and none while idle", () =>
+    Effect.gen(function* () {
+      const active = yield* MuseKeyBodyJson.decode(
+        `{"subs_tier_name":"Muse Code Everyday Usage","subs_usage":{"window":{"used_percent":6,"window_duration_mins":300,"resets_at":1767916800},"weekly":{"used_percent":17,"resets_at":1767916800}}}`
+      );
+      expect(A.map(museUsageWindows(active), (window) => [window.kind, window.usedPercent])).toEqual([
+        ["session", 6],
+        ["weekly", 17],
+      ]);
+      const idle = museUsageOutcome({ identity: O.none(), status: 200, body: `{"subs_tier_name":"Tier"}` });
+      expect(idle._tag === "Ok" ? [O.getOrNull(idle.plan), A.length(idle.windows)] : []).toEqual(["Tier", 0]);
+      expect(museUsageOutcome({ identity: O.none(), status: 401, body: "" })._tag).toBe("NeedsLogin");
+      expect(museUsageOutcome({ identity: O.none(), status: 200, body: "<html>" })._tag).toBe("Failed");
+    })
+  );
+
+  it("decodes the Grok weekly pool from a gRPC-web protobuf reply", () => {
+    const windows = O.getOrElse(grokUsageWindows(grokReply), () => A.empty<UsageWindow>());
+    expect(
+      A.map(windows, (window) => [
+        window.kind,
+        window.usedPercent,
+        O.getOrNull(O.map(window.resetsAt, DateTime.toEpochMillis)),
+      ])
+    ).toEqual([["weekly", 8, 1_791_630_240_000]]);
+    expect(grokUsageOutcome({ identity: O.none(), status: 200, body: grokReply })._tag).toBe("Ok");
+    expect(grokUsageOutcome({ identity: O.none(), status: 200, body: new Uint8Array([1, 2, 3]) })._tag).toBe("Failed");
+    expect(grokUsageOutcome({ identity: O.none(), status: 403, body: new Uint8Array(0) })._tag).toBe("NeedsLogin");
+  });
+
+  it("treats a missing used-percent field as an untouched pool", () => {
+    const untouched = new Uint8Array([0x00, 0x00, 0x00, 0x00, 0x02, 0x0a, 0x00]);
+    const windows = O.getOrElse(grokUsageWindows(untouched), () => A.empty<UsageWindow>());
+    expect(A.map(windows, (window) => [window.usedPercent, O.isNone(window.resetsAt)])).toEqual([[0, true]]);
+  });
+
+  it("hides an unreadable duplicate login behind a readable one", () => {
+    const dead = AccountUsage.make({
+      account: account("twin"),
+      outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "rejected" }),
+    });
+    const live = ok("twin", [weekly(10, inHours(5))]);
+    const alone = AccountUsage.make({
+      account: account("solo"),
+      outcome: AccountUsageOutcome.cases.Failed.make({ detail: "offline" }),
+    });
+    expect(
+      A.map(dedupeAccountUsages([dead, live, alone, live]), (usage) => [usage.account.label, usage.outcome._tag])
+    ).toEqual([
+      ["twin", "Ok"],
+      ["solo", "Failed"],
+    ]);
+    expect(A.length(dedupeAccountUsages([dead, dead]))).toBe(1);
   });
 });
 
@@ -198,7 +302,7 @@ describe("account report rendering", () => {
   });
 
   it("says so when nothing is ready or nothing is registered", () => {
-    expect(renderAccountsStatus([])).toBe("[accounts] the proxy holds no Claude or Codex login");
+    expect(renderAccountsStatus([])).toBe("[accounts] the proxy holds no supported login");
     assertSome(
       A.head(renderAccountsStatus(rankAccounts([ok("spent", [weekly(100, inHours(1))])], now)).split("\n")),
       "[accounts] no account is ready right now"
@@ -240,33 +344,45 @@ const authFiles = {
   "codex-work.json": `{"type":"codex","email":"work@example.com","access_token":"codex-token","account_id":"acct-1"}`,
   "claude-off.json": `{"type":"claude","email":"off@example.com","access_token":"off-token","disabled":true}`,
   "xai-me.json": `{"type":"xai","email":"me@example.com","access_token":"xai-token"}`,
+  "meta-me.json": `{"type":"meta","email":"me@example.com","access_token":"muse-key","dca_token":"muse-device"}`,
+  "kimi-me.json": `{"type":"kimi","email":"me@example.com","access_token":"kimi-token"}`,
   "config.yaml": "port: 8317",
   "broken.json": "{",
 };
 
 describe("live account poller", () => {
-  it.effect("lists enabled Claude and Codex logins and polls each with its own token", () =>
+  it.effect("lists every supported login and polls each with its own token", () =>
     Effect.gen(function* () {
       const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
+      const answer = (request: HttpClientRequest.HttpClientRequest) => {
+        if (request.url.includes("anthropic")) return respond(request, claudeBody);
+        if (request.url.includes("chatgpt")) return respond(request, codexBody);
+        if (request.url.includes("meta.ai")) return respond(request, `{"subs_tier_name":"Tier"}`);
+        return HttpClientResponse.fromWeb(request, new Response(grokReply, { status: 200 }));
+      };
       const client = HttpClient.make((request) =>
         Ref.update(
           seen,
           A.append([
+            request.method,
             request.url,
             request.headers.authorization,
-            request.headers["anthropic-beta"],
-            request.headers["chatgpt-account-id"],
+            request.headers["anthropic-beta"] ?? request.headers["chatgpt-account-id"] ?? request.headers["x-grpc-web"],
           ])
-        ).pipe(Effect.as(respond(request, request.url.includes("anthropic") ? claudeBody : codexBody)))
+        ).pipe(Effect.as(answer(request)))
       );
       const usages = yield* runLive(authFiles, client, pollAccounts);
       expect(A.map(usages, (usage) => [usage.account.provider, usage.account.label, usage.outcome._tag])).toEqual([
         ["claude", "me@example.com", "Ok"],
         ["codex", "work@example.com", "Ok"],
+        ["grok", "me@example.com", "Ok"],
+        ["muse", "me@example.com", "Ok"],
       ]);
-      expect(A.sort(yield* Ref.get(seen), (left, right) => (String(left[0]) < String(right[0]) ? -1 : 1))).toEqual([
-        ["https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20", undefined],
-        ["https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", undefined, "acct-1"],
+      expect(A.sort(yield* Ref.get(seen), (left, right) => (String(left[1]) < String(right[1]) ? -1 : 1))).toEqual([
+        ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
+        ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
+        ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
+        ["POST", "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig", "Bearer xai-token", "1"],
       ]);
     })
   );

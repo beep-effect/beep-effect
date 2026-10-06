@@ -31,7 +31,7 @@ const $I = $RepoCliId.create("commands/Accounts/Accounts.schemas");
  * @category models
  * @since 0.0.0
  */
-export const AccountProvider = LiteralKit(["claude", "codex"]).pipe(
+export const AccountProvider = LiteralKit(["claude", "codex", "muse", "grok"]).pipe(
   $I.annoteSchema("AccountProvider", { description: "Subscription provider whose plan limits are polled." })
 );
 
@@ -160,11 +160,68 @@ export class UsageWindow extends S.Class<UsageWindow>($I`UsageWindow`)(
 ) {}
 
 /**
+ * What a credit balance is counted in.
+ *
+ * **Example** (Narrow a unit)
+ *
+ * ```ts
+ * import { CreditUnit } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(CreditUnit.is.usd("usd")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CreditUnit = LiteralKit(["usd", "credits"]).pipe(
+  $I.annoteSchema("CreditUnit", { description: "Dollars, or the provider's own credit points." })
+);
+
+/**
+ * Dollars, or the provider's own credit points.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreditUnit = typeof CreditUnit.Type;
+
+/**
+ * A credit balance that sits beside the plan limits, such as Claude's cloud
+ * session credit or a ChatGPT credit balance.
+ *
+ * **Example** (Make a balance)
+ *
+ * ```ts
+ * import { CreditBalance } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const credit = CreditBalance.make({ label: "cloud session credits", unit: "usd", remaining: 246.5, limit: O.some(250), expiresAt: O.none() })
+ * console.log(credit.remaining) // 246.5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreditBalance extends S.Class<CreditBalance>($I`CreditBalance`)(
+  {
+    label: S.String,
+    unit: CreditUnit,
+    remaining: S.Finite,
+    limit: S.OptionFromNullOr(S.Finite),
+    expiresAt: S.OptionFromNullOr(S.DateTimeUtcFromString),
+  },
+  $I.annote("CreditBalance", {
+    description: "A credit balance beside the plan limits: what is left and when it expires.",
+  })
+) {}
+
+/**
  * What one poll of one account produced.
  *
  * **Details**
  *
- * `Ok` carries the windows. `NeedsLogin` means the stored login is missing or
+ * `Ok` carries the windows, any credit balances, and the number of unused
+ * limit-reset grants when the provider reports one. `NeedsLogin` means the stored login is missing or
  * no longer refreshes, so the operator must sign that account in again.
  * `Failed` is any other read, network, or decode failure.
  *
@@ -185,6 +242,8 @@ export const AccountUsageOutcome = S.TaggedUnion({
     identity: S.OptionFromNullOr(S.String),
     plan: S.OptionFromNullOr(S.String),
     windows: S.Array(UsageWindow),
+    credits: S.Array(CreditBalance),
+    limitResets: S.OptionFromNullOr(S.Finite),
   },
   NeedsLogin: { detail: S.String },
   Failed: { detail: S.String },

@@ -19,15 +19,20 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AccountsError } from "./Accounts.errors.ts";
 import { AccountProvider, AccountRef, AccountUsage, AccountUsageOutcome } from "./Accounts.schemas.ts";
 import {
   ClaudeUsageBodyJson,
   CodexUsageBodyJson,
+  claudeCreditBalances,
   claudeUsageWindows,
+  codexCreditBalances,
+  codexLimitResets,
   codexUsageWindows,
+  grokUsageWindows,
+  MuseKeyBodyJson,
+  museUsageWindows,
   ProxyAuthFileJson,
 } from "./Accounts.wire.schemas.ts";
 import type { PlatformError } from "effect";
@@ -81,10 +86,22 @@ export class AccountsUsage extends Context.Service<AccountsUsage, AccountsUsageS
 
 const CLAUDE_USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
 const CODEX_USAGE_URL = "https://chatgpt.com/backend-api/wham/usage";
+const MUSE_KEY_URL = "https://api.meta.ai/muse-code/key";
+const GROK_BILLING_URL = "https://grok.com/grok_api_v2.GrokBuildBilling/GetGrokCreditsConfig";
+// An empty gRPC-web request: one uncompressed frame holding a zero-length message.
+const GROK_EMPTY_REQUEST = new Uint8Array(5);
 const REQUEST_TIMEOUT = Duration.seconds(20);
 const POLL_CONCURRENCY = 4;
 
-const isProvider = S.is(AccountProvider);
+// The proxy names a stored login by its upstream; the report names the product.
+const providerOfLoginType = (type: string): O.Option<AccountProvider> =>
+  type === "claude" || type === "codex"
+    ? O.some(type)
+    : type === "meta"
+      ? O.some("muse")
+      : type === "xai"
+        ? O.some("grok")
+        : O.none();
 
 const mapPlatformError = (cause: PlatformError.PlatformError): AccountsError =>
   AccountsError.make({
@@ -145,6 +162,8 @@ export const claudeUsageOutcome = (response: {
         identity: response.identity,
         plan: O.none(),
         windows: claudeUsageWindows(body),
+        credits: claudeCreditBalances(response.body),
+        limitResets: O.none(),
       });
     },
   });
@@ -181,32 +200,116 @@ export const codexUsageOutcome = (response: {
         identity: response.identity,
         plan: O.fromNullishOr(body.plan_type),
         windows: codexUsageWindows(body),
+        credits: codexCreditBalances(body),
+        limitResets: codexLimitResets(body),
       }),
   });
 };
 
-const usageRequest = (provider: AccountProvider, login: ProxyAuthFile): HttpClientRequest.HttpClientRequest => {
-  const token = Redacted.value(login.access_token);
-  return AccountProvider.$match(provider, {
-    claude: () =>
-      HttpClientRequest.get(CLAUDE_USAGE_URL).pipe(
-        HttpClientRequest.bearerToken(token),
-        HttpClientRequest.setHeader("anthropic-beta", "oauth-2025-04-20")
-      ),
-    codex: () =>
-      HttpClientRequest.get(CODEX_USAGE_URL).pipe(
-        HttpClientRequest.bearerToken(token),
-        HttpClientRequest.setHeader("user-agent", "codex-cli"),
-        O.match(O.fromNullishOr(login.account_id), {
-          onNone: () => (request: HttpClientRequest.HttpClientRequest) => request,
-          onSome: (accountId) => HttpClientRequest.setHeader("chatgpt-account-id", accountId),
-        })
-      ),
+/**
+ * Turn a Muse Code key response into an outcome.
+ *
+ * **Example** (Read an idle account)
+ *
+ * ```ts
+ * import { museUsageOutcome } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = museUsageOutcome({ identity: O.none(), status: 200, body: '{"subs_tier_name":"Muse Code Everyday Usage"}' })
+ * console.log(outcome._tag) // "Ok"
+ * ```
+ *
+ * @param response - The account's identity, the HTTP status, and the body text.
+ * @returns The windows, a re-login request, or the failure.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const museUsageOutcome = (response: {
+  readonly identity: O.Option<string>;
+  readonly status: number;
+  readonly body: string;
+}): AccountUsageOutcome => {
+  if (isRejectedStatus(response.status)) return loginRejected;
+  if (response.status !== 200) return failed(`Muse Code answered HTTP ${response.status}`);
+  return O.match(MuseKeyBodyJson.decodeOption(response.body), {
+    onNone: () => failed("Muse Code answered with a body this version cannot read"),
+    onSome: (body) =>
+      AccountUsageOutcome.cases.Ok.make({
+        identity: response.identity,
+        plan: O.fromNullishOr(body.subs_tier_name),
+        windows: museUsageWindows(body),
+        credits: [],
+        limitResets: O.none(),
+      }),
   });
 };
 
-const toOutcome = (provider: AccountProvider) =>
-  AccountProvider.$match(provider, { claude: () => claudeUsageOutcome, codex: () => codexUsageOutcome });
+/**
+ * Turn a Grok Build billing reply into an outcome.
+ *
+ * **Example** (Read a rejected login)
+ *
+ * ```ts
+ * import { grokUsageOutcome } from "@beep/repo-cli/test/Accounts"
+ * import * as O from "effect/Option"
+ *
+ * console.log(grokUsageOutcome({ identity: O.none(), status: 401, body: new Uint8Array(0) })._tag) // "NeedsLogin"
+ * ```
+ *
+ * @param response - The account's identity, the HTTP status, and the body bytes.
+ * @returns The weekly window, a re-login request, or the failure.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const grokUsageOutcome = (response: {
+  readonly identity: O.Option<string>;
+  readonly status: number;
+  readonly body: Uint8Array;
+}): AccountUsageOutcome => {
+  if (isRejectedStatus(response.status)) return loginRejected;
+  if (response.status !== 200) return failed(`Grok billing answered HTTP ${response.status}`);
+  return O.match(grokUsageWindows(response.body), {
+    onNone: () => failed("Grok billing answered with a body this version cannot read"),
+    onSome: (windows) =>
+      AccountUsageOutcome.cases.Ok.make({
+        identity: response.identity,
+        plan: O.none(),
+        windows,
+        credits: [],
+        limitResets: O.none(),
+      }),
+  });
+};
+
+const sameAccount = (left: AccountUsage, right: AccountUsage): boolean =>
+  left.account.provider === right.account.provider && left.account.label === right.account.label;
+
+const isOk = (usage: AccountUsage): boolean => usage.outcome._tag === "Ok";
+
+/**
+ * Keep one row per account when the proxy holds several logins for it: a
+ * readable login hides an unreadable duplicate, and the first readable one
+ * wins.
+ *
+ * **Example** (Drop nothing from an empty poll)
+ *
+ * ```ts
+ * import { dedupeAccountUsages } from "@beep/repo-cli/test/Accounts"
+ *
+ * console.log(dedupeAccountUsages([]).length) // 0
+ * ```
+ *
+ * @param usages - Every polled login.
+ * @returns One usage per provider and label.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const dedupeAccountUsages = (usages: ReadonlyArray<AccountUsage>): ReadonlyArray<AccountUsage> =>
+  A.filter(usages, (usage, index) => {
+    const twins = A.filter(usages, (other) => sameAccount(usage, other));
+    const preferred = O.getOrElse(A.findFirst(twins, isOk), () => usage);
+    return preferred === usage && A.findFirstIndex(usages, (other) => other === usage).pipe(O.contains(index));
+  });
 
 /**
  * Resolve the proxy's auth directory: `BEEP_ACCOUNTS_AUTH_DIR` when set, else
@@ -262,12 +365,90 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
       .readFileString(source)
       .pipe(Effect.map(ProxyAuthFileJson.decodeOption), Effect.orElseSucceed(O.none<ProxyAuthFile>));
 
+  const fetchText = (
+    request: HttpClientRequest.HttpClientRequest,
+    identity: O.Option<string>,
+    toOutcome: (response: {
+      readonly identity: O.Option<string>;
+      readonly status: number;
+      readonly body: string;
+    }) => AccountUsageOutcome
+  ) =>
+    Effect.flatMap(client.execute(request), (response) =>
+      Effect.map(response.text, (body) => toOutcome({ identity, status: response.status, body }))
+    );
+
+  const fetchOutcome = (provider: AccountProvider, login: ProxyAuthFile) => {
+    const identity = O.some(login.email);
+    const token = Redacted.value(login.access_token);
+    return AccountProvider.$match(provider, {
+      claude: () =>
+        fetchText(
+          HttpClientRequest.get(CLAUDE_USAGE_URL).pipe(
+            HttpClientRequest.bearerToken(token),
+            HttpClientRequest.setHeader("anthropic-beta", "oauth-2025-04-20")
+          ),
+          identity,
+          claudeUsageOutcome
+        ),
+      codex: () =>
+        fetchText(
+          HttpClientRequest.get(CODEX_USAGE_URL).pipe(
+            HttpClientRequest.bearerToken(token),
+            HttpClientRequest.setHeader("user-agent", "codex-cli"),
+            HttpClientRequest.setHeaders(
+              O.match(O.fromNullishOr(login.account_id), {
+                onNone: () => ({}),
+                onSome: (accountId) => ({ "chatgpt-account-id": accountId }),
+              })
+            )
+          ),
+          identity,
+          codexUsageOutcome
+        ),
+      // Meta's CLI reads its usage from the key endpoint, which answers with
+      // the key the proxy already holds; the call changes nothing.
+      muse: () =>
+        O.match(O.fromNullishOr(login.dca_token), {
+          onNone: () =>
+            Effect.succeed(
+              AccountUsageOutcome.cases.NeedsLogin.make({ detail: "the proxy's Muse login carries no device token" })
+            ),
+          onSome: (deviceToken) =>
+            fetchText(
+              HttpClientRequest.post(MUSE_KEY_URL).pipe(
+                HttpClientRequest.bearerToken(Redacted.value(deviceToken)),
+                HttpClientRequest.setHeader("user-agent", "muse-code/1.0.2"),
+                HttpClientRequest.acceptJson,
+                HttpClientRequest.bodyJsonUnsafe({ dca_token: Redacted.value(deviceToken) })
+              ),
+              identity,
+              museUsageOutcome
+            ),
+        }),
+      grok: () =>
+        Effect.flatMap(
+          client.execute(
+            HttpClientRequest.post(GROK_BILLING_URL).pipe(
+              HttpClientRequest.bearerToken(token),
+              HttpClientRequest.setHeader("x-grpc-web", "1"),
+              HttpClientRequest.bodyUint8Array(GROK_EMPTY_REQUEST, "application/grpc-web+proto")
+            )
+          ),
+          (response) =>
+            Effect.map(response.arrayBuffer, (buffer) =>
+              grokUsageOutcome({ identity, status: response.status, body: new Uint8Array(buffer) })
+            )
+        ),
+    });
+  };
+
   const accountAt = Effect.fnUntraced(function* (source: string) {
     const login = yield* readLogin(source);
     return O.flatMap(login, (file) =>
-      isProvider(file.type) && file.disabled !== true
-        ? O.some(AccountRef.make({ provider: file.type, label: file.email, source }))
-        : O.none()
+      file.disabled === true
+        ? O.none()
+        : O.map(providerOfLoginType(file.type), (provider) => AccountRef.make({ provider, label: file.email, source }))
     );
   });
 
@@ -290,12 +471,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
         outcome: AccountUsageOutcome.cases.NeedsLogin.make({ detail: "the proxy holds no readable login for it" }),
       });
     }
-    const outcome = yield* client.execute(usageRequest(account.provider, login.value)).pipe(
-      Effect.flatMap((response) =>
-        Effect.map(response.text, (body) =>
-          toOutcome(account.provider)({ identity: O.some(login.value.email), status: response.status, body })
-        )
-      ),
+    const outcome = yield* fetchOutcome(account.provider, login.value).pipe(
       Effect.timeoutOption(REQUEST_TIMEOUT),
       Effect.map(O.getOrElse(() => failed(`no answer within ${Duration.format(REQUEST_TIMEOUT)}`))),
       Effect.catchTag("HttpClientError", (error) => Effect.succeed(failed(error.message)))
@@ -341,5 +517,7 @@ export const layerAccountsUsageLive = Layer.effect(AccountsUsage, makeAccountsUs
  */
 export const pollAccounts = Effect.gen(function* () {
   const usage = yield* AccountsUsage;
-  return yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY });
+  return dedupeAccountUsages(
+    yield* Effect.forEach(yield* usage.accounts, usage.poll, { concurrency: POLL_CONCURRENCY })
+  );
 }).pipe(Effect.withSpan("AccountsUsage.pollAll"));
