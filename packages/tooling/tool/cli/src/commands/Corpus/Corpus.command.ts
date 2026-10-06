@@ -111,7 +111,9 @@ const maxFilesFlag = Flag.Int("max-files").pipe(
 /** @since 0.0.0 */
 const extractOverwriteFlag = Flag.Boolean("overwrite").pipe(
   Flag.withDefault(false),
-  Flag.withDescription("Replace an existing staging/extract output tree")
+  Flag.withDescription(
+    "Discard an existing output tree and redo every source; without it a run resumes and extracts only unfinished sources"
+  )
 );
 /** @since 0.0.0 */
 const sampleStrideFlag = Flag.Int("sample-stride").pipe(
@@ -354,7 +356,9 @@ const corpusExtractCommand = Command.make(
     ).pipe(Effect.asVoid);
   })
 ).pipe(
-  Command.withDescription("Run libpff and Tika extraction over salvaged raw/ files into staging/extract"),
+  Command.withDescription(
+    "Run libpff and Tika extraction over salvaged raw/ files into staging/extract, resuming an interrupted run"
+  ),
   Command.provide(CorpusCommandServiceLive)
 );
 

@@ -47,6 +47,7 @@ import {
   DateTime,
   Effect,
   FileSystem,
+  HashSet,
   Layer,
   Match,
   MutableHashMap,
@@ -57,7 +58,7 @@ import {
   Result,
 } from "effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -80,6 +81,8 @@ import {
   CorpusDuplicateSetRecord,
   CorpusEnrichmentRecord,
   CorpusEnrichSummary,
+  CorpusExtractOutcomeRecord,
+  CorpusExtractOutcomeRecordJson,
   CorpusExtractSummary,
   CorpusOrganizeRecord,
   CorpusOrganizeSummary,
@@ -966,29 +969,66 @@ const appendCorpusJsonLines = Effect.fn("CorpusCommandService.appendCorpusJsonLi
   );
 });
 
+// An existing output tree is resumed, never refused: `overwrite` is the only
+// path that discards it. The staging directory holds half-written artifacts of
+// a killed run, so it is emptied on every start.
 const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOutputDir")(function* (
   outDir: string,
   childrenRoot: string,
+  stagingDir: string,
   overwrite: boolean
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const outDirExists = yield* fs
-    .exists(outDir)
-    .pipe(CorpusCommandError.mapError(`Failed checking extract output directory "${outDir}".`));
-  if (outDirExists && !overwrite) {
-    return yield* CorpusCommandError.make({
-      message: `Extract output "${outDir}" already exists; pass --overwrite to replace it.`,
-    });
-  }
-  if (outDirExists) {
+  if (overwrite) {
     yield* fs
-      .remove(outDir, { recursive: true })
+      .remove(outDir, { force: true, recursive: true })
       .pipe(CorpusCommandError.mapError(`Failed removing previous extract output "${outDir}".`));
   }
   yield* fs
     .makeDirectory(childrenRoot, { recursive: true })
     .pipe(CorpusCommandError.mapError(`Failed creating extract output "${childrenRoot}".`));
+  yield* fs
+    .remove(stagingDir, { force: true, recursive: true })
+    .pipe(
+      Effect.andThen(fs.makeDirectory(stagingDir, { recursive: true })),
+      CorpusCommandError.mapError(`Failed resetting extract staging directory "${stagingDir}".`)
+    );
 });
+
+// Stage-then-rename writer for extract artifacts: the content is written and
+// synced under the run's staging directory, then renamed into place, so a
+// killed process leaves either the whole artifact or none.
+const makeExtractArtifactWriter = Effect.fn("CorpusCommandService.makeExtractArtifactWriter")(function* (
+  stagingDir: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sequenceRef = yield* Ref.make(0);
+  return Effect.fn("CorpusCommandService.writeExtractArtifact")(function* (
+    outputPath: string,
+    content: string
+  ): Effect.fn.Return<void, CorpusCommandError> {
+    const sequence = yield* Ref.getAndUpdate(sequenceRef, (value) => value + 1);
+    const stagingPath = path.join(stagingDir, `${sequence}-${path.basename(outputPath)}`);
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true });
+        const file = yield* fs.open(stagingPath, { flag: "w" });
+        yield* file.writeAll(jsonlTextEncoder.encode(content));
+        yield* file.sync;
+      })
+    ).pipe(
+      Effect.andThen(fs.rename(stagingPath, outputPath)),
+      CorpusCommandError.mapError(`Failed writing corpus output "${outputPath}".`)
+    );
+  });
+});
+
+// `artifact:` plus a 64-character SHA-256 hex digest: every libpff export
+// tree, claim, and child manifest of one source starts with this prefix.
+const extractArtifactIdLength = 73;
+
+const isSettledExtractOutcome = (outcome: CorpusExtractOutcome): boolean => outcome.sourceRecord.status !== "failed";
 
 const dedupeBySha256 = <A extends { readonly sha256: string }>(
   records: ReadonlyArray<A>
@@ -1055,9 +1095,12 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const outLabel = yield* extractOutputLabel(options.outLabel);
   const outDir = path.join(options.corpusRoot, "staging", outLabel);
   const childrenRoot = path.join(outDir, "children");
+  const outcomesDir = path.join(outDir, "outcomes");
+  const stagingDir = path.join(outDir, ".staging");
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? 4));
 
-  yield* prepareExtractOutputDir(outDir, childrenRoot, options.overwrite);
+  yield* prepareExtractOutputDir(outDir, childrenRoot, stagingDir, options.overwrite);
+  const writeExtractArtifact = yield* makeExtractArtifactWriter(stagingDir);
 
   const manifests = yield* discoverCatalogManifests(rawRoot);
   const recordBatches = yield* Effect.forEach(manifests, (manifest) =>
@@ -1088,15 +1131,17 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   );
   const engines: ReadonlyArray<FileProcessingEngineShape> = [libpffEngine, tikaEngine];
 
-  const completedRef = yield* Ref.make(0);
-  const total = A.length(selected);
-
-  const processOneSource = Effect.fn("CorpusCommandService.processOneSource")(function* (
+  const deriveSourceIds = Effect.fn("CorpusCommandService.deriveExtractSourceIds")(function* (
     record: CorpusProvenanceRecord
   ): Effect.fn.Return<
-    CorpusExtractOutcome,
+    {
+      readonly artifactId: ArtifactId;
+      readonly digest: ContentDigest;
+      readonly operationId: OperationId;
+      readonly relativePath: PosixPath;
+    },
     CorpusCommandError,
-    Crypto.Crypto | FileProcessingService | FileSystem.FileSystem | Path.Path
+    Crypto.Crypto
   > {
     const sanitizedRelative = `${record.sourceLabel}/${record.relativePath}`.replaceAll("\\", "/");
     const artifactId = yield* decodeArtifactId(`artifact:${record.sha256}`).pipe(
@@ -1109,7 +1154,97 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
     const fallbackRelative = yield* decodePosixPath(sanitizedRelative).pipe(
       CorpusCommandError.mapError("Sanitized relative path failed decoding.")
     );
-    const ids = { artifactId, digest, operationId, relativePath: fallbackRelative };
+    return { artifactId, digest, operationId, relativePath: fallbackRelative };
+  });
+
+  // The artifact id decoded above proves `sha256` is bare lowercase hex, so it
+  // is a safe single path segment.
+  const outcomeMarkerPath = (sha256: string): string => path.join(outcomesDir, `${sha256}.json`);
+
+  // A source counts as already extracted only on disk evidence: a marker that
+  // decodes, names this exact source and the same `exportChildren` choice,
+  // records a settled outcome, and whose artifacts are all still present.
+  // Anything else (no marker, a marker from different inputs, a missing
+  // artifact) is redone from scratch.
+  const readCompletedOutcome = Effect.fn("CorpusCommandService.readCompletedExtractOutcome")(function* (
+    record: CorpusProvenanceRecord
+  ): Effect.fn.Return<O.Option<CorpusExtractOutcome>, CorpusCommandError, Crypto.Crypto> {
+    const ids = yield* deriveSourceIds(record);
+    const markerText = yield* fs.readFileString(outcomeMarkerPath(record.sha256)).pipe(Effect.option);
+    const marker = pipe(
+      markerText,
+      O.flatMap(CorpusExtractOutcomeRecordJson.decodeOption),
+      O.filter(
+        (candidate) =>
+          candidate.sha256 === record.sha256 &&
+          candidate.exportChildren === options.exportChildren &&
+          candidate.sourceRecord.operationId === ids.operationId &&
+          candidate.sourceRecord.relativePath === ids.relativePath &&
+          isSettledExtractOutcome(candidate)
+      )
+    );
+    if (O.isNone(marker)) {
+      return O.none();
+    }
+    const { sourceRecord, strategy } = marker.value;
+    const expectedTextPath = `text/${ids.operationId}.txt`;
+    const recordedTextPath = sourceRecord.status === "succeeded" ? O.fromUndefinedOr(sourceRecord.textPath) : O.none();
+    if (O.exists(recordedTextPath, (textPath) => textPath !== expectedTextPath)) {
+      return O.none();
+    }
+    const evidencePaths = A.getSomes([
+      O.as(recordedTextPath, path.join(outDir, expectedTextPath)),
+      strategy.operationKind === "extract"
+        ? O.some(path.join(outDir, "metadata", `${ids.operationId}.json`))
+        : O.none(),
+      strategy.operationKind === "export-archive"
+        ? O.some(path.join(childrenRoot, ids.artifactId, "artifacts.jsonl"))
+        : O.none(),
+    ]);
+    const evidencePresent = yield* Effect.forEach(evidencePaths, (evidencePath) =>
+      fs.exists(evidencePath).pipe(Effect.orElseSucceed(() => false))
+    );
+    return A.every(evidencePresent, (present) => present) ? O.some(marker.value) : O.none();
+  });
+
+  const resumeStates = yield* Effect.forEach(selected, readCompletedOutcome, { concurrency: 16 });
+  const sourceStates = A.zip(selected, resumeStates);
+  const pendingRecords = A.map(
+    A.filter(sourceStates, ([, completed]) => O.isNone(completed)),
+    ([record]) => record
+  );
+  const alreadyCompleteCount = A.length(selected) - A.length(pendingRecords);
+  yield* Console.log(
+    `corpus extract: ${alreadyCompleteCount} sources already complete, ${A.length(pendingRecords)} to extract`
+  );
+
+  // A redone source must start clean: libpff refuses an export whose tree or
+  // claim already exists, so every child entry of a pending source is removed.
+  const pendingArtifactIds = HashSet.fromIterable(A.map(pendingRecords, (record) => `artifact:${record.sha256}`));
+  const childEntries = yield* fs
+    .readDirectory(childrenRoot)
+    .pipe(CorpusCommandError.mapError(`Failed reading extract children "${childrenRoot}".`));
+  yield* Effect.forEach(
+    A.filter(childEntries, (name) => HashSet.has(pendingArtifactIds, Str.slice(0, extractArtifactIdLength)(name))),
+    (name) =>
+      fs
+        .remove(path.join(childrenRoot, name), { force: true, recursive: true })
+        .pipe(CorpusCommandError.mapError(`Failed removing partial extract children "${name}".`)),
+    { concurrency: 8, discard: true }
+  );
+
+  const completedRef = yield* Ref.make(0);
+  const total = A.length(pendingRecords);
+
+  const processOneSource = Effect.fn("CorpusCommandService.processOneSource")(function* (
+    record: CorpusProvenanceRecord
+  ): Effect.fn.Return<
+    CorpusExtractOutcome,
+    CorpusCommandError,
+    Crypto.Crypto | FileProcessingService | FileSystem.FileSystem | Path.Path
+  > {
+    const ids = yield* deriveSourceIds(record);
+    const { artifactId, digest, operationId } = ids;
 
     // Fail closed before extraction: the manifest is untrusted, so the source
     // file must canonicalize to a real path inside <corpusRoot>/raw rather than
@@ -1174,7 +1309,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                     ChildArtifactRecord.make({ child, sourceArtifactId: archive.sourceArtifactId })
                   ).pipe(CorpusCommandError.mapError("Child artifact record failed JSONL encoding."))
                 );
-                yield* writeCorpusStringFile(
+                yield* writeExtractArtifact(
                   path.join(outDir, "children", archive.sourceArtifactId, "artifacts.jsonl"),
                   jsonlContent(childLines)
                 );
@@ -1206,12 +1341,12 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
                 const textRelative =
                   extracted.extraction.text === undefined ? O.none() : O.some(`text/${ids.operationId}.txt`);
                 if (O.isSome(textRelative) && extracted.extraction.text !== undefined) {
-                  yield* writeCorpusStringFile(path.join(outDir, textRelative.value), extracted.extraction.text);
+                  yield* writeExtractArtifact(path.join(outDir, textRelative.value), extracted.extraction.text);
                 }
                 const metadataJson = yield* encodeMetadataRecordJson(extracted.extraction.metadata).pipe(
                   CorpusCommandError.mapError("Extraction metadata failed JSON encoding.")
                 );
-                yield* writeCorpusStringFile(
+                yield* writeExtractArtifact(
                   path.join(outDir, "metadata", `${ids.operationId}.json`),
                   `${metadataJson}\n`
                 );
@@ -1285,6 +1420,25 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
       })
     );
 
+    // The marker is the last write for a source and the only thing a resumed
+    // run trusts. Failed sources get none, so they are retried.
+    if (isSettledExtractOutcome(outcome)) {
+      const sha256 = yield* decodeSha256Hex(record.sha256).pipe(
+        CorpusCommandError.mapError("Provenance sha256 failed digest decoding.")
+      );
+      const markerJson = yield* CorpusExtractOutcomeRecordJson.encode(
+        CorpusExtractOutcomeRecord.make({
+          childArtifactCount: S.Natural.make(outcome.childArtifactCount),
+          exportChildren: options.exportChildren,
+          failure: outcome.failure,
+          sha256,
+          sourceRecord: outcome.sourceRecord,
+          strategy: outcome.strategy,
+        })
+      ).pipe(CorpusCommandError.mapError("Extract outcome marker failed JSON encoding."));
+      yield* writeExtractArtifact(outcomeMarkerPath(record.sha256), `${markerJson}\n`);
+    }
+
     const completed = yield* Ref.updateAndGet(completedRef, (value) => value + 1);
     if (completed % 250 === 0 || completed === total) {
       yield* Console.log(`corpus extract: ${completed}/${total} sources processed`);
@@ -1296,9 +1450,15 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const outcomes = yield* Effect.scoped(
     Layer.build(fileProcessingLayer).pipe(
       Effect.flatMap((context) =>
-        Effect.forEach(selected, (record) => processOneSource(record).pipe(Effect.provide(context)), {
-          concurrency,
-        })
+        Effect.forEach(
+          sourceStates,
+          ([record, completed]) =>
+            O.match(completed, {
+              onNone: () => processOneSource(record).pipe(Effect.provide(context)),
+              onSome: Effect.succeed,
+            }),
+          { concurrency }
+        )
       )
     )
   );
@@ -1340,14 +1500,18 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
     )
   );
 
-  yield* writeCorpusStringFile(path.join(outDir, "run.json"), `${runJson}\n`);
-  yield* writeCorpusStringFile(path.join(outDir, "coverage.json"), `${coverageJson}\n`);
-  yield* writeCorpusStringFile(path.join(outDir, "sources.jsonl"), jsonlContent(sourceLines));
-  yield* writeCorpusStringFile(path.join(outDir, "failures.jsonl"), jsonlContent(failureLines));
+  yield* writeExtractArtifact(path.join(outDir, "run.json"), `${runJson}\n`);
+  yield* writeExtractArtifact(path.join(outDir, "coverage.json"), `${coverageJson}\n`);
+  yield* writeExtractArtifact(path.join(outDir, "sources.jsonl"), jsonlContent(sourceLines));
+  yield* writeExtractArtifact(path.join(outDir, "failures.jsonl"), jsonlContent(failureLines));
 
+  // Failed sources never carry a marker, so every failure belongs to this run
+  // and the three counts partition the selected sources.
   const summary = CorpusExtractSummary.make({
+    alreadyCompleteCount: S.Natural.make(alreadyCompleteCount),
     childArtifactCount: S.Natural.make(childArtifactCount),
     duplicatesSkipped: S.Natural.make(duplicatesSkipped),
+    extractedCount: S.Natural.make(A.length(pendingRecords) - coverage.failedCount),
     failedCount: coverage.failedCount,
     skippedCount: coverage.skippedCount,
     sourceCount: coverage.sourceCount,
@@ -1357,10 +1521,10 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const summaryJson = yield* encodeCorpusExtractSummaryJson(summary).pipe(
     CorpusCommandError.mapError("Extract summary failed JSON encoding.")
   );
-  yield* writeCorpusStringFile(path.join(outDir, "extract-summary.json"), `${summaryJson}\n`);
+  yield* writeExtractArtifact(path.join(outDir, "extract-summary.json"), `${summaryJson}\n`);
 
   yield* Console.log(
-    `corpus extract: sources=${summary.sourceCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
+    `corpus extract: sources=${summary.sourceCount} alreadyComplete=${summary.alreadyCompleteCount} extracted=${summary.extractedCount} succeeded=${summary.succeededCount} skipped=${summary.skippedCount} failed=${summary.failedCount} textArtifacts=${summary.textArtifactCount} children=${summary.childArtifactCount}`
   );
   yield* Console.log(`corpus extract: output "${outDir}"`);
 

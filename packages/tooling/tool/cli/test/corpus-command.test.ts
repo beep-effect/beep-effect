@@ -49,7 +49,7 @@ import { NodeServices } from "@effect/platform-node";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
-import { Context, Effect, FileSystem, Layer, Match, Path, Result, Stream } from "effect";
+import { Context, Effect, FileSystem, Layer, Match, Order, Path, pipe, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -1183,6 +1183,21 @@ printf '%s' '[{"Content-Type":"text/plain","X-TIKA:content":"\\n  stub text body
 exit 0
 `;
 
+// Engine stubs for the resume tests: each invocation appends one line to a call
+// log, so a test can prove which sources a run actually sent to an engine. The
+// java stub fails any source whose bytes carry the `extract-must-fail` marker.
+const countingPffexportStub = (callLog: string): string =>
+  Str.replace("#!/usr/bin/env bash\n", `#!/usr/bin/env bash\nprintf 'pffexport\\n' >> "${callLog}"\n`)(stubPffexport);
+
+const countingJavaStub = (callLog: string): string => `#!/usr/bin/env bash
+printf 'java\\n' >> "${callLog}"
+for arg in "$@"; do
+  if [ -f "$arg" ] && grep -q "extract-must-fail" "$arg"; then exit 3; fi
+done
+printf '%s' '[{"Content-Type":"text/plain","X-TIKA:content":"\\n  stub text body\\n"}]'
+exit 0
+`;
+
 const writeStub = Effect.fn("CorpusTest.writeStub")(function* (script: string, stubPath: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(stubPath, script);
@@ -1226,6 +1241,82 @@ const readProvenanceLines = Effect.fn("CorpusTest.readProvenanceLines")(function
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(manifestPath);
   return A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+});
+
+const contentDigest = (content: string): string => bytesToHex(sha256(utf8ToBytes(content)));
+
+const summaryCountKeys = [
+  "alreadyCompleteCount",
+  "extractedCount",
+  "failedCount",
+  "skippedCount",
+  "sourceCount",
+  "succeededCount",
+] as const;
+
+// Synthetic corpus for the extract resume tests: every source is a small file
+// under raw/source-a whose manifest digest is the real digest of its content.
+// A source with `present: false` is listed in the manifest but missing on
+// disk, which aborts a run at that source the way a killed process would.
+const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture")(function* (
+  sources: ReadonlyArray<{ readonly content: string; readonly name: string; readonly present?: boolean }>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-extract-resume-test-" });
+  const rawDir = path.join(corpusRoot, "raw", "source-a");
+  const outDir = path.join(corpusRoot, "staging", "extract");
+  const callLog = path.join(corpusRoot, "engine-calls.log");
+  const pffexportPath = path.join(corpusRoot, "pffexport-stub");
+  const javaPath = path.join(corpusRoot, "java-stub");
+  const manifestPath = path.join(corpusRoot, "raw", "provenance.jsonl");
+  yield* fs.makeDirectory(rawDir, { recursive: true });
+  yield* writeStub(countingPffexportStub(callLog), pffexportPath);
+  yield* writeStub(countingJavaStub(callLog), javaPath);
+
+  yield* Effect.forEach(
+    A.filter(sources, (source) => source.present !== false),
+    (source) => fs.writeFileString(path.join(rawDir, source.name), source.content),
+    { discard: true }
+  );
+  const manifestLines = yield* Effect.forEach(sources, (source) =>
+    encodeProvenanceLine(
+      provenanceRecord({
+        destPath: path.join(rawDir, source.name),
+        originPath: `/origin/source-a/${source.name}`,
+        relativePath: source.name,
+        sha256: contentDigest(source.content),
+        sizeBytes: utf8ToBytes(source.content).byteLength,
+        sourceLabel: "source-a",
+      })
+    )
+  );
+  yield* fs.writeFileString(manifestPath, `${A.join(manifestLines, "\n")}\n`);
+
+  const engineCalls = Effect.fn("CorpusTest.engineCalls")(function* (engine: "java" | "pffexport") {
+    const text = yield* fs.readFileString(callLog).pipe(Effect.orElseSucceed(() => ""));
+    return A.length(A.filter(Str.split(text, "\n"), (line) => line === engine));
+  });
+
+  return {
+    engineCalls,
+    markerPath: (content: string) => path.join(outDir, "outcomes", `${contentDigest(content)}.json`),
+    outDir,
+    rawDir,
+    run: (overrides: { readonly exportChildren?: boolean; readonly overwrite?: boolean } = {}) =>
+      extractCorpus(
+        CorpusExtractOptions.make({
+          concurrency: 1,
+          corpusRoot,
+          exportChildren: overrides.exportChildren ?? true,
+          includeDuplicates: false,
+          javaPath,
+          overwrite: overrides.overwrite ?? false,
+          pffexportPath,
+          tikaJarPath: manifestPath,
+        })
+      ),
+  };
 });
 
 const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(function* (manifestPath: string) {
@@ -1462,6 +1553,199 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus extract and salvage", (it
       expect(salvage.matched).toBe(3);
       expect(salvage.mismatched).toBe(0);
       expect(salvage.missing).toBe(0);
+    })
+  );
+
+  it.effect(
+    "resumes an interrupted run and extracts only the remaining sources",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "beta body", name: "beta.txt" },
+        { content: "gamma body", name: "gamma.txt", present: false },
+        { content: "delta body", name: "delta.txt" },
+      ]);
+
+      // The third source is unreadable, so the run dies after two sources.
+      const interrupted = yield* fixture.run().pipe(Effect.flip);
+      const callsAfterInterrupt = yield* fixture.engineCalls("java");
+      const markersAfterInterrupt = yield* fs.readDirectory(path.join(fixture.outDir, "outcomes"));
+      const summaryAfterInterrupt = yield* fs.exists(path.join(fixture.outDir, "extract-summary.json"));
+
+      yield* fs.writeFileString(path.join(fixture.rawDir, "gamma.txt"), "gamma body");
+      const resumed = yield* fixture.run();
+      const callsAfterResume = yield* fixture.engineCalls("java");
+      const sourceLines = yield* readProvenanceLines(path.join(fixture.outDir, "sources.jsonl"));
+      const stagingEntries = yield* fs.readDirectory(path.join(fixture.outDir, ".staging"));
+
+      const settled = yield* fixture.run();
+      const callsAfterSettled = yield* fixture.engineCalls("java");
+
+      expect(interrupted.message).toContain("gamma.txt");
+      expect(callsAfterInterrupt).toBe(2);
+      expect(A.sort(markersAfterInterrupt, Order.String)).toEqual(
+        A.sort([`${contentDigest("alpha body")}.json`, `${contentDigest("beta body")}.json`], Order.String)
+      );
+      expect(summaryAfterInterrupt).toBe(false);
+
+      expect(resumed.sourceCount).toBe(4);
+      expect(resumed.alreadyCompleteCount).toBe(2);
+      expect(resumed.extractedCount).toBe(2);
+      expect(resumed.failedCount).toBe(0);
+      expect(resumed.succeededCount).toBe(4);
+      expect(resumed.textArtifactCount).toBe(4);
+      expect(callsAfterResume).toBe(4);
+      expect(A.length(sourceLines)).toBe(4);
+      expect(stagingEntries).toEqual([]);
+
+      expect(settled.alreadyCompleteCount).toBe(4);
+      expect(settled.extractedCount).toBe(0);
+      expect(settled.succeededCount).toBe(4);
+      expect(callsAfterSettled).toBe(4);
+    })
+  );
+
+  it.effect(
+    "redoes sources whose marker or artifacts are partial and never trusts them",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "beta body", name: "beta.txt" },
+        { content: "gamma body", name: "gamma.txt" },
+        { content: "delta body", name: "delta.txt" },
+        { content: "not a real pst", name: "mailbox.pst" },
+      ]);
+      const first = yield* fixture.run();
+      // The driver may invoke the binary more than once per export, so the
+      // redo is asserted as one more export's worth of calls.
+      const pffexportCallsPerExport = yield* fixture.engineCalls("pffexport");
+      const textDir = path.join(fixture.outDir, "text");
+      const textFiles = yield* fs.readDirectory(textDir);
+      const alphaMarker = yield* fs.readFileString(fixture.markerPath("alpha body"));
+      const betaMarker = yield* fs.readFileString(fixture.markerPath("beta body"));
+      const alphaTextName = yield* Effect.fromOption(
+        A.findFirst(textFiles, (name) => pipe(alphaMarker, Str.includes(name)))
+      );
+      const pstArtifactId = `artifact:${contentDigest("not a real pst")}`;
+      const claimPath = path.join(fixture.outDir, "children", `${pstArtifactId}.claim`);
+
+      // alpha: marker intact, text artifact gone. beta: marker cut mid-record,
+      // as a non-atomic write would leave it. gamma: text present, no marker.
+      // mailbox: no marker, plus the export tree and claim of a killed export.
+      yield* fs.remove(path.join(textDir, alphaTextName));
+      yield* fs.writeFileString(fixture.markerPath("beta body"), Str.slice(0, 40)(betaMarker));
+      yield* fs.remove(fixture.markerPath("gamma body"));
+      yield* fs.remove(fixture.markerPath("not a real pst"));
+      yield* fs.makeDirectory(claimPath);
+
+      const resumed = yield* fixture.run();
+      const alphaTextRestored = yield* fs.exists(path.join(textDir, alphaTextName));
+      const betaMarkerAfter = yield* fs.readFileString(fixture.markerPath("beta body"));
+      const claimLeft = yield* fs.exists(claimPath);
+      const childrenText = yield* fs.readFileString(
+        path.join(fixture.outDir, "children", pstArtifactId, "artifacts.jsonl")
+      );
+      const javaCalls = yield* fixture.engineCalls("java");
+      const pffexportCalls = yield* fixture.engineCalls("pffexport");
+
+      expect(first.alreadyCompleteCount).toBe(0);
+      expect(first.extractedCount).toBe(5);
+      expect(first.succeededCount).toBe(5);
+
+      expect(resumed.sourceCount).toBe(5);
+      expect(resumed.alreadyCompleteCount).toBe(1);
+      expect(resumed.extractedCount).toBe(4);
+      expect(resumed.failedCount).toBe(0);
+      expect(resumed.succeededCount).toBe(5);
+      expect(resumed.childArtifactCount).toBe(first.childArtifactCount);
+      expect(javaCalls).toBe(7);
+      expect(pffexportCallsPerExport).toBeGreaterThan(0);
+      expect(pffexportCalls).toBe(2 * pffexportCallsPerExport);
+      expect(alphaTextRestored).toBe(true);
+      expect(betaMarkerAfter).toBe(betaMarker);
+      expect(claimLeft).toBe(false);
+      expect(childrenText).toContain("Attachments/report.pdf");
+    })
+  );
+
+  it.effect(
+    "redoes every source when overwrite is set or the export choice changes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "beta body", name: "beta.txt" },
+        { content: "gamma body", name: "gamma.txt" },
+      ]);
+      yield* fixture.run();
+      const leftover = path.join(fixture.outDir, "leftover.txt");
+      yield* fs.writeFileString(leftover, "from the previous run");
+
+      const forced = yield* fixture.run({ overwrite: true });
+      const leftoverKept = yield* fs.exists(leftover);
+      const callsAfterForce = yield* fixture.engineCalls("java");
+
+      // Markers record the export choice they were produced under.
+      const otherInputs = yield* fixture.run({ exportChildren: false });
+      const callsAfterOtherInputs = yield* fixture.engineCalls("java");
+
+      expect(forced.alreadyCompleteCount).toBe(0);
+      expect(forced.extractedCount).toBe(3);
+      expect(forced.succeededCount).toBe(3);
+      expect(leftoverKept).toBe(false);
+      expect(callsAfterForce).toBe(6);
+
+      expect(otherInputs.alreadyCompleteCount).toBe(0);
+      expect(otherInputs.extractedCount).toBe(3);
+      expect(callsAfterOtherInputs).toBe(9);
+    })
+  );
+
+  it.effect(
+    "retries failed sources on resume and keeps the summary counts a partition",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const fixture = yield* makeExtractResumeFixture([
+        { content: "alpha body", name: "alpha.txt" },
+        { content: "extract-must-fail", name: "broken.txt" },
+        { content: "gamma body", name: "gamma.txt" },
+        { content: "opaque payload", name: "mystery.zzunknown" },
+      ]);
+
+      const first = yield* fixture.run();
+      const brokenMarker = yield* fs.exists(fixture.markerPath("extract-must-fail"));
+      const unsupportedMarker = yield* fs.exists(fixture.markerPath("opaque payload"));
+      const resumed = yield* fixture.run();
+      const javaCalls = yield* fixture.engineCalls("java");
+
+      expect(Struct.pick(first, summaryCountKeys)).toEqual({
+        alreadyCompleteCount: 0,
+        extractedCount: 2,
+        failedCount: 2,
+        skippedCount: 0,
+        sourceCount: 4,
+        succeededCount: 2,
+      });
+      expect(brokenMarker).toBe(false);
+      expect(unsupportedMarker).toBe(false);
+
+      // Both failures (engine error and unsupported format) are retried; the
+      // engine is only invoked again for the source it can attempt.
+      expect(Struct.pick(resumed, summaryCountKeys)).toEqual({
+        alreadyCompleteCount: 2,
+        extractedCount: 0,
+        failedCount: 2,
+        skippedCount: 0,
+        sourceCount: 4,
+        succeededCount: 2,
+      });
+      expect(resumed.alreadyCompleteCount + resumed.extractedCount + resumed.failedCount).toBe(resumed.sourceCount);
+      expect(javaCalls).toBe(4);
     })
   );
 });
