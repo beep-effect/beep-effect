@@ -129,8 +129,8 @@
     "stage": "writer"
   },
   "publisher": {
-    "agent": null,
-    "pr": null,
+    "agent": "cursor-cloud-agent",
+    "pr": 1497,
     "branch": "research/2026-10-06"
   },
   "written_at": "2026-10-06T08:45:00-05:00"
