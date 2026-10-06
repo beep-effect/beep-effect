@@ -30239,17 +30239,17 @@
       "status": "open"
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-scripted-process.test.ts:49:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-scripted-process.test.ts:50:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-scripted-process.test.ts",
-      "line": 49,
-      "endLine": 49,
+      "line": 50,
+      "endLine": 50,
       "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
