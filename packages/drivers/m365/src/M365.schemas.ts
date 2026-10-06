@@ -1,5 +1,5 @@
 /**
- * Schema models for the read-only Microsoft Graph `v1.0` surface decoded by the
+ * Schema models for the Microsoft Graph `v1.0` resources decoded by the
  * driver. Each model decodes a least-privilege subset of the upstream Graph
  * resource (excess properties are ignored). Optional Graph fields decode to
  * `Option` so consumers branch idiomatically; `id` stays required.
@@ -9,6 +9,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -545,6 +546,212 @@ export class GraphListItem extends S.Class<GraphListItem>($I`GraphListItem`)(
 ) {}
 
 /**
+ * A Graph single-value extended property (`id` names the property, `value` is
+ * its string form).
+ *
+ * **Example** (Make extended property)
+ *
+ * ```ts
+ * import { GraphExtendedProperty } from "@beep/m365"
+ *
+ * const property = GraphExtendedProperty.make({ id: "String {guid} Name Key", value: "abc" })
+ * console.log(property.value) // "abc"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphExtendedProperty extends S.Class<GraphExtendedProperty>($I`GraphExtendedProperty`)(
+  {
+    id: S.String.annotateKey({ description: "Property id (`<type> {<guid>} Name <name>`)." }),
+    value: S.String.annotateKey({ description: "Property value in string form." }),
+  },
+  $I.annote("GraphExtendedProperty", { description: "A Graph single-value extended property." })
+) {}
+
+/**
+ * Body content types Graph accepts and returns for message and event bodies.
+ *
+ * **Example** (Guard a content type)
+ *
+ * ```ts
+ * import { GraphBodyContentType } from "@beep/m365"
+ *
+ * console.log(GraphBodyContentType.is.text("text")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraphBodyContentType = LiteralKit(["text", "html"]).pipe(
+  $I.annoteSchema("GraphBodyContentType", { description: "Graph item body content type." })
+);
+
+/**
+ * Type for {@link GraphBodyContentType}.
+ *
+ * **Example** (Type a content type)
+ *
+ * ```ts
+ * import type { GraphBodyContentType } from "@beep/m365"
+ *
+ * const contentType: GraphBodyContentType = "text"
+ * console.log(contentType)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GraphBodyContentType = typeof GraphBodyContentType.Type;
+
+/**
+ * Free/busy states an Outlook event can show.
+ *
+ * **Example** (Guard a show-as value)
+ *
+ * ```ts
+ * import { GraphEventShowAs } from "@beep/m365"
+ *
+ * console.log(GraphEventShowAs.is.tentative("tentative")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraphEventShowAs = LiteralKit(["free", "tentative", "busy", "oof", "workingElsewhere", "unknown"]).pipe(
+  $I.annoteSchema("GraphEventShowAs", { description: "Outlook event free/busy status." })
+);
+
+/**
+ * Type for {@link GraphEventShowAs}.
+ *
+ * **Example** (Type a show-as value)
+ *
+ * ```ts
+ * import type { GraphEventShowAs } from "@beep/m365"
+ *
+ * const showAs: GraphEventShowAs = "tentative"
+ * console.log(showAs)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GraphEventShowAs = typeof GraphEventShowAs.Type;
+
+/**
+ * Preset colors of an Outlook master category.
+ *
+ * **Example** (Guard a category color)
+ *
+ * ```ts
+ * import { GraphCategoryColor } from "@beep/m365"
+ *
+ * console.log(GraphCategoryColor.is.preset0("preset0")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GraphCategoryColor = LiteralKit([
+  "none",
+  "preset0",
+  "preset1",
+  "preset2",
+  "preset3",
+  "preset4",
+  "preset5",
+  "preset6",
+  "preset7",
+  "preset8",
+  "preset9",
+  "preset10",
+  "preset11",
+  "preset12",
+  "preset13",
+  "preset14",
+  "preset15",
+  "preset16",
+  "preset17",
+  "preset18",
+  "preset19",
+  "preset20",
+  "preset21",
+  "preset22",
+  "preset23",
+  "preset24",
+]).pipe($I.annoteSchema("GraphCategoryColor", { description: "Outlook master-category preset color." }));
+
+/**
+ * Type for {@link GraphCategoryColor}.
+ *
+ * **Example** (Type a category color)
+ *
+ * ```ts
+ * import type { GraphCategoryColor } from "@beep/m365"
+ *
+ * const color: GraphCategoryColor = "preset0"
+ * console.log(color)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GraphCategoryColor = typeof GraphCategoryColor.Type;
+
+/**
+ * An Outlook master category (an entry of the mailbox's category list).
+ *
+ * **Example** (Make master category)
+ *
+ * ```ts
+ * import { GraphOutlookCategory } from "@beep/m365"
+ *
+ * const category = GraphOutlookCategory.make({ displayName: "Docket - unverified" })
+ * console.log(category.displayName)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphOutlookCategory extends S.Class<GraphOutlookCategory>($I`GraphOutlookCategory`)(
+  {
+    displayName: S.String.annotateKey({ description: "Category name; unique in the mailbox, case-insensitive." }),
+    color: opt(S.String, "Preset color constant (`none`, `preset0`..`preset24`)."),
+    id: opt(S.String, "Category id."),
+  },
+  $I.annote("GraphOutlookCategory", { description: "An Outlook master category." })
+) {}
+
+/**
+ * Metadata of a message attachment (never its bytes).
+ *
+ * **Example** (Make attachment metadata)
+ *
+ * ```ts
+ * import { GraphAttachment } from "@beep/m365"
+ *
+ * const attachment = GraphAttachment.make({ id: "AAMk" })
+ * console.log(attachment.id) // "AAMk"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphAttachment extends S.Class<GraphAttachment>($I`GraphAttachment`)(
+  {
+    id: S.String.annotateKey({ description: "Attachment id." }),
+    "@odata.type": opt(S.String, "Attachment kind (`#microsoft.graph.fileAttachment`, item or reference)."),
+    contentType: opt(S.String, "Attachment MIME type."),
+    isInline: opt(S.Boolean, "Whether the attachment is rendered inline in the body."),
+    lastModifiedDateTime: opt(S.String, "Last-modified timestamp."),
+    name: opt(S.String, "Attachment file name (never logged)."),
+    size: opt(GraphNonNegativeInt, "Attachment size in bytes."),
+  },
+  $I.annote("GraphAttachment", { description: "Metadata of a message attachment." })
+) {}
+
+/**
  * An Outlook mail message (read subset). Body/preview are decoded but spans
  * never record their content.
  *
@@ -565,7 +772,9 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
     id: S.String.annotateKey({ description: "Message id." }),
     body: opt(GraphItemBody, "Message body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
+    categories: opt(S.Array(S.String), "Outlook category display names applied to the message."),
     ccRecipients: opt(S.Array(GraphRecipient), "Carbon-copy recipients."),
+    changeKey: opt(S.String, "Version tag; changes on every edit (optimistic concurrency)."),
     conversationId: opt(S.String, "Owning conversation id."),
     from: opt(GraphRecipient, "Originating sender."),
     hasAttachments: opt(S.Boolean, "Whether the message has attachments."),
@@ -573,6 +782,7 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
     internetMessageId: opt(S.String, "RFC 2822 internet message id."),
     isDraft: opt(S.Boolean, "Whether the message is a draft."),
     isRead: opt(S.Boolean, "Whether the message has been read."),
+    parentFolderId: opt(S.String, "Id of the mail folder holding the message."),
     receivedDateTime: opt(S.String, "Receipt timestamp."),
     sender: opt(GraphRecipient, "Actual sending mailbox."),
     sentDateTime: opt(S.String, "Sent timestamp."),
@@ -603,17 +813,27 @@ export class GraphEvent extends S.Class<GraphEvent>($I`GraphEvent`)(
     id: S.String.annotateKey({ description: "Event id." }),
     body: opt(GraphItemBody, "Event body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
+    categories: opt(S.Array(S.String), "Outlook category display names applied to the event."),
+    changeKey: opt(S.String, "Version tag; changes on every edit (optimistic concurrency)."),
     end: opt(GraphDateTimeTimeZone, "End date-time."),
+    iCalUId: opt(S.String, "Calendar-wide unique id shared by all instances of the event."),
     importance: opt(S.String, "Importance (low/normal/high)."),
     isAllDay: opt(S.Boolean, "Whether the event spans the whole day."),
     isCancelled: opt(S.Boolean, "Whether the event is cancelled."),
     isOnlineMeeting: opt(S.Boolean, "Whether an online meeting is attached."),
+    isReminderOn: opt(S.Boolean, "Whether a reminder alert is set."),
     location: opt(GraphLocation, "Event location."),
     organizer: opt(GraphRecipient, "Organizing mailbox."),
+    reminderMinutesBeforeStart: opt(GraphNonNegativeInt, "Minutes before the start at which the reminder fires."),
     seriesMasterId: opt(S.String, "Series master id for recurring events."),
     showAs: opt(S.String, "Free/busy status."),
+    singleValueExtendedProperties: opt(
+      S.Array(GraphExtendedProperty),
+      "Single-value extended properties, present only when expanded."
+    ),
     start: opt(GraphDateTimeTimeZone, "Start date-time."),
     subject: opt(S.String, "Event subject."),
+    transactionId: opt(S.String, "Client-supplied id Graph uses to drop a retried create."),
     type: opt(S.String, "Event type (singleInstance/occurrence/exception/seriesMaster)."),
     webLink: opt(S.String, "Browser URL for the event."),
   },
