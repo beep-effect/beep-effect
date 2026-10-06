@@ -81,6 +81,7 @@ export const FakeM365Layer = Layer.effect(
       }),
       getEvent: unused,
       getListItem: unused,
+      getMailFolder: unused,
       getMessage: unused,
       getSite: unused,
       listDriveItemVersions: unused,
