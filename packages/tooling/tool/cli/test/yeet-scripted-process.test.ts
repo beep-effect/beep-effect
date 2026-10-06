@@ -16,6 +16,7 @@ import {
   deriveYeetMergeReady,
   ensurePullRequest,
   findOpenPullRequest,
+  isMergeCommitSubject,
   ProofJobRecord,
   ProofJobRequest,
   ProofJobSubmitter,
@@ -32,6 +33,7 @@ import {
   SweepGitState,
   shouldMonitorChecks,
   TurboPlanSnapshot,
+  titleFromMessage,
   validateCommitMessage,
   validateMonitorBranch,
   validateMonitorGuards,
@@ -40,6 +42,7 @@ import {
   validateRequiredMessage,
   YeetEnsuredPullRequest,
   YeetExecutedStep,
+  YeetPullRequestTitle,
   YeetReadyOptions,
   YeetReadyPullRequestRead,
   YeetRetirePlan,
@@ -94,8 +97,16 @@ const draftCreateStep = planStep("publish:pr-create", ["pr", "create", "--draft"
 const stampStep = planStep("publish:pr-provenance-stamp", ["pr", "edit"]);
 const labelStep = planStep("publish:pr-ready-for-heavy-label", ["pr", "edit"]);
 
-const prView = (overrides: { readonly headRefName?: string; readonly state?: string; readonly url?: string } = {}) =>
-  encodeJson({ number: 7, headRefName: BRANCH, state: "OPEN", ...overrides });
+const prView = (
+  overrides: {
+    readonly headRefName?: string;
+    readonly state?: string;
+    readonly title?: string;
+    readonly url?: string;
+  } = {}
+) => encodeJson({ number: 7, headRefName: BRANCH, state: "OPEN", ...overrides });
+
+const MERGE_TITLE = `Merge remote-tracking branch 'origin/main' into ${BRANCH}`;
 
 const handle = (exitCode: number, output: string) =>
   ChildProcessSpawner.makeHandle({
@@ -514,7 +525,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 0, `${PR_URL}\n`],
               ["gh pr view", 0, prView()],
@@ -550,7 +561,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create --draft", 0, ""],
               ["gh pr view", 0, prView({ url: PR_URL })],
@@ -581,7 +592,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         ).pipe(
           withProcesses(
             [
-              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
               ["git remote get-url --push origin", 0, "git@github.com:fork-owner/beep-effect.git"],
@@ -614,7 +625,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         }).pipe(
           withProcesses(
             [
-              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "GraphQL: API rate limit already exceeded"],
               ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
@@ -640,7 +651,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses(
             [
-              ["log -1", 0, "feat(repo-cli): ship\n"],
+              ["log --no-merges", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "a pull request for this branch already exists"],
             ],
@@ -668,6 +679,241 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr create"))).toBe(false);
       })
     );
+
+    it.effect("titles the pull request from the --message first line, never the head commit", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-title-message-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const pullRequest = yield* ensurePullRequest(
+          contextAt(root),
+          recorder,
+          O.some(draftCreateStep),
+          O.none(),
+          { findOpen: () => Effect.succeedNone },
+          O.some("feat(repo-cli): title from message\n\nA body paragraph the title must not include.")
+        ).pipe(
+          withProcesses(
+            [
+              ["log --reverse", 0, `## ${MERGE_TITLE}\n`],
+              ["gh pr create --draft", 0, `${PR_URL}\n`],
+              ["gh pr view", 0, prView()],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.created).toBe(true);
+        const lines = yield* Ref.get(commands);
+        const create = A.findFirst(lines, Str.startsWith("gh pr create"));
+        assertSome(
+          O.map(create, Str.startsWith("gh pr create --draft --title feat(repo-cli): title from message --body-file ")),
+          true
+        );
+        expect(A.some(lines, Str.includes("--pretty=%s"))).toBe(false);
+      })
+    );
+
+    it.effect("titles the pull request from the first non-merge commit when no message is given", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-title-history-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+        }).pipe(
+          withProcesses(
+            [
+              ["log --no-merges", 0, "feat(repo-cli): first real change\nfix(repo-cli): follow-up\n"],
+              ["log --reverse", 0, `## feat(repo-cli): first real change\n\n## ${MERGE_TITLE}\n`],
+              ["gh pr create", 0, `${PR_URL}\n`],
+              ["gh pr view", 0, prView()],
+            ],
+            commands
+          )
+        );
+        const lines = yield* Ref.get(commands);
+        expect(A.some(lines, Str.includes("git log --no-merges --reverse --pretty=%s HEAD"))).toBe(true);
+        expect(A.some(lines, Str.includes("log -1 --pretty=%s"))).toBe(false);
+        const create = A.findFirst(lines, Str.startsWith("gh pr create"));
+        assertSome(
+          O.map(create, Str.startsWith("gh pr create --title feat(repo-cli): first real change --body-file ")),
+          true
+        );
+      })
+    );
+
+    it.effect("fails with the --message remedy when the branch carries only merge commits", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-title-merges-only-" });
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const error = yield* ensurePullRequest(contextAt(root), recorder, O.some(createStep), O.none(), {
+          findOpen: () => Effect.succeedNone,
+        }).pipe(Effect.flip, withProcesses([["log --no-merges", 0, "\n"]], commands));
+        expect(error.message).toContain("no non-merge commit in HEAD");
+        expect(error.message).toContain('pass --message "<conventional subject>"');
+        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr create"))).toBe(false);
+        expect(yield* Ref.get(recorder)).toEqual([]);
+      })
+    );
+
+    it.effect("renames an existing pull request whose title is a merge-commit subject", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const pullRequest = yield* ensurePullRequest(
+          contextAt("/repo"),
+          recorder,
+          O.some(createStep),
+          O.none(),
+          {},
+          O.some("feat(repo-cli): ship")
+        ).pipe(
+          withProcesses(
+            [
+              ["gh pr view", 0, prView({ url: PR_URL, title: MERGE_TITLE })],
+              ["gh pr edit 7 --title", 0, ""],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.created).toBe(false);
+        expect(yield* Ref.get(commands)).toContain("gh pr edit 7 --title feat(repo-cli): ship");
+        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+          [
+            createStep.id,
+            undefined,
+            0,
+            "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: feat(repo-cli): ship",
+          ],
+        ]);
+      })
+    );
+
+    it.effect("resolves the replacement title from history when the re-publish has no message", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        yield* ensurePullRequest(contextAt("/repo"), recorder, O.some(createStep)).pipe(
+          withProcesses(
+            [
+              ["gh pr view", 0, prView({ title: MERGE_TITLE })],
+              ["log --no-merges", 0, "feat(repo-cli): from history\n"],
+              ["gh pr edit 7 --title", 0, ""],
+            ],
+            commands
+          )
+        );
+        expect(yield* Ref.get(commands)).toContain("gh pr edit 7 --title feat(repo-cli): from history");
+      })
+    );
+
+    it.effect("keeps an existing pull request title that is not a merge-commit subject", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        yield* ensurePullRequest(
+          contextAt("/repo"),
+          recorder,
+          O.some(createStep),
+          O.none(),
+          {},
+          O.some("feat(repo-cli): a newer message")
+        ).pipe(withProcesses([["gh pr view", 0, prView({ title: "feat(repo-cli): merge strategy" })]], commands));
+        expect(A.some(yield* Ref.get(commands), Str.includes("--title"))).toBe(false);
+        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+          [createStep.id, undefined, 0, "skipped: open pull request #7 already exists"],
+        ]);
+      })
+    );
+
+    it.effect("patches the title through REST when the rename hits GraphQL rate limiting", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        yield* ensurePullRequest(contextAt("/repo"), recorder, O.some(createStep), O.none(), {}, O.some("fix: x")).pipe(
+          withProcesses(
+            [
+              ["gh pr view", 0, prView({ title: MERGE_TITLE })],
+              ["gh pr edit 7 --title", 1, "GraphQL: API rate limit exceeded"],
+              ["gh api -X PATCH repos/{owner}/{repo}/pulls/7", 0, "fix: x\n"],
+            ],
+            commands
+          )
+        );
+        expect(yield* Ref.get(commands)).toContain(
+          "gh api -X PATCH repos/{owner}/{repo}/pulls/7 -f title=fix: x --jq .title"
+        );
+        expect(laneRows(yield* Ref.get(recorder))).toEqual([
+          [
+            createStep.id,
+            undefined,
+            0,
+            "skipped: open pull request #7 already exists; replaced the merge-commit subject on pull request #7 with: fix: x",
+          ],
+        ]);
+      })
+    );
+
+    it.effect("reports a refused rename without failing the publish", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const recorder = yield* makeRecorder;
+        const pullRequest = yield* ensurePullRequest(
+          contextAt("/repo"),
+          recorder,
+          O.some(createStep),
+          O.none(),
+          {},
+          O.some("fix: x")
+        ).pipe(
+          withProcesses(
+            [
+              ["gh pr view", 0, prView({ title: MERGE_TITLE })],
+              ["gh pr edit 7 --title", 1, "HTTP 403: Resource not accessible"],
+            ],
+            commands
+          )
+        );
+        expect(pullRequest.number).toBe(7);
+        const rows = laneRows(yield* Ref.get(recorder));
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.[3]).toContain("could not replace the merge-commit subject on pull request #7");
+        expect(rows[0]?.[3]).toContain('gh pr edit 7 --title "fix: x"');
+      })
+    );
+  });
+
+  describe("pull request title helpers", () => {
+    it.each([
+      ["Merge branch 'main' into feat/x", true],
+      ["Merge branches 'a' and 'b' into main", true],
+      [MERGE_TITLE, true],
+      ["Merge pull request #12 from o/branch", true],
+      ["Merge commit 'abc123' into main", true],
+      ["Merge tag 'v1.2.0' into main", true],
+      ["feat(repo-cli): merge strategy", false],
+      ["Merged the queue", false],
+      ["chore: Merge branch tooling", false],
+    ])("isMergeCommitSubject(%j) is %s", (subject, expected) => {
+      expect(isMergeCommitSubject(subject)).toBe(expected);
+    });
+
+    it("takes the first non-empty trimmed line of a message", () => {
+      assertSome(titleFromMessage("  feat(repo-cli): ship  \n\nbody"), "feat(repo-cli): ship");
+      assertSome(titleFromMessage("\n\nfix: late subject\n"), "fix: late subject");
+      assertNone(titleFromMessage(" \n \n"));
+    });
+
+    it("decodes a title as one trimmed non-empty line", () => {
+      const decode = S.decodeUnknownOption(YeetPullRequestTitle);
+      assertSome(decode("  feat(repo-cli): ship  "), "feat(repo-cli): ship");
+      assertNone(decode("   "));
+      assertNone(decode("feat: a\nfix: b"));
+    });
   });
 
   describe("applyHeavyAdmissionLabel", () => {

@@ -642,16 +642,21 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
   }
 });
 
+// The `--message` first line titles the pull request (and so its squash-merge
+// commit); without one the branch's first non-merge commit subject does.
 const ensureRequestedPullRequest = Effect.fn("Yeet.ensureRequestedPullRequest")(function* (
   context: RepoRunContext,
   steps: ReadonlyArray<RepoPlanStep>,
-  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  message: O.Option<string> = O.none()
 ) {
   return yield* ensurePullRequest(
     context,
     recorder,
     A.findFirst(steps, (step) => step.id === "publish:02-pr-create"),
-    A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp")
+    A.findFirst(steps, (step) => step.id === "publish:03-pr-provenance-stamp"),
+    {},
+    message
   );
 });
 
@@ -991,7 +996,8 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
   const pullRequest = yield* (dependencies.ensurePullRequest ?? ensureRequestedPullRequest)(
     plan.context,
     plan.steps,
-    recorder
+    recorder,
+    yield* validateRequiredMessage(options)
   );
   yield* applyHeavyAdmissionLabel(
     plan.context,

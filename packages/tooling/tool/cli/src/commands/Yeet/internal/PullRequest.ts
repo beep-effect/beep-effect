@@ -24,6 +24,12 @@ import {
   ProvenanceStampOutcome,
   recordCurrentPrSession,
 } from "./ProvenanceFooter.ts";
+import {
+  isMergeCommitSubject,
+  resolvePullRequestTitle,
+  YeetPullRequestTitleSync,
+  YeetPullRequestTitleSyncStatus,
+} from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
@@ -35,8 +41,8 @@ import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
 
-const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url"] as const;
-const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url";
+const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url,title"] as const;
+const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url,title";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 const decodeGhPullRequestList = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhPrView)));
 const isGraphQlRateLimitOutput = (output: string) => /GraphQL: API rate limit (already )?exceeded/.test(output);
@@ -75,7 +81,7 @@ const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestViaRest")(
       "api",
       endpoint,
       "--jq",
-      "map({number, headRefName: .head.ref, state: (.state | ascii_upcase), url: .html_url, headRefOid: .head.sha, isDraft: .draft})",
+      "map({number, headRefName: .head.ref, state: (.state | ascii_upcase), url: .html_url, headRefOid: .head.sha, isDraft: .draft, title})",
     ],
     cwd: context.repoRoot,
     label: `gh api ${endpoint}`,
@@ -220,6 +226,19 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
   );
 });
 
+// The branch's own commits: `<merge-base>..HEAD`, or all of `HEAD` when the
+// base cannot be resolved. Shared by the PR body and the PR title so both
+// describe the same commits.
+const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<string, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
+    Effect.map(Str.trim),
+    Effect.orElseSucceed(() => "")
+  );
+  return Str.isNonEmpty(mergeBase) ? `${mergeBase}..HEAD` : "HEAD";
+});
+
 /**
  * Build the PR body from commit log text and recorded local proof lanes.
  *
@@ -262,11 +281,7 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
-    Effect.map(Str.trim),
-    Effect.orElseSucceed(() => "")
-  );
-  const range = Str.isNonEmpty(mergeBase) ? `${mergeBase}..HEAD` : "HEAD";
+  const range = yield* branchCommitRange(context);
   const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
   const executed = yield* Ref.get(recorder);
   const laneSummary = pipe(
@@ -536,11 +551,15 @@ const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(func
 });
 
 // Run `gh pr create` (draft when the planned step says so) and return the
-// created pull request with the URL `gh` printed.
+// created pull request with the URL `gh` printed. The title comes from the
+// `--message` first line, else the first non-merge commit subject: the head
+// commit may be a merge commit publish did not create, and the squash-merge
+// subject is taken from this title.
 const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   context: RepoRunContext,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
+  message: O.Option<string>,
   capture: typeof runRepoCommandCapture,
   view: NonNullable<EnsurePullRequestDependencies["view"]>
 ): Effect.fn.Return<
@@ -548,7 +567,9 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   YeetCommandError,
   Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const title = yield* runGitOutput(context.repoRoot, ["log", "-1", "--pretty=%s"]).pipe(Effect.map(Str.trim));
+  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
+  const title = resolved.title;
+  yield* Console.log(`[yeet] --pr: title from ${resolved.source}: ${title}`);
   const bodyPath = yield* runOutputPathForContext(context, "pr-body.md");
   yield* writeTextFile(bodyPath, yield* buildPrBody(context, recorder));
   const draft = O.exists(prStep, (step) => A.contains(step.args, "--draft"));
@@ -570,8 +591,131 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   return yield* finishCreatedPullRequest(context, recorder, prStep, view, Str.trim(result.output), draft, false);
 });
 
+// Replace an existing pull request's title through `gh pr edit`, falling back
+// to the REST PATCH when GraphQL is rate limited. A non-zero exit is reported,
+// never fatal: the branch is already pushed and the owner can rename by hand.
+const editPullRequestTitle = Effect.fn("Yeet.editPullRequestTitle")(function* (
+  context: RepoRunContext,
+  number: number,
+  title: string,
+  capture: typeof runRepoCommandCapture
+): Effect.fn.Return<
+  YeetPullRequestTitleSync,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const edited = yield* capture("gh", ["pr", "edit", `${number}`, "--title", title], context.repoRoot).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to run gh pr edit --title."))
+  );
+  const updated = YeetPullRequestTitleSync.make({
+    status: "updated",
+    message: `replaced the merge-commit subject on pull request #${number} with: ${title}`,
+  });
+  if (edited.exitCode === 0) return updated;
+  if (!isGraphQlRateLimitOutput(edited.output)) {
+    return YeetPullRequestTitleSync.make({
+      status: "failed",
+      message: `could not replace the merge-commit subject on pull request #${number}; run: gh pr edit ${number} --title "${title}"\n${edited.output}`,
+    });
+  }
+  const patched = yield* capture(
+    "gh",
+    ["api", "-X", "PATCH", `repos/{owner}/{repo}/pulls/${number}`, "-f", `title=${title}`, "--jq", ".title"],
+    context.repoRoot
+  ).pipe(Effect.mapError(YeetCommandError.new("Failed to patch the pull request title through GitHub REST.")));
+  return patched.exitCode === 0
+    ? updated
+    : YeetPullRequestTitleSync.make({
+        status: "failed",
+        message: `could not replace the merge-commit subject on pull request #${number} through REST; run: gh pr edit ${number} --title "${title}"\n${patched.output}`,
+      });
+});
+
+// A re-publish keeps the pull request title it finds unless that title is a
+// merge-commit subject left by an earlier publish; then it resolves the title
+// the create path would have used and renames the pull request. Title
+// resolution failures degrade to a reported `failed` sync.
+const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitle")(function* (
+  context: RepoRunContext,
+  existing: GhPrView,
+  message: O.Option<string>,
+  capture: typeof runRepoCommandCapture
+): Effect.fn.Return<
+  YeetPullRequestTitleSync,
+  YeetCommandError,
+  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const current = O.fromUndefinedOr(existing.title);
+  if (!O.exists(current, isMergeCommitSubject)) {
+    return YeetPullRequestTitleSync.make({
+      status: "kept",
+      message: `pull request #${existing.number} keeps its title`,
+    });
+  }
+  const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context)).pipe(
+    Effect.asSome,
+    Effect.catchTag("YeetCommandError", (error) =>
+      Effect.as(Console.error(`[yeet] warning: ${error.message}`), O.none())
+    )
+  );
+  if (O.isNone(resolved)) {
+    return YeetPullRequestTitleSync.make({
+      status: "failed",
+      message: `pull request #${existing.number} still carries a merge-commit subject; pass --message to rename it`,
+    });
+  }
+  if (O.contains(current, resolved.value.title)) {
+    return YeetPullRequestTitleSync.make({
+      status: "kept",
+      message: `pull request #${existing.number} keeps its title`,
+    });
+  }
+  return yield* editPullRequestTitle(context, existing.number, resolved.value.title, capture);
+});
+
+// Reuse the open pull request a re-publish found: record the skipped create
+// lane, and rename the pull request when its title is a merge-commit subject.
+const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  prStep: O.Option<RepoPlanStep>,
+  existing: GhPrView,
+  message: O.Option<string>,
+  capture: typeof runRepoCommandCapture
+): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  yield* Console.log(
+    `[yeet] --pr: open pull request #${existing.number} already exists for ${context.branch}; skipping create`
+  );
+  const sync = yield* syncExistingPullRequestTitle(context, existing, message, capture);
+  yield* YeetPullRequestTitleSyncStatus.$match(sync.status, {
+    kept: () => Effect.void,
+    updated: () => Console.log(`[yeet] --pr: ${sync.message}`),
+    failed: () => Console.error(`[yeet] warning: ${sync.message}`),
+  });
+  const skipped = `skipped: open pull request #${existing.number} already exists`;
+  yield* recordPrCreateLane(
+    recorder,
+    prStep,
+    YeetPullRequestTitleSyncStatus.is.kept(sync.status) ? skipped : `${skipped}; ${sync.message}`
+  );
+  return YeetEnsuredPullRequest.make({
+    number: existing.number,
+    url: O.fromUndefinedOr(existing.url),
+    created: false,
+  });
+});
+
 /**
  * Create a pull request for publish when one does not already exist.
+ *
+ * **Details**
+ *
+ * The title is the `--message` first line when publish was given one, else the
+ * branch's first non-merge commit subject, never the head commit's subject: a
+ * re-publish whose head is a merge commit would otherwise title the pull
+ * request, and its squash-merge commit, after the merge. An existing open
+ * pull request keeps its title unless it still equals a merge-commit subject,
+ * in which case this call renames it the same way.
  *
  * **Example** (Ensure PR when missing)
  *
@@ -604,6 +748,7 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
  * @param prStep - Optional planned PR creation lane for recorder metadata.
  * @param stampStep - Optional planned provenance-stamp lane for recorder metadata.
  * @param dependencies - Injectable GitHub runners and registry for deterministic tests.
+ * @param message - The publish `--message`, whose first line titles the pull request.
  * @returns The open pull request the branch now has, and whether this call
  * created it. A create step whose args carry `--draft` opens a draft.
  * @category workflows
@@ -614,7 +759,8 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
   prStep: O.Option<RepoPlanStep>,
   stampStep: O.Option<RepoPlanStep> = O.none(),
-  dependencies: EnsurePullRequestDependencies = {}
+  dependencies: EnsurePullRequestDependencies = {},
+  message: O.Option<string> = O.none()
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
@@ -623,20 +769,8 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
   const pullRequest = O.isSome(existing)
-    ? yield* Effect.as(
-        Effect.andThen(
-          Console.log(
-            `[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}; skipping create`
-          ),
-          recordPrCreateLane(recorder, prStep, `skipped: open pull request #${existing.value.number} already exists`)
-        ),
-        YeetEnsuredPullRequest.make({
-          number: existing.value.number,
-          url: O.fromUndefinedOr(existing.value.url),
-          created: false,
-        })
-      )
-    : yield* createPullRequest(context, recorder, prStep, capture, dependencies.view ?? runGhPullRequestView);
+    ? yield* reuseExistingPullRequest(context, recorder, prStep, existing.value, message, capture)
+    : yield* createPullRequest(context, recorder, prStep, message, capture, dependencies.view ?? runGhPullRequestView);
   // A failed provenance stamp must not stop the heavy-admission label or the
   // readiness monitor that follow: the pull request already exists on the
   // remote, so record the failure and carry on.
