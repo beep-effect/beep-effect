@@ -16,13 +16,13 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
 import { PrRepository } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/Register.schemas");
@@ -225,11 +225,6 @@ export const RegisterReportJson = JsonStringCodec(RegisterReport);
 // A unit is identified by what it is and where it is reached; the NUL byte keeps the two apart.
 const registerUnitKey = (unit: RegisterRow): string => `${unit.kind}\u0000${unit.address}`;
 
-const newestFirst = Order.mapInput(Order.Number, (row: RegisterRow) => -DateTime.toEpochMillis(row.recordedAt));
-
-const notBefore = (left: DateTime.DateTime, right: DateTime.DateTime): boolean =>
-  DateTime.toEpochMillis(left) >= DateTime.toEpochMillis(right);
-
 /**
  * Reduce append-only rows to the current register: newest row per unit,
  * retired units dropped, newest first.
@@ -247,22 +242,12 @@ const notBefore = (left: DateTime.DateTime, right: DateTime.DateTime): boolean =
  * @category models
  * @since 0.0.0
  */
-export const currentRegisterRows = (rows: ReadonlyArray<RegisterRow>): ReadonlyArray<RegisterRow> => {
-  const newest = MutableHashMap.empty<string, RegisterRow>();
-  for (const row of rows) {
-    const key = registerUnitKey(row);
-    const current = MutableHashMap.get(newest, key);
-    if (O.isNone(current) || notBefore(row.recordedAt, current.value.recordedAt)) {
-      MutableHashMap.set(newest, key, row);
-    }
-  }
-  return newest.pipe(
-    MutableHashMap.values,
-    A.fromIterable,
-    A.filter((row) => !RegisterUnitState.is.retired(row.state)),
-    A.sort(newestFirst)
+export const currentRegisterRows = (rows: ReadonlyArray<RegisterRow>): ReadonlyArray<RegisterRow> =>
+  pipe(
+    rows,
+    newestPerKey<RegisterRow>({ key: registerUnitKey, at: (row) => row.recordedAt }),
+    A.filter((row) => !RegisterUnitState.is.retired(row.state))
   );
-};
 
 /**
  * Units a successor must reach first: those blocked on the orchestrator.
@@ -328,25 +313,28 @@ export const renderRegisterMarkdown = (rows: ReadonlyArray<RegisterRow>): string
 /**
  * Input for one register append before provenance is stamped.
  *
- * @category models
- * @since 0.0.0
- */
-export const RegisterNoteInput = S.Struct({
-  kind: RegisterUnitKind,
-  address: S.NonEmptyString,
-  name: S.Option(S.String),
-  owns: S.Array(S.String),
-  state: RegisterUnitState,
-  waitingOnOrchestrator: S.Option(S.String),
-  lastContact: S.Option(S.DateTimeUtcFromString),
-  orphanPlan: S.NonEmptyString,
-  note: S.Option(S.String),
-}).pipe($I.annoteSchema("RegisterNoteInput", { description: "Register append input before provenance is stamped." }));
-
-/**
- * Register append input before provenance is stamped.
+ * **Example** (Describe an append)
+ *
+ * ```ts
+ * import { RegisterNoteInput } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof RegisterNoteInput.make) // "function"
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type RegisterNoteInput = typeof RegisterNoteInput.Type;
+export class RegisterNoteInput extends S.Class<RegisterNoteInput>($I`RegisterNoteInput`)(
+  {
+    kind: RegisterUnitKind,
+    address: S.NonEmptyString,
+    name: S.Option(S.String),
+    owns: S.Array(S.String),
+    state: RegisterUnitState,
+    waitingOnOrchestrator: S.Option(S.String),
+    lastContact: S.Option(S.DateTimeUtcFromString),
+    orphanPlan: S.NonEmptyString,
+    note: S.Option(S.String),
+  },
+  $I.annote("RegisterNoteInput", { description: "Register append input before provenance is stamped." })
+) {}

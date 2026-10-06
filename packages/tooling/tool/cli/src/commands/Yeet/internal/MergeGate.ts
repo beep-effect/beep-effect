@@ -273,20 +273,15 @@ export type MergeGateDecision = typeof MergeGateDecision.Type;
  * @category models
  * @since 0.0.0
  */
-export const MergeGateOptions = S.Struct({
-  wantSha: S.NonEmptyString,
-  now: S.DateTimeUtcFromString,
-  tolerate: S.Array(MergeGateTolerance),
-  forceWindow: S.Boolean,
-}).pipe($I.annoteSchema("MergeGateOptions", { description: "What the caller asserts when it asks the gate." }));
-
-/**
- * What the caller asserts when it asks the gate.
- *
- * @category models
- * @since 0.0.0
- */
-export type MergeGateOptions = typeof MergeGateOptions.Type;
+export class MergeGateOptions extends S.Class<MergeGateOptions>($I`MergeGateOptions`)(
+  {
+    wantSha: S.NonEmptyString,
+    now: S.DateTimeUtcFromString,
+    tolerate: S.Array(MergeGateTolerance),
+    forceWindow: S.Boolean,
+  },
+  $I.annote("MergeGateOptions", { description: "What the caller asserts when it asks the gate." })
+) {}
 
 /**
  * One gate question: the read and what the caller asserts about it.
@@ -323,6 +318,13 @@ const latestRunPerName = (runs: ReadonlyArray<MergeGateCheckRun>): HashMap.HashM
 const hold = (prNumber: number, reason: MergeGateHoldReason, detail: string): MergeGateHold =>
   MergeGateHold.make({ prNumber, reason, detail });
 
+const holdWhen = (
+  condition: boolean,
+  prNumber: number,
+  reason: MergeGateHoldReason,
+  detail: string
+): O.Option<MergeGateHold> => (condition ? O.some(hold(prNumber, reason, detail)) : O.none());
+
 const names = (runs: ReadonlyArray<MergeGateCheckRun>): string =>
   A.join(
     A.map(runs, (run) => run.name),
@@ -330,6 +332,113 @@ const names = (runs: ReadonlyArray<MergeGateCheckRun>): string =>
   );
 
 const sameHead = (want: string, head: string): boolean => Str.startsWith(want)(head) || want === head;
+
+// Cheap structural refusals, before any check is read.
+const structuralHold = ({ read, options }: MergeGateInput): O.Option<MergeGateHold> =>
+  O.firstSomeOf([
+    holdWhen(
+      !sameHead(options.wantSha, read.headSha),
+      read.prNumber,
+      "head-moved",
+      `head is ${read.headSha.slice(0, 10)}, caller saw ${options.wantSha.slice(0, 10)}`
+    ),
+    holdWhen(read.draft, read.prNumber, "draft", "still draft; the owner flips ready at content-final"),
+    holdWhen(
+      read.mergeableState === "dirty",
+      read.prNumber,
+      "conflicting",
+      "conflicts with the base; owner merges main"
+    ),
+  ]);
+
+const runsHold = (
+  runs: ReadonlyArray<MergeGateCheckRun>,
+  prNumber: number,
+  reason: MergeGateHoldReason,
+  prefix: string
+): O.Option<MergeGateHold> => holdWhen(A.isReadonlyArrayNonEmpty(runs), prNumber, reason, `${prefix}: ${names(runs)}`);
+
+const isPending = (run: MergeGateCheckRun): boolean => run.status !== "completed";
+const isRed = (run: MergeGateCheckRun): boolean => !goodConclusion(run.conclusion);
+
+// Required contexts must be registered, complete and green; every other check
+// must be too unless the caller attributed it with --tolerate.
+const checksHold = (
+  { read, options }: MergeGateInput,
+  latest: HashMap.HashMap<string, MergeGateCheckRun>
+): O.Option<MergeGateHold> =>
+  O.match(read.requiredContexts, {
+    onNone: () =>
+      O.some(
+        hold(read.prNumber, "required-contexts-unknown", "base ruleset unreadable; never evaluate the gate without it")
+      ),
+    onSome: (contexts) => {
+      const required = HashSet.fromIterable(contexts);
+      const tolerated = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
+      const runs = latest.pipe(HashMap.values, A.fromIterable);
+      const requiredRuns = A.filter(runs, (run) => HashSet.has(required, run.name));
+      const optionalRuns = A.filter(
+        runs,
+        (run) => !HashSet.has(required, run.name) && !HashSet.has(tolerated, run.name)
+      );
+      const missing = A.filter(contexts, (context) => !HashMap.has(latest, context));
+      return O.firstSomeOf([
+        holdWhen(
+          A.isReadonlyArrayNonEmpty(missing),
+          read.prNumber,
+          "required-pending",
+          `required context(s) not registered on the head: ${A.join(missing, ", ")}`
+        ),
+        runsHold(A.filter(requiredRuns, isPending), read.prNumber, "required-pending", "required still running"),
+        runsHold(A.filter(requiredRuns, isRed), read.prNumber, "required-red", "required red"),
+        runsHold(
+          A.filter(optionalRuns, isPending),
+          read.prNumber,
+          "pending",
+          'still running, pass --tolerate "<check>=<attribution>" to merge over it'
+        ),
+        runsHold(A.filter(optionalRuns, isRed), read.prNumber, "red", "red, attribute it before tolerating"),
+      ]);
+    },
+  });
+
+// An unknown window always holds; an open one holds unless the caller forced it.
+const windowHold = ({ read, options }: MergeGateInput): O.Option<MergeGateHold> =>
+  O.firstSomeOf([
+    holdWhen(
+      read.window._tag === "unknown",
+      read.prNumber,
+      "review-window-unknown",
+      renderYeetReviewWindow(read.window)
+    ),
+    holdWhen(
+      !options.forceWindow && read.window._tag === "open",
+      read.prNumber,
+      "review-window-open",
+      renderYeetReviewWindow(read.window)
+    ),
+  ]);
+
+const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
+  O.match(read.unresolvedThreads, {
+    onNone: () =>
+      O.some(
+        hold(
+          read.prNumber,
+          "threads-unknown",
+          "review threads unreadable (GraphQL quota?); a missing count is never zero"
+        )
+      ),
+    onSome: (count) => holdWhen(count > 0, read.prNumber, "threads-unresolved", `${count} unresolved thread(s)`),
+  });
+
+const windowAgeSeconds = (window: YeetReviewWindow, now: DateTime.Utc): number =>
+  window._tag === "unknown"
+    ? 0
+    : DateTime.make(window.anchoredAt).pipe(
+        O.map((anchored) => Math.floor((DateTime.toEpochMillis(now) - DateTime.toEpochMillis(anchored)) / 1000)),
+        O.getOrElse(() => 0)
+      );
 
 /**
  * Decide the gate from one read. Pure, so recorded payloads prove every branch.
@@ -377,72 +486,19 @@ const sameHead = (want: string, head: string): boolean => Str.startsWith(want)(h
  */
 export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   const { read, options } = input;
-  const n = read.prNumber;
-  if (!sameHead(options.wantSha, read.headSha)) {
-    return hold(n, "head-moved", `head is ${read.headSha.slice(0, 10)}, caller saw ${options.wantSha.slice(0, 10)}`);
-  }
-  if (read.draft) return hold(n, "draft", "still draft; the owner flips ready at content-final");
-  if (read.mergeableState === "dirty") return hold(n, "conflicting", "conflicts with the base; owner merges main");
-  if (O.isNone(read.requiredContexts)) {
-    return hold(n, "required-contexts-unknown", "base ruleset unreadable; never evaluate the gate without it");
-  }
-  const required = HashSet.fromIterable(read.requiredContexts.value);
   const latest = latestRunPerName(read.checkRuns);
-  const missing = A.filter(read.requiredContexts.value, (context) => !HashMap.has(latest, context));
-  if (A.isReadonlyArrayNonEmpty(missing)) {
-    return hold(n, "required-pending", `required context(s) not registered on the head: ${A.join(missing, ", ")}`);
-  }
-  const runs = latest.pipe(HashMap.values, A.fromIterable);
-  const requiredRuns = A.filter(runs, (run) => HashSet.has(required, run.name));
-  const requiredPending = A.filter(requiredRuns, (run) => run.status !== "completed");
-  if (A.isReadonlyArrayNonEmpty(requiredPending)) {
-    return hold(n, "required-pending", `required still running: ${names(requiredPending)}`);
-  }
-  const requiredRed = A.filter(requiredRuns, (run) => !goodConclusion(run.conclusion));
-  if (A.isReadonlyArrayNonEmpty(requiredRed)) {
-    return hold(n, "required-red", `required red: ${names(requiredRed)}`);
-  }
-  const toleratedNames = HashSet.fromIterable(A.map(options.tolerate, (tolerance) => tolerance.check));
-  const optionalRuns = A.filter(
-    runs,
-    (run) => !HashSet.has(required, run.name) && !HashSet.has(toleratedNames, run.name)
+  return O.firstSomeOf([structuralHold(input), checksHold(input, latest), windowHold(input), threadsHold(read)]).pipe(
+    O.getOrElse(
+      (): MergeGateDecision =>
+        MergeGateMerge.make({
+          prNumber: read.prNumber,
+          headSha: read.headSha,
+          commitTitle: `${read.title} (#${read.prNumber})`,
+          windowAgeSeconds: windowAgeSeconds(read.window, options.now),
+          tolerated: A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check)),
+        })
+    )
   );
-  const optionalPending = A.filter(optionalRuns, (run) => run.status !== "completed");
-  if (A.isReadonlyArrayNonEmpty(optionalPending)) {
-    return hold(
-      n,
-      "pending",
-      `still running, pass --tolerate "<check>=<attribution>" to merge over it: ${names(optionalPending)}`
-    );
-  }
-  const optionalRed = A.filter(optionalRuns, (run) => !goodConclusion(run.conclusion));
-  if (A.isReadonlyArrayNonEmpty(optionalRed)) {
-    return hold(n, "red", `red, attribute it before tolerating: ${names(optionalRed)}`);
-  }
-  if (read.window._tag === "unknown") {
-    return hold(n, "review-window-unknown", renderYeetReviewWindow(read.window));
-  }
-  if (!options.forceWindow && read.window._tag === "open") {
-    return hold(n, "review-window-open", renderYeetReviewWindow(read.window));
-  }
-  const windowAgeSeconds = DateTime.make(read.window.anchoredAt).pipe(
-    O.map((anchored) => Math.floor((DateTime.toEpochMillis(options.now) - DateTime.toEpochMillis(anchored)) / 1000)),
-    O.getOrElse(() => 0)
-  );
-  if (O.isNone(read.unresolvedThreads)) {
-    return hold(n, "threads-unknown", "review threads unreadable (GraphQL quota?); a missing count is never zero");
-  }
-  if (read.unresolvedThreads.value > 0) {
-    return hold(n, "threads-unresolved", `${read.unresolvedThreads.value} unresolved thread(s)`);
-  }
-  const used = A.filter(options.tolerate, (tolerance) => HashMap.has(latest, tolerance.check));
-  return MergeGateMerge.make({
-    prNumber: n,
-    headSha: read.headSha,
-    commitTitle: `${read.title} (#${n})`,
-    windowAgeSeconds,
-    tolerated: used,
-  });
 };
 
 /**
@@ -653,21 +709,16 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
  * @category models
  * @since 0.0.0
  */
-export const MergeGateRunOptions = S.Struct({
-  prNumber: S.Finite,
-  wantSha: S.NonEmptyString,
-  tolerate: S.Array(MergeGateTolerance),
-  forceWindow: S.Boolean,
-  dryRun: S.Boolean,
-}).pipe($I.annoteSchema("MergeGateRunOptions", { description: "One merge-gate invocation." }));
-
-/**
- * One merge-gate invocation.
- *
- * @category models
- * @since 0.0.0
- */
-export type MergeGateRunOptions = typeof MergeGateRunOptions.Type;
+export class MergeGateRunOptions extends S.Class<MergeGateRunOptions>($I`MergeGateRunOptions`)(
+  {
+    prNumber: S.Finite,
+    wantSha: S.NonEmptyString,
+    tolerate: S.Array(MergeGateTolerance),
+    forceWindow: S.Boolean,
+    dryRun: S.Boolean,
+  },
+  $I.annote("MergeGateRunOptions", { description: "One merge-gate invocation." })
+) {}
 
 /**
  * Read, decide, print, and merge unless the gate held or `--dry-run` was passed.

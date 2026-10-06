@@ -8,6 +8,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Runtime } from "effect";
 import * as S from "effect/Schema";
+import type { PlatformError } from "effect";
 
 const $I = $RepoCliId.create("commands/Session/Session.errors");
 
@@ -70,3 +71,27 @@ export class SessionLedgerError extends S.TaggedError<SessionLedgerError>($I`Ses
   /** Process exit code reported when this error reaches the runtime boundary. */
   override readonly [Runtime.errorExitCode] = 1;
 }
+
+/**
+ * Map a filesystem failure on a session state file to the session error,
+ * keeping a permission denial apart from every other I/O failure.
+ *
+ * **Example** (Describe the mapper)
+ *
+ * ```ts
+ * import { sessionStatePlatformError } from "@beep/repo-cli/test/Session"
+ *
+ * console.log(typeof sessionStatePlatformError) // "function"
+ * ```
+ *
+ * @param cause - The platform error raised by the filesystem.
+ * @returns A `denied` error for a permission failure, `io` otherwise.
+ * @category errors
+ * @since 0.0.0
+ */
+export const sessionStatePlatformError = (cause: PlatformError.PlatformError): SessionLedgerError =>
+  SessionLedgerError.make({
+    reason: cause.reason._tag === "PermissionDenied" ? "denied" : "io",
+    message: cause.message,
+    cause,
+  });

@@ -7,14 +7,12 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
+import { newestPerKey } from "../../internal/state/JsonLinesStore.ts";
 import { PrNumber, PrProvenanceHarness, PrRepository } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/Session.schemas");
@@ -189,12 +187,6 @@ export class SessionOpenReport extends S.Class<SessionOpenReport>($I`SessionOpen
  */
 export const SessionOpenReportJson = JsonStringCodec(SessionOpenReport);
 
-// Newest first: negate the epoch so the installed Order module's plain
-// Number order sorts descending without a reverse combinator.
-const newestFirst = Order.mapInput(Order.Number, (row: SessionLedgerRow) => -DateTime.toEpochMillis(row.recordedAt));
-const notBefore = (left: DateTime.DateTime, right: DateTime.DateTime): boolean =>
-  DateTime.toEpochMillis(left) >= DateTime.toEpochMillis(right);
-
 /**
  * Collapse a ledger into its live rows: the newest row per checkout, minus
  * the ones whose newest row is `done`, newest first.
@@ -212,21 +204,12 @@ const notBefore = (left: DateTime.DateTime, right: DateTime.DateTime): boolean =
  * @category utilities
  * @since 0.0.0
  */
-export const openSessionRows = (rows: ReadonlyArray<SessionLedgerRow>): ReadonlyArray<SessionLedgerRow> => {
-  const newest = MutableHashMap.empty<string, SessionLedgerRow>();
-  for (const row of rows) {
-    const current = MutableHashMap.get(newest, row.checkout);
-    if (O.isNone(current) || notBefore(row.recordedAt, current.value.recordedAt)) {
-      MutableHashMap.set(newest, row.checkout, row);
-    }
-  }
-  return newest.pipe(
-    MutableHashMap.values,
-    A.fromIterable,
-    A.filter((row) => !SessionLedgerState.is.done(row.state)),
-    A.sort(newestFirst)
+export const openSessionRows = (rows: ReadonlyArray<SessionLedgerRow>): ReadonlyArray<SessionLedgerRow> =>
+  pipe(
+    rows,
+    newestPerKey<SessionLedgerRow>({ key: (row) => row.checkout, at: (row) => row.recordedAt }),
+    A.filter((row) => !SessionLedgerState.is.done(row.state))
   );
-};
 
 /**
  * The session currently holding the orchestrator role, if any live row claims it.

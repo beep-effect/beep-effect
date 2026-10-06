@@ -15,21 +15,15 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Console, Context, DateTime, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { Context, DateTime, Effect, flow, Layer, Ref } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import {
-  emptyWhenNotFound,
-  repositoryJsonLinesFileName,
-  resolveWorkstationStateDir,
-} from "../../internal/state/WorkstationState.ts";
+import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
+import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrRepository } from "../Yeet/internal/Provenance.ts";
 import { RegisterRow, RegisterRowJson } from "./Register.schemas.ts";
-import { SessionLedgerError } from "./Session.errors.ts";
+import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
 import { sessionCheckoutFacts, sessionHarness } from "./SessionLedger.service.ts";
-import type { PlatformError } from "effect";
 import type { RegisterNoteInput } from "./Register.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Session/Register.service");
@@ -96,26 +90,8 @@ export class DecodedRegister extends S.Class<DecodedRegister>($I`DecodedRegister
  * @category codecs
  * @since 0.0.0
  */
-export const decodeRegister = (content: string): DecodedRegister => {
-  let rows = A.empty<RegisterRow>();
-  let corruptLineCount = 0;
-  for (const line of A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty)) {
-    const decoded = RegisterRowJson.decodeOption(line);
-    if (O.isSome(decoded)) {
-      rows = A.append(rows, decoded.value);
-    } else {
-      corruptLineCount += 1;
-    }
-  }
-  return DecodedRegister.make({ rows, corruptLineCount });
-};
-
-const mapPlatformError = (cause: PlatformError.PlatformError): SessionLedgerError =>
-  SessionLedgerError.make({
-    reason: cause.reason._tag === "PermissionDenied" ? "denied" : "io",
-    message: cause.message,
-    cause,
-  });
+export const decodeRegister = (content: string): DecodedRegister =>
+  DecodedRegister.make(partitionJsonLines(RegisterRowJson.decodeOption)(content));
 
 /**
  * The register file name for a repository.
@@ -132,42 +108,21 @@ export const registerFileName: (repository: PrRepository) => string = repository
  * @since 0.0.0
  */
 export const makeOrchestratorRegisterLive = Effect.fn("OrchestratorRegister.makeLive")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const directory = yield* resolveWorkstationStateDir({
-    override: "BEEP_ORCHESTRATOR_STATE_ROOT",
-    store: "orchestrator",
-  });
-  const fileFor = (repository: PrRepository): string => path.join(directory, registerFileName(repository));
-  return OrchestratorRegister.of({
-    append: Effect.fn("OrchestratorRegister.append")((row) =>
-      RegisterRowJson.encode(row).pipe(
-        Effect.mapError((cause) =>
-          SessionLedgerError.make({ reason: "decode", message: "Failed to encode the register row.", cause })
-        ),
-        Effect.flatMap((encoded) =>
-          fs
-            .makeDirectory(directory, { recursive: true, mode: 0o700 })
-            .pipe(
-              Effect.andThen(fs.writeFileString(fileFor(row.repository), `${encoded}\n`, { flag: "a", mode: 0o600 })),
-              Effect.mapError(mapPlatformError)
-            )
-        )
+  const store = yield* makeJsonLinesStore({
+    directory: yield* resolveWorkstationStateDir({ override: "BEEP_ORCHESTRATOR_STATE_ROOT", store: "orchestrator" }),
+    fileName: registerFileName,
+    partitionOf: (row: RegisterRow) => row.repository,
+    encode: flow(
+      RegisterRowJson.encode,
+      Effect.mapError((cause) =>
+        SessionLedgerError.make({ reason: "decode", message: "Failed to encode the register row.", cause })
       )
     ),
-    list: Effect.fn("OrchestratorRegister.list")((repository) =>
-      fs.readFileString(fileFor(repository)).pipe(
-        Effect.map(decodeRegister),
-        Effect.tap((result) =>
-          result.corruptLineCount > 0
-            ? Console.warn(`[session] skipped ${result.corruptLineCount} corrupt register line(s)`)
-            : Effect.void
-        ),
-        Effect.map((result) => result.rows),
-        emptyWhenNotFound(mapPlatformError)
-      )
-    ),
+    decodeOption: RegisterRowJson.decodeOption,
+    onPlatformError: sessionStatePlatformError,
+    label: { scope: "session", noun: "register" },
   });
+  return OrchestratorRegister.of(store);
 });
 
 /**
