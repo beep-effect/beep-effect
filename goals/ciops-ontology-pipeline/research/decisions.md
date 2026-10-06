@@ -1377,3 +1377,41 @@ P4 hand-off (Ruling 17):
 - Tier derivation for change-event rows: rows carry no structured tier member in this phase; deriving one
   for W8 is P4 work (Ruling 10), with #1427 partitioning the local series only and the hosted population
   shift named as a confounder at that instant.
+
+## 2026-10-06 — P3 close: the lab's CQ-009 lift (orchestrator under the autonomy charter)
+
+The last P3 PR, after the run PR (#1490, `077cb283d9`) merged, under launch-sitting Ruling 15. It
+lifts the lab's CQ-009 reading, applies the review follow-up from #1490, and flips P3.
+
+**Ruling 33 — CQ-009 in the live replay is a typed verdict; P2 Ruling 9's CQ-009 sentence is
+superseded.** P2 Ruling 9 printed CQ-009 as "temporally out of scope: 0 of 689 pinned rows precede #929",
+never a pass or a failure. `apps/labs/ciops` now reports a `Cq009Verdict` over the replayed active grant
+set (the replay's own fold, window and skip rule). The same-checkout arm is evaluated: on the
+`run4-fleet` pin it holds with 0 pairs across 200 grants, every one with a checkout joined from its
+chain. The legacy-origin-drain arm is reported as unobservable, never green: the deployed journal writer
+has no coordination-protocol field (only scheduler ticket and lease state carry it, with a decoding
+default of `legacy-origin-lock/v1`), so no journal row can answer it. Its census: 148 of 200 grants carry a
+non-empty origin key, 0 of 689 rows carry a protocol, and 99 concurrently active grant pairs share a
+non-empty origin key, reported as a journal fact and not as the arm's answer. The censorship line gives
+the retained window, the 3 pre-v3 chains, the 4 ledger-censored verdicts, 44 withdrawn and 1
+ticket-evicted request rows, 1 grant active at the first edge and none at the last. Design call: the
+pinned query scopes the same-checkout arm to grants that record the current protocol, but the journal
+records none, so applying the scope literally would make the lab's arm vacuously green; the lab keeps
+pairs with no recorded protocol in scope and exempts only a pair in which a grant records
+`legacy-origin-lock/v1` by value, as drain-window state. That errs toward a false violation, never a
+false green. Reversal: a later entry and a lab follow-up.
+
+**Ruling 34 — CQ-009's same-checkout arm is scoped to current-protocol grants.** The #1490 review
+showed the pinned arm flags legal drain-window state: the pre-#929 release admits a review-fix lease
+with an empty origin key beside a full-proof lease in one checkout, and the must-be-zero query returned
+2 rows on it. The same-checkout UNION branch now requires `hasCoordinationProtocol
+"scheduler-origin-concurrency/v1"` on both grants, and a `rows_eq_0` fixture
+(`cq009-drain-window-checkout.ttl`) guards the legacy case; the harness carries 23 fixtures, superseding
+call (n)'s count of 22. `regen_cq_artifacts.py` was a no-op before the edit and afterwards changed only
+`tests/cq-009.sparql`. The CQ suite digest moves from `e1ed9c0f65f5` to `3eed0c3f73de`; the run-4
+archive, its ratifications and its docket keep `e1ed9c0f65f5`, which is the suite run 4 was pinned to.
+The next run pins the new digest. Reversal: revert the query and the fixture.
+
+**Ruling 35 — P3 is complete.** Its exit criterion (gate passed and sittings scribed) was met by run 4,
+and the CQ-009 lift that PLAN ties to W7 lands here. P3 is marked complete in PLAN, README and the
+manifest; P4 (the KPI reading and verdict) starts next, from the P4 hand-off in the run-4 closing entry.
