@@ -102,26 +102,77 @@ by watching which PCI device's `mem_info_vram_used` moves, never by index.
 ## Proven on the cards
 
 <!-- GPU-RESULTS -->
-Run on 2026-10-06 after the extraction finished, on the non-display card
-only, guard script green before each step.
+Runs of 2026-10-06 after the extraction finished, non-display card only,
+launched through the heavy-work queue, no root, no sysfs writes.
 
 | Step | Result |
 | --- | --- |
 | PyTorch enumeration (no device pin) | `torch.cuda.is_available()` true, 2 devices, each 31.9 GiB |
-| 2048x2048 half-precision matmul, `HIP_VISIBLE_DEVICES=1` | ok in 0.2 s, 116 MiB allocated; the free card's VRAM counter moved, the display card's did not |
-| `llama-server` (HIP build) with a vision GGUF and its projector | loads in 1.0 s, serves `/v1/chat/completions` with an image; 58 pages read, no errors |
-| PyTorch + `transformers` vision model | not run |
+| 2048x2048 half-precision matmul, `HIP_VISIBLE_DEVICES=1` | ok in 0.2 s, 116 MiB; the free card's VRAM counter moved, the display card's did not |
+| `llama-server` (HIP build), 0.9B vision GGUF + projector | loads in 1.0 s; pages read across six runs with no request errors |
+| `llama-server` (HIP build), 3B vision GGUF + projector | loads in 1.5 s; 42 s per page; killed on temperature |
+| PyTorch + `transformers`, 0.9B vision model | loads in 6 s; generates at 3.6 tokens per second |
 
-So both paths work on one card: ROCm PyTorch sees and can use the cards, and
-the HIP llama.cpp build serves a vision model.
+Both paths work on one card. No run produced a new kernel `amdgpu` or
+`AMD-Vi` error, and the thermal watchdog never fired.
 
-**Heat is the open problem.** A 0.9B OCR model reading one page every four
-seconds drove the junction temperature from 50 C to a peak of 94 C; 17 of 58
-samples were at or above 90 C. The fan peaked at 2,339 rpm against a reported
-maximum of 5,100 rpm. Limits on this card: thermal watchdog 100 C, driver
-critical 110 C, driver emergency 115 C. Nothing tripped and the kernel logged
-no new GPU errors, but the run crossed the 90 C stop line set for this work,
-and GPU work was stopped there. A fan curve or a power cap (the cap reads
-300 W) has to be in place before any run longer than a few pages. Both need
-root and are the operator's to set.
+### Temperature
+
+Operator decision relayed by the orchestrator session on 2026-10-06: run at
+stock settings (no power cap, no fan change), with a kill line at 98 C
+junction or 100 C memory enforced by a 1 Hz background sampler. This replaced
+the earlier 90 C between-page check, which had let a run reach 94 C.
+
+History of this card under sustained load, from the workstation's own notes
+(not measured here):
+
+| Date | Load | Junction | Memory | Fan | Source |
+| --- | --- | --- | --- | --- | --- |
+| 2026-08-30 | image model, about 10 min | 96 C | 92 C | 65% | `~/ai/docs/howto/comfy/comfyui-rdna4.md` |
+| 2026-09-27 | video jobs, 12 min each | 97 C on every run | 92 C | not recorded | `~/ai/docs/research/env-room-2026-09-27/l2-motion.md` |
+| 2026-09-29 to 09-30 | sustained | 299 watchdog trips at 100 to 103 C | n/a | n/a | watchdog journal, per `~/ai/docs/reference/gpu-fan-investigation-2026-10-06.md` |
+
+That investigation concluded the fan is under firmware control and working
+as designed: it responds to load, stops well short of its reported 5,100 rpm
+maximum, and the card settles at 96 to 97 C at 300 W. Driver limits are 110 C
+critical and 115 C emergency (memory 108 / 113 C). The watchdog forces a low
+performance level at 100 C. The standing guidance in
+`~/ai/docs/howto/workstation/runtime-ops.md` is to keep long GPU jobs
+attended.
+
+Traces from this packet's runs (1 Hz, GLM-OCR unless noted):
+
+| Run | Seconds | Junction peak / median | Seconds at >= 90 C / >= 95 C | Memory peak | Edge peak | Fan peak / median | Power peak / mean | Ended |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 90 s trial, continuous | 93 | 95 / 82 C | 23 / 3 | 82 C | 64 C | 3,021 / 2,109 rpm | 302 / 257 W | time budget |
+| 58 pages, continuous | 141 | 98 / 90 C | 74 / 44 | 86 C | 67 C | 3,231 / 2,837 rpm | 301 / 259 W | killed at 98 C |
+| 200 pages, junction gate only | 73 | 98 / 88 C | 34 / 25 | 86 C | 67 C | 3,010 / 2,780 rpm | 301 / 241 W | killed at 98 C |
+| 200 pages, junction and edge gate | 2,136 | 96 / 62 C | 430 / 276 | 84 C | 65 C | 2,145 / 1,357 rpm | 304 / 108 W | complete |
+| dots.ocr, 2 pages | 63 | 98 / 95 C | 50 / 35 | 84 C | 64 C | 3,587 / 3,321 rpm | 301 / 267 W | killed at 98 C |
+| PaddleOCR-VL, 1 page, stopped by hand | 412 | 91 / 87 C | 5 / 0 | 91 C | 71 C | 3,049 / 2,400 rpm | 320 / 237 W (median) | stopped by hand |
+
+What the traces show:
+
+- **An OCR model saturates the card.** A 0.9B model draws the full 300 W while
+  a page is being read. Continuous reading is the same thermal load as the
+  video jobs above and lands on the same 95 to 98 C plateau.
+- **The plateau is reached in under a minute**: 89 C within 15 s of the first
+  page, 94 to 97 C from 45 s on. It does not run away; it flattens. A 98 C
+  line sits inside the plateau's own noise, so a continuous run trips it
+  within a few minutes every time.
+- **The junction sensor is the wrong thing to gate on.** It drops below 80 C
+  within a second of idle. The edge sensor follows the heatsink (47 C cold,
+  64 to 67 C at the plateau) and is the one a duty cycle has to watch.
+- **The fan follows the slow signal.** It rose to about 3,000 rpm over two
+  minutes of continuous load and fell back to its idle 1,230 rpm during
+  duty-cycle pauses, which is why the pauses are long.
+- **Memory temperature climbs slowly and keeps climbing**: 91 C after seven
+  minutes at about 237 W in the PyTorch run, with the junction at 88 C. On a
+  long continuous run the memory line could be the one that trips.
+
+**Is a sustained pass safe at stock settings?** Under the 98 C line, only with
+a duty cycle: the gated 35-minute run stayed at or under 96 C with no kill
+and no errors, at a cost of 64% idle time. A continuous pass is not possible
+under that line. Whether the line should move to 100 C, or the card be
+capped at 210 W, is with the operator; neither was changed here.
 <!-- /GPU-RESULTS -->

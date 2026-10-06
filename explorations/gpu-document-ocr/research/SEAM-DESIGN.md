@@ -241,10 +241,25 @@ Three refinements from the measurements and from the October run:
   output does not mark it. In the page-level contract this is
   `recognition-failed` for that page, recorded in `pages.jsonl`.
 
+Two more, from the 200-page low-text comparison:
+
+- **Order of work.** The page rasterizer and the Tesseract driver come before
+  any GPU driver. Rendering the page first and calling Tesseract per page
+  read all 60 sampled crash-window pages and 28 of 30 sampled timeout pages.
+  The GPU driver is the second engine behind the same contract.
+- **Language is a routing input.** A page in another script reads as low
+  confidence under the English model. `PageOcrRequest.languages` is already
+  in the schema; the selector should set it from script detection before it
+  concludes a page is degraded.
+
 Acceptance of a re-read is a separate rule, not part of the selector: a new
 page text replaces the first reading only when it carries no
 `output-truncated` or `repetition-suspected` warning and is not shorter than
-the first reading by more than a set ratio. The ratio is an open question for
+the first reading by more than a set ratio. The measured engine omitted a
+header line on one hand-checked page and returned 28% fewer characters than
+Tesseract across a class of text-heavy pages, so "not shorter" is a required
+check, and a vision reading is stored beside the first reading, never over
+it. The ratio is an open question for
 the align stage; the benchmark gives the first numbers.
 
 ## 7. Open questions

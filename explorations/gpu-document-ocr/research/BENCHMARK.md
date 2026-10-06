@@ -6,8 +6,10 @@ sample ids to documents stay in a private folder outside this repo.
 ## Status
 
 - CPU half: done. Tika, Tesseract-through-Tika and Tesseract directly.
-- GPU half: **not run yet** at the time of writing. See "GPU results" at the
-  end; the section says so until numbers exist.
+- GPU half: done as far as the hardware allowed. One engine has full
+  numbers, two were attempted and could not be run usefully; see "GPU
+  results". A second, 200-page set from the October run compares the one
+  working engine with Tesseract.
 
 ## Census: how much of the corpus is scanned
 
@@ -150,71 +152,142 @@ What the numbers say:
 ## GPU results
 
 <!-- GPU-RESULTS -->
-One engine was measured, then GPU work stopped on a temperature limit. The
-other two candidates were **not run**.
+Three engines were attempted on one card (the non-display card). One
+produced a full result. All runs used a 1 Hz background sampler that kills
+the engine at 98 C junction or 100 C memory; the thermal traces are in
+`GPU-STACK.md`.
 
-Run: GLM-OCR Q8_0 through `llama-server` (ROCm/HIP build), one card (the
-non-display card), one server slot, temperature 0, prompt `Text Recognition:`,
-the 300 dpi page PNG sent as is (4,043 image tokens per page), 58 pages.
+### Three engines, 58-page sample
 
-| Engine | Class | n | Median s/page | Mean chars | Empty pages | Quality |
-| --- | --- | --- | --- | --- | --- | --- |
-| GLM-OCR Q8_0 | control | 10 | 5.27 | 3,086 | 0 | CER median 0.93%, WER median 1.2%, word F1 mean 0.984 |
-| GLM-OCR Q8_0 | scan | 30 | 4.06 | 1,190 | 2 | char similarity to Tesseract: median 0.78; word F1 0.87 |
-| GLM-OCR Q8_0 | scan-low | 6 | 3.35 | 160 | 2 | char similarity to Tesseract: median 0.84 |
-| GLM-OCR Q8_0 | sparse | 6 | 3.44 | 164 | 1 | char similarity to Tesseract: median 0.73 |
+| Engine | Path | Pages done | s/page | Clean pages: CER median (n=10) | Scans: char similarity to Tesseract | VRAM peak | Outcome |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Tesseract 5.5.3 | CPU | 58 | 0.78 (scans), 1.45 (clean) | 0.09% | n/a | n/a | baseline |
+| GLM-OCR Q8_0 (0.9B) | `llama-server`, HIP | 58 | 4.06 (scans), 5.27 (clean) | 0.93% | 0.78 | 3.7 GB | complete |
+| dots.ocr Q8_0 (3B) | `llama-server`, HIP | 1 | 41.9 | not measured | not measured | 6.8 GB | killed at 98 C during page 2 |
+| PaddleOCR-VL-1.6 (0.9B) | PyTorch ROCm, `transformers` | 0 complete | 3.6 tokens/s | not measured | not measured | 2.9 GB | unusably slow |
 
-| Resource | Value |
-| --- | --- |
-| Model load | 1.0 s |
-| VRAM, after load / peak | 2,987 MiB / 3,717 MiB of 32 GB |
-| Wall time, 58 pages | 430 s, of which 165 s were cool-down pauses |
-| Junction temperature, start / median / peak | 50 C / 87 C / **94 C** |
-| Post-page samples at or above 90 C | 17 of 58 |
-| Fan, peak | 2,339 rpm of a 5,100 rpm maximum |
-| Outputs cut at the token limit | 0 of 58 |
-| New kernel `amdgpu` / `AMD-Vi` errors | 0 |
+- **dots.ocr** encodes a 300 dpi page as 10,751 image tokens and takes 42 s
+  per page at 300 W. One page from a cool card reached 97 C; the second hit
+  the 98 C line. `--image-max-tokens` did not reduce the token count. At this
+  input size it cannot be run under the stop line and would be ten times
+  slower than GLM-OCR if it could. Not measured for quality.
+- **PaddleOCR-VL-1.6** loads and generates on ROCm PyTorch, at 3.6 tokens per
+  second (128 tokens in 35.8 s; 1,253 prompt tokens). A first attempt at a
+  full page ran 412 s without finishing and was stopped by hand with memory
+  temperature at 91 C. A page of 500 tokens would take over two minutes. The
+  PyTorch path works but is not usable for this model as installed. Not
+  measured for quality.
+- **GLM-OCR** numbers are from the first full run (unchanged): it loses to
+  Tesseract on clean pages (CER 0.93% against 0.09%) and is five times
+  slower. The hand check of four page bands from that run (a judgment, one
+  reader): both engines right on two clean bands; on a faxed table band
+  Tesseract had about 12 of 38 words wrong or missing and GLM-OCR none,
+  though it returned the table column by column; on a thermal receipt band
+  Tesseract had about 8 of 22 tokens wrong or missing and GLM-OCR had items
+  and prices right, and printed a definite time for a smudged timestamp the
+  reader could not confirm.
+
+### GLM-OCR and Tesseract on 200 low-text pages from the October run
+
+A second set: 200 pages, one per source, drawn with a fixed seed from the
+October extraction's low-text list (1,090 sources): 60 from the window in
+which Tesseract crashed, 70 with few characters per page, 30 image files, 30
+PDFs that hit the Tika timeout, 10 other low-text sources. Rendered the same
+way (300 dpi grayscale PNG). No ground truth; these are counts.
+
+| Class | n | Tesseract: empty pages | GLM-OCR: empty pages | Tesseract empty, GLM has text | GLM empty, Tesseract has text | Tesseract mean chars | GLM mean chars | Tesseract conf < 70 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| crash window | 60 | 0 | 6 | 0 | 3 | 1,846 | 1,695 | 3 |
+| few chars per page | 70 | 38 | 40 | 2 | 4 | 51 | 52 | 22 |
+| image files | 30 | 21 | 21 | 3 | 1 | 20 | 48 | 9 |
+| Tika timeout | 30 | 2 | 2 | 0 | 0 | 1,554 | 1,121 | 2 |
+| other low text | 10 | 3 | 4 | 1 | 0 | 664 | 590 | 4 |
+
+("Empty" is under 20 characters; "has text" is 100 or more.) Median seconds
+per page: Tesseract 0.11 to 0.69 by class, GLM-OCR 1.9 to 4.6. GLM-OCR: 200
+of 200 pages returned, none cut at the token limit, no errors.
 
 Readings:
 
-1. **On clean pages GLM-OCR is worse than Tesseract, and slower.** CER median
-   0.93% against 0.09%, at 5.3 s per page against 1.5 s. There is no case for
-   sending born-digital or clean scanned prose to it.
-2. **On the two degraded bands of the hand check it is clearly better** (a
-   judgment, four bands, one reader). Faxed table band: all visible words
-   right, including the three column headers Tesseract lost; Tesseract had
-   about 12 of 38 wrong or missing. Thermal receipt band: items and prices
-   right, including the price Tesseract dropped; Tesseract had about 8 of 22
-   wrong or missing. On the two clean bands both engines were right.
-3. **Two cautions from the same hand check.** The receipt's time of day is
-   smudged in the image; GLM-OCR printed a definite time that the reader could
-   not confirm. That is the invented-detail risk in one token. And the faxed
-   table came back column by column (all descriptions, then all
-   manufacturers, then all uses), so the words are right and the row
-   association is gone.
-4. **Agreement with Tesseract on scans is 0.78 by characters.** On most pages
-   the two engines mostly agree; the disagreement is where one of them is
-   wrong, and this benchmark cannot say which without reading the page.
-5. **Throughput was not tuned.** One slot, full-resolution images. Smaller
-   images and several slots would raise pages per second. It was not explored
-   because heat, not compute, is the limit (next point).
-6. **The run breached its own temperature rule.** The rule was to stop at 90 C
-   junction. The runner checked before each page, not during one, and paused
-   whenever a page would have started at 80 C or more. Even so the junction
-   was at or above 90 C after 17 pages. The run should have stopped at the
-   first such sample (page 17) and did not; that is a fault in the runner.
-   GPU work was stopped after this run. A 0.9B model at one page every four
-   seconds is enough to take this card from 50 C to over 80 C in 40 seconds,
-   with the fan at less than half its maximum speed.
+1. **Most low-text pages have little or no text to find.** On 64 of 200
+   pages Tesseract returns under 20 characters, and GLM-OCR on 73: drawings,
+   photos, blank and near-blank pages. The vision model recovered text
+   Tesseract missed on 6 pages and lost text Tesseract had on 8. "Low text"
+   is mostly not an OCR failure.
+2. **The crash and timeout classes are a pipeline problem, and the CPU fixes
+   them.** On pages rendered to PNG first, Tesseract read all 60 crash-window
+   pages (mean confidence 86, no crash: the JPEG 2000 decode never runs) and
+   28 of 30 timeout pages, at 0.6 to 0.7 s per page. Those sources lost or
+   risked their text to how the page reaches Tesseract, not to Tesseract's
+   reading. One page per source was sampled, so this shows the route works,
+   not that every page of those sources reads.
+3. **Low confidence with real text is rare.** Tesseract's mean word
+   confidence is under 70 on 40 of 200 pages, but only 4 pages with
+   confidence under 75 carry 250 or more characters in both engines. The
+   rest are sparse pages.
+4. **Hand check of two of those four (a judgment, two page bands, one
+   reader).** One is an official notice in Chinese: Tesseract, run with the
+   English model only, wrote noise at confidence 28; GLM-OCR read the Chinese
+   text, the numbers and the date correctly as far as the band shows. The
+   other is a two-column patent front page: Tesseract kept every field but
+   interleaved the columns; GLM-OCR put the fields in reading order and
+   **left out the header line with the patent number and date**. Its output
+   for that page is 36% shorter than Tesseract's.
+5. **GLM-OCR drops content.** Across the timeout class it returned 28% fewer
+   characters than Tesseract, and it returned nothing on 3 crash-window pages
+   Tesseract read. Fewer characters is not fewer errors. An omission is
+   silent: nothing in the output marks it.
 
-Not run: dots.ocr Q8_0 and PaddleOCR-VL-1.6. Their weights are on disk and
-hashed. They wait on a fan curve or power cap for the card.
+### Cost of running under the temperature line
+
+| Run | Pages | Wall | GPU-on | Idle fraction | Effective pages/min | Junction peak / median | Ended |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| GLM-OCR, 90 s trial, continuous | 21 | 90 s | 90 s | 0% | 14.0 | 95 / 82 C | time budget |
+| GLM-OCR, 58 pages, continuous | 31 | 138 s | 138 s | 0% | 13.5 | 98 / 90 C | **killed at 98 C** |
+| GLM-OCR, 200 pages, gate on junction < 80 C only | 14 | 70 s | 68 s | 3% | 12.0 | 98 / 88 C | **killed at 98 C** |
+| GLM-OCR, 200 pages, gate on junction < 80 C and edge < 58 C | 200 | 2,135 s | 762 s | 64% | 5.6 | 96 / 62 C | complete |
+| dots.ocr, 2 pages | 1 | 60 s | 58 s | 3% | 1.0 | 98 / 95 C | **killed at 98 C** |
+| PaddleOCR-VL, 1 page, 128 tokens | 1 | 42 s | 42 s | 0% | 1.4 | 80 / 75 C | complete |
+
+- Run continuously, the card settles at 95 to 97 C within a minute and
+  crosses 98 C inside two and a half minutes. A continuous pass is not
+  possible under a 98 C line.
+- A gate on the junction sensor alone does nothing: that sensor falls under
+  80 C within a second of idle while the heatsink is still hot. The gate
+  that works waits for the edge sensor.
+- With that gate a pass is thermally stable for 35 minutes (peak 96 C, no
+  kill, no kernel errors) and costs 64% idle time: 5.6 pages per minute,
+  where Tesseract on one CPU thread does about 80. The fan falls back to idle
+  speed during each pause, so the heatsink cools slowly.
+
+### Revised recommendation
+
+1. **Fix the CPU path first.** Render each PDF page to an image and call
+   Tesseract directly, page by page with a per-page timeout, instead of one
+   Tika call per source. On this evidence that reads the crash and timeout
+   sources, exposes word confidence, and costs under a second per page. Keep
+   image files' text. This is most of the available gain and needs no GPU.
+2. **Give Tesseract the right language.** One of the two hand-checked
+   low-confidence pages was a wrong-language page, not a degraded one. Script
+   detection (`osd` is installed) and more language models come before any
+   vision model.
+3. **Use the GPU as a second reader, not a replacement.** Send GLM-OCR only
+   pages with real text and low Tesseract confidence, plus pages flagged as
+   multi-column or tabular. On both samples that is a small share of pages
+   (4 of 200 here; about a fifth of the scan pages in the first sample), a
+   volume the duty-cycled card can serve. Keep both readings and never let
+   the vision reading silently replace the first: it omits content.
+4. **Engine: GLM-OCR through `llama-server`.** It is the only candidate that
+   ran to completion. dots.ocr is too slow and too hot at full resolution;
+   PaddleOCR-VL is too slow on ROCm PyTorch as installed.
 <!-- /GPU-RESULTS -->
 
 ## Limits of this benchmark
 
-- 58 pages from one month's extract of one practice. It ranks engines; it
-  does not estimate corpus-wide error rates.
+- 58 pages from one month's extract and 200 from another, one practice. They
+  rank engines; they do not estimate corpus-wide error rates.
+- Only one vision engine was measured for quality. Nothing here says the
+  other two read worse.
 - Ground truth exists only for 10 born-digital pages, and those are the easy
   case. The hard cases are scored by agreement and a small hand check.
 - Standalone image sources (252) are not in the sample.

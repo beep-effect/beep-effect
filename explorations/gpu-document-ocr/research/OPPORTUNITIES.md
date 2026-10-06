@@ -43,3 +43,21 @@
 7. **The port picked for a throwaway local server was already bound.** Doing:
    starting `llama-server`. Evidence: `couldn't bind HTTP server socket`.
    Prevention: bind port 0 or probe before launch.
+
+8. **A duty-cycle gate on the hot-spot sensor did nothing.** Doing: the first
+   sustained GPU run under a kill line. Evidence: gate "start a page only
+   under 80 C junction" idled 3% and the run was killed at 98 C after 70 s;
+   the junction sensor falls under 80 C within a second of idle. Fix used:
+   also wait for the edge sensor to fall under 58 C. Prevention: gate on the
+   slow sensor.
+
+9. **A server flag was accepted and ignored.** Doing: reducing image tokens
+   for a 3B vision model. Evidence: `--image-max-tokens 4096` given, 10,751
+   prompt tokens used. Prevention: check the prompt token count on the first
+   page before trusting a size cap.
+
+10. **A list of sources named a corpus root whose top-level manifest did not
+    hold them.** Doing: resolving 1,090 sources to files. Evidence: 3 of 1,090
+    digests found in the root manifest; all found in a per-source manifest one
+    directory down. Prevention: the list should carry the manifest path, or
+    the lookup should read every manifest under the raw directory.

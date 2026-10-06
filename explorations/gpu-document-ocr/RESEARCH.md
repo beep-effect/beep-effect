@@ -73,12 +73,15 @@ control for "is the gain from the GPU, or from any OCR newer than Tesseract?"
 - **Hardware safety.** Single card only, short runs, temperatures watched.
   The kernel runs translated, strict DMA on purpose; two-card peer-to-peer
   work is out. See `research/GPU-STACK.md`.
-- **Heat.** One measured run took the card to 94 C junction with the fan
-  below half speed. No sustained GPU pass until the card has a fan curve or
-  a power cap.
-- **One engine measured.** GLM-OCR has numbers in `research/BENCHMARK.md`.
-  Statements about dots.ocr and PaddleOCR-VL are still from publishers and
-  round-ups.
+- **Heat.** Continuous OCR puts the card on a 95 to 98 C plateau within a
+  minute. Under the 98 C kill line a pass needs a duty cycle that idles 64%
+  of the time (5.6 pages per minute).
+- **One engine usable.** GLM-OCR has full numbers. dots.ocr (42 s per page,
+  killed on temperature) and PaddleOCR-VL on ROCm PyTorch (3.6 tokens per
+  second) ran but are not usable as configured; their quality is unmeasured.
+- **Vision models omit content as well as invent it.** GLM-OCR left out a
+  header line in the hand check and returned fewer characters than Tesseract
+  on text-heavy pages.
 - **Ground truth is scarce.** Only born-digital pages have it, and they are
   the easy case.
 - **Vision models can invent text.** For legal documents an invented word is

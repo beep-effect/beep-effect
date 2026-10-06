@@ -18,14 +18,14 @@ engine can plug in without overwriting what was read before.
 
 ## Next Open Question
 
-Can the free GPU run OCR for more than a few pages without crossing 90 C? One
-engine (GLM-OCR) was measured: it reads faxed and thermal-printed pages that
-Tesseract garbles, loses to Tesseract on clean pages, and heated the card to
-94 C in a 58-page run, so GPU work stopped. Until the card has a fan curve or
-a power cap, the other two candidates stay unmeasured and no GPU pass over
-the corpus is possible. The software question after that: route only
-low-confidence pages to the vision engine, and decide how its reading is
-accepted.
+Should the first build be a CPU change rather than a GPU one? The measurements
+say most lost text is a pipeline problem: pages rendered to images and read
+by Tesseract directly read the sampled crash and timeout sources at under a
+second per page, and most "low-text" pages have little or no text. The vision
+engine that ran (GLM-OCR) helps on a small share of pages (wrong-language,
+faxed, tabular), omits content on others, and under the current temperature
+line the card serves 5.6 pages per minute. Decide in align: page-level
+Tesseract driver first, GPU as a confidence-routed second reader after.
 
 ## Read This First
 
@@ -44,3 +44,8 @@ accepted.
   landed with tests. After the long extraction finished: ROCm PyTorch and
   the HIP llama.cpp build proven on one card, GLM-OCR measured on the sample,
   then GPU work stopped at a 94 C junction peak.
+- 2026-10-06 (later): operator ruled to run at stock with a 98 C kill line.
+  Runner rebuilt with a 1 Hz sampler. dots.ocr and PaddleOCR-VL attempted
+  (too hot and too slow; too slow). GLM-OCR and Tesseract compared on 200
+  low-text pages from the October run with a duty cycle. Recommendation
+  revised: fix the CPU path first.
