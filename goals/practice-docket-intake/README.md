@@ -39,11 +39,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. Slices 0-2 are merged (#1455, #1456, #1458). Slice 3 (the Graph,
-language-model and state-store adapters and the service app under
-`apps/docket-intake`) is in review. Slice 4 (the docket-sheet cross-check and
-the live practice-KG matter lookup) follows it. The live smoke waits on the
-operator-attended registration.
+P1 Implement. Slices 0-2 are merged (#1455, #1456, #1458); slice 3 (adapters
+and the service app) is in review as #1475; slice 3b (the adversarial review
+loop, SPEC D-31 to D-39) is built on top of it. Slice 4 (the docket-sheet
+cross-check and the live practice-KG matter lookup) follows. The live smoke
+waits on the operator-attended registration.
 
 ## Latest Evidence
 
