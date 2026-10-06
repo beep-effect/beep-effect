@@ -34,6 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/process";
@@ -41,15 +42,6 @@ import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergeGate");
-
-/**
- * The review window the operator ruled on 2026-10-06: twenty minutes after the
- * later of "marked ready" and the head commit.
- *
- * @category constants
- * @since 0.0.0
- */
-export const MERGE_GATE_REVIEW_WINDOW_SECONDS = 20 * 60;
 
 /**
  * One check run on the head commit, reduced to what the gate reads.
@@ -137,8 +129,8 @@ export const parseMergeGateTolerance = (value: string): O.Option<MergeGateTolera
  *
  * `requiredContexts` is `None` when the base ruleset could not be read;
  * `unresolvedThreads` is `None` when the GraphQL thread read failed or was
- * truncated; `headCommittedAt` is `None` when the commit read failed. Each
- * `None` holds the gate rather than reading as "nothing to worry about".
+ * truncated; `window` is `unknown` when the review-window reads failed. Each
+ * unknown holds the gate rather than reading as "nothing to worry about".
  *
  * **Example** (Build a read)
  *
@@ -153,11 +145,9 @@ export const parseMergeGateTolerance = (value: string): O.Option<MergeGateTolera
  *   headSha: "212fe39b4f0000000000000000000000000000ab",
  *   draft: false,
  *   mergeableState: "clean",
- *   createdAt: DateTime.makeUnsafe(0),
  *   requiredContexts: O.some(["Lint"]),
  *   checkRuns: [],
- *   readyAt: O.none(),
- *   headCommittedAt: O.some(DateTime.makeUnsafe(0)),
+ *   window: { _tag: "elapsed", anchor: "ready-for-review", anchoredAt: "2026-10-06T08:00:52Z", windowMs: 1200000 },
  *   unresolvedThreads: O.some(0),
  *   readAt: DateTime.makeUnsafe(0),
  * })
@@ -174,11 +164,9 @@ export class MergeGateRead extends S.Class<MergeGateRead>($I`MergeGateRead`)(
     headSha: S.NonEmptyString,
     draft: S.Boolean,
     mergeableState: S.String,
-    createdAt: S.DateTimeUtcFromString,
     requiredContexts: S.NonEmptyString.pipe(S.Array, S.Option),
     checkRuns: S.Array(MergeGateCheckRun),
-    readyAt: S.Option(S.DateTimeUtcFromString),
-    headCommittedAt: S.Option(S.DateTimeUtcFromString),
+    window: YeetReviewWindow,
     unresolvedThreads: S.Option(S.Finite),
     readAt: S.DateTimeUtcFromString,
   },
@@ -208,7 +196,7 @@ export const MergeGateHoldReason = LiteralKit([
   "required-red",
   "pending",
   "red",
-  "head-time-unknown",
+  "review-window-unknown",
   "review-window-open",
   "threads-unknown",
   "threads-unresolved",
@@ -276,9 +264,11 @@ export type MergeGateDecision = typeof MergeGateDecision.Type;
  *
  * **Details**
  *
- * `forceWindow` exists for one case only: a fix that unblocks `main`. The
- * ruling text is in `feedback-review-window-before-merge`; the flag is
- * recorded in the merge line so the hand-off log shows every override.
+ * The window itself (20 minutes by default, `BEEP_YEET_REVIEW_WINDOW`) is
+ * read by `readYeetReviewWindow`, the same reader `yeet monitor` uses, so one
+ * definition governs both. `forceWindow` exists for one case only: a fix that
+ * unblocks `main`. The ruling text is in `feedback-review-window-before-merge`;
+ * the flag is recorded in the merge line so the hand-off log shows every override.
  *
  * @category models
  * @since 0.0.0
@@ -288,7 +278,6 @@ export const MergeGateOptions = S.Struct({
   now: S.DateTimeUtcFromString,
   tolerate: S.Array(MergeGateTolerance),
   forceWindow: S.Boolean,
-  windowSeconds: S.Finite,
 }).pipe($I.annoteSchema("MergeGateOptions", { description: "What the caller asserts when it asks the gate." }));
 
 /**
@@ -350,8 +339,8 @@ const sameHead = (want: string, head: string): boolean => Str.startsWith(want)(h
  * Criteria in order, first failure wins: head unchanged since the caller
  * looked; not draft; not conflicting; base ruleset readable; every required
  * context registered, complete and green; every other check complete and
- * green unless tolerated with an attribution; head commit time known; review
- * window elapsed unless forced; thread count known and zero. The order puts
+ * green unless tolerated with an attribution; review window known and
+ * elapsed unless forced; thread count known and zero. The order puts
  * the cheap structural refusals first and the two judgment calls (window,
  * threads) last, matching the hand-run gate.
  *
@@ -368,17 +357,15 @@ const sameHead = (want: string, head: string): boolean => Str.startsWith(want)(h
  *   headSha: "abc",
  *   draft: true,
  *   mergeableState: "clean",
- *   createdAt: DateTime.makeUnsafe(0),
  *   requiredContexts: O.some([]),
  *   checkRuns: [],
- *   readyAt: O.none(),
- *   headCommittedAt: O.some(DateTime.makeUnsafe(0)),
+ *   window: { _tag: "unknown", reason: "not read" },
  *   unresolvedThreads: O.some(0),
  *   readAt: DateTime.makeUnsafe(0),
  * })
  * const decision = decideMergeGate({
  *   read,
- *   options: { wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false, windowSeconds: 1200 },
+ *   options: { wantSha: "abc", now: DateTime.makeUnsafe(0), tolerate: [], forceWindow: false },
  * })
  * console.log(decision._tag) // "hold"
  * ```
@@ -432,18 +419,16 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
   if (A.isReadonlyArrayNonEmpty(optionalRed)) {
     return hold(n, "red", `red, attribute it before tolerating: ${names(optionalRed)}`);
   }
-  if (O.isNone(read.headCommittedAt)) {
-    return hold(n, "head-time-unknown", "head commit time unreadable; the review window cannot be measured");
+  if (read.window._tag === "unknown") {
+    return hold(n, "review-window-unknown", renderYeetReviewWindow(read.window));
   }
-  const readyAt = O.getOrElse(read.readyAt, () => read.createdAt);
-  const windowStart = DateTime.max(readyAt, read.headCommittedAt.value);
-  const windowAgeSeconds = Math.floor(
-    (DateTime.toEpochMillis(options.now) - DateTime.toEpochMillis(windowStart)) / 1000
+  if (!options.forceWindow && read.window._tag === "open") {
+    return hold(n, "review-window-open", renderYeetReviewWindow(read.window));
+  }
+  const windowAgeSeconds = DateTime.make(read.window.anchoredAt).pipe(
+    O.map((anchored) => Math.floor((DateTime.toEpochMillis(options.now) - DateTime.toEpochMillis(anchored)) / 1000)),
+    O.getOrElse(() => 0)
   );
-  if (!options.forceWindow && windowAgeSeconds < options.windowSeconds) {
-    const left = Math.ceil((options.windowSeconds - windowAgeSeconds) / 60);
-    return hold(n, "review-window-open", `${left} min left; window started ${DateTime.formatIso(windowStart)}`);
-  }
   if (O.isNone(read.unresolvedThreads)) {
     return hold(n, "threads-unknown", "review threads unreadable (GraphQL quota?); a missing count is never zero");
   }
@@ -500,8 +485,6 @@ const GhPull = S.Struct({
 const GhCheckRuns = S.Struct({
   check_runs: S.Array(S.Struct({ id: S.Finite, name: S.String, status: S.String, conclusion: S.NullOr(S.String) })),
 });
-const GhTimelinePages = S.Struct({ event: S.String, created_at: S.optionalKey(S.String) }).pipe(S.Array, S.Array);
-const GhCommit = S.Struct({ commit: S.Struct({ committer: S.Struct({ date: S.String }) }) });
 const GhThreads = S.Struct({
   data: S.Struct({
     repository: S.Struct({
@@ -515,8 +498,6 @@ const GhMergeResult = S.Struct({ merged: S.Boolean, sha: S.optionalKey(S.String)
 
 const decodePull = S.decodeUnknownEffect(S.fromJsonString(GhPull));
 const decodeCheckRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhCheckRuns)));
-const decodeTimelinePages = S.decodeUnknownEffect(S.fromJsonString(GhTimelinePages));
-const decodeCommit = S.decodeUnknownEffect(S.fromJsonString(GhCommit));
 const decodeThreads = S.decodeUnknownEffect(S.fromJsonString(GhThreads));
 const decodeMergeResult = S.decodeUnknownEffect(S.fromJsonString(GhMergeResult));
 
@@ -536,16 +517,14 @@ const gh = (context: RepoRunContext, label: string, args: ReadonlyArray<string>)
 const decodeOrFail = <A>(what: string, decode: (input: unknown) => Effect.Effect<A, S.SchemaError>, input: string) =>
   decode(input).pipe(Effect.mapError(YeetCommandError.new(`Failed to decode ${what}.`)));
 
-const instant = (value: string): O.Option<DateTime.Utc> => DateTime.make(value);
-
 /**
  * Read everything the gate needs for one pull request, once.
  *
  * **Details**
  *
- * REST for the pull request, check runs, timeline and head commit (core
- * quota); one GraphQL query for the unresolved thread count; the base ruleset
- * through the same reader `yeet monitor` uses. The thread read is the only
+ * REST for the pull request and check runs (core quota); the review window
+ * and the base ruleset through the same readers `yeet monitor` uses; one
+ * GraphQL query for the unresolved thread count. The thread read is the only
  * call allowed to fail softly, and it fails to `None`, which the decision
  * treats as a hold.
  *
@@ -573,28 +552,6 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     ])
   );
   const checkRuns = A.flatMap(checkRunPages, (page) => page.check_runs);
-  const timeline = yield* decodeOrFail(
-    "the pull request timeline",
-    decodeTimelinePages,
-    yield* gh(context, "gh api timeline", [
-      "api",
-      `repos/{owner}/{repo}/issues/${prNumber}/timeline?per_page=100`,
-      "--paginate",
-      "--slurp",
-    ])
-  );
-  const readyAt = A.findLast(
-    A.flatten(timeline),
-    (event) => event.event === "ready_for_review" && event.created_at !== undefined
-  ).pipe(O.flatMap((event) => instant(event.created_at ?? "")));
-  const headCommittedAt = yield* gh(context, "gh api commit", [
-    "api",
-    `repos/{owner}/{repo}/commits/${pull.head.sha}`,
-  ]).pipe(
-    Effect.flatMap((output) => decodeOrFail("the head commit", decodeCommit, output)),
-    Effect.map((commit) => instant(commit.commit.committer.date)),
-    Effect.orElseSucceed(O.none<DateTime.Utc>)
-  );
   const unresolvedThreads = yield* gh(context, "gh api graphql threads", [
     "api",
     "graphql",
@@ -624,13 +581,11 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     headSha: pull.head.sha,
     draft: pull.draft,
     mergeableState: pull.mergeable_state ?? "unknown",
-    createdAt: O.getOrElse(instant(pull.created_at), () => DateTime.makeUnsafe(0)),
     requiredContexts: O.map(ruleset, (rules) => rules.contexts),
     checkRuns: A.map(checkRuns, (run) =>
       MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion })
     ),
-    readyAt,
-    headCommittedAt,
+    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.head.sha }),
     unresolvedThreads,
     readAt: yield* DateTime.now,
   });
@@ -738,7 +693,6 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
       now: read.readAt,
       tolerate: options.tolerate,
       forceWindow: options.forceWindow,
-      windowSeconds: MERGE_GATE_REVIEW_WINDOW_SECONDS,
     },
   });
   yield* Console.log(

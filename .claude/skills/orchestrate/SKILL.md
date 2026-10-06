@@ -48,7 +48,9 @@ The orchestrator's context is the scarcest thing in the fleet. Rules:
    newest briefs; write it before doing anything else.
 3. `bun run beep session register list`: every unit, newest first. For each
    row with `waiting on orchestrator`, that ask is your first queue.
-4. `bash .claude/skills/orchestrate/gate.sh`: one row per open PR. Compare
+4. `bash .claude/skills/orchestrate/gate.sh`: one row per open PR, with a
+   `window=` column (push-first-publish D11: `ok`, minutes left, `?`, or `-`
+   for a draft). Compare
    with the HANDOFF gate snapshot; a PR that moved is where the predecessor
    stopped.
 5. Claim the role: `bun run beep session note --role orchestrator --state
@@ -74,7 +76,7 @@ Where each event is recorded, in the order it happens:
 
 | Event | Record | Then |
 | --- | --- | --- |
-| A session reports "final <sha>" | HANDOFF "Outstanding promises" row; STATE line | Owner flips ready in the same step; arm the gate for that sha. |
+| A session reports "final <sha>" | HANDOFF "Outstanding promises" row; STATE line | Owner flips ready in the same step (`bun run beep yeet ready`, which refuses only on a required red or an outstanding thread); flip it yourself only after the owner called it final, never un-draft and merge in one step. Arm the gate for that sha. |
 | Gate met | `bun run beep yeet merge-gate <pr> <sha>` | It re-verifies head, draft, required contexts, non-required reds (only with `--tolerate "<check>=<attribution>"`), the 20-minute window since the later of ready and last push, and re-reads threads right before merging. A hold exits 1 with the reason; route it. `--force-window` only for a fix that unblocks main. Tell the owner `MERGED <sha>` and to `yeet sweep --retire`. |
 | New review thread | STATE line | Send the owner thread id, file:line, the ask. After round 2, P2-and-below become a tracked follow-up, not a push. |
 | Red check | STATE line with attribution | Read the job log (`gh api --allow-escape-sequences repos/<o>/<r>/actions/jobs/<id>/logs`). Introduced → owner. Inherited → one small fix PR on main, then every dependent owner merges main once. Environment → rerun. Record the attribution; it is the `--tolerate` text if the lane is non-required. |

@@ -15,6 +15,7 @@ import {
   reviewThreadIssue,
   summarizeRemoteChecksForTesting,
   YeetCheckSignal,
+  YeetReviewWindowElapsed,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusReviewThread,
@@ -38,6 +39,7 @@ import { assertInclude, assertNone, assertSome, deepStrictEqual, strictEqual } f
 import { Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
 
@@ -105,6 +107,7 @@ const openRemote = (fields: {
   readonly mergeable?: string;
   readonly mergeStateStatus?: string;
   readonly reviewDecision?: string;
+  readonly reviewWindow?: O.Option<YeetReviewWindow>;
   readonly state?: string;
 }) =>
   YeetStatusRemote.make({
@@ -118,6 +121,17 @@ const openRemote = (fields: {
     headSha: fields.headSha ?? O.some(HEAD_A),
     unresolvedReviewThreadCount: fields.unresolvedReviewThreadCount ?? 0,
     unresolvedThreads: fields.unresolvedThreads ?? O.some(A.empty<YeetStatusReviewThread>()),
+    // An elapsed review window unless a case says otherwise: these cases are
+    // about the other criteria, and the window has its own suite.
+    reviewWindow:
+      fields.reviewWindow ??
+      O.some(
+        YeetReviewWindowElapsed.make({
+          anchor: "ready-for-review",
+          anchoredAt: "2026-10-06T00:00:00.000Z",
+          windowMs: 1_200_000,
+        })
+      ),
     ...O.getSomesStruct({
       reviewDecision: O.fromUndefinedOr(fields.reviewDecision),
       checkCount: O.fromUndefinedOr(fields.checkCount),
@@ -929,7 +943,7 @@ describe("yeet merge readiness with review-bot gates as advisories", () => {
       );
 
       const next = yeetStatusNextCommandForTesting(cleanWorktree, publishedVerdict, closeout, remote);
-      strictEqual(next, "confirm GitHub mergeability, then merge the PR");
+      strictEqual(next, "re-read the review threads, confirm GitHub mergeability, then merge the PR");
 
       const summary = renderYeetStatusSummary(
         YeetStatusSnapshot.make({

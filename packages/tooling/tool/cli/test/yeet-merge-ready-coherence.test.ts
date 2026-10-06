@@ -36,6 +36,7 @@ const currentCriteria = (
   mergeable: true,
   mergeStateAcceptable: true,
   reviewDecisionAcceptable: true,
+  reviewWindowElapsed: true,
   ...overrides,
 });
 
@@ -194,13 +195,27 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
     Effect.gen(function* () {
       const decoded = yield* YeetVerdictJson.decode(
         verdictJsonWithMergeReady(
-          '{"ready":false,"failing":"closeout-gates-passed","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"closeoutGatesPassed":false}}'
+          '{"ready":false,"failing":"closeout-gates-passed","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"reviewWindowElapsed":true,"closeoutGatesPassed":false}}'
         )
       );
       const mergeReady = O.getOrThrow(decoded.mergeReady);
 
       assertTrue(mergeReady.ready);
       assertNone(mergeReady.failing);
+    })
+  );
+
+  it.effect("reads a ready verdict written before the review window gated merges as blocked on it", () =>
+    Effect.gen(function* () {
+      const decoded = yield* YeetVerdictJson.decode(
+        verdictJsonWithMergeReady(
+          '{"ready":true,"criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":true,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+        )
+      );
+      const mergeReady = O.getOrThrow(decoded.mergeReady);
+
+      assertFalse(mergeReady.ready);
+      assertSome(mergeReady.failing, "review-window-elapsed");
     })
   );
 
@@ -221,7 +236,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
   it.effect("round-trips a current verdict byte-identically", () =>
     Effect.gen(function* () {
       const json = verdictJsonWithMergeReady(
-        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+        '{"ready":false,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"reviewWindowElapsed":true}}'
       );
       const decoded = yield* YeetVerdictJson.decode(json);
 
@@ -234,7 +249,7 @@ describe("YeetVerdictJson merge-readiness coherence", () => {
       const exit = yield* Effect.exit(
         YeetVerdictJson.decode(
           verdictJsonWithMergeReady(
-            '{"ready":true,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true}}'
+            '{"ready":true,"failing":"required-checks-green","criteria":{"prOpen":true,"notDraft":true,"closeoutRun":true,"requiredChecksGreen":false,"threadsResolved":true,"mergeable":true,"mergeStateAcceptable":true,"reviewDecisionAcceptable":true,"reviewWindowElapsed":true}}'
           )
         )
       );

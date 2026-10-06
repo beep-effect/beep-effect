@@ -1,6 +1,5 @@
 import {
   decideMergeGate,
-  MERGE_GATE_REVIEW_WINDOW_SECONDS,
   MergeGateCheckRun,
   MergeGateHold,
   MergeGateRead,
@@ -10,6 +9,9 @@ import {
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
+  YeetReviewWindowElapsed,
+  YeetReviewWindowOpen,
+  YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -20,7 +22,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import checkRunsFixture from "./fixtures/yeet-merge-gate/check-runs.json" with { type: "json" };
-import commitFixture from "./fixtures/yeet-merge-gate/commit.json" with { type: "json" };
+import checkSuitesFixture from "./fixtures/yeet-merge-gate/check-suites.json" with { type: "json" };
 import pullFixture from "./fixtures/yeet-merge-gate/pull.json" with { type: "json" };
 import rulesFixture from "./fixtures/yeet-merge-gate/rules.json" with { type: "json" };
 import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type: "json" };
@@ -28,8 +30,8 @@ import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { ty
 import type { MergeGateOptions } from "@beep/repo-cli/test/Yeet";
 
 // Recorded 2026-10-06 from merged PR #1459 (head 212fe39b4f): 16 required
-// contexts on main, all 33 check runs green, one ready_for_review event, zero
-// review threads. No test here talks to GitHub.
+// contexts on main, all 33 check runs green, one ready_for_review event, the
+// head's check suites, zero review threads. No test here talks to GitHub.
 const headSha = pullFixture.head.sha;
 const requiredContexts = A.flatMap(rulesFixture, (rule) =>
   A.map(rule.parameters.required_status_checks, (check) => check.context)
@@ -37,9 +39,23 @@ const requiredContexts = A.flatMap(rulesFixture, (rule) =>
 const fixtureRuns = A.map(checkRunsFixture.check_runs, (run) =>
   MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion })
 );
-const readyAt = DateTime.makeUnsafe(timelineFixture[0]?.created_at ?? "2026-10-06T08:00:52Z");
-const headCommittedAt = DateTime.makeUnsafe(commitFixture.commit.committer.date);
-const windowClosed = DateTime.add(DateTime.max(readyAt, headCommittedAt), { minutes: 21 });
+const readyAtIso = timelineFixture[0]?.created_at ?? "2026-10-06T08:00:52Z";
+const suiteInstants = A.map(checkSuitesFixture.check_suites, (suite) => suite.created_at);
+const pushedAtIso = A.sort(suiteInstants, Str.Order)[0] ?? readyAtIso;
+const anchoredAt = DateTime.makeUnsafe(pushedAtIso > readyAtIso ? pushedAtIso : readyAtIso);
+const windowMs = 20 * 60 * 1000;
+const elapsedWindow = YeetReviewWindowElapsed.make({
+  anchor: "head-push",
+  anchoredAt: DateTime.formatIso(anchoredAt),
+  windowMs,
+});
+const openWindow = YeetReviewWindowOpen.make({
+  anchor: "head-push",
+  anchoredAt: DateTime.formatIso(anchoredAt),
+  remainingMs: 5 * 60 * 1000,
+  windowMs,
+});
+const windowClosed = DateTime.add(anchoredAt, { minutes: 21 });
 
 const read = (overrides: Partial<ConstructorParameters<typeof MergeGateRead>[0]> = {}) =>
   MergeGateRead.make({
@@ -48,11 +64,9 @@ const read = (overrides: Partial<ConstructorParameters<typeof MergeGateRead>[0]>
     headSha,
     draft: false,
     mergeableState: "clean",
-    createdAt: DateTime.makeUnsafe(pullFixture.created_at),
     requiredContexts: O.some(requiredContexts),
     checkRuns: fixtureRuns,
-    readyAt: O.some(readyAt),
-    headCommittedAt: O.some(headCommittedAt),
+    window: elapsedWindow,
     unresolvedThreads: O.some(0),
     readAt: windowClosed,
     ...overrides,
@@ -63,7 +77,6 @@ const options = (overrides: Partial<MergeGateOptions> = {}): MergeGateOptions =>
   now: windowClosed,
   tolerate: [],
   forceWindow: false,
-  windowSeconds: MERGE_GATE_REVIEW_WINDOW_SECONDS,
   ...overrides,
 });
 
@@ -80,7 +93,7 @@ describe("yeet merge-gate decision", () => {
     if (decision._tag === "merge") {
       expect(decision.headSha).toBe(headSha);
       expect(decision.commitTitle).toBe(`${pullFixture.title} (#${pullFixture.number})`);
-      expect(decision.windowAgeSeconds).toBeGreaterThanOrEqual(MERGE_GATE_REVIEW_WINDOW_SECONDS);
+      expect(decision.windowAgeSeconds).toBeGreaterThanOrEqual(20 * 60);
       expect(decision.tolerated).toHaveLength(0);
     }
   });
@@ -179,62 +192,38 @@ describe("yeet merge-gate decision", () => {
     ).toBe("required-red");
   });
 
-  it("holds inside the review window measured from the later of ready and head commit", () => {
-    const start = DateTime.max(readyAt, headCommittedAt);
-    const inside = DateTime.add(start, { minutes: 19 });
-    const decision = decideMergeGate({ read: read(), options: options({ now: inside }) });
+  it("holds while the review window is open and prints the time left", () => {
+    const decision = decideMergeGate({ read: read({ window: openWindow }), options: options() });
     expect(holdReason(decision)).toBe("review-window-open");
-    expect(renderMergeGateDecision(decision)).toContain("min left");
-    const laterPush = DateTime.add(readyAt, { hours: 2 });
-    expect(
-      holdReason(
-        decideMergeGate({
-          read: read({ headCommittedAt: O.some(laterPush) }),
-          options: options({ now: DateTime.add(laterPush, { minutes: 5 }) }),
-        })
-      )
-    ).toBe("review-window-open");
-    expect(
-      decideMergeGate({ read: read(), options: options({ now: DateTime.add(start, { minutes: 20 }) }) })._tag
-    ).toBe("merge");
+    expect(renderMergeGateDecision(decision)).toMatch(/min/u);
   });
 
-  it("falls back to the PR creation time when no ready_for_review event exists", () => {
-    const createdAt = DateTime.makeUnsafe(pullFixture.created_at);
-    const start = DateTime.max(createdAt, headCommittedAt);
-    expect(
-      holdReason(
-        decideMergeGate({
-          read: read({ readyAt: O.none() }),
-          options: options({ now: DateTime.add(start, { minutes: 1 }) }),
-        })
-      )
-    ).toBe("review-window-open");
-    expect(
-      decideMergeGate({
-        read: read({ readyAt: O.none() }),
-        options: options({ now: DateTime.add(start, { minutes: 20 }) }),
-      })._tag
-    ).toBe("merge");
+  it("holds when the review window could not be established", () => {
+    const unknown = YeetReviewWindowUnknown.make({ reason: "the timeline could not be read" });
+    const decision = decideMergeGate({ read: read({ window: unknown }), options: options() });
+    expect(holdReason(decision)).toBe("review-window-unknown");
+    expect(renderMergeGateDecision(decision)).toContain("timeline could not be read");
   });
 
-  it("the window override merges inside the window but still re-reads threads", () => {
-    const inside = DateTime.add(DateTime.max(readyAt, headCommittedAt), { minutes: 1 });
-    expect(decideMergeGate({ read: read(), options: options({ now: inside, forceWindow: true }) })._tag).toBe("merge");
+  it("the window override merges inside the window but still re-reads threads and never an unknown window", () => {
+    expect(decideMergeGate({ read: read({ window: openWindow }), options: options({ forceWindow: true }) })._tag).toBe(
+      "merge"
+    );
     expect(
       holdReason(
         decideMergeGate({
-          read: read({ unresolvedThreads: O.some(2) }),
-          options: options({ now: inside, forceWindow: true }),
+          read: read({ window: openWindow, unresolvedThreads: O.some(2) }),
+          options: options({ forceWindow: true }),
         })
       )
     ).toBe("threads-unresolved");
+    const unknown = YeetReviewWindowUnknown.make({ reason: "no check suite yet" });
+    expect(
+      holdReason(decideMergeGate({ read: read({ window: unknown }), options: options({ forceWindow: true }) }))
+    ).toBe("review-window-unknown");
   });
 
-  it("holds when the head commit time or the thread count is unknown", () => {
-    expect(holdReason(decideMergeGate({ read: read({ headCommittedAt: O.none() }), options: options() }))).toBe(
-      "head-time-unknown"
-    );
+  it("holds when the thread count is unknown", () => {
     expect(holdReason(decideMergeGate({ read: read({ unresolvedThreads: O.none() }), options: options() }))).toBe(
       "threads-unknown"
     );
@@ -284,10 +273,12 @@ interface GhScript {
   readonly mergeResponse: string;
   readonly rulesExit: number;
   readonly threadsExit: number;
+  readonly windowExit: number;
 }
 
 const defaultScript: GhScript = {
   threadsExit: 0,
+  windowExit: 0,
   rulesExit: 0,
   mergeResponse: JSON.stringify({ merged: true, sha: "feedfacefeedfacefeedfacefeedfacefeedface", message: "ok" }),
 };
@@ -315,12 +306,13 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
         return Ref.update(calls, A.append(line)).pipe(
           Effect.map(() => {
             if (Str.includes("/merge")(line)) return stubHandle(0, script.mergeResponse);
+            // The review-window reader asks for instants through --jq: answer with the recorded values.
+            if (Str.includes("/timeline")(line)) return stubHandle(script.windowExit, `${readyAtIso}\n`);
+            if (Str.includes("/check-suites")(line)) return stubHandle(script.windowExit, A.join(suiteInstants, "\n"));
             if (Str.includes("graphql")(line)) return stubHandle(script.threadsExit, JSON.stringify(threadsFixture));
             if (Str.includes("rules/branches/")(line))
               return stubHandle(script.rulesExit, JSON.stringify(rulesFixture));
             if (Str.includes("/check-runs")(line)) return stubHandle(0, JSON.stringify([checkRunsFixture]));
-            if (Str.includes("/timeline")(line)) return stubHandle(0, JSON.stringify([timelineFixture]));
-            if (Str.includes(`/commits/${headSha}`)(line)) return stubHandle(0, JSON.stringify(commitFixture));
             if (Str.includes(`/pulls/${pullFixture.number}`)(line)) return stubHandle(0, JSON.stringify(pullFixture));
             return stubHandle(1, `unexpected command: ${line}`);
           })
@@ -330,7 +322,7 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
   );
 
 describe("yeet merge-gate against recorded gh payloads", () => {
-  it.live("reads the PR, check runs, timeline, head commit, threads and ruleset into one read", () =>
+  it.live("reads the PR, check runs, review window, threads and ruleset into one read", () =>
     Effect.gen(function* () {
       const calls = yield* Ref.make(A.empty<string>());
       const result = yield* readMergeGate(context, pullFixture.number).pipe(
@@ -340,8 +332,8 @@ describe("yeet merge-gate against recorded gh payloads", () => {
       expect(result.draft).toBe(false);
       expect(result.checkRuns).toHaveLength(checkRunsFixture.check_runs.length);
       expect(O.map(result.requiredContexts, A.length)).toEqual(O.some(16));
-      expect(O.map(result.readyAt, DateTime.formatIso)).toEqual(O.some(DateTime.formatIso(readyAt)));
-      expect(O.map(result.headCommittedAt, DateTime.formatIso)).toEqual(O.some(DateTime.formatIso(headCommittedAt)));
+      expect(result.window._tag).toBe("elapsed");
+      if (result.window._tag === "elapsed") expect(result.window.anchoredAt).toBe(DateTime.formatIso(anchoredAt));
       expect(result.unresolvedThreads).toEqual(O.some(0));
       const lines = yield* Ref.get(calls);
       expect(A.some(lines, Str.includes("/merge"))).toBe(false);
@@ -358,6 +350,19 @@ describe("yeet merge-gate against recorded gh payloads", () => {
       expect(holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt }) }))).toBe(
         "threads-unknown"
       );
+    })
+  );
+
+  it.live("a failed window read becomes an unknown window, which holds even when forced", () =>
+    Effect.gen(function* () {
+      const calls = yield* Ref.make(A.empty<string>());
+      const result = yield* readMergeGate(context, pullFixture.number).pipe(
+        Effect.provide(scriptedGh({ ...defaultScript, windowExit: 1 }, calls))
+      );
+      expect(result.window._tag).toBe("unknown");
+      expect(
+        holdReason(decideMergeGate({ read: result, options: options({ now: result.readAt, forceWindow: true }) }))
+      ).toBe("review-window-unknown");
     })
   );
 
