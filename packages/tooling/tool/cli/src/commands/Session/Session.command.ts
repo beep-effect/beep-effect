@@ -9,22 +9,50 @@ import * as A from "effect/Array";
 import { Command, Flag } from "effect/cli";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { PrNumber } from "../Yeet/internal/Provenance.ts";
-import { SessionLedgerError } from "./Session.errors.ts";
-import { openSessionRows, SessionLedgerState, SessionOpenReport, SessionOpenReportJson } from "./Session.schemas.ts";
+import { sessionRegisterCommand } from "./Register.command.ts";
+import { reportSessionFailure, SessionLedgerError, sessionUsageError } from "./Session.errors.ts";
+import {
+  openSessionRows,
+  SessionLedgerState,
+  SessionOpenReport,
+  SessionOpenReportJson,
+  SessionRole,
+  sessionOrchestrator,
+} from "./Session.schemas.ts";
 import { layerSessionLedgerLive, noteSession, SessionLedger, sessionCheckoutFacts } from "./SessionLedger.service.ts";
 import type { SessionLedgerRow } from "./Session.schemas.ts";
 
 const decodeState = S.decodeUnknownResult(SessionLedgerState);
 const decodePrNumber = S.decodeUnknownResult(PrNumber);
+const decodeRole = S.decodeUnknownResult(SessionRole);
 
-const usage = (message: string): SessionLedgerError => SessionLedgerError.make({ reason: "usage", message });
-
-const reportFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
-  effect.pipe(Effect.catchTag("SessionLedgerError", (error) => failWithReportedExit(`[session] ${error.message}`)));
+/**
+ * The first line of `session open`: who holds the orchestrator role.
+ *
+ * **Example** (Nobody holds the role)
+ *
+ * ```ts
+ * import { renderSessionOrchestrator } from "@beep/repo-cli/test/Session"
+ * import * as O from "effect/Option"
+ *
+ * console.log(renderSessionOrchestrator(O.none()).startsWith("[session] orchestrator: none recorded")) // true
+ * ```
+ *
+ * @param holder - The newest open row claiming the role, if any.
+ * @returns One line naming the holder, its lane and since when.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderSessionOrchestrator = (holder: O.Option<SessionLedgerRow>): string =>
+  O.match(holder, {
+    onNone: () => "[session] orchestrator: none recorded (take the role with `session note --role orchestrator`)",
+    onSome: (row) =>
+      `[session] orchestrator: ${row.lane} (${row.branch}) session ${O.getOrElse(row.sessionId, () => "unknown")} since ${DateTime.formatIso(row.recordedAt)}`,
+  });
 
 /**
  * Render one live row as the operator reads it.
@@ -62,7 +90,7 @@ const reportFailure = <A, R>(effect: Effect.Effect<A, SessionLedgerError, R>) =>
 export const renderSessionRow = (row: SessionLedgerRow): string =>
   A.join(
     [
-      `- ${row.state} ${row.lane} (${row.branch}${O.match(row.pr, { onNone: () => "", onSome: (pr) => `, PR #${pr}` })}) ${DateTime.formatIso(row.recordedAt)} by ${row.harness}`,
+      `- ${row.state} ${row.lane} (${row.branch}${O.match(row.pr, { onNone: () => "", onSome: (pr) => `, PR #${pr}` })}) ${DateTime.formatIso(row.recordedAt)} by ${row.harness}${O.match(row.role, { onNone: () => "", onSome: (role) => ` [${role}]` })}`,
       `  next: ${row.next}`,
       ...O.match(row.summary, { onNone: () => A.empty<string>(), onSome: (summary) => [`  summary: ${summary}`] }),
       `  checkout: ${row.checkout}`,
@@ -79,6 +107,10 @@ const nextFlag = Flag.String("next").pipe(
 );
 const summaryFlag = Flag.String("summary").pipe(Flag.optional, Flag.withDescription("What landed, in one line"));
 const prFlag = Flag.Int("pr").pipe(Flag.optional, Flag.withDescription("The pull request this checkout carries"));
+const roleFlag = Flag.String("role").pipe(
+  Flag.optional,
+  Flag.withDescription("Fleet role this session holds: orchestrator (the one coordinating session) or member")
+);
 const jsonFlag = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit the report as JSON"));
 
 /**
@@ -97,33 +129,45 @@ const jsonFlag = Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDes
  */
 export const sessionNoteCommand = Command.make(
   "note",
-  { state: stateFlag, next: nextFlag, summary: summaryFlag, pr: prFlag },
-  Effect.fn(function* ({ state, next, summary, pr }) {
+  { state: stateFlag, next: nextFlag, summary: summaryFlag, pr: prFlag, role: roleFlag },
+  Effect.fn(function* ({ state, next, summary, pr, role }) {
     const program = Effect.gen(function* () {
       const decodedState = decodeState(state);
       if (decodedState._tag === "Failure") {
-        return yield* usage(`--state must be one of ${A.join(SessionLedgerState.literals, ", ")}; got "${state}".`);
+        return yield* sessionUsageError(
+          `--state must be one of ${A.join(SessionLedgerState.literals, ", ")}; got "${state}".`
+        );
       }
       if (Str.isEmpty(Str.trim(next))) {
-        return yield* usage("--next must say what a resuming session should do.");
+        return yield* sessionUsageError("--next must say what a resuming session should do.");
       }
       const prNumber = O.flatMap(pr, (value) => {
         const decoded = decodePrNumber(value);
         return decoded._tag === "Success" ? O.some(decoded.success) : O.none();
       });
       if (O.isSome(pr) && O.isNone(prNumber)) {
-        return yield* usage(`--pr must be a positive integer; got ${pr.value}.`);
+        return yield* sessionUsageError(`--pr must be a positive integer; got ${pr.value}.`);
+      }
+      const decodedRole = O.map(role, decodeRole);
+      const roleValue = O.flatMap(decodedRole, Result.getSuccess);
+      if (O.isSome(role) && O.isNone(roleValue)) {
+        return yield* sessionUsageError(
+          `--role must be one of ${A.join(SessionRole.literals, ", ")}; got "${role.value}".`
+        );
       }
       const row = yield* noteSession({
+        role: roleValue,
         cwd: process.cwd(),
         state: decodedState.success,
         next: Str.trim(next),
         summary: O.map(summary, Str.trim),
         pr: prNumber,
       });
-      yield* Console.log(`[session] noted ${row.state} for ${row.lane} (${row.branch}): ${row.next}`);
+      yield* Console.log(
+        `[session] noted ${row.state}${O.match(row.role, { onNone: () => "", onSome: (value) => ` [${value}]` })} for ${row.lane} (${row.branch}): ${row.next}`
+      );
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription("Append where this session stopped and what comes next to the workstation ledger"),
@@ -173,9 +217,10 @@ export const sessionOpenCommand = Command.make(
       yield* Console.log(
         `[session] ${A.length(rows)} live session(s) for ${facts.repository.owner}/${facts.repository.name}:`
       );
+      yield* Console.log(renderSessionOrchestrator(sessionOrchestrator(rows)));
       yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { discard: true });
     });
-    yield* reportFailure(program);
+    yield* reportSessionFailure(program);
   })
 ).pipe(
   Command.withDescription("List where every session on this machine stopped in this repository"),
@@ -201,13 +246,14 @@ export const sessionCommand = Command.make("session", {}, () =>
     A.join(
       [
         "Session commands:",
-        '- bun run beep session note --state <open|blocked|done> --next "<one line>" [--summary "<one line>"] [--pr <n>]',
+        '- bun run beep session note --state <open|blocked|done> --next "<one line>" [--summary "<one line>"] [--pr <n>] [--role orchestrator|member]',
         "- bun run beep session open [--json]",
+        "- bun run beep session register add|list",
       ],
       "\n"
     )
   )
 ).pipe(
   Command.withDescription("Record and read where harness sessions stopped across every clone on this machine"),
-  Command.withSubcommands([sessionNoteCommand, sessionOpenCommand])
+  Command.withSubcommands([sessionNoteCommand, sessionOpenCommand, sessionRegisterCommand])
 );

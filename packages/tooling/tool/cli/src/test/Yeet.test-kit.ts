@@ -6,6 +6,7 @@
  */
 
 export * from "@beep/repo-cli/commands/Yeet/index";
+export { yeetGhCommand } from "../commands/Yeet/Gh.command.ts";
 export * from "../commands/Yeet/internal/Ack.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
@@ -26,6 +27,7 @@ export {
   runYeetFallowFeedback as runYeetFallowFeedbackForTesting,
 } from "../commands/Yeet/internal/FallowFeedback.ts";
 export * from "../commands/Yeet/internal/GateStaleness.ts";
+export * from "../commands/Yeet/internal/GhOps.ts";
 export {
   currentCommitSha,
   currentYeetBranch,
@@ -46,6 +48,7 @@ export * from "../commands/Yeet/internal/IssueParser.ts";
 export * from "../commands/Yeet/internal/LocalShardPoison.ts";
 export * from "../commands/Yeet/internal/Merge.ts";
 export * from "../commands/Yeet/internal/MergedPreview.ts";
+export * from "../commands/Yeet/internal/MergeGate.ts";
 export * from "../commands/Yeet/internal/MonitorChecks.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";

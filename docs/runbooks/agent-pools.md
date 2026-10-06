@@ -41,8 +41,16 @@ runs its own chain. The meter and recipe below describe that route.
 
 ### Opus
 
-There is no scraper and no dashboard API for the Anthropic pool; the signal is the request
-itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
+`bun run beep accounts status [--json]` polls every Claude, Codex, Muse Code, and Grok Build account
+the local proxy holds a login for and ranks them by how urgently the weekly quota needs use
+(weekly percent left per hour until reset). A row also shows credit balances (Claude cloud session
+credits with their expiry, ChatGPT credits) and unused ChatGPT limit resets. Muse reports no
+windows while its five-hour window is idle. Cursor is not polled (D17): the command only shows
+`accounts-snapshot/v1` files that a local collector leaves in `$HOME/.local/state/beep/accounts/`
+(`BEEP_ACCOUNTS_SNAPSHOT_DIR` overrides), each as a row with its age. It only reads the proxy's stored logins under `$HOME/.cli-proxy-api`; an account
+appears once it is signed in to the proxy, and one whose login the provider rejects shows as
+`needs login`. The usage endpoints are undocumented and can change without notice, so inside a
+running lane the signal is still the request itself. A delegation that fails with `rate_limit_error` ("This request would exceed your
 account's rate limit") marks the Opus pool below floor for the session: finish what is already
 running, then step the Claude chain down (2026-10-01 policy): launch the next bounded lane on
 `cursor-agent --model claude-opus-5-5`, and when Cursor is below floor too, on grok-build
@@ -430,6 +438,7 @@ interactive picker may lag while `-m gpt-6.1-sol` works.
 | Sudo / YubiKey prompt hang | `Shell(sudo)` and `Shell(pkexec)` in deny list (D21). |
 | Workspace trust hang | `--trust` on every headless lane. |
 | Missing `result/success` + exit 0 | Treat as failure; inspect stderr. |
+| `GraphQL: API rate limit exceeded` from `gh pr view\|edit\|ready\|merge\|checks` | GitHub GraphQL is one 5,000-point hourly budget shared by every session on the account (resets at the hour's `resetAt`). Use `bun run beep yeet gh …` (REST for PR status, labels, comments, checks, and merge; the ready flip and thread read go through a budget guard that waits for the reset, or exits 75 with `--no-wait`). `bun run beep yeet gh rate-limit` shows both budgets. An identity with its own budget: `--token-ref op://…` / `BEEP_GH_TOKEN_REF`, or a GitHub App via `BEEP_GH_APP_ID`, `BEEP_GH_APP_INSTALLATION_ID`, `BEEP_GH_APP_KEY_REF`. |
 | Linux sandbox `unshare EPERM` | Host fix `sysctl kernel.apparmor_restrict_unprivileged_userns=0`; if the lane still cannot run, stop and report the blocked path — never `--sandbox disabled` (https://forum.cursor.com/t/agent-cli-linux-sandbox-preflight-fails-unshare-eperm-unless-run-under-strace-apparmor-restrict-unprivileged-userns-1/160039). |
 
 ## Sources

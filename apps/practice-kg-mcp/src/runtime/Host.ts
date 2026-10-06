@@ -100,6 +100,39 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
 });
 
 /**
+ * Open the bundle's PGlite and DuckDB stores and publish the bundle context.
+ *
+ * **Details**
+ *
+ * This is the one place the host decides which files back its stores, so the
+ * stdio server and the headless self-check read the same resources.
+ *
+ * **Example** (Compose the host resources)
+ *
+ * ```ts
+ * import { makePracticeKgHostResourcesLayer } from "../../src/runtime/Host.ts"
+ * import type { PracticeKgBundleContext } from "@beep/law-practice-server"
+ *
+ * const compose = (context: PracticeKgBundleContext) => makePracticeKgHostResourcesLayer(context)
+ * console.log(typeof compose)
+ * ```
+ *
+ * @param context - Validated bundle paths and manifest metadata.
+ * @category layers
+ * @since 0.0.0
+ */
+export const makePracticeKgHostResourcesLayer = (context: PracticeKgBundleContext) =>
+  Layer.unwrap(
+    Effect.map(Effect.service(Path.Path), (path) =>
+      Layer.mergeAll(
+        makePracticeKgPgliteLayer(path.join(context.bundleDir, "kg.pglite")),
+        makePracticeKgDuckDbLayer(path.join(context.bundleDir, "practice.duckdb")),
+        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
+      )
+    )
+  );
+
+/**
  * Compose the stdio server with app-owned PGlite and DuckDB resources.
  *
  * **Example** (Compose practice host layer)
@@ -117,19 +150,9 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
  * @since 0.0.0
  */
 export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      const path = yield* Path.Path;
-      const resources = Layer.mergeAll(
-        makePracticeKgPgliteLayer(path.join(context.bundleDir, "kg.pglite")),
-        makePracticeKgDuckDbLayer(path.join(context.bundleDir, "practice.duckdb")),
-        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
-      );
-      return makePracticeKgServerLayer(
-        PracticeKgMcpServerConfig.make({
-          name: "beep-practice-kg",
-          version: PRACTICE_KG_EXTENSION_VERSION,
-        })
-      ).pipe(Layer.provide(resources));
+  makePracticeKgServerLayer(
+    PracticeKgMcpServerConfig.make({
+      name: "beep-practice-kg",
+      version: PRACTICE_KG_EXTENSION_VERSION,
     })
-  );
+  ).pipe(Layer.provide(makePracticeKgHostResourcesLayer(context)));

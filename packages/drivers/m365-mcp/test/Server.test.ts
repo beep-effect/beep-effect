@@ -95,8 +95,11 @@ const notExposedByMcp = Effect.fn("M365Test.notExposedByMcp")(() =>
 
 const createMockM365 = () =>
   M365.of({
+    addMessageAttachment: notExposedByMcp,
+    createDraftMessage: notExposedByMcp,
     createEvent: notExposedByMcp,
     createMasterCategory: notExposedByMcp,
+    deleteDraftMessage: notExposedByMcp,
     deleteEvent: notExposedByMcp,
     downloadMessageAttachment: notExposedByMcp,
     ensureMasterCategories: notExposedByMcp,
@@ -104,6 +107,7 @@ const createMockM365 = () =>
     getMailFolder: notExposedByMcp,
     listMasterCategories: notExposedByMcp,
     listMessageAttachments: notExposedByMcp,
+    sendDraftMessage: notExposedByMcp,
     updateEvent: notExposedByMcp,
     updateMessageCategories: notExposedByMcp,
     deltaDriveItems: Effect.fn("M365Test.deltaDriveItems")(function* () {
@@ -125,6 +129,9 @@ const createMockM365 = () =>
     }),
     getMessage: Effect.fn("M365Test.getMessage")(function* () {
       return message;
+    }),
+    getMessageAuthoredText: Effect.fn("M365Test.getMessageAuthoredText")(function* () {
+      return yield* Effect.die("not used by the MCP server");
     }),
     getSite: Effect.fn("M365Test.getSite")(function* () {
       return site;
@@ -150,8 +157,9 @@ const MockM365Layer = Layer.succeed(M365, createMockM365());
 
 // The stdio conversation is framed by the kit client's own helpers: every
 // request carries the 2026-07-28 `_meta` keys, and the host answers without
-// a session (D-posture). The conformance port below proves the legacy
-// `initialize` path is refused with `-32022`.
+// a session. The conformance port below runs the registrations on its own
+// 2026-07-28-only transport; the handshake test in OutboxServer.test.ts covers
+// the `initialize` path of the built servers.
 const clientMetadata = requestMetadata(McpClientOptions.make({}));
 const encodeFrame = S.encodeEffect(JsonRpcMessageFromLine);
 const requestFrame = Effect.fnUntraced(function* (id: number, method: string, params: Record<string, unknown>) {

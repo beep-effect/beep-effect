@@ -6,10 +6,11 @@
  */
 
 import { $M365McpId } from "@beep/identity/packages";
-import { sanitizedToolkit, statelessMcpProtocols } from "@beep/mcp-kit";
+import { sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
+import { m365McpProtocols } from "./internal/McpProtocols.ts";
 import { M365ToolkitHandlersLive } from "./M365Handlers.ts";
 import { M365Toolkit } from "./M365Tools.ts";
 import type { M365 } from "@beep/m365";
@@ -98,10 +99,12 @@ export const M365McpRegistrationsLive: Layer.Layer<never, never, M365> = sanitiz
  *
  * **Details**
  *
- * The host serves `[McpProtocol.v2026_07_28]` only, pinned through the kit's
- * `statelessMcpProtocols` (D-posture): clients open with `server/discover`
- * and call tools with request metadata; a legacy `initialize` is answered
- * with `-32022` and the supported list. There is no session.
+ * The host answers `2026-07-28` first: clients may open with
+ * `server/discover` and call tools with request metadata, with no session. It
+ * also answers the handshake-era versions `2025-11-25`, `2025-06-18`,
+ * `2025-03-26` and `2024-11-05`, because Claude Code and Claude Desktop open
+ * every MCP server with `initialize`; a host that lists only `2026-07-28`
+ * refuses that handshake with `-32022`.
  *
  * **Example** (Building stdio server layer)
  *
@@ -124,7 +127,7 @@ export const makeServerLayer = (config: M365McpServerConfig): Layer.Layer<never,
         name: config.name,
         version: config.version,
         instructions: M365_MCP_INSTRUCTIONS,
-        protocols: statelessMcpProtocols,
+        protocols: m365McpProtocols,
       })
     ),
     Layer.orDie

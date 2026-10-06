@@ -729,18 +729,20 @@ export const recordCachePolicyBaseline = (
     onNone: () => A.empty<CacheBaselineSubject>(),
     onSome: (previous) => A.filter(Rec.keys(previous.reviews), (subject) => !A.contains(subjects, subject)),
   });
-  const reviewOf = (subject: CacheBaselineSubject) =>
-    A.contains(stamped, subject)
-      ? request.review
-      : O.getOrElse(
-          O.flatMap(prior, (previous) => Rec.get(previous.reviews, subject)),
-          () => request.review
-        );
+  const carriedReviews = O.match(prior, {
+    onNone: () => A.empty<readonly [CacheBaselineSubject, CacheReviewDecision]>(),
+    onSome: (previous) => A.filter(Rec.toEntries(previous.reviews), ([subject]) => A.contains(carried, subject)),
+  });
+  const stampedReviews = A.map(stamped, (subject) => [subject, request.review] as const);
+  const reviewEntries: ReadonlyArray<readonly [CacheBaselineSubject, CacheReviewDecision]> = A.appendAll(
+    stampedReviews,
+    carriedReviews
+  );
   const baseline = CachePolicyBaseline.make({
     profile: request.profile,
     epoch: request.epoch,
     scope: request.scope,
-    reviews: Rec.fromEntries(A.map(subjects, (subject) => [subject, reviewOf(subject)] as const)),
+    reviews: Rec.fromEntries(A.sortWith(reviewEntries, ([subject]) => subject, Order.String)),
     projection: sorted,
   });
   return R.succeed(CachePolicyBaselineRecord.make({ baseline, stamped, carried, dropped }));

@@ -52,7 +52,7 @@ request on the never-run desktop release lane); real geometry in-repo.
 
 **Question:** Who runs the pipeline, where, for the first year?
 
-**Answer:** A **`bun run beep drawings …` CLI on the developer's Linux
+**Answer:** A **`bun run beep drawings render` CLI on the developer's Linux
 workstation**, operated per matter by the developer; the attorney receives
 PDFs and signs off. A desktop-app surface is deferred to agentic-cad P7.
 

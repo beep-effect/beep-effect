@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "orchestrator-handoff",
+    "title": "Orchestrator Hand-off",
+    "status": "active",
+    "created": "2026-10-06",
+    "updated": "2026-10-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/orchestrator-handoff",
+  "lifecycle": "active",
+  "statusNote": "P1 lands the register, the role on the session ledger, the HANDOFF format, the orchestrate skill procedures and the CLI merge gate; P2 follow-ups are listed in the skill.",
+  "mission": "Codify the orchestrator session role so a successor session can take it over from files alone without orphaning the sessions, agents, lanes, jobs and people it coordinates.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "AGENTS.md Autonomy (PR #1448)",
+    "graduated": "2026-10-06",
+    "note": "Opened from the 2026-10-06 orchestrator session's hand-off problems: in-process units die with the session, members only know the orchestrator by session id, context pressure, Codex lanes reachable only by PR comment."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until the register, role, HANDOFF format, skill procedures and merge gate are merged and a take-over has been performed from files alone.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "goals/orchestrator-handoff/SPEC.md",
+    "goals/orchestrator-handoff/PLAN.md",
+    ".claude/skills/orchestrate/SKILL.md",
+    ".claude/skills/orchestrate/HANDOFF.template.md"
+  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 2500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/orchestrator-handoff/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "name": "Register, role, HANDOFF format, skill procedures, merge gate",
+      "status": "in-progress"
+    },
+    {
+      "id": "P2",
+      "name": "Handoff renderer, gate table port, register convert, codex-lane comment helper",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "First take-over from files alone; close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/orchestrator-handoff/GOAL.md)\" -le 4000",
+    "jq . goals/orchestrator-handoff/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep quality package-verify @beep/repo-cli"
+  ],
+  "stopConditions": [
+    "A hand-off step would require the operator to relay messages between sessions.",
+    "The merge gate would merge over an unattributed red or an unknown thread count."
+  ]
+}

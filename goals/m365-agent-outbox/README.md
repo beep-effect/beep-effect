@@ -31,13 +31,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete. P1 Implement waits on workstream A's `@beep/m365`
-write lane (`feat/m365-write-lane`) reaching `main`; slice 1 is cut from it.
+P1 Implement. Slices 0, 1 and 2 are merged (#1454, #1471 as `fa90e642f1`) and
+the live smoke passed on the firm tenant. The next PR is slice 3: reply,
+reply-all and forward drafts plus draft update, and tests that raise the
+`@beep/m365-mcp` coverage rows #1471 recorded as a baseline (see #1471's
+"Coverage rows"). After slice 3: the closeout reflection and the flip to
+`completed-retained`.
 
 ## Latest Evidence
 
-2026-10-06: packet and registration runbook written (slice 0). Recommendation
-and eleven implementing decisions are in `SPEC.md`.
+- 2026-10-06: packet and registration runbook (slice 0).
+- 2026-10-06: slices 1 and 2 merged as #1471 (`fa90e642f1`) after two review
+  rounds; `bun run beep quality package-verify` passed for `@beep/m365` and
+  `@beep/m365-mcp`.
+- 2026-10-06: live smoke passed on the firm tenant, read, write and one
+  self-send (`history/2026-10-06-live-smoke.md`).
 
 ## Notes
 

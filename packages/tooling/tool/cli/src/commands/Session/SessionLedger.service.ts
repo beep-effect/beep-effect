@@ -7,22 +7,24 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, Console, Context, DateTime, Effect, FileSystem, Layer, Path, Ref } from "effect";
+import { Config, Context, DateTime, Effect, flow, Layer, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
-import {
-  emptyWhenNotFound,
-  repositoryJsonLinesFileName,
-  resolveWorkstationStateDir,
-} from "../../internal/state/WorkstationState.ts";
+import { makeJsonLinesStore, partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
+import { repositoryJsonLinesFileName, resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import { PrNumber, PrRepository } from "../Yeet/internal/Provenance.ts";
 import { detectPrRepository } from "../Yeet/internal/ProvenanceFooter.ts";
-import { SessionLedgerError } from "./Session.errors.ts";
-import { SessionLedgerRow, SessionLedgerRowJson, SessionLedgerState } from "./Session.schemas.ts";
-import type { PlatformError } from "effect";
+import { SessionLedgerError, sessionStatePlatformError } from "./Session.errors.ts";
+import {
+  openSessionRows,
+  SessionLedgerRow,
+  SessionLedgerRowJson,
+  SessionLedgerState,
+  SessionRole,
+} from "./Session.schemas.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
@@ -90,26 +92,8 @@ class DecodedSessionLedger extends S.Class<DecodedSessionLedger>($I`DecodedSessi
  * @category parsing
  * @since 0.0.0
  */
-export const decodeSessionLedger = (content: string): DecodedSessionLedger => {
-  let rows = A.empty<SessionLedgerRow>();
-  let corruptLineCount = 0;
-  for (const line of A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty)) {
-    const decoded = SessionLedgerRowJson.decodeOption(line);
-    if (O.isSome(decoded)) {
-      rows = A.append(rows, decoded.value);
-    } else {
-      corruptLineCount += 1;
-    }
-  }
-  return DecodedSessionLedger.make({ rows, corruptLineCount });
-};
-
-const mapPlatformError = (cause: PlatformError.PlatformError): SessionLedgerError =>
-  SessionLedgerError.make({
-    reason: cause.reason._tag === "PermissionDenied" ? "denied" : "io",
-    message: cause.message,
-    cause,
-  });
+export const decodeSessionLedger = (content: string): DecodedSessionLedger =>
+  DecodedSessionLedger.make(partitionJsonLines(SessionLedgerRowJson.decodeOption)(content));
 
 /**
  * The ledger file name for a repository.
@@ -146,39 +130,21 @@ export const sessionLedgerFileName: (repository: PrRepository) => string = repos
  * @since 0.0.0
  */
 export const makeSessionLedgerLive = Effect.fn("SessionLedger.makeLive")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const directory = yield* resolveWorkstationStateDir({ override: "BEEP_SESSION_STATE_ROOT", store: "sessions" });
-  const fileFor = (repository: PrRepository): string => path.join(directory, sessionLedgerFileName(repository));
-  return SessionLedger.of({
-    append: Effect.fn("SessionLedger.append")((row) =>
-      SessionLedgerRowJson.encode(row).pipe(
-        Effect.mapError((cause) =>
-          SessionLedgerError.make({ reason: "decode", message: "Failed to encode the session ledger row.", cause })
-        ),
-        Effect.flatMap((encoded) =>
-          fs
-            .makeDirectory(directory, { recursive: true, mode: 0o700 })
-            .pipe(
-              Effect.andThen(fs.writeFileString(fileFor(row.repository), `${encoded}\n`, { flag: "a", mode: 0o600 })),
-              Effect.mapError(mapPlatformError)
-            )
-        )
+  const store = yield* makeJsonLinesStore({
+    directory: yield* resolveWorkstationStateDir({ override: "BEEP_SESSION_STATE_ROOT", store: "sessions" }),
+    fileName: sessionLedgerFileName,
+    partitionOf: (row: SessionLedgerRow) => row.repository,
+    encode: flow(
+      SessionLedgerRowJson.encode,
+      Effect.mapError((cause) =>
+        SessionLedgerError.make({ reason: "decode", message: "Failed to encode the session ledger row.", cause })
       )
     ),
-    list: Effect.fn("SessionLedger.list")((repository) =>
-      fs.readFileString(fileFor(repository)).pipe(
-        Effect.map(decodeSessionLedger),
-        Effect.tap((result) =>
-          result.corruptLineCount > 0
-            ? Console.warn(`[session] skipped ${result.corruptLineCount} corrupt ledger line(s)`)
-            : Effect.void
-        ),
-        Effect.map((result) => result.rows),
-        emptyWhenNotFound(mapPlatformError)
-      )
-    ),
+    decodeOption: SessionLedgerRowJson.decodeOption,
+    onPlatformError: sessionStatePlatformError,
+    label: { scope: "session", noun: "ledger" },
   });
+  return SessionLedger.of(store);
 });
 
 /**
@@ -366,6 +332,7 @@ export const SessionNoteInput = S.Struct({
   cwd: S.String,
   next: S.String,
   pr: S.Option(PrNumber),
+  role: SessionRole.pipe(S.Option, S.optionalKey),
   state: SessionLedgerState,
   summary: S.Option(S.String),
 }).pipe(
@@ -419,6 +386,7 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
     harness: identity.harness,
     sessionId: identity.sessionId,
     recordedAt: yield* DateTime.now,
+    role: input.role ?? O.none<SessionRole>(),
   });
 });
 
@@ -442,11 +410,24 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
  * @since 0.0.0
  */
 export const noteSession = Effect.fn("SessionLedger.note")(function* (input: SessionNoteInput) {
-  const row = yield* buildSessionRow(input);
+  const built = yield* buildSessionRow(input);
   const ledger = yield* SessionLedger;
+  // A note that omits --role keeps the checkout's current role, so a routine
+  // closeout note by the orchestrator does not silently drop its claim. Only
+  // `--role member` or a `done` row releases it.
+  const row =
+    O.isSome(built.role) || SessionLedgerState.is.done(built.state)
+      ? built
+      : SessionLedgerRow.make({
+          ...built,
+          role: inheritedRole(yield* ledger.list(built.repository), built.checkout),
+        });
   yield* ledger.append(row);
   return row;
 });
+
+const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string): O.Option<SessionRole> =>
+  A.findFirst(openSessionRows(rows), (row) => row.checkout === checkout).pipe(O.flatMap((row) => row.role));
 
 /**
  * Record that a sweep finished a checkout's work. `executeSweep` calls this

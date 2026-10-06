@@ -246,6 +246,16 @@ const decodeGhPrBodySnapshot = S.decodeUnknownEffect(S.fromJsonString(GhPrBodySn
 const decodeGhPrBodyEditsDocument = S.decodeUnknownEffect(S.fromJsonString(GhPrBodyEditsDocument));
 const encodeRecord = S.encodeEffect(S.fromJsonString(PrSessionRecord));
 
+// The pull request reads and the body write go over REST (`gh pr view|edit` spend
+// the shared GraphQL budget and failed the stamp whenever it ran dry). Only the
+// body-edit history is GraphQL-only; see readPrBodyEditsOrNone.
+const restPullArgs = (prNumber: PrNumber, jq: string): ReadonlyArray<string> => [
+  "api",
+  `repos/{owner}/{repo}/pulls/${prNumber}`,
+  "--jq",
+  jq,
+];
+
 const prBodyEditsQuery =
   "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){userContentEdits(last:5){nodes{editedAt editor{login} diff}}}}}";
 
@@ -254,7 +264,7 @@ const readPrBodySnapshot = Effect.fn("ProvenanceFooter.readPrBodySnapshot")(func
   context: RepoRunContext,
   prNumber: PrNumber
 ) {
-  const viewed = yield* capture("gh", ["pr", "view", `${prNumber}`, "--json", "body,updatedAt"], context.repoRoot);
+  const viewed = yield* capture("gh", restPullArgs(prNumber, "{body, updatedAt: .updated_at}"), context.repoRoot);
   if (viewed.exitCode !== 0) {
     return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
   }
@@ -299,6 +309,23 @@ const readPrBodyEdits = Effect.fn("ProvenanceFooter.readPrBodyEdits")(function* 
   );
 });
 
+// The edit history only sharpens race detection; the REST readback in
+// verifyReconciledBody still catches a body that drifted. A spent GraphQL budget
+// must not fail or skip the stamp, so a failed history read is an empty one.
+const readPrBodyEditsOrNone = (
+  capture: typeof runRepoCommandCapture,
+  context: RepoRunContext,
+  repository: PrRepository,
+  prNumber: PrNumber
+) =>
+  readPrBodyEdits(capture, context, repository, prNumber).pipe(
+    Effect.catch((error) =>
+      Console.warn(
+        `[yeet] could not read the body-edit history of PR #${prNumber} over GraphQL (${Str.trim(error.message)}); verifying the provenance footer by REST readback only`
+      ).pipe(Effect.as(A.empty<PrBodyEdit>()))
+    )
+  );
+
 const prBodyEditOrder = Order.mapInput(DateTime.Order, (edit: PrBodyEdit) => edit.editedAt);
 const editedAtOrAfter = Order.isGreaterThanOrEqualTo(DateTime.Order);
 
@@ -331,7 +358,11 @@ const writePrBody = Effect.fn("ProvenanceFooter.writePrBody")(function* (
   body: string
 ) {
   yield* writeTextFile(bodyPath, body);
-  const edited = yield* capture("gh", ["pr", "edit", `${prNumber}`, "--body-file", bodyPath], context.repoRoot);
+  const edited = yield* capture(
+    "gh",
+    ["api", "-X", "PATCH", `repos/{owner}/{repo}/pulls/${prNumber}`, "--silent", "-F", `body=@${bodyPath}`],
+    context.repoRoot
+  );
   if (edited.exitCode !== 0) {
     return yield* YeetCommandError.make({ message: edited.output, exitCode: edited.exitCode });
   }
@@ -416,7 +447,7 @@ const reconcilePrBodyAfterWrite = Effect.fn("ProvenanceFooter.reconcileAfterWrit
   const writtenBody = splicePrProvenanceFooter(sourceBody, rendered);
   const known = pipe(knownBodies, HashSet.add(sourceBody), HashSet.add(writtenBody));
   yield* writePrBody(capture, context, prNumber, bodyPath, writtenBody);
-  const edits = yield* readPrBodyEdits(capture, context, repository, prNumber);
+  const edits = yield* readPrBodyEditsOrNone(capture, context, repository, prNumber);
   const foreign = newestUnknownEditSince(edits, baseline, known);
   if (O.isNone(foreign)) {
     return yield* verifyReconciledBody(capture, context, prNumber, rendered, sourceBody, preservedForeign);
@@ -444,7 +475,7 @@ const readPrBody = Effect.fn("ProvenanceFooter.readPrBody")(function* (
   context: RepoRunContext,
   prNumber: PrNumber
 ) {
-  const viewed = yield* capture("gh", ["pr", "view", `${prNumber}`, "--json", "body"], context.repoRoot);
+  const viewed = yield* capture("gh", restPullArgs(prNumber, "{body}"), context.repoRoot);
   if (viewed.exitCode !== 0) {
     return yield* YeetCommandError.make({ message: viewed.output, exitCode: viewed.exitCode });
   }

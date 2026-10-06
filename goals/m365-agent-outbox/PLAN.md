@@ -9,21 +9,23 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Compare the connector route with a firm-owned route and ground the design in workstream A's lane. | `SPEC.md` recommendation, relation table and Decision Log are written. |
-| P1 Implement | pending | Build the slices below. | Acceptance criteria are met. |
+| P1 Implement | in progress | Build the slices below. | Acceptance criteria are met. |
 | P2 Verify | pending | Package handoffs, property tests, live smoke after registration. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish each slice through yeet and drive it to mergeable. | Each PR is merge-ready; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
-One PR per slice.
+Slices 1 and 2 ship as one PR: slice 2 is the only caller of slice 1, both
+wait on the same upstream merge, and one PR costs one hosted run instead of
+two. Slice 0 and slice 3 are their own PRs.
 
 | Slice | Content | Surfaces | Depends on |
 | --- | --- | --- | --- |
 | 0 | This packet and the registration runbook. | `goals/m365-agent-outbox`, `docs/runbooks` | Nothing |
 | 1 | `@beep/m365` mail-outbound verbs: create draft, add attachment (single request and upload session), get draft with `bccRecipients`, send draft, delete draft. Fixture tests. | `packages/drivers/m365`, `packages/drivers/m365-mcp` (test stubs) | Workstream A's slice 1 (`feat/m365-write-lane`) merged to `main` |
 | 2 | The outbox server: tool schemas, send guard, attachment source, audit log, handlers, server layer, `bin-outbox.ts`, `.mcp.json` entry, conformance and guard tests, the credential-gated live smoke. | `packages/drivers/m365-mcp`, `.mcp.json` | Slice 1 |
-| 3 | Reply, reply-all and forward drafts; draft update. | `packages/drivers/m365`, `packages/drivers/m365-mcp` | Slice 2 live |
+| 3 | Reply, reply-all and forward drafts; draft update; tests that raise the `@beep/m365-mcp` coverage rows recorded as a baseline in #1471. Next PR. | `packages/drivers/m365`, `packages/drivers/m365-mcp` | Slice 2 live (done: #1471, live smoke) |
 
 Slice 1 is developed on a branch cut from workstream A's commit and merges
 `main` once after A's PR lands. It is not published as a stacked PR: a stacked
