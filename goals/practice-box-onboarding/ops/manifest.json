@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "practice-box-onboarding",
+    "packetId": "goal-packet/v1:ce8a72d05d2426400a5c1f4b36e8a9604e3459a816f78e971590ba55262944c6",
+    "title": "Practice Box Onboarding",
+    "status": "active",
+    "created": "2026-10-05",
+    "updated": "2026-10-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/practice-box-onboarding",
+  "lifecycle": "active",
+  "mission": "Move the solo practice onto Box: a resumable, dry-run-first, content-hash-deduped file migration into the provisioned client/matter tree, the Box Drive install steps, and the attorney how-to",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/practice-box-onboarding/README.md",
+    "goals/practice-box-onboarding/SPEC.md",
+    "goals/practice-box-onboarding/PLAN.md",
+    "goals/practice-box-onboarding/GOAL.md",
+    "goals/practice-box-onboarding/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/practice-box-onboarding/GOAL.md"
+    }
+  ],
+  "provides": [
+    "practice/box-content-migration",
+    "drivers/box-content-migration"
+  ],
+  "requires": ["practice/box-tree"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "in-progress"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/practice-box-onboarding/GOAL.md)\" -le 4000",
+    "jq . goals/practice-box-onboarding/ops/manifest.json",
+    "rg -n \"practice-box-onboarding|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/practice-box-onboarding",
+    "git diff --check -- goals/practice-box-onboarding",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

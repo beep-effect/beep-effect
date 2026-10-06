@@ -1,11 +1,15 @@
 import * as B from "@beep/box";
 import { HttpsUrl } from "@beep/schema";
-import { Effect, MutableHashSet, pipe } from "effect";
+import { Effect, Equal, MutableHashSet, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { BoxProvisioningInvariantError } from "../BoxProvisioningErrors.ts";
+import {
+  BoxProvisioningInvariantError,
+  BoxProvisioningSubjectMismatchError,
+  BoxProvisioningTenantMismatchError,
+} from "../BoxProvisioningErrors.ts";
 import {
   BoxObservedCollaboration,
   BoxObservedFolder,
@@ -17,7 +21,7 @@ import { canonicalObservedWebhook } from "./canonical.ts";
 
 const isBUserCollaborations = S.is(B.UserCollaborations);
 
-const markerPageLimit = 1000;
+export const markerPageLimit = 1000;
 
 export type MarkerPage<A> = {
   readonly entries?: ReadonlyArray<A>;
@@ -53,18 +57,27 @@ export const markerQuery = (marker: O.Option<string>) =>
 
 const markerFolderQuery = (marker: O.Option<string>) => ({ ...markerQuery(marker), usemarker: true });
 
+/** Loads one marker page of a folder's direct items; one provider call per invocation. */
+export const loadFolderItemsPage: {
+  (folderId: string): (box: B.Box["Service"]) => (marker: O.Option<string>) => Effect.Effect<B.Items, B.BoxError>;
+  (box: B.Box["Service"], folderId: string): (marker: O.Option<string>) => Effect.Effect<B.Items, B.BoxError>;
+} = dual(
+  2,
+  (box: B.Box["Service"], folderId: string) =>
+    (marker: O.Option<string>): Effect.Effect<B.Items, B.BoxError> =>
+      box.folders.getFolderItems(
+        B.FoldersGetFolderItemsPayload.make({
+          folderId,
+          optionalsInput: { queryParams: markerFolderQuery(marker) },
+        })
+      )
+);
+
 export const listFolderItems: {
   (folderId: string): (box: B.Box["Service"]) => Effect.Effect<ReadonlyArray<B.Item>, B.BoxError>;
   (box: B.Box["Service"], folderId: string): Effect.Effect<ReadonlyArray<B.Item>, B.BoxError>;
 } = dual(2, (box: B.Box["Service"], folderId: string) =>
-  collectMarkerPages<B.Item, B.BoxError>((marker) =>
-    box.folders.getFolderItems(
-      B.FoldersGetFolderItemsPayload.make({
-        folderId,
-        optionalsInput: { queryParams: markerFolderQuery(marker) },
-      })
-    )
-  )
+  collectMarkerPages<B.Item, B.BoxError>(loadFolderItemsPage(box, folderId))
 );
 
 export const listFolderCollaborations: {
@@ -240,3 +253,66 @@ export const listObservedWebhooks = (box: B.Box["Service"]) =>
       )
     )
   );
+
+/** Authenticated enterprise and subject identifiers read from `users.getUserMe`. */
+export type BoxLiveIdentity = {
+  readonly enterpriseId: BoxProviderId;
+  readonly subjectId: BoxProviderId;
+};
+
+/** Tenant and service-identity fingerprint pinned by a secure-runner document. */
+export type BoxExpectedIdentity = {
+  readonly expectedEnterpriseId: BoxProviderId;
+  readonly expectedSubjectId: BoxProviderId;
+};
+
+const enterpriseIdFromUser = (user: B.UserFull): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
+  pipe(
+    O.fromNullishOr(user.enterprise),
+    O.flatMap((enterprise) => O.fromNullishOr(enterprise.id)),
+    O.match({
+      onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "missing-enterprise-id" })),
+      onSome: (enterpriseId) => Effect.succeed(BoxProviderId.make(enterpriseId)),
+    })
+  );
+
+/** Reads the authenticated enterprise and subject with exactly one `users.getUserMe` call. */
+export const observeBoxIdentity = Effect.fn("BoxProvisioningLive.observeBoxIdentity")(function* (
+  box: B.Box["Service"]
+): Effect.fn.Return<BoxLiveIdentity, B.BoxError | BoxProvisioningInvariantError> {
+  const user = yield* box.users.getUserMe(
+    B.UsersGetUserMePayload.make({
+      queryParams: B.GetUserMeQueryParams.make({ fields: ["id", "enterprise"] }),
+    })
+  );
+  return { enterpriseId: yield* enterpriseIdFromUser(user), subjectId: BoxProviderId.make(user.id) };
+});
+
+/** Fails closed when the live enterprise, then the live subject, differs from the pinned fingerprint. */
+export const assertExpectedBoxIdentity: {
+  (
+    actual: BoxLiveIdentity
+  ): (
+    expected: BoxExpectedIdentity
+  ) => Effect.Effect<void, BoxProvisioningTenantMismatchError | BoxProvisioningSubjectMismatchError>;
+  (
+    expected: BoxExpectedIdentity,
+    actual: BoxLiveIdentity
+  ): Effect.Effect<void, BoxProvisioningTenantMismatchError | BoxProvisioningSubjectMismatchError>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (expected: BoxExpectedIdentity, actual: BoxLiveIdentity) {
+    if (!Equal.equals(expected.expectedEnterpriseId, actual.enterpriseId)) {
+      return yield* BoxProvisioningTenantMismatchError.make({
+        expectedEnterpriseId: expected.expectedEnterpriseId,
+        actualEnterpriseId: actual.enterpriseId,
+      });
+    }
+    if (!Equal.equals(expected.expectedSubjectId, actual.subjectId)) {
+      return yield* BoxProvisioningSubjectMismatchError.make({
+        expectedSubjectId: expected.expectedSubjectId,
+        actualSubjectId: actual.subjectId,
+      });
+    }
+  })
+);

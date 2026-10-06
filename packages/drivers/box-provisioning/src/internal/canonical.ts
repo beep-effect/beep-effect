@@ -7,6 +7,8 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { BoxContentMigrationMap } from "../BoxContentMigrationMap.ts";
+import { BoxContentMigrationPlan } from "../BoxContentMigrationPlan.ts";
 import { BoxAdoptions, BoxDesiredState, BoxWebhookIntent } from "../BoxProvisioningIntent.ts";
 import { BoxObservedState, BoxObservedWebhook } from "../BoxProvisioningObserved.ts";
 import { BoxProvisioningPlan } from "../BoxProvisioningPlan.ts";
@@ -149,4 +151,44 @@ export const sealBoxProvisioningPlan = Effect.fnUntraced(function* (plan: BoxPro
 
 export const hasValidBoxProvisioningPlanDigest = Effect.fnUntraced(function* (plan: BoxProvisioningPlan) {
   return sha256Equivalence(plan.planDigest, yield* boxProvisioningPlanDigest(plan));
+});
+
+const joinPath = A.join("/");
+
+/** Entry-order-independent form of a migration map: folders by path, files by destination then source. */
+export const canonicalBoxContentMigrationMap = (map: BoxContentMigrationMap): BoxContentMigrationMap =>
+  BoxContentMigrationMap.make({
+    ...map,
+    folders: A.sortWith(map.folders, (folder) => joinPath(folder.path), Order.String),
+    files: A.sort(
+      map.files,
+      Order.combineAll([
+        Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => joinPath(file.folderPath)),
+        Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => file.fileName),
+        Order.mapInput(Order.String, (file: BoxContentMigrationMap["files"][number]) => file.sourceRelativePath),
+      ])
+    ),
+  });
+
+export const boxContentMigrationMapDigest = (map: BoxContentMigrationMap) =>
+  encodedDigest(BoxContentMigrationMap, canonicalBoxContentMigrationMap(map));
+
+export const boxContentMigrationPlanDigest = (plan: BoxContentMigrationPlan) =>
+  encodedDigest(
+    BoxContentMigrationPlan,
+    BoxContentMigrationPlan.make({
+      ...plan,
+      planDigest: zeroDigest,
+    })
+  );
+
+export const sealBoxContentMigrationPlan = Effect.fnUntraced(function* (plan: BoxContentMigrationPlan) {
+  return BoxContentMigrationPlan.make({
+    ...plan,
+    planDigest: yield* boxContentMigrationPlanDigest(plan),
+  });
+});
+
+export const hasValidBoxContentMigrationPlanDigest = Effect.fnUntraced(function* (plan: BoxContentMigrationPlan) {
+  return sha256Equivalence(plan.planDigest, yield* boxContentMigrationPlanDigest(plan));
 });
