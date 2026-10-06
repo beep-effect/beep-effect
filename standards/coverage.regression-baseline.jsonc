@@ -15217,15 +15217,15 @@
     },
     "@beep/m365-mcp": {
       "path": "packages/drivers/m365-mcp",
-      "lines": 88.94,
-      "statements": 89.25,
-      "branches": 88.23,
-      "functions": 75.73,
+      "lines": 89.9,
+      "statements": 90.18,
+      "branches": 88.37,
+      "functions": 78.67,
       "uncovered": {
-        "lines": 46,
-        "statements": 46,
+        "lines": 42,
+        "statements": 42,
         "branches": 10,
-        "functions": 33
+        "functions": 29
       },
       "files": {
         "packages/drivers/m365-mcp/src/M365Handlers.ts": {
@@ -15301,15 +15301,15 @@
           }
         },
         "packages/drivers/m365-mcp/src/OutboxSendGuard.ts": {
-          "lines": 90,
-          "statements": 90.62,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 80,
+          "functions": 100,
           "uncovered": {
-            "lines": 3,
-            "statements": 3,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 3
+            "functions": 0
           }
         },
         "packages/drivers/m365-mcp/src/OutboxServer.ts": {
@@ -15325,15 +15325,15 @@
           }
         },
         "packages/drivers/m365-mcp/src/OutboxStoredAttachments.ts": {
-          "lines": 94.44,
-          "statements": 94.44,
+          "lines": 97.22,
+          "statements": 97.22,
           "branches": 100,
-          "functions": 80,
+          "functions": 90,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 2
+            "functions": 1
           }
         },
         "packages/drivers/m365-mcp/src/OutboxTools.ts": {
