@@ -7,10 +7,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   CacheActivationProjection,
-  CachePolicyBaseline,
+  CachePolicyBaselineReview,
   CacheQualificationEntry,
   CacheQualificationKey,
-  CacheReviewDecision,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -688,7 +687,13 @@ export class CacheLiveIdentity extends S.Class<CacheLiveIdentity>($I`CacheLiveId
 ) {}
 
 /**
- * Reviewed baseline replacement with a digest compare-and-swap precondition.
+ * Reviewed baseline re-record with a digest compare-and-swap precondition.
+ *
+ * **Details**
+ *
+ * `subjects` optionally names the packages (or `//`) the review covers; a
+ * changed subject outside that list rejects the record. Without it, the review is
+ * stamped on every subject whose posture changed and the command reports them.
  *
  * **Example** (Reject a baseline without review)
  *
@@ -703,10 +708,7 @@ export class CacheLiveIdentity extends S.Class<CacheLiveIdentity>($I`CacheLiveId
  */
 export class CacheBaselineRequest extends S.Class<CacheBaselineRequest>($I`CacheBaselineRequest`)(
   {
-    review: CacheReviewDecision,
-    scope: CachePolicyBaseline.fields.scope,
-    profile: CachePolicyBaseline.fields.profile,
-    epoch: CachePolicyBaseline.fields.epoch,
+    ...CachePolicyBaselineReview.fields,
     previous: S.OptionFromOptionalKey(Sha256Hex),
   },
   $I.annote("CacheBaselineRequest", { description: "Explicit review and expected prior baseline digest." })

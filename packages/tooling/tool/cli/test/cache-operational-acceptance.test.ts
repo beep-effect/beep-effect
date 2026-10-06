@@ -37,6 +37,7 @@ import {
   CacheSignedExecutionProfile,
   CacheTaskConfiguration,
   CacheTaskContract,
+  cacheBaselineSubject,
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
@@ -259,7 +260,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
           .spyOn(Fingerprint, "collectCacheToolchain")
           .mockReturnValue(Effect.succeed(toolchain));
         const baseline = CachePolicyBaseline.make({
-          review,
+          reviews: { "//": review, [cacheBaselineSubject(contract.key.computation)]: review },
           scope: [contract.key.computation],
           profile: contract.key.profile,
           epoch: contract.key.epoch,

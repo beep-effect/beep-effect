@@ -12,9 +12,14 @@
  */
 export {
   auditCachePolicy,
+  CacheBaselineSubject,
   CachePolicyAuditReport,
   CachePolicyAuditRequest,
   CachePolicyBaseline,
+  CachePolicyBaselineRecord,
+  CachePolicyBaselineRecordRequest,
+  CachePolicyBaselineRejection,
+  CachePolicyBaselineReview,
   CachePolicyFinding,
   CachePolicyFindingKind,
   CachePolicyNode,
@@ -25,7 +30,12 @@ export {
   CacheQualificationStatus,
   CacheQualificationStore,
   CacheReviewDecision,
+  cacheBaselineRootSubject,
+  cacheBaselineSubject,
+  cacheBaselineSubjects,
   cacheLedgerFailures,
+  cachePolicyBaselineFailures,
+  recordCachePolicyBaseline,
 } from "./Cache.governance.policy.ts";
 /**
  * Computation-scoped qualification contracts and evidence promotion policies.

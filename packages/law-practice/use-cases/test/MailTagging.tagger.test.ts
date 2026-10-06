@@ -1,10 +1,17 @@
 import {
   decisionCategories,
+  defaultMailTaxonomy,
   MailConversationId,
   MailTaxonomy,
+  MatterClientKey,
+  MatterDocketNumber,
+  MatterIndex,
+  MatterIndexEntry,
+  MatterKey,
   MatterMatched,
   MatterUnmatched,
   SenderAddressRule,
+  UnattributedMatter,
 } from "@beep/law-practice-domain/values/MailTagging";
 import {
   decideMatterTagging,
@@ -18,7 +25,7 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as P from "effect/Predicate";
-import { acme, envelope, globex, index, taxonomy } from "./MailTagging.fixture.ts";
+import { acme, envelope, globex, index, since, taxonomy } from "./MailTagging.fixture.ts";
 import type { MailEnvelope } from "@beep/law-practice-domain/values/MailTagging";
 
 const context = MatterTaggerContext.make({ index, taxonomy });
@@ -38,7 +45,86 @@ const expectUnmatched = (message: MailEnvelope, reason: string) => {
   expect(!isMatched(decision) && decision.reason).toBe(reason);
 };
 
+// The attorney's docket grammar: `<client>.<family><country><sequence>`. Family 10001 is reused by two clients.
+const keyed = MatterKey.make("1234.10001");
+const reused = MatterKey.make("5678.10001");
+const docketed = MatterTaggerContext.make({
+  index: MatterIndex.make({
+    builtAt: since,
+    entries: [
+      MatterIndexEntry.make({
+        matterKey: keyed,
+        clientKey: MatterClientKey.make("1234"),
+        docketNumbers: [MatterDocketNumber.make("10001US01"), MatterDocketNumber.make("1234.10001US01")],
+      }),
+      MatterIndexEntry.make({
+        matterKey: reused,
+        clientKey: MatterClientKey.make("5678"),
+        docketNumbers: [MatterDocketNumber.make("10001US01"), MatterDocketNumber.make("5678.10001US01")],
+      }),
+    ],
+    unattributed: [
+      UnattributedMatter.make({ familyKeys: [MatterDocketNumber.make("30003")] }),
+      UnattributedMatter.make({ familyKeys: [MatterDocketNumber.make("9999.40004")] }),
+    ],
+  }),
+  taxonomy: defaultMailTaxonomy([keyed, reused]),
+});
+const docketDecision = (subject: string) => decideMatterTagging(docketed, envelope({ at: 1, subject }));
+const matchedKey = (subject: string) => {
+  const decision = docketDecision(subject);
+  return isMatched(decision) ? decision.matterKey : decision.reason;
+};
+
 describe("MailTagging matter tagger", () => {
+  it("matches the attorney's client-keyed docket reference wherever it sits in the text", () => {
+    expect(matchedKey("Re: 1234.10001US01 office action")).toBe(keyed);
+    expect(matchedKey("docket#1234.10001us01")).toBe(keyed);
+    expect(matchedKey("Your ref FA-2026-0042 / 1234.10001US01")).toBe(keyed);
+    expect(matchedKey("Our ref 5678.10001US01")).toBe(reused);
+  });
+
+  it("matches a country stage the index does not list through its client-keyed family", () => {
+    const decision = docketDecision("Annuity due for 1234.10001EP02");
+
+    expect(matchedKey("Annuity due for 1234.10001EP02")).toBe(keyed);
+    expect(isMatched(decision) && A.map(decision.evidence, (item) => [item.kind, item.matched])).toStrictEqual([
+      ["docket-number", "1234.10001"],
+    ]);
+    expect(matchedKey("Entering the national phase: 1234.10001WO02-US1")).toBe(keyed);
+  });
+
+  it("never picks a client from a bare family", () => {
+    expect(matchedKey("Annuity due for 10001EP02")).toBe("no-signal");
+    expect(matchedKey("Status of 10001US01")).toBe("ambiguous");
+  });
+
+  it("leaves a docket reference into an unattributed family for the attorney", () => {
+    expect(matchedKey("Filing receipt for 30003EP01")).toBe("needs-attorney");
+    expect(matchedKey("Filing receipt for 9999.40004US01")).toBe("needs-attorney");
+    expect(matchedKey("Invoice 30003 and 9999.40004 enclosed")).toBe("no-signal");
+  });
+
+  it("reads the reference grammar's application and patent forms", () => {
+    expectMatched(envelope({ at: 1, subject: "App. No. 16/123,456 allowed" }), "application-number");
+    expectMatched(envelope({ at: 2, subject: "now US 10,123,456" }), "patent-number");
+  });
+
+  it("never tags from a contact address alone, or from an address and its domain", () => {
+    const fromContact = envelope({ at: 1, sender: "counsel@acme.example.test" });
+    const candidates = matterCandidates(context, fromContact);
+
+    expect(A.flatMap(candidates, (candidate) => A.map(candidate.evidence, (item) => item.kind))).toStrictEqual([
+      "contact-address",
+      "contact-domain",
+    ]);
+    expectUnmatched(fromContact, "below-threshold");
+    expectUnmatched(
+      envelope({ at: 2, sender: "attorney@example.test", recipients: ["counsel@acme.example.test"] }),
+      "below-threshold"
+    );
+  });
+
   it("matches every written form of an application number", () => {
     expectMatched(envelope({ at: 1, subject: "Re: U.S. Appl. No. 16/123,456 - response due" }), "application-number");
     expectMatched(envelope({ at: 2, subject: "Filing receipt 16/123456" }), "application-number");

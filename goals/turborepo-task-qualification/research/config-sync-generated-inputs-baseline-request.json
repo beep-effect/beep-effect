@@ -1,5 +1,6 @@
 {
-  "previous": "bc8a56503cbe20a429763c267a9f6ebab764382ca38c41657f15ca5c0c689b6e",
+  "previous": "57098aa849f30497ab36d5c07727c61bfdcfbff6aa3e845eef0dcc30e862ed7e",
+  "subjects": ["//"],
   "review": {
     "reviewer": "Claude Fable 5.1 (create-package CI-ready, fix/create-package-ci-ready)",
     "reason": "Accept the two generated-file inputs (vitest.aliases.generated.json, standards/fallow.boundaries.generated.jsonc) added to the cached //#config-sync:check root task so the check re-runs when only a file it regenerates changes; one node moves by two input entries, no command text, output, environment key, dependency edge or cache flag changed, and no qualification is granted.",

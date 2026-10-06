@@ -75,7 +75,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
           expect(exitCode, stderr).toBe(0);
           return { stderr, stdout };
         }, Effect.scoped);
-        const links = ["effect", "effect-tsgo", "effect-workspace"];
+        const links = [
+          "effect",
+          "effect-tsgo",
+          "ai-plugin-marketplace-manager",
+          "okfit",
+          "tsdoctor",
+          "effected",
+          "pluginfinity",
+          "vitest-agent",
+          "effect-workspace",
+        ];
         const assertLinks = Effect.fn("SetupEffectRefTest.assertLinks")(function* () {
           for (const name of links) {
             expect(yield* fs.readLink(path.join(repoRoot, ".repos", name))).toBe(
@@ -90,6 +100,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
           [
             `clone --quiet git@github.com:Effect-TS/effect.git ${expectedRoot}/effect`,
             `clone --quiet git@github.com:Effect-TS/tsgo.git ${expectedRoot}/effect-tsgo`,
+            `clone --quiet git@github.com:spencerbeggs/ai-plugin-marketplace-manager.git ${expectedRoot}/ai-plugin-marketplace-manager`,
+            `clone --quiet git@github.com:spencerbeggs/okfit.git ${expectedRoot}/okfit`,
+            `clone --quiet git@github.com:spencerbeggs/tsdoctor.git ${expectedRoot}/tsdoctor`,
+            `clone --quiet git@github.com:spencerbeggs/effected.git ${expectedRoot}/effected`,
+            `clone --quiet git@github.com:spencerbeggs/pluginfinity.git ${expectedRoot}/pluginfinity`,
+            `clone --quiet git@github.com:spencerbeggs/vitest-agent.git ${expectedRoot}/vitest-agent`,
             "",
           ].join("\n")
         );
