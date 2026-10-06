@@ -33,7 +33,7 @@
     ".claude/skills/orchestrate/SKILL.md",
     ".claude/skills/orchestrate/HANDOFF.template.md"
   ],
-  "researchReports": [],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -305,8 +305,9 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
       Effect.map(() => {
         if (command.command === "git") return stubHandle(0, "feat/gate\n");
         if (Str.includes("/merge")(line)) return stubHandle(0, script.mergeResponse);
-        // The review-window reader asks for instants through --jq: answer with the recorded values.
-        if (Str.includes("/timeline")(line)) return stubHandle(script.windowExit, `${readyAtIso}\n`);
+        // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
+        if (Str.includes("/timeline")(line))
+          return stubHandle(script.windowExit, `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n`);
         if (Str.includes("/check-suites")(line)) return stubHandle(script.windowExit, A.join(suiteInstants, "\n"));
         if (Str.includes("graphql")(line)) return stubHandle(script.threadsExit, JSON.stringify(threadsFixture));
         if (Str.includes("rules/branches/")(line)) return stubHandle(script.rulesExit, JSON.stringify(rulesFixture));
