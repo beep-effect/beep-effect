@@ -560,3 +560,272 @@ script (`EvidenceWriteScript`, a named literal domain of the three regenerate sc
 names it; each of the three scripts passes its sibling and the test asserts the lane-plan hint never
 mentions the admission replay. From round 3 on, P2-and-below threads become tracked follow-ups
 with a resolve and no push.
+
+## 2026-10-06 — P3 opened; run-4 launch sitting (orchestrator under the autonomy charter)
+
+Inputs: a five-lane read-only survey with a critic (the run-3 choreography, the vendored auditor
+engine v15, the docket queues A–G, the gate and pin, the CQ-009 re-scope and the lab's exclusion),
+checked against PLAN P3/W7, SPEC Constraints and Stop Conditions, graduation Rulings 1, 4, 6, 7, 8,
+9, 10 and 11, the docket's "Not in scope", and the P1/P2 sittings. Facts the survey settled: the
+run-3 prior index digests to `b9c140ccd31b` (284 rows: 37 proposed / 77 mapped / 138 unresolved
+= 84 live + 54 carried / 32 irrelevant); the engine bytes at the P2 head are validator
+`fdbcefc9fd70`, framed contracts `dcc8da4cc7f9` (21 files), SKILL.md `a12de4055976`, prompts
+denotation `ddec132ee905`, ufo-analysis `3d94feb0629c`, synthesis `117d82b29904`,
+ontoclean-adversary `9dbfb7fc9d4c`, alternative-model `4563e5726438`, sandbox runner
+`ecb6dcab421b`, CQ suite `e99e30cd8015` (26 CQs), `scope.md` `9ff61c839a08` (all recomputed at
+the pin); the launch gate passes from the pinned bytes (C4.1 checked at
+`goals/time-to-certainty/PLAN.md:171`, byte-equal to `run4-ledger/MANIFEST.yaml` `gate.c4_1`;
+`post_cut_pre_push_facts: 3628`, `holds: true`; merged-preview dormant; C4.2 unchecked) and needs no
+second fleet read; the validator binds the run manifest and the dispositions index to exactly
+`ONT/work/`, so every seat output lands under `ONT/work/` and `ONT/work-run4/` holds only the impl
+report; the run-3 adapter is hard-wired to the four run-3 pins, so run 4 needs a sibling adapter
+version with its own golden; the control-interventions ledger holds 42 rows with W1's census head at
+`8b7392fe00`; the rat-049 lane-plan line, S7 contract §8 and the lane-plan golden are P2 bytes. Each
+ruling is reversible by a later entry before the pin commit, and by a new run after it (a committed
+pin is never refreshed).
+
+**Ruling 1 — the run base is `origin/main` after the P2 projection PR merges.** The run branch is
+`feat/ciops-p3-run4` off the merge commit of #1459, so the pin tree carries the rat-049 lane-plan
+line, contract §8, `lane-plan-v1.ttl` and the live replay evidence the seats must judge (CT §8.3
+hands the eleven provisional lane-plan terms to the run-4 Queue E/G intake). Rejected: stacking on
+the P2 branch (no hosted proof until retargeted); pinning on main without P2 (seats would read a pin
+without the vocabulary they must judge). Reversal: rebase before the pin; after the pin, a new run.
+
+**Ruling 2 — the orchestrator rules every sitting under the charter, named honestly.** Sittings 1–3,
+withdrawals, parks and every ratification are the orchestrator's calls under the operator autonomy
+charter (PR #1448; "only money" escalates; the operator reviews asynchronously). The skill reserves
+ratification to a human steward (SKILL "HUMAN — authoritative"; the ratification schema header), so
+the deviation is recorded here, in the run README and in every run-4 ratification: `steward.id`
+is the role `orchestrator-under-autonomy-charter`, `steward.name` names the session and the charter
+date, every `verbatim_decision` is the orchestrator's own words, and no record names the operator or
+carries words he did not say (the failure mode SKILL "Known Limits" documents is an invented human
+authority, which honest labelling avoids). Rejected: routing accepts to the operator as structured
+prompts (a non-money escalation the charter withdrew); closing the run by ruling with everything
+`proposed` (leaves P4 on seed rows and three tiers). Reversal: a later sitting supersedes with
+revise or reject ratifications (a scribed `rat-*` is never deleted); the P3 closing entry lists every
+accept for the operator's asynchronous review, which is the charter's review path.
+
+**Ruling 3 — "append under a new run or pin root" is read as the run-3 precedent reads it.** Frozen
+means the corpus pins and their generators, prior indexes and manifests under `ONT/runs/`, archived
+observations and seat trees under `ARCH/`, every `rat-*` byte, and `s4/LEDGER.yaml`. The run may
+move the run-3 seat trees and rat-053..070 byte-identically into the shelter roots
+`ARCH/orun-2026-09-10T02:10:52Z.{work,governance}/` (the SKILL rotation; `validate_packet.py` reads
+them there), add new files, and regenerate the S5/S6 status files additively for its own accepts
+(graduation Ruling 7; #1089). Notes live only in new files: the relocation note is
+`ARCH/orun-2026-09-10T02:10:52Z.work/README.md`, the adapter record is a new file beside the adapter,
+and the run-3 README, `adapters/README.md` and `work-run3/impl-report.md` are not appended to (broken
+links there stay as provenance). Rejected: the literal reading (rotation impossible, v15 scans run-3
+trees as live, the run cannot start). Reversal: revert before merge; after merge a later entry and a
+follow-up PR.
+
+**Ruling 4 — lanes edit files; the orchestrator owns git, the remote and the worktree.** No lane
+stages, commits, tags or pushes. The relocation is a plain `mv` by the engine lane with a byte-identity
+check; the orchestrator stages by name. The pin is a lightweight tag
+`evidence/beep-ci-ops/<run_id with ':' → '-'>-pin` pushed by the orchestrator (run-1..3 precedent;
+P1 Ruling 4 is scoped to the captures, and a run pin differs: the validator needs the pin COMMIT and
+every observation id embeds it, so a tree on main cannot stand in). Residue scans run before the push.
+The pin worktree is a detached worktree at the tag in the sibling `-worktrees` root; never `/tmp`,
+never force-push. Reversal: delete the remote tag; remove the worktree after the run PR merges.
+
+**Ruling 5 — the CQ-009 re-scope is the full package, in its own pre-pin commit, by the pin lane's
+CQ-009 step.** Graduation Ruling 9's "re-scoped to same-checkout exclusion plus the legacy-origin
+drain, with a new must-fail fixture" is read as the whole falsifiable change, so it is one commit
+before the digests are computed: the CQ-009 entry (question, SPARQL with both arms bound in `?arm`,
+notes citing the #929 law by symbol, temporal scope, fixtures); two new must-fail fixtures, one per
+arm (`cq009-same-checkout.ttl`, `cq009-legacy-drain.ttl`), because each arm needs its own falsifier;
+the seed's `grant-1` gains the checkout predicate and a protocol value so the checkout arm is not
+vacuous; the old fixture `cq009-two-grants.ttl` keeps its bytes and becomes the retained pre-#929
+regression under a hand-authored `ontology/tests/temporal/cq-009-pre929.sparql`, its harness row
+re-pointed; the harness antecedent (`run_cq_suite.py`) and the validator's copy require an active
+grant with a checkout; the errata fold is the Ruling 9 list plus `orsd.md` §9 (CQ-008 sample answer,
+CQ-010/CQ-023 code cites by symbol, CQ-021 pre-#878 note, pre-glossary rows, the closed-world row,
+UC-002, dated "folded at the run-4 pin" lines in `scope.md` and `orsd.md`). The two predicates are
+`ciops:hasCheckout` (object property, SeatGrant → Checkout) and `ciops:hasCoordinationProtocol`
+(data property, `xsd:string`, value `legacy-origin-lock/v1` for the drain); they enter
+`s6/PREDICATES.yaml` as `seed-only` through `build_predicates.py`, which is not ratification (the
+`landedAt` precedent). `regen_cq_artifacts.py` has no check mode, so a pre-change regeneration must
+prove an empty diff first. Rejected: the minimal reading with a vacuous checkout arm (untestable);
+one fixture for two arms. Reversal: revert before the tag; after the tag only a new run, because the
+CQ digest sits in every review chain.
+
+**Ruling 6 — engine scope: one sibling adapter, one transcriber, every tuple pinned.** The pin lane's
+engine step writes `ONT/adapters/adapter-journal-run4.py` (v1.2.0) over the `run4-fleet` and
+`run4-ledger` `.properties` projections only, with a tracked, clean golden
+`ONT/adapters/golden/journal-run4/**`, and a run-4 prose transcriber over: the
+control-interventions ledger rows (id, class, landedAt, mechanismChanged lines), KPI law §2 and §6,
+S7 contract §8, `lane-plan-v1.ttl`, `literal-domains.md`, the deployed `ProofStage` literal line,
+and both pin manifests' census readings (stage census, the gate block, the merged-preview reading).
+It never transcribes DECISIONS, CQ text or ratifications. The engine lane first evaluates whether
+`po_from_evidence.py` or `runtime_po_capture.py` can be reused and reports; a new
+`po_transcriber_run4.py` is written only if neither fits. Queue G and the tier evidence travel as
+prose observations plus `adapter-config` scalar facts where the object grammar allows. The source
+observation budget stays near run 3's (about 250). Reversal: a new version before the pin; after
+it, a new run.
+
+**Ruling 7 — Queue F is carried to the next S6 refresh.** Regenerating `s6/POLICY.yaml` at a new
+commit re-extracts the S6 policy (a baseline re-run under the SPEC stop) and risks value drift since
+its last extraction; the tree-pinned citation convention it was to adopt is already carried by both
+run-4 pin manifests. The docket records the carry as a dated addendum. Reversal: a later entry.
+
+**Ruling 8 — seat launch: Workflow children for every seat but the blinded one, which runs headless
+from an isolated root.** Denotation, foundational, synthesis and adversary seats and every
+orchestration lane are one Workflow `agent()` per invocation with `model: "claude-opus-5-5"` and an
+explicit `effort: "medium"` (the Claude Code default under the 2026-10-01 policy), a fresh agent per
+batch and per adversary round, never continued through SendMessage (SKILL "same-context execution
+voids the pass"). The blinded alternative seat runs as a headless `claude -p --model
+claude-opus-5-5` with the effort setting, no MCP servers and the default permission mode, from an
+isolated root under `~/.cache/beep/run4-blinded/<prefix>/` that holds only its prompt, contracts, CQ
+suite, observations and hypotheses, so a read outside the root is denied by the harness rather than
+by instruction alone; the engine step proves this with a canary seat before the first real launch,
+and if the probe does not deny, the seat falls back to a Workflow child with instruction-only
+blinding and the launch entry says so. The manifest records `effort: medium` on all five seats, the
+launch entry quotes both command shapes as the deviation from skill v15's `codex exec` recipe
+(graduation Ruling 4), and no Codex or Grok seat runs (no operator opt-in). Reversal: before launch,
+a later entry; after launch, re-run the affected seat pass and re-review stale chains.
+
+**Ruling 9 — seats write to the lane; gates run in the pin worktree.** Seat output goes to the run
+lane's untracked `ONT/work/` (and `ONT/governance/ratifications/` for new rats); every
+`validate_artifacts.py --gate --repo .` runs in the detached pin worktree with those two trees
+rsynced in, so documentation commits can move the branch while `HEAD == manifest.commit` holds at
+the pin. The run manifest is written after the pin, in the lane's `ONT/work/`, with `repository.commit`
+= the pin SHA in block style, and is committed only at rotation.
+
+**Ruling 10 — the docket's at-pin addendum.** The pin lane's docket step appends one dated
+addendum: every count and digest re-verified at the pin; the prior chain; a Queue G row presenting
+the pair only (`OperationalChangeEvent`, `ciops:landedAt`) over the ledger as it stands at the pin,
+after the orchestrator re-runs the W1 lever query over `8b7392fe00..<run base>` so the ledger is
+fresh (a goal-owned seed-data step, with its `w1-lever-query.md` addendum); a Queue H row for the
+fourth `AssuranceTier` member (graduation Ruling 10) stating the parked `AssuranceTierId` domain as
+the blocker and the dormant merged-preview reading as the evidence line; a Queue E addendum taking
+the eleven provisional lane-plan terms into intake (S7 contract §8.3); a dated correction of the
+stale "no CQ, seed or fixture edit is owed to run 4" and "none is scheduled" sentences; and the
+shelter path remap for the run-3 trees. Rows never gain a structured `tier` member in this phase;
+tier derivation for W8 is a P4 hand-off. Reversal: a later dated addendum.
+
+**Ruling 11 — batching and the adversary round cap.** Batches keep prefix-stable membership across
+stages. An adversary FAIL is blocking: it is fixed or withdrawn in any round, and rounds continue
+while a FAIL remains, capped at three (run-3 precedent); a FAIL that survives round 3 ends in a
+withdrawal with named evidence. Non-blocking findings from round 3 on become tracked follow-ups
+(the charter's loop cap). Reversal: a later entry before the next round.
+
+**Ruling 12 — carried rows.** The index-close lane authors all 138 carried rows with fresh
+`needed_evidence` and the run date, never `mapped` or `proposed` on a carried row. The carried-rows
+lane reuses the run-3 fifteen-cluster frame for the 54 C(iv) rows and the docket's C(i)–C(iii) groups
+for the 84 live ones, re-clustering only where a run-4 pin offers new evidence, and re-parks every
+CQ-requiring duty with "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009" as
+the named missing decision. Reversal: sitting 2 re-adjudicates.
+
+**Ruling 13 — numbering.** Ratifications continue at `rat-071`, rejections at `rej-001`, each the
+maximum over the live directory and every shelter (the SKILL `LAST` probe reads only the live
+directory); proposal slugs are fresh and never equal an archived id (a collision breaks the archived
+digest checks in `--s5`).
+
+**Ruling 14 — projection rides the run PR, additively.** Accepts are projected in the run PR through
+the #1089 footprint (`s5/DISPOSITIONS.yaml`, `s5/TAXONOMY.yaml`, `s6/PREDICATES.yaml`, `ABOX.yaml`
+only if a new class needs typing, dated notes in the S5/S6 contract docs); `apply_s5_dispositions.py`
+is never run over `s4/LEDGER.yaml`. Flags are never removed: a lifted flag is a ratification that
+names it, listed beside the flag, so the S5 contract needs no removal rule. Rejected: a follow-up
+projection PR (lawful only with zero accepts; `--s5` must be green on the final tree). Reversal: a
+revert commit.
+
+**Ruling 15 — the lab's CQ-009 lift is its own small PR inside P3, after the run PR merges.** The
+run PR carries data and docs; the lab change is schema-first (a typed `Cq009Verdict` replacing the
+"temporally out of scope" reading: the same-checkout arm evaluated over the replayed active set, the
+legacy arm reported as unobservable in the journal with its census, a censorship line), regenerates
+the live evidence, and carries a ruling superseding P2 Ruling 9's CQ-009 sentence, an S7 §8 dated
+note, and the PLAN/README/manifest text. The P3 status flip rides that last P3 PR. Rejected: lab
+code inside a >1,000-file run PR (unreviewable); deferring to P4 (PLAN ties the lift to W7).
+Reversal: a later entry and a lab follow-up.
+
+**Ruling 16 — waivers.** An unresolved-fraction waiver exists only as a sitting ruling scribed here
+and applied to the manifest with the sitting entry; it is never pre-declared (a dormant waiver is
+flagged). Reversal: re-disposition, then re-gate.
+
+**Ruling 17 — publication, gitleaks and the P4 hand-off.** The run tree is scanned with `gitleaks`
+under main's configuration before the pin push; a main-first allowlist PR is opened only on a hit,
+never speculatively. The run PR is a draft until final, labelled `ready-for-heavy`, published through
+Yeet when the planner's capture limit admits it and by hand otherwise; never force-pushed. The P3
+closing entry carries the P4 hand-off: the tier outcome (KPI law §2 and W8 text), the change-event
+ratification state, W1 freshness at the pin, the lane-plan terms' intake outcome, and tier
+derivation for change-event rows.
+
+Recorded calls: (a) every validator run uses `uv run --offline --python 3.12 --with pyyaml python -B`
+with `UV_CACHE_DIR=$HOME/.cache/beep/uv-cache`, `env -u TMPDIR` and `PYTHONDONTWRITEBYTECODE=1`
+from the pin worktree, never `mise trust`; (b) the engine step proves, before anything else, the
+v15 self-test on 3.12, the offline cache for cp3.12 + PyYAML, the sandbox runner, that v15 ignores
+`ONT/lanes/` and `ONT/ratification-package.yaml`, and the blinded-root read denial; (c) every seat
+brief states the expected standing violations before index close (138 "prior unresolved
+observation … has NO row") so no seat invents rows; (d) every lane records friction receipts in
+`research/OPPORTUNITIES.md` at the moment, redacted; (e) MAP W7's capability line is provenance and
+stays; the NET-NEW adapter, golden and transcriber are recorded here as the capability gap it did
+not list; (f) sitting entries are appended here with byte-equal mirrors under `ONT/work/sittings/`;
+(g) the run README names the pin tag, the sitting entries here, the shelter relocation, the
+unresolved fraction and the launch deviation.
+
+Recorded call (h) — where gates run before the pin: no pin worktree exists before the pin, so the
+call-(b) proofs, the pre-pin CQ-009 packet gates and the final-tree packet gates run in the lane
+checkout under call (a)'s runtime; only `validate_artifacts.py --repo` and `--gate` runs happen in
+the pin worktree. The call-(b) scans are plain `VAL "$ONT"` scans whose expected output is the
+noise call (c) names (904 lines before the relocation; exactly one "NO records and no manifest"
+line after it); the engine step alone may write a transient provisional manifest (`pin_waived:
+true`, `repository.commit` = the current HEAD) so the adapter proofs validate against a pinned
+tuple, and it deletes that file before the pin, proving it gone in its residue step (the run-3
+precedent). The Ruling 9 run manifest is a different file written after the pin.
+Recorded call (i) — relocated bytes are provenance, not a placement: the 26 run-3 files in the
+relocation set that match the residue scan (the login-valued `steward.id` of rat-053..070 and one
+gate log; seven 12-hex keys in run-3 records) are already public on `main` and move byte-identically;
+the pre-push residue scan applies to new bytes only, scan B over the moved trees is informational and
+must report exactly that count, and the gitleaks proof is the hosted shape: every commit in
+`origin/main..HEAD` plus a `dir` scan of the final tree under main's configuration (Ruling 17).
+Recorded call (j) — Ruling 6's "adapter-config scalar facts" arm is withdrawn: the run-1
+`adapter-config` reads only hard-coded JSON files and Ruling 6 admits one sibling adapter, so Queue G
+and the tier evidence travel as prose observations only, one PO per control-interventions row
+spanning `- id:` through its first `mechanismChanged:` line (the row's own public fields). The
+adapter record is the new file `ONT/adapters/adapter-journal-run4.md`; the relocation note
+`ARCH/orun-2026-09-10T02:10:52Z.work/README.md` is written by the engine lane with the move.
+Recorded call (k) — the blinded canary's "default permission mode" reads as `--permission-mode
+acceptEdits` with permission prompts disabled, from the isolated root: a write inside the root must
+succeed and a read outside it must be denied; the engine lane records the exact command and both
+outcomes, and the real blinded seats use the shape the canary proved (Ruling 8's fallback applies if
+the probe does not deny).
+Recorded call (l) — lane scratch lives under `$HOME/.cache/beep/run4-p3/<lane>/`, never the repo
+or `/tmp`; briefs cite the sitting by ruling number and the `S:n` offsets of this entry as filed.
+Recorded call (m) — sequencing: the engine lane runs its call-(b) proofs and the relocation first
+and reports; the orchestrator stages the relocation by name; only then do the engine's adapter and
+transcriber work and the docket + CQ-009 step run in parallel (the packet validators read live and
+shelter ratifications, so a relocation racing a `--s5` run would be a false red). The uv cache for
+CPython 3.12 (PyYAML, rdflib, pyshacl, pyoxigraph, owlrl) was warmed online once by the orchestrator
+before launch and every offline with-set verified; lanes never drop `--offline`.
+Recorded call (n) — CQ-009 details under Ruling 5: the seed `grant-1` protocol value is the deployed
+current default `scheduler-origin-concurrency/v1` (the legacy arm is exercised by its fixture only);
+the harness carries 22 fixtures (two new rows, the old row re-pointed, no extra `rows_eq_0` row);
+`closed-world.yaml` gains no `hasCheckout` closure row in run 4 because `build_predicates.py`
+hard-codes fourteen declarations and the S6 scripts are not touched (a tracked follow-up for a later
+ruling); the orchestrator re-verifies the CQ and scope digests on the Commit A blob before writing
+the run manifest.
+Recorded call (o) — the docket addendum is appended at the end of the file after "Not in scope",
+the title line keeps its "pre-pin draft" words as provenance, and the addendum also dates the stale
+gate-amendment sentence (docket lines 30–33) as superseded by graduation Ruling 7.
+Recorded call (p) — the W1 lever-query re-run over `8b7392fe00..<run base>` is the orchestrator's
+first step on the run branch; the resulting ledger sha256, row count and census head are supplied to
+the docket lane in its launch message, and the docket lane writes nothing about the ledger without
+them.
+Recorded call (q) — the run-4 adapter's selection rules (first attempt-started per stage; per
+clone and stage the first fact and shadow, the first shadow per decision class, the first fact per
+outcome, tier, input source and lane class) are reviewed by the orchestrator against the engine brief
+before the engine lane launches and recorded in the engine report; a rule change after the pin is a
+new adapter version and a new run.
+Recorded call (r) — opening facts and W1 pass 5: the P2 projection PR (#1459) merged as
+`41a7b0717e`; the run branch `feat/ciops-p3-run4` was cut from `origin/main` `50b79e470b`, which
+contains it, and the launch-gate bytes, both pin manifests and every engine digest above were re-read
+unchanged at that base. Under call (p) the W1 lever query was re-run over the window since
+`8b7392fe00` (ten PRs; "Pass 5" in `w1-lever-query.md`): two rows survived both refuters,
+`iv-1427-push-first-publish` (lane-assembly, landed 2026-10-06T01:36:13Z) and
+`iv-1422-spot-pool-drop-r6a` (hosted-runner-capacity, landed 2026-10-06T02:22:00Z from the runbook's
+apply record under P0 Ruling 6; its record PR #1450 is not a row), eight PRs were excluded, none was
+contested, and the ledger stands at 44 rows (sha256 `f520b302424f`). Ruling on the one open point:
+#1427 partitions the local series only. No hosted mechanism is in its diff and rows partition only
+their own tier's series (P0 Ruling 2), so its hosted consequences stay in a caveat that partitions
+nothing; W8 states that population shift as a confounder at that instant (a P4 hand-off). Pass 5
+batched its classifier lanes by path family (three lanes over ten PRs) with one criterion refuter and
+one facts refuter. Reversal: a later entry adds a hosted co-row or re-classifies.

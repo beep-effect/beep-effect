@@ -33,7 +33,9 @@ Use this command for execution-capable sessions:
 
 P2 Projection on live data — complete 2026-10-06 (W6 S7-v2 seam and `planEpisode` body, W5 live
 replay: 197 of 200 first-choice agreement on the `run4-fleet` pin beside the golden's 41 of 41; P1
-and P0 complete). Next: P3 auditor run 4 (W7), fed by the P1 pins and the P2 projection.
+and P0 complete). P3 auditor run 4 (W7) opened 2026-10-06, fed by the P1 pins and the P2 projection:
+the launch sitting (Rulings 1–17) is in `research/decisions.md`, and the change-event ledger was
+refreshed to 44 rows by W1 pass 5 before the pin.
 
 ## Latest Evidence
 
