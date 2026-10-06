@@ -9,10 +9,9 @@ digests while retaining the originals.
 
 ## Next action
 
-Finish the resumed P0 archive run (`beep corpus restore-preserve`, lane E,
-2026-10-06), verify it with `restore-verify`, then land the P4 provenance
-index tooling and run it on the corpus home. P1-P2 ceilings are recorded in
-the decision log before the live mail slice.
+P0 is complete. Finish P4 (attachment repair apply, metadata census) and
+hand the summaries to pass-3 identification and the practice-kg bundle; then
+record the P1-P2 ceilings in the decision log before the live mail slice.
 
 ## Launcher
 
@@ -43,8 +42,17 @@ re-entry points. The solo-practice corpus kit remains deferred.
 The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;
 the source tree had since lost 1,818 operator-deleted noise files (recorded
 as inherited loss, see `SPEC.md` decision log). The run resumed under
-re-measured denominators on a USB 3 link. P4 schemas and service contracts
-landed (`ProvenanceIndex.schemas.ts`, `ProvenanceIndex.contracts.ts`).
+re-measured denominators on a USB 3 link and **closed P0**: 11,451 objects /
+348,605,703,418 bytes preserved, independent verification 11,451/11,451, zero
+unapproved rows. The catalog now registers the T7 run (10,696 rows) and the
+2026-10 tom-pc run (8,237 rows; 35,707 files / 18,464 distinct digests in
+all). Full-hash reconcile: 5,086 T7 files (28.5 GB) have a copy elsewhere in
+the corpus home; 5,610 (320.1 GB, 4,354 distinct digests, including the four
+large PSTs and both OSTs) exist only in the preserved payload. P4 schemas and service contracts
+landed (`ProvenanceIndex.schemas.ts`, `ProvenanceIndex.contracts.ts`), and the
+header index ran over both mail trees: 118,771 + 122,730 messages, 72,980 +
+101,107 with RFC 5322 headers, 116,951 + 186,180 attachments, 1,539 + 1,582
+embedded items (`staging/provenance/messages-<tree>.jsonl`).
 
 
 2026-08-27 — P0 in progress. Bar-v2 preservation schemas landed in the repo

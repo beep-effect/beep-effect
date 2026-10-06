@@ -11,6 +11,7 @@ import {
   ProvenanceMessagesOptions,
 } from "@beep/repo-cli/commands/Corpus";
 import {
+  fallbackMagicExtensions,
   indexMailExportTrees,
   proposeAttachmentRepair,
   repairAttachmentExtensions,
@@ -106,6 +107,25 @@ describe("attachment proposal rule", () => {
   }
 });
 
+describe("fallback magic extensions", () => {
+  for (const [mime, name, expected] of [
+    ["audio/mpeg", "1_song.m", ["mp3"]],
+    ["application/zip", "12_brief.do", ["docx", "dotx"]],
+    ["text/html", "1_page", ["html", "htm"]],
+    ["text/plain", "1_notes.s", []],
+    ["application/octet-stream", "1_blob", []],
+  ] satisfies ReadonlyArray<readonly [string, string, ReadonlyArray<string>]>) {
+    it(`${mime}: ${name}`, () => {
+      expect(fallbackMagicExtensions(mime, name)).toEqual(expected);
+    });
+  }
+  it("completes an mp3 remnant through the fallback table", () => {
+    const result = proposeAttachmentRepair("1_song.m", "audio/mpeg", fallbackMagicExtensions("audio/mpeg", "1_song.m"));
+    expect(result.flags).toEqual(["exact-completion"]);
+    expect(result.proposedFileName).toBe("1_song.mp3");
+  });
+});
+
 it.effect("indexes two artifacts and a nested embedded message with counts and parsed headers", () =>
   Effect.scoped(
     Effect.gen(function* () {
@@ -164,20 +184,22 @@ it.effect("plans, applies, journals, skips collisions and undoes actual magic re
       const plan = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "plan" })
       );
-      expect(plan.proposedRenames).toBe(2);
+      expect(plan.proposedRenames).toBe(3);
       expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(false);
       const applied = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: ["extract"], mode: "apply", journalPath })
       );
-      expect(applied.byOutcome.renamed).toBe(2);
+      expect(applied.byOutcome.renamed).toBe(3);
       expect(yield* fs.exists(path.join(attachments, "1_report.pdf"))).toBe(true);
       expect(yield* fs.exists(path.join(attachments, "2_photo.jpg"))).toBe(true);
+      // text/plain has no file(1) extension; the fallback table completes the fully eaten name.
+      expect(yield* fs.exists(path.join(attachments, "3_notes.txt"))).toBe(true);
       const journal = yield* AttachmentRepairJournal;
-      expect((yield* journal.readAll(journalPath)).map((r) => r.outcome)).toEqual(["renamed", "renamed"]);
+      expect((yield* journal.readAll(journalPath)).map((r) => r.outcome)).toEqual(["renamed", "renamed", "renamed"]);
       const undo = yield* repairAttachmentExtensions(
         AttachmentRepairOptions.make({ corpusRoot: root, trees: [], mode: "undo", journalPath })
       );
-      expect(undo.byOutcome.reverted).toBe(2);
+      expect(undo.byOutcome.reverted).toBe(3);
       expect(yield* fs.exists(path.join(attachments, "1_report.p"))).toBe(true);
       expect(yield* fs.exists(path.join(attachments, "2_photo.j"))).toBe(true);
       yield* fs.writeFileString(path.join(attachments, "1_report.pdf"), "collision content");
@@ -210,7 +232,8 @@ it.effect("plans, applies, journals, skips collisions and undoes actual magic re
           journalPath: path.join(root, "staging/provenance/collision.jsonl"),
         })
       );
-      expect(missing.byOutcome["skipped-missing"]).toBe(1);
+      // 2_photo.jpg was removed above and 3_notes.txt was already reverted by the previous undo.
+      expect(missing.byOutcome["skipped-missing"]).toBe(2);
       const malformed = path.join(root, "staging/provenance/malformed.jsonl");
       yield* fs.writeFileString(malformed, '{"fromPath":"incomplete"}\n');
       expect((yield* journal.readAll(malformed).pipe(Effect.result))._tag).toBe("Failure");

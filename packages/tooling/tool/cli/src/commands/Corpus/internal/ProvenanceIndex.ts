@@ -426,6 +426,76 @@ export const AttachmentRepairJournalLive = Layer.effect(
  * @category utilities
  * @since 0.0.0
  */
+// Extension candidates for MIME types where `file --extension` prints `???`.
+// Order matters: the first entry completes a fully eaten extension.
+const fallbackExtensionsByMime: Readonly<Record<string, ReadonlyArray<string>>> = {
+  "application/gzip": ["gz"],
+  "application/msword": ["doc", "dot"],
+  "application/postscript": ["ps", "eps", "ai"],
+  "application/rtf": ["rtf"],
+  "application/vnd.ms-excel": ["xls", "xlt"],
+  "application/vnd.ms-outlook": ["msg"],
+  "application/vnd.ms-powerpoint": ["ppt", "pps"],
+  "application/vnd.rar": ["rar"],
+  "application/x-7z-compressed": ["7z"],
+  "application/x-msdownload": ["exe", "dll"],
+  "application/zip": ["zip", "docx", "xlsx", "pptx", "dotx"],
+  "audio/mpeg": ["mp3"],
+  "audio/x-wav": ["wav"],
+  "image/bmp": ["bmp"],
+  "image/heic": ["heic"],
+  "image/tiff": ["tif", "tiff"],
+  "image/vnd.dwg": ["dwg"],
+  "image/vnd.dxf": ["dxf"],
+  "message/rfc822": ["eml"],
+  "text/calendar": ["ics"],
+  "text/csv": ["csv"],
+  "text/html": ["html", "htm"],
+  "text/plain": ["txt", "log", "csv"],
+  "text/rtf": ["rtf"],
+  "text/vcard": ["vcf"],
+  "video/mp4": ["mp4"],
+  "video/quicktime": ["mov", "mp4"],
+  "video/x-ms-asf": ["wmv", "asf"],
+};
+
+/**
+ * Extension candidates for a MIME type when `file --extension` has none.
+ *
+ * **Details**
+ *
+ * The table is consulted only when the magic extension list is empty. With a
+ * surviving name remnant, only candidates that extend it are returned so a
+ * generic type such as `text/plain` never relabels a `.s` remnant as `.txt`;
+ * with no remnant (fully eaten) the whole list is returned and the first
+ * entry wins.
+ *
+ * **Example** (Complete an MP3 remnant)
+ *
+ * ```ts
+ * import { fallbackMagicExtensions } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex"
+ *
+ * console.log(fallbackMagicExtensions("audio/mpeg", "1_song.m")) // ["mp3"]
+ * console.log(fallbackMagicExtensions("text/plain", "1_notes.s")) // []
+ * ```
+ *
+ * @param mime - The byte-signature MIME type reported by `file --mime-type`.
+ * @param name - The on-disk attachment name including its `N_` ordinal prefix.
+ * @returns Lower-case candidates compatible with the name remnant, possibly empty.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fallbackMagicExtensions: {
+  (mime: string, name: string): ReadonlyArray<string>;
+  (name: string): (mime: string) => ReadonlyArray<string>;
+} = dual(2, (mime: string, name: string): ReadonlyArray<string> => {
+  const table = fallbackExtensionsByMime[mime] ?? [];
+  const rest = Str.replace(/^\d+_/, "")(name);
+  const dot = rest.lastIndexOf(".");
+  const remnant = dot < 0 ? "" : Str.toLowerCase(rest.slice(dot + 1));
+  return remnant === "" ? table : A.filter(table, (extension) => Str.startsWith(remnant)(extension));
+});
+
 const proposal = (name: string, mime: string, extensions: ReadonlyArray<string>) => {
   const candidates = A.map(extensions, Str.toLowerCase);
   const match = /^(\d+_)(.*)$/.exec(name);
@@ -746,7 +816,13 @@ export const repairAttachmentExtensions = Effect.fn("Provenance.repairAttachment
           const observation = observations[i];
           if (verdict === undefined || observation === undefined) continue;
           const row = P.AttachmentRepairProposal.make({
-            ...proposeAttachmentRepair(path.basename(verdict.path), verdict.mimeType, verdict.extensions),
+            ...proposeAttachmentRepair(
+              path.basename(verdict.path),
+              verdict.mimeType,
+              verdict.extensions.length > 0
+                ? verdict.extensions
+                : fallbackMagicExtensions(verdict.mimeType, path.basename(verdict.path))
+            ),
             tree,
             relativePath: relative(path, options.corpusRoot, verdict.path),
             sizeBytes: Number(observation.size),

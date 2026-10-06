@@ -15,8 +15,11 @@ Current phase state:
   day at a 90.25 GB `root-archive.zip.partial` when its writer process died;
   the tree payload was never started. Resumed 2026-10-06 (lane E) under
   re-measured denominators after the source changed: see the 2026-10-06
-  decision-log entries in `SPEC.md`. Independent verification follows the
-  run.
+  decision-log entries in `SPEC.md`. **Complete 2026-10-06:** sealed run
+  `t7-salvage-2026-08-10:1791318827540:2721` preserved 11,451 objects
+  (10,695 files, 755 directories, the verbatim root archive) /
+  348,605,703,418 bytes with zero unapproved rows; the fresh-process
+  `restore-verify` reported terminals=11451 passes=11451 over the same bytes.
 - **P1 Mail vertical slice:** run-bound source-path extraction, child
   reconciliation, attachment repair, sandboxing, hard resource ceilings, and
   synthetic exception lanes are implemented; the live slice follows P0.
@@ -61,6 +64,9 @@ destination. P0 is tool work followed by the archive operation, not a rerun.
 **Exit:** P0 has zero unapproved terminal rows and an independent PASS. No
 transformation result contributes to this gate.
 
+**Met 2026-10-06** (lane E): 11,451 terminal PASS rows, 0 unapproved,
+independent verification 11,451/11,451.
+
 ## P1 — Mail vertical slice
 
 1. Select one non-stub PST occurrence from a recycle surface using metadata,
@@ -81,7 +87,13 @@ do not expand to the estate.
 Run the remaining work in this order:
 
 1. Restore the mail estate store by store. Reconcile every child and assign
-   non-PST families an explicit process, quarantine, or defer outcome.
+   non-PST families an explicit process, quarantine, or defer outcome. The
+   store list includes the four containers that had no copy anywhere before
+   P0 closed on 2026-10-06 and now live only in
+   `raw/t7-salvage-2026-08-10/payload/tree`: the 24,544,478,208-byte PST
+   (f-oip-law), the 12,387,542,016-byte PST (a-OppoldIPLaw), and the two OSTs
+   (f-outlook-cache, about 1.0 GB together). Their extraction belongs here,
+   not to P4.
 2. Reconcile all three recycle volumes with the valid-pair, missing-`$R`,
    orphan-`$R`, and duplicate classes. Reconcile directory trees and apply
    the declared path/collision policy.
