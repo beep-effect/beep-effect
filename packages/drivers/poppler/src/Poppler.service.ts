@@ -1,10 +1,10 @@
-// fallow-ignore-file code-duplication -- each process driver owns its spawn-and-capture step (tika, tesseract, poppler); drivers do not depend on each other and no shared capture helper exists below repo-cli.
 /**
  * Poppler-backed PDF page counting and page rasterization.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+// fallow-ignore-file code-duplication -- each process driver owns its spawn-and-capture step (tika, tesseract, poppler); drivers do not depend on each other and no shared capture helper exists below repo-cli.
 
 import { ContentDigest } from "@beep/file-processing/Artifact";
 import { PageImage } from "@beep/file-processing/PageOcr";

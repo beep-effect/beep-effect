@@ -3102,7 +3102,6 @@
           "@beep/poppler",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3111,7 +3110,6 @@
           "@beep/poppler",
           "@beep/schema",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3843,7 +3841,6 @@
           "@beep/schema",
           "@beep/tesseract",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3852,7 +3849,6 @@
           "@beep/schema",
           "@beep/tesseract",
           "@beep/test-runner",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
