@@ -6722,3 +6722,16 @@ exception, and the exact article builder is excluded from production Fallow
 analysis. All three focused gates pass. Running these generated inventory and
 Fallow checks on each owning PR before merge would have avoided cross-PR gate
 repair.
+
+### Full local proof surfaced shared main reds after the CLI push (2026-10-05)
+
+PR #1445's pre-push proof found seven OSV findings in the unchanged lockfile,
+six live checkout paths in newly merged fleet packet prose, a native `Error`
+in the law-practice projection, and one `effect/tsgo` diagnostic in this wave's
+atlas fixture test. The focused Node/Bun and package proofs did not cover
+these root lanes. The atlas diagnostic is fixed in this wave; the inherited
+docs and native error are repaired before resubmitting. A separate dependency
+branch resolves four patched packages and records a short-lived exact-version
+exception for the unpatched `sprintf-js`; it waits for the overlapping postcss
+PR before publication. Main-head root-gate preflight on each owning PR, with
+OSV advisories refreshed at review time, would prevent this cross-PR repair.

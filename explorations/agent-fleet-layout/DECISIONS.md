@@ -29,11 +29,11 @@ recommendation on every question except where noted.
 
 ## 2026-10-05 — fleet-root-path
 
-**Question:** New root at `~/YeeBois/beep-effect` as proposed, or under `projects/`?
+**Question:** New flat root outside `projects/` as proposed, or under `projects/`?
 
 **Answer:** Under `~/YeeBois/projects/` with a new namespace (working name `projects/beep/{seats,lanes}`) and a single fleet-root setting the CLI and timers read.
 
-**Rationale:** `yeet sweep --fleet`, five user units and portfolio-watch all discover via the projects root; a root outside it is invisible until discovery is parameterized anyway. Rejected: `~/YeeBois/beep-effect` as a hard requirement (operator confirmed it was "somewhere clean", not the path), flat rename only (keeps the glob-by-prefix sprawl).
+**Rationale:** `yeet sweep --fleet`, five user units and portfolio-watch all discover via the projects root; a root outside it is invisible until discovery is parameterized anyway. Rejected: a flat root outside `projects/` as a hard requirement (operator confirmed it was "somewhere clean", not the path), flat rename only (keeps the glob-by-prefix sprawl).
 
 ## 2026-10-05 — migration-posture
 
