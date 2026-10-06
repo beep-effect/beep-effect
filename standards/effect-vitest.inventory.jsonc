@@ -2000,13 +2000,13 @@
       "reason": "Model-identity layer acquisition is the assertion subject. Parameter rows supply their exact model/environment, and invalid revisions must fail inside the test so the typed acquisition error can be asserted; suite-hook acquisition would bypass that oracle."
     },
     {
-      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:267:provideScopedLayer@10#1",
+      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:288:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 267,
-      "endLine": 271,
+      "line": 288,
+      "endLine": 292,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:0277a9bb09cbe6b88509b68a58b8e3101c5eedc2ece2853d443231c6cd0db46f",
       "class": "unresolved-layer-provide",

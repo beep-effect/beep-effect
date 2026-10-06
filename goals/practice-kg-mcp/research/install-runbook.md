@@ -50,10 +50,21 @@ not read input. A working install prints this shape and exits with code 0:
 
 Check that `extensionVersion` and `bundleVersion` are the pair that was handed
 over and that `nodes` and `matters` are not zero. Anything else prints
-`{"ok":false,"message":"…"}` and exits with a non-zero code; the message names
-the cause, such as a bundle built for another store format or a store missing
-from the folder. A `--bundle-dir` that does not exist is rejected before the
-check starts, with usage text instead of the JSON line.
+`{"ok":false,"message":"…"}` and exits with a non-zero code. When a store is
+the problem the line also carries `"cause"`, the underlying error text, and
+the message is one of two kinds:
+
+- **"could not be opened"**: the store named in the message is held by another
+  process, unreadable or corrupt. Close Claude Desktop and run the check again;
+  if it still fails, read `cause`. Do not replace the bundle for this alone.
+- **"does not answer the queries this server's tools run"**: the store opened,
+  but its tables are not the ones this server reads. Install the bundle that
+  was handed over with this extension version.
+
+Other messages name their own cause, such as a manifest for another store
+format or a store missing from the folder. A `--bundle-dir` that does not
+exist is rejected before the check starts, with usage text instead of the
+JSON line.
 
 This proves the files and the executable. The tool call from a chat described
 below is still the proof that Claude Desktop itself loaded the extension.

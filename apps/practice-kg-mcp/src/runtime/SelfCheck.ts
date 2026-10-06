@@ -9,11 +9,15 @@
 import { DuckDb } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgQueries, PracticeKgSchemaVersions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { Console, Effect, FileSystem, flow, Layer, Path } from "effect";
+import * as OptionUtils from "@beep/utils/Option";
+import { Console, Effect, FileSystem, flow, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { constFalse } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { SqlClient } from "effect/sql/SqlClient";
 import { PracticeKgHostError, SelfCheckFailure } from "../PracticeKgMcp.errors.ts";
 import { PRACTICE_KG_EXTENSION_VERSION } from "../Version.ts";
@@ -68,9 +72,17 @@ export class PracticeKgSelfCheckReport extends S.Class<PracticeKgSelfCheckReport
  * ```ts
  * import { PracticeKgSelfCheckRefusal } from "../../src/runtime/SelfCheck.ts"
  *
- * const refusal = PracticeKgSelfCheckRefusal.make({ message: "Bundle directory is required." })
+ * const refusal = PracticeKgSelfCheckRefusal.make({
+ *   message: "The matter store could not be opened.",
+ *   cause: "IO Error: Could not set lock on file"
+ * })
  * console.log(refusal.ok) // false
  * ```
+ *
+ * **Details**
+ *
+ * `message` is the stable operator-facing sentence. `cause`, when present, is
+ * the underlying error text on one line with no stack trace.
  *
  * @category models
  * @since 0.0.0
@@ -79,6 +91,7 @@ export class PracticeKgSelfCheckRefusal extends S.Class<PracticeKgSelfCheckRefus
   {
     ok: S.tag(false),
     message: S.String,
+    cause: S.optionalKey(S.String),
   },
   $I.annote("PracticeKgSelfCheckRefusal", {
     description: "Reason an installed practice KG host could not read its bundle.",
@@ -95,18 +108,60 @@ const firstCount = (rows: A.NonEmptyReadonlyArray<CountRow>) => A.headNonEmpty(r
 const encodeReport = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckReport));
 const encodeRefusal = S.encodeEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 
-// Prints the refusal line, then fails with the error that tells the main
-// runner the failure is already on stdout.
-const refuse = (cause: PracticeKgHostError) =>
-  encodeRefusal(PracticeKgSelfCheckRefusal.make({ message: cause.message })).pipe(
-    Effect.orDie,
-    Effect.flatMap(Console.log),
-    Effect.andThen(SelfCheckFailure.make({ cause, message: cause.message }))
+const hasMessage = (value: unknown): value is { readonly message: string } =>
+  P.hasProperty(value, "message") && P.isString(value.message);
+const lineBreaks = /\s*[\r\n]+\s*/g;
+const MAX_CAUSE_DEPTH = 5;
+
+// The messages down an error's cause chain as one line: the driver's own words
+// ("Could not set lock on file", "not a valid DuckDB database file") without a
+// stack trace. Depth-bounded so a cyclic chain cannot spin.
+// Driver errors carry their cause either bare or as an `Option` (`DuckDbError`).
+const causeOf = (error: object): unknown => {
+  const cause = P.hasProperty(error, "cause") ? error.cause : undefined;
+  return O.isOption(cause) ? O.getOrUndefined(cause) : cause;
+};
+
+type CauseStep = readonly [cause: unknown, depth: number];
+const nextMessage = ([current, depth]: CauseStep): O.Option<readonly [string, CauseStep]> =>
+  depth < MAX_CAUSE_DEPTH && hasMessage(current) ? O.some([current.message, [causeOf(current), depth + 1]]) : O.none();
+
+const causeLine = (cause: unknown): O.Option<string> =>
+  pipe(
+    A.unfold<CauseStep, string>([cause, 0], nextMessage),
+    A.map(flow(Str.replace(lineBreaks, " "), Str.trim)),
+    A.filter(Str.isNonEmpty),
+    A.dedupe,
+    A.match({ onEmpty: O.none<string>, onNonEmpty: flow(A.join(" — "), O.some) })
   );
 
+// Prints the refusal line, then fails with the error that tells the main
+// runner the failure is already on stdout.
+const refuse = (error: PracticeKgHostError) =>
+  encodeRefusal(
+    PracticeKgSelfCheckRefusal.make({
+      message: error.message,
+      ...OptionUtils.getSomesStruct({ cause: causeLine(error.cause) }),
+    })
+  ).pipe(
+    Effect.orDie,
+    Effect.flatMap(Console.log),
+    Effect.andThen(SelfCheckFailure.make({ cause: error, message: error.message }))
+  );
+
+// Opening and reading fail for different reasons and call for different fixes,
+// so each store is opened with a trivial statement before its columns are
+// probed. A lock held by a running host, a corrupt file or a permission error
+// stops at the open and is never reported as a bundle to replace.
+const openFailure = (store: string, bundleDir: string) => (cause: unknown) =>
+  PracticeKgHostError.make({
+    cause,
+    message: `Practice KG ${store} at "${bundleDir}" could not be opened; check that no other process holds the bundle (close Claude Desktop) and that the store is readable and not corrupt.`,
+  });
+
 // A manifest can say store format 3 over tables built for an older format, and a
-// bare COUNT would still pass. Each store is therefore read through a query the
-// tools really run, so a missing column fails here instead of in a chat.
+// bare COUNT would still pass. Each opened store is therefore probed for the
+// columns the tools read, so a missing column fails here instead of in a chat.
 const SELF_CHECK_REFERENCE = "practice-kg-self-check";
 
 const storeFailure = (store: string, bundleDir: string) => (cause: unknown) =>
@@ -122,30 +177,42 @@ SELECT m.family_key, m.family, m.client, m.client_name, m.attribution_source, m.
 FROM matters m LEFT JOIN matter_dockets d USING (family_key)
 LIMIT 1`;
 
-const readGraphStore = Effect.gen(function* () {
-  const sql = (yield* SqlClient).withoutTransforms();
-  // `kg_find` text: selects every graph column the tools project, attribution_source included.
-  yield* sql.unsafe(PracticeKgQueries.find, [SELF_CHECK_REFERENCE]);
-  return yield* sql
-    .unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM kg_node")
-    .pipe(Effect.flatMap(decodeCountRows), Effect.map(firstCount));
-}).pipe(Effect.withSpan("PracticeKgSelfCheck.readGraphStore"));
+const GRAPH_STORE = "graph store (kg.pglite)";
+const MATTER_STORE = "matter store (practice.duckdb)";
 
-const readMatterStore = Effect.gen(function* () {
+const readGraphStore = Effect.fn("PracticeKgSelfCheck.readGraphStore")(function* (bundleDir: string) {
+  const sql = (yield* SqlClient).withoutTransforms();
+  yield* sql.unsafe("SELECT 1").pipe(Effect.mapError(openFailure(GRAPH_STORE, bundleDir)));
+  // `kg_find` text: selects every graph column the tools project, attribution_source included.
+  return yield* sql
+    .unsafe(PracticeKgQueries.find, [SELF_CHECK_REFERENCE])
+    .pipe(
+      Effect.andThen(sql.unsafe("SELECT COUNT(*)::FLOAT8 AS count FROM kg_node")),
+      Effect.flatMap(decodeCountRows),
+      Effect.map(firstCount),
+      Effect.mapError(storeFailure(GRAPH_STORE, bundleDir))
+    );
+});
+
+const readMatterStore = Effect.fn("PracticeKgSelfCheck.readMatterStore")(function* (bundleDir: string) {
   const duckdb = yield* DuckDb;
+  // DuckDB opens the file on its first statement, so this is where a lock or a damaged file shows.
+  yield* duckdb.query("SELECT 1").pipe(Effect.mapError(openFailure(MATTER_STORE, bundleDir)));
   // Every column `kg_matter_lookup` reads from both matter tables, `client_name`
   // included: an older store that lacks one fails here, not in a tool call.
-  yield* duckdb.query(matterColumnsProbe);
   return yield* duckdb
-    .query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")
-    .pipe(Effect.flatMap(decodeCountRows), Effect.map(firstCount));
-}).pipe(Effect.withSpan("PracticeKgSelfCheck.readMatterStore"));
+    .query(matterColumnsProbe)
+    .pipe(
+      Effect.andThen(duckdb.query("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters")),
+      Effect.flatMap(decodeCountRows),
+      Effect.map(firstCount),
+      Effect.mapError(storeFailure(MATTER_STORE, bundleDir))
+    );
+});
 
 const readStoreCounts = Effect.fn("PracticeKgSelfCheck.readStoreCounts")(function* (bundleDir: string) {
-  const nodes = yield* readGraphStore.pipe(Effect.mapError(storeFailure("graph store (kg.pglite)", bundleDir)));
-  const matters = yield* readMatterStore.pipe(
-    Effect.mapError(storeFailure("matter store (practice.duckdb)", bundleDir))
-  );
+  const nodes = yield* readGraphStore(bundleDir);
+  const matters = yield* readMatterStore(bundleDir);
   return { matters, nodes };
 });
 
@@ -166,11 +233,12 @@ const requireStore = Effect.fn("PracticeKgSelfCheck.requireStore")(function* (bu
  *
  * **Details**
  *
- * Each store answers one query the tools really run (`kg_find` on the graph,
- * `kg_matter_lookup` on the matter tables) before it is counted, so a bundle
- * whose manifest claims the current store format over older tables is refused
- * with a message naming the store. Only `SELECT` statements run, and both
- * stores close before the report is returned. The stores are the ones `makePracticeKgHostResourcesLayer` hands
+ * Each store is opened with a trivial statement, then probed for the columns
+ * the tools read, then counted. A store that will not open (held by another
+ * process, unreadable or corrupt) and a store whose tables are older than the
+ * manifest claims are refused with different messages, each naming the store.
+ * Only `SELECT` statements run, and both stores close before the report is
+ * returned. The stores are the ones `makePracticeKgHostResourcesLayer` hands
  * the stdio server, so a passing report covers the files the server reads.
  *
  * **Example** (Check a bundle folder)
@@ -196,12 +264,7 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
   yield* requireStore(bundleDir, "kg.pglite");
   yield* requireStore(bundleDir, "practice.duckdb");
   const counts = yield* Layer.build(makePracticeKgHostResourcesLayer(context)).pipe(
-    Effect.mapError((cause) =>
-      PracticeKgHostError.make({
-        cause,
-        message: `Practice KG self-check could not open the bundle stores at "${bundleDir}".`,
-      })
-    ),
+    Effect.mapError(openFailure("bundle stores", bundleDir)),
     Effect.flatMap((resources) => readStoreCounts(bundleDir).pipe(Effect.provide(resources))),
     Effect.scoped
   );
@@ -220,7 +283,8 @@ export const runPracticeKgSelfCheck = Effect.fn("PracticeKgSelfCheck.run")(funct
  *
  * **Details**
  *
- * A failing check prints `{"ok":false,"message":…}` and then fails with
+ * A failing check prints `{"ok":false,"message":…}`, with the underlying
+ * error text under `cause` when there is one, and then fails with
  * `SelfCheckFailure`, which exits the process non-zero without a second
  * report: nothing but the one line reaches stdout.
  *

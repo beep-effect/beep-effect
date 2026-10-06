@@ -241,13 +241,34 @@ describe("@beep/practice-kg-mcp self-check", () => {
         yield* fs.writeFileString(path.join(bundleDir, "bundle.manifest.json"), yield* encodeManifest(manifest));
 
         const missing = yield* Effect.flip(runPracticeKgSelfCheck(bundleDir));
-        yield* fs.makeDirectory(path.join(bundleDir, "kg.pglite"));
-        yield* fs.writeFileString(path.join(bundleDir, "practice.duckdb"), "not a database");
-        const unreadable = yield* Effect.flip(runPracticeKgSelfCheck(bundleDir));
-
         expect(missing.message).toBe(`Practice KG bundle store is missing at "${path.join(bundleDir, "kg.pglite")}".`);
-        expect(unreadable).toBeInstanceOf(PracticeKgHostError);
-        expect(unreadable.message).toContain(`at "${bundleDir}"`);
+      })
+    );
+
+    it.effect(
+      "reports a matter store that will not open as unopenable, never as a bundle to replace",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-practice-kg-self-check-" });
+        const bundleDir = yield* makePracticeKgSmokeBundle(root);
+        yield* fs.writeFileString(path.join(bundleDir, "practice.duckdb"), "not a database");
+
+        const { lines, value: unreadable } = yield* runPracticeKgSelfCheck(bundleDir).pipe(
+          printPracticeKgSelfCheck,
+          Effect.flip,
+          printed
+        );
+
+        expect(unreadable).toBeInstanceOf(SelfCheckFailure);
+        expect(lines).toHaveLength(1);
+        const refusal = yield* decodeFailureLine(lines[0] ?? "");
+        expect(refusal.message).toContain(`matter store (practice.duckdb) at "${bundleDir}" could not be opened`);
+        expect(refusal.message).toContain("close Claude Desktop");
+        expect(refusal.message).not.toContain("install");
+        expect(refusal.cause ?? "").not.toBe("");
+        expect(refusal.cause ?? "").not.toContain("\n");
+        expect(refusal.cause ?? "").not.toMatch(/\n\s+at /);
       })
     );
 
@@ -284,14 +305,16 @@ describe("@beep/practice-kg-mcp self-check", () => {
         expect(refusal.message).toBe(
           `Practice KG matter store (practice.duckdb) at "${bundleDir}" does not answer the queries this server's tools run; install the bundle that matches this server.`
         );
+        expect(refusal.cause ?? "").toContain("client_name");
       })
     );
   });
 });
 
 const encodeReportLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
+const encodeRefusalLine = S.encodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckRefusal));
 
-describe("practice KG self-check report line", () => {
+describe("practice KG self-check lines", () => {
   it.effect.prop(
     "round-trips every generated report through its one-line JSON form",
     [Arbitrary.schema(PracticeKgSelfCheckReport)],
@@ -300,6 +323,17 @@ describe("practice KG self-check report line", () => {
         const line = yield* encodeReportLine(report);
         expect(line).not.toContain("\n");
         expect(yield* decodeReportLine(line)).toStrictEqual(report);
+      })
+  );
+
+  it.effect.prop(
+    "round-trips every generated refusal, with or without a cause, through its one-line JSON form",
+    [Arbitrary.schema(PracticeKgSelfCheckRefusal)],
+    ([refusal]) =>
+      Effect.gen(function* () {
+        const line = yield* encodeRefusalLine(refusal);
+        expect(line).not.toContain("\n");
+        expect(yield* decodeFailureLine(line)).toStrictEqual(refusal);
       })
   );
 });
