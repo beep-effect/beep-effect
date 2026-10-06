@@ -41,6 +41,15 @@ describe("@beep/schema PatternOntology", () => {
     expect(A.map(rows, (row) => O.getOrNull(row.identifier))).toEqual(["Leaf", "Bare", null]);
   });
 
+  it("records a constructor once when the graph reaches it through a cloned AST", () => {
+    const rows = collectPoTaggedConstructors(
+      S.Tuple([Row, Row.annotate({ description: "the same row, re-annotated" })]),
+      "_tag"
+    );
+
+    expect(A.map(rows, (row) => row.tag)).toEqual(["row", "leaf"]);
+  });
+
   it("classifies conservation by pattern identity", () => {
     expect(poConservation("block", "block")).toBe("preserved");
     expect(poConservation("container", "block")).toBe("demoted");
