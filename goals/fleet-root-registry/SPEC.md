@@ -2,7 +2,7 @@
 
 ## Objective
 
-`beep worktree fleet` discovers `$HOME/YeeBois/projects/beep/{seats,lanes}` and the legacy `$HOME/YeeBois/projects/beep-effect*` roots through a single fleet-root setting (working name `BEEP_FLEET_ROOT` plus a config-file equivalent, per repository), and a new joined view prints each checkout's derived mirror facts beside its authored registry facts. The registry is a schema-first, file-backed store under `~/.local/state/beep` that authors only what git cannot derive. The mirror's per-root undercount of `beep-effect0-worktrees` (35 directories, 1 attributed) is explained or fixed.
+`beep worktree fleet` discovers the `projects/beep/{seats,lanes}` namespace and legacy `beep-effect*` roots under the configured projects directory through a single fleet-root setting (working name `BEEP_FLEET_ROOT` plus a config-file equivalent, per repository), and a new joined view prints each checkout's derived mirror facts beside its authored registry facts. The registry is a schema-first, file-backed store under `~/.local/state/beep` that authors only what git cannot derive. The mirror's per-root undercount of `beep-effect0-worktrees` (35 directories, 1 attributed) is explained or fixed.
 
 Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: none (first bet in the map).
 
@@ -44,7 +44,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `BEEP_FLEET_ROOT` (or config equivalent) set to a fresh `$HOME/YeeBois/projects/beep` with `seats/main` cloned is discovered by `bun run beep worktree fleet --json` alongside every legacy checkout.
+- [ ] `BEEP_FLEET_ROOT` (or config equivalent) set to a fresh `beep` directory under the configured projects root with `seats/main` cloned is discovered by `bun run beep worktree fleet --json` alongside every legacy checkout.
 - [ ] The joined view prints, for lane `agent-fleet-layout`, its mirror facts plus authored role, slug and PR number.
 - [ ] The registry file decodes against its schema; `beep worktree fleet` JSON is byte-identical before and after when the fleet root is unset.
 - [ ] The `beep-effect0-worktrees` count matches `git -C beep-effect0 worktree list` or the discrepancy has a named cause recorded in the reflection.

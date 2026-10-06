@@ -46,7 +46,7 @@ Higher sources outrank lower sources when they conflict.
 - [ ] `bun run beep quality residue-reap --fleet --json` reports a `drainable` class with per-checkout reasons, dry-run by default.
 - [ ] First apply wave removes only checkouts that met the predicate for the full grace window; journal shows PR, unit, confirmed liveness, dirty, local-only-ref and owned-worktree checks per removal.
 - [ ] A fixture checkout with an unpushed branch and a stash is not removed until its bundle exists and verifies; a fixture clone with a registered worktree is refused; a fixture checkout with `unknown` liveness is refused.
-- [ ] Disk under `$HOME/YeeBois/projects/beep-effect*` is reported before and after each wave.
+- [ ] Disk across registered legacy `beep-effect*` clones is reported before and after each wave.
 - [ ] `standards/git-worktrees.md` documents seats, lanes, registry, adoption and drain.
 - [ ] `bun run beep quality package-verify @beep/repo-cli` passes.
 - [ ] No unrelated refactors or formatting churn.
