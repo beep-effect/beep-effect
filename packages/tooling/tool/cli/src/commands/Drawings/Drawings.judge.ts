@@ -13,6 +13,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { RenderManifest } from "@beep/technical-drawing";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { DrawingQaLens, decodeQaInventory, QaInventory } from "../Qa/Inventory.schemas.ts";
 import { DRAWING_JUDGE_PROMPT_TEMPLATE } from "../Qa/JudgePack.ts";
@@ -95,9 +96,11 @@ const figuresTable = (manifest: RenderManifest): string =>
       : "The figures are unshaded line drawings.",
   ].join("\n");
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const fillTemplate = (template: string, values: Readonly<Record<string, string>>): string =>
   pipe(
-    Object.entries(values),
+    R.toEntries(values),
     A.reduce(template, (text, [key, value]) => Str.replaceAll(`{{${key}}}`, value)(text))
   );
 
@@ -261,7 +264,7 @@ export const ingestDrawingJudgeInventory = Effect.fn("DrawingsJudge.ingest")(fun
   const reply = yield* fs
     .readFileString(input.replyPath)
     .pipe(Effect.mapError(fail(`Could not read "${input.replyPath}".`)));
-  const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(inventoryText(reply)).pipe(
+  const parsed = yield* S.decodeEffect(UnknownJson)(inventoryText(reply)).pipe(
     Effect.mapError(fail("The judge reply has no parseable JSON inventory."))
   );
   const inventory = yield* decodeQaInventory(parsed).pipe(

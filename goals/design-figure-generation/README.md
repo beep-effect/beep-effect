@@ -13,7 +13,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 Turn a measured matter spec into eight USPTO design-patent figures from one
 parametric solid: hidden-line views, 37 CFR 1.84 sheets, a validator, a
 vision-judge rubric, and a recorded attorney sign-off, operated as
-`bun run beep drawings …` on the developer workstation.
+`bun run beep drawings render` and its sibling commands on the developer workstation.
 
 ## Launch
 

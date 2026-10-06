@@ -24,6 +24,9 @@ import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
+const RenderManifestJson = S.fromJsonString(RenderManifest);
+const ApprovalRecordJson = S.fromJsonString(ApprovalRecord);
+
 const approver = EmailAddress.make("attorney@example.com");
 const pdfBytes = new TextEncoder().encode("%PDF-1.6 synthetic sheet set");
 
@@ -135,7 +138,7 @@ const writeSheetSet = Effect.fnUntraced(function* () {
     pdfSha256,
     validation: O.none(),
   });
-  const json = yield* S.encodeUnknownEffect(S.fromJsonString(RenderManifest))(manifest);
+  const json = yield* S.encodeUnknownEffect(RenderManifestJson)(manifest);
   const manifestPath = path.join(dir, "manifest.json");
   yield* fs.writeFileString(manifestPath, json);
   current.statement = approvalStatement(pdfSha256);
@@ -163,7 +166,7 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         expect(record.matchedAddress).toBe("attorney@example.com");
         // written and re-read: the stored event decodes back to the returned record
         const written = yield* fs.readFileString(path.join(dir, "approval.json"));
-        const reread = yield* S.decodeEffect(S.fromJsonString(ApprovalRecord))(written);
+        const reread = yield* S.decodeEffect(ApprovalRecordJson)(written);
         expect(reread).toEqual(record);
         expect(reread.sheetSetSha256).toBe(pdfSha256);
       })

@@ -39,6 +39,8 @@ import * as S from "effect/Schema";
 
 // A fake engine: every view projects a unit square, except that the "rear"
 // camera (eye +Y) projects the square shifted, so omission proofs can fail.
+const RenderManifestJson = S.fromJsonString(RenderManifest);
+
 const square: ReadonlyArray<readonly [number, number, number, number]> = [
   [0, 0, 10, 0],
   [0, 0, 0, 5],
@@ -338,7 +340,7 @@ describe("@beep/technical-drawing", () => {
           ]);
           // the written manifest decodes back to the returned one (it feeds `drawings sign`)
           const written = yield* fs.readFileString(path.join(out, "manifest.json"));
-          const decoded = yield* S.decodeEffect(S.fromJsonString(RenderManifest))(written);
+          const decoded = yield* S.decodeEffect(RenderManifestJson)(written);
           expect(decoded).toEqual(manifest);
           const again = yield* service.render(RenderRequest.make({ specPath, outputDir: out }));
           expect(again.figures).toEqual(manifest.figures);
