@@ -63,10 +63,17 @@ person by `practice-kg-mcp --self-check`. Bundle `2026-10-07-01` with
 extension 0.4.0 is on his PC (self-check ok, 2026-10-06). What remains needs
 people: one session with him, scripted in `research/attorney-session.md`
 (in-chat `kg_provenance`, G-1..G-5 verdicts, his own questions for AC-6). P11
-widens correspondents from the mail archives.
+widens correspondents from the mail archives; its rebuild is diffed against
+`2026-10-07-01` with `verify.ts --compare-to` (D-25), which fails on any lost
+matter, docket, or number.
 
 ## Latest Evidence
 
+- 2026-10-07: **P11 prep landed** — `verify.ts --compare-to <old bundle>`
+  diffs the matter tables of a rebuilt bundle against the one it replaces and
+  fails on any lost matter, docket, or number (D-25); proved on `2026-10-07-01`
+  against `2026-10-06-03`: 0 matters or dockets added or removed, 23 dockets
+  gained numbers, none lost, exit 0. The quoted bare address (#1521) is fixed.
 - 2026-10-06: **P7 landed** — `kg_matter_lookup` and the
   `PracticeKgMatterLookup` service over new `matters` / `matter_dockets`
   tables; claims carried into the rebuilt bundle with no model run; bundle
