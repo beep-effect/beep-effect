@@ -26,3 +26,17 @@ export * from "./DocketIntake.schemas.ts";
  * @since 0.0.0
  */
 export * from "./DocketIntake.service.ts";
+/**
+ * Docket review loop policy.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./DocketReview.policy.ts";
+/**
+ * Docket review loop schema models.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./DocketReview.schemas.ts";

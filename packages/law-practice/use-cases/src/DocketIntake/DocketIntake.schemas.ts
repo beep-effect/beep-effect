@@ -11,8 +11,16 @@ import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { DocketCategory, DocketDueDate, DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import { LiteralKit } from "@beep/schema";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import {
+  DeterministicCheck,
+  ExtractorFieldResponse,
+  FieldAgreement,
+  ReviewFinding,
+  ReviewVerdict,
+} from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.schemas");
 
@@ -161,6 +169,7 @@ export class DocketSourceDocument extends S.Class<DocketSourceDocument>($I`Docke
     bytes: S.Uint8Array.annotateKey({ description: "Document bytes (never logged)." }),
     contentType: S.String.annotateKey({ description: "MIME type of the document." }),
     name: opt(S.String, "File name (never logged)."),
+    text: opt(S.String, "Text of the document, when the adapter can supply it (never logged)."),
   },
   $I.annote("DocketSourceDocument", { description: "A source document attached to a message." })
 ) {}
@@ -195,6 +204,8 @@ export class ParalegalNotDocketItem extends S.TaggedClass<ParalegalNotDocketItem
  * Every date field is optional and is filled only with what the message
  * itself says. `statedDueDate` is a due date the message states outright;
  * `mailDate` and `responsePeriod` are the trigger date and period it states.
+ * `citedText` is the exact source text those values were copied from; the
+ * review checks every reported date and period against it.
  *
  * **Example** (Make a docket entry)
  *
@@ -211,6 +222,7 @@ export class ParalegalNotDocketItem extends S.TaggedClass<ParalegalNotDocketItem
 export class ParalegalDocketEntry extends S.TaggedClass<ParalegalDocketEntry>($I`ParalegalDocketEntry`)(
   "ParalegalDocketEntry",
   {
+    citedText: opt(S.String, "Exact source text the dates and the period were copied from (never logged)."),
     mailDate: opt(LocalDateFromString, "Trigger (mailing or notification) date the message states."),
     matterReferences: stringList("Docket, application, patent or matter numbers the message mentions, verbatim."),
     rationale: S.String.annotateKey({ description: "One sentence on why this is a docket item." }),
@@ -294,6 +306,97 @@ export class SecretaryReview extends S.Class<SecretaryReview>($I`SecretaryReview
     responsePeriod: opt(DocketResponsePeriod, "Response period the reviewer read for itself."),
   },
   $I.annote("SecretaryReview", { description: "Agent 2 review of one entry." })
+) {}
+
+/**
+ * What agent 1 (paralegal role) returns when it is asked to revise or defend
+ * disputed fields of its entry.
+ *
+ * **Details**
+ *
+ * `selfReportedConfidence` is the model's own statement of confidence. It is
+ * recorded for the attorney and is never part of the review score.
+ *
+ * **Example** (Make a revision)
+ *
+ * ```ts
+ * import { ParalegalNotDocketItem, ParalegalRevision } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const revision = ParalegalRevision.make({ entry: ParalegalNotDocketItem.make({ rationale: "Newsletter." }) });
+ * console.log(revision.responses.length);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ParalegalRevision extends S.Class<ParalegalRevision>($I`ParalegalRevision`)(
+  {
+    entry: ParalegalEntry.annotateKey({ description: "The entry after the revision." }),
+    responses: S.Array(ExtractorFieldResponse)
+      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
+      .annotateKey({ description: "What the extractor did with each disputed field." }),
+    selfReportedConfidence: opt(UnitInterval, "The model's own confidence; recorded, never scored."),
+  },
+  $I.annote("ParalegalRevision", { description: "Agent 1 answer to a set of disputed fields." })
+) {}
+
+/**
+ * One completed round of the review loop.
+ *
+ * **Details**
+ *
+ * `entry` is the extractor's entry for the round and `reading` the critic's
+ * own reading. `extractorResponse` is empty in the first round, where nothing
+ * was disputed yet. `score` is computed from `findings` and `agreement` only.
+ *
+ * **Example** (Read a round's index)
+ *
+ * ```ts
+ * import type { ReviewRound } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const index = (round: ReviewRound) => round.index;
+ * console.log(index);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReviewRound extends S.Class<ReviewRound>($I`ReviewRound`)(
+  {
+    agreement: S.Array(FieldAgreement).annotateKey({ description: "Agreement per compared field." }),
+    checks: S.Array(DeterministicCheck).annotateKey({ description: "Results of the deterministic checks." }),
+    entry: ParalegalEntry.annotateKey({ description: "The extractor's entry for this round." }),
+    extractorConfidence: opt(UnitInterval, "The extractor's own confidence; recorded, never scored."),
+    extractorResponse: S.Array(ExtractorFieldResponse)
+      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
+      .annotateKey({ description: "What the extractor did with each field disputed after the previous round." }),
+    findings: S.Array(ReviewFinding).annotateKey({ description: "The critic's findings on the entry." }),
+    index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
+    reading: SecretaryReview.annotateKey({ description: "The critic's own reading for this round." }),
+    score: UnitInterval.annotateKey({ description: "Confidence score of the round." }),
+  },
+  $I.annote("ReviewRound", { description: "One completed round of the docket review loop." })
+) {}
+
+/**
+ * The rounds of a review that has not settled yet.
+ *
+ * **Example** (Make empty progress)
+ *
+ * ```ts
+ * import { DocketReviewProgress } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DocketReviewProgress.make({ rounds: [] }).rounds.length);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocketReviewProgress extends S.Class<DocketReviewProgress>($I`DocketReviewProgress`)(
+  {
+    rounds: S.Array(ReviewRound).annotateKey({ description: "Completed rounds, oldest first." }),
+  },
+  $I.annote("DocketReviewProgress", { description: "The rounds of a docket review that has not settled yet." })
 ) {}
 
 /**
@@ -546,6 +649,11 @@ export class DocketWrittenEntry extends S.Class<DocketWrittenEntry>($I`DocketWri
 /**
  * Why a docket item got a needs-review entry instead of a dated one.
  *
+ * **Details**
+ *
+ * `flagged-low-confidence`, `flagged-max-rounds` and `deterministic-failure`
+ * are the terminal statuses of a review that did not accept the item.
+ *
  * **Example** (Guard a reason)
  *
  * ```ts
@@ -557,9 +665,14 @@ export class DocketWrittenEntry extends S.Class<DocketWrittenEntry>($I`DocketWri
  * @category models
  * @since 0.0.0
  */
-export const DocketNeedsReviewReason = LiteralKit(["no-usable-date", "agents-disagree", "processing-failed"]).pipe(
-  $I.annoteSchema("DocketNeedsReviewReason", { description: "Why a docket item needs the attorney's review." })
-);
+export const DocketNeedsReviewReason = LiteralKit([
+  "no-usable-date",
+  "agents-disagree",
+  "processing-failed",
+  "flagged-low-confidence",
+  "flagged-max-rounds",
+  "deterministic-failure",
+]).pipe($I.annoteSchema("DocketNeedsReviewReason", { description: "Why a docket item needs the attorney's review." }));
 
 /**
  * Type for {@link DocketNeedsReviewReason}.
@@ -658,13 +771,14 @@ export class DocketEntered extends S.TaggedClass<DocketEntered>($I`DocketEntered
     flags: S.Array(DocketEntryFlag).annotateKey({ description: "Things the attorney should check." }),
     messageId: S.NonEmptyString.annotateKey({ description: "Provider id of the message." }),
     reminders: S.Array(DocketWrittenEntry).annotateKey({ description: "The reminder entries." }),
+    review: opt(ReviewVerdict, "Verdict of the review that accepted the item."),
   },
   $I.annote("DocketEntered", { description: "A dated tentative docket entry exists." })
 ) {}
 
 /**
- * Outcome: a docket item without a usable date, or one the agents disagree
- * on, has a needs-review entry.
+ * Outcome: a docket item without a usable date, one the agents disagree on,
+ * or one the review flagged has a needs-review entry.
  *
  * **Example** (Read the outcome tag)
  *
@@ -685,6 +799,7 @@ export class DocketNeedsReview extends S.TaggedClass<DocketNeedsReview>($I`Docke
     flags: S.Array(DocketEntryFlag).annotateKey({ description: "Things the attorney should check." }),
     messageId: S.NonEmptyString.annotateKey({ description: "Provider id of the message." }),
     reason: DocketNeedsReviewReason.annotateKey({ description: "Why no dated entry was written." }),
+    review: opt(ReviewVerdict, "Verdict of the review, when the item went through one."),
   },
   $I.annote("DocketNeedsReview", { description: "A docket item needs the attorney's review." })
 ) {}
@@ -752,7 +867,14 @@ export type DocketIntakeOutcome = typeof DocketIntakeOutcome.Type;
 
 /**
  * Ledger record of one processed message: its latest outcome and how many
- * times it has been attempted. It holds ids, dates and flags only.
+ * times it has been attempted.
+ *
+ * **Details**
+ *
+ * A settled record holds ids, dates and flags only. While a review is still
+ * running, `review` holds its completed rounds so a restart continues from
+ * the next round; a record that has `review` is not settled, and the rounds
+ * are dropped when the message settles.
  *
  * **Example** (Make a ledger record)
  *
@@ -778,6 +900,7 @@ export class DocketLedgerRecord extends S.Class<DocketLedgerRecord>($I`DocketLed
     outcome: DocketIntakeOutcome.annotateKey({ description: "Latest outcome." }),
     processedOn: LocalDateFromString.annotateKey({ description: "Day of the latest attempt." }),
     receivedAt: S.NonEmptyString.annotateKey({ description: "UTC receipt timestamp of the message." }),
+    review: opt(DocketReviewProgress, "Completed rounds of a review that has not settled yet."),
   },
   $I.annote("DocketLedgerRecord", { description: "Ledger record of one processed message." })
 ) {}
