@@ -80,7 +80,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   "bounded paper HTTP bodies",
   (it) => {
     const declaredCases: ReadonlyArray<readonly [string, string, string]> = [
-      ["landing", "text/html", "5000001"],
+      ["HTML-labelled response", "text/html", "50000001"],
       ["PDF", "application/pdf", "50000001"],
     ];
     for (const [label, contentType, contentLength] of declaredCases) {
@@ -99,10 +99,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         })
       );
     }
-    for (const contentLength of ["", "1", "not-a-number"]) {
+    for (const contentLength of ["", "1", "not-a-number", "9000000"]) {
       it.effect(`stops chunked landing overflow with ${contentLength || "absent"} content length`, () =>
         Effect.gen(function* () {
-          const headers: Record<string, string> = contentLength === "" ? {} : { "content-length": contentLength };
+          const headers: Record<string, string> =
+            contentLength === ""
+              ? { "content-type": "text/html" }
+              : { "content-type": "text/html", "content-length": contentLength };
           const actual = yield* runBody(
             A.map(A.range(1, 9), () => new Uint8Array(1_000_000)),
             headers
@@ -149,6 +152,23 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         );
       })
     );
+    for (const contentLength of ["", "6000005"]) {
+      it.effect(`accepts an HTML-labelled PDF with ${contentLength || "absent"} content length`, () =>
+        Effect.gen(function* () {
+          const headers: Record<string, string> =
+            contentLength === ""
+              ? { "content-type": "text/html" }
+              : { "content-type": "text/html", "content-length": contentLength };
+          const actual = yield* runBody([bytes("%PDF-"), new Uint8Array(6_000_000)], headers);
+          expect(actual.result.status).toBe("readable");
+          expect(actual.result.complete).toBe(true);
+          expect(actual.extractors).toBe(1);
+          const retained = yield* actual.fs.readFile(actual.path.join(actual.root, "capture/source.pdf"));
+          expect(retained.byteLength).toBe(6_000_005);
+          expect(new TextDecoder().decode(retained.subarray(0, 5))).toBe("%PDF-");
+        })
+      );
+    }
     it.effect("retains valid bounded PDF bytes and extracted text with a misleading small length", () =>
       Effect.gen(function* () {
         const pdf = bytes("%PDF-1.4\nfixture paper");

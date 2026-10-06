@@ -73,10 +73,7 @@ const readBoundedPaperBody = Effect.fn("Library.paper.readBoundedBody")(function
   response: HttpClientResponse.HttpClientResponse,
   pdfAllowed: boolean
 ) {
-  const declaredLimit =
-    !pdfAllowed || Str.includes("text/html")(Str.toLowerCase(response.headers["content-type"] ?? ""))
-      ? 5_000_000
-      : 50_000_000;
+  const declaredLimit = pdfAllowed ? 50_000_000 : 5_000_000;
   const declared = S.decodeUnknownOption(S.FiniteFromString)(response.headers["content-length"]);
   if (O.isSome(declared) && declared.value > declaredLimit) {
     yield* Effect.scoped(Stream.toPull(response.stream).pipe(Effect.asVoid));

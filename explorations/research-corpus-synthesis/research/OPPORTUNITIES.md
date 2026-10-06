@@ -184,3 +184,17 @@ line number, then replaced the moved row with a generic advisory. The correction
 preserves the reviewed reason and status at the new line. Matching this policy
 record by stable file and symbol would avoid losing its rationale after imports
 move. No new schema exception or coverage floor was admitted.
+
+The second review found that a PDF mislabeled as HTML could be rejected only
+when its accurate `Content-Length` was present. The declared ceiling now follows
+whether the request permits PDFs; observed bytes still enforce the smaller limit
+for non-PDF bodies. Paired header-present/header-absent cases cover this mismatch.
+
+The second review's `yeet verify --tier cheap-gates` run passed 13 lanes and
+failed `fallow:audit` and `fallow:health`. Both report the existing callback in
+`research-library-acquisition.test.ts:121` (cognitive complexity 18); that file
+is unchanged from the preceding published review fix. This is introduced against
+main, but precedes the second review correction. It remains in the operator's
+deferred CI burndown. The focused body tests, scoped test types, and CLI package
+lint/check pass. Include Fallow's test-callback complexity in future review-fix
+checks so a regression fixture's maintainability cost is visible before push.
