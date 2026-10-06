@@ -74,7 +74,7 @@ Higher sources outrank lower sources when they conflict.
 - `packages/law-practice/use-cases` — ports and the intake pipeline.
 - `packages/law-practice/server` — adapters: Graph mailbox and calendar,
   language-model agents, state store, matter lookup.
-- `apps/docket-intake` — the runnable service and its systemd user unit.
+- the `docket-intake` service app — the runnable service and its systemd user unit.
 - `docs/runbooks/docket-intake-entra-registration.md` — the operator-attended
   registration.
 - The live tenant: one Entra app registration and one Exchange management
@@ -202,7 +202,7 @@ autonomy charter.
 | D-9 | The reviewer also reviews messages agent 1 classified as not a docket item. This is on by default and can be switched off in configuration. | A single-agent negative is the one path where an item can vanish silently. The cost is one extra model call per message on existing API billing. |
 | D-10 | The daily digest is an all-day calendar event (`Docket - digest`, shown as free) plus a markdown file in the state directory. | Sending mail would need `Mail.Send`, and no decision approves Graph message creation. The calendar is already where the attorney looks. |
 | D-11 | Reminder ladder events are separate all-day events (`Docket - reminder`, shown as free). A rung dated today or earlier is not created; the entry is flagged `ladder-truncated`. | Alignment decision 6 asks for ladder events. A reminder in the past is noise. |
-| D-12 | Code placement: values and pure policy in `law-practice/domain`, ports and the pipeline in `law-practice/use-cases`, adapters in `law-practice/server`, the process in `apps/docket-intake`. | `standards/ARCHITECTURE.md` slice spine, and the `apps/practice-kg-mcp` precedent for a thin runnable host. The repo CLI may not import slice packages. |
+| D-12 | Code placement: values and pure policy in `law-practice/domain`, ports and the pipeline in `law-practice/use-cases`, adapters in `law-practice/server`, the process in the `docket-intake` service app. | `standards/ARCHITECTURE.md` slice spine, and the `apps/practice-kg-mcp` precedent for a thin runnable host. The repo CLI may not import slice packages. |
 | D-13 | Matter lookup is a port shaped to workstream D's `PracticeKgMatterLookup` contract. Anything other than a verified unique match is a flag on the entry, never a guess. | The contract is published but its PR has not merged; the port lets this packet proceed and swap in the live layer later. |
 | D-14 | The time zone for all-day events is required configuration with no default. | An all-day event created in the wrong zone spans two days in Outlook. |
 | D-15 | The reviewer returns the mail date and response period it read; the pipeline does the arithmetic. The "email's date" is the due date the message states, or failing that the paralegal's own mail date plus period. | A model that returns a finished date hides whether it read or computed it. Keeping the arithmetic in tested code is what makes "never guess" checkable. |

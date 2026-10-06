@@ -40,7 +40,7 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement. Slices 0-2 are open as draft pull requests (#1455, #1456,
-#1458). Slice 3 (adapters and `apps/docket-intake`) is built and follows once
+#1458). Slice 3 (adapters and the `docket-intake` service app) is built and follows once
 slices 1 and 2 merge. The live smoke waits on the operator-attended
 registration.
 

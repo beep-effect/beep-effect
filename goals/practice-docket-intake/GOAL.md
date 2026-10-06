@@ -25,7 +25,7 @@ Scope:
 
 - In: `packages/drivers/m365` (app-only lane, write verbs),
   `packages/drivers/m365-mcp` (test stubs only), docket intake code in
-  `packages/law-practice/{domain,use-cases,server}`, `apps/docket-intake`,
+  `packages/law-practice/{domain,use-cases,server}`, the `docket-intake` service app,
   `docs/runbooks/docket-intake-entra-registration.md`, this packet.
 - Out: a docket of record, a rules engine, weekend or holiday roll-forward,
   mail send, matter tagging of mail, attachment filing, contacts verbs, MCP
