@@ -18,7 +18,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runEntrypoint } from "./entrypoint.ts";
 import { SmokeFailure } from "./PracticeKgMcp.errors.ts";
+import { loadPracticeKgBundleContext } from "./runtime/Host.ts";
 import { makePracticeKgBuildLayer } from "./runtime/Layer.ts";
+import { PracticeKgSelfCheckReport } from "./runtime/SelfCheck.ts";
 
 const $I = $PracticeKgMcpId.create("smoke");
 const FixtureDigest = `sha256:${Str.repeat(64)("a")}`;
@@ -153,7 +155,29 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
   yield* Effect.scoped(Layer.build(Layer.effectDiscard(populateCatalog).pipe(Layer.provide(catalogLayer))));
 });
 
-const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(function* (root: string) {
+/**
+ * Build the one-document fixture bundle the compiled-host smoke serves.
+ *
+ * **Details**
+ *
+ * The bundle is written to `<root>/bundle` from a corpus created under
+ * `<root>/corpus`, through the same build layer `practice-kg-build` uses.
+ *
+ * **Example** (Build the fixture bundle)
+ *
+ * ```ts
+ * import { makePracticeKgSmokeBundle } from "../../src/smoke.ts"
+ * import { Effect } from "effect"
+ *
+ * const building = makePracticeKgSmokeBundle("/work/practice-kg-smoke")
+ * console.log(Effect.isEffect(building)) // true
+ * ```
+ *
+ * @param root - Empty directory that receives the fixture corpus and bundle.
+ * @category testing
+ * @since 0.0.0
+ */
+export const makePracticeKgSmokeBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const corpusRoot = path.join(root, "corpus");
@@ -366,12 +390,63 @@ const runCompiledHandshake = Effect.fn("PracticeKgSmoke.runCompiledHandshake")(f
   yield* Effect.logInfo("COMPILED_HANDSHAKE_OK", { protocolVersion: HANDSHAKE_PROTOCOL_VERSION });
 });
 
+const decodeSelfCheck = S.decodeUnknownEffect(S.fromJsonString(PracticeKgSelfCheckReport));
+
+// The install proof a person cannot give over SSH: the compiled host opens the
+// bundle and both stores and reports them on one line, with stdin closed.
+const runCompiledSelfCheck = Effect.fn("PracticeKgSmoke.runCompiledSelfCheck")(function* (
+  executable: string,
+  bundleOut: string,
+  neutralCwd: string
+) {
+  const path = yield* Path.Path;
+  const selfCheckFailure = (message: string) => (cause: unknown) => SmokeFailure.make({ cause, message });
+  const expected = yield* loadPracticeKgBundleContext(bundleOut).pipe(
+    Effect.mapError(selfCheckFailure("Fixture bundle manifest could not be read for the self-check smoke."))
+  );
+  const child = yield* Effect.try({
+    try: () =>
+      Bun.spawn([executable, "--self-check"], {
+        cwd: neutralCwd,
+        env: { ...Bun.env, BUNDLE_DIR: bundleOut, NODE_PATH: path.join(path.dirname(executable), "node_modules") },
+        stderr: "inherit",
+        stdin: "ignore",
+        stdout: "pipe",
+      }),
+    catch: selfCheckFailure("Compiled host self-check could not start."),
+  });
+  const output = yield* Effect.tryPromise({
+    try: () => new Response(child.stdout).text(),
+    catch: selfCheckFailure("Failed reading the compiled host self-check line."),
+  });
+  const exitCode = yield* Effect.tryPromise({
+    try: () => child.exited,
+    catch: selfCheckFailure("Failed waiting for the compiled host self-check."),
+  });
+  const lines = A.filter(Str.split("\n")(Str.trim(output)), Str.isNonEmpty);
+  const report = yield* Effect.succeed(lines).pipe(
+    Effect.filterOrFail(
+      (printed) => exitCode === 0 && A.length(printed) === 1,
+      () => SmokeFailure.make({ message: `Compiled host self-check exited ${exitCode} after printing: ${output}` })
+    ),
+    Effect.flatMap(flow(A.join("\n"), decodeSelfCheck)),
+    Effect.mapError(selfCheckFailure(`Compiled host self-check line was invalid: ${output}`))
+  );
+  yield* Effect.succeed(report).pipe(
+    Effect.filterOrFail(
+      (line) => line.bundleVersion === expected.manifest.bundleVersion && line.tools === A.length(ExpectedTools),
+      () => SmokeFailure.make({ message: `Compiled host self-check reported another bundle or toolkit: ${output}` })
+    )
+  );
+  yield* Effect.logInfo("COMPILED_SELF_CHECK_OK", { bundleVersion: report.bundleVersion, tools: report.tools });
+});
+
 const program = Effect.scoped(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-compiled-smoke-" });
-    const bundleOut = yield* makeFixtureBundle(root);
+    const bundleOut = yield* makePracticeKgSmokeBundle(root);
     const executable = path.resolve(import.meta.dir, "..", "dist", "mcpb", "linux-x64", "practice-kg-mcp");
     if (!(yield* fs.exists(executable))) {
       return yield* SmokeFailure.make({
@@ -380,6 +455,7 @@ const program = Effect.scoped(
     }
     yield* runCompiledHost(executable, bundleOut, root);
     yield* runCompiledHandshake(executable, bundleOut, root);
+    yield* runCompiledSelfCheck(executable, bundleOut, root);
   })
 );
 runEntrypoint({ isMain: import.meta.main, program });

@@ -7,6 +7,7 @@
 
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 
 const $I = $PracticeKgMcpId.create("PracticeKgMcp.errors");
@@ -86,3 +87,37 @@ export class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
   },
   $I.annoteError<SmokeFailure>("SmokeFailure", { description: "Sanitized compiled-host smoke failure." })
 ) {}
+
+/**
+ * Failure of the headless `--self-check`, already reported as its one JSON line.
+ *
+ * **Details**
+ *
+ * The self-check owns stdout: it prints `{"ok":false,"message":…}` itself, so
+ * this error opts out of the main runner's own error log through
+ * `Runtime.errorReported`. The process still exits non-zero.
+ *
+ * **Example** (Create a self-check failure)
+ *
+ * ```ts
+ * import { SelfCheckFailure } from "../../src/PracticeKgMcp.errors.ts"
+ *
+ * const error = SelfCheckFailure.make({ message: "Bundle directory is required." })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class SelfCheckFailure extends S.TaggedError<SelfCheckFailure>($I`SelfCheckFailure`)(
+  "SelfCheckFailure",
+  {
+    cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
+    message: S.NonEmptyString,
+  },
+  $I.annoteError<SelfCheckFailure>("SelfCheckFailure", {
+    description: "Self-check failure that was already printed as the self-check result line.",
+  })
+) {
+  override readonly [Runtime.errorReported] = false;
+}

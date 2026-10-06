@@ -25,3 +25,8 @@ export * from "./Layer.ts";
  * @since 0.0.0
  */
 export * from "./Pglite.ts";
+/**
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./SelfCheck.ts";
