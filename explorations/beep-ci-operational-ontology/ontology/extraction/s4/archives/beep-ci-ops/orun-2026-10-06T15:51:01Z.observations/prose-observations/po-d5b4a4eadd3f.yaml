@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d5b4a4eadd3fc86fca26be407d25a681ce732593df4a3e9320a1f222a7518401",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 922,
+    "end_line": 929
+  },
+  "quote": "- id: iv-1233-pilot-dependency-lint-uncached\n  title: \"PR #1233 — lint caching off for @beep/fc-runs and @beep/test-runner\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-25T16:09:11Z\"\n  mergeCommit: df5b20d19e7df024ddef42b14b84b6619ada4687\n  pr: 1233\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

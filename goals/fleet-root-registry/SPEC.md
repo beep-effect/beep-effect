@@ -2,7 +2,11 @@
 
 ## Objective
 
-`beep worktree fleet` discovers the `projects/beep/{seats,lanes}` namespace and legacy `beep-effect*` roots under the configured projects directory through a single fleet-root setting (working name `BEEP_FLEET_ROOT` plus a config-file equivalent, per repository), and a new joined view prints each checkout's derived mirror facts beside its authored registry facts. The registry is a schema-first, file-backed store under `~/.local/state/beep` that authors only what git cannot derive. The mirror's per-root undercount of `beep-effect0-worktrees` (35 directories, 1 attributed) is explained or fixed.
+`beep worktree fleet` discovers the `projects/beep/{seats,lanes}` namespace and legacy `beep-effect*` checkouts under the configured projects directory (the discovery root) through a single fleet-root setting (working name `BEEP_FLEET_ROOT` plus a config-file equivalent, per repository), and a new joined view prints each checkout's derived mirror facts beside its authored registry facts. The registry is a schema-first, file-backed store under `~/.local/state/beep` that authors only what git cannot derive. The mirror's per-root undercount of `beep-effect0-worktrees` (35 directories, 1 attributed) is explained or fixed.
+
+Discovery from the configured projects directory selects only matching
+`beep-effect*` child checkout roots and excludes unrelated project directories.
+The sibling `beep-effect*` checkout directories are the legacy checkouts.
 
 Brief and decisions: [`explorations/agent-fleet-layout/BRIEF.md`](../../explorations/agent-fleet-layout/BRIEF.md), [`explorations/agent-fleet-layout/DECISIONS.md`](../../explorations/agent-fleet-layout/DECISIONS.md). Depends on: none (first bet in the map).
 
@@ -39,12 +43,12 @@ Higher sources outrank lower sources when they conflict.
 - Schema first: registry document, seat role and drain status are `effect/Schema` models with `LiteralKit` literal domains before any store code.
 - `git rev-parse --git-common-dir` consumers (`yeet sweep --retire`, the live-checkout fence, Codex `--add-dir`) keep resolving.
 - The fleet root is per repository so `beep-effect-private` can have its own fleet.
-- Legacy roots stay discoverable until `legacy-drain` ends.
+- Legacy checkouts stay discoverable until `legacy-drain` ends.
 - Mirror undercount: until explained, nothing downstream trusts the mirror's per-root grouping for deletion decisions.
 
 ## Acceptance Criteria
 
-- [ ] `BEEP_FLEET_ROOT` (or config equivalent) set to a fresh `beep` directory under the configured projects root with `seats/main` cloned is discovered by `bun run beep worktree fleet --json` alongside every legacy checkout.
+- [ ] `BEEP_FLEET_ROOT` (or config equivalent) set to a fresh `beep` directory under the configured projects directory (the discovery root) with `seats/main` cloned is discovered by `bun run beep worktree fleet --json` alongside every legacy checkout.
 - [ ] The joined view prints, for lane `agent-fleet-layout`, its mirror facts plus authored role, slug and PR number.
 - [ ] The registry file decodes against its schema; `beep worktree fleet` JSON is byte-identical before and after when the fleet root is unset.
 - [ ] The `beep-effect0-worktrees` count matches `git -C beep-effect0 worktree list` or the discrepancy has a named cause recorded in the reflection.
@@ -75,6 +79,7 @@ Seeded from the exploration; entries here cover only decisions taken inside this
 | Date | Decision | Source |
 | --- | --- | --- |
 | 2026-10-05 | Scope, non-goals and constraints inherited from the exploration brief, rabbit holes and no-gos. | `explorations/agent-fleet-layout/DECISIONS.md` |
+| 2026-10-06 | Use discovery root for the configured projects directory and legacy checkouts for its matching `beep-effect*` child checkout roots; exclude unrelated project directories. Reversal path: revert this doc-only criterion if the fleet registry contract later intentionally admits nonmatching project directories. | Issue #1449 |
 
 ## Exception Ledger
 

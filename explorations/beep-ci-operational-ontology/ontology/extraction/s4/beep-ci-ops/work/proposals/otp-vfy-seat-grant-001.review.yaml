@@ -1,0 +1,70 @@
+target: "otp:vfy-seat-grant:001"
+target_sha256: "050395fdde0cb4423ffb205a05413358a39a0b68b5cde54807d270dff13a8cbd"
+chain_sha256: "357c536a8fe47f2ed10246c5087ecc3be1600e224a22b7db9c824363dca14485"
+seat: ontoclean-adversary
+verdict: PASS
+surfaces:
+  taxonomy: attacked
+  identity: attacked
+  warrant: attacked
+  null_discriminator: attacked
+no_surface_reasons: {}
+revision_requests:
+  - >-
+    Non-blocking: the hypothesis's discriminator says the held admission is "revoked when the
+    heartbeat stops", a causal reading the card itself disowns (no cited record states that eviction
+    follows from a stopped heartbeat). Keep the observed facts (an end tag of its own, a last
+    heartbeat instant before the eviction instant, reason owner-dead-or-reused) and drop the causal
+    clause.
+attacks:
+  - surface: taxonomy
+    rule: reuse-semantic-match
+    counterexample: >-
+      Tried a grain other than the ratified lease side: the chain holds admitted-to-released spans
+      (so-95b7d78a061f), admitted-to-lease-evicted spans (so-860cff0d673e, so-a9ed1352e2bc) and a
+      lease state record (so-a8d270b5e19d) carrying weightTokens and an origin member, the two
+      parameters the ratified SeatGrant row lists. Same grain; no parent asserted. Survived.
+    outcome: survived
+  - surface: identity
+    rule: identity-conflict
+    counterexample: >-
+      Tried request/grant continuity: so-860cff0d673e carries enqueue, admit and lease eviction under
+      one nonce. Relator and phase readings count it differently. The card leaves the criterion
+      unresolved and the proposal claims no lift of the account-copy or authorization-continuity
+      flag. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: listing-cq-warrant
+    counterexample: >-
+      Tried whether CQ-008 or CQ-009 answers without the class: CQ-008 types ?grant rdf:type
+      ciops:SeatGrant and CQ-009 types ?g1 and ?g2 the same way. Survived.
+    outcome: survived
+  - surface: warrant
+    rule: seed-only-read-as-ratified
+    counterexample: >-
+      Tried a reading of hasCheckout or hasCoordinationProtocol as ratified, or a missing protocol
+      field read as no protocol: the proposal states both are seed-only, that the protocol carries
+      the decoded value, and that the cited records show the legacy arm neither present nor absent
+      (so-a8d270b5e19d carries scheduler-origin-concurrency/v1). Survived.
+    outcome: survived
+  - surface: null_discriminator
+    rule: discriminator-true-of-dto
+    counterexample: >-
+      Twin: a scheduler variable with no domain counterpart. For a flagged ratified term reused with no
+      lift claimed, the test is semantic match: the held span has its own end tag
+      (admission-lease-evicted, reason owner-dead-or-reused) and a lastHeartbeatAtMillis that no
+      queued-request row in the chain carries (so-860cff0d673e), which places it at the ratified lease
+      grain apart from the ticket. Survived; the causal wording is a non-blocking request.
+    outcome: survived
+rival_models_still_viable:
+  - >-
+    held phase of one admission engagement that began at enqueue; discriminating fact: a grant
+    released or evicted and re-admitted under the same nonce, or a lease whose nonce differs from its
+    ticket's
+evidence:
+  - "so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1"
+  - "so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020"
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - CQ-008
+  - CQ-009

@@ -1,0 +1,147 @@
+id: dh:vfy-verification-attempt:001
+observation_refs:
+- so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c
+- so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296
+- so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321
+- so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4
+- so:sha256:ff071fc9a2a9ebd7cd5064c6d8c8bcb04e31ed7ea4db18f3c45a8c531d01d73f
+- so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610
+- so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200
+- po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e
+- so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3
+- so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b
+- so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713
+- so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f
+- so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3
+- so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6
+- so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918
+- so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8
+- so:sha256:b06341eedd72be9d8b123f40c7729efea92910975880102a33da2da444ef6f4d
+- so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c
+- so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8
+- so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002
+- so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385
+- so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186
+- so:sha256:0d463294884b11f7faaf24a3ba9b966e69f908900adf66458943b70c153833f4
+- so:sha256:1a2d6fd275d6a810eef1cdb03ab5e1085b17b844f91a70009548bde6dab21710
+- so:sha256:1dc3d062f26a6e613885a56fd596bd45efd94e166c269a2b4ca2c9a090efd7fc
+- so:sha256:1de864e5f2e5020e5a85639e2caf651d4dc1f49ac7f0399a9438fd1bc84de90a
+- so:sha256:306f2bbb87ce8ffa9e686a3a471988b4a98b9a5bc27a49037cc23764a1322f7e
+- so:sha256:3df0321fa2303fa9f583571346a2e2ae0d1a3d9ca7d4f02191891b0e85cbc597
+- so:sha256:4cab473a4ae30a83a496368b6cd6ebcdabeb17571a4dc8fc10e232b1479b09f1
+- so:sha256:5447e14345260d1316f5f04b00835e541e88f9646b161d2b690fec4338c17042
+- so:sha256:7c5446b68304183946ec6a774cb60b328403e84d1feac71ce6f6ba7748e4b525
+- so:sha256:7dfd18c974612418dbbd3729d76d1c49346d7b1cfc8ce2e4347baf190d4b032d
+- so:sha256:b1c417f143294008bf47a9b1d6e8030b874e0644de3d12599b1f585937e4462d
+- so:sha256:d07a64721ca62bee951bfb9ee76a2d26ea05767d82e99a1ef274ab165a780fdd
+- so:sha256:d649f17f1b974b62bb254501a557b1256551454c201d5fa08cf4bead41477ec9
+- so:sha256:da248e006495f81c7b5a0301e935c3bd847f8f1e4fb42bb5d697b3bc653c63e8
+- so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0
+- so:sha256:dd058663d3079e0532fa11e5c25d345fa1ac6be5a8399e0cbd7afd0c2b4b44f6
+- so:sha256:de6b9f85651a7fd50a492b7fe0cf6fe2116e3442604e3afa33984b4745a1ede7
+- so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382
+- so:sha256:1454a58421d5c34bb5b5042185ded5f010c59eed9bf8f4618a1b47a21d6ac2f2
+- so:sha256:1c1a47ab0a24f2030f9adbd35e1cb70302f0537ccd94a8b6f815a15956f246e9
+- so:sha256:202cf1353ee3399c439c50514382b75898bd0053f07e0155cff135e5da1ea695
+- so:sha256:29a5ac8607a2204f5c7518e009834a017dbc947407f1c9430c0b87119c33d677
+- so:sha256:2d8a12f68b8f11229083d0b72d848d51d8af65bd58c5c63d96f723ffe2c4fefa
+- so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c
+- so:sha256:361532c73eb06bc97aeb7078285bf045977246406fca122fcb7e250d75fb0ab1
+- so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+- so:sha256:39551747b60d66e8780875439fb941c0339e58f319cca5683cf4ba4ddb7ee932
+- so:sha256:3a6e1d02992aae92c9a6c655f58d27b6c4c7ba00cd998571250028f6d21c086e
+- so:sha256:3cc89e1b48c31fd2d27dc7c01c9daeafb5174c3f160f8f899019a4f055e9f67e
+- so:sha256:40e26d2f06727f6b3e5744a8fe251564521f144cbfab9eefc21417ec3b8cfe5c
+- so:sha256:43780f21666c853c77fd6ef57de4d096353d8a00786d6574a8929611e521b1b7
+- so:sha256:5692f872f1193ed1a7d8f272a60b3e1dcfa452cd5872acc36f37a903e9489da7
+- so:sha256:5fb817d1c1bf32b5c176eca953fa9b728159d6401e238f6e341cf2704a02ac92
+- so:sha256:69757556b71cebe4be46d5cab890d3ff69f72565175f9091db832efb135a9319
+- so:sha256:6bbe438d1133f37eabc818032603da718d67a632b1f9f5a527419a06a6007746
+- so:sha256:73cab1dda09f584b59981c05c286bd18867965a67aa36377c3353143cc88681e
+- so:sha256:7b7e3ae102981a7b4ed16f6344f2ac3efba21fd762b1d36d4110ff9c2acbc75e
+- so:sha256:7fa2e91b7760f2d323b1a2e0d60cbc5a19a46728da1b51e9b4be41a2e3c2e29e
+- so:sha256:8528aeede357e4f01207fa81b86236e75172b001db41d098a0268ec09a1a84c1
+- so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1
+- so:sha256:8e590f9d864514fad0c6dabd528e210f5b972a8cf4d35f109c0388991cf13f18
+- so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20
+- so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+- so:sha256:95c548d11f0d4f662c747129c4775a26ee6905f8216e04311a00479a137388da
+- so:sha256:97294ad8ff802b8ce62ad6a705ddcfe554f20c25c0083ea42fb52fe31625d60c
+- so:sha256:9832cf3344c12caa7ae6cff6da206198b15c1af557d740d9c1578bc84e40f1db
+- so:sha256:9883ccc4fb4caf307adb1bb3e1a46c2cfc8a083abdfe4e65e61fbe37ad8381c9
+- so:sha256:9944009915a62c907bc1be0456d2b69c272f61ff4fc0473bfbd14db7ab35cf94
+- so:sha256:9de2dc5d014be58e691270bfb19f1ca4245a9986e9f2ad3589663a144a8ffcb9
+- so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192
+- so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020
+- so:sha256:acd8b44fb47d2f6e9c65ee598627835b64adaecc2625bef8df8378d4dcc508e7
+- so:sha256:b091bfd365c5afccdb62bb90465dca6e835585ffe53b09d26e9e0a2b9c61cfd4
+- so:sha256:b0d1acea3324393c2a51494ffc72b20bf5565e9ff96f2416f0d9921e99c0cfd7
+- so:sha256:b62e6964ef692ce7d92d198216dcd03098feac6f8bed9a81da2a3047caaa7f79
+- so:sha256:b7f9da9330672e476e84fb60392273c964dd625ee9362e24c5491fcdee3169a6
+- so:sha256:bf5548d0d5fe5a450c6e46569ef87b75f2e98ed886c06b7628f69ba61c68947b
+- so:sha256:c4f41caf9b1e088de028c28e67075f3f6f63dd6a47de296744c1088cf69c966b
+- so:sha256:cac0a9e757f0cbb2afa94434ea8857752214528039243a01e107e9647c5bedff
+- so:sha256:cc2d16f12d1c71cdb72b426099b406a519b08c7141b788e89607b19ebd8e5302
+- so:sha256:d17c4d8c00d96fbd6d5f2c854ab9936e75c26a06b12025ab2219d430837ae83d
+- so:sha256:d463fed2f96706ee297f431b9d928824649d40b80aeca6cd0bc0e6e429c8c450
+- so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c
+- so:sha256:ddaa6047c00c3e114ea6491cd76ef891362ec00f970e8e38dcc5a03542958075
+- so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71
+- so:sha256:fba5f4273ae5dbf0276ced242729aae774ef9778b84be299ad8785deaeccc81c
+- so:sha256:ffdc0da640dfeee162c38c8230428e04e4f407c42d3ea2369f22a3f9e8c309ab
+cq_warrants:
+- CQ-022
+proposed_referent:
+  label: verification attempt (one started run of the verification pipeline, as against the request it may submit and the
+    lane runs it contains)
+  description: 'One instance is one verification attempt: opened by an `_tag=attempt-started` row (so-6390d5f857ae, so-10c2570fe2f6,
+    so-3bf9cacb55b4, and so-eefbf95beb8d with its twin so-ff071fc9a2a9) carrying `mode` (`repair`, `verify`, `closeout`) and,
+    where present, `stage` and `proofTier`; closed by an attempt-finished verdict (so-ca8b3f90e57c: `outcome`, `elapsedMs`,
+    `committed`, `pushed`) or by an attempt-terminated reason (so-f8f678d23c44, `reason=legacy-unowned-start`). Individuated
+    by its attempt identifier (`attemptId`; the observation id is the citation), never by the run it belongs to: one run file
+    holds several attempts (dh:vfy-run-grouping:001). The same identifier stamps the proof-ledger lane records written during
+    the attempt (several lanes per attempt: so-1de864e5f2e5 and so-1dc3d062f26a; so-3df0321fa230 through so-c997b4851faa under
+    `stage=repair-loop`) and the admission chains enqueued on its behalf, and the quarantined lease so-a8d270b5e19d carries
+    attempt members (`startedAt`, `stage`, `proofTier`, `resolvedHeadSha`) beside admission members. Queue A: no cited record
+    pair joins one `attemptId` value across two record classes (attempt journal, proof ledger, admission journal), every admission
+    chain that carries an `attemptId` carries a different one, and successive withdrawn chains from one checkout and branch
+    each carry a fresh one, so attempt and seat request are one to one wherever both show; this is a sample limit, not an
+    absence. so-6390d5f857ae carries no `stage` key; that absence selected the row and is not a fact. The KPI law (po-fd56d2b008d1)
+    counts a terminated attempt as red and evicts whole terminal attempts per run-id file. CQ-022 needs VerificationAttempt
+    (inAttempt on CommittedFailure and WorkUnitExecution). Record pairs so-1a2d6fd275d6/so-1dc3d062f26a, so-d6adeec15c79/so-fcbe894799ea,
+    so-eefbf95beb8d/so-ff071fc9a2a9, so-df1f4d8ba41f/so-3013eedf6f82 are each one record span seen twice (the vocabulary record
+    a strict subset of its twin): one individual, both cited.'
+representation_status: domain_referent
+alternatives:
+- label: the journal, ledger and admission rows about an attempt (records, not the occurrence)
+  representation_status: information_artifact
+  plausibility: viable
+- label: an alias of the seat request (attemptId as a second identifier of one admission chain; see dh:vfy-seat-request:001);
+    told apart by an attempt-started row sharing its attemptId with an admission chain, or by two chains under one attemptId
+  representation_status: lexical_alias
+  plausibility: viable
+- label: the lane runs with the attempt as a grouping label only; told apart by the attempt-journal start row and verdict
+    (so-6390d5f857ae, so-ca8b3f90e57c) whose `elapsedMs` spans from that start to the verdict's end, a span of the attempt
+    itself that the proof-ledger and admission records, which show the attempt only as a stamp, lack
+  representation_status: implementation_artifact_only
+  plausibility: viable
+- label: the episode the attempt belongs to (see dh:vfy-run-grouping:001)
+  representation_status: unresolved
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: true
+  rationale: 'The null falls: the attempt has its own start row and its own verdict, whose elapsed time spans exactly from
+    that start to the verdict''s end, and the verdict locates a failure at one step while another step passed. The proof-ledger
+    and admission readings left the null standing because those records show the attempt only as a stamp; the attempt-journal
+    records supply its own events. Whether attempt and request are distinct individuals stays open. Needed evidence: an attempt-started
+    row sharing its attemptId with an admission chain, or two admission chains under one attemptId.'
+  discriminator: 'so-6390d5f857ae is an `_tag=attempt-started` row with `startedAt=2026-08-23T16:59:45.919Z`, and so-ca8b3f90e57c
+    in the same attempt journal file carries `endedAt=2026-08-23T17:01:07.524Z`, `elapsedMs=81605`, `outcome=failure` and
+    `failedStepId=prepare:05-docgen` beside lane `prepare:01-effect-imports` at `status=passed`: the verdict''s elapsed time
+    is exactly the interval from the start row to the verdict''s end, which would be false if the attempt were only a bookkeeping
+    label.'
+epistemic_status: proposed
+confidence:
+  value: 0.6
+  use_for_acceptance: false

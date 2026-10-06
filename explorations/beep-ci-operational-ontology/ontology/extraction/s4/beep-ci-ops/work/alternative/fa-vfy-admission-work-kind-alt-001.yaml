@@ -1,0 +1,35 @@
+id: "fa:vfy-admission-work-kind-alt:001"
+hypothesis_ref: "dh:vfy-admission-work-kind:001"
+identity_card_ref: "ic:vfy-admission-work-kind-alt:001"
+tests:
+  spec_vs_execution: separated
+  world_vs_information: separated
+  role_vs_bearer: separated
+  context_reification_needed: false
+rival_models:
+  - label: "subkind classification of seat requests by requested work (this card)"
+    still_viable: true
+  - label: "closed set of classifier individuals (CQ-021 binds ?kind as an individual such as FullProofWork)"
+    still_viable: true
+  - label: "code list only, with no category of work behind it"
+    still_viable: false
+  - label: "the same referent as the ProofStage member of the same spelling"
+    still_viable: false
+strongest_counterexample: >-
+  CQ-021's pinned query and sample answer treat the kind as an individual object of hasWorkKind, which fits
+  a classifier-individual (powertype) reading at least as well as a subkind of seat request; the instance-level
+  records cannot tell the two apart, because both predict one kind per request and a fixed charge per kind.
+verdict: analyzed
+needed_evidence: >-
+  Subkind versus classifier individuals is observationally equivalent on current evidence and is a modelling
+  choice CQ-021 tolerates either way. What would bear on it: a record of a request whose kind changes within
+  one chain (would make it a phase and defeat both), or a kind-level property beyond the charge (for example
+  a per-kind starvation bound feeding CQ-023) that only an individual member can bear. The publish member
+  quoted in po-2f209664dde0 has no chain among the observations: a sample limit, not an absence.
+rationale: >-
+  The code-list rival fails: the kind fixes a distinct capacity claim under both priority classes
+  (so-d99a3c53086c and so-0d75ae7174ed at 5, so-95b7d78a061f and so-363f9b7f07dc at 3) and goes with a distinct
+  request shape (review-fix chains lack attemptId and branch). The same-referent-as-stage rival fails on
+  so-a8d270b5e19d (kind=merged-preview, stage=pre-push). Kind of requested work is kept apart from the stage of
+  execution (spec_vs_execution separated), from its literal (world_vs_information separated), and from the
+  request that bears it (role_vs_bearer separated: the kind is not a role a request plays for a while).

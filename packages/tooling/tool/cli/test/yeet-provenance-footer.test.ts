@@ -66,35 +66,44 @@ type GhBodyEdit = typeof GhBodyEdit.Type;
 const editedAt = "2026-09-03T12:01:00Z";
 const encodeGhBodyJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBody));
 const encodeGhBodyEditsDocumentJsonResult = S.encodeUnknownResult(S.fromJsonString(GhBodyEditsDocument));
-// The `gh pr view --json` fields gh 2.99 exposes that the stamp may ask for.
-// A field outside this set is exactly what shipped the `lastEditedAt` skip, so
-// the fake refuses it the way gh does instead of returning a snapshot anyway.
-const GhPrViewJsonFields = HashSet.make("body", "createdAt", "updatedAt", "number", "title", "url", "state");
-const unsupportedGhPrViewField = (args: ReadonlyArray<string>): O.Option<string> =>
+// The REST pull-request fields the stamp may project with `--jq`. A field
+// outside this set (a camelCase `gh pr view` name such as `lastEditedAt`) is
+// exactly what shipped the earlier stamp skip, so the fake refuses it instead
+// of returning a snapshot anyway.
+const RestPullFields = HashSet.make("body", "created_at", "updated_at", "number", "title", "html_url", "state");
+const restPullJqFields = (jq: string): ReadonlyArray<string> => [
+  ...A.map(A.fromIterable(jq.matchAll(/[{,]\s*([A-Za-z_]+)\s*(?=[,}])/g)), (match) => match[1] ?? ""),
+  ...A.map(A.fromIterable(jq.matchAll(/\.([A-Za-z_]+)/g)), (match) => match[1] ?? ""),
+];
+const unsupportedRestPullField = (args: ReadonlyArray<string>): O.Option<string> =>
   pipe(
-    A.findFirstIndex(args, (arg) => arg === "--json"),
+    A.findFirstIndex(args, (arg) => arg === "--jq"),
     O.flatMap((index) => A.get(args, index + 1)),
-    O.flatMap((fields) => A.findFirst(Str.split(fields, ","), (field) => !HashSet.has(GhPrViewJsonFields, field)))
+    O.flatMap((jq) => A.findFirst(restPullJqFields(jq), (field) => !HashSet.has(RestPullFields, field)))
   );
+const isRestPullRead = (args: ReadonlyArray<string>): boolean =>
+  args[0] === "api" && /^repos\/\{owner\}\/\{repo\}\/pulls\/\d+$/.test(args[1] ?? "");
+const bodyFileOf = (args: ReadonlyArray<string>): string =>
+  Str.replace(/^body=@/, "")(O.getOrElse(A.last(args), () => ""));
 interface GhCaptureResult {
   readonly exitCode: number;
   readonly output: string;
   readonly truncated: boolean;
 }
-const ghUnknownJsonField = (field: string): GhCaptureResult => ({
+const restUnknownField = (field: string): GhCaptureResult => ({
   exitCode: 1,
-  output: `Unknown JSON field: "${field}"\nAvailable fields:\n  body\n  createdAt\n  updatedAt`,
+  output: `the REST pull request has no field "${field}"`,
   truncated: false,
 });
-// Answers a `gh pr view --json …` call the way gh does: refuse an unsupported
-// field before serving the snapshot the fake would otherwise return.
-const ghPrView = <E, R>(
+// Answers a REST `pulls/{n}` read: refuse a projected field REST does not carry
+// before serving the snapshot the fake would otherwise return.
+const restPullRead = <E, R>(
   args: ReadonlyArray<string>,
   snapshot: Effect.Effect<GhCaptureResult, E, R>
 ): Effect.Effect<GhCaptureResult, E, R> =>
-  O.match(unsupportedGhPrViewField(args), {
+  O.match(unsupportedRestPullField(args), {
     onNone: () => snapshot,
-    onSome: (field) => Effect.succeed(ghUnknownJsonField(field)),
+    onSome: (field) => Effect.succeed(restUnknownField(field)),
   });
 const encodeGhBody = (body: string, updatedAt: string = editedAt): string =>
   Result.getOrThrow(encodeGhBodyJsonResult({ body, updatedAt }));
@@ -176,8 +185,8 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
     _cwd: string,
     _env: Record<string, string | undefined> | undefined = undefined
   ) {
-    if (args[1] === "view") {
-      return yield* ghPrView(
+    if (isRestPullRead(args)) {
+      return yield* restPullRead(
         args,
         Effect.gen(function* () {
           const view = yield* Ref.getAndUpdate(views, (count) => count + 1);
@@ -194,7 +203,7 @@ const makeGhRunner = Effect.fn("test.makeGhRunner")(function* (
         truncated: false,
       };
     }
-    const bodyPath = O.getOrElse(A.last(args), () => "");
+    const bodyPath = bodyFileOf(args);
     const body = yield* fs.readFileString(bodyPath).pipe(Effect.orDie);
     yield* Ref.set(written, body);
     yield* Ref.update(writtenBodies, A.append(body));
@@ -247,8 +256,8 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
       yield* Ref.set(createBody, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
       return { exitCode: 0, output: "https://github.com/beep-effect/beep-effect/pull/42", truncated: false };
     }
-    if (args[1] === "view") {
-      return yield* ghPrView(
+    if (isRestPullRead(args)) {
+      return yield* restPullRead(
         args,
         Effect.map(Ref.get(body), (current) => ({ exitCode: 0, output: encodeGhBody(current), truncated: false }))
       );
@@ -266,7 +275,7 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
         truncated: false,
       };
     }
-    const bodyPath = O.getOrElse(A.last(args), () => "");
+    const bodyPath = bodyFileOf(args);
     yield* Ref.set(body, yield* fs.readFileString(bodyPath).pipe(Effect.orDie));
     return { exitCode: 0, output: "", truncated: false };
   });
@@ -274,10 +283,15 @@ const makePublishGhRunner = Effect.fn("test.makePublishGhRunner")(function* (fs:
 });
 
 describe("Yeet provenance footer splice", () => {
-  it("refuses gh pr view fields the CLI does not expose, as gh does", () => {
-    assertSome(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,createdAt,lastEditedAt"]), "lastEditedAt");
-    assertNone(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body,updatedAt"]));
-    assertNone(unsupportedGhPrViewField(["pr", "view", "42", "--json", "body"]));
+  it("refuses REST pull-request fields the API does not carry", () => {
+    assertSome(
+      unsupportedRestPullField(["api", "repos/{owner}/{repo}/pulls/42", "--jq", "{body, lastEditedAt}"]),
+      "lastEditedAt"
+    );
+    assertNone(
+      unsupportedRestPullField(["api", "repos/{owner}/{repo}/pulls/42", "--jq", "{body, updatedAt: .updated_at}"])
+    );
+    assertNone(unsupportedRestPullField(["api", "repos/{owner}/{repo}/pulls/42", "--jq", "{body}"]));
   });
 
   it("is idempotent for current markers", () => {

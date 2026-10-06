@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 974,
+    "end_line": 981
+  },
+  "quote": "- id: iv-1364-spot-pool-spread\n  title: \"PR #1364 — the heavy CI fleet spreads across capacity-optimized Spot pools (applied 2026-10-01)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-01T12:05:00Z\"\n  mergeCommit: a69b1956eed9949b314c64b93f2d3d3eabf11283\n  pr: 1364\n  mechanismChanged: hosted-runner-capacity",
+  "epistemic_status": "quoted_prose"
+}

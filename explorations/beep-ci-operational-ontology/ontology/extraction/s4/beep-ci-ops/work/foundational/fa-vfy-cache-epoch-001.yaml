@@ -1,0 +1,69 @@
+id: "fa:vfy-cache-epoch:001"
+hypothesis_ref: "dh:vfy-cache-epoch:001"
+identity_card_ref: "ic:vfy-cache-epoch:001"
+referent_grain: >-
+  A configuration state of the build environment (lockfile, root tsconfig, root turbo config,
+  toolchain and policy-pack versions taken together), individuated by that configuration surface
+  or by its period (unresolved) and shared by the lanes of each cited attempt run against it;
+  coarser than any one task's inputs.
+tests:
+  spec_vs_execution: not_applicable
+  world_vs_information: separated
+  role_vs_bearer: not_applicable
+  context_reification_needed: unresolved
+rival_models:
+  - label: configuration-state situation individuated by content (the card's reading)
+    still_viable: true
+  - label: >-
+      temporal period of one checkout's environment, individuated by its beginning
+    still_viable: true
+  - label: >-
+      an epoch taken per verification attempt or per head commit, not a state shared across attempts
+    still_viable: true
+  - label: environment fingerprint digest as the referent (dismissed conceptually, not on a record)
+    still_viable: false
+  - label: task-input state at turbo task-hash grain as the same referent
+    still_viable: false
+  - label: per-record cache key
+    still_viable: false
+strongest_counterexample: >-
+  A reverted configuration change restores an earlier surface: the content reading counts one epoch
+  obtaining twice, the period reading two epochs, and CQ-014's beganAt is single-valued only under
+  the period reading.
+verdict: explicitly_deferred
+needed_evidence: >-
+  To split the content and period readings: one clone ledger in which an epoch digest recurs after
+  an intervening different one, or a record of an epoch change with its instant (CQ-014 beganAt). To
+  test the per-attempt or per-head reading: one epoch digest on facts of two different attempts or
+  two different heads, or two digests on two attempts over an unchanged surface. For the
+  cross-checkout question of CQ-015: two clone ledgers carrying one epoch digest.
+evidence_refs:
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - CQ-014
+  - CQ-015
+rationale:
+  spec_vs_execution: >-
+    An epoch is neither a plan nor a run; the test does not apply.
+  world_vs_information: >-
+    The epoch digest and the digest member record the state; the state is what the facts are valid
+    in (CQ-005).
+  role_vs_bearer: >-
+    No role is in play.
+  context_reification_needed: >-
+    Left unresolved: if epochs are per-checkout periods, the epoch must be indexed by the checkout
+    whose environment it is; if content-individuated, one epoch can obtain in several checkouts,
+    which is what CQ-015's transfer question presupposes. No cited pair of clone ledgers shares a
+    digest.
+  rivals: >-
+    The environment-fingerprint rival, which the hypothesis grades viable, is dismissed
+    conceptually, not on a record: the digest is a record of a state, and taking it for the state
+    is the record-for-referent confusion. A record bearing on it would be two facts with equal
+    surface digests and different epoch digests, which would show the epoch digest is not a function
+    of the surface alone. The task-hash rival is a finer, different referent: one epoch spans facts
+    with different inputDigest values. The per-record key rival fails because one epoch value is
+    shared across lanes with different commandDigest values. The per-attempt or per-head rival stays
+    viable: every cited shared digest is within one attempt at one head. Content and period also
+    remain, so the category reading is deferred until the recurrence record exists.

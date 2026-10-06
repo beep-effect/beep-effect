@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md"
+  },
+  "source_span": {
+    "start_line": 31,
+    "end_line": 48
+  },
+  "quote": "## 2. Membership and partitioning\n\n- **Window membership** is by `episodeStartedAt` (CQ-012's contract). Decomposition\n  shares are VOID unless `decomposedEpisodes = windowEpisodes` — the harness fails the\n  run when they differ; report the pair, never the shares alone.\n- **Tier partitioning**: report per target assurance tier (TierRepairGreen /\n  TierLocalFullProof / TierCiMergeGreen); a fleet aggregate without tier partitions is\n  a headline, not a reading.\n- **Change-event membership is ADOPTION-QUALIFIED** (round-2 seat F): wall-clock\n  `landedAt` is the series partition point, but a checkout is in the post-period ONLY\n  when its HEAD ancestry includes the event's merge commit (adoption census:\n  `evidence/journal-snapshot-2026-08-27/CHECKOUT_HEADS.txt` pattern). Merge time is\n  never the fleet boundary — old binaries keep old behavior.\n- **Observational vs causal labeling** (final-grill round 3): every partition-point\n  comparison is labeled OBSERVATIONAL (OperationalChangeEvent) unless a supporting\n  design (paired pre/post cohorts under adoption qualification, stated confounders)\n  upgrades it; \"the KPI moved after X landed\" is never reported as \"X moved the KPI\"\n  without the upgrade.",
+  "epistemic_status": "quoted_prose"
+}

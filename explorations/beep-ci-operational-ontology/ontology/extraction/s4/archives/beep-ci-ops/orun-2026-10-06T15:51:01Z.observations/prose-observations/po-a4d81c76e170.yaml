@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:a4d81c76e170bb1692ab847b24189cf548ae5939ecf5ef3965aa3aefe0fcb792",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 541,
+    "end_line": 545
+  },
+  "quote": "**§5 live evidence.** The W5 live replay over the `run4-fleet` pin is\nrendered to `goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md`\nby `apps/labs/ciops/scripts/generate-live-replay-evidence.ts`. Like\n`evidence:s7`, it is check-by-default: only `--write` renders. The frozen\n`research/s7-replay-evidence.md` is never re-rendered.",
+  "epistemic_status": "quoted_prose"
+}

@@ -32,8 +32,11 @@ import {
 import { PosInt } from "@/projection/PosInt";
 import {
   buildLiveReplayReport,
-  Cq009Reading,
-  Cq009Scope,
+  Cq009Arm,
+  Cq009ArmStatus,
+  Cq009PairRegime,
+  Cq009SameCheckoutPair,
+  Cq009Verdict,
   CustodyCensus,
   decodeAdmissionJournal,
   FirstChoiceAgreement,
@@ -190,7 +193,72 @@ const liveOwner = { pid: 7, procStart: "proc-start" };
 
 const sameCheckout: MismatchAttribution = MismatchAttribution.Enum["same-checkout-active-lease"];
 const unattributed: MismatchAttribution = MismatchAttribution.Enum.unattributed;
-const outOfScope: Cq009Scope = Cq009Scope.Enum["temporally-out-of-scope"];
+
+// One synthetic grant chain: a v3 enqueue (the chain's checkout), a v1 admission and a
+// v3 release. `protocol` is written by value only when given; none of the pinned rows carry it.
+const syntheticChain = (grant: {
+  readonly nonce: string;
+  readonly checkoutRoot: string;
+  readonly originKey: string;
+  readonly protocol: O.Option<string>;
+}) => {
+  const protocol = O.match(grant.protocol, {
+    onNone: () => ({}),
+    onSome: (coordinationProtocol) => ({ coordinationProtocol }),
+  });
+  const v3 = { ...surrogateOwner, schemaVersion: "yeet-admission-journal/v3", checkoutRoot: grant.checkoutRoot };
+  const request = { kind: "review-fix", priority: "verify", originKey: grant.originKey, enqueuedAtMillis: 1000 };
+  return {
+    enqueued: {
+      ...v3,
+      ...request,
+      ...protocol,
+      _tag: "admission-enqueued",
+      nonce: grant.nonce,
+      branch: "",
+      weightTokens: 1,
+    },
+    admitted: (admittedAtMillis: number) => ({
+      ...surrogateOwner,
+      ...request,
+      schemaVersion: "yeet-admission-journal/v1",
+      _tag: "admission-admitted",
+      nonce: grant.nonce,
+      weightTokens: 1,
+      admittedAtMillis,
+    }),
+    released: (releasedAtMillis: number) => ({
+      ...v3,
+      _tag: "admission-released",
+      nonce: grant.nonce,
+      branch: "",
+      releasedAtMillis,
+    }),
+  };
+};
+
+// Two overlapping grants: `holder` admitted at 1100, `entrant` at 1200, released at 1300 and 1400.
+const overlappingGrants = (
+  holder: { readonly checkoutRoot: string; readonly originKey: string; readonly protocol: O.Option<string> },
+  entrant: { readonly checkoutRoot: string; readonly originKey: string; readonly protocol: O.Option<string> }
+): string => {
+  const first = syntheticChain({ nonce: "holder", ...holder });
+  const second = syntheticChain({ nonce: "entrant", ...entrant });
+  return ndjson([
+    first.enqueued,
+    second.enqueued,
+    first.admitted(1100),
+    second.admitted(1200),
+    first.released(1300),
+    second.released(1400),
+  ]);
+};
+
+const syntheticWindow = fixtureWindow(0, 1400, 1000);
+
+const unrecorded = O.none<string>();
+const currentProtocol = O.some("scheduler-origin-concurrency/v1");
+const legacyProtocol = O.some("legacy-origin-lock/v1");
 
 const ndjson = (rows: ReadonlyArray<Record<string, unknown>>): string =>
   A.join(
@@ -443,8 +511,9 @@ describe("@beep/ciops live replay", () => {
         expect(A.map(report.verdicts, (verdict) => verdict.ledgerCensored)).toStrictEqual([true, false]);
         expect(live.enqueueLessAdmissions).toBe(1);
         expect(live.agreement.agreed).toBe(2);
-        expect(live.cq009.scope).toBe(Cq009Scope.Enum["pre-929-rows-present"]);
-        expect(live.cq009.preCutRows).toBe(6);
+        expect(live.cq009.sameCheckout.evaluatedGrants).toBe(2);
+        expect(live.cq009.censorship.grantsActiveAtFirstEdge).toStrictEqual(["released-only"]);
+        expect(live.cq009.censorship.ledgerCensoredVerdicts).toBe(1);
       })
     );
 
@@ -775,38 +844,137 @@ describe("@beep/ciops live replay", () => {
       })
     );
 
-    it.effect("prints CQ-009 as temporally out of scope, never as a verdict", () =>
+    it.effect("evaluates CQ-009 arm by arm on the pin: same-checkout holds, legacy drain unobservable", () =>
       Effect.gen(function* () {
         const run = yield* generateLiveReplayEvidence(
           EvidenceMode.Enum.check,
           run4FleetLiveEvidencePaths,
           run4FleetCanonicalWindow
         );
+        const { censorship, legacyOriginDrain, sameCheckout } = run.summary.live.cq009;
         const cq009Section = cq009SectionOf(run.rendered);
 
-        expect(run.summary.live.cq009).toStrictEqual(
-          Cq009Reading.make({ scope: outOfScope, preCutRows: S.Natural.make(0), totalRows: S.Natural.make(689) })
-        );
-        expect(cq009Section).toContain(
-          "CQ-009 — temporally out of scope: 0 of 689 pinned rows precede #929 (graduation Ruling 9)."
-        );
+        expect(S.is(Cq009Verdict)(run.summary.live.cq009)).toBe(true);
+        const arms: ReadonlyArray<Cq009Arm> = [sameCheckout.arm, legacyOriginDrain.arm];
+        const statuses: ReadonlyArray<Cq009ArmStatus> = [sameCheckout.status, legacyOriginDrain.status];
+        expect(arms).toStrictEqual([Cq009Arm.Enum["same-checkout"], Cq009Arm.Enum["legacy-origin-drain"]]);
+        expect(statuses).toStrictEqual([Cq009ArmStatus.Enum.holds, Cq009ArmStatus.Enum.unobservable]);
+        expect(sameCheckout.status).toBe(Cq009ArmStatus.Enum.holds);
+        expect(sameCheckout.pairs).toHaveLength(0);
+        expect([
+          sameCheckout.evaluatedGrants,
+          sameCheckout.grantsWithoutCheckout,
+          sameCheckout.grantsWithoutProtocol,
+        ]).toStrictEqual([200, 0, 200]);
+        expect(legacyOriginDrain.status).toBe(Cq009ArmStatus.Enum.unobservable);
+        expect([
+          legacyOriginDrain.grantsWithOriginKey,
+          legacyOriginDrain.rowsWithProtocol,
+          legacyOriginDrain.rowsWithoutProtocol,
+          legacyOriginDrain.sharedOriginActivePairs,
+        ]).toStrictEqual([148, 0, 689, 99]);
+        expect([
+          censorship.preV3Chains,
+          censorship.ledgerCensoredVerdicts,
+          censorship.withdrawnRows,
+          censorship.ticketEvictedRows,
+        ]).toStrictEqual([3, 4, 44, 1]);
+        expect(censorship.grantsActiveAtFirstEdge).toStrictEqual(["f7d10df1-9ca0-4206-af3f-d54b368d4eaf"]);
+        expect(censorship.grantsActiveAtLastEdge).toStrictEqual([]);
+        expect(cq009Section).toContain("Same-checkout arm — holds: 0 pairs.");
+        expect(cq009Section).toContain("Legacy-origin-drain arm — unobservable in the journal.");
         expect(Str.includes("PASS")(cq009Section)).toBe(false);
         expect(Str.includes("FAIL")(cq009Section)).toBe(false);
       })
     );
 
-    it.effect("prints pre-#929 rows as CQ-009's temporal scope, never as a verdict", () =>
+    it.effect("reports two active grants on one checkout as one in-scope pair: the arm is violated", () =>
       Effect.gen(function* () {
-        const { events, report } = yield* replayFixture(releasedOnlyFixturePath, windowed(fixtureWindow(2)));
-        const rendered = renderLiveReplayEvidence(
-          fixtureSummary(buildLiveReplayReport(events, report, fixtureWindow(2))),
-          run4FleetLiveEvidencePaths
+        const { events, report } = yield* replaySource(
+          overlappingGrants(
+            { checkoutRoot: "<fleet>/shared", originKey: "origin-a", protocol: unrecorded },
+            { checkoutRoot: "<fleet>/shared", originKey: "origin-b", protocol: currentProtocol }
+          )
         );
-        const cq009Section = cq009SectionOf(rendered);
+        const { sameCheckout } = buildLiveReplayReport(events, report, syntheticWindow).cq009;
 
-        expect(cq009Section).toContain(
-          "CQ-009 — 6 of 6 pinned rows precede #929; only those rows fall in CQ-009's temporal scope, and this lab does not evaluate them (graduation Ruling 9)."
+        expect(sameCheckout.status).toBe(Cq009ArmStatus.Enum.violated);
+        expect(sameCheckout.pairs).toStrictEqual([
+          Cq009SameCheckoutPair.make({
+            eventIndex: S.Natural.make(3),
+            holderNonce: "holder",
+            entrantNonce: "entrant",
+            checkoutRoot: "<fleet>/shared",
+            overlapBeginsAtMillis: S.Natural.make(1200),
+            regime: Cq009PairRegime.Enum["in-scope"],
+          }),
+        ]);
+        expect(sameCheckout.grantsWithoutProtocol).toBe(1);
+      })
+    );
+
+    it.effect("holds when the two active grants hold distinct checkouts", () =>
+      Effect.gen(function* () {
+        const { events, report } = yield* replaySource(
+          overlappingGrants(
+            { checkoutRoot: "<fleet>/one", originKey: "origin-a", protocol: currentProtocol },
+            { checkoutRoot: "<fleet>/two", originKey: "origin-a", protocol: currentProtocol }
+          )
         );
+        const { legacyOriginDrain, sameCheckout } = buildLiveReplayReport(events, report, syntheticWindow).cq009;
+
+        expect(sameCheckout.status).toBe(Cq009ArmStatus.Enum.holds);
+        expect(sameCheckout.pairs).toHaveLength(0);
+        expect(legacyOriginDrain.status).toBe(Cq009ArmStatus.Enum.unobservable);
+        expect(legacyOriginDrain.sharedOriginActivePairs).toBe(1);
+      })
+    );
+
+    it.effect(
+      "reports a same-checkout pair with a legacy-protocol grant as drain-window state, never a violation",
+      () =>
+        Effect.gen(function* () {
+          const { events, report } = yield* replaySource(
+            overlappingGrants(
+              { checkoutRoot: "<fleet>/shared", originKey: "origin-a", protocol: legacyProtocol },
+              { checkoutRoot: "<fleet>/shared", originKey: "", protocol: legacyProtocol }
+            )
+          );
+          const live = buildLiveReplayReport(events, report, syntheticWindow);
+          const cq009Section = cq009SectionOf(
+            renderLiveReplayEvidence(fixtureSummary(live), run4FleetLiveEvidencePaths)
+          );
+
+          expect(live.cq009.sameCheckout.status).toBe(Cq009ArmStatus.Enum.holds);
+          const regimes: ReadonlyArray<Cq009PairRegime> = A.map(live.cq009.sameCheckout.pairs, (pair) => pair.regime);
+          expect(regimes).toStrictEqual([Cq009PairRegime.Enum["drain-window"]]);
+          expect(live.cq009.legacyOriginDrain.rowsWithProtocol).toBe(2);
+          expect(cq009Section).toContain(
+            "Same-checkout arm — holds: 0 in-scope pair(s); 1 drain-window pair(s), never violations."
+          );
+        })
+    );
+
+    it.effect("keeps the legacy-origin-drain arm unobservable, never green, when the protocol field is absent", () =>
+      Effect.gen(function* () {
+        const { events, report } = yield* replaySource(
+          overlappingGrants(
+            { checkoutRoot: "<fleet>/one", originKey: "origin-a", protocol: unrecorded },
+            { checkoutRoot: "<fleet>/two", originKey: "origin-a", protocol: unrecorded }
+          )
+        );
+        const live = buildLiveReplayReport(events, report, syntheticWindow);
+        const { legacyOriginDrain } = live.cq009;
+        const cq009Section = cq009SectionOf(renderLiveReplayEvidence(fixtureSummary(live), run4FleetLiveEvidencePaths));
+
+        assertTrue(
+          A.every(events, (event) => !("coordinationProtocol" in event) || O.isNone(event.coordinationProtocol))
+        );
+        expect(legacyOriginDrain.status).toBe(Cq009ArmStatus.Enum.unobservable);
+        expect([legacyOriginDrain.rowsWithProtocol, legacyOriginDrain.rowsWithoutProtocol]).toStrictEqual([0, 6]);
+        expect(legacyOriginDrain.sharedOriginActivePairs).toBe(1);
+        expect(cq009Section).toContain("Rows that carry `coordinationProtocol` by value: 0; rows without it: 6.");
+        expect(Str.includes("legacy-origin-drain arm — holds")(Str.toLowerCase(cq009Section))).toBe(false);
         expect(Str.includes("PASS")(cq009Section)).toBe(false);
         expect(Str.includes("FAIL")(cq009Section)).toBe(false);
       })

@@ -560,3 +560,858 @@ script (`EvidenceWriteScript`, a named literal domain of the three regenerate sc
 names it; each of the three scripts passes its sibling and the test asserts the lane-plan hint never
 mentions the admission replay. From round 3 on, P2-and-below threads become tracked follow-ups
 with a resolve and no push.
+
+## 2026-10-06 — P3 opened; run-4 launch sitting (orchestrator under the autonomy charter)
+
+Inputs: a five-lane read-only survey with a critic (the run-3 choreography, the vendored auditor
+engine v15, the docket queues A–G, the gate and pin, the CQ-009 re-scope and the lab's exclusion),
+checked against PLAN P3/W7, SPEC Constraints and Stop Conditions, graduation Rulings 1, 4, 6, 7, 8,
+9, 10 and 11, the docket's "Not in scope", and the P1/P2 sittings. Facts the survey settled: the
+run-3 prior index digests to `b9c140ccd31b` (284 rows: 37 proposed / 77 mapped / 138 unresolved
+= 84 live + 54 carried / 32 irrelevant); the engine bytes at the P2 head are validator
+`fdbcefc9fd70`, framed contracts `dcc8da4cc7f9` (21 files), SKILL.md `a12de4055976`, prompts
+denotation `ddec132ee905`, ufo-analysis `3d94feb0629c`, synthesis `117d82b29904`,
+ontoclean-adversary `9dbfb7fc9d4c`, alternative-model `4563e5726438`, sandbox runner
+`ecb6dcab421b`, CQ suite `e99e30cd8015` (26 CQs), `scope.md` `9ff61c839a08` (all recomputed at
+the pin); the launch gate passes from the pinned bytes (C4.1 checked at
+`goals/time-to-certainty/PLAN.md:171`, byte-equal to `run4-ledger/MANIFEST.yaml` `gate.c4_1`;
+`post_cut_pre_push_facts: 3628`, `holds: true`; merged-preview dormant; C4.2 unchecked) and needs no
+second fleet read; the validator binds the run manifest and the dispositions index to exactly
+`ONT/work/`, so every seat output lands under `ONT/work/` and `ONT/work-run4/` holds only the impl
+report; the run-3 adapter is hard-wired to the four run-3 pins, so run 4 needs a sibling adapter
+version with its own golden; the control-interventions ledger holds 42 rows with W1's census head at
+`8b7392fe00`; the rat-049 lane-plan line, S7 contract §8 and the lane-plan golden are P2 bytes. Each
+ruling is reversible by a later entry before the pin commit, and by a new run after it (a committed
+pin is never refreshed).
+
+**Ruling 1 — the run base is `origin/main` after the P2 projection PR merges.** The run branch is
+`feat/ciops-p3-run4` off the merge commit of #1459, so the pin tree carries the rat-049 lane-plan
+line, contract §8, `lane-plan-v1.ttl` and the live replay evidence the seats must judge (CT §8.3
+hands the eleven provisional lane-plan terms to the run-4 Queue E/G intake). Rejected: stacking on
+the P2 branch (no hosted proof until retargeted); pinning on main without P2 (seats would read a pin
+without the vocabulary they must judge). Reversal: rebase before the pin; after the pin, a new run.
+
+**Ruling 2 — the orchestrator rules every sitting under the charter, named honestly.** Sittings 1–3,
+withdrawals, parks and every ratification are the orchestrator's calls under the operator autonomy
+charter (PR #1448; "only money" escalates; the operator reviews asynchronously). The skill reserves
+ratification to a human steward (SKILL "HUMAN — authoritative"; the ratification schema header), so
+the deviation is recorded here, in the run README and in every run-4 ratification: `steward.id`
+is the role `orchestrator-under-autonomy-charter`, `steward.name` names the session and the charter
+date, every `verbatim_decision` is the orchestrator's own words, and no record names the operator or
+carries words he did not say (the failure mode SKILL "Known Limits" documents is an invented human
+authority, which honest labelling avoids). Rejected: routing accepts to the operator as structured
+prompts (a non-money escalation the charter withdrew); closing the run by ruling with everything
+`proposed` (leaves P4 on seed rows and three tiers). Reversal: a later sitting supersedes with
+revise or reject ratifications (a scribed `rat-*` is never deleted); the P3 closing entry lists every
+accept for the operator's asynchronous review, which is the charter's review path.
+
+**Ruling 3 — "append under a new run or pin root" is read as the run-3 precedent reads it.** Frozen
+means the corpus pins and their generators, prior indexes and manifests under `ONT/runs/`, archived
+observations and seat trees under `ARCH/`, every `rat-*` byte, and `s4/LEDGER.yaml`. The run may
+move the run-3 seat trees and rat-053..070 byte-identically into the shelter roots
+`ARCH/orun-2026-09-10T02:10:52Z.{work,governance}/` (the SKILL rotation; `validate_packet.py` reads
+them there), add new files, and regenerate the S5/S6 status files additively for its own accepts
+(graduation Ruling 7; #1089). Notes live only in new files: the relocation note is
+`ARCH/orun-2026-09-10T02:10:52Z.work/README.md`, the adapter record is a new file beside the adapter,
+and the run-3 README, `adapters/README.md` and `work-run3/impl-report.md` are not appended to (broken
+links there stay as provenance). Rejected: the literal reading (rotation impossible, v15 scans run-3
+trees as live, the run cannot start). Reversal: revert before merge; after merge a later entry and a
+follow-up PR.
+
+**Ruling 4 — lanes edit files; the orchestrator owns git, the remote and the worktree.** No lane
+stages, commits, tags or pushes. The relocation is a plain `mv` by the engine lane with a byte-identity
+check; the orchestrator stages by name. The pin is a lightweight tag
+`evidence/beep-ci-ops/<run_id with ':' → '-'>-pin` pushed by the orchestrator (run-1..3 precedent;
+P1 Ruling 4 is scoped to the captures, and a run pin differs: the validator needs the pin COMMIT and
+every observation id embeds it, so a tree on main cannot stand in). Residue scans run before the push.
+The pin worktree is a detached worktree at the tag in the sibling `-worktrees` root; never `/tmp`,
+never force-push. Reversal: delete the remote tag; remove the worktree after the run PR merges.
+
+**Ruling 5 — the CQ-009 re-scope is the full package, in its own pre-pin commit, by the pin lane's
+CQ-009 step.** Graduation Ruling 9's "re-scoped to same-checkout exclusion plus the legacy-origin
+drain, with a new must-fail fixture" is read as the whole falsifiable change, so it is one commit
+before the digests are computed: the CQ-009 entry (question, SPARQL with both arms bound in `?arm`,
+notes citing the #929 law by symbol, temporal scope, fixtures); two new must-fail fixtures, one per
+arm (`cq009-same-checkout.ttl`, `cq009-legacy-drain.ttl`), because each arm needs its own falsifier;
+the seed's `grant-1` gains the checkout predicate and a protocol value so the checkout arm is not
+vacuous; the old fixture `cq009-two-grants.ttl` keeps its bytes and becomes the retained pre-#929
+regression under a hand-authored `ontology/tests/temporal/cq-009-pre929.sparql`, its harness row
+re-pointed; the harness antecedent (`run_cq_suite.py`) and the validator's copy require an active
+grant with a checkout; the errata fold is the Ruling 9 list plus `orsd.md` §9 (CQ-008 sample answer,
+CQ-010/CQ-023 code cites by symbol, CQ-021 pre-#878 note, pre-glossary rows, the closed-world row,
+UC-002, dated "folded at the run-4 pin" lines in `scope.md` and `orsd.md`). The two predicates are
+`ciops:hasCheckout` (object property, SeatGrant → Checkout) and `ciops:hasCoordinationProtocol`
+(data property, `xsd:string`, value `legacy-origin-lock/v1` for the drain); they enter
+`s6/PREDICATES.yaml` as `seed-only` through `build_predicates.py`, which is not ratification (the
+`landedAt` precedent). `regen_cq_artifacts.py` has no check mode, so a pre-change regeneration must
+prove an empty diff first. Rejected: the minimal reading with a vacuous checkout arm (untestable);
+one fixture for two arms. Reversal: revert before the tag; after the tag only a new run, because the
+CQ digest sits in every review chain.
+
+**Ruling 6 — engine scope: one sibling adapter, one transcriber, every tuple pinned.** The pin lane's
+engine step writes `ONT/adapters/adapter-journal-run4.py` (v1.2.0) over the `run4-fleet` and
+`run4-ledger` `.properties` projections only, with a tracked, clean golden
+`ONT/adapters/golden/journal-run4/**`, and a run-4 prose transcriber over: the
+control-interventions ledger rows (id, class, landedAt, mechanismChanged lines), KPI law §2 and §6,
+S7 contract §8, `lane-plan-v1.ttl`, `literal-domains.md`, the deployed `ProofStage` literal line,
+and both pin manifests' census readings (stage census, the gate block, the merged-preview reading).
+It never transcribes DECISIONS, CQ text or ratifications. The engine lane first evaluates whether
+`po_from_evidence.py` or `runtime_po_capture.py` can be reused and reports; a new
+`po_transcriber_run4.py` is written only if neither fits. Queue G and the tier evidence travel as
+prose observations plus `adapter-config` scalar facts where the object grammar allows. The source
+observation budget stays near run 3's (about 250). Reversal: a new version before the pin; after
+it, a new run.
+
+**Ruling 7 — Queue F is carried to the next S6 refresh.** Regenerating `s6/POLICY.yaml` at a new
+commit re-extracts the S6 policy (a baseline re-run under the SPEC stop) and risks value drift since
+its last extraction; the tree-pinned citation convention it was to adopt is already carried by both
+run-4 pin manifests. The docket records the carry as a dated addendum. Reversal: a later entry.
+
+**Ruling 8 — seat launch: Workflow children for every seat but the blinded one, which runs headless
+from an isolated root.** Denotation, foundational, synthesis and adversary seats and every
+orchestration lane are one Workflow `agent()` per invocation with `model: "claude-opus-5-5"` and an
+explicit `effort: "medium"` (the Claude Code default under the 2026-10-01 policy), a fresh agent per
+batch and per adversary round, never continued through SendMessage (SKILL "same-context execution
+voids the pass"). The blinded alternative seat runs as a headless `claude -p --model
+claude-opus-5-5` with the effort setting, no MCP servers and the default permission mode, from an
+isolated root under `~/.cache/beep/run4-blinded/<prefix>/` that holds only its prompt, contracts, CQ
+suite, observations and hypotheses, so a read outside the root is denied by the harness rather than
+by instruction alone; the engine step proves this with a canary seat before the first real launch,
+and if the probe does not deny, the seat falls back to a Workflow child with instruction-only
+blinding and the launch entry says so. The manifest records `effort: medium` on all five seats, the
+launch entry quotes both command shapes as the deviation from skill v15's `codex exec` recipe
+(graduation Ruling 4), and no Codex or Grok seat runs (no operator opt-in). Reversal: before launch,
+a later entry; after launch, re-run the affected seat pass and re-review stale chains.
+
+**Ruling 9 — seats write to the lane; gates run in the pin worktree.** Seat output goes to the run
+lane's untracked `ONT/work/` (and `ONT/governance/ratifications/` for new rats); every
+`validate_artifacts.py --gate --repo .` runs in the detached pin worktree with those two trees
+rsynced in, so documentation commits can move the branch while `HEAD == manifest.commit` holds at
+the pin. The run manifest is written after the pin, in the lane's `ONT/work/`, with `repository.commit`
+= the pin SHA in block style, and is committed only at rotation.
+
+**Ruling 10 — the docket's at-pin addendum.** The pin lane's docket step appends one dated
+addendum: every count and digest re-verified at the pin; the prior chain; a Queue G row presenting
+the pair only (`OperationalChangeEvent`, `ciops:landedAt`) over the ledger as it stands at the pin,
+after the orchestrator re-runs the W1 lever query over `8b7392fe00..<run base>` so the ledger is
+fresh (a goal-owned seed-data step, with its `w1-lever-query.md` addendum); a Queue H row for the
+fourth `AssuranceTier` member (graduation Ruling 10) stating the parked `AssuranceTierId` domain as
+the blocker and the dormant merged-preview reading as the evidence line; a Queue E addendum taking
+the eleven provisional lane-plan terms into intake (S7 contract §8.3); a dated correction of the
+stale "no CQ, seed or fixture edit is owed to run 4" and "none is scheduled" sentences; and the
+shelter path remap for the run-3 trees. Rows never gain a structured `tier` member in this phase;
+tier derivation for W8 is a P4 hand-off. Reversal: a later dated addendum.
+
+**Ruling 11 — batching and the adversary round cap.** Batches keep prefix-stable membership across
+stages. An adversary FAIL is blocking: it is fixed or withdrawn in any round, and rounds continue
+while a FAIL remains, capped at three (run-3 precedent); a FAIL that survives round 3 ends in a
+withdrawal with named evidence. Non-blocking findings from round 3 on become tracked follow-ups
+(the charter's loop cap). Reversal: a later entry before the next round.
+
+**Ruling 12 — carried rows.** The index-close lane authors all 138 carried rows with fresh
+`needed_evidence` and the run date, never `mapped` or `proposed` on a carried row. The carried-rows
+lane reuses the run-3 fifteen-cluster frame for the 54 C(iv) rows and the docket's C(i)–C(iii) groups
+for the 84 live ones, re-clustering only where a run-4 pin offers new evidence, and re-parks every
+CQ-requiring duty with "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009" as
+the named missing decision. Reversal: sitting 2 re-adjudicates.
+
+**Ruling 13 — numbering.** Ratifications continue at `rat-071`, rejections at `rej-001`, each the
+maximum over the live directory and every shelter (the SKILL `LAST` probe reads only the live
+directory); proposal slugs are fresh and never equal an archived id (a collision breaks the archived
+digest checks in `--s5`).
+
+**Ruling 14 — projection rides the run PR, additively.** Accepts are projected in the run PR through
+the #1089 footprint (`s5/DISPOSITIONS.yaml`, `s5/TAXONOMY.yaml`, `s6/PREDICATES.yaml`, `ABOX.yaml`
+only if a new class needs typing, dated notes in the S5/S6 contract docs); `apply_s5_dispositions.py`
+is never run over `s4/LEDGER.yaml`. Flags are never removed: a lifted flag is a ratification that
+names it, listed beside the flag, so the S5 contract needs no removal rule. Rejected: a follow-up
+projection PR (lawful only with zero accepts; `--s5` must be green on the final tree). Reversal: a
+revert commit.
+
+**Ruling 15 — the lab's CQ-009 lift is its own small PR inside P3, after the run PR merges.** The
+run PR carries data and docs; the lab change is schema-first (a typed `Cq009Verdict` replacing the
+"temporally out of scope" reading: the same-checkout arm evaluated over the replayed active set, the
+legacy arm reported as unobservable in the journal with its census, a censorship line), regenerates
+the live evidence, and carries a ruling superseding P2 Ruling 9's CQ-009 sentence, an S7 §8 dated
+note, and the PLAN/README/manifest text. The P3 status flip rides that last P3 PR. Rejected: lab
+code inside a >1,000-file run PR (unreviewable); deferring to P4 (PLAN ties the lift to W7).
+Reversal: a later entry and a lab follow-up.
+
+**Ruling 16 — waivers.** An unresolved-fraction waiver exists only as a sitting ruling scribed here
+and applied to the manifest with the sitting entry; it is never pre-declared (a dormant waiver is
+flagged). Reversal: re-disposition, then re-gate.
+
+**Ruling 17 — publication, gitleaks and the P4 hand-off.** The run tree is scanned with `gitleaks`
+under main's configuration before the pin push; a main-first allowlist PR is opened only on a hit,
+never speculatively. The run PR is a draft until final, labelled `ready-for-heavy`, published through
+Yeet when the planner's capture limit admits it and by hand otherwise; never force-pushed. The P3
+closing entry carries the P4 hand-off: the tier outcome (KPI law §2 and W8 text), the change-event
+ratification state, W1 freshness at the pin, the lane-plan terms' intake outcome, and tier
+derivation for change-event rows.
+
+Recorded calls: (a) every validator run uses `uv run --offline --python 3.12 --with pyyaml python -B`
+with `UV_CACHE_DIR=$HOME/.cache/beep/uv-cache`, `env -u TMPDIR` and `PYTHONDONTWRITEBYTECODE=1`
+from the pin worktree, never `mise trust`; (b) the engine step proves, before anything else, the
+v15 self-test on 3.12, the offline cache for cp3.12 + PyYAML, the sandbox runner, that v15 ignores
+`ONT/lanes/` and `ONT/ratification-package.yaml`, and the blinded-root read denial; (c) every seat
+brief states the expected standing violations before index close (138 "prior unresolved
+observation … has NO row") so no seat invents rows; (d) every lane records friction receipts in
+`research/OPPORTUNITIES.md` at the moment, redacted; (e) MAP W7's capability line is provenance and
+stays; the NET-NEW adapter, golden and transcriber are recorded here as the capability gap it did
+not list; (f) sitting entries are appended here with byte-equal mirrors under `ONT/work/sittings/`;
+(g) the run README names the pin tag, the sitting entries here, the shelter relocation, the
+unresolved fraction and the launch deviation.
+
+Recorded call (h) — where gates run before the pin: no pin worktree exists before the pin, so the
+call-(b) proofs, the pre-pin CQ-009 packet gates and the final-tree packet gates run in the lane
+checkout under call (a)'s runtime; only `validate_artifacts.py --repo` and `--gate` runs happen in
+the pin worktree. The call-(b) scans are plain `VAL "$ONT"` scans whose expected output is the
+noise call (c) names (904 lines before the relocation; exactly one "NO records and no manifest"
+line after it); the engine step alone may write a transient provisional manifest (`pin_waived:
+true`, `repository.commit` = the current HEAD) so the adapter proofs validate against a pinned
+tuple, and it deletes that file before the pin, proving it gone in its residue step (the run-3
+precedent). The Ruling 9 run manifest is a different file written after the pin.
+Recorded call (i) — relocated bytes are provenance, not a placement: the 26 run-3 files in the
+relocation set that match the residue scan (the login-valued `steward.id` of rat-053..070 and one
+gate log; seven 12-hex keys in run-3 records) are already public on `main` and move byte-identically;
+the pre-push residue scan applies to new bytes only, scan B over the moved trees is informational and
+must report exactly that count, and the gitleaks proof is the hosted shape: every commit in
+`origin/main..HEAD` plus a `dir` scan of the final tree under main's configuration (Ruling 17).
+Recorded call (j) — Ruling 6's "adapter-config scalar facts" arm is withdrawn: the run-1
+`adapter-config` reads only hard-coded JSON files and Ruling 6 admits one sibling adapter, so Queue G
+and the tier evidence travel as prose observations only, one PO per control-interventions row
+spanning `- id:` through its first `mechanismChanged:` line (the row's own public fields). The
+adapter record is the new file `ONT/adapters/adapter-journal-run4.md`; the relocation note
+`ARCH/orun-2026-09-10T02:10:52Z.work/README.md` is written by the engine lane with the move.
+Recorded call (k) — the blinded canary's "default permission mode" reads as `--permission-mode
+acceptEdits` with permission prompts disabled, from the isolated root: a write inside the root must
+succeed and a read outside it must be denied; the engine lane records the exact command and both
+outcomes, and the real blinded seats use the shape the canary proved (Ruling 8's fallback applies if
+the probe does not deny).
+Recorded call (l) — lane scratch lives under `$HOME/.cache/beep/run4-p3/<lane>/`, never the repo
+or `/tmp`; briefs cite the sitting by ruling number and the `S:n` offsets of this entry as filed.
+Recorded call (m) — sequencing: the engine lane runs its call-(b) proofs and the relocation first
+and reports; the orchestrator stages the relocation by name; only then do the engine's adapter and
+transcriber work and the docket + CQ-009 step run in parallel (the packet validators read live and
+shelter ratifications, so a relocation racing a `--s5` run would be a false red). The uv cache for
+CPython 3.12 (PyYAML, rdflib, pyshacl, pyoxigraph, owlrl) was warmed online once by the orchestrator
+before launch and every offline with-set verified; lanes never drop `--offline`.
+Recorded call (n) — CQ-009 details under Ruling 5: the seed `grant-1` protocol value is the deployed
+current default `scheduler-origin-concurrency/v1` (the legacy arm is exercised by its fixture only);
+the harness carries 22 fixtures (two new rows, the old row re-pointed, no extra `rows_eq_0` row);
+`closed-world.yaml` gains no `hasCheckout` closure row in run 4 because `build_predicates.py`
+hard-codes fourteen declarations and the S6 scripts are not touched (a tracked follow-up for a later
+ruling); the orchestrator re-verifies the CQ and scope digests on the Commit A blob before writing
+the run manifest.
+Recorded call (o) — the docket addendum is appended at the end of the file after "Not in scope",
+the title line keeps its "pre-pin draft" words as provenance, and the addendum also dates the stale
+gate-amendment sentence (docket lines 30–33) as superseded by graduation Ruling 7.
+Recorded call (p) — the W1 lever-query re-run over `8b7392fe00..<run base>` is the orchestrator's
+first step on the run branch; the resulting ledger sha256, row count and census head are supplied to
+the docket lane in its launch message, and the docket lane writes nothing about the ledger without
+them.
+Recorded call (q) — the run-4 adapter's selection rules (first attempt-started per stage; per
+clone and stage the first fact and shadow, the first shadow per decision class, the first fact per
+outcome, tier, input source and lane class) are reviewed by the orchestrator against the engine brief
+before the engine lane launches and recorded in the engine report; a rule change after the pin is a
+new adapter version and a new run.
+Recorded call (r) — opening facts and W1 pass 5: the P2 projection PR (#1459) merged as
+`41a7b0717e`; the run branch `feat/ciops-p3-run4` was cut from `origin/main` `50b79e470b`, which
+contains it, and the launch-gate bytes, both pin manifests and every engine digest above were re-read
+unchanged at that base. Under call (p) the W1 lever query was re-run over the window since
+`8b7392fe00` (ten PRs; "Pass 5" in `w1-lever-query.md`): two rows survived both refuters,
+`iv-1427-push-first-publish` (lane-assembly, landed 2026-10-06T01:36:13Z) and
+`iv-1422-spot-pool-drop-r6a` (hosted-runner-capacity, landed 2026-10-06T02:22:00Z from the runbook's
+apply record under P0 Ruling 6; its record PR #1450 is not a row), eight PRs were excluded, none was
+contested, and the ledger stands at 44 rows (sha256 `f520b302424f`). Ruling on the one open point:
+#1427 partitions the local series only. No hosted mechanism is in its diff and rows partition only
+their own tier's series (P0 Ruling 2), so its hosted consequences stay in a caveat that partitions
+nothing; W8 states that population shift as a confounder at that instant (a P4 hand-off). Pass 5
+batched its classifier lanes by path family (three lanes over ten PRs) with one criterion refuter and
+one facts refuter. Reversal: a later entry adds a hosted co-row or re-classifies.
+Recorded call (s) — engine stage 1 and the blinded seat shape (amends call (k)): stage 1 passed
+with no stop (the v15 self-test on CPython 3.12, the offline cache, the sandbox runner under the
+system interpreter 3.14.7 with the run-3 golden at 31 records, v15 ignoring `ONT/lanes/` and
+`ONT/ratification-package.yaml`, the launch gate holding from pinned bytes, both pins verifying),
+and the run-3 trees moved byte-identically (315 + 18 files, each equal to its committed blob; tree
+digests `4fe3bccbf243` and `87e15cfa6d99`), leaving exactly the one expected "NO records and no
+manifest" line. The canary refuted call (k)'s literal shape: with user settings loaded, user-level
+allow rules for shell commands let a seat read outside its root, so that shape never launches a
+seat. The blinded alternative seats launch from the isolated root with an environment of `HOME`,
+`PATH` and `TERM` only, as `claude -p --model claude-opus-5-5 --settings
+'{"effortLevel":"medium"}' --strict-mcp-config --mcp-config '{"mcpServers":{}}' --restricted --tools
+"Read,Write" --permission-mode acceptEdits --permission-prompts none --setting-sources project,local
+--no-session-persistence`, the shape the three-outcome canary proved (the inside read and write
+succeed; the outside read is denied by the harness, which confines the file tools to the working
+directory; the seat has no shell tool). The launcher asserts from the init event that the permission
+mode is `acceptEdits`, the tool list is exactly Read and Write and no MCP server is attached, hands
+the seat an explicit input manifest (it has no listing tool), checks that the harness's per-root
+memory directory is empty before launch, and records every permission denial as a blinding incident
+in the launch record. Ruling 8's Workflow-child fallback is not used. Also recorded: verification
+lanes (skeptics) may run at effort `high`, while seats and their manifest entries stay `medium`; the
+engine step's scratch root is `~/.cache/beep/run4-engine` as its brief names (call (l) covers the
+other lanes); the three empty directories left under `ONT/work/` stay; the system interpreter version
+is named in the run README as the adapter runtime. Reversal: a later entry before the first blinded
+seat launches; after it, a re-run of the blinded pass.
+
+## 2026-10-06 — P3 pin-stage and seat-stage calls (orchestrator under the autonomy charter)
+
+Inputs: the engine lane's stage-2 report and its skeptic, the docket and CQ-009 lane's report and its
+skeptic, and the five seat briefs with their two skeptics. Each call is reversible by a later entry
+before the pin commit, and by a new run after it, unless it says otherwise.
+
+**Call (t) — the CQ-009 package is committed and its digests are final.** The package landed as
+`4af5ca6981`; read from those blobs, the CQ suite is `e1ed9c0f65f5` (26 CQs), the scope document
+`750657e0c5b7` and the S6 predicate registry `93b8172adc08` (89 predicates; `hasCheckout` and
+`hasCoordinationProtocol` seed-only). The orchestrator's gates on that tree: validators base, `--s5`
+and `--s6` at 0 blockers and 0 warns, the CQ suite at 0 failures across 25 seed tests and 22
+fixtures with CQ-009 non-vacuous on the seed. One skeptic correction is adopted as law for any later
+ETL: `hasCoordinationProtocol` carries the DECODED value (a persisted record without the field decodes
+as `legacy-origin-lock/v1`), so an absent triple would be a false green on the legacy arm. No CQ or
+scope byte changes after this commit until the run closes (the digest sits in every review chain).
+
+**Call (u) — adapter v1.3.0 before the pin.** v1.2.0 as proven emits 287 source observations in 5.2 MB,
+three of them whole-file vocabulary records of 0.27 to 2.2 MB, and with the 95 prose observations the
+run would open at 382 against a budget of about 250 (run 3: 216). It is not pinned. v1.3.0 changes
+two rules and keeps the rest: R2 keeps every admission chain that carries a withdrawal or an eviction
+(47; Queue D needs the organic evictions and a withdrawal chain with both ticket records, so none is
+sampled away) plus the first plain chain per (kind, priority) of its enqueue row; R1 emits one
+vocabulary record per record stanza that holds the first occurrence of at least one key of its (pin,
+kind), carrying exactly the keys first seen there, so no record spans a whole file. R3 and R4 stand,
+with R4(b) keyed on (decision kind, reason, observed) as the brief and the adapter have it (call
+(q)'s "decision class" wording yields to it). The prose grain stands: the lane-plan terms have per-term
+Turtle observations and the tier evidence has the literal-domains row beside the KPI section. The
+golden keeps every lock the review round added (each rule component alone, thirty failing mutants)
+and adds locks for the two changed rules; its expected set may be produced through the sandbox by a
+throwaway variant and then proven by the real adapter, disclosed in the adapter record. The lane
+reports the new totals; the orchestrator accepts them only at or under the budget, or rules again.
+Rejected: pinning 382 (seats would denote 196 near-identical plain chains and read megabyte
+excerpts); per-item prose grain (more records for no new kind).
+
+**Call (v) — one rule set for every seat.** Seats run none of the common brief's preconditions (they
+read this log, which is excluded for seats; the orchestrator verifies them before each launch), write
+no report file and no receipt (friction returns in the structured result and the orchestrator files
+it), run scan A only, and run only the plain validator scan in the lane, or none when their toolset
+has no shell. Seats receive a trimmed seat-common brief (the common brief without the scan-B file
+names, the owners table and the prior-index census, which name archived slugs and outcomes), never
+the lane copy. Launch variables are fixed: `LANE`, `PREFIX`, `BATCH` (always the observation list
+`ONT/work/denotation-batches/batch-<PREFIX>.txt`), `INPUT MANIFEST` (the exhaustive file list for
+that launch; a needed file missing from it is a stop), `ROUND` (r1 to r3 for synthesis revision and
+the adversary), `REPAIR` (validator lines under the seat's own directory only, never a line naming
+`work/alternative/` and never a FLAGGED line; or the orchestrator's restatement of a landed attack
+as rule id, target record and one sentence, never review text), and for consolidation `OUT` and
+`SOURCES`. Each seat's input set is closed as its brief lists it; extra record keys the validator
+does not close (`referent_grain`, `evidence_refs`, `rationale`) are allowed on identity cards and
+analyses as at run 3. Expected noise once proposals exist is the 138 lines of call (c) plus one
+"dispositions.index.yaml missing" line; stages run in order (all denotation, then foundational beside
+blinded, then synthesis, then the gate, then the adversary), so a seat that sees another prefix's
+partial files in a plain scan reports their count and fixes nothing.
+
+**Call (w) — denotation and batching.** The skill's default stands: a discriminated referent with
+neither a warranting suite CQ nor a CQ-warranted kind it supports is written null-standing and
+`unresolved` with Ruling 12's sentence as the named missing decision, so the Queue D terminations
+re-park on the CQ barrier while a tier member reaches analysis through the tier CQs. The
+consolidation pass is conditional: it runs only when the orchestrator's cross-batch check finds one
+kind under two or more prefixes, a status disagreement or per-individual grain. Batches are planned
+so each queue's evidence sits together: the change-event rows with KPI law section 2 (Queue G); KPI
+section 6, the literal-domains rows, the `ProofStage` line, both manifest census records and the
+stage-bearing attempt and ledger observations (Queue H, with the `AssuranceTierId` row in the same
+batch so the tier class can be hypothesized beside a member); S7 section 8 with the lane-plan Turtle
+(the lane-plan terms). No batch is built to manufacture a support chain: the lane-plan terms have no
+CQ and no same-run decision term to support, so they are analyzed and end deferred with the missing
+lane-order CQ named, unless the seats find a warrant the orchestrator did not.
+
+**Call (x) — blinded seat details (extends call (s)).** Prose observations are evidence for every
+seat, the blinded one included: identifiers of earlier ratifications, flags or archived record ids
+that appear inside quoted source text (S7 section 8, literal-domains, hypothesis descriptions quoting
+them) are sanctioned exposure, read as quoted text and never as a category verdict. The root also
+receives the shared foundational-analysis contract. A pass that meets a permission denial stands when
+the three init assertions held and its output cites nothing outside its manifest; the denial is
+logged in `ONT/work/review-audit/blinded-launch-log.md` with the pass's root, prefix and init facts.
+A pass whose init assertions fail is void. A repair pass is a fresh process in a rebuilt root holding
+only the failing `-alt-` pairs and the validator lines naming that prefix's alternative files;
+DISPUTED flags and coverage errors are never forwarded (they name the primary category). A prefix gets
+at most the first pass and two repair passes. Before the first launch the orchestrator confirms that
+the user-level instruction files the headless seat loads carry no ontology content and that the
+per-root memory directory is empty.
+
+**Call (y) — proposals, reviews and withdrawals.** Proposals name `https://oip.law/ontology/ci-ops#`
+plus the local name as the proposed IRI (run-3 precedent; proposing an IRI is not IRI-scheme work). A
+flagged term that a surviving chain denotes is carried by a reuse proposal with the phrase "flag
+<name> persists; no lift claimed", because a `mapped` row needs a same-run proposal; a lift is claimed
+only by a proposal that says so. Category rivals on one hypothesis go to a steward-choice open issue,
+never a second proposal. A struck attack stays listed in the revision log with an open-issues line
+naming the striking ruling, and the adversary does not re-land it without a different counterexample;
+when a revision log misses a failed digest or a landed rule, the adversary writes no review and
+reports the gap. New proposals in a revision pass are allowed only in rounds 1 and 2 and only where a
+landed attack, a ruling or an upstream repair requires one. The synthesis seat writes a withdrawal
+receipt (digests of the proposal and each review); the orchestrator verifies the digests and deletes
+the files, so no seat deletes another seat's records. Ruling 11's cap holds: a round-3 FAIL is
+withdrawn, except that a sitting which strikes every landed attack of that FAIL may order one more
+review of the unchanged bytes, recorded in that sitting entry. The orchestrator runs the mechanical
+gate in the pin worktree before every adversary round and checks slug freshness against the shelters.
+
+**Call (z) — adapter v1.3.0 accepted; the pin's observation set.** v1.3.0 (`0e6d17963817` in the
+working tree; the run manifest pins the committed blob) emits 109 source observations in 0.44 MB with
+a largest record of 11.5 KB: 24 stanza-scoped vocabulary records, 52 admission chains (44 with a
+withdrawal, 3 with an eviction, 5 plain, one per (kind, priority) class) and the first-v3-tag record, 3
+first-stage records and 29 ledger records. With the 95 prose observations the run opens at 204,
+inside the budget. The golden holds 65 expected records over 21 synthetic inputs, and fifty-five
+single-substitution variants of the adapter all fail it. Ruled with it: the one record that equals its
+file (the three-line protocol projection, a single stanza) meets call (u) in intent; five pairs of
+records share path, span and name and differ only in facts, the vocabulary record being a strict
+subset, so they stay, the denotation brief names the pattern and each pair is batched together; the
+chain definition stays v1.2.0's; Queue D's resubmission evidence is sufficient as emitted (all 44
+withdrawal chains and all 3 eviction chains, with a later same-checkout enqueue emitted as its own
+chain for 20 of the withdrawals), so no further version is ordered: the withdrawn readings turn on a
+demand referent and consumers the journal does not carry. The run manifest is written from the pin's
+blobs and the prose set is emitted in the pin worktree, never from lane scratch.
+
+## 2026-10-06 — run-4 launch record (orchestrator under the autonomy charter)
+
+The pin is commit `71c7357adc`, retained by the pushed lightweight tag
+`evidence/beep-ci-ops/orun-2026-10-06T15-51-01Z-pin`; the run is `orun-2026-10-06T15:51:01Z`. Gates on
+the pin tree before the push: gitleaks under main's configuration over every commit of the branch
+and every changed path (no leaks), the residue scan over the added lines (clean), the packet
+validators base, `--s5` and `--s6` (0 blockers, 0 warns), the CQ suite (0 failures across 25 seed
+tests and 22 fixtures), the run-3 citation replay (0 failing) and the repository knowledge, goals,
+atlas and markdown-law checks (all clean). The pin worktree is a detached worktree at the tag in the
+sibling worktrees root. The run manifest records the pinned digests (CQ suite `e1ed9c0f65f5`, 26 CQs;
+scope `750657e0c5b7`; adapter-journal 1.3.0 `0e6d17963817`; the engine freeze), five seats on
+`claude-opus-5-5` at effort `medium`, and the prior chain. Observed at the pin inside the pin
+worktree: 109 source observations from the sandboxed adapter and 95 prose observations from the
+transcriber, each set byte-identical on a second pass; the repository-fidelity scan shows exactly
+the 138 expected lines and nothing else. Fifty-four source observations quote the one native 12-hex
+`originKey` the pins carry verbatim (goal P1 Ruling 7); attempt ids in the ledger and attempt
+projections are pin bytes already on main.
+
+**Call (aa) — the denotation batches.** Five batches, every observation in exactly one, each
+shared-span pair inside one batch: `chg` (45: the 44 change-event ledger rows with KPI law section 2;
+Queue G), `tier` (41: KPI law section 6, the literal-domains rows and rulings, the `ProofStage` line,
+both pin manifests' census blocks and the 16 attempt observations; Queue H), `prf` (32: the
+proof-ledger observations; Queue B issuance and custody), `jrn` (61: the 60 admission-journal
+observations with the live-state record; Queue D), and `lpl` (25: S7 contract section 8 with the
+lane-plan Turtle; the Queue E lane-plan terms). Call (w) placed the stage-bearing ledger observations
+with Queue H; they stay in `prf` instead, because the tier batch already reads the ledger's stage
+census through the manifest prose and one batch of 73 records would crowd a single context. If the
+tier and proof-ledger seats denote the same kind under two prefixes, the conditional consolidation
+pass of call (w) reconciles them. Reversal: a re-batched denotation pass before foundational
+analysis starts.
+
+**Call (ab) — seat repair rows, the round-3 exception, and three seat details (amends calls (v),
+(w) and (y)).** The seat briefs' skeptic showed four gaps; each is closed here. (1) `REPAIR`'s second
+arm is a list of bare rows the orchestrator writes, one per line, never sitting text, its mirror or
+review text: `landed <rule> <target>: <sentence>`, `struck <ruling n> <target> <failed digest
+12-hex> <rule>`, `withdraw <ruling n> <target>: <sentence>`, `upstream <target> <repaired dh, ic or
+fa id> <rule>`, `ruling <ruling n> <target>: <sentence>`. The adversary receives struck rows only;
+denotation and foundational seats receive landed rows only; a withdrawal receipt's authority is the
+row's ruling number with its sentence. The blinded seat's `REPAIR` may also carry `residue <file>
+<class>` rows for a residue-scan or gitleaks hit on its own records. (2) Call (y)'s round-3 exception
+runs on changed bytes: when struck rows cover every rule a round-3 FAIL landed, the synthesis seat
+appends the revision-log entry and one open-issues line per struck rule and changes nothing else,
+and the adversary reviews once more at the target's next review number; the engine can only re-FAIL
+unchanged FAILed bytes, so "unchanged bytes" in call (y) is superseded. Partial strike coverage does
+not open the exception. (3) Call (w) is read strictly for the lane-plan terms: they are denoted and
+parked null-standing and `unresolved` at denotation with the missing lane-order CQ named, receive no
+analysis pair and no proposal, and the index-close lane carries their rows; a warrant named at
+denotation is the only route to analysis. (4) The Queue H "prior refutation to answer"
+(`fa-pb-yeet-proof-tier-001` in the run-2 shelter) is answered by the orchestrator in the sitting
+that rules the tier proposal, not by a seat, because the shelters are closed to seats. (5) Before the
+first blinded launch, the memory canary of the blinded brief's checklist runs and its result is
+logged; the earlier canary already showed no memory path and no ontology skill under the final shape.
+The six seat briefs are installed as `research/run4-lanes/p3-seat-{common,denotation,foundational,
+blinded,synthesis,adversary}-brief.md`; every input manifest lists the seat-common brief and the
+seat's own brief, and the blinded seat receives Part A of its brief only, as the root's brief file.
+
+**Call (ac) — denotation results and the consolidation pass.** The five seats wrote 56 hypotheses
+(`chg` 6, `tier` 15, `prf` 12, `jrn` 14, `lpl` 9), every observation cited by its own batch, no stop.
+The cross-batch check found the same kinds under several prefixes: a verification attempt under
+`tier`, `prf` and `jrn`; a proof stage, tier values, a grouping of attempts under one run and a lane
+execution under `tier` and `prf`; the admission work kind under `jrn` and, as a merged-preview
+reading, under `tier`. Under call (w) the consolidation pass runs once over those three batches with
+the fresh output prefix `vfy` and a union batch of 134 observations; `vfy` is the prefix of every later
+stage for that material, and the 41 source records are retired after an exact coverage check (kept
+outside the repository for audit, never committed). `chg` and `lpl` share no kind with them and keep
+their prefixes; the `lpl` hypothesis of the same-checkout admission skip is a mechanism reading from
+prose, not an instance of the seat-grant or checkout kinds, so it is not consolidated. Reversal: a
+re-run of the consolidation pass before foundational analysis starts.
+
+**Call (ad) — the denotation stage closes.** The consolidation pass merged the `tier`, `prf` and `jrn`
+hypotheses into 35 `vfy` records over their 134 observations; an exact coverage check confirmed the
+union, and the 41 source records were retired outside the repository. An independent skeptic per
+prefix then checked every hypothesis against its records. The recurring defects were wording a seat
+took from its brief and stated as a record fact (for example "applied outside the repository", which no
+change-event row says), viable rival readings collapsed into one, and queue answers stated beyond the
+records (the merged-preview records read the deployed `proofTier=full` as placing an attempt in an
+assurance tier, although that mapping is open). Two repair rounds fixed every blocker and major from
+landed rows in the call (ab) shape, and a last majors-only round split the head-plus-diff working state
+into its own hypothesis and removed one unsupported claim; the remaining minors are tracked follow-ups
+for the synthesis seat. The stage ends with 54 hypotheses (`chg` 6, `vfy` 36, `lpl` 12), every
+observation cited, and the repository-fidelity scan in the pin worktree showing only the 138 expected
+lines. Survivors under the validator's rule (null rejected, a discriminator, a domain-referent or
+information-artifact status) are `chg` 1 and `vfy` 16; the lane-plan batch has none, as call (ab)
+expects, so the foundational and blinded seats run for `chg` and `vfy` only. Notable outcomes the later
+seats inherit: the assurance-tier class and the change-event landing instant both stand
+null-standing and unresolved for want of a record-backed discriminator, so the Queue G property and the
+Queue H tier class reach synthesis without an analysis pair unless a later record supplies one; the
+merged-preview stage and work-kind readings survive, the tier reading does not. The blinded seat's
+memory canary passed before launch (it reports nothing in context and loads no memory path), and the
+launch log records the pre-launch checks. Reversal: a re-run of the affected denotation pass before
+the foundational pairs are reviewed.
+
+**Call (ae) — the analysis stage and its check.** The two foundational seats wrote one identity card and
+one foundational analysis per survivor: `chg` 1 (an event, rigid, with two event-grain rivals still
+viable) and `vfy` 16 (ten analysed, six explicitly deferred with named evidence: both work-kind
+readings, the proof stage, the merged-preview stage, the seat grant and the seat request). The blinded
+alternative seats, launched in the call (s) shape from allow-listed roots, wrote the same 17 pairs; the
+init assertions held, no read was denied, no record fell outside the alternative grammar or cited
+anything outside its manifest, and residue and gitleaks scans were clean. With all 68 analysis records
+in place the repository-fidelity scan in the pin worktree shows only the 138 expected lines. The
+primary pairs, which feed synthesis, get one independent check of the denotation kind (record-backed
+claims, criteria, categories, rivals, queue duties), whose checkers never read the blinded pairs so no
+blinded category can reach a primary repair row. The blinded pairs are judged only by the validator and
+by the category comparison the mechanical gate prints as DISPUTED flags for the sitting; they are not
+repaired to chase agreement. Reversal: a repair pass of either seat before synthesis starts.
+
+**Call (af) — foundational repair loop and the unnamed-pair Stop.** The primary pairs went through an
+independent check, then repairs and rechecks: round 1 (52 rows), round 2 (22 rows, after a recheck found
+11 majors and 18 minors) and round 3 (9 rows, majors only). The review-loop rule applies as written:
+blockers and majors are fixed in any round, minors are fixed through round 2, and from round 3 the
+minors become tracked follow-ups carried into synthesis as open issues, not repair rows. After the
+round-3 repair a narrow recheck confirms every row is answered and looks only for new blockers; a new
+major that a repair sentence introduces at that point goes to the adversary stage, whose attacks on
+identity, category or rivals land on the IC, FA or DH anyway. The foundational brief's Stop for "an
+`ic-`/`fa-` file of your prefix exists before you start and `REPAIR` does not name it" guards against
+overwriting work: on a `REPAIR` launch the prefix's unnamed pairs exist by design from earlier passes,
+they are read-only inputs, and their presence is not a Stop; a seat still never rewrites a pair no row
+names. The launch message states this call. Reversal: name every pair of the prefix in a later pass, or
+relaunch the affected pairs from a first pass.
+
+**Call (ag) — the foundational stage closes.** Three repair rounds answered all 83 landed rows (52, 22
+and 9), none declined, and the round-4 recheck found no new blocker. The plain scan and the
+repository-fidelity scan in the pin worktree still show only the 138 expected lines. The pairs now
+stand at: `chg` 1 analyzed (change-landing, an event, with four viable rivals: apply against merge,
+the supersession grain, the ledger row and the change artifact); `vfy` 4 analyzed (committed-failure,
+lane-execution, verification-attempt, verification-evidence-record) and 12 explicitly deferred
+(admission-charge, admission-work-kind, cache-epoch, checkout, merged-preview-stage,
+merged-preview-work-kind, peak-memory-use, proof-stage, seat-grant, seat-request, tree-state,
+verification-lane), most with the category unresolved and each naming the record that would decide
+it. The repairs moved pairs toward deferral because the selected records show shapes, never counts,
+joins or absences, and several first-pass readings had leaned on facts outside their own hypothesis.
+That is the honest yield of this corpus, not a defect to repair away. Queue H stays open: no pair
+rules tier against stage. The 21 minors from rounds 3 and 4 are tracked follow-ups for the
+implementation report. One seat's filename-only grep over all prose observations saw one name off its
+manifest without reading the file; that file is a run-4 observation, not an excluded path, so the
+pass stands. Synthesis starts for `chg` and `vfy`; `lpl` has no surviving chain and goes to index
+rows only. Reversal: reopen a pair with a repair row before synthesis reads it.
+
+**Call (ah) — an interrupted synthesis seat.** The workstation session ended while both synthesis seats
+ran. The `chg` seat had already returned (one decision proposal, `OperationalChangeEvent` on CQ-016,
+with the four viable rivals as steward-choice open issues; `landedAt` is not proposed because its
+chain did not survive denotation, so CQ-016 is half answered and goes to the sitting). The `vfy` seat
+died after writing nine proposals and before its self-check, scan or Return, so nothing vouches for
+those bytes. They are retired outside the repository with their digests, and a fresh `vfy` seat redoes
+the whole batch from the same input manifest; a dead seat's partial output is never continued
+(same-context rule). No upstream record changed after synthesis started. Reversal: restore the retired
+files from their digest list.
+
+## 2026-10-06 — run-4 withdrawal sitting W1 (orchestrator under the autonomy charter)
+
+Run-4 rulings continue the launch sitting's numbering (Rulings 1–17). Adversary round 1 landed a
+`discriminator-true-of-dto` attack on three `vfy` proposals. The denotation seat, sent the landed
+attacks as repair rows, found no cited record false under the named twin and set each null not
+rejected: `dh:vfy-cache-epoch:001` (each cited epoch digest belongs to one attempt, which an opaque
+per-attempt digest also shows), `dh:vfy-checkout:001` (a recurring checkout root is equally a path label
+stored on each request; it also moved its warrant from CQ-009, whose query compares values, to CQ-015)
+and `dh:vfy-verification-evidence-record:001` (a later lookup and an expiry are equally true of a
+skip-only build-cache entry). A proposal needs a surviving chain, so these three cannot stand.
+
+**Ruling 18 — withdraw the three proposals whose chains no longer survive.**
+`otp:vfy-cache-epoch:001` (CacheEpoch), `otp:vfy-checkout:001` (Checkout) and
+`otp:vfy-verification-evidence-record:001` (VerificationEvidence, a reuse) are withdrawn. The synthesis
+seat writes the receipt with the files' digests; the orchestrator verifies them and deletes the
+proposals and their round-1 reviews. No proposal depends on them. Their identity cards, analyses and
+blinded pairs stay as records of non-surviving chains, and the index-close lane carries their
+observations with the needed evidence each hypothesis now names: one epoch digest across two attempts,
+heads or clone ledgers; tree state carried by one checkout root across two requests or attempts, or a
+checkout mounting a cache; an issued fact consulted for something other than skipping work, or copied
+or corrected as the same item. CQ-005, CQ-006, CQ-014 and CQ-015 therefore lose these subjects in run
+4; no CQ edit is made (Ruling 5). Reversal: a later run re-presents a term from a fresh chain that cites
+the named record.
+
+## 2026-10-06 — run-4 sitting 1 (adversary adjudication, orchestrator under the autonomy charter)
+
+Docket: 15 adversary reviews over 14 proposals (round 1: 11 PASS / 4 FAIL, no INDETERMINATE;
+round 2: the revised change-landing class, PASS), three proposals already withdrawn at sitting W1,
+and the review-validity audit by three independent auditors who read the closure only
+(`work/review-audit/validity-report-r1-{chg,vfy-admission,vfy-verification}.md`). Every landed attack
+the audit examined is demonstrated; none is struck. Of the 11 latest PASS reviews, 6 are sound
+(change-landing, admission-charge, seat-grant, seat-request, committed-failure, verification-lane)
+and 5 are not, each for an attack the reviewer tried with a twin or a record reading the closure
+refutes.
+
+**Ruling 19 — four missed attacks land; one is outside the reviewer's standard.** The sitting lands:
+on `otp:vfy-lane-execution:001`, identity (the cited verdict record's durations show the wrapper lane
+containing its 32 child lane executions, which the card says the record does not show, and the same
+record and a ledger fact share one attempt and one duration, which bears on the two-referent rival);
+on `otp:vfy-tree-state:001`, the null discriminator (every shared head value in the chain is equally
+shared by a per-attempt or per-run writer stamp); on `otp:vfy-merged-preview-work-kind:001`, the null
+discriminator (the still-viable charge-code reading makes every cited charge fact true); on
+`otp:vfy-admission-work-kind:001`, the warrant (Ruling 20). The audit's null attack on
+`otp:vfy-verification-attempt:001` does not land: VerificationAttempt is a Queue A recorded-value
+reuse deferral, and the adversary brief judges a reuse that keeps its flag on semantic match only, the
+standard the reviewer applied. Its warrant falls under Ruling 20. Rejected: re-running the adversary
+blind on unchanged bytes (the reviewer may miss again, and the audit already shows the attack from
+the closure).
+
+**Ruling 20 — a decision warrant needs a query that uses the term itself.** A Must/Should CQ warrants
+a decision term only when its executable query types by the class, uses the property, or names the
+individual. A query that binds the referent as an untyped join or harness-bound node, with the class
+only in `required_classes`, needs the individual but not the term, and warrants nothing (the briefs'
+"a CQ that only mentions the term warrants nothing", applied to the query text). Such a term takes the
+support arm toward a same-run decision term it is necessary to define, constrain or disambiguate, or it
+defers. This reaches `otp:vfy-admission-work-kind:001` (CQ-021 reaches the kind only as the object of
+`hasWorkKind`), `otp:vfy-tree-state:001` (no CQ-005, CQ-006 or CQ-014 query types the tree) and
+`otp:vfy-verification-attempt:001` (CQ-022 joins executions to the attempt without typing it); the
+other proposals' queries type their terms. Rejected: reading `required_classes` as a warrant (it
+licenses every listed class with no query need).
+
+**Ruling 21 — the semantic-match exemption covers flagged reuses only.** A reuse is attacked on
+semantic match only when the ratified term is flagged in TAXONOMY or is one of the Queue A
+recorded-value reuse deferrals (SeatRequest, SeatGrant, VerificationAttempt, VerificationResultArtifact)
+and the proposal says the flag persists and claims no lift. Every other reuse, including an unflagged
+literal member such as MergedPreviewWork, takes the full standard on every surface.
+
+**Ruling 22 — how the landed attacks reach the seats.** An attack the sitting lands on a hypothesis or
+analysis reaches that record's own seat as a `landed` row (call (ab) shape; the sitting is the one that
+landed it) and then the synthesis seat as an `upstream` row; a Ruling 20 warrant defect reaches the
+synthesis seat as a `ruling` row. A chain whose null then stands is withdrawn at a further sitting. A
+revised proposal is reviewed by a fresh adversary at its own next round. No validity-audit text reaches
+any seat.
+
+**Ruling 23 — questions held for sitting 3.** The change-landing class keeps its CQ-016 warrant (the
+query types it), but `landedAt` has no surviving chain, so CQ-016 cannot return a row on run-4
+vocabulary; sitting 3 decides whether the class ratifies alone. PASS with DISPUTED is the intended
+outcome when a proposal carries steward-choice rivals, and an explicitly deferred proposal submits
+FLAGGED; sitting 3 rules each. Identity rivals carried as steward-choice issues on an analyzed verdict
+(committed-failure's obsoletion point, verification-attempt's request alias) are allowed, and sitting 3
+weighs them. Reuse proposals that carry rigidity unresolved over a ratified rigid row meet the step-8
+OntoClean rule at sitting 3; no prior ratification changes before then. Tracked follow-ups: the
+change-landing proposal's "later P0 Ruling 3" wording (the closure-grounded reason is that a row
+records a merge commit), and the seat-grant proposal's open issue that names the withdrawn checkout
+proposal. Reversal: a later sitting supersedes any ruling here.
+
+## 2026-10-06 — run-4 sitting 2 (carried-row adjudication, orchestrator under the autonomy charter)
+
+Docket: the 138 prior unresolved rows (91 source, 47 prose; 84 live in Queue C(i)–C(iii), 54 carried
+run-2 rows in C(iv)), clustered on the intake docket's groups and the run-3 fifteen-cluster frame
+(`work/sittings/carried-rows-docket.md` and `carried-clusters.yaml`). No run-4 observation re-observes
+a prior chain (no shared nonce or attempt id) and no run-4 analysis cites a prior id, so nothing
+re-clusters and nothing retires by re-identification. The lane's checks hold: 138 ids, each once,
+equal to the prior unresolved set; every row `unresolved`, `carried_from_prior: true`,
+`since: 2026-10-06`; no needed evidence repeats the prior text; the 48 rows on duties that need a new
+Must/Should CQ name "a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009".
+
+**Ruling 24 — all 138 rows re-park with fresh evidence; none retires.** The index-close lane writes
+the carried rows exactly as `carried-clusters.yaml` gives them. The four retirement candidates are
+rejected for run 4: recovery-durations (the run-4 chain holds that observation on policy recurrence,
+not on execution boundaries, so re-identification would drop the duty); comparison-operand-binding
+with the freshness duty (the ground is the workspace-bookkeeping null, a hypothesis no proposal or
+review has tested); governing-specification-comparison (the contract's diagnostic-only wording speaks
+of the admission model; whether any gate consumes the comparison stays the open question); and the
+origin-block rows (the change ledger row that retires the per-origin lock is observational seed data,
+and CQ-009's legacy-drain arm still needs the origin regime). Rejected: retiring the synthetic-corpus
+rows because run 4 dropped that corpus (the duties concern boundaries an organic record leaves just as
+open).
+
+**Ruling 25 — the zero-ledger premise has changed.** Run 4 captures writer-issued proof-ledger facts
+and shadows, so the issuance duties that rested on there being no ledger now narrow to copy,
+correction (the time-to-certainty C4.2 check) and custody, plus their CQ duties; the fresh needed
+evidence says so row by row. The frozen-replay rows stay bound to the frozen S6 snapshot; moving them
+to the live-replay report needs a transcription lane in a later run. The deferred-tail row stays
+decision-gated, with the same-checkout skip named as the candidate consumer for the next capture.
+Reversal: the next run's sitting 2 re-adjudicates.
+
+## 2026-10-06 — run-4 withdrawal sitting W2 (orchestrator under the autonomy charter)
+
+Under Rulings 19 and 22 the denotation seat received the two null-discriminator attacks the sitting
+landed and again found no cited record false under the named twin: every head value that recurs in
+`dh:vfy-tree-state:001` stays inside one attempt or one run, as a writer stamp's would, and every
+charge fact in `dh:vfy-merged-preview-work-kind:001` is equally true of a charge code with no kind of
+work behind it. It set both nulls not rejected and named the needed evidence: one head value across two
+runs, or across two attempts that share no run; and a merged-preview chain charged other than 5, or a
+work fact beside the kind that no full-proof record carries.
+
+**Ruling 26 — withdraw the two proposals whose chains no longer survive.** `otp:vfy-tree-state:001`
+(TreeState) and `otp:vfy-merged-preview-work-kind:001` (MergedPreviewWork, a support individual) are
+withdrawn on the Ruling 18 procedure: the synthesis seat writes the receipt, the orchestrator verifies
+the digests, deletes the proposals and their reviews and keeps a backup. No proposal depends on either.
+The index-close lane carries their observations with the named evidence. In the same synthesis pass,
+`otp:vfy-admission-work-kind:001` and `otp:vfy-verification-attempt:001` answer Ruling 20 (support arm
+or deferral) and `otp:vfy-lane-execution:001` answers the repaired card and analysis; a proposal the
+seat returns as a withdrawal candidate is withdrawn at the next sitting. Tracked follow-up: the
+alternatives of sibling hypotheses that still describe these two referents as domain referents.
+Reversal: a later run re-presents either term from a fresh chain that cites the named record.
+
+**Call (ai) — the W2 withdrawal receipt.** The synthesis pass for Ruling 26 stopped before writing its
+receipt: both withdrawal passes ran at `ROUND: r1`, so the brief's fixed name
+`withdrawals-vfy-r1.yaml` already held the Ruling 18 receipt and the seat correctly refused to overwrite
+it. It returned the digests instead. The orchestrator wrote `work/sittings/withdrawals-vfy-w2.yaml`,
+naming itself as author and transcribing the seat-computed digests after checking each against its own
+pre-pass digests and the files, then kept a backup and deleted the two proposals and their reviews.
+The same pass moved `otp:vfy-admission-work-kind:001` to the support arm (toward the seat-request and
+admission-charge proposals) and `otp:vfy-verification-attempt:001` to the support arm (toward the
+committed-failure and lane-execution proposals) under Ruling 20, and re-derived
+`otp:vfy-lane-execution:001` from its repaired card and analysis. Next run's brief should name the
+receipt by pass, not by round. Reversal: restore the backup and rerun the pass.
+
+## 2026-10-06 — run-4 withdrawal sitting W3 (orchestrator under the autonomy charter)
+
+Adversary round 3, the last round under Ruling 11, closed the review loop. `otp:vfy-lane-execution:001`
+(WorkUnitExecution) passed: the round-2 rule did not land again on the revised definition, which now
+counts an execution from its start, and its one rival (a process counted while running) makes it
+DISPUTED. `otp:vfy-admission-work-kind:001` (AdmissionWorkKind, an exact reuse moved to the support arm
+under Ruling 20) failed again on `support-not-necessary`, with a new counterexample: CQ-021 already keeps
+the work kind and the priority apart on two properties with distinct member names, so the class could
+disambiguate them only as the range of `hasWorkKind`, which is parked with its range unknown, and no
+cited chain carries the publish-and-publish case it would separate.
+
+**Ruling 27 — withdraw the round-3 FAIL with named evidence.** `otp:vfy-admission-work-kind:001` is
+withdrawn on the Ruling 18 procedure. It returns only with: a ratified range of `ciops:hasWorkKind` equal
+to AdmissionWorkKind (an S6 refresh) together with a SeatRequest constraint that a request has exactly
+one work kind from that class; or a pinned Must/Should CQ whose query types the kind; and, for the
+disambiguation case, an admission chain carrying kind and priority both equal to publish. No proposal
+depends on it. The ratified AdmissionWorkKind row is untouched: this withdraws a run-4 reuse proposal,
+not a prior ratification. Reversal: a later run re-presents the reuse from a chain citing that evidence.
+
+## 2026-10-06 — run-4 sitting 3 (ratification, orchestrator under the autonomy charter)
+
+Docket: the eight proposals that stand after three adversary rounds and six withdrawals
+(`work/sittings/ratification-docket.md` and `.yaml`, advisory only). Latest reviews: 8 PASS, 0 FAIL,
+0 INDETERMINATE. The pre-scribe gate at the pin printed ARTIFACTS VALID — GATE PASSED with 154 flags
+(138 carried rows, 12 DISPUTED, 4 explicitly deferred) and an unresolved fraction of 54/198 = 27%, so
+no waiver is in play (Ruling 16). The blinded seat agreed with the primary seat's event category on the
+four event proposals; it named a category (quality, relator, relator, information object) where the
+primary seat left four deferred reuses unresolved. Every ratification below names the orchestrator role
+as steward under Ruling 2 and is in the orchestrator's own words.
+
+**Ruling 28 — a reuse ratification affirms denotation under the ratified values.** When a run-4 chain is
+mapped to an already ratified term at the same grain, ratifying the mapping affirms that run 4 denotes
+that term; it does not overwrite the ratified row's category, rigidity or identity. The run-4 card's
+unresolved values and still-viable rivals enter the row as flags with their discriminating evidence, and
+a Queue A flag that the proposal says persists keeps persisting. The step-8 OntoClean rule therefore does
+not fire for the five reuses (VerificationAttempt, SeatRequest, SeatGrant, admissionChargeTokens,
+VerificationLane): none submits a new core sortal, and each ratified rigid value stands. The seat cluster
+takes this one position together, and no SeatRequest flag lifts singly. Rejected: rejecting the reuses for
+unresolved rigidity, which would re-disposition 96 mapped index rows and erase run 4's re-examination
+while the ratified rows stand regardless.
+
+**Ruling 29 — the new event classes are not core sortals.** The step-8 rule's core sortal is an endurant
+type that supplies identity to other types, a kind or subkind anchor. CommittedFailure and
+WorkUnitExecution are events whose criteria derive from an attempt and a step or a lane; nothing takes
+identity from them. Their rigidity doubts (a retried step or revised failed step; a wrapper absorbing its
+children, or a relabelled lane) become flags. OperationalChangeEvent's rigidity is resolved. Rejected:
+holding them for revision until wrapper parthood and the obsoletion point are decided; the review loop is
+closed (Ruling 11) and each doubt carries its discriminating record.
+
+**Ruling 30 — all eight are accepted as flagged accepts,** scribed individually as rat-071 to rat-078:
+OperationalChangeEvent, VerificationAttempt, WorkUnitExecution, CommittedFailure, SeatRequest,
+SeatGrant, admissionChargeTokens and VerificationLane. VerificationLane's run-4 doubts become the first
+flags on an unflagged ratified row; projection stays additive (Ruling 14).
+
+**Ruling 31 — what the accepted terms answer, stated plainly.** CQ-016 is answered for its subject only:
+`landedAt` stays seed-only and unproposed because its chain did not survive. CQ-022 returns no row on run-4
+vocabulary even with its three terms accepted, since `inAttempt`, `hasExecutionState` and
+RunningExecution are parked and `hasCancelClass` is seed-only. VerificationLane's CQ-006 citation is void
+under Ruling 20 (the query binds the lane untyped); its warrant stands on CQ-001. Prose in the
+admission-charge and seat-grant proposals that names the withdrawn admission-work-kind and checkout
+proposals is superseded by Rulings 27 and 18; the bound bytes are not revised.
+
+**Ruling 32 — Queue H's prior refutation stands.** The run-2 analysis `fa-pb-yeet-proof-tier-001` refuted
+reading Yeet proof tiers as AssuranceTiers because both use the word tier; run 4 affirms it: the
+literal-domains table keeps YeetProofTier apart from AssuranceTierId, every cited `proofTier` is `full`,
+and no tier chain survived denotation. No tier proposal exists, so no fourth AssuranceTier member is
+ratified: the member stays blocked on the parked AssuranceTierId domain, and KPI law §6 keeps merged
+preview a sub-partition of TierLocalFullProof. This goes to the P4 hand-off. Reversal for Rulings 28–32:
+a later sitting supersedes with revise or reject ratifications; a scribed ratification is never deleted.
+
+## 2026-10-06 — run-4 closing entry and P4 hand-off (orchestrator under the autonomy charter)
+
+Auditor run 4 (`orun-2026-10-06T15:51:01Z`, pin `71c7357adc`) is closed: the gate passed at the pin before
+and after the scribe, the run is rotated (`runs/orun-2026-10-06T15:51:01Z.{manifest,index,README}`,
+`prior_index_sha256_12` `2d70f0ffcaf5`, observations at the sibling shelter), and the run report with every
+tracked follow-up is `explorations/beep-ci-operational-ontology/research/run4-lanes/p3-run4-report.md`. P3's
+exit criterion is met; the P3 status flip rides the lab's CQ-009 lift PR (Ruling 15).
+
+Accepts for the operator's asynchronous review (Ruling 2), each a flagged accept in the orchestrator's own
+words: rat-071 OperationalChangeEvent; rat-072 VerificationAttempt (reuse, support arm); rat-073
+WorkUnitExecution; rat-074 CommittedFailure; rat-075 SeatRequest (reuse); rat-076 SeatGrant (reuse);
+rat-077 admissionChargeTokens (reuse); rat-078 VerificationLane (reuse, its first flags). Withdrawn with
+named evidence: CacheEpoch, Checkout, VerificationEvidence (Ruling 18), TreeState, MergedPreviewWork
+(Ruling 26), AdmissionWorkKind (Ruling 27).
+
+**Call (aj) — the projection.** Under Ruling 14 the accepts are projected in the run PR through the #1089
+footprint: TAXONOMY gains the three new classes (52 to 55 terms) and, on the five reuse rows, run-4 flag
+segments that open with their ratification id plus an additive `later_ratifications` list, with every
+ratified value unchanged (Ruling 28); DISPOSITIONS turns the CommittedFailure and WorkUnitExecution rows
+from parked to accepted and adds four later ratifications; PREDICATES regenerates byte-identically (no new
+property); ABOX is unchanged; both contract docs carry a dated note. `validate_packet.py`, `--s5` and `--s6`
+are green on the final tree (`--s5` was red at the run commit until the projection, as Ruling 14 expects).
+The S5 gate does not yet check the TAXONOMY `later_ratifications` list; that is a tracked follow-up.
+Reversal: a revert commit.
+
+P4 hand-off (Ruling 17):
+
+- Tier outcome: Queue H stays open. No tier chain survived denotation, every cited `proofTier` is `full`,
+  merged preview is dormant in the capture window, and the run-2 refutation of reading proof tiers as
+  AssuranceTiers stands (Ruling 32). KPI law §2 and the W8 text keep the three ratified tiers; §6 keeps
+  merged preview a sub-partition of TierLocalFullProof.
+- Change-event ratification state: OperationalChangeEvent is ratified (rat-071) and closes all 44
+  change-event rows and the KPI law §2 block; `ciops:landedAt` stays seed-only and unproposed, so CQ-016 is
+  answered for its subject only and W8 partitions on the seed `landedAt` values as before.
+- W1 freshness at the pin: pass 5 re-ran the lever query from `8b7392fe00` to the run base `50b79e470b` (ten
+  PRs, two rows kept: `iv-1427-push-first-publish`, `iv-1422-spot-pool-drop-r6a`); the ledger holds 44 rows,
+  `f520b302424f`, at the pin.
+- Lane-plan terms: the eleven provisional terms entered intake through the lpl batch; none survived
+  denotation (no pinned lane-order CQ), so none was analysed or proposed and they stay provisional.
+- Tier derivation for change-event rows: rows carry no structured tier member in this phase; deriving one
+  for W8 is P4 work (Ruling 10), with #1427 partitioning the local series only and the hosted population
+  shift named as a confounder at that instant.
+
+## 2026-10-06 — P3 close: the lab's CQ-009 lift (orchestrator under the autonomy charter)
+
+The last P3 PR, after the run PR (#1490, `077cb283d9`) merged, under launch-sitting Ruling 15. It
+lifts the lab's CQ-009 reading, applies the review follow-up from #1490, and flips P3.
+
+**Ruling 33 — CQ-009 in the live replay is a typed verdict; P2 Ruling 9's CQ-009 sentence is
+superseded.** P2 Ruling 9 printed CQ-009 as "temporally out of scope: 0 of 689 pinned rows precede #929",
+never a pass or a failure. `apps/labs/ciops` now reports a `Cq009Verdict` over the replayed active grant
+set (the replay's own fold, window and skip rule). The same-checkout arm is evaluated: on the
+`run4-fleet` pin it holds with 0 pairs across 200 grants, every one with a checkout joined from its
+chain. The legacy-origin-drain arm is reported as unobservable, never green: the deployed journal writer
+has no coordination-protocol field (only scheduler ticket and lease state carry it, with a decoding
+default of `legacy-origin-lock/v1`), so no journal row can answer it. Its census: 148 of 200 grants carry a
+non-empty origin key, 0 of 689 rows carry a protocol, and 99 concurrently active grant pairs share a
+non-empty origin key, reported as a journal fact and not as the arm's answer. The censorship line gives
+the retained window, the 3 pre-v3 chains, the 4 ledger-censored verdicts, 44 withdrawn and 1
+ticket-evicted request rows, 1 grant active at the first edge and none at the last. Design call: the
+pinned query scopes the same-checkout arm to grants that record the current protocol, but the journal
+records none, so applying the scope literally would make the lab's arm vacuously green; the lab keeps
+pairs with no recorded protocol in scope and exempts only a pair in which a grant records
+`legacy-origin-lock/v1` by value, as drain-window state. That errs toward a false violation, never a
+false green. Reversal: a later entry and a lab follow-up.
+
+**Ruling 34 — CQ-009's same-checkout arm is scoped to current-protocol grants.** The #1490 review
+showed the pinned arm flags legal drain-window state: the pre-#929 release admits a review-fix lease
+with an empty origin key beside a full-proof lease in one checkout, and the must-be-zero query returned
+2 rows on it. The same-checkout UNION branch now requires `hasCoordinationProtocol
+"scheduler-origin-concurrency/v1"` on both grants, and a `rows_eq_0` fixture
+(`cq009-drain-window-checkout.ttl`) guards the legacy case; the harness carries 23 fixtures, superseding
+call (n)'s count of 22. `regen_cq_artifacts.py` was a no-op before the edit and afterwards changed only
+`tests/cq-009.sparql`. The CQ suite digest moves from `e1ed9c0f65f5` to `3eed0c3f73de`; the run-4
+archive, its ratifications and its docket keep `e1ed9c0f65f5`, which is the suite run 4 was pinned to.
+The next run pins the new digest. Reversal: revert the query and the fixture.
+
+**Ruling 35 — P3 is complete.** Its exit criterion (gate passed and sittings scribed) was met by run 4,
+and the CQ-009 lift that PLAN ties to W7 lands here. P3 is marked complete in PLAN, README and the
+manifest; P4 (the KPI reading and verdict) starts next, from the P4 hand-off in the run-4 closing entry.

@@ -12,6 +12,7 @@ import {
   MailEnvelope,
   MailMessageId,
   MailTaxonomy,
+  MatterCandidate,
   MatterCategoryName,
   MatterEvidence,
   MatterEvidenceKind,
@@ -243,8 +244,46 @@ describe("MailTagging matching", () => {
     expect(decisionCategories(decision)).toStrictEqual(["P: Client", "P: Unmatched - review"]);
   });
 
-  it("adds the review category for a below-threshold outcome", () => {
-    expect(decisionCategories(MatterUnmatched.make({ reason: "below-threshold" }))).toStrictEqual([
+  it("adds the review category for a below-threshold outcome only when its best candidate names the matter", () => {
+    const candidate = (evidence: MatterCandidate["evidence"]) =>
+      MatterCandidate.make({ matterKey: acme, confidence: matterEvidenceConfidence(evidence), evidence });
+    const address = MatterEvidence.make({
+      kind: "contact-address",
+      matched: MatterEvidenceToken.make("a@acme.example.test"),
+    });
+    const domain = MatterEvidence.make({
+      kind: "contact-domain",
+      matched: MatterEvidenceToken.make("acme.example.test"),
+    });
+    const docket = MatterEvidence.make({ kind: "docket-number", matched: MatterEvidenceToken.make("ACME-1") });
+    const carryover = MatterEvidence.make({
+      kind: "conversation-carryover",
+      matched: MatterEvidenceToken.make("conv-1"),
+    });
+    const belowThreshold = (candidates: ReadonlyArray<MatterCandidate>) =>
+      decisionCategories(
+        MatterUnmatched.make({ reason: "below-threshold", candidates, practiceCategories: ["P: Client"] })
+      );
+
+    expect(belowThreshold([candidate([address, domain])])).toStrictEqual(["P: Client"]);
+    expect(belowThreshold([candidate([domain])])).toStrictEqual(["P: Client"]);
+    expect(belowThreshold([])).toStrictEqual(["P: Client"]);
+    expect(belowThreshold([candidate([docket])])).toStrictEqual(["P: Client", "P: Unmatched - review"]);
+    expect(belowThreshold([candidate([address, carryover])])).toStrictEqual(["P: Client", "P: Unmatched - review"]);
+    expect(belowThreshold([candidate([address, patentEvidence])])).toStrictEqual([
+      "P: Client",
+      "P: Unmatched - review",
+    ]);
+    expect(
+      belowThreshold([
+        candidate([MatterEvidence.make({ kind: "application-number", matched: MatterEvidenceToken.make("16000001") })]),
+      ])
+    ).toStrictEqual(["P: Client", "P: Unmatched - review"]);
+    expect(belowThreshold([candidate([address]), candidate([patentEvidence])])).toStrictEqual(["P: Client"]);
+  });
+
+  it("keeps the review category for needs-attorney whatever the evidence", () => {
+    expect(decisionCategories(MatterUnmatched.make({ reason: "needs-attorney" }))).toStrictEqual([
       "P: Unmatched - review",
     ]);
   });

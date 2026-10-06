@@ -124,3 +124,15 @@ corrections into `competency-questions.yaml`, `pre-glossary.csv`, `closed-world.
   `isTicketSkippable`; CQ-010 `:661-663` → the self-admission charge check
   `activeTokenTotal(state) + ticket.weightTokens <= capacityTokens`; CQ-023 `:600-601` →
   `effectivePriorityRank`.
+
+Folded at the run-4 pin (2026-10-06), under goal `ciops-ontology-pipeline` P3 Ruling 5: the
+corrections above now live in the companion files. `competency-questions.yaml` carries the CQ-009
+re-scope (same-checkout exclusion plus the legacy-origin drain), the CQ-008 sample-answer reading
+of MachineProofLock, the CQ-021 pre-#878 note and the CQ-010 and CQ-023 code cites by symbol.
+`pre-glossary.csv` carries dated notes on SeatGrant, Checkout, hasOriginKey, enqueuedAt and
+MachineProofLock and two new rows, `hasCheckout` and `hasCoordinationProtocol` (both CQ-009), so
+the §6 census is 42 candidate classes, 72 candidate properties and 4 named individuals (118 rows).
+`closed-world.yaml` carries the `hasOriginKey` note (the closure binds the legacy-origin-drain arm;
+`hasCheckout` has no declaration) and `use-cases.yaml` the UC-002 flow line. The pre-#929 query is
+retained as `../tests/temporal/cq-009-pre929.sparql`; see `scope.md`, "2026-10-01 amendment", for
+the fixtures and the seed change. No amendment text above was removed.

@@ -1,0 +1,84 @@
+id: "ic:vfy-verification-lane:001"
+hypothesis_ref: "dh:vfy-verification-lane:001"
+referent_grain: >-
+  A repeatable verification procedure at specification grain: one lane (fallow:audit,
+  quality:coverage and the rest) that many executions run against many trees, individuated by the
+  procedure, not by any run of it.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    unresolved: two lanes are the same iff they are the same procedure, but whether a procedure is
+    individuated by its name lineage (one lane whose command is revised over time) or by its command
+    content (a revised command is a new lane) is not decided. No cited record shows one laneId with
+    two command digests or two laneIds with one.
+  reidentification_key:
+    - laneId (evidence of the name lineage)
+    - commandDigest (evidence of the command content)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: unresolved
+  unity: >-
+    One command under one lane name.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - information object (a specification of a procedure that executions realize)
+    - process type (the universal its executions instantiate)
+    - a label grouping ledger rows (rejected)
+  existential_dependencies: []
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - retired from the lane set (not shown; an end only on the information-object reading)
+counterexamples:
+  - description: >-
+      Revision: if fallow:audit's command were changed, the name criterion keeps one lane with a new
+      version and the content criterion makes a new lane. CQ-006 obligations and CQ-017 asymmetries
+      attach to lanes, so the choice decides whether old facts still discharge an obligation.
+  - description: >-
+      Shared command: two lane names bound to one command digest would be two lanes under the name
+      criterion and one under the content criterion.
+status: proposed
+evidence_refs:
+  - "so:sha256:1872cd0bda84cfd3d686e24baa1b4721cd7a76c20dd32889663221ce0f24620b"
+  - "so:sha256:6c4e9189d15e0513d4e46e273bd79015b07165645bc00cb0bb962d63d467c918"
+  - "so:sha256:3c8a4efed3f984a5f0329679451e4147c35a8fbe6572119d86df06bf4776e4f3"
+  - "so:sha256:e26c033721f68a2fd908e0351d8467383a21d63ac1a7539613f6d4974de32385"
+  - "so:sha256:a953d730c7ecd167d519314adf6103f17490786be3cebea51aed6d04e3cdd4e8"
+  - "so:sha256:2816ffb640ed3dae64fd5048e95f831793ca7c792504e66f00af97105f33ae3f"
+  - "so:sha256:bcccc2d7545be33425c0761fb013cfd6f942f1465300bd9ca6e365431141475c"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - CQ-001
+  - CQ-006
+rationale:
+  identity: >-
+    Seven clone ledgers carry laneId fallow:audit with one identical command digest and different
+    heads, inputs and durations, so the lane recurs across executions. fallow:health
+    (so-12d5a26fbfac) and quality:docgen (so-40abdcaf1156) carry different digests from it. Name and
+    content never come apart in the cited records.
+  rigidity: >-
+    Unresolved. An individual could lose this classification while persisting if a procedure were
+    removed from the lane set yet kept as a command, or run outside any lane. The cited ledgers show
+    each lane only through executions recorded under its laneId and never show the procedure before
+    or after its membership, so they neither show nor rule out such a loss. A record of the deployed
+    lane set over time (a lane retired while its command remains) would be the evidence.
+  dependence: >-
+    Unresolved. No external bearer is needed for it to be a lane, but whether it depends on a
+    defining configuration (the deployed lane set) is not shown by any cited record; such a record is
+    the needed evidence. No existential dependency is listed for that reason.
+  category: >-
+    Unresolved between UFO information object (a specification of a procedure that executions
+    realize) and process type; the identity criterion is open too, so the category is not ruled. laneClass
+    cli-runnable is the only value seen, so it is a field, not a lane-kind taxonomy (CQ-001's kinds
+    need the full value domain).
+  temporality: >-
+    Whether it exists during an interval differs by reading. As an information object (a lane
+    specification) it comes into being when defined and can be retired, so it exists over an
+    interval; as a process type (the universal its executions instantiate) it is not bounded by an
+    interval of its own. The category is unresolved, so the field is too; a deployed lane definition
+    with a creation or retirement record would bear on it. Whether it can be revised and remain the
+    same lane is the open identity question.

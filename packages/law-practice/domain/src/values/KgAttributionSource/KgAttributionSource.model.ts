@@ -33,6 +33,9 @@ const $I = $LawPracticeDomainId.create("values/KgAttributionSource");
  * - `client-map` — client supplied by the organizer's source-label map.
  * - `official-record` — identity carried by a USPTO record (application, patent,
  *   parent chain).
+ * - `mention-dominance` — a USPTO anchor's membership because one client-keyed
+ *   family holds a dominant share of the documents that mention its number,
+ *   though some documents elsewhere cite it too.
  * - `mention` — the only link is a number mentioned in family documents; never a
  *   membership claim.
  *
@@ -61,6 +64,7 @@ export const KgAttributionSource = LiteralKit([
   "family-consensus",
   "client-map",
   "official-record",
+  "mention-dominance",
   "mention",
 ]).pipe(
   $I.annoteSchema("KgAttributionSource", {

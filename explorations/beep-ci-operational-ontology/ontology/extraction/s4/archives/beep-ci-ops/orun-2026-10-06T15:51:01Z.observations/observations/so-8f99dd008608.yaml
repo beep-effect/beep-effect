@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:8f99dd0086080f972c55de23dc0457bea7fb782bf92c2ef41686163dbc03ebbc",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect10/docs_patent-drafting-episode-ledger-research-6054027069ca/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 164,
+    "end_line": 231,
+    "content_sha256": "815373b72a937df27b0001c80cca43938d3b91fca65c6e2b107c5f4c58d85296"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect10/docs_patent-drafting-episode-ledger-research-6054027069ca/attempts.properties:record=3",
+    "lexical_name": "policy",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "detectedAt=2026-08-08T11:43:52.465Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneLabel=quality:build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneRerunDurationMs=29802.864398"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "packageName=@beep/box"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "policy=ts2589-no-location"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "standaloneDurationMs=1902.713545"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "task=build"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "taskId=@beep/box#build"
+    }
+  ],
+  "source_excerpt": "# record 3\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=95843714-fd19-4195-b260-93f7410b95b4\nrecordedAt=2026-08-08T12:02:55.626Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=docs/patent-drafting-episode-ledger-research\ncommitted=true\ncreatedAt=2026-08-08T12:02:55.626Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=2190.406417\nexitCode=0\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2554.221931\nexitCode=0\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=publish\nstatus=passed\ndurationMs=4737.327509\nexitCode=0\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=passed\ndurationMs=1204591.767418\nexitCode=0\nid=publish:01-git-push\nlabel=publish:git:push\nphase=publish\nstatus=passed\ndurationMs=1546.17947\nexitCode=0\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=publish\nstatus=passed\nexitCode=0\nmessage=yeet publish succeeded.\nmode=publish\noutcome=success\npushed=true\nrunId=docs_patent-drafting-episode-ledger-research-6054027069ca\nattemptId=95843714-fd19-4195-b260-93f7410b95b4\nstartedAt=2026-08-08T11:42:37.765Z\nendedAt=2026-08-08T12:02:55.626Z\nelapsedMs=1217861\nindexPath=<fleet>/beep-effect10/.beep/yeet/quality-issue-index.json\nbehindCount=0\nmergeBase=98ec0c645124f6431e4ef118eac5d92b4c3ae5bc\npolicy=ts2589-no-location\nlaneLabel=quality:build\ntaskId=@beep/box#build\npackageName=@beep/box\ntask=build\nstandaloneCommand=bun run build -- --filter=@beep/box\ndetectedAt=2026-08-08T11:43:52.465Z\nstandaloneDurationMs=1902.713545\nlaneRerunDurationMs=29802.864398\n",
+  "epistemic_status": "parser_derived"
+}

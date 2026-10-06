@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:a48d2b4f63642d8415fa3248c76a25fae15d6e1b21cc0d5f96d0d59e0a7a8fb0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 752,
+    "end_line": 759
+  },
+  "quote": "- id: iv-1146-turbo-input-isolation\n  title: \"PR #1146 — Turbo task inputs isolated and narrowed; REGEN_GOLDENS hashed\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-16T08:01:40Z\"\n  mergeCommit: 678cf4198280d2f1effde89c1ac094f4f7abd90d\n  pr: 1146\n  mechanismChanged: turbo-cache-inputs",
+  "epistemic_status": "quoted_prose"
+}

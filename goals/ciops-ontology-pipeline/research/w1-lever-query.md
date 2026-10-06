@@ -576,3 +576,199 @@ pass-2 re-review reasons, and #1055 its pass-3 re-review reason.
 | #1408 | excluded-not-a-lever | runBunAudit ignores exact OSV IDs; changes what counts as a pass inside the existing bun-audit step. |
 | #1410 | excluded-not-a-lever | Dependency refresh (turbo 2.11.7); `$schema` URLs and the catalog version. |
 | 8ef3213cbf (no PR) | excluded (pass 3, criterion refuted; P0 Ruling 7) | Its diff changes no decision (`TURBO_TOKEN_REPLACE` is opt-in, default 0; the posture stays `local:rw,remote:r`); the token-reference correction it records edited the git-ignored `.env` of 27 checkouts outside the repository, so iv-953 carries no caveat for it. |
+
+## Pass 5 (2026-10-06, census head `50b79e470b`)
+
+A windowed re-run under "How to re-run": only the commits that landed after the pass-4 census
+head were classified. Nothing above this heading was edited. Where this section and an earlier
+one differ (row counts, the HEAD that cites resolve at, the verification date), this section is
+the later reading.
+
+### Window and census
+
+`W1_SINCE` is `2026-10-05T12:43:21-05:00`, the committer instant of `8b7392fe00` (#1407). The
+audited commit is `50b79e470b` (branch `feat/ciops-p3-run4` at `origin/main`). `8b7392fe00`
+touches no family path, so the window lists only later commits.
+
+```sh
+W1_SINCE="$(git log -1 --format=%cI 8b7392fe00)" \
+  bash goals/ciops-ontology-pipeline/research/scripts/w1_lever_query.sh
+```
+
+| Measure | Pass 5 window | Full census at `50b79e470b` |
+| --- | ---: | ---: |
+| Family lines (TSV) | 12 | 333 |
+| `scheduler-admission` lines | 0 | 51 |
+| `turbo-cache` lines | 0 | 59 |
+| `lane-assembly` lines | 8 | 164 |
+| `hosted-runner` lines | 3 | 37 |
+| `package-scripts` lines | 1 | 22 |
+| Unique first-parent commits | 10 | 208 |
+| PRs | 10 | 207 |
+| Commits with no PR number | 0 | 1 (`8ef3213cbf`, as before) |
+
+The ten commits are `9091fab6ec` (#1426), `721d1239b1` (#1422), `61d1b494f0` (#1435),
+`01d8c18f31` (#1427), `c359992002` (#1440), `77bc3c9184` (#1450), `6f0cbeb021` (#1444),
+`9c57fa81d2` (#1453), `6260a6de70` (#1468) and `7c2d2b5199` (#1479). Two of them sit in two
+families: #1427 (`lane-assembly` and `hosted-runner`) and #1435 (`lane-assembly` and
+`package-scripts`). None is a ledger row or an appendix line above, so all ten are new.
+
+**Census digest** (the recipe under Commands: sha256 of the script's output).
+
+- Window output: 12 lines, sha256
+  `ebe7364d039e6a7f4c2a74301105f2eaa5debc150126e0bdafc914c991a7a0b2`.
+- Full output at `50b79e470b` with the default boundary: 333 lines, sha256
+  `a619d27fe181a2aed7013ecea99c3af56d2f285e8d9aa2f0765c1290b5e986da`.
+- Removing the 12 window lines from the full output leaves 321 lines with sha256
+  `8c95797ed6c2077f7d0b5d88bcc168cef0bfe24a8fa58cc73f435b55e4f1221c`, the pass-4 digest. The
+  families and the earlier window are unchanged, and the difference is exactly the window.
+- No `turbo.json` changed between the two heads
+  (`git diff --stat 8b7392fe00 50b79e470b -- ':(glob)**/turbo.json'` is empty), so the probe's
+  list of Turbo task names is still complete.
+
+### Verdicts
+
+| PR | Merge commit | Verdict | Mechanism | Tier | Decision |
+| ---: | --- | --- | --- | --- | --- |
+| #1422 | `721d1239b1` | qualifying | `hosted-runner-capacity` | hosted | survives both refuters; row `iv-1422-spot-pool-drop-r6a` |
+| #1426 | `9091fab6ec` | excluded-instrumentation-only | none | local | no row; appendix line below |
+| #1427 | `01d8c18f31` | qualifying | `lane-assembly` | both as classified; local after the criterion refuter | survives both refuters; row `iv-1427-push-first-publish` |
+| #1435 | `61d1b494f0` | excluded-not-a-lever | none | both | no row; appendix line below |
+| #1440 | `c359992002` | excluded-instrumentation-only | none | local | no row; appendix line below |
+| #1444 | `6f0cbeb021` | excluded-instrumentation-only | none | local | no row; appendix line below |
+| #1450 | `77bc3c9184` | excluded-instrumentation-only | none | hosted | no row; appendix line below; it records the instant `iv-1422` lands at |
+| #1453 | `9c57fa81d2` | excluded-instrumentation-only | none | local | no row; appendix line below |
+| #1468 | `6260a6de70` | excluded-not-a-lever | none | local | no row; appendix line below |
+| #1479 | `7c2d2b5199` | excluded-not-a-lever | none | both | no row; appendix line below |
+
+For an excluded PR the tier names the surface its family hunk touches; no tier's decision
+changes.
+
+| Outcome | Pass 5 (10 PRs) |
+| --- | ---: |
+| Survived both refuters | 2 |
+| Contested (one refuter refuted) | 0 |
+| Dropped (both refuted) | 0 |
+| `excluded-not-a-lever` at classification | 3 |
+| `excluded-instrumentation-only` at classification | 5 |
+| `excluded-shadow-only` at classification | 0 |
+
+Two squash subjects hid what the diff did. #1427 is titled a refactor and carries the
+push-first publish default; #1422's capacity change landed 3 h 31 min after its merge, at the
+apply that #1450 recorded. #1450 was excluded at classification, not through a refuter as
+#1375 was in pass 2, because P0 Ruling 7 has since ruled the pattern.
+
+### Refuter outcomes
+
+**#1422** (`hosted-runner-capacity`, hosted). Neither refuter refuted it.
+
+- Criterion refuter: the diff removes `r6a.2xlarge` from `runnerInstanceTypes`, a production
+  fleet input and the "instance pools" leg of the vocabulary value, the same lever as iv-1364.
+  The #1055 and #1085 pattern (no realized change) does not apply, because the apply record
+  reports the runner module's `instance_types` and the scale-up Lambda environment as updated.
+  Corrections, all applied to the row:
+  - the live cap around the apply was a burst value (8 before, 2 during, 8 after, no clock
+    times), so the hypothesis does not carry iv-1364's two-worker bound forward;
+  - pool counts are nominal ("nominally 35 of 40");
+  - a same-day caveat names iv-1427's hosted co-mechanisms, 46 minutes earlier;
+  - the "eight types until the apply" reading rests on the apply record, not on a stated live
+    value;
+  - no post-apply reclaim sample is on record;
+  - one other `infra/` commit (#1371) sits between the two applies and changed nothing in the
+    plan.
+- Facts refuter: merge facts over REST, first-parent membership, every cite and the runbook
+  instant all hold. Corrections applied: the apply quote is cited as `:247-248`, the stack
+  entry as `:15-27` with the subnets at `:18-24`, and the evidence line keeps `merged_at`
+  (the squash committer instant is one second earlier).
+
+**#1427** (`lane-assembly`). Neither refuter refuted it.
+
+- Criterion refuter: the default `publishSteps` arm drops the full pre-push lane set and the
+  CI-parity step, an executed plan change on the publish path that iv-874 already tags, so it
+  is not instrumentation-only, shadow-only or a standalone command. `lane-assembly` holds as
+  the scalar; admission moves as a consequence, and gate selection does not fit a
+  per-invocation flag. Corrections, all applied to the row:
+  - the tier is local, not both, because no hosted mechanism is in the diff; the hosted
+    effects go in a HOSTED CO-MECHANISMS caveat in the iv-874 and iv-1068 form;
+  - that caveat has three parts (the label applied at pull-request creation, `--pr` on by
+    default, published heads with cheap-gates as their only local proof) and says the
+    pre-period label timing is not on record;
+  - the local change is stated as a population shift on TierLocalFullProof;
+  - the before-side mixes three publish routes;
+  - squash adoption undercounts the post-period for the PR branch and its stacked lanes;
+  - the row precedes iv-1422 in the ledger, and the #1453 commit-body claim is marked as
+    unverified against run data.
+- Facts refuter: merge facts, first-parent membership and every cite hold. Corrections
+  applied: the lever commit `881521e316` is the second commit on the PR (26 commits over REST,
+  not 20); the reuse marker is dropped only from the push-first default push; the
+  `withQualityAdmission` cites are scoped to the Yeet handler; line ranges were re-resolved.
+
+### Rows written
+
+Two rows were appended to `control-interventions.yaml`, in `landedAt` order:
+
+| Row | `mechanismChanged` | Tier | `landedAt` | `mergedAt` |
+| --- | --- | --- | --- | --- |
+| `iv-1427-push-first-publish` | `lane-assembly` | local | 2026-10-06T01:36:13Z | 2026-10-06T01:36:13Z |
+| `iv-1422-spot-pool-drop-r6a` | `hosted-runner-capacity` | hosted | 2026-10-06T02:22:00Z | 2026-10-05T22:51:15Z |
+
+`iv-1422` is the third row whose `landedAt` is a runbook instant (P0 Ruling 6):
+`docs/runbooks/ci-runner-reliability.md:247-248` at `50b79e470b` reads "Applied 2026-10-06
+02:21–02:22 UTC", recorded by #1450, and the row takes the end of that window at minute
+precision, as iv-1364 does. `iv-1427` lands at `mergedAt`.
+
+The ledger now holds **44 rows** (42 + 2): `turbo-cache-inputs` 10, `lane-assembly` 9,
+`gate-selection` 8, `admission` 7, `hosted-runner-capacity` 4, `sharding` 4, `ordering` 2 and
+`early-stop` 0, counting iv-870, iv-929 and iv-1006. Ten rows are hosted-tier only (the nine
+listed under Verdicts plus #1422). Both new rows cite paths at their merge commit or at HEAD
+`50b79e470b`, and their evidence lines carry the REST verification dated 2026-10-06.
+
+The writer re-ran the merge facts for all ten PRs, re-resolved every cite in the two rows, and
+checked that each merge commit is on the first-parent line of `50b79e470b`. The REST form of
+the merge-fact check was used throughout, in place of `gh pr view`:
+`gh api repos/beep-effect/beep-effect/pulls/<N> --jq '{merged_at, merge_commit_sha, title}'`.
+
+### Contested set
+
+Empty: no PR was refuted by either refuter, so no draft row waits for a ruling.
+
+One point is left for the orchestrator's ruling, because the two sides differ on a row that was
+written:
+
+- **Does #1427 partition the hosted series?** The classifier filed the row on both tiers: every
+  published head now reaches hosted CI without a local full proof, and the heavy matrix is
+  admitted when the pull request is created. The criterion refuter reduced it to local: the
+  diff changes no hosted mechanism (nothing under `.github`, `commands/Ci`, `commands/Quality`
+  or `internal/repo-run`), so a `lane-assembly` scalar on the hosted tier would mislabel the
+  hosted leg. The row follows the refuter and the iv-874 and iv-1068 form: local tier, with the
+  hosted effects in a caveat that partitions nothing. If the hosted series should break at
+  2026-10-06T01:36:13Z, that needs a ruling, and the caveat already states hosted membership.
+  **Ruled 2026-10-06** (`decisions.md`, P3 launch sitting, recorded call (r)): local tier only; the
+  hosted series does not break at this instant, and W8 names the population shift as a confounder.
+
+### Appendix lines (pass 5)
+
+The eight pass-5 PRs that did not become rows, in the appendix's form:
+
+| PR | Verdict or ruling | Reason |
+| ---: | --- | --- |
+| #1426 | excluded-instrumentation-only (pass 5) | `yeet sweep --retire` gains an advisory that names touched goal packets still marked active; every probe falls back to no slugs and the retirement blocker is untouched. The goals doctor's new `active-after-merge` finding is severity `advisory`, and the `goals:doctor` lane fails only on new blocking findings, so P0 Ruling 3 does not reach it. |
+| #1435 | excluded-not-a-lever (pass 5) | `scratchpad/docgen.json` is modified, not deleted (132 `docgen.json` files before and after), and the scratchpad workspace was never in the Docgen configured-package scan, so this is the #1192 shape, not the #1080 shape. The probe hit is the removed `docgen:claudecode` script, which no lane, workflow or Turbo task called; the workspace keeps its `docgen` script. The rest is dependency overrides, OSV exceptions and lint allowlist content. |
+| #1440 | excluded-instrumentation-only (pass 5) | The #1426 retire advisory and the doctor's `active-after-merge` finding skip a packet that carries a statusNote or a non-empty blockedBy; the finding stays advisory and the retirement decision is untouched. The rest is the Guided Closeout law text and skills. |
+| #1444 | excluded-instrumentation-only (pass 5) | The sweep writes a best-effort `done` row to the new workstation session ledger after its report (the write ends in `Effect.ignore`), and PrSessionRegistry moves to shared state-root helpers with the same resolution order; no gate, scheduler or cache reads the ledger. |
+| #1450 | excluded-instrumentation-only (pass 5) | Runbook-only record of the 2026-10-06 Pulumi apply of #1422; the capacity change is #1422's diff, so the event has one row (iv-1422-spot-pool-drop-r6a), whose landedAt is the apply instant this PR recorded (the #1375 precedent, P0 Ruling 7). |
+| #1453 | excluded-instrumentation-only (pass 5) | `prCreateStep` loses a `draft` parameter whose only caller passed `true`, so the planned `gh pr create` argv is identical; the rest is tests and inventory rows that restore the Yeet coverage floors after #1427, satisfying the existing Coverage Regression gate as #1348 did. |
+| #1468 | excluded-not-a-lever (pass 5) | When `gh pr view` or `gh pr create` fails with GitHub's GraphQL rate-limit message, Yeet finds or creates the pull request over REST with the same title, body, base and draft flag; Planner.ts is not in the diff, so no step, lane or gate changes. A transport fallback that completes the publish tail #1427 designed, as #1009, #1026 and #1066. |
+| #1479 | excluded-not-a-lever (pass 5) | `scratchpad/docgen.json` loses its last scratchpad path alias, for the deleted semver module, and `scratchpad/package.json` loses only the `./semver` export; the Docgen package set, the task and its input definition are unchanged (the #1192 precedent). |
+
+With these, the census at `50b79e470b` splits as 41 W1 rows, 3 pre-existing rows and 163 PRs
+that are not rows (41 + 3 + 163 = 207), plus the commit with no PR.
+
+### How pass 5 was run
+
+Protocol step 2 assigns one classifier lane per PR. Pass 5 batched the classifier lanes by
+path family instead, three lanes over the ten PRs, and ran one criterion refuter and one facts
+refuter over both qualifying PRs, under the workstation's lane budget. Each qualifying PR still
+got both lenses, and every excluded PR is listed above with its reason so that it can be
+challenged. Every verdict was judged from the merge-commit diff, restricted to the families in
+force, never from the PR title.

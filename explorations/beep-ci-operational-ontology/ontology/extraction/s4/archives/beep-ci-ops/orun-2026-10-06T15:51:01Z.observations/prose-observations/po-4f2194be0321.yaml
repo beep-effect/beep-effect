@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:4f2194be0321759c7240f0581c5c16ddc108a72a73c1fb883eea6156e574eb59",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 233,
+    "end_line": 240
+  },
+  "quote": "- id: iv-982-hosted-lint-unit-shards\n  title: \"PR #982 — hosted Lint and Test Unit lanes split into partition shards\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-03T19:35:51Z\"\n  mergeCommit: 9ee1e38ee98d89c66131abf2f38b442b3147ef7c\n  pr: 982\n  mechanismChanged: sharding",
+  "epistemic_status": "quoted_prose"
+}

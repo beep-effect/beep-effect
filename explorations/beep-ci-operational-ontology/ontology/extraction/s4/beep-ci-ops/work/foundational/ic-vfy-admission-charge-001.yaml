@@ -1,0 +1,119 @@
+id: "ic:vfy-admission-charge:001"
+hypothesis_ref: "dh:vfy-admission-charge:001"
+referent_grain: >-
+  The share of shared verification capacity that one queued request or held grant claims; on the
+  bearer readings it is individuated by its bearer, not by its value, and on the open
+  work-kind-attribute reading by the work kind.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    unresolved over the readings. On the bearer readings (a quality individual, or a claim mode,
+    borne by a queued request or held grant), two admission charges are the same charge iff they
+    inhere in the same bearer, and the token value is a state of the charge, never its identity;
+    whether the charge of a request and that of the grant admitted on the same chain are one charge
+    then turns on whether request and grant are one bearer (see the seat-request and seat-grant
+    pairs). On the value-only reading there is no charge individual: a token count is attached to
+    each request or grant, and two charges are the same only as equal values. On the
+    work-kind-attribute reading there is one charge per work kind, the same for every request of
+    that kind. The deciding records are a repricing chain (value-only against a persisting
+    individual) and one work kind carrying two weights (bearer against work kind).
+  reidentification_key:
+    - weightTokens (the value, evidence only)
+    - nonce of the bearing chain (evidence of a bearer on the bearer readings, never the criterion)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: false
+  unity: >-
+    On the bearer readings, one magnitude per bearer at a time with no parts; on the value-only
+    reading no individual to unify; on the work-kind reading one value per kind.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      quality (a magnitude inhering in its one bearer, with a value in a token-count quality space);
+      not argued over the rivals below by any cited record
+    - quality value only (a point in a token-count space with no quality individual)
+    - >-
+      relational claim mode (a commitment on the capacity pool externally dependent on pool and
+      bearer; relational dependence)
+    - attribute of the work kind (one charge per kind, the rule rather than its application)
+    - measured resource use (rejected; see the peak-memory-use pair)
+  existential_dependencies:
+    - >-
+      on the bearer readings only: the bearing seat request or seat grant (and, on the claim-mode
+      reading, also a capacity pool or snapshot no cited record names). The value-only reading has
+      no individual to depend on anything, and the work-kind reading makes the charge depend on the
+      kind, not on a bearer. A repricing chain and a work kind carrying two weights decide.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - >-
+      on the bearer readings only: ceases with its bearer (withdrawal, eviction or release of the
+      bearing chain). The value-only reading has no individual to cease, and on the work-kind
+      reading the charge outlasts every request of the kind.
+counterexamples:
+  - description: >-
+      Repricing: if a chain's enqueue row and admit row carried different weightTokens, a
+      quality-individual model says one charge changed value, while a value-only model says two
+      charges. No cited chain shows two values; the de-duplicated fact set would show both if a chain
+      held them, and none does, which is an absence in a selected sample and not evidence that
+      repricing never happens.
+  - description: >-
+      Rule versus application: in the cited records the value matches the work kind
+      (merged-preview 5 on so-0d75ae7174ed, so-d99a3c53086c and so-a8d270b5e19d; full-proof 3 on
+      so-95b7d78a061f and so-363f9b7f07dc; review-fix 1 on so-0ddb10ca516c and so-c01a58325c68).
+      This selected sample says nothing about other chains. A per-kind weight table (the rule) is a
+      specification and the charge borne by one request would be its application, but the cited
+      records fit equally a charge that is simply an attribute of the work kind; a record of one
+      work kind carrying two weights, or of a charge recomputed per request, would separate them.
+status: proposed
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+  - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+  - "so:sha256:0ddb10ca516c6c4510a411df4cf8b5dbc0c021f06e690afe5b8ac507928e19cd"
+  - "so:sha256:c01a58325c68c56c5ce297399e92f0844bdd2c041a5c11b1dddf5fcaf32772cb"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - CQ-010
+  - CQ-021
+rationale:
+  identity: >-
+    The value is present on the enqueue row before any grant (so-0d75ae7174ed is withdrawn
+    ungranted yet carries 5), so on the bearer readings the request as such bears it. That fits the
+    value-only and work-kind readings as well: a token count written on the request, or the value of
+    its kind, also appears at enqueue. carries_identity is unresolved for that reason: it is true on
+    the bearer readings (the charge is reidentified through its bearer), and there is nothing to
+    carry identity on the value-only reading.
+  rigidity: >-
+    Unresolved. The question is whether an individual that is an admission charge could persist
+    while ceasing to be one, for example a claim that outlives its admission as a mere record of
+    the token count. Each cited chain shows the value only on the rows of one bearer and no record
+    shows the charge after its bearer ends or under another classification, so the records neither
+    show nor rule out such a loss. A repricing chain or a record of the charge after release would
+    be the evidence.
+  dependence: >-
+    Unresolved, because it differs by reading. On the quality reading it would be intrinsic: the
+    charge inheres in its one bearer and exists only while that bearer exists. On the relational
+    claim mode it would be relational, depending on a capacity pool or snapshot as well as its
+    bearer; on the work-kind-attribute reading it would depend on the kind rather than on a bearer.
+    The pool the token count is stated against is not cited by any record of this hypothesis, so
+    nothing decides between them.
+  category: >-
+    Unresolved, with quality kept as an alternative. The cited records rule out only measured use:
+    two full-proof grants with equal charge 3 carry memory peaks about a factor of ten apart
+    (so-95b7d78a061f, so-363f9b7f07dc). They do not argue quality over the other readings. Every
+    cited chain carries one weightTokens value on the rows of one bearer, which a quality individual,
+    a bare value attached to the bearer, a claim mode on a capacity pool and an attribute of the work
+    kind all predict alike. A repricing chain would split quality from value-only, a record stating
+    the charge against a pool would test the mode, and one work kind carrying two weights would test
+    the work-kind attribute.
+  temporality: >-
+    Reading-relative, so exists_during_interval is unresolved. On the bearer readings the charge
+    lasts as long as its bearer; on the value-only reading a value does not exist over an interval;
+    on the work-kind reading the charge lasts as long as the kind's weight does, past any one
+    request. Whether a charge can take a new value and remain the same charge needs a repricing
+    chain, so that field stays unresolved too.

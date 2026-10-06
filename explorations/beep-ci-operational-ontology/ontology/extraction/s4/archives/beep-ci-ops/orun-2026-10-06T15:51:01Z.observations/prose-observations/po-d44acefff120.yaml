@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:d44acefff1205021315c71c96e269829b1507d7c83a4d6399ae53be73d19f9b0",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 503,
+    "end_line": 521
+  },
+  "quote": "**Relation to ratified terms.** `LanePlan` is a candidate instance, or a\ncandidate subclass, of the ratified `VerificationPlanSpecification`\n(`ic:yeet-planner:002`). Which one stays undecided for run 4, because rat-049\ndefers the plan-identity contract (content, contextual copy, replacement,\nrevision) and names the yeet planner and lane plans as what it will observe.\nNo `subClassOf`, `rdf:type` or equivalence to `VerificationPlanSpecification`\nis emitted. `planId` and the plan IRI are a minting convention for a\ncontent-derived node, not an identity criterion, and they do not answer\nrat-049. `LanePlanSpecification` binds the handoff digest, so it is an\ninput-bound application context, not the `gate-order-lexicographic/v1` rule;\nit carries rat-056's rule-versus-application flag, with no equation of the\nrule with its applications. `LaneStep` is not `ScheduleStep`: no\n`subClassOf` or equivalence is emitted, and the\n`${planNode}-lane-${laneStepIndex}` IRI is a minting convention, not a\ndecision on rat-060's tuple-versus-component flag. `hasLanePlan` is a plain\nepisode-to-plan edge; it makes no claim of rat-054's current-proposal\nselection at a reference instant, has no re-pointing semantics, and leaves\nthe selection-situation deferral with `hasCurrentProposal`. The run-4 intake\nshould list `LanePlan` beside `VerificationPlanSpecification` under rat-049.",
+  "epistemic_status": "quoted_prose"
+}

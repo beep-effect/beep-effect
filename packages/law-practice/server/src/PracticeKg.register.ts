@@ -9,10 +9,12 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, HashSet, MutableHashMap, pipe } from "effect";
+import { Effect, HashSet, MutableHashMap, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { readJsonlLines } from "./internal/Jsonl.ts";
+import type { FileSystem } from "effect";
 
 const $I = $LawPracticeServerId.create("PracticeKg.register");
 
@@ -106,7 +108,6 @@ export class PracticeKgDocketRegisterError extends S.TaggedError<PracticeKgDocke
 ) {}
 
 const decodeRegisterLine = S.decodeUnknownEffect(S.fromJsonString(PracticeKgDocketRegisterRow));
-const lineBreakPattern = /\r?\n/u;
 
 /**
  * Read the docket register JSONL file.
@@ -137,31 +138,25 @@ const lineBreakPattern = /\r?\n/u;
 export const readPracticeKgDocketRegister = Effect.fn("PracticeKg.readDocketRegister")(function* (
   path: string
 ): Effect.fn.Return<ReadonlyArray<PracticeKgDocketRegisterRow>, PracticeKgDocketRegisterError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const text = yield* fs.readFileString(path).pipe(
-    Effect.mapError((cause) =>
+  return yield* readJsonlLines(
+    path,
+    (cause) =>
       PracticeKgDocketRegisterError.make({
         cause,
         message: `Failed reading docket register "${path}".`,
         path,
-      })
-    )
-  );
-  const numbered = A.filter(
-    A.map(Str.split(text, lineBreakPattern), (content, index) => ({ content, lineNumber: index + 1 })),
-    ({ content }) => Str.isNonEmpty(Str.trim(content))
-  );
-  return yield* Effect.forEach(numbered, ({ content, lineNumber }) =>
-    decodeRegisterLine(content).pipe(
-      Effect.mapError((cause) =>
-        PracticeKgDocketRegisterError.make({
-          cause,
-          lineNumber,
-          message: `Docket register "${path}" line ${lineNumber} is not a valid register row.`,
-          path,
-        })
+      }),
+    (content, lineNumber) =>
+      decodeRegisterLine(content).pipe(
+        Effect.mapError((cause) =>
+          PracticeKgDocketRegisterError.make({
+            cause,
+            lineNumber,
+            message: `Docket register "${path}" line ${lineNumber} is not a valid register row.`,
+            path,
+          })
+        )
       )
-    )
   );
 });
 

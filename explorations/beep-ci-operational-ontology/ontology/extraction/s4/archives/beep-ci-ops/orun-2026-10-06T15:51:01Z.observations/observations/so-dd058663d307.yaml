@@ -1,0 +1,80 @@
+{
+  "id": "so:sha256:dd058663d3079e0532fa11e5c25d345fa1ac6be5a8399e0cbd7afd0c2b4b44f6",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-ledger/ledgers/beep-effect19/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 14,
+    "content_sha256": "e6f32c3ae004c8e4232eceffb5baeb745ce802c6a9521241a58534dac2af2ceb"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beep-effect19/proof-ledger.properties:record=0",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=5cdfaec4-5d95-4581-9149-00a0d2a69803"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=feat/harness-ledger-close"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=8795.029902"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "envProfile=local"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "key=607fc1b2249"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=fallow:audit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=passed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-09-29T12:55:15.917Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 0\nkind=shadow\nschemaVersion=proof-fact/v1\nattemptId=5cdfaec4-5d95-4581-9149-00a0d2a69803\nlaneId=fallow:audit\nbranch=feat/harness-ledger-close\nstage=pre-push\nenvProfile=local\nkind=miss\nkey=607fc1b2249\nreason=no-fact\nobserved=passed\ndurationMs=8795.029902\nrecordedAt=2026-09-29T12:55:15.917Z\n",
+  "epistemic_status": "parser_derived"
+}

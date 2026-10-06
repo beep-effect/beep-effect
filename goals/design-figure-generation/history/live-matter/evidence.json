@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "design-figure-live-evidence/v1",
+  "recorded": "2026-10-06",
+  "note": "Hashes and counts only. The spec, sheets, judge packs, inventories, and reference images live under BEEP_OPPOLD_CORPUS_ROOT and are not in this repository.",
+  "corpusRelativeRoot": "ops/patent-drawing-pipeline/matter",
+  "inputs": { "count": 4, "kinds": { "image": 3, "docx": 1 } },
+  "spec": {
+    "sha256": "617e98da7fbd37ad7835df0734cb826c9c077e2fb7bbc979c6d9edc8d2011bd5",
+    "primitivesAdded": 8,
+    "primitivesSubtracted": 7
+  },
+  "renders": [
+    {
+      "kind": "unshaded",
+      "pages": 8,
+      "runs": 2,
+      "byteIdenticalAcrossRuns": true,
+      "validator": "ok",
+      "pdfSha256": "17e086a26b64e6ae5b2c80a490fd119614aed36a3d8f8d3c11abf2181b84c0a7",
+      "manifestSha256": "c68f23214e6243fe9c36fc8e7749ab370cd6e395241fc55bf5a236d69d34c435"
+    },
+    {
+      "kind": "shaded",
+      "pages": 8,
+      "runs": 2,
+      "byteIdenticalAcrossRuns": true,
+      "validator": "ok",
+      "pdfSha256": "227efb7a2752f99af8b09310ea23e2430db54f18a4480b1caf751fa6a8baf547",
+      "manifestSha256": "fe37792a92b092704b0c6be1250d4a4909ec4e43d8d7c165e161b972358a3c8e"
+    }
+  ],
+  "judge": {
+    "model": "claude-opus-5-5",
+    "referenceImages": 3,
+    "rounds": [
+      {
+        "round": 1,
+        "inventorySha256": "f4bccee6df8829d9cf2c8e7028f0717be6adf90596037318a011ff778be046ff",
+        "findings": [
+          {
+            "id": "R1-01",
+            "severity": "P1",
+            "lens": "feature-presence",
+            "disposition": "fixed in the spec"
+          },
+          {
+            "id": "R1-02",
+            "severity": "P2",
+            "lens": "feature-presence",
+            "disposition": "fixed in the spec"
+          },
+          {
+            "id": "R1-03",
+            "severity": "P2",
+            "lens": "shading-legibility",
+            "disposition": "hatch direction fixed in @beep/occt; light rule for bottom views carried"
+          },
+          {
+            "id": "R1-04",
+            "severity": "P2",
+            "lens": "shading-legibility",
+            "disposition": "carried"
+          },
+          {
+            "id": "R1-05",
+            "severity": "P2",
+            "lens": "sheet-compliance",
+            "disposition": "carried"
+          }
+        ]
+      },
+      {
+        "round": 2,
+        "inventorySha256": "3426f5424175fafd42b6804be259eb560e7be3849df459005575d98f9d389ba5",
+        "findings": [
+          {
+            "id": "R2-01",
+            "severity": "P1",
+            "lens": "feature-presence",
+            "disposition": "decided: interior fastening features are left out as unclaimed; the attorney sign-off confirms or reverses"
+          },
+          {
+            "id": "R2-02",
+            "severity": "P1",
+            "lens": "shading-legibility",
+            "disposition": "fixed in @beep/occt; verified on the re-render"
+          },
+          {
+            "id": "R2-03",
+            "severity": "P2",
+            "lens": "shading-legibility",
+            "disposition": "carried"
+          },
+          {
+            "id": "R2-04",
+            "severity": "P2",
+            "lens": "feature-presence",
+            "disposition": "carried"
+          }
+        ]
+      }
+    ]
+  },
+  "signOff": "not requested yet; `beep drawings statement` and `beep drawings sign` run on the shaded set when the attorney reviews it"
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/m365/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/domain/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/server/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/test-runner/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../../."
+  }
+}

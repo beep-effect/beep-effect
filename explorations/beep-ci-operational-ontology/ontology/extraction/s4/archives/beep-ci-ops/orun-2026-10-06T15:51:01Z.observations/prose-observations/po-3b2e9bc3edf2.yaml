@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:3b2e9bc3edf2a3be3253d9d0cc4751719f9e86b598106f79a370c32a66b4cf36",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md"
+  },
+  "source_span": {
+    "start_line": 101,
+    "end_line": 105
+  },
+  "quote": "## 6. 2026-10-01 amendment (v1.1)\n\nAuthority: DECISIONS.md, Ruling 10 (2026-10-01 graduation sitting). §1–§5 stay the\nv1 text; where this section disagrees, it governs readings over journals written at\nor after the changes it names.",
+  "epistemic_status": "quoted_prose"
+}

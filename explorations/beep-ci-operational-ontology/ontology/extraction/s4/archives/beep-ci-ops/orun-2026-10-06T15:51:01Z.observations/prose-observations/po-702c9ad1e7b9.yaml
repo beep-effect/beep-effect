@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:702c9ad1e7b9982dde9e8d3f63c4f83d4b1bbfafd5527ce6ddc302c9f21e639f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 568,
+    "end_line": 575
+  },
+  "quote": "- id: iv-1080-api-docs-docgen-config-removed\n  title: \"PR #1080 — the stray apps/labs/api-docs docgen.json is deleted, so Docgen stops checking and aggregating @beep/api-docs\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-10T07:48:11Z\"\n  mergeCommit: 43a625dacd5f934e26e5eccfac20c244d8171faf\n  pr: 1080\n  mechanismChanged: gate-selection",
+  "epistemic_status": "quoted_prose"
+}

@@ -1,0 +1,60 @@
+{
+  "id": "so:sha256:6ed910f47125b21230309b4f81f9ed767cdd1f96573420c65082bc0eb5b72876",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-ledger/ledgers/beta/proof-ledger.properties"
+  },
+  "source_span": {
+    "start_line": 20,
+    "end_line": 28,
+    "content_sha256": "cf070f9ab9966f2d763bfab054619aa597335d85751fc68985b8a7d3cbb5bfa6"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-ledger/ledgers/beta/proof-ledger.properties:record=2",
+    "lexical_name": "kind",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "key=second"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=miss"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=shadow"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "laneId=lint:beta"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "observed=failed"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "reason=no-fact"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=proof-fact/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stage=pre-push"
+    }
+  ],
+  "source_excerpt": "# record 2\nkind=shadow\nschemaVersion=proof-fact/v1\nlaneId=lint:beta\nstage=pre-push\nkind=miss\nkey=second\nreason=no-fact\nobserved=failed\n",
+  "epistemic_status": "parser_derived"
+}

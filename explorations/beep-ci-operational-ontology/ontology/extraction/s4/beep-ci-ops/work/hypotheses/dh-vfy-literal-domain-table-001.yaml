@@ -1,0 +1,50 @@
+id: dh:vfy-literal-domain-table:001
+observation_refs:
+- po:sha256:cf0bf57811601e931d102b172ac29694d5db726d8dde8823ab568efa086a54b4
+- po:sha256:be43f502f1ad33703d83d596ab8d0a2b65e4fa6282a305a88878758f3b126668
+- po:sha256:6087c33b5bbd69d66ddedb67da1e0fcad5f35d1cf15f776db2d97820ed9a87ee
+- po:sha256:371f54c6cbb03e72c9dafaa66ba7b1e3afb74917225a437f14b7f42d1265b392
+- po:sha256:3d0afbe028ab88fe8cdca929c0d3fe27002f7d9c8fd04c9cf7430a5cfd3d1eb8
+- po:sha256:d067a0787ac432b22b76b62e369842928da6ca13e281c16fd56ef77e8e743908
+- po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f
+- po:sha256:079622511e865ab004c2fce66ddfdcd98b0bc2adec405e42fdb393e199923177
+- po:sha256:ef0798dae0088dd92334fecae7b6d1b65b2dd1aadf2f80c48baae549cb409844
+- po:sha256:1390e007c634f3040f4e6acd644cde3ae9a83fb5b29979d3c947c29821a3711f
+- po:sha256:ed915fad850ac373459d8a97baa970bde072b7cc7cda3aeb0db0a4a2c3e89b75
+- po:sha256:bc1f5608d615e7d78e834be1f177a297532c9cc240321ec70cb554620873aa36
+- po:sha256:5869fd732b3efaa57740a082efd8f19fdfb32e678a591573a100f4193de7b768
+- po:sha256:2b7cdf8babec65435dcb9a12a4477d6d6423207028baa810f4ec103f9817a1de
+- po:sha256:1b7ce8179ee9ea1bd29260242a48fa76c3f2039a9d37ae1baf3790a6b03b3281
+- po:sha256:29afca5918a47b9efdbbcc6c0ee4cc9b0f6040a88ffa9ed457d7b7bff6c627d6
+- po:sha256:6fa7edcaaf52ffbd41207ca29fcd39f018ab4a4530ea3d7807eefa5a1f7732fb
+- po:sha256:39213e5f7d01487ba0df48376cf630d5c8f722af131ec4296f6268f08c1e7cc1
+cq_warrants: []
+proposed_referent:
+  label: closed literal-domain declaration (the packet's domain table and its rules)
+  description: 'The observed construct: the literal-domains table rows (LaneKind, ScopeKind, AssuranceTierId, CostProvenance,
+    GrantState, ContendedResourceId, AdmissionWorkKind, AdmissionPriorityClass, ExecutionState, CancelClass, StarvationException,
+    CachePosture) and its rules (no punning, YeetProofTier distinct, deployed-literal fidelity, member addition as a T-Box
+    change, member licensing, not-deployed enums). One instance would be one domain declaration. The AssuranceTierId row and
+    rules 2 to 5 are also cited by dh:vfy-assurance-tier:001 and the merged-preview hypotheses; the other domains'' classes
+    are CQ-warranted (CQ-001, CQ-002, CQ-003, CQ-008, CQ-021, CQ-022, CQ-023, CQ-024, CQ-025), but a packet-side row shows
+    deployed spelling, not category, and is not denoted here as those classes.'
+representation_status: unresolved
+alternatives:
+- label: ontology-design specification (information about the ontology, not about CI operations)
+  representation_status: information_artifact
+  plausibility: viable
+- label: evidence for each named domain class
+  representation_status: unresolved
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: the table is the packet''s own design text, so its member lists and supports annotations are
+    self-applied and cannot discriminate. Needed evidence: source observations of each deployed carrier (the LiteralKit call
+    sites the rows cite), from their own batches. For the declaration as such, no pinned query needs it and the named missing
+    decision is: a Must/Should CQ is required and run 4 admits no CQ edit beyond CQ-009.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.4
+  use_for_acceptance: false

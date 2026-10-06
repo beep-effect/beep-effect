@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:505d7e4061faeae0f7226949fef1d6bc8350eec1181dd183d75f257ea4f13438",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/live/bom.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 2,
+    "content_sha256": "cf4754dffa65f31c5161c253ae034407a7fb85b57c80c418ff36b3abe3b3bda5"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/live/bom.properties",
+    "lexical_name": "bomled",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "bomled=value"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "plain=word"
+    }
+  ],
+  "source_excerpt": "﻿bomled=value\nplain=word\n",
+  "epistemic_status": "parser_derived"
+}

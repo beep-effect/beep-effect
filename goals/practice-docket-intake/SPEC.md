@@ -125,12 +125,15 @@ Every processed message ends in exactly one outcome:
 | --- | --- | --- |
 | `NotDocketItem` | Both agents agree there is no deadline or required action. | None. |
 | `DocketEntered` | A dated docket item both agents accept. | Due-date event (`Docket - unverified`) and ladder events (`Docket - reminder`). |
-| `DocketNeedsReview` | A docket item with no usable date, the agents disagree on whether it is one, or the message could not be processed within the retry budget. | One event (`Docket - needs review`) the day after receipt, or today when that day has passed. |
+| `DocketNeedsReview` | A docket item with no usable date, one the agents disagree on, one the review loop flagged (`flagged-low-confidence`, `flagged-max-rounds`, `deterministic-failure`), or a message that could not be processed within the retry budget. | One event (`Docket - needs review`). A flagged item goes on its earliest candidate date when a date was read; otherwise the day after receipt, or today when that day has passed. No reminder ladder. |
 | `IntakeFailed` | A step failed (model, Graph, decode). | None yet. Retried on the next poll. After the retry budget the message gets a needs-review entry (`processing-failed`) so it is not dropped; while the calendar itself is failing it keeps retrying and holds the cursor. |
 
-`DocketEntered` carries flags: `dates-differ`, `matter-ambiguous`,
+`DocketEntered` is written only when the review loop ends `accepted`. Both
+`DocketEntered` and `DocketNeedsReview` carry the review verdict (status,
+rounds used, final score, threshold) and flags: `dates-differ`, `matter-ambiguous`,
 `matter-not-found`, `matter-unverified`, `matter-lookup-failed`,
-`ladder-truncated`, `source-document-missing`, `due-date-past`.
+`ladder-truncated`, `source-document-missing`, `due-date-past`,
+`junk-folder`, `deleted-folder`.
 
 ## Acceptance Criteria
 
@@ -182,7 +185,8 @@ and a critic (the secretary role), on top of the deterministic checks. It runs
 until a confidence score reaches a threshold or the round limit is hit. An
 item that does not reach the threshold is flagged and shown to the attorney;
 it is neither accepted silently nor dropped. This section is the design for
-slice 3b; the pipeline merged in slices 2 and 3 runs one round.
+slice 3b, and the "As built" notes at its end record where the
+implementation is stricter than this text.
 
 ### Schemas
 
@@ -212,11 +216,10 @@ slice 3b; the pipeline merged in slices 2 and 3 runs one round.
 The score is built from things that can be measured. A model's own statement
 of confidence is recorded for the attorney but is not part of the score.
 
-1. **Deterministic gate.** Every check must pass: each date parses as a real
-   calendar day; the due date equals the mail date plus the stated period;
-   the due date is not before the mail date; every date and period the
-   extractor reports appears in the text it cites; the cited span exists in
-   the message or the attached document. If any check fails on the final
+1. **Deterministic gate.** Every check must pass: the due date equals the
+   mail date plus the stated period; the due date is not before the mail
+   date; every date and period the extractor reports appears in the text it
+   cites; the cited span exists in the message or the attached document. If any check fails on the final
    round the status is `deterministic-failure`, whatever the score.
 2. **Material findings** `M`: 1 when the critic raised no `P0` or `P1`
    finding in the final round, otherwise 0.
@@ -266,12 +269,42 @@ rounds are read back, not run again.
   matter lookup of slice 4 cannot mistake a flagged item for an accepted
   deadline.
 
+### As built (slice 3b)
+
+- A field only one side read counts as a disagreement, and
+  `stated-due-date` is compared when either side read one. With no material
+  finding, acceptance at 0.85 tolerates one disagreement when four or more
+  fields are compared and none when three or fewer are.
+- The critic may read a due date the source states outright, next to the
+  mail date and period, and may cite the text it read. When its stated date
+  and its own mail date plus period differ, the pipeline writes a `P1`
+  finding on `due-date`; such an item is flagged at the default threshold
+  and goes on the earlier date.
+- A dated entry from the extractor must cite its source text. The
+  deterministic checks run on the extractor's entry and, when the critic
+  cites, on the critic's reading; each check row records its side.
+- A failed check becomes a dispute, so a gate-only failure gives the
+  extractor something to revise in the next round.
+- The critique is asked again in a later round only when what the critic was
+  shown changed.
+- A settled ledger record keeps the verdict and drops the rounds. While a
+  loop is in progress its rounds, including quoted source text, sit in the
+  local state file. Resuming an interrupted loop does not use the retry
+  budget.
+- Impossible dates are rejected when the model's answer is decoded, so they
+  fail the step and are retried rather than reaching the gate.
+
 ## Known Limits
 
 - The message listing has no page cap: an old start date on a large mailbox is
   read in one cycle.
 - Only the previous day's digest is written. Days missed during a longer
   outage get no digest; their calendar entries still exist.
+- The adapters do not extract text from PDF attachments, so the
+  `cited-span-exists` check cannot fail for a citation into an attached
+  document; it is checked against the message text only.
+- The extractor's per-field citations in a revision are recorded and shown
+  to the critic but not checked by code; only the entry's citation is.
 - Nothing has run against the live mailbox or a live model until the
   registration is done.
 
@@ -318,6 +351,11 @@ autonomy charter.
 | D-33 | Defaults: `maxRounds` 3, `acceptThreshold` 0.85, both typed configuration. | Three rounds is one revision and one defence beyond the first pass; later rounds rarely change a reading and each costs two model calls. 0.85 admits at most one disagreeing field out of five and no material finding. |
 | D-34 | A flagged item still gets a calendar entry, in `Docket - needs review`, under the `DocketNeedsReview` outcome with the terminal status as its reason. It never produces `DocketEntered` and gets no reminder ladder. | Alignment decision 3 (missed is worse than wrong-tentative) still holds, and a flagged item must not look like an accepted deadline anywhere downstream. |
 | D-35 | Each round is persisted in the message's ledger record before the next begins; the loop resumes from the next index after a restart. In the disputed rounds the extractor sees the critic's reasons but not the critic's values. | The workstation was killed twice by memory pressure on 2026-10-06; a loop that restarts from zero would repeat model calls. Showing the critic's values would let the extractor copy them, and agreement would stop meaning anything. |
+| D-36 | The critic reads a stated due date for itself (never a computed one), and a stated date that differs from its own mail date plus period is a code-written `P1` finding. | Without it an item whose only date is stated outright could never be accepted, because the due date would always be read by one side only. A source that contradicts itself is exactly what the attorney must see. |
+| D-37 | A field read by only one side is a disagreement, and the extractor must cite the text behind a dated entry. | "Agreement" between a reading and nothing is not confirmation. A date with no citation cannot be checked against the source. |
+| D-38 | In-progress rounds are kept in the ledger under a placeholder outcome and dropped when the message settles; resumption does not consume the retry budget. | The loop must resume after a kill without repeating model calls, and an interruption is not a failed step. Settled records stay free of message text. |
+| D-39 | Review round 3 findings on slice 3 (#1496) are fixed in slice 3b: a lock that cannot be written reports `store` / `lock`, and reminder entries carry the Junk or Deleted folder line. | Round rule: after round 2, P2 findings get a tracked follow-up instead of another push. |
+| D-40 | The text the extractor quotes for each revised or defended field is checked in code (the field's value must appear in it and it must be in the source; a failure is a dispute on that field) and is never shown to the critic, which re-reads from its own earlier findings and the revised/defended actions only. The real-calendar-day check is removed from the gate: decoding the model's answer already rejects an impossible date. | Showing the extractor's quotes to the critic would let it copy them, the mirror of D-35. A gate check that decoding makes unreachable only looks like protection. |
 
 ## Exception Ledger
 

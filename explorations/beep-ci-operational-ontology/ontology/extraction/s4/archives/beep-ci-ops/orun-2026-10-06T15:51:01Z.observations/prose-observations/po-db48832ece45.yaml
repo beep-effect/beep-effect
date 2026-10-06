@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:db48832ece458c823c749f99c0f7b0731ce9bdf3109f379f4371d509a934ccfb",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 101,
+    "end_line": 108
+  },
+  "quote": "- id: iv-874-publish-before-admission\n  title: \"PR #874 — publish before proof admission; CI-parity step, lane-proof reuse and new pre-push lanes\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-08-30T02:39:33Z\"\n  mergeCommit: d324544d3a3b333b8ef1f9eb225df2d065b70338\n  pr: 874\n  mechanismChanged: admission",
+  "epistemic_status": "quoted_prose"
+}

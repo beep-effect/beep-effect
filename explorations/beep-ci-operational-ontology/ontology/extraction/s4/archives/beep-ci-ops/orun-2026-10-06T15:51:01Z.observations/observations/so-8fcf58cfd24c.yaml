@@ -1,0 +1,104 @@
+{
+  "id": "so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 162,
+    "end_line": 198,
+    "content_sha256": "7a1a65c454393a8e3a13d35915cb2388217841a9441471bba95c150b9b93a0ff"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:nonce=1e9cfa69-e4a2-47fe-9118-63ccfc153f2d",
+    "lexical_name": "ownerRef",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-admitted"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-enqueued"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=admission-released"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "admittedAtMillis=1790849859770"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=4d577875-e837-4d9d-a5ae-c2c27b730c0f"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=codex/effect-vitest-console-followup"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "checkoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-console-followup"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "enqueuedAtMillis=1790849859751"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "kind=merged-preview"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "nonce=1e9cfa69-e4a2-47fe-9118-63ccfc153f2d"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "originKey=4cc31eeb4dec"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=226589bc8991"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRef=5442b681ae28"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "ownerRefVariant=pid_pair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "priority=publish"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "releasedAtMillis=1790850019609"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-admission-journal/v3"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "weightTokens=5"
+    }
+  ],
+  "source_excerpt": "# record 16\nownerRef=5442b681ae28\nownerRefVariant=pid_pair\nattemptId=4d577875-e837-4d9d-a5ae-c2c27b730c0f\nkind=merged-preview\npriority=publish\noriginKey=4cc31eeb4dec\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-console-followup\nbranch=codex/effect-vitest-console-followup\nenqueuedAtMillis=1790849859751\nnonce=1e9cfa69-e4a2-47fe-9118-63ccfc153f2d\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-enqueued\nweightTokens=5\n# record 17\nownerRef=5442b681ae28\nownerRefVariant=pid_pair\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-admitted\nnonce=1e9cfa69-e4a2-47fe-9118-63ccfc153f2d\nkind=merged-preview\nweightTokens=5\npriority=publish\noriginKey=4cc31eeb4dec\nenqueuedAtMillis=1790849859751\nadmittedAtMillis=1790849859770\nattemptId=4d577875-e837-4d9d-a5ae-c2c27b730c0f\n# record 18\nownerRef=226589bc8991\nownerRefVariant=pid_pair\ncheckoutRoot=<fleet>/beep-effect2-worktrees/effect-vitest-console-followup\nbranch=codex/effect-vitest-console-followup\nschemaVersion=yeet-admission-journal/v3\n_tag=admission-released\nnonce=1e9cfa69-e4a2-47fe-9118-63ccfc153f2d\nreleasedAtMillis=1790850019609\nattemptId=4d577875-e837-4d9d-a5ae-c2c27b730c0f\n",
+  "epistemic_status": "parser_derived"
+}

@@ -186,29 +186,44 @@ with `mode: dry-run | apply`, `AttachmentFiler.file`, `MailTaggingUndo.run`.
 | D-29 | 2026-10-06 | There is no automatic removal of filed documents: the document port has no delete verb, undo restores categories only, and the filing ledger lists stored files for manual reversal. | "Never delete" applies to Box as much as to mail; a wrongly filed PDF is moved by a person, with the ledger as the list. |
 | D-30 | 2026-10-06 | Scan exclusions are resolved at run start through the driver's well-known mail-folder lookup (Deleted Items, Junk), merged with an optional configured list; a failed lookup fails the run before any message is listed. Supersedes the fallback in D-19. | Never scan with an unknown exclusion set. |
 | D-31 | 2026-10-06 | With the Box driver as it stands, a name conflict reports the holder's id only (no size or hash), so an interrupted upload is never claimed as ours: the intent is abandoned and the attachment is uploaded under a short-hash name. The cost is a possible duplicate file, never a lost attachment. A driver follow-up to expose the holder's size and SHA-1 turns this into a true reconcile. | `@beep/box` strips conflict details to id and type; proving ownership needs content evidence (review round 2). |
+| D-32 | 2026-10-06 | The entrypoint is the app `apps/practice-mail-tagging` with `report`, `dry-run`, `apply`, `watch`, and `undo` subcommands. `apply`, `watch`, and a non-dry `undo` refuse without `--yes`. Exit codes: 1 failed, 2 refused, 3 provider throttled; the sample unit does not restart on 2 or 3. | The first live apply is operator-attended; a throttled provider must stop the loop, not be retried by systemd. |
+| D-33 | 2026-10-06 | Credentials reuse the docket-intake Entra registration (certificate, app-only) and the existing Box settings by their established variable names; app-owned settings carry a `PRACTICE_MAIL_TAGGING_` prefix. Mail tagging needs application `Mail.ReadWrite` and `MailboxSettings.ReadWrite` (the second for master categories). | One registration and one env file for both services (D-18); no parallel secret names. |
+| D-34 | 2026-10-06 | `watch` builds the service fresh for every pass, labels each pass's Box call-ledger line with the run id, retries a non-throttled failure with a doubling delay capped at one hour, and logs totals only. Full reports with per-category counts go to stdout of attended commands. | Per-run freshness of the private lookups (D-17); the journal is a log and per-category counts carry matter keys. |
+| D-35 | 2026-10-06 | `--since` applies only before the first checkpoint; afterwards the checkpoint decides where a pass resumes. | A stray flag must not rewind or skip the backfill. |
+| D-36 | 2026-10-06 | Writing commands (`apply`, `watch`, non-dry `undo`) hold `writer.lock` in the state directory for the life of the process; read-only commands take none. A lock whose recorded process is gone is taken over; a held or unreadable lock exits 4, which the unit does not exempt from restart. Review round 1. | Ledger appends and the checkpoint temp file are not safe under two writers; an attended command beside the unit could file an attachment twice. Residual: two processes finding the same stale lock at once can both take it over. |
+| D-37 | 2026-10-06 | The retry back-off of `watch` is raised to at least the poll interval, itself at least one minute; env-file values containing a space or backslash are double-quoted. Review round 1. | A zero back-off retries a persistent failure against Graph and Box in a tight loop; unquoted values are split by a shell and lose backslashes under systemd. |
+| D-38 | 2026-10-06 | The writer lock records the holder's pid, the kernel boot id, and the holder's process start time. It is held only when the pid is another live process with the recorded start time on the same boot; anything else (own pid, reboot, different start time, missing identity) is stale and taken over once with the reason logged. An unreadable lock exits 4. Review round 2; refines D-36. | A lock outlives its holder exactly when the finalizer could not run, and afterwards the pid can belong to another process or to the reader; trusting it would loop the unit on exit 4. Trade-off: without a readable `/proc` every lock is stale. Mirrors the corpus writer claim. |
+| D-39 | 2026-10-06 | D-31 is resolved: the Box driver now reports a conflicting file's SHA-1 and size, and the adapter passes them to the filer, so an interrupted Box upload reconciles by hash. The abandon-and-short-hash path remains for holders that report neither. | #1487 merged. |
+| D-40 | 2026-10-06 | In the known-documents index, a file held outside any matter folder (null or absent family key) is read, not rejected, and never counts as known for a matter. Found by the first live dry-run, which failed closed on the real index. | Holding areas and dockets still to be confirmed are part of the Box tree; a file there is not in the matter folder the filer would write to. |
+| D-41 | 2026-10-06 | `P: Unmatched - review` marks a `below-threshold` outcome only when the best candidate's evidence includes an identifier (application, patent, or docket number, or conversation carryover). Contact-only near misses get no review category; their practice categories (for example `P: Client`) still apply. `ambiguous` and `needs-attorney` keep it. Amends D-7. | A read-only dry-run with the draft contact overlay (16 matters, 17 addresses, 12 shared) moved `below-threshold` from 0 to 206, all contact-only. "A known client wrote to us" is not a near miss. With the default 0.8 threshold every identifier already clears it, so in practice the review category is `ambiguous` and `needs-attorney` only. |
+| D-42 | 2026-10-06 | While the Box service account's storage allocation is exceeded (every upload answers 403), the job runs with filing switched off by data: the folder-map setting points at a file containing `[]`, so every attachment is skipped as `no-folder` before any Box call. Skipped attachments are not filed retroactively. Raising the allocation is the operator's call (a possible cost). Lifted 2026-10-06: the allocation was raised and filing is back on for new runs (D-45). | The job treats an upload failure as a failed run, so with the real map the first routable attachment would stop a pass before its message is tagged; tagging must not wait on storage. |
+| D-43 | 2026-10-06 | First live writes went to the operator's own IT mailbox (apply plus undo drill), then to the attorney's mailbox for mail since 2026-10-01, unattended, categories only, gated on a dry-run with review share under about 10% and no single matter swallowing the window (a judgement, not a fixed percentage). Operator rulings relayed by the orchestrator. | Prove the write and undo path where a mistake costs nothing, then start the attorney's mailbox on a small recent window. |
+| D-44 | 2026-10-06 | The July-September backfill runs from a separate state directory with its own ledger and checkpoint, `--since 2026-07-01`, dry-run first, applied without a further ask when the same gate as D-43 passes. Orchestrator ruling. | The live checkpoint already stood at today; a separate directory leaves the live run untouched and makes the backfill undoable as one run. |
+| D-45 | 2026-10-06 | Filing is on with the real folder map from the backfill onward. Until contact evidence is active only USPTO senders route. Orchestrator ruling. | The Box storage block was lifted; the filing path is proved with the real map even when nothing is routable. |
+| D-46 | 2026-10-06 | Contact evidence comes from the practice KG's correspondent lookup (store format 4), replacing the draft contact overlay: an address the KG resolves `unique` to one matter, from the attorney's own records, is contact evidence for that matter; a `candidate` is a suggestion only and never tags or files; role mailboxes and the practice's own addresses never count. Weights unchanged. It stays switched off in the live job until the attorney's spot-check of the current tags. Orchestrator ruling; implemented in #1525. | One owner for the correspondent rule (the KG contract) instead of a second, hand-curated list. |
 
 ## Acceptance Criteria
 
-- [ ] Taxonomy, matching, ledger, checkpoint, and report schemas exist in
+- [x] Taxonomy, matching, ledger, checkpoint, and report schemas exist in
       `@beep/law-practice-domain` with decode tests.
-- [ ] `MatterTagger` matches on identifier evidence, returns an explicit
+- [x] `MatterTagger` matches on identifier evidence, returns an explicit
       unmatched outcome below threshold or on ambiguity, and never forces a
       matter (tested with synthetic fixtures).
-- [ ] `MailTaggingJob` dry-run reports counts and invokes no write; apply
+- [x] `MailTaggingJob` dry-run reports counts and invokes no write; apply
       writes categories, records the ledger, and is idempotent on re-run.
-- [ ] The since-2026-07-01 backfill resumes from its checkpoint after an
+- [x] The since-2026-07-01 backfill resumes from its checkpoint after an
       interruption without re-tagging (tested).
-- [ ] Undo restores every tagged message's categories to their pre-run state
+- [x] Undo restores every tagged message's categories to their pre-run state
       while preserving categories added by anyone else (tested).
-- [ ] The attachment filer dedupes by content hash and never overwrites
+- [x] The attachment filer dedupes by content hash and never overwrites
       (tested).
-- [ ] Adapters: file ledgers, Box document store, practice-KG matter
+- [x] Adapters: file ledgers, Box document store, practice-KG matter
       directory, `@beep/m365` mailbox, folder map, known-documents index,
       Box call metering, composed behind one service layer.
-- [ ] A `bin` subcommand (dry-run, apply, undo) with a sample user unit.
+- [x] A `bin` subcommand (dry-run, apply, undo) with a sample user unit.
 - [ ] A live dry-run report (counts only) over mail since 2026-07-01 is
       recorded in `history/`, followed by an operator-attended apply.
-- [ ] `bun run beep quality package-verify` passes for each touched package.
+- [x] `bun run beep quality package-verify` passes for each touched package.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix

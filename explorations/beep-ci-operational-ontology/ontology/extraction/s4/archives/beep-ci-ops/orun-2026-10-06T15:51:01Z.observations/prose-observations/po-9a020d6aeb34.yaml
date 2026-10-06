@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:9a020d6aeb341cdb7dbfa22d366e70a67a9785f8e5a576883302a996b95cbaf5",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/s7-projection-contract.md"
+  },
+  "source_span": {
+    "start_line": 497,
+    "end_line": 501
+  },
+  "quote": "**Derived edges.** `precedesLaneStep` is derived from `laneStepIndex`: one\nedge from index `i` to index `i+1`, emitted for each consecutive pair. It is\na second encoding of the same order (rat-062 kept precedence as a flagged\nrival of the index), never independent evidence for it. A CQ must not count\nthe two as separate witnesses of one order.",
+  "epistemic_status": "quoted_prose"
+}

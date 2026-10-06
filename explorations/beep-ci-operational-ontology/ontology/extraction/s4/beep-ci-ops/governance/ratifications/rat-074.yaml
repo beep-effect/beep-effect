@@ -1,0 +1,13 @@
+id: rat:74
+proposal_ref: otp:vfy-committed-failure:001
+proposal_sha256: 929755435984178b52a49b35365ec02d7c6e05316ce1c0d91cda3ed23eeaff27
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: 'Accept otp:vfy-committed-failure:001 as CommittedFailure, the failure an attempt commits
+  at one step, warranted by CQ-022''s typed failure. It is a leaf event whose criterion rests on the attempt
+  and the step, not a core sortal. Retained as flags: rigidity under a retried step or revised failed
+  step, the obsoletion-point rival with its exit-instant discriminator, the single cited verdict, and
+  the parked inAttempt edge.'

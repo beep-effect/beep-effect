@@ -1,0 +1,107 @@
+id: "ic:vfy-verification-attempt:001"
+hypothesis_ref: "dh:vfy-verification-attempt:001"
+referent_grain: >-
+  A dated occurrence: one started run of the verification pipeline, from its attempt-started event to
+  its verdict or termination, as the attempt journal records it; individuated by its start, not by
+  the run file it is grouped in or the request it may submit.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two verification attempts are the same iff they are the same started run of the pipeline: one
+    start event, with the verdict or termination that closes it. The attempt uuid is evidence of
+    that run, never the criterion, and in the cited records it joins only within one record class:
+    an attempt-journal start row and its verdict row share one (so-6390d5f857ae, so-ca8b3f90e57c),
+    proof-ledger records share one with each other, and admission records share one with each
+    other, but no cited ledger or admission attemptId equals any cited attempt-journal attemptId.
+    Whether the ledger and admission records name the same attempts as the journal is therefore not
+    shown; a ledger fact or admission chain whose attemptId equals an attempt-journal start row's is
+    the needed evidence. Several attempts in one run file are distinct attempts; in the cited
+    records two attempts of one run start at different stages.
+  reidentification_key:
+    - >-
+      attemptId (evidence; joins an attempt-journal start row to its verdict row in the cited
+      records, and no cited id joins the journal to a ledger or admission record)
+    - startedAt on the attempt-started row (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One start-to-verdict span on the attempt journal. Lane executions are its parts only if the
+    ledger records that carry them name the same attempt; the cited ledger lane records share an
+    attemptId with each other (so-40abdcaf1156, so-c997b4851faa) but with no cited journal row, so
+    that parthood is unshown.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - process (while running, for CQ-022's in-flight queries)
+    - the journal, ledger and admission rows about an attempt (information object; rejected)
+    - >-
+      an alias of the seat request (attemptId as a second identifier of one admission chain; kept
+      open)
+    - a grouping label over lane runs (rejected)
+  existential_dependencies:
+    - the checkout and tree state it runs against
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - >-
+      finished with a verdict (outcome=failure on so-ca8b3f90e57c; the spelling of a passing
+      outcome on an attempt verdict is not shown by a cited record)
+    - terminated with a reason (for example legacy-unowned-start), counted red
+counterexamples:
+  - description: >-
+      Request alias: each cited admission chain that carries an attemptId carries a different one,
+      and successive withdrawn chains from one checkout carry fresh ones, but no cited record joins
+      one attemptId across the attempt journal and the admission journal, so whether attempts and
+      requests are one to one, or one individual under two names, is not shown. The quarantined lease
+      so-a8d270b5e19d carries a startedAt equal to its admittedAtMillis, after its enqueue instant;
+      reading that member as the attempt's start rests on its field name alone, so it does not
+      separate the two. An attempt-started row sharing its attemptId with an admission chain, or two
+      chains under one attemptId, would.
+  - description: >-
+      Retention: the KPI law (po-fd56d2b008d1) evicts whole oldest terminal attempts per run-id file
+      and records the eviction. An attempt no longer in the journal still occurred, so a criterion
+      tied to journal presence would make the eviction end the attempt.
+status: proposed
+evidence_refs:
+  - "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321"
+  - "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610"
+  - "so:sha256:f8f678d23c44ef0e6bd800f79b8b2160f75efc9ce296b64d362d6a0b3994e200"
+  - "so:sha256:eefbf95beb8d3c296c1816ddc0e8d4011b0882c50e255e86b7fffe8c7636b2e4"
+  - "so:sha256:10c2570fe2f62edc08df8ba560eaf9a718c07c1e802988325eed47e54eadd20c"
+  - "so:sha256:3bf9cacb55b46f24b4e338c9585373e657fcd1846e0e726dd6063dbc7cde5296"
+  - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+  - "so:sha256:40abdcaf1156faffb566b4978ac5ce4c70027b44eaa305a6814650a8b2bc1de6"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "po:sha256:fd56d2b008d116a7298306590441fe49482be56357eb1f17166d6af2191cbf7e"
+  - CQ-022
+rationale:
+  identity: >-
+    so-6390d5f857ae starts at 16:59:45.919Z and the verdict so-ca8b3f90e57c ends at 17:01:07.524Z
+    with elapsedMs 81605, the exact span between them, so the attempt has its own start and end.
+    Two attempts of one runId start at different stages (so-eefbf95beb8d, so-10c2570fe2f6), so the
+    run file groups attempts and does not individuate them.
+  rigidity: >-
+    Unresolved. If the attempt is an occurrence of its own, nothing that is an attempt could persist
+    while ceasing to be one. Under the seat-request alias rival, the individual stamped with an
+    attemptId would be one admission chain, an attempt only from its start onward, which would make
+    being an attempt a phase of that chain. The cited records do not separate the two readings; the
+    alias discriminator (an attempt-started row and an admission chain under one attemptId, or two
+    chains under one attemptId) would.
+  dependence: >-
+    Marked relational: it exists only as a run over a given checkout and tree. What the records show
+    of its tie to a run is membership: its start row sits in one run's attempt-journal file, which
+    may hold several attempts (so-eefbf95beb8d, so-10c2570fe2f6); no cited record names an agent run
+    that starts it.
+  category: >-
+    UFO event: one start and one verdict joined by attemptId on the attempt journal, with elapsedMs
+    equal to the span between them. Two ledger lane records (so-40abdcaf1156, so-c997b4851faa) share
+    one attemptId and carry separate verdicts, which fits lane executions as parts of an attempt, but
+    no cited id joins those ledger records to a journal start, so parthood is not part of the ruling.
+  temporality: >-
+    It unfolds from start to a verdict or termination. Whether it changes state without losing
+    identity is unresolved: no cited record shows an attempt while running, between its start and
+    its verdict, and such a record (as CQ-022's in-flight queries need) is the evidence.

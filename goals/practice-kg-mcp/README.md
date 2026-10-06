@@ -50,15 +50,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P8 Handoff + close. P6 and P7 are complete (2026-10-06): the graph is keyed
-by client, every row resolves to provenance (AC-2, proved by `verify.ts`),
-the server needs no network (AC-5, proved under enforced isolation), and the
-bundle exposes a stable matter-lookup contract for the docket-intake, email,
-and Box services (`research/matter-lookup-contract.md`). The server and bundle are on
-the attorney's PC and pass eleven of eleven tool-level checks there with zero
-network connections. What remains needs people: replacing the July extension with
-the new package in Claude Desktop, his first questions (AC-6), and his correctness calls
-on G-1..G-5.
+P8 Handoff + close. P6, P7, P9 and P10 are complete (2026-10-06 to
+2026-10-07): the graph is keyed by client, every row resolves to provenance
+(AC-2, proved by `verify.ts`), the server needs no network (AC-5, proved under
+enforced isolation), and the bundle exposes a stable matter-lookup contract and
+a correspondent lookup for the docket-intake, email, and Box services
+(`research/matter-lookup-contract.md`). The attorney's working files, saved
+emails and docket register are in the bundle (`2026-10-06-03` on his PC with
+extension 0.3.1; `2026-10-07-01` with extension 0.4.0 adds anchor dominance
+(D-23) and matter correspondents (D-24)). Installs are verified without a
+person by `practice-kg-mcp --self-check`. Bundle `2026-10-07-01` with
+extension 0.4.0 is on his PC (self-check ok, 2026-10-06). What remains needs
+people: one session with him, scripted in `research/attorney-session.md`
+(in-chat `kg_provenance`, G-1..G-5 verdicts, his own questions for AC-6). P11
+widens correspondents from the mail archives.
 
 ## Latest Evidence
 

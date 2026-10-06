@@ -1,0 +1,64 @@
+{
+  "id": "so:sha256:6390d5f857aef5fb852f8bf598ab0eba0a8a9a4d64b948005388f6ec95a2f321",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 1,
+    "end_line": 10,
+    "content_sha256": "bc5c246f910addb7123fb21483b04a0cc74e8c6dcdb421b6043bb52658d0780b"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties:record=0",
+    "lexical_name": "schemaVersion",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "_tag=attempt-started"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "attemptId=d1e2faf7-31d5-4b94-b672-7a70c8f7d015"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "base=origin/main"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "branch=@chore/deps-update-08-23-26"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "head=HEAD"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "mode=repair"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "runId=chore_deps-update-08-23-26-cadf4f69e957"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "schemaVersion=yeet-attempt-journal/v1"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "startedAt=2026-08-23T16:59:45.919Z"
+    }
+  ],
+  "source_excerpt": "# record 0\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-started\nattemptId=d1e2faf7-31d5-4b94-b672-7a70c8f7d015\nrunId=chore_deps-update-08-23-26-cadf4f69e957\nbranch=@chore/deps-update-08-23-26\nbase=origin/main\nhead=HEAD\nmode=repair\nstartedAt=2026-08-23T16:59:45.919Z\n",
+  "epistemic_status": "parser_derived"
+}

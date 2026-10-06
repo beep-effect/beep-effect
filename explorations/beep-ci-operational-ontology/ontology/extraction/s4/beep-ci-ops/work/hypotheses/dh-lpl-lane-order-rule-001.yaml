@@ -1,0 +1,51 @@
+id: "dh:lpl-lane-order-rule:001"
+observation_refs: ["po:sha256:4139861eb1243cf8fa9bd2ba3c7ff553e6399f32f19d52332bc6b0840f19ce03", "po:sha256:7193f17d8ababc728625845d15b07aa8327f671570f646dc414e0650b1e6c47f", "po:sha256:0030b2144c3e01002444ec77890baaad11b77ebfe67a2d4b6994e59fd5baae43", "po:sha256:5d984d7d5554ac29feeb046f12f86766e6718df0a290e26bdc02023a86f55f21", "po:sha256:db8366e7780e92846d2c2454b651a5e31d975b34772c83ef2cdf49b2dcc8c22f", "po:sha256:d44acefff1205021315c71c96e269829b1507d7c83a4d6399ae53be73d19f9b0", "po:sha256:fb56d336f45445d9d55b113ad26e30e87c04adfa1ac69204cc0edf969d2863d1", "po:sha256:4dbce15dff1835d2a389a08955fa50b18297b38040dee4bd8264d9992839eadd", "po:sha256:ef1a43d8c85966a859f010500e53f554d45e12f1e47b0ebc0190721829cf96ca"]
+cq_warrants: []
+proposed_referent:
+  label: "lane order rule (a named, versioned rule for ordering verification lanes)"
+  description: >-
+    One instance is one named, versioned ordering rule. The records show one rule name,
+    gate-order-lexicographic/v1: the LaneOrderRule literal domain admits that one member only (a
+    one-member LiteralKit), a handoff carries it as its orderRule, and the planner reproduces it
+    without recomputing it (no new order literal, no reordering). Answers the provisional term
+    laneOrderRule (the specification's order-rule literal). This hypothesis is the rival of
+    dh:lpl-lane-plan-application:001 over what the specification denotes. Under this reading the
+    node typed LanePlanSpecification (golden statement typing the specification node) denotes the
+    order rule governing a plan, with the handoff digest it binds (handoffDigest) a record of the
+    input the rule was applied to rather than part of what the specification is, so this hypothesis
+    also answers LanePlanSpecification and hasLanePlanSpecification (the plan-to-specification edge,
+    read as plan-to-governing-rule). Under the rival reading the specification is an input-bound
+    application of the rule, as the contract's author claims (the specification binds the handoff
+    digest, so it is an application context, not the rule; the contract carries a rule-versus-
+    application flag and asserts no equation of the rule with its applications); both readings are
+    listed as viable and neither is asserted. Proposed individuation, not a record's statement: a
+    rule by name and version, so that one rule would be repeatable across handoffs while an
+    application would be bound to one handoff digest; the records show neither a second handoff nor
+    a second rule version.
+representation_status: unresolved
+alternatives:
+  - label: "the specification denotes an input-bound application of the rule, not the rule (dh:lpl-lane-plan-application:001); discriminated by an observation of two specification nodes that differ only in handoff digest, and of whether anything said of the governing specification (a ratification, a revision, a count) treats them as one rule or as two applications"
+    representation_status: domain_referent
+    plausibility: viable
+  - label: "a version label on the handoff document format (an information-artifact attribute); discriminated by an observation of the rule name varying independently of the handoff schemaVersion"
+    representation_status: information_artifact
+    plausibility: viable
+  - label: "a literal-domain member with no referent of its own (closed vocabulary only)"
+    representation_status: implementation_artifact_only
+    plausibility: viable
+null_hypothesis:
+  label: "implementation artifact only"
+  rejected: false
+  rationale: >-
+    The null stands. The records show the rule only as a string literal emitted on the
+    specification and as a one-member LiteralKit; a literal list shows deployed spelling, not
+    category, and no record shows the rule applied twice or changed. No pinned Must/Should CQ needs
+    the order rule or the lane-plan specification, so under the no-CQ default this is null-standing
+    and unresolved. The decision a CQ would serve is the missing lane-order CQ (a Must/Should CQ that
+    needs a lane plan or its order); named missing decision: "a Must/Should CQ is required and run 4
+    admits no CQ edit beyond CQ-009". Needed evidence: a pinned Must/Should CQ needing the lane order
+    rule or the governing specification, and an observation of a second rule version or of one rule
+    applied to two handoffs.
+  discriminator: ""
+epistemic_status: proposed
+confidence: {value: 0.3, use_for_acceptance: false}

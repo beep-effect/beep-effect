@@ -71,6 +71,9 @@ import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const json = (value: unknown): Effect.Effect<string> => Effect.orDie(encodeJson(value));
+
 const isPracticeKgCandidateClaimsNotLoadedResult = S.is(PracticeKgCandidateClaimsNotLoadedResult);
 const isString = S.is(S.String);
 
@@ -465,7 +468,7 @@ const workingFiles = [
   // no client in the path or the text, and no other document in its family: the register may speak
   [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
   [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
-  // a second copy of an organized file adds no document
+  // a second copy of an organized file adds no document and does not take over its run, size, or date
   [fixtureDigests.family, "Loose files/family-notes copy.txt"],
 ] as const;
 
@@ -528,6 +531,189 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
     )
   );
   return registerPath;
+});
+
+// A later run holding the attorney's filed email, plus three more alpha docket
+// letters citing the application that beta's response also cites. Every name,
+// number, and address here is invented.
+const mailRun = "2026-10-mail";
+const mailDigests = {
+  answer: `sha256:${Str.repeat(64)("4")}`,
+  dominantOne: `sha256:${Str.repeat(64)("3")}`,
+  dominantThree: `sha256:${Str.repeat(64)("0")}`,
+  dominantTwo: `sha256:${Str.repeat(64)("5")}`,
+  filing: `sha256:${Str.repeat(64)("b1")}`.slice(0, 71),
+  noMetadata: `sha256:${Str.repeat(64)("9a")}`.slice(0, 71),
+};
+const mailFolder = `Clients/Example Client ${fixtureClients.alpha}/20001US01 - ${fixtureClients.alpha}.00012`;
+const practiceDomain = "example-law.test";
+
+const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dominantDigests = [mailDigests.dominantOne, mailDigests.dominantTwo, mailDigests.dominantThree] as const;
+  yield* Effect.gen(function* () {
+    const db = yield* DuckDb;
+    yield* Effect.forEach(
+      [
+        [mailDigests.filing, `${mailFolder}/Re filing receipt.eml`],
+        [mailDigests.answer, `${mailFolder}/Answer.MSG`],
+        [mailDigests.noMetadata, `${mailFolder}/Unreadable.eml`],
+      ] as const,
+      ([digest, relativePath], index) =>
+        db.run(
+          `INSERT INTO corpus_source_files VALUES ('${mailRun}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
+          [relativePath, index + 50, digest]
+        ),
+      { discard: true }
+    );
+    yield* Effect.forEach(
+      dominantDigests,
+      (digest, index) =>
+        db
+          .run(
+            "INSERT INTO corpus_source_files VALUES ('base', 'fixture-source', $1, $2, '2026-01-02T03:04:05.000Z', $3)",
+            [`alpha-letter-${index}.txt`, index + 60, digest]
+          )
+          .pipe(
+            Effect.andThen(
+              db.run(
+                "INSERT INTO corpus_organized VALUES ($1, 'fixture-source', $2, 'docket', NULL, '20001US01', '20001', $3, $4, FALSE)",
+                [
+                  digest,
+                  `dockets/20001/20001US01/alpha-letter-${index}.txt`,
+                  `dockets/20001/20001US01/alpha-letter-${index}.txt`,
+                  `alpha-letter-${index}.txt`,
+                ]
+              )
+            )
+          ),
+      { discard: true }
+    );
+  }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
+
+  const extractRoot = path.join(corpusRoot, "staging", "extract");
+  const baseLines = yield* Effect.forEach(dominantDigests, (digest, index) =>
+    encodeFixtureSource(
+      FixtureSourceRow.make({
+        artifactId: `artifact-letter-${index}`,
+        digest,
+        engine: "tika",
+        format: "text",
+        operationId: `operation:op-letter-${index}`,
+        relativePath: `text/operation:op-letter-${index}.txt`,
+        sizeBytes: 20,
+        status: "succeeded",
+      })
+    )
+  );
+  const baseSources = yield* fs.readFileString(path.join(extractRoot, "sources.jsonl"));
+  yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${baseSources}${A.join(baseLines, "\n")}\n`);
+  yield* Effect.forEach(
+    A.range(0, 2),
+    (index) =>
+      fs.writeFileString(
+        path.join(extractRoot, "text", `operation:op-letter-${index}.txt`),
+        `letter ${fixtureClients.alpha}.20001US01 about application 11/223,344`
+      ),
+    { discard: true }
+  );
+
+  const mailRoot = path.join(corpusRoot, "staging", `extract-${mailRun}`);
+  yield* fs.makeDirectory(path.join(mailRoot, "metadata"), { recursive: true });
+  yield* fs.makeDirectory(path.join(mailRoot, "text"), { recursive: true });
+  yield* fs.writeFileString(path.join(mailRoot, "text", "operation:op-mail-filing.txt"), "filing receipt attached");
+  const mailLines = yield* Effect.forEach(
+    [
+      ["filing", mailDigests.filing],
+      ["answer", mailDigests.answer],
+      ["missing", mailDigests.noMetadata],
+    ] as const,
+    ([name, digest]) =>
+      encodeFixtureSource(
+        FixtureSourceRow.make({
+          artifactId: `artifact-mail-${name}`,
+          digest,
+          engine: "tika",
+          format: "message",
+          operationId: `operation:op-mail-${name}`,
+          relativePath: `text/operation:op-mail-${name}.txt`,
+          sizeBytes: 20,
+          status: "succeeded",
+        })
+      )
+  );
+  yield* fs.writeFileString(path.join(mailRoot, "sources.jsonl"), `${A.join(mailLines, "\n")}\n`);
+  yield* fs.writeFileString(
+    path.join(mailRoot, "metadata", "operation:op-mail-filing.json"),
+    yield* json({
+      "Content-Type": "message/rfc822",
+      "Message-Cc": '"Docketing, Example" <Docketing@Example.com>',
+      "Message-From": "Pat Example <Pat@Example.com>",
+      "Message-To": [`Ann Attorney <ann@${practiceDomain}>`, "sam@other.test"],
+      "dcterms:created": "2026-02-01T10:00:00Z",
+    })
+  );
+  // Recursive Tika output: an array whose first object is the message itself.
+  yield* fs.writeFileString(
+    path.join(mailRoot, "metadata", "operation:op-mail-answer.json"),
+    yield* json([
+      {
+        "Message-From": "Sam Other",
+        "Message-To": "Pat Example <pat@example.com>",
+        "Message:From-Email": "sam@other.test",
+        "dcterms:created": ["2026-03-01T09:00:00Z"],
+      },
+      { "Content-Type": "application/pdf" },
+    ])
+  );
+
+  const contactsPath = path.join(corpusRoot, "contacts.jsonl");
+  const contact = (
+    contactId: string,
+    displayName: string,
+    address: string,
+    role: boolean,
+    links: ReadonlyArray<readonly [string, string | null, string]>
+  ) =>
+    json({
+      contactId,
+      displayName,
+      emails: [{ address, role }],
+      links: A.map(links, ([clientNumber, familyKey, source]) => ({
+        clientNumber,
+        evidence: "fixture",
+        familyKey,
+        source,
+      })),
+      organization: null,
+      sources: ["csv"],
+    });
+  const contactLines = yield* Effect.all([
+    contact("c_aaaaaaaaaaaa", "Pat Example", "pat@example.com", false, [
+      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-answer"],
+      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
+      [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
+    ]),
+    // The attorney's own matter number has the dotted shape of a family key but is no matter (D-20).
+    contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
+      [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
+    ]),
+    // A family key keyed to another client than the link's own.
+    contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
+      [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
+    ]),
+    contact("c_bbbbbbbbbbbb", "Example Docketing", "docketing@example.com", true, [
+      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
+    ]),
+    contact("c_cccccccccccc", "Sam Other", "sam@other.test", false, [
+      [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
+      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "email-subject-ref"],
+      [fixtureClients.beta, null, "org-name-match"],
+    ]),
+  ]);
+  yield* fs.writeFileString(contactsPath, A.join(contactLines, "\n"));
+  return contactsPath;
 });
 
 const makeFixtureCorpus = Effect.fn("PracticeKgTest.makeFixtureCorpus")(function* () {
@@ -879,7 +1065,7 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
-            '{"bundle_version":"2026-10-06-02","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
+            '{"bundle_version":"2026-10-07-01","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
           ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
       }),
@@ -889,7 +1075,7 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "serves all ten tools from the synthetic fixture bundle and degrades oversized results",
+      "serves the ten graph and document tools from the synthetic fixture bundle and degrades oversized results",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -1144,6 +1330,187 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
+      "attaches a dominant family's application and records who writes about each matter",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const contactsPath = yield* addMailRun(corpusRoot);
+        const bundleOut = path.join(corpusRoot, "bundle-mail");
+        yield* runBuild(
+          PracticeKgOptions.make({
+            ...graphOptions(corpusRoot, bundleOut),
+            contactsPath,
+            includeRuns: [mailRun],
+            practiceDomains: [practiceDomain],
+            skipEmails: true,
+          }),
+          bundleOut
+        );
+        const manifest = yield* fs
+          .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+          .pipe(Effect.flatMap(decodeManifestJson));
+        expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
+          "2026-10-07-01",
+          "4",
+          "4",
+        ]);
+
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          const lines = (statement: string) =>
+            db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
+          expect(
+            yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, address, contact_id, display_name, role_address, is_practice_address, message_count, from_count, to_count, cc_count, first_at, last_at, epistemic_status FROM matter_correspondents ORDER BY family_key, address) x"
+            )
+          ).toStrictEqual([
+            `{"family_key":"${fixtureClients.alpha}.20001","address":"ann@${practiceDomain}","contact_id":null,"display_name":"Ann Attorney","role_address":false,"is_practice_address":true,"message_count":1,"from_count":0,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-02-01T10:00:00Z","epistemic_status":"mention-derived"}`,
+            `{"family_key":"${fixtureClients.alpha}.20001","address":"docketing@example.com","contact_id":"c_bbbbbbbbbbbb","display_name":"Example Docketing","role_address":true,"is_practice_address":false,"message_count":1,"from_count":0,"to_count":0,"cc_count":1,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-02-01T10:00:00Z","epistemic_status":"mention-derived"}`,
+            `{"family_key":"${fixtureClients.alpha}.20001","address":"pat@example.com","contact_id":"c_aaaaaaaaaaaa","display_name":"Pat Example","role_address":false,"is_practice_address":false,"message_count":2,"from_count":1,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-03-01T09:00:00Z","epistemic_status":"mention-derived"}`,
+            `{"family_key":"${fixtureClients.alpha}.20001","address":"sam@other.test","contact_id":"c_cccccccccccc","display_name":"Sam Other","role_address":false,"is_practice_address":false,"message_count":2,"from_count":1,"to_count":1,"cc_count":0,"first_at":"2026-02-01T10:00:00Z","last_at":"2026-03-01T09:00:00Z","epistemic_status":"mention-derived"}`,
+          ]);
+          expect(
+            yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS links FROM contact_client_links) x"
+            )
+          ).toStrictEqual(['{"links":9}']);
+        }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
+
+        const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+        const resources = Layer.mergeAll(
+          Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }),
+          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
+          Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
+        );
+        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(
+          Layer.provideMerge(resources)
+        );
+        yield* Effect.gen(function* () {
+          const toolRows = (name: string, args: Readonly<Record<string, unknown>>) =>
+            callToolText(name, { budgetBytes: 20_000, ...args }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))))
+            );
+          // 4 of the 5 citing documents are alpha's: the application now joins alpha's matter (D-23).
+          const byApplication = yield* toolRows("kg_matter_lookup", { reference: "11/223,344" });
+          expect(A.map(byApplication, (row) => [row.resolution, row.familyKey, row.matchedOn])).toStrictEqual([
+            ["unique", `${fixtureClients.alpha}.20001`, ["application"]],
+          ]);
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          const anchorLines = yield* sql
+            .unsafe(
+              "SELECT row_to_json(x)::text AS line FROM (SELECT n.attribution_source, e.predicate, o.natural_key FROM kg_node n JOIN kg_edge e ON e.subject_iri = n.iri JOIN kg_node o ON o.iri = e.object_iri WHERE n.natural_key = '11223344' ORDER BY e.predicate, o.natural_key) x"
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(anchorLines, (row) => row.line)).toStrictEqual([
+            '{"attribution_source":"mention-dominance","predicate":"continuation_of","natural_key":"87654321"}',
+            `{"attribution_source":"mention-dominance","predicate":"mentioned_in_family","natural_key":"${fixtureClients.alpha}.20001"}`,
+            `{"attribution_source":"mention-dominance","predicate":"mentioned_in_family","natural_key":"${fixtureClients.beta}.20001"}`,
+          ]);
+
+          const correspondent = (address: string) =>
+            toolRows("kg_correspondent_lookup", { address }).pipe(
+              Effect.map(
+                A.map((row) => [
+                  row.resolution,
+                  row.familyKey,
+                  row.clientNumber,
+                  row.messageCount,
+                  row.linkSources,
+                  row.decided,
+                ])
+              )
+            );
+          // Only the decided row says unique, and it leads; header-entry input works too.
+          const patRows = [
+            [
+              "unique",
+              `${fixtureClients.alpha}.20001`,
+              fixtureClients.alpha,
+              2,
+              "attorney-answer | attorney-pc-folder",
+              true,
+            ],
+            ["candidate", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
+          ];
+          expect(yield* correspondent(" Pat@Example.com ")).toStrictEqual(patRows);
+          expect(yield* correspondent("Pat Example <pat@example.com>")).toStrictEqual(patRows);
+          // Under a budget that keeps one minimal row, the kept row is the decided one,
+          // and the minimal tier still says decided; with room for two, the other is a candidate.
+          const budgeted = (budgetBytes: number) =>
+            callToolText("kg_correspondent_lookup", { address: "pat@example.com", budgetBytes }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => ({
+                note: result.note ?? "",
+                rows: A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))),
+                tier: result.tier,
+                truncated: result.truncated,
+              }))
+            );
+          const oneRow = yield* budgeted(200);
+          expect([oneRow.tier, oneRow.truncated]).toStrictEqual(["minimal", true]);
+          expect(A.map(oneRow.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, true, "unique"],
+          ]);
+          expect(oneRow.note).toContain(`decided matter: ${fixtureClients.alpha}.20001.`);
+          const twoRows = yield* budgeted(250);
+          expect([twoRows.tier, twoRows.truncated]).toStrictEqual(["minimal", false]);
+          expect(A.map(twoRows.rows, (row) => [row.familyKey, row.decided, row.resolution])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, true, "unique"],
+            [`${fixtureClients.beta}.20001`, false, "candidate"],
+          ]);
+          // A family key that is no matter, or is keyed to another client, never decides.
+          expect(yield* correspondent("lee@example.com")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.00012`, fixtureClients.alpha, 0, "attorney-answer", false],
+          ]);
+          expect(yield* correspondent("kim@example.com")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.beta, 0, "attorney-answer", false],
+          ]);
+          const invalid = yield* callToolText("kg_correspondent_lookup", {
+            address: "Pat Example <pat@example.com>, sam@other.test",
+          }).pipe(Effect.flatMap(decodeToolErrorJson));
+          expect([invalid.tool, invalid.reason, invalid.message]).toStrictEqual([
+            "kg_correspondent_lookup",
+            "invalid-input",
+            "Expected one email address; the input holds 2.",
+          ]);
+          // A role mailbox never resolves, however clear its link.
+          expect(yield* correspondent("docketing@example.com")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 1, "attorney-pc-folder", false],
+          ]);
+          // Inferred links rank candidates; they never decide.
+          expect(yield* correspondent("sam@other.test")).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 2, "email-subject-ref", false],
+            ["ambiguous", `${fixtureClients.beta}.20001`, fixtureClients.beta, 0, "org-name-match", false],
+            ["ambiguous", null, fixtureClients.beta, 0, "org-name-match", false],
+          ]);
+          expect(yield* correspondent(`ann@${practiceDomain}`)).toStrictEqual([
+            ["ambiguous", `${fixtureClients.alpha}.20001`, fixtureClients.alpha, 1, "", false],
+          ]);
+          expect(yield* correspondent("nobody@nowhere.test")).toStrictEqual([]);
+          const verified = yield* verifyPracticeKgBundle;
+          expect([
+            verified.ok,
+            verified.correspondents,
+            verified.correspondentsWithoutMatter,
+            verified.contactLinksWithoutMatter,
+          ]).toStrictEqual([true, 4, 0, 1]);
+          // A store that cannot answer is reported as a typed store fault.
+          const duckdb = yield* DuckDb;
+          yield* duckdb.run("DROP TABLE contact_addresses");
+          const failure = yield* callToolText("kg_correspondent_lookup", { address: "pat@example.com" }).pipe(
+            Effect.flatMap(decodeToolErrorJson)
+          );
+          expect([failure.tool, failure.reason]).toStrictEqual(["kg_correspondent_lookup", "store-query-failed"]);
+        }).pipe(provideScopedLayer(host));
+      }),
+      { timeout: 120_000 }
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
       "folds an included run in, reads its folder paths, and keeps the docket register for unnamed families",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1176,6 +1543,7 @@ describe("practice KG projections", () => {
           PracticeKgOptions.make({
             ...graphOptions(corpusRoot, bundleOut),
             docketRegisterPath: registerPath,
+            bundleVersion: "2026-10-06-09",
             includeRuns: [workingRun],
             skipEmails: true,
           }),
@@ -1187,9 +1555,9 @@ describe("practice KG projections", () => {
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
           .pipe(Effect.flatMap(decodeManifestJson));
         expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
-          "2026-10-06-02",
-          "3",
-          "3",
+          "2026-10-06-09",
+          "4",
+          "4",
         ]);
         expect([
           manifest.sourceRuns.base,
@@ -1201,10 +1569,19 @@ describe("practice KG projections", () => {
           const db = yield* DuckDb;
           const lines = (statement: string) =>
             db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
+          // An organized file that the included run also holds still reports the organizer's
+          // copy; the origin chain is where both runs show.
+          expect(
+            yield* lines(
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, size_bytes, mtime_iso, source_origin_chain FROM documents WHERE digest = '${fixtureDigests.family}') x`
+            )
+          ).toStrictEqual([
+            `{"run_label":"base","size_bytes":11,"mtime_iso":"2026-01-02T03:04:05.000Z","source_origin_chain":"${workingRun}:source-b:Loose files/family-notes copy.txt <- base:fixture-source:family-notes.txt"}`,
+          ]);
           // One docket in the path files the row under it; two leave it unsorted.
           expect(
             yield* lines(
-              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' AND digest <> '${fixtureDigests.family}' ORDER BY digest) x`
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' ORDER BY digest) x`
             )
           ).toStrictEqual([
             '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',

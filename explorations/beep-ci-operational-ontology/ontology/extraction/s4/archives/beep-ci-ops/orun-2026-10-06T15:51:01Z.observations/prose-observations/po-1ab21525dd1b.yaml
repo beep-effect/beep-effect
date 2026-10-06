@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 24,
+    "end_line": 31
+  },
+  "quote": "- id: iv-870-weighted-admission\n  title: \"PR #870 — machine-wide weighted admission scheduler\"\n  class: OperationalChangeEvent\n  causalStatus: observational          # upgrade requires the §2 supporting design\n  landedAt: \"2026-08-27T19:52:03Z\"\n  mergeCommit: debbbb51f77ae10015788dec0b819f12b96c3552\n  pr: 870\n  mechanismChanged: admission          # per-origin proof lock RETAINED (until #929); a weighted",
+  "epistemic_status": "quoted_prose"
+}

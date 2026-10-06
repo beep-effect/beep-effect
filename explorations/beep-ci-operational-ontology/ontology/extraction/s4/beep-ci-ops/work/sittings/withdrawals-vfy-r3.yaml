@@ -1,0 +1,67 @@
+run: "orun-2026-10-06T15:51:01Z"
+seat: synthesis
+pass: revision
+batch: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/denotation-batches/batch-vfy.txt"
+date: "2026-10-06"
+authority:
+  - id: "otp:vfy-admission-work-kind:001"
+    ruling: 27
+    sentence: "Withdrawn because its round-3 review failed on support-not-necessary and Ruling 11 ends a round-3 FAIL in withdrawal with named evidence."
+scope: >-
+  Withdrawal receipt for the one proposal the r3 withdraw row names. This seat deletes nothing:
+  the proposal file and its three review files stay in place for the orchestrator to verify
+  against the digests below and delete. No other proposal's bytes were changed in this pass.
+  Dependents check over every proposal file the input manifest names: none names this id in
+  semantic_support_for or this term in parents; otp:vfy-admission-charge:001 mentions it in one
+  open_issues line only, which is prose routing, not a support or parent edge.
+withdrawals:
+  - id: "otp:vfy-admission-work-kind:001"
+    hypothesis: "dh:vfy-admission-work-kind:001"
+    term: AdmissionWorkKind
+    proposal_sha256: "8fc6d6083ea5a9718e616d149d608adec9ff782da73b2fc3899fb678eff7f670"
+    reviews:
+      - file: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-admission-work-kind-001.review.yaml"
+        sha256: "4dcc5763195ca44553b7f19a5bf3aec01223e6ce7025d691e863024b15cadeaf"
+      - file: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-admission-work-kind-001-r2.review.yaml"
+        sha256: "1d553f102fd41ef667a1587b4da827d5bec29732b203137bdd1bd086c1bcb1b2"
+      - file: "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/work/proposals/otp-vfy-admission-work-kind-001-r3.review.yaml"
+        sha256: "b9fc7311eb1c32896d87e5bfcde29f20947da00c66948abe15d9bafa1736ee3b"
+    landed_rules_unanswered:
+      - support-not-necessary
+    dependents: []
+    reason: >-
+      The round-3 review FAILed the bytes 8fc6d6083ea5 on support-not-necessary against the
+      disambiguation arm: the kind and priority values of a seat request are already kept apart by
+      distinct properties and distinct qualified member names, the class could type the kind value
+      only through a range on hasWorkKind that no cited record carries, and the check case (kind and
+      priority both publish) is carried by no cited chain. With no remaining decision warrant (CQ-021
+      reaches the kind only as an untyped object) and no checkable support dependency, the term has
+      no warrant in this run.
+    retained_evidence:
+      - "po:sha256:2f209664dde0f3a3d8880b960facd47d5fad86683678ed5b126a2bdc986c390f"
+      - "so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c"
+      - "so:sha256:0d75ae7174ed0d50eaeb7d137e7aa98090fa268adb4bf725eab6d41aab946382"
+      - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+      - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+      - "so:sha256:a8d270b5e19db57e5018ec2995ada6953c3306d8d585d72e1e5be947eddb3192"
+    needed_evidence: >-
+      A warrant the term can stand on: either a pinned Must/Should CQ whose query types the kind
+      value as ciops:AdmissionWorkKind (a Must/Should CQ is required and run 4 admits no CQ edit
+      beyond CQ-009), or a ratified range of ciops:hasWorkKind equal to AdmissionWorkKind together
+      with a SeatRequest definition or constraint stating that a request has exactly one work kind
+      drawn from that class; and, to make the disambiguation case real, an admission chain carrying
+      kind=publish beside priority=publish. For the category question (fa:vfy-admission-work-kind:001,
+      verbatim): A record that joins one admission chain to the work run under its grant (an
+      attempt-journal start row or proof-ledger facts sharing the chain's attemptId), for at least
+      two different kind values, showing whether the stage, lanes or tree grain of the work differ by
+      kind (subkind reading) or not (code reading); or the deployed definition of what each
+      AdmissionWorkKind member causes the scheduler to run.
+    rivals_preserved:
+      - >-
+        categorizer over requested work, members as rigid subkinds (merged-tree preview work, full
+        proof work, review-fix work, publish work) (fa:vfy-admission-work-kind:001, still viable)
+      - >-
+        controlled-vocabulary code list, members as scheduling classes that fix charge only
+        (fa:vfy-admission-work-kind:001, still viable; the adversary's discriminating fact: an
+        admission chain joined by attemptId to the stage, lanes or tree of the work run under its
+        grant, for two different kind values)

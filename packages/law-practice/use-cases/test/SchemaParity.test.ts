@@ -129,7 +129,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
     { arbitrary: fcRuns(10) }
   );
 
-  it("composes the ten-tool practice KG surface with a typed claims not-loaded branch", () => {
+  it("composes the eleven-tool practice KG surface with a typed claims not-loaded branch", () => {
     const notLoaded = PracticeKgCandidateClaimsNotLoadedResult.make({
       available: false,
       bundle_version: "fixture-1",
@@ -137,7 +137,7 @@ describe("@beep/law-practice-use-cases schema parity", () => {
       reason: "claims batch not yet loaded",
     });
 
-    expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(10);
+    expect(Object.keys(PracticeKgToolkit.tools)).toHaveLength(11);
     pipe(S.is(PracticeKgCandidateClaimsResult)(notLoaded), assertTrue);
   });
 

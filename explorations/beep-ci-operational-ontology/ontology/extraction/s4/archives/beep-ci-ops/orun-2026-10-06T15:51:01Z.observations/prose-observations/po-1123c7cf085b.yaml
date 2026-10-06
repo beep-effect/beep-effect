@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 1141,
+    "end_line": 1148
+  },
+  "quote": "- id: iv-1422-spot-pool-drop-r6a\n  title: \"PR #1422 — r6a.2xlarge leaves the heavy CI Spot fleet, eight instance types to seven (applied 2026-10-06)\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-10-06T02:22:00Z\"\n  mergeCommit: 721d1239b193b8ce3899fd5243e00fca0bd5a378\n  pr: 1422\n  mechanismChanged: hosted-runner-capacity",
+  "epistemic_status": "quoted_prose"
+}

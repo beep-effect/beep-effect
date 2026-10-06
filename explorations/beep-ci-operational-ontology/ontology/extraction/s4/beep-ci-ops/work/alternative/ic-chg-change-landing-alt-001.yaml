@@ -1,0 +1,99 @@
+id: "ic:chg-change-landing-alt:001"
+hypothesis_ref: "dh:chg-change-landing:001"
+referent_grain: >-
+  A dated occurrence: one alteration of a verification mechanism (admission, ordering,
+  gate selection, lane assembly, sharding, cache inputs, hosted-runner capacity) becoming
+  effective. Not the ledger row that records it, not the pull request or merge commit that
+  carries the alteration, and not the per-checkout adoption of it.
+identity:
+  supplies_identity: unresolved
+  identity_criterion: >-
+    Two landings are the same individual iff they are the same occurrence of one
+    alteration of a verification mechanism becoming effective at one instant. The pr
+    number, the mergeCommit value and the landedAt value are evidence for reidentifying
+    a landing, never the criterion. Under this criterion one landing recorded in two rows
+    is one landing. A row that records both a merge and a later infrastructure apply may
+    record two occurrences. Whether merge or apply is the occurrence that counts as "the
+    landing" is unresolved: no record gives the merge time and the apply or live time
+    separately for one change.
+  reidentification_key:
+    - "pr"
+    - "mergeCommit"
+    - "landedAt"
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: unresolved
+  unity: >-
+    unresolved: the records do not say whether one landing unifies a merge and a later
+    apply. The rows titled 'applied <date>' or 'live <date>' carry one landedAt each and
+    also a mergeCommit and a pr, so their unity is undecided. For the other rows, one row
+    gives one instant, and that is consistent with a single unified occurrence.
+  dependence: relational
+ufo_analysis:
+  candidate_category: event
+  alternatives:
+    - "information_object: the curated ledger row that records the landing"
+    - "information_object: the change artifact (pull request and its merge commit)"
+    - "process: a rollout that runs from merge through infrastructure apply to per-checkout adoption"
+  existential_dependencies:
+    - "the alteration it makes effective, carried by a pull request or an applied configuration"
+    - "the verification mechanism that is altered (the mechanismChanged tag is ledger governance and is not used as evidence of the mechanism's kind)"
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: false
+  terminal_states: []
+counterexamples:
+  - description: >-
+      The #1019 row (po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf)
+      is titled 'superseded by #1022'. The #1022 row
+      (po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b) lands
+      later on the same day. A revision reading says this is ONE change landed twice. The
+      criterion counts two landings, because there are two occurrences at two instants,
+      and leaves "one change revised" to the alteration continuant. The counterexample
+      fails against the landing criterion. It survives against any criterion that
+      individuates the change itself.
+  - description: >-
+      The #1141 row (po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1)
+      is titled 'live 2026-09-15' but carries a landedAt on 2026-09-16 UTC. If the live
+      instant and the recorded instant are two occurrences (a go-live and a merge), the row
+      records two candidate landings. The criterion cannot say which one is "the" landing,
+      which is why supplies_identity stays unresolved.
+  - description: >-
+      The #870 row (po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2)
+      notes that the per-origin proof lock was 'RETAINED (until #929)', and the #929 row
+      (po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6) retires
+      it 'after drain'. If one admission redesign landed in two steps, the criterion splits
+      one intended change into two landings. On these records that is acceptable: the rows
+      date two distinct effective instants.
+status: proposed
+evidence_refs:
+  - "po:sha256:1ab21525dd1b081d1f15b84ebeefa92c4ce794f20f2d697cca2c9b7ba8acc4e2"
+  - "po:sha256:2654950d9b964315bef9ac21e038fdd3078b24b9c8a88692dc9f4002854079b6"
+  - "po:sha256:c5670323bacb24ef4541fbbc8977b3cd906ef65414f4402c88bfdfbc584e4ebf"
+  - "po:sha256:18f1c2cefe0554207b08ea7611faf766c91707712f743a5f68a484181ccf9b4b"
+  - "po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b"
+  - "po:sha256:6a21b95a56d8945ce46b6cf50bc487e44d16136cf13e545cea81d5b5b28edde1"
+  - "po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd"
+  - "po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361"
+  - "po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f"
+rationale: >-
+  The category is event, based on the evidence alone. CQ-016 asks when each change landed.
+  The KPI law section 2 quote
+  (po:sha256:d63c0a7e9e45785273230beae335f469760cdbfe3af9bd3502d00d72ffd1ca7f) partitions
+  KPI series at wall-clock landedAt and speaks of 'the KPI moved after X landed', which is
+  language about an occurrence. The rows date alterations of things the ledger does not
+  hold, for example 'the heavy CI pool moves from Spot to On-Demand (applied 2026-09-09)'
+  (po:sha256:95263f790b62e80a2278afabce517661109a66aa3425d23dd4e3aa68e590f81b).
+  Rigid: whatever is a landing is a landing in every circumstance in which it exists.
+  Dependence is relational because the occurrence depends on the alteration and the
+  mechanism it participates in. may_change_state_without_losing_identity is false: an
+  occurred landing does not change, and later supersession or retirement is a further
+  occurrence, not a state change of this one.
+  exists_during_interval is unresolved. Each row gives one instant, but the
+  'applied'/'live' rows (po:sha256:846d044b5a5d7f068d5c4ce2ed7fe24ebc8b18a657388afb47b26b942a45f2cd,
+  po:sha256:1123c7cf085b71bd095f8cb98c97a4a83677ecc32373784ea9c187a252a77361) leave open
+  whether a landing spans the time from merge to apply. Adoption per checkout is a
+  distinct occurrence by the KPI law's own text, so it is not part of the landing.
+  The self-applied class line, the row id, the mechanismChanged tag and the causalStatus
+  value are not used as evidence.

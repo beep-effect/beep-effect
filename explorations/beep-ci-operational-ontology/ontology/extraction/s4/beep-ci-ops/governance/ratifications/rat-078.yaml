@@ -1,0 +1,12 @@
+id: rat:78
+proposal_ref: otp:vfy-verification-lane:001
+proposal_sha256: 23c86967b5d5e0b55788227b61870bde3818cc03adfbb38d78ad95c5b19ac7ff
+decision: accept
+steward:
+  id: orchestrator-under-autonomy-charter
+  name: ciops run-4 orchestrator session, operator autonomy charter of 2026-10-06
+decided_at: '2026-10-06T20:48:42Z'
+verbatim_decision: 'Accept otp:vfy-verification-lane:001 as an exact reuse of VerificationLane, warranted
+  by CQ-001 alone because its CQ-006 citation is void, affirming the ratified rigid value. These are the
+  row''s first flags: identity by lane name against command content, information object against process
+  type, the single observed lane class, and the grain beside the turbo task specification card.'

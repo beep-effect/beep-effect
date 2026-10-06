@@ -1,0 +1,36 @@
+id: dh:vfy-admission-engagement:001
+observation_refs:
+- so:sha256:0ddb10ca516c6c4510a411df4cf8b5dbc0c021f06e690afe5b8ac507928e19cd
+- so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467
+- so:sha256:860cff0d673e93aaa9ec8db4d85fe43cfdd89d22b92e5ba29966346fee8a35a1
+- so:sha256:8fcf58cfd24c1c0a784f4b68f0eae180755b356dd9bfbde9c360624864e2ec20
+- so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1
+- so:sha256:a9ed1352e2bca5c2c3ca9f5bff72e936dd668a90cc4f1842ba3512cf9dd29020
+- so:sha256:c01a58325c68c56c5ce297399e92f0844bdd2c041a5c11b1dddf5fcaf32772cb
+- so:sha256:d99a3c53086c3ec23d615614f4fc617cc9000d56600a647936d10b002adc4d3c
+cq_warrants: []
+proposed_referent:
+  label: admission engagement (one nonce-bounded admission, from enqueue through grant to its end)
+  description: 'Rival to the request/grant split. One instance would be the whole admission a single chain records: enqueued,
+    admitted and then released or evicted, under one `nonce`, with the queued request and the held grant as its phases rather
+    than two individuals. The chains that show both phases instantiate it: the five admitted-and-released chains, the two
+    lease-evicted chains and the record-0 admitted stanza. No pinned CQ needs the whole engagement; it bears on how the CQ-warranted
+    kinds dh:vfy-seat-request:001 (CQ-021, CQ-023) and dh:vfy-seat-grant:001 (CQ-008, CQ-009, CQ-010) are individuated, so
+    it is judged on evidence with no warrant of its own.'
+representation_status: unresolved
+alternatives:
+- label: two individuals, a seat request and a seat grant (dh:vfy-seat-request:001, dh:vfy-seat-grant:001)
+  representation_status: domain_referent
+  plausibility: viable
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The shared `nonce` across the enqueued, admitted and ended rows of one chain is an identifier and decides nothing.
+    Needed evidence: a record of one chain whose admitted row changes a member the enqueued row fixed (charge, owner, checkout),
+    which would show two individuals, or a record showing the grant inheriting the request''s history (an enqueue instant
+    carried as the grant''s own wait), which would favour one engagement.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.35
+  use_for_acceptance: false

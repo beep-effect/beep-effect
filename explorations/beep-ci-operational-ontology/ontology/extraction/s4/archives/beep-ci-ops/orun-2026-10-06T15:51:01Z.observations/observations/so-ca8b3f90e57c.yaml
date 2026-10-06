@@ -1,0 +1,96 @@
+{
+  "id": "so:sha256:ca8b3f90e57c22461d21f2b3bf2dad01149119aa674f540e81317a908f3f0610",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 11,
+    "end_line": 81,
+    "content_sha256": "2f91a117e827e64ea32fd1905c0539b4c8c77d1225aee8b51218069f7123249e"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect/chore_deps-update-08-23-26-cadf4f69e957/attempts.properties:record=1",
+    "lexical_name": "recordedAt",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "committed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "createdAt=2026-08-23T17:01:07.524Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "durationMs=7094.398349"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "elapsedMs=81605"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "endedAt=2026-08-23T17:01:07.524Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "exitCode=0"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failedStepId=prepare:05-docgen"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failureKind=step-exit"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "failurePolicy=fail-fast"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "id=prepare:01-effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "indexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "label=prepare:laws:effect-imports"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "outcome=failure"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "phase=prepare"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "pushed=false"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "recordedAt=2026-08-23T17:01:07.524Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "status=passed"
+    }
+  ],
+  "source_excerpt": "# record 1\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=d1e2faf7-31d5-4b94-b672-7a70c8f7d015\nrecordedAt=2026-08-23T17:01:07.524Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=@chore/deps-update-08-23-26\ncommitted=false\ncreatedAt=2026-08-23T17:01:07.524Z\nfailurePolicy=fail-fast\nhead=HEAD\nid=prepare:01-effect-imports\nlabel=prepare:laws:effect-imports\nphase=prepare\nstatus=passed\ndurationMs=7094.398349\nexitCode=0\nid=prepare:02-terse-effect\nlabel=prepare:laws:terse-effect\nphase=prepare\nstatus=passed\ndurationMs=17391.846084\nexitCode=0\nid=prepare:03-config-sync\nlabel=prepare:config-sync\nphase=prepare\nstatus=passed\ndurationMs=6601.481331\nexitCode=0\nid=prepare:04-lint-fix\nlabel=prepare:lint:fix\nphase=prepare\nstatus=passed\ndurationMs=3145.06807\nexitCode=0\nid=prepare:05-docgen\nlabel=prepare:docgen\nphase=prepare\nstatus=failed\ndurationMs=47356.549767\nexitCode=1\nrepairCommand=Run `bun run docgen:local` for edit loops or `bun run docgen` for the full proof.\nid=feedback:01-build\nlabel=feedback:build\nphase=feedback\nstatus=not-run\nid=feedback:02-check\nlabel=feedback:check\nphase=feedback\nstatus=not-run\nid=feedback:03-lint\nlabel=feedback:lint\nphase=feedback\nstatus=not-run\nid=feedback:04-test\nlabel=feedback:test\nphase=feedback\nstatus=not-run\nmessage=yeet prepare phase failed.\nmode=repair\noutcome=failure\npushed=false\nrunId=chore_deps-update-08-23-26-cadf4f69e957\nattemptId=d1e2faf7-31d5-4b94-b672-7a70c8f7d015\nstartedAt=2026-08-23T16:59:45.919Z\nendedAt=2026-08-23T17:01:07.524Z\nelapsedMs=81605\nindexPath=<fleet>/beep-effect/.beep/yeet/quality-issue-index.json\nfailedStepId=prepare:05-docgen\nfailureKind=step-exit\n",
+  "epistemic_status": "parser_derived"
+}

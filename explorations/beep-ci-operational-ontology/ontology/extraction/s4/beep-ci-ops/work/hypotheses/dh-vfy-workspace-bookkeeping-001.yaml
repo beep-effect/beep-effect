@@ -1,0 +1,27 @@
+id: dh:vfy-workspace-bookkeeping:001
+observation_refs:
+- so:sha256:759ba7836a3c2ec434bebcece5db53d4985f8d001bf84b7baef48eeb9a2d4ecc
+- so:sha256:5732c46dc07bd092a442bae40ee2e4466975f7d197c7264b9dc5dd8131de597a
+- so:sha256:ba38c5b8d80ccd24f9ea2714629fe1a0e82d998621fc35d72a1826ab837e2ed4
+cq_warrants: []
+proposed_referent:
+  label: repair-loop workspace bookkeeping (merge base, stash marker, overlapping paths)
+  description: 'The observed construct: attempt-journal keys about the local git workspace, `behindCount` and `mergeBase`
+    (so-759ba7836a3c), a staged-only stash `marker` and `stashSha` (so-5732c46dc07b), and `overlappingPaths` (so-ba38c5b8d80c).
+    Grouped as one construct: bookkeeping the pipeline keeps to restore or compare the working tree.'
+representation_status: implementation_artifact_only
+alternatives:
+- label: tree state of the checkout relative to its base
+  representation_status: unresolved
+  plausibility: weak
+null_hypothesis:
+  label: implementation artifact only
+  rejected: false
+  rationale: 'The null stands: these keys record how the tool manipulates the working tree; no pinned CQ needs them and no
+    CQ-warranted kind is shown to depend on them. The named missing decision is: a Must/Should CQ is required and run 4 admits
+    no CQ edit beyond CQ-009.'
+  discriminator: ''
+epistemic_status: proposed
+confidence:
+  value: 0.6
+  use_for_acceptance: false

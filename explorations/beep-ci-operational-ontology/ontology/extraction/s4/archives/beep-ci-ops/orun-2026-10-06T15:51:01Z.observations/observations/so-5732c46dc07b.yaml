@@ -1,0 +1,36 @@
+{
+  "id": "so:sha256:5732c46dc07bd092a442bae40ee2e4466975f7d197c7264b9dc5dd8131de597a",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/attempts/beep-effect12/codex_security-findings-2026-09-08-fca6d1290697/attempts.properties"
+  },
+  "source_span": {
+    "start_line": 939,
+    "end_line": 1040,
+    "content_sha256": "e48e436e9c7c6028e8d9e7ea35a5b9564a90caac7ee7e8ed46ae468c815f39bf"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/attempts/beep-effect12/codex_security-findings-2026-09-08-fca6d1290697/attempts.properties:record=21",
+    "lexical_name": "marker",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "marker=yeet-staged-only/codex_security-findings-2026-09-08-fca6d1290697/2026-09-09T03:15:12.259Z"
+    },
+    {
+      "predicate": "config_key_value",
+      "object": "stashSha=b2675def82c2fb2d4d6c81efa6eef38563db102f"
+    }
+  ],
+  "source_excerpt": "# record 21\nschemaVersion=yeet-attempt-journal/v1\n_tag=attempt-finished\nattemptId=36b4f9da-78fe-4d10-9eb4-a78a1587309f\nrecordedAt=2026-09-09T03:15:28.966Z\nschemaVersion=yeet-verdict/v2\nbase=origin/main\nbranch=codex/security-findings-2026-09-08\ncommitted=true\ncreatedAt=2026-09-09T03:15:28.966Z\nfailurePolicy=fail-fast\nhead=b174a77c584c5f2005e21acfc7de1e788c3b94e1\nid=advisory:01-fallow-feedback\nlabel=fallow-advisory-feedback\nphase=feedback\nstatus=passed\ndurationMs=1725.694892\npeakRssKb=502468\nexitCode=0\ntier=full\nid=commit:01-git-commit\nlabel=commit:git:commit\nphase=commit\nstatus=passed\ndurationMs=2543.508218\npeakRssKb=4936856\nexitCode=0\ntier=full\nid=publish:00-head-install-preflight\nlabel=publish:head-install-preflight\nphase=early-publish\nstatus=passed\ndurationMs=11351.50967\nexitCode=0\ntier=full\nid=publish:01-git-push\nlabel=early-publish:git:push\nphase=early-publish\nstatus=passed\ndurationMs=1520.732971\npeakRssKb=14220\nexitCode=0\ntier=full\nid=publish:02-pr-create\nlabel=publish:pr-create\nphase=early-publish\nstatus=not-run\ntier=full\nid=publish:03-pr-provenance-stamp\nlabel=publish:pr-provenance-stamp\nphase=early-publish\nstatus=not-run\ntier=full\nid=full:00-cheap-gates\nlabel=full:cheap-gates\nphase=full\nstatus=not-run\ntier=full\nid=full:01-pre-push\nlabel=full:pre-push\nphase=full\nstatus=not-run\ntier=full\nid=full:02-ci-parity\nlabel=full:ci-parity\nphase=full\nstatus=not-run\ntier=full\nid=monitor:01-pr-context\nlabel=monitor:pr-context\nphase=monitor\nstatus=not-run\ntier=full\nid=monitor:02-pr-checks-watch\nlabel=monitor:pr-checks:watch\nphase=monitor\nstatus=not-run\ntier=full\nmode=publish\noutcome=failure\npushed=true\nrunId=codex_security-findings-2026-09-08-fca6d1290697\nattemptId=36b4f9da-78fe-4d10-9eb4-a78a1587309f\nresolvedHeadSha=b174a77c584c5f2005e21acfc7de1e788c3b94e1\ndiffFingerprint=02befbce13a8b86ca838b4aa6254edaad8ebcc7bb5eab01931794b16b7461d9e\nproofTier=full\nstartedAt=2026-09-09T03:15:10.102Z\nendedAt=2026-09-09T03:15:28.966Z\nelapsedMs=18865\nindexPath=<fleet>/beep-effect12/.beep/yeet/quality-issue-index.json\nbehindCount=1\nmergeBase=ed66cbce8f17111458f8b4801ec417d9adafaabd\ncreatedAt=2026-09-09T03:15:12.259Z\nmarker=yeet-staged-only/codex_security-findings-2026-09-08-fca6d1290697/2026-09-09T03:15:12.259Z\nstashSha=b2675def82c2fb2d4d6c81efa6eef38563db102f\nfailedStepId=publish:02-pr-create\nfailureKind=handler-error\nresolvedHeadSha=b174a77c584c5f2005e21acfc7de1e788c3b94e1\ndiffFingerprint=02befbce13a8b86ca838b4aa6254edaad8ebcc7bb5eab01931794b16b7461d9e\nproofTier=full\nenvProfile=local\nstage=pre-push\n",
+  "epistemic_status": "parser_derived"
+}

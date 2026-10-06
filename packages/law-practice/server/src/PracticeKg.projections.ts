@@ -16,6 +16,14 @@ import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
+import { readPracticeKgContacts } from "./PracticeKg.contacts.ts";
+import {
+  buildPracticeKgCorrespondentTables,
+  PracticeKgCorrespondentTablesInput,
+  PracticeKgEmailMessagesInput,
+  readPracticeKgEmailMessages,
+  writePracticeKgCorrespondentTables,
+} from "./PracticeKg.correspondents.ts";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import {
@@ -47,6 +55,7 @@ import {
   PracticeKgSummary,
 } from "./PracticeKg.schemas.ts";
 import type { KgAttributionSource, KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
+import type { PracticeKgContact } from "./PracticeKg.contacts.ts";
 import type { PracticeKgAnchorResolution, PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
 import type { PracticeKgReferenceScans } from "./PracticeKg.references.ts";
 import type { PracticeKgDocketRegisterRow } from "./PracticeKg.register.ts";
@@ -58,7 +67,7 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-06-02";
+const graphBundleVersion = "2026-10-07-01";
 const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
 
@@ -89,6 +98,12 @@ const decodeReconciliationRows = S.decodeUnknownEffect(S.Array(GraphReconciliati
  * included is skipped whole, so its copies of organized files do not change
  * those files' size, date, or origin chain. An included run adds each of its
  * unorganized files once, flagged `runFolded`.
+ *
+ * An organized file reports the run, size, and date of the organizer's copy.
+ * When an included run holds the same file, that copy is ranked after every
+ * copy from a run that is not included, so it never takes the row over; it is
+ * the reported copy only when no other exists. The origin chain still lists
+ * every run and path, and is the relation to read for "which runs hold this".
  */
 const catalogRowsSql = `
 WITH included_runs AS (
@@ -99,6 +114,20 @@ skipped_runs AS (
   FROM corpus_source_files f
   WHERE NOT EXISTS (SELECT 1 FROM corpus_organized o WHERE o.digest = f.digest)
     AND NOT EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label)
+),
+ranked_copies AS (
+  SELECT
+    f.digest,
+    f.size_bytes,
+    f.mtime_iso,
+    f.run_label,
+    f.source_label,
+    f.relative_path,
+    f.run_label || ':' || f.source_label || ':' || f.relative_path AS origin,
+    CASE WHEN EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label) THEN 1 ELSE 0 END
+      AS included_rank
+  FROM corpus_source_files f
+  WHERE NOT EXISTS (SELECT 1 FROM skipped_runs k WHERE k.run_label = f.run_label)
 )
 SELECT
   o.digest,
@@ -120,12 +149,11 @@ FROM corpus_organized o
 LEFT JOIN (
   SELECT
     digest,
-    ARG_MIN(size_bytes, run_label || ':' || source_label || ':' || relative_path) AS size_bytes,
-    ARG_MIN(mtime_iso, run_label || ':' || source_label || ':' || relative_path) AS mtime_iso,
-    ARG_MIN(run_label, run_label || ':' || source_label || ':' || relative_path) AS run_label
-    ,STRING_AGG(run_label || ':' || source_label || ':' || relative_path, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
-  FROM corpus_source_files f
-  WHERE NOT EXISTS (SELECT 1 FROM skipped_runs k WHERE k.run_label = f.run_label)
+    ARG_MIN(size_bytes, included_rank || ':' || origin) AS size_bytes,
+    ARG_MIN(mtime_iso, included_rank || ':' || origin) AS mtime_iso,
+    ARG_MIN(run_label, included_rank || ':' || origin) AS run_label
+    ,STRING_AGG(origin, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
+  FROM ranked_copies
   GROUP BY digest
 ) s USING (digest)
 UNION ALL
@@ -701,7 +729,7 @@ const projectGraph = (
   enrichmentRows: ReadonlyArray<PracticeKgEnrichmentRow>,
   scans: PracticeKgReferenceScans,
   registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>
-): ReturnType<typeof buildGraphRows> => {
+): ReturnType<typeof buildGraphRows> & { readonly attributions: ReadonlyArray<PracticeKgDocumentAttribution> } => {
   const attributions = attributeDocuments(
     PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences, registerRows })
   );
@@ -712,7 +740,7 @@ const projectGraph = (
       numberMentions: scans.numberMentions,
     })
   );
-  return buildGraphRows(catalogRows, attributions, resolutions, registerRows);
+  return { ...buildGraphRows(catalogRows, attributions, resolutions, registerRows), attributions };
 };
 
 const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(function* (
@@ -721,7 +749,8 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
   counts: PracticeKgCounts,
   sourceRuns: PracticeKgSourceRuns,
   builtAt: string,
-  corpusSnapshotAt: string
+  corpusSnapshotAt: string,
+  bundleVersion: string
 ) {
   const countsJson = yield* encodePracticeKgCountsJson(counts).pipe(
     PracticeKgProjectionError.mapError("Graph build counts failed JSON encoding.")
@@ -767,7 +796,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
   yield* sql.unsafe(
     `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at, corpus_snapshot_at) VALUES ($1, $2, $3::jsonb, $4, $5)`,
     [
-      graphBundleVersion,
+      bundleVersion,
       A.join(A.prepend(sourceRuns.includedRuns, "base"), runListSeparator),
       countsJson,
       builtAt,
@@ -810,6 +839,20 @@ const readRegisterRows = (
       onNone: () => Effect.succeed(A.empty<PracticeKgDocketRegisterRow>()),
       onSome: (registerPath) =>
         readPracticeKgDocketRegister(registerPath).pipe(
+          Effect.mapError((cause) => PracticeKgProjectionError.make({ cause, message: cause.message }))
+        ),
+    })
+  );
+
+const readContactRows = (
+  options: PracticeKgOptions
+): Effect.Effect<ReadonlyArray<PracticeKgContact>, PracticeKgProjectionError, FileSystem.FileSystem> =>
+  pipe(
+    O.fromUndefinedOr(options.contactsPath),
+    O.match({
+      onNone: () => Effect.succeed(A.empty<PracticeKgContact>()),
+      onSome: (contactsPath) =>
+        readPracticeKgContacts(contactsPath).pipe(
           Effect.mapError((cause) => PracticeKgProjectionError.make({ cause, message: cause.message }))
         ),
     })
@@ -882,6 +925,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
 
   const includedRuns = PracticeKgOptions.includedRuns(options);
   const registerRows = yield* readRegisterRows(options);
+  const contacts = yield* readContactRows(options);
   const catalog = yield* readCatalog(catalogPath, includedRuns);
   const { enrichmentRows, reconciliation } = catalog;
   // Folder-path evidence goes in before the DuckDB store is written, so the
@@ -905,6 +949,19 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   yield* writeMatterTables(duckDbPath)(
     buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows }))
   );
+  const messages = yield* readPracticeKgEmailMessages(
+    PracticeKgEmailMessagesInput.make({ databasePath: duckDbPath, sourceSpecs })
+  );
+  yield* writePracticeKgCorrespondentTables(duckDbPath)(
+    buildPracticeKgCorrespondentTables(
+      PracticeKgCorrespondentTablesInput.make({
+        attributions: graph.attributions,
+        contacts,
+        messages,
+        practiceDomains: options.practiceDomains,
+      })
+    )
+  );
   const builtAt = DateTime.formatIso(yield* DateTime.now);
   const counts = PracticeKgCounts.make({
     documents: S.Natural.make(duckCounts.documents),
@@ -917,17 +974,26 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     includedRuns,
     refresh202607: A.contains(includedRuns, PRACTICE_KG_REFRESH_RUN) ? "included" : "excluded",
   });
-  yield* writePgliteProjection(graph.nodes, graph.edges, counts, sourceRuns, builtAt, reconciliation.snapshotIso).pipe(
+  const bundleVersion = options.bundleVersion ?? graphBundleVersion;
+  yield* writePgliteProjection(
+    graph.nodes,
+    graph.edges,
+    counts,
+    sourceRuns,
+    builtAt,
+    reconciliation.snapshotIso,
+    bundleVersion
+  ).pipe(
     PracticeKgProjectionError.mapError(`Failed building graph PGlite store "${path.join(bundleOut, "kg.pglite")}".`)
   );
 
   const manifest = PracticeKgBundleManifest.make({
     builtAt,
-    bundleVersion: graphBundleVersion,
+    bundleVersion,
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "4", pglite: "4" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(

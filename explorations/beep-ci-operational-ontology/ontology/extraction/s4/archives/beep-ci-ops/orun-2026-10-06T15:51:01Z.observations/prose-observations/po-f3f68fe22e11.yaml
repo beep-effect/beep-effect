@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:f3f68fe22e119fcd646d8a5b9a28ebef53fb4f243baa2c47f3e3d99bf2faea5f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/research/control-interventions.yaml"
+  },
+  "source_span": {
+    "start_line": 410,
+    "end_line": 417
+  },
+  "quote": "- id: iv-1053-check-typechecks-tests\n  title: \"PR #1053 — every package check typechecks its test files\"\n  class: OperationalChangeEvent\n  causalStatus: observational\n  landedAt: \"2026-09-09T11:50:17Z\"\n  mergeCommit: c12c6ae651a3facc3f6e6a5190fd84670ef8a014\n  pr: 1053\n  mechanismChanged: gate-selection",
+  "epistemic_status": "quoted_prose"
+}

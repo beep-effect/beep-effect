@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:1390e007c634f3040f4e6acd644cde3ae9a83fb5b29979d3c947c29821a3711f",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 20,
+    "end_line": 20
+  },
+  "quote": "| `CancelClass` | `CleanCancel`, `DirtyCancel` *(supports: CancelClass — mutating executions may require a drain before cancellation)* | CQ-022; the stopping ruling's clean/dirty cancel — clean = interruption leaves no corrupt state (read-only verification), dirty = mutating executions that must drain |",
+  "epistemic_status": "quoted_prose"
+}

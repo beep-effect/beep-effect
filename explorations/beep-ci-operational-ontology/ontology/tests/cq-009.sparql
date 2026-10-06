@@ -1,13 +1,16 @@
-# CQ-009: Are any two active origin-keyed admission grants sharing the same origin? (deployed origin-exclusion law; must be zero)
+# CQ-009: Do any two active seat grants hold the same checkout, or does any active grant share a non-empty origin with an active legacy-origin-lock grant? (deployed post-#929 exclusion law: same-checkout plus legacy-origin drain; must be zero)
 # Expected: zero_rows | priority: must_have | derivation: inference
 # GENERATED from competency-questions.yaml by regen_cq_artifacts.py — do not hand-edit.
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX ciops: <https://oip.law/ontology/ci-ops#>
-SELECT ?g1 ?g2 ?origin WHERE {
-  ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
-      ciops:hasOriginKey ?origin .
-  ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant ;
-      ciops:hasOriginKey ?origin .
+SELECT ?g1 ?g2 ?arm WHERE {
+  ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant .
+  ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant .
   FILTER (?g1 != ?g2)
-  FILTER (?origin != "")
+  { ?g1 ciops:hasCheckout ?c ; ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .
+    ?g2 ciops:hasCheckout ?c ; ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .
+    BIND("same-checkout" AS ?arm) }
+  UNION
+  { ?g1 ciops:hasOriginKey ?o ; ciops:hasCoordinationProtocol "legacy-origin-lock/v1" .
+    ?g2 ciops:hasOriginKey ?o . FILTER (?o != "") BIND("legacy-origin-drain" AS ?arm) }
 }

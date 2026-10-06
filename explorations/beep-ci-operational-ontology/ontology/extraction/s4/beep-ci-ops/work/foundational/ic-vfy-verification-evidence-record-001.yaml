@@ -1,0 +1,93 @@
+id: "ic:vfy-verification-evidence-record:001"
+hypothesis_ref: "dh:vfy-verification-evidence-record:001"
+referent_grain: >-
+  An issued information item: one proof fact written into a proof ledger, individuated by its
+  issuing write and the lane execution it is written for (one write can carry several facts, one
+  per lane execution), not by its content or by the run it records.
+identity:
+  supplies_identity: true
+  identity_criterion: >-
+    Two evidence records are the same iff they have the same issuing write and the same lane
+    execution: the record is one write-and-lane-execution pair. One write can carry several records,
+    one per lane execution (so-12d5a26fbfac and so-d6adeec15c79 share one recordedAt and attemptId
+    and differ in lane). Two writes with equal content are two records, a copy into another ledger
+    is a copy of the record and not the record, and two extracted stanzas of one written span are
+    one record. The ledger key and recordedAt are evidence of the write, never the criterion.
+  reidentification_key:
+    - recordedAt with laneId within the ledger it is found in (evidence of the write-and-lane pair)
+    - >-
+      factRecordedAt with laneId on a hit shadow (evidence of the write-and-lane pair; the instant
+      alone names only the write, which can carry several records)
+ontoclean:
+  rigidity: rigid
+  carries_identity: true
+  supplies_identity: true
+  unity: >-
+    One written fact with all its members: verdict, tree, epoch, command, inputs, tier, stage and
+    expiry.
+  dependence: relational
+ufo_analysis:
+  candidate_category: information_object
+  alternatives:
+    - the lane-run verdict occurrence itself (what the record is about; rejected as the referent)
+    - a build-cache entry kept only to skip work (rejected as a category; the same category under a use description)
+  existential_dependencies:
+    - the lane execution it records (historically, as its origin)
+    - >-
+      the clone ledger it is held in (unresolved: whether the record depends on one ledger or can
+      exist in another needs a fact copied into, or moved to, another clone's ledger)
+temporality:
+  exists_during_interval: true
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - expired at expiresAt (thirty days after recordedAt on every cited fact)
+    - not shown - invalidated, corrected or evicted from the ledger
+counterexamples:
+  - description: >-
+      Validity is not identity: a fact past its expiresAt, or invalidated by an epoch change, would
+      still be the same issued record but no longer valid evidence for its tree and epoch (CQ-005).
+      VerificationEvidence read as "currently valid proof" is therefore a phase or role of the
+      record, anti-rigid, and must not be merged with the rigid record kind. No cited fact is past
+      its expiresAt, so this stays a hypothetical; the FA keeps the rival viable.
+  - description: >-
+      Twin stanzas: so-d6adeec15c79 and so-fcbe894799ea are one record span seen twice. A criterion
+      keyed on extracted stanzas would count two records.
+status: proposed
+evidence_refs:
+  - "so:sha256:dc1dce23ac11e53e60777ea7d0f4db7338946ae293ed30cc50e768265c5c5fa0"
+  - "so:sha256:e66e1190087c8409cfabc00e8361ad9c3643e76ea166589a0140234282c0f04c"
+  - "so:sha256:2601c6b77d878a21a244475ffb55090c13359e0d89200a9b299de931d566c713"
+  - "so:sha256:c997b4851faa9689c96b4a3a55babed6e042e265088ba38423725874a5570ac8"
+  - "so:sha256:d6adeec15c79c1b03be5404b297f3e87cef2bbb88d92b350f98398ecd5abf002"
+  - "so:sha256:fcbe894799eaef93ad777c7a676c529cb4329f46ddbbf0578751d37987372186"
+  - "so:sha256:12d5a26fbfac613f030ac0f2edcaed9456998ba2a6f820e02176bb9abb4b3fa3"
+  - CQ-005
+  - CQ-006
+  - CQ-014
+  - CQ-015
+rationale:
+  identity: >-
+    The hit shadow so-dc1dce23ac11 names a prior fact by its recording instant (factRecordedAt), 25
+    minutes earlier, and carries its own laneId. One instant does not name one fact: so-12d5a26fbfac
+    and so-d6adeec15c79 are two facts of one attempt sharing one recordedAt, for lanes fallow:health
+    and fallow:audit. So one write carries several records, and the record is the write-and-lane-
+    execution pair (recordedAt with laneId); the hit is consistent with consulting the record of
+    that pair for its lane.
+  rigidity: >-
+    Rigid on the record reading: expiry changes whether the fact is valid evidence, not what was
+    written. No cited fact is past its expiresAt, so that a record stays in the ledger after expiry
+    is not shown; the rigid-valid-proof rival stays open in the FA.
+  dependence: >-
+    Marked relational on the lane execution it records, its origin. Whether it also depends on the
+    clone ledger it is held in is unresolved: no cited record shows a fact copied into or moved to
+    another ledger, which is the evidence that would decide it.
+  category: >-
+    UFO information object. Failed facts (so-2601c6b77d87, so-c997b4851faa) are issued like passed
+    ones, so the record kind is neutral to the verdict it carries.
+  temporality: >-
+    It persists in the ledger over an interval. Whether it changes state without losing identity is
+    unresolved: on the record reading it would move from valid to expired without becoming another
+    record, but no cited fact is past its expiresAt; a fact past its expiresAt still held in the
+    ledger is the evidence.
+    Copy, correction and realized reuse are not shown, and shadow hits are would-reuse, never
+    realized reuse.

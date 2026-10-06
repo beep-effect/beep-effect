@@ -3010,3 +3010,74 @@ full Yeet and final-head hosted verification remain required.
   re-records through `git merge-file`. The other generated files stay
   multi-line already; their residual conflicts come from adjacent-row edits
   and are out of scope here.
+
+
+### 2026-10-06 — Accepted evidence missing from cache storage
+
+- Work: recover PR #1389's accepted closeout without restarting implementation.
+- Evidence: the recorded private retention archive, residue archive, accepted
+  fragment store and issuer directories are absent. Targeted searches found no
+  matching originals; no cause of deletion or movement was established.
+- Effect: surviving native observations and operational records match fourteen
+  published hashes, but original authenticated import and final proof-file bytes
+  cannot be independently revalidated. Direct historical tool output survives.
+- Action: preserve verified copies in durable user-state storage and publish the
+  [recovery limits](recovery-audit-2026-10-06.md) alongside the accepted chronology.
+- Prevention: retain accepted evidence, including independent issuer/acceptance
+  records, under an explicit archival policy with a checked manifest and backup.
+- GitHub GraphQL also returned `API rate limit already exceeded`; REST remained
+  available. Preserve historical thread resolution separately from fresh REST
+  comments rather than claiming that unchanged comments prove current flags.
+  A later successful publication-time GraphQL refresh confirmed eight resolved
+  threads with complete pagination and no later human follow-up.
+
+### 2026-10-06 — Repair fixers expanded a documentation-only change
+
+- Work: publish the recovery addendum through Yeet.
+- Evidence: `yeet repair` rewrote inherited helper forms in cache governance and
+  the Session command before its feedback gate. Those packages were unchanged
+  by the documentation work.
+- Action: stopped this lane's repair process, retained its patch privately and
+  restored those two files. Publication runs the normal cheap-gates and
+  head-install preflight on the documentation scope; no successful repair run
+  is claimed.
+- Prevention: scope deterministic preparation to the intended change when a
+  documentation publication would otherwise acquire unrelated source edits.
+
+### 2026-10-06 — Inherited hosted dependency vulnerability
+
+- Work: drive the documentation follow-up PR #1504 to merge readiness.
+- Evidence: completed Security job 112380511552 reports
+  `GHSA-6qxp-vccf-f47h` for transitive `@modelcontextprotocol/sdk` 1.30.0,
+  fixed in 1.31.0. The documentation diff changes no lockfile or dependency.
+- Attribution: inherited from the base. PR #1500 already owns the dependency
+  repair. It merged as `3f9d7a4a1d`; this lane integrated main before the
+  final documentation publication.
+- Prevention: route inherited reds to their existing owner and preserve the
+  exact failing job log instead of copying the dependency fix into each lane.
+
+### 2026-10-06 — Dependency fix delayed by runner loss
+
+- Work: wait for the inherited Security fix in PR #1500 before integrating main
+  into documentation PR #1504.
+- Evidence: Heavy / Check job 112371272813 ended with the annotation
+  `The self-hosted runner lost communication with the server`; its job-log
+  endpoint returned HTTP 404. Other heavy lanes were still running.
+- Attribution: runner loss, with no code failure established by this job.
+  The repository's Rerun Runner Loss workflow triggers after the parent run
+  completes; leave that bounded recovery and the dependency fix with their
+  existing owner.
+- Prevention: retain runner termination evidence and let the existing recovery
+  workflow retry individual jobs instead of duplicating a dependency repair.
+
+### 2026-10-06 — Existing coverage repair blocks the dependency fix
+
+- Work: follow the inherited Security repair in PR #1500 to its merge.
+- Evidence: its Coverage Regression job 112371273048 reports missing baseline
+  identity for `Cache.governance.policy.ts` and repo-configs lines
+  `80.66 < 80.7`; the job's log was retained locally.
+- Attribution: separate inherited coverage debt already owned by PR #1492.
+  The coordinating session owns their ordering; PR #1500 has since merged.
+  Its merge does not establish a successful coverage rerun.
+- Prevention: follow the existing repair chain, keep exact failure evidence,
+  and integrate main once instead of adding source changes to this docs lane.

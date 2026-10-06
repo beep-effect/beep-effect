@@ -16,11 +16,15 @@ import * as S from "effect/Schema";
 const $I = $M365Id.create("M365.schemas");
 
 /**
- * Build an optional Graph wire field that decodes a missing/`undefined` key to
- * `Option.none`, defaults to `none` on construction, and carries a description.
+ * Build an optional Graph wire field. Graph sends an absent value either as a
+ * missing key or as `null` (for example `seriesMasterId` on a single event),
+ * so both decode to `Option.none`; `none` encodes as a missing key. The field
+ * defaults to `none` on construction and carries a description.
  */
 const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
-  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
+  S.OptionFromOptionalNullOr(schema, { onNoneEncoding: "omit" })
+    .pipe(S.withConstructorDefault(Effect.succeedNone))
+    .annotateKey({ description });
 
 const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("GraphNonNegativeInt", {
@@ -231,6 +235,92 @@ export class GraphSiteCollection extends S.Class<GraphSiteCollection>($I`GraphSi
     hostname: opt(S.String, "Site collection hostname."),
   },
   $I.annote("GraphSiteCollection", { description: "A Graph siteCollection descriptor." })
+) {}
+
+/**
+ * The plain-text attorney-authored portion of a message (Graph `uniqueBody`).
+ *
+ * **Details**
+ *
+ * `contentType` is the literal `text`: a response carrying an HTML
+ * `uniqueBody` fails to decode, so a caller can never fall back to stripping
+ * markup or to the full `body`.
+ *
+ * **Example** (Make a text body)
+ *
+ * ```ts
+ * import { GraphUniqueTextBody } from "@beep/m365"
+ *
+ * console.log(GraphUniqueTextBody.make({ contentType: "text", content: "Approved.\n" }).content)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphUniqueTextBody extends S.Class<GraphUniqueTextBody>($I`GraphUniqueTextBody`)(
+  {
+    contentType: S.Literal("text").annotateKey({ description: "Must be plain text; HTML is refused." }),
+    content: S.String.annotateKey({ description: "Text the sender wrote, without the quoted thread." }),
+  },
+  $I.annote("GraphUniqueTextBody", { description: "A plain-text Graph uniqueBody." })
+) {}
+
+/**
+ * A required Graph address wrapper (`{ emailAddress: { address } }`).
+ *
+ * **Example** (Make an address)
+ *
+ * ```ts
+ * import { GraphRequiredAddress } from "@beep/m365"
+ *
+ * console.log(GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }).emailAddress.address)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphRequiredAddress extends S.Class<GraphRequiredAddress>($I`GraphRequiredAddress`)(
+  {
+    emailAddress: S.Struct({ address: S.NonEmptyString }).annotateKey({ description: "The address." }),
+  },
+  $I.annote("GraphRequiredAddress", { description: "A Graph recipient whose address is required." })
+) {}
+
+/**
+ * The fields of a message needed to verify who wrote what: sender addresses,
+ * the plain-text `uniqueBody`, and the message identity.
+ *
+ * **Example** (Make an authored-text message)
+ *
+ * ```ts
+ * import { GraphMessageAuthoredText, GraphRequiredAddress, GraphUniqueTextBody } from "@beep/m365"
+ *
+ * const message = GraphMessageAuthoredText.make({
+ *   id: "AAMk",
+ *   internetMessageId: "<a@b>",
+ *   receivedDateTime: "2026-10-06T12:00:00Z",
+ *   from: GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }),
+ *   sender: GraphRequiredAddress.make({ emailAddress: { address: "a@b.co" } }),
+ *   uniqueBody: GraphUniqueTextBody.make({ contentType: "text", content: "Approved." })
+ * })
+ * console.log(message.internetMessageId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GraphMessageAuthoredText extends S.Class<GraphMessageAuthoredText>($I`GraphMessageAuthoredText`)(
+  {
+    id: S.NonEmptyString.annotateKey({ description: "Graph message id." }),
+    internetMessageId: S.NonEmptyString.annotateKey({ description: "RFC 5322 Message-ID." }),
+    receivedDateTime: S.NonEmptyString.annotateKey({ description: "Receipt time." }),
+    from: GraphRequiredAddress.annotateKey({ description: "Graph `from`." }),
+    sender: GraphRequiredAddress.annotateKey({ description: "Graph `sender`." }),
+    uniqueBody: GraphUniqueTextBody.annotateKey({ description: "Plain-text unique body." }),
+  },
+  $I.annote("GraphMessageAuthoredText", {
+    description: "Sender addresses, identity, and plain-text uniqueBody of one message.",
+  })
 ) {}
 
 /**
@@ -797,6 +887,7 @@ export class GraphMailFolder extends S.Class<GraphMailFolder>($I`GraphMailFolder
 export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
   {
     id: S.String.annotateKey({ description: "Message id." }),
+    bccRecipients: opt(S.Array(GraphRecipient), "Blind-carbon-copy recipients (present on drafts and sent items)."),
     body: opt(GraphItemBody, "Message body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
     categories: opt(S.Array(S.String), "Outlook category display names applied to the message."),
@@ -821,6 +912,38 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
 ) {}
 
 /**
+ * One attendee of a calendar event (read subset).
+ *
+ * **Details**
+ *
+ * A host reads this to tell a meeting from an appointment: Graph mails every
+ * attendee when a meeting changes. The driver never writes attendees.
+ *
+ * **Example** (Make an attendee)
+ *
+ * ```ts
+ * import { GraphEmailAddress, GraphEventAttendee } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const attendee = GraphEventAttendee.make({
+ *   emailAddress: O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") })),
+ *   type: O.some("required")
+ * })
+ * console.log(O.isSome(attendee.type)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GraphEventAttendee extends S.Class<GraphEventAttendee>($I`GraphEventAttendee`)(
+  {
+    emailAddress: opt(GraphEmailAddress, "The attendee's email address (never logged)."),
+    type: opt(S.String, "Attendee type (required/optional/resource)."),
+  },
+  $I.annote("GraphEventAttendee", { description: "One attendee of an Outlook calendar event (read subset)." })
+) {}
+
+/**
  * An Outlook calendar event (read subset).
  *
  * **Example** (Make event with id)
@@ -838,6 +961,7 @@ export class GraphMessage extends S.Class<GraphMessage>($I`GraphMessage`)(
 export class GraphEvent extends S.Class<GraphEvent>($I`GraphEvent`)(
   {
     id: S.String.annotateKey({ description: "Event id." }),
+    attendees: opt(S.Array(GraphEventAttendee), "Attendees; Graph mails each of them when a meeting changes."),
     body: opt(GraphItemBody, "Event body (never logged)."),
     bodyPreview: opt(S.String, "Truncated body preview (never logged)."),
     categories: opt(S.Array(S.String), "Outlook category display names applied to the event."),

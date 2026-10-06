@@ -1,0 +1,32 @@
+{
+  "id": "so:sha256:1ccc2613c0be9a452eb28fc32f60f83fa74b663c93c4c3fc3440050bdf6275fd",
+  "schema_version": 1,
+  "repository": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "path": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/journal-run4/input/run4-fleet/admission/canonical/journal.properties"
+  },
+  "source_span": {
+    "start_line": 6,
+    "end_line": 10,
+    "content_sha256": "b46af64fd7756ad67d223f0837bd00be1d7c127e1beb29d12e87685e600d88d2"
+  },
+  "extractor": {
+    "id": "adapter-journal",
+    "version": "1.3.0",
+    "parser": "python-stdlib-properties",
+    "script": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/adapter-journal-run4.py"
+  },
+  "symbol": {
+    "qualified_name": "run4-fleet/admission/canonical/journal.properties:record=1",
+    "lexical_name": "withdrawnAtMillis",
+    "syntactic_kind": "properties_projection"
+  },
+  "observed_facts": [
+    {
+      "predicate": "config_key_value",
+      "object": "withdrawnAtMillis=90"
+    }
+  ],
+  "source_excerpt": "# record 1\nschemaVersion=yeet-admission-journal/v1\n_tag=admission-withdrawn\nnonce=legacy-withdrawn\nwithdrawnAtMillis=90\n",
+  "epistemic_status": "parser_derived"
+}

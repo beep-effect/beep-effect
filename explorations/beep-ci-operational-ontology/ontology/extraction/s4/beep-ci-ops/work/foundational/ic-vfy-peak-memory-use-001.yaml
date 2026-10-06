@@ -1,0 +1,112 @@
+id: "ic:vfy-peak-memory-use:001"
+hypothesis_ref: "dh:vfy-peak-memory-use:001"
+referent_grain: >-
+  A measured magnitude at the grain of one bearer's work, the bearer being unresolved between the
+  work held under one grant and the attempt or proof unit that work ran: the highest memory that
+  work used, individuated by that bearer and read at release (the only cited readings sit on
+  release rows); or, on the value-only reading, a byte count attached to that work with no
+  individual of its own.
+identity:
+  supplies_identity: false
+  identity_criterion: >-
+    unresolved over the category and the bearer. On the quality reading, two peak-memory
+    magnitudes are the same iff they are the peak of the same bearer's work, and the bearer is
+    either the work held under one grant or the attempt or proof unit that work ran, both kept
+    viable in the FA. On the value-only reading there is no magnitude individual, only a byte count
+    attached to the bearer, and two readings are the same only as equal values. The deciding record
+    for the category is a mid-hold reading of one grant (a memoryPeakBytes value taken before that
+    grant's release, joined to its release row by nonce or attemptId); for the bearer, a release
+    row and an attempt or lane record of the same work, joined by attemptId, each carrying a peak
+    reading. The reading written on the release row is evidence of the value, and a second record
+    of the same release span is the same reading, not a second magnitude.
+  reidentification_key:
+    - memoryPeakBytes on an admission-released row (evidence)
+ontoclean:
+  rigidity: unresolved
+  carries_identity: unresolved
+  supplies_identity: false
+  unity: >-
+    On the quality reading, one maximum per bearer (grant or attempt, unresolved) with no parts; on
+    the value-only reading no individual to unify.
+  dependence: unresolved
+ufo_analysis:
+  candidate_category: unresolved
+  alternatives:
+    - >-
+      quality (an intrinsic moment of one bearer's work, with a value in a byte-count quality
+      space); kept as an alternative, not argued over value-only by any cited record
+    - quality value only (a byte count with no individual)
+    - >-
+      a quality of the attempt's or proof unit's work rather than of the grant (bearer ambiguity
+      within the quality reading)
+    - the recorded reading as an information object (rejected as the referent, kept as evidence)
+  existential_dependencies:
+    - >-
+      on the quality reading only: its one bearer, the work run under a seat grant or the attempt or
+      proof unit that work ran (unresolved). The value-only reading has no individual to depend on
+      anything. A mid-hold reading of one grant decides between the readings.
+temporality:
+  exists_during_interval: unresolved
+  may_change_state_without_losing_identity: unresolved
+  terminal_states:
+    - >-
+      on the quality reading, read at release (the only cited readings sit on release rows), and
+      whether the magnitude is fixed then is unresolved; the value-only reading has no individual
+      to reach a terminal state
+counterexamples:
+  - description: >-
+      Bearer (hypothetical): the work under one grant may be several processes. No record of this
+      hypothesis shows a lane or execution carrying its own peak reading; a lane-peak record joined
+      to a release row by attemptId is the needed evidence. If such readings exist and the grant's
+      peak is the maximum over those processes, a lane peak and the grant peak would be different
+      magnitudes of different bearers, and a schema that attaches peak memory only to executions
+      would lose the grant-level one.
+  - description: >-
+      Duplicate record: so-df1f4d8ba41f and so-3013eedf6f82 are one release span seen twice and
+      carry one value. Counting records as magnitudes would make two peaks of one grant.
+  - description: >-
+      Quality against value-only: every cited reading is one memoryPeakBytes value on one release
+      row of one grant (so-95b7d78a061f, so-363f9b7f07dc, so-df1f4d8ba41f). A quality individual
+      that is read once at release and a bare byte count written on the release row predict exactly
+      these records. A mid-hold reading of the same grant that is lower than its release reading
+      would show one magnitude taking a new value while its bearer is held (a quality persisting
+      through change); the value-only reading would count two values and nothing persisting. No
+      cited record carries such a reading.
+status: proposed
+evidence_refs:
+  - "so:sha256:95b7d78a061f4eadeca7bc45379f83a3696c58770863df88b0a13e5435ede7a1"
+  - "so:sha256:363f9b7f07dcb4d4295f3193059e58f32cfb81c4efbf3fb587348c3ecb6aa467"
+  - "so:sha256:df1f4d8ba41f32b9b399d0a8872ac5d0ab743f6d23eef09fd66121ec5b68db71"
+  - "so:sha256:3013eedf6f823e140ca1892f65e0bba8d491f54a42659231b17ecc35d3597a9c"
+rationale:
+  identity: >-
+    Grants of one kind and one charge carry peaks about ten times apart (so-95b7d78a061f,
+    so-363f9b7f07dc), so the value follows the work done, not any configured member of the request.
+    That holds on the quality and value-only readings alike. carries_identity is unresolved with
+    the category: on the quality reading the magnitude is reidentified through its bearer, and on
+    the value-only reading there is nothing to carry identity. Whose work it is (the grant's or the
+    attempt's) is left open in the criterion.
+  rigidity: >-
+    Unresolved. Rigidity asks whether an individual that is a peak-memory magnitude could persist
+    while ceasing to be one. Each cited release row carries one value for one release span, and no
+    record shows the individual before release or under another classification after it, so the
+    records neither show nor rule out such a change. A mid-hold reading of the same grant would be
+    the evidence that starts to decide it.
+  dependence: >-
+    Unresolved, because it differs by reading. On the quality reading it would be intrinsic: it
+    inheres in one bearer and exists only as that bearer's peak, not as a relation among several
+    participants. On the value-only reading there is no individual whose dependence could be
+    tested. Which bearer, on the quality reading, is the open question in the criterion.
+  category: >-
+    Unresolved, with quality kept as an alternative. The cited records rule out the admission
+    charge (equal charges, unequal peaks) and the reading as referent, but they do not argue a
+    quality individual over a bare value: each grant carries one reading, on its release row, which
+    both readings predict. The discriminator is a mid-hold reading of one grant: a value that
+    changes while the grant is held favours a persisting quality, while only ever one value per
+    grant leaves value-only standing.
+  temporality: >-
+    Unresolved whether it exists over an interval or can change state: on the quality reading it
+    would exist while its bearer's work runs, on the value-only reading it would not exist over an
+    interval at all, and every cited reading sits on a release row, with no record carrying a
+    reading taken while the grant is held. A mid-hold reading of the same grant (a memoryPeakBytes
+    value before its releasedAtMillis, joined by nonce or attemptId) is the needed evidence.

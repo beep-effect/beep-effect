@@ -1,0 +1,14 @@
+{
+  "id": "po:sha256:079622511e865ab004c2fce66ddfdcd98b0bc2adec405e42fdb393e199923177",
+  "schema_version": 1,
+  "repository": {
+    "commit": "71c7357adc57e5a3258fc884edf9a613afec3a7c",
+    "path": "explorations/beep-ci-operational-ontology/ontology/docs/literal-domains.md"
+  },
+  "source_span": {
+    "start_line": 18,
+    "end_line": 18
+  },
+  "quote": "| `AdmissionPriorityClass` | `PublishPriority` *(supports: AdmissionPriorityClass — publish tickets are prioritized by deployed policy)*, `VerifyPriority` | CQ-021; DEPLOYED `AdmissionPriority` LiteralKit: `publish`, `verify` |",
+  "epistemic_status": "quoted_prose"
+}

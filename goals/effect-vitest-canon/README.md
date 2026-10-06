@@ -1,3 +1,9 @@
+> Continuation, 2026-10-06: work the existing repo-cli backlog in
+> `codex/effect-vitest-canon-continuation` on the installed 4.0.1 cohort.
+> PRs #1390, #1467 and #1468 are merged. P1/P2 remain in progress; P3 is pending.
+> See [current provenance](history/2026-10-06-continuation-provenance.md).
+> Older status and cohort sections below retain their dated evidence.
+
 > Current-source amendment, 2026-10-01: new work uses the verified Effect /
 > Effect Vitest 4.0.0 cohort, Vitest 5.0.3 and GPT-6.1-Sol medium. Older
 > rc.113/version/model receipts retain their historical provenance. See

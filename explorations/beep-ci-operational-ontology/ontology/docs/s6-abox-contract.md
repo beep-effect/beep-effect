@@ -181,3 +181,16 @@ Authority: DECISIONS.md, "2026-10-01 — graduation sitting".
 §1's `SchedulerConfig` reads `AdmissionConfig` (`QualityScheduler.schemas.ts`;
 :279 at the S6 corpus commit `62a5cafd91`, :641 at `04993ae26a`). The S6
 extraction (`etl_policy.py`) always used AdmissionConfig.
+
+## 9. 2026-10-06 — run-4 projection
+
+Authority: `goals/ciops-ontology-pipeline/research/decisions.md`, run-4 launch
+sitting Ruling 14 and run-4 sitting 3 Rulings 28–32. TAXONOMY gains three ratified
+classes: OperationalChangeEvent, WorkUnitExecution and CommittedFailure. §7's
+superset rule admits them, and the named S6-era baseline does not change. No
+individual in the ratified A-Box or golden snapshot is typed by a new class, so
+ABOX.yaml and the graphs stay byte-identical. The run-4 accepts add no property:
+admissionChargeTokens is already in the S6 baseline. Regenerating PREDICATES.yaml
+from the amended TAXONOMY therefore reproduces it byte-identically. `landedAt`,
+`inAttempt`, `hasExecutionState` and `hasCancelClass` keep their seed-only or
+parked status there (Ruling 31).
