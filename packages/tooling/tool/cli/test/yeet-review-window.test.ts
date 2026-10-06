@@ -122,10 +122,10 @@ describe("review window decision", () => {
     const elapsed = YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt: "x", windowMs: 1 });
     const open = YeetReviewWindowOpen.make({ anchor: "head-push", anchoredAt: "x", remainingMs: 1, windowMs: 1 });
     const unknown = YeetReviewWindowUnknown.make({ reason: "timeline unreadable" });
-    assertTrue(yeetReviewWindowElapsed(O.some(elapsed)));
-    assertFalse(yeetReviewWindowElapsed(O.some(open)));
-    assertFalse(yeetReviewWindowElapsed(O.some(unknown)));
-    assertFalse(yeetReviewWindowElapsed(O.none()));
+    assertTrue(O.some(elapsed).pipe(yeetReviewWindowElapsed));
+    assertFalse(O.some(open).pipe(yeetReviewWindowElapsed));
+    assertFalse(O.some(unknown).pipe(yeetReviewWindowElapsed));
+    assertFalse(O.none().pipe(yeetReviewWindowElapsed));
     expect(renderYeetReviewWindow(unknown)).toBe(
       "review window unknown: timeline unreadable; unknown never counts as elapsed"
     );
@@ -237,7 +237,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("review window read", (i
       const { window } = yield* readWith(answers);
       expect(window._tag).toBe("unknown");
       expect(renderYeetReviewWindow(window)).toContain(reason);
-      assertFalse(yeetReviewWindowElapsed(O.some(window)));
+      assertFalse(O.some(window).pipe(yeetReviewWindowElapsed));
     }).pipe(noOverride)
   );
 
