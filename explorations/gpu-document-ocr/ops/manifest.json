@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "gpu-document-ocr",
+    "title": "GPU Document OCR",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Which vision OCR engine beats Tesseract on the scan sample once the GPU half of the benchmark has run?",
+      "Page-separated first-reading text: split Tika XHTML output, or re-read every page of a selected source?",
+      "Should image sources keep their OCR text in the first extraction instead of only in a re-read pass?",
+      "What acceptance rule lets a vision-model page reading replace the first reading?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-06",
+    "updated": "2026-10-06"
+  }
+}

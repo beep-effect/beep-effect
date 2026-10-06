@@ -2027,6 +2027,9 @@
       ],
       "@beep/schema/PatternOntology": [
         "./packages/foundation/modeling/schema/src/PatternOntology/index.ts"
+      ],
+      "@beep/file-processing/PageOcr": [
+        "./packages/foundation/capability/file-processing/src/PageOcr/index.ts"
       ]
     }
   }
