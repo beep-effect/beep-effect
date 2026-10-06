@@ -43,6 +43,7 @@ import {
   GraphEvent,
   GraphEventShowAs,
   GraphListItem,
+  GraphMailFolder,
   GraphMessage,
   GraphOutlookCategory,
   GraphSite,
@@ -633,6 +634,40 @@ export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I
   },
   $I.annote("M365ListMessagesRequest", {
     description: "Request for listing Outlook mail messages.",
+  })
+) {}
+
+/**
+ * Request for reading one Outlook mail folder.
+ *
+ * **Details**
+ *
+ * `folder` is a folder id or one of Graph's well-known folder names, such as
+ * `inbox`, `sentitems`, `deleteditems` or `junkemail`. A well-known name
+ * resolves to the mailbox's own folder whatever its display language.
+ *
+ * **Example** (Get the Deleted Items folder)
+ *
+ * ```ts
+ * import { M365GetMailFolderRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365GetMailFolderRequest.make({ folder: "deleteditems", userId: O.some("mailbox-id") })
+ * console.log(request.folder)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365GetMailFolderRequest extends S.Class<M365GetMailFolderRequest>($I`M365GetMailFolderRequest`)(
+  {
+    folder: GraphPathSegment.annotateKey({ description: "Mail folder id or well-known folder name." }),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "Mailbox user id or address; required on the app-only lane.",
+    }),
+  },
+  $I.annote("M365GetMailFolderRequest", {
+    description: "Request for reading one Outlook mail folder by id or well-known name.",
   })
 ) {}
 
@@ -1576,6 +1611,7 @@ export type M365Shape = {
   ) => Effect.Effect<M365EventCollection, M365Error>;
   readonly getEvent: (request: M365GetEventRequest) => Effect.Effect<GraphEvent, M365Error>;
   readonly getListItem: (request: M365GetListItemRequest) => Effect.Effect<GraphListItem, M365Error>;
+  readonly getMailFolder: (request: M365GetMailFolderRequest) => Effect.Effect<GraphMailFolder, M365Error>;
   readonly getMessage: (request: M365GetMessageRequest) => Effect.Effect<GraphMessage, M365Error>;
   readonly getSite: (request: M365GetSiteRequest) => Effect.Effect<GraphSite, M365Error>;
   readonly listDriveItemVersions: (
@@ -2207,6 +2243,11 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
       ["$expand", O.some("fields")],
     ]);
     return yield* executeJson(runtime, url, GraphListItem, "listItems");
+  }),
+  getMailFolder: Effect.fn("M365.getMailFolder")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365GetMailFolderRequest, "mailFolders")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `mailFolders/${request.folder}`, "mailFolders");
+    return yield* executeJson(runtime, url, GraphMailFolder, "mailFolders");
   }),
   getMessage: Effect.fn("M365.getMessage")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);

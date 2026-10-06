@@ -36,7 +36,19 @@ export class BoxProvisioningSchemaError extends S.TaggedError<BoxProvisioningSch
   $I`BoxProvisioningSchemaError`
 )(
   "BoxProvisioningSchemaError",
-  { stage: LiteralKit(["desired-state", "observed-state", "plan", "receipt", "journal"]) },
+  {
+    stage: LiteralKit([
+      "desired-state",
+      "observed-state",
+      "plan",
+      "receipt",
+      "journal",
+      "migration-map",
+      "migration-plan",
+      "migration-receipt",
+      "migration-journal",
+    ]),
+  },
   $I.annoteError<BoxProvisioningSchemaError>("BoxProvisioningSchemaError", {
     description: "Sanitized failure decoding a Box provisioning boundary schema.",
   })
@@ -264,6 +276,83 @@ export class BoxProvisioningApplyJournalError extends S.TaggedError<BoxProvision
 }
 
 /**
+ * Content-migration map decoded but violated a cross-entry destination rule.
+ *
+ * **Gotchas**
+ *
+ * Only a closed reason and a violation count are retained. The offending
+ * folder names, file names, and source paths stay in the secure runner.
+ *
+ * **Example** (Reject two files sharing one destination)
+ *
+ * ```ts
+ * import { BoxContentMigrationMapError } from "@beep/box-provisioning/BoxProvisioningErrors"
+ *
+ * const error = BoxContentMigrationMapError.make({ reason: "duplicate-destination", violationCount: 2 })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxContentMigrationMapError extends S.TaggedError<BoxContentMigrationMapError>(
+  $I`BoxContentMigrationMapError`
+)(
+  "BoxContentMigrationMapError",
+  {
+    reason: LiteralKit(["duplicate-destination", "file-folder-name-collision", "source-root-not-absolute"]),
+    violationCount: S.Natural,
+  },
+  $I.annoteError<BoxContentMigrationMapError>("BoxContentMigrationMapError", {
+    description: "Sanitized cross-entry validation failure for a Box content-migration map.",
+  })
+) {
+  override get message(): string {
+    return `Box content migration map is invalid: ${this.reason} (${this.violationCount}).`;
+  }
+}
+
+/**
+ * Hard provider-call budget would be exceeded by a read the run cannot skip.
+ *
+ * **Details**
+ *
+ * Writes never raise this error: an unaffordable write is reported as
+ * `NotAttempted` on the receipt. Only the identity check and folder listings of
+ * the pre-apply plan (`plan`) or of the post-apply plan (`post-plan`) fail with
+ * it, because a partial listing cannot produce a trustworthy plan.
+ *
+ * **Example** (Report an exhausted plan budget)
+ *
+ * ```ts
+ * import { BoxContentMigrationBudgetError } from "@beep/box-provisioning/BoxProvisioningErrors"
+ *
+ * const error = BoxContentMigrationBudgetError.make({ maxProviderCalls: 10, phase: "plan", usedProviderCalls: 10 })
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class BoxContentMigrationBudgetError extends S.TaggedError<BoxContentMigrationBudgetError>(
+  $I`BoxContentMigrationBudgetError`
+)(
+  "BoxContentMigrationBudgetError",
+  {
+    phase: LiteralKit(["plan", "post-plan"]),
+    maxProviderCalls: S.Natural,
+    usedProviderCalls: S.Natural,
+  },
+  $I.annoteError<BoxContentMigrationBudgetError>("BoxContentMigrationBudgetError", {
+    description: "Sanitized failure when a required Box read would exceed the run's provider-call budget.",
+  })
+) {
+  override get message(): string {
+    return `Box content migration ${this.phase} would exceed the provider-call budget of ${this.maxProviderCalls}.`;
+  }
+}
+
+/**
  * Technical errors produced directly by the Box reconciliation engine.
  *
  * @category errors
@@ -276,4 +365,6 @@ export type BoxProvisioningError =
   | BoxProvisioningDriftError
   | BoxProvisioningInvariantError
   | BoxProvisioningBlockerContractError
-  | BoxProvisioningApplyJournalError;
+  | BoxProvisioningApplyJournalError
+  | BoxContentMigrationMapError
+  | BoxContentMigrationBudgetError;

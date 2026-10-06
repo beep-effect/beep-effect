@@ -23,6 +23,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
+import { PracticeKgDocketRegisterRow, practiceKgRegisterClientNames } from "./PracticeKg.register.ts";
 import { withDuckDb } from "./PracticeKg.rows.ts";
 import { PracticeKgEdgeRow, PracticeKgNodeRow } from "./PracticeKg.schemas.ts";
 import type { PracticeKgMatterLookupRequest } from "@beep/law-practice-use-cases/server";
@@ -40,6 +41,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.matters");
  * const row = PracticeKgMatterRow.make({
  *   attributionSource: "text-reference",
  *   client: "12345",
+ *   clientName: "Example Client",
  *   docketCount: 1,
  *   documentCount: 4,
  *   epistemicStatus: "derived-from-official-records",
@@ -56,6 +58,7 @@ export class PracticeKgMatterRow extends S.Class<PracticeKgMatterRow>($I`Practic
   {
     attributionSource: KgAttributionSource,
     client: S.NullOr(S.String),
+    clientName: S.NullOr(S.String),
     docketCount: S.Finite,
     documentCount: S.Finite,
     epistemicStatus: PracticeKgEpistemicStatus,
@@ -132,7 +135,8 @@ export class PracticeKgMatterTables extends S.Class<PracticeKgMatterTables>($I`P
 ) {}
 
 /**
- * The projected graph a matter table is derived from.
+ * The projected graph a matter table is derived from, with the register rows
+ * that name its clients.
  *
  * **Example** (Make an empty graph input)
  *
@@ -150,9 +154,12 @@ export class PracticeKgMatterGraph extends S.Class<PracticeKgMatterGraph>($I`Pra
   {
     edges: S.Array(PracticeKgEdgeRow),
     nodes: S.Array(PracticeKgNodeRow),
+    registerRows: S.Array(PracticeKgDocketRegisterRow).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<PracticeKgDocketRegisterRow>()))
+    ),
   },
   $I.annote("PracticeKgMatterGraph", {
-    description: "Projected graph nodes and edges used to derive the matter tables.",
+    description: "Projected graph nodes and edges, plus docket-register rows, used to derive the matter tables.",
   })
 ) {}
 
@@ -192,7 +199,10 @@ const bareDocketOf = (node: PracticeKgNodeRow): string =>
  * `has_docket` edges. A docket's application numbers are its `files_as`
  * targets and its patent numbers are those applications' `granted_as` targets
  * plus any patent filed directly. Mention-only anchors never appear: only
- * membership edges are read. Rows are ordered by key so a rebuild is stable.
+ * membership edges are read. A matter's `clientName` is the name the docket
+ * register gives its client number, and null when the register does not name
+ * the client or names it more than one way. Rows are ordered by key so a
+ * rebuild is stable.
  *
  * **Example** (Derive from an empty graph)
  *
@@ -203,7 +213,7 @@ const bareDocketOf = (node: PracticeKgNodeRow): string =>
  * console.log(tables.dockets.length) // 0
  * ```
  *
- * @param graph - Projected nodes and edges.
+ * @param graph - Projected nodes and edges, with the register rows that name clients.
  * @returns Ordered matter and docket rows.
  * @category use-cases
  * @since 0.0.0
@@ -242,6 +252,7 @@ export const buildMatterTables = (graph: PracticeKgMatterGraph): PracticeKgMatte
     });
   };
 
+  const clientNameOf = practiceKgRegisterClientNames(graph.registerRows);
   const families = A.filter(graph.nodes, (node) => node.kind === "docket_family");
   const dockets = A.flatMap(families, (family) =>
     A.map(targetNodes("has_docket", family.iri), (docket) => docketRowFor(family.naturalKey, docket))
@@ -253,6 +264,7 @@ export const buildMatterTables = (graph: PracticeKgMatterGraph): PracticeKgMatte
     return PracticeKgMatterRow.make({
       attributionSource: family.attributionSource,
       client: family.client ?? null,
+      clientName: pipe(O.fromNullishOr(family.client), O.flatMap(clientNameOf), O.getOrNull),
       docketCount: A.length(familyDockets),
       documentCount:
         targetCount("family_document", family.iri) +
@@ -279,6 +291,7 @@ const createMatterTables = [
   family_key VARCHAR PRIMARY KEY,
   family VARCHAR NOT NULL,
   client VARCHAR,
+  client_name VARCHAR,
   attribution_source VARCHAR NOT NULL,
   epistemic_status VARCHAR NOT NULL,
   docket_count BIGINT NOT NULL,
@@ -295,7 +308,7 @@ const createMatterTables = [
 )`,
 ];
 
-const insertMatter = "INSERT INTO matters VALUES ($1, $2, $3, $4, $5, $6, $7)";
+const insertMatter = "INSERT INTO matters VALUES ($1, $2, $3, $4, $5, $6, $7, $8)";
 
 const insertMatterDocket = `
 INSERT INTO matter_dockets VALUES (
@@ -343,6 +356,7 @@ export const writeMatterTables = (databasePath: string) =>
             row.familyKey,
             row.family,
             row.client,
+            row.clientName,
             row.attributionSource,
             row.epistemicStatus,
             row.docketCount,
@@ -379,6 +393,7 @@ class MatterHitRow extends S.Class<MatterHitRow>($I`MatterHitRow`)({
 class MatterQueryRow extends S.Class<MatterQueryRow>($I`MatterQueryRow`)({
   attributionSource: KgAttributionSource,
   client: S.NullOr(S.String),
+  clientName: S.NullOr(S.String),
   docketCount: S.Finite,
   documentCount: S.Finite,
   epistemicStatus: PracticeKgEpistemicStatus,
@@ -423,7 +438,8 @@ SELECT family_key, 'family', NULL FROM matters WHERE $1 = '' AND $2 <> '' AND fa
 ORDER BY 1, 2, 3`;
 
 const mattersSql = `
-SELECT family_key AS "familyKey", family, client, attribution_source AS "attributionSource",
+SELECT family_key AS "familyKey", family, client, client_name AS "clientName",
+  attribution_source AS "attributionSource",
   epistemic_status AS "epistemicStatus", CAST(docket_count AS DOUBLE) AS "docketCount",
   CAST(document_count AS DOUBLE) AS "documentCount"
 FROM matters
