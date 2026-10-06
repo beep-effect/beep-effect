@@ -9,6 +9,7 @@ import {
   EvidenceMode,
   EvidencePaths,
   EvidenceRun,
+  EvidenceWriteScript,
   generateReplayEvidence,
 } from "@/projection/Evidence";
 
@@ -38,27 +39,45 @@ const readEvidence = Effect.fn("EvidenceTest.readEvidence")(function* (paths: Ev
 describe("@beep/ciops replay evidence", () => {
   it.effect("decodes a bare argv as the read-only check mode", () =>
     Effect.gen(function* () {
-      expect(yield* decodeEvidenceMode(["bun", "scripts/generate-replay-evidence.ts"])).toBe(EvidenceMode.Enum.check);
-      expect(yield* decodeEvidenceMode(["bun", "scripts/generate-replay-evidence.ts", "--check"])).toBe(
-        EvidenceMode.Enum.check
-      );
+      expect(
+        yield* decodeEvidenceMode(
+          ["bun", "scripts/generate-replay-evidence.ts"],
+          EvidenceWriteScript.Enum["evidence:s7:write"]
+        )
+      ).toBe(EvidenceMode.Enum.check);
+      expect(
+        yield* decodeEvidenceMode(
+          ["bun", "scripts/generate-replay-evidence.ts", "--check"],
+          EvidenceWriteScript.Enum["evidence:s7:write"]
+        )
+      ).toBe(EvidenceMode.Enum.check);
     })
   );
 
   it.effect("decodes --write as the opt-in write mode", () =>
     Effect.gen(function* () {
-      expect(yield* decodeEvidenceMode(["bun", "scripts/generate-replay-evidence.ts", "--write"])).toBe(
-        EvidenceMode.Enum.write
-      );
+      expect(
+        yield* decodeEvidenceMode(
+          ["bun", "scripts/generate-replay-evidence.ts", "--write"],
+          EvidenceWriteScript.Enum["evidence:s7:write"]
+        )
+      ).toBe(EvidenceMode.Enum.write);
     })
   );
 
   it.effect("refuses --check together with --write", () =>
     Effect.gen(function* () {
-      const failure = yield* Effect.flip(decodeEvidenceMode(["bun", "script.ts", "--check", "--write"]));
+      const argv = ["bun", "script.ts", "--check", "--write"];
+      const failure = yield* Effect.flip(decodeEvidenceMode(argv, EvidenceWriteScript.Enum["evidence:s7:write"]));
+      const lanePlanFailure = yield* Effect.flip(
+        decodeEvidenceMode(argv, EvidenceWriteScript.Enum["evidence:lane-plan:write"])
+      );
 
       expect(failure._tag).toBe("PolicyDecodeError");
-      expect(failure.message).toContain("evidence:s7:write");
+      expect(failure.message).toContain("bun run evidence:s7:write");
+      expect(lanePlanFailure._tag).toBe("PolicyDecodeError");
+      expect(lanePlanFailure.message).toContain("bun run evidence:lane-plan:write");
+      expect(lanePlanFailure.message).not.toContain(EvidenceWriteScript.Enum["evidence:s7:write"]);
     })
   );
 

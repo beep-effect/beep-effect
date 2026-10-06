@@ -838,3 +838,29 @@
 - A same-length mutation fixture in a generator test misspelled a word on purpose and tripped
   `typos` on the authored files, and the receipt that quoted it tripped it again; the fixture now
   swaps a whole word. Prevention: mutate a word, never a spelling, and never quote the misspelling.
+
+## 2026-10-06: P2 projection drive — friction and an admission incident
+- Two `systemd-oomd` kills of the desktop agent app (05:33Z and 06:36Z) ended three Workflow runs
+  mid-lane (the P2 survey critic, the phase-B W5 implementer twice); every finished lane's
+  deliverables were on disk and the runs resumed from their run ids with the finished stages cached.
+  The pressure came from several agent sessions' heavy local work sharing one memory slice with the
+  app; the orchestrator session's answer was `beep-heavy`, a three-slot admission wrapper that runs
+  heavy commands in a capped `agent-runs.slice` and queues sessions for the slots. This is the
+  packet's own subject matter observed on the workstation: unbounded concurrent admission of
+  heavy work, then a capacity-safe admission with explicit slots and a per-job weight (memory cap),
+  with the fleet's sessions as the contenders. Candidate change-event row for the local tier once
+  the wrapper is a tracked repo artifact (today it is a user-local script); until then, a receipt.
+- The 1Password desktop app died with the second kill, so every signed commit failed with
+  "Could not connect to socket" until it was relaunched detached (`systemd-run --user ...
+  /opt/1Password/1password --silent`); staged files survived. Prevention: relaunch before the first
+  commit after any app restart, and keep a signed local checkpoint commit of in-flight lane work.
+- Knip flagged the seam commit's one unused export (`PlanEpisodeError`, used only inside its module)
+  on the hosted head; un-exported in the body commit. Prevention: `bun run beep ci lane knip` on
+  the lane before pushing a seam that exports types for a later commit.
+- Repo Sanity went red on the pushed P2 head on `quality:cache-policy` (six `@beep/ciops`
+  `configuration-drift` blocks) because the four new package-owned evidence scripts move every
+  `@beep/ciops` `commandDigest`; the same trap bit `evidence:s7:write` in #1394 and the fix is the
+  same: a reviewed baseline re-record (`beep cache baseline --request`, review doc under
+  `goals/turborepo-task-qualification/research/`), one more hosted run. Prevention: run
+  `bun run beep quality cache-policy` locally whenever a package's scripts block changes, before the
+  push, and re-record in the same commit as the scripts.

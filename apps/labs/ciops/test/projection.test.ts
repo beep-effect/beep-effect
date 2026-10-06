@@ -1,6 +1,7 @@
 import { $CiopsId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import { assertExitFailure, assertNone } from "@effect/vitest/utils";
@@ -62,7 +63,9 @@ const readPolicy = Effect.fn("CiOpsProjectionTest.readPolicy")(function* (): Eff
 
 const $I = $CiopsId.create("test/projection.test");
 class TestPolicy extends Context.Service<TestPolicy, AdmissionPolicyParams>()($I`TestPolicy`) {}
-const TestPolicyLive = Layer.effect(TestPolicy, readPolicy()).pipe(Layer.provideMerge(BunFileSystem.layer));
+const TestPolicyLive = Layer.effect(TestPolicy, readPolicy()).pipe(
+  Layer.provideMerge(Layer.merge(BunFileSystem.layer, BunCrypto.layer))
+);
 
 const PendingRequestArbitrary = Arbitrary.schema(PendingRequest);
 const proposalEquivalent = S.toEquivalence(ScheduleProposal);
@@ -633,7 +636,7 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
   );
 
   it.layer(CiOpsProjectionLive, { timeout: "5 seconds" })((it) => {
-    it.effect("keeps current proposal state transactionally and leaves the planner seam typed", () =>
+    it.effect("keeps current proposal state transactionally and plans lanes without touching it", () =>
       Effect.gen(function* () {
         const policy = yield* TestPolicy;
         const service: CiOpsProjectionShape = yield* CiOpsProjection;
@@ -646,9 +649,19 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
 
         expect(Eq.equals(projected, awaited)).toBe(true);
         expect(Eq.equals(projected, queued)).toBe(true);
-        expect((yield* Effect.flip(service.planEpisode(PlanEpisodeInput.make({ episodeId: "episode-1" }))))._tag).toBe(
-          "PlannerNotImplementedError"
-        );
+        const planInput = yield* S.decodeEffect(PlanEpisodeInput)({
+          episodeId: "episode-1",
+          repoRoot: "../../..",
+          handoff: {
+            path: "goals/time-to-certainty/research/gate-order-handoff.json",
+            sha256: "705f3e754a51c6750529ccec1021293c82fce0994709a18906b863609a0a2198",
+          },
+        });
+        const plan = yield* service.planEpisode(planInput);
+        expect(plan.planId).toBe(`lane-plan-${planInput.handoff.sha256}`);
+        expect(plan.episodeId).toBe("episode-1");
+        expect(plan.laneSteps.length).toBeGreaterThan(0);
+        expect(Eq.equals(O.some(projected), yield* service.currentProposal)).toBe(true);
       })
     );
   });
