@@ -6819,6 +6819,14 @@ for PR creation and discovery, followed by an automatic attached monitor
 fallback, would keep an already-pushed Yeet run observable under these
 conditions.
 
+The same boundary recurred on PR #1467: Yeet's cheap gates passed and the branch
+was pushed, but GraphQL PR creation failed. The REST-created draft was visible
+at the exact pushed head, while attached `yeet monitor --until-ready` still
+reported no open PR. Detached monitoring also refused to start without a user
+systemd manager. This second occurrence confirms the need for REST discovery
+and a durable attached fallback; exact-head REST checks are the interim
+observation path, not a substitute for a merge-ready verdict.
+
 ### Quick package check needs built dependency declarations in a fresh worktree (2026-10-06)
 
 While migrating `artifacts-io.test.ts` in a newly installed sibling worktree,
