@@ -35,6 +35,11 @@ point it at the bundle folder:
 practice-kg-mcp.exe --self-check --bundle-dir "<path to practice-kg-bundle>"
 ```
 
+**Close Claude Desktop first.** The graph store allows one process at a time,
+and the running extension already holds it; a second process on the same
+bundle is unproven on Windows and may fail or damage the store. Run the check
+before Claude Desktop starts, or after quitting it.
+
 It opens the bundle the same way the server does, counts one table in each
 store, prints one line and exits. It does not start the MCP server and does
 not read input. A working install prints this shape and exits with code 0:
@@ -90,7 +95,7 @@ After any install, proof that it works is a tool call from a chat
 only a running process.
 
 The server and the bundle ship as a pair: this server reads store format
-pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
+pglite 3 / duckdb 3 and refuses any other bundle with a message naming both
 formats. Replace the extension and the bundle folder together.
 
 Refresh always means full replacement; never merge database files. Close
