@@ -7,7 +7,9 @@ SELECT ?g1 ?g2 ?arm WHERE {
   ?g1 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant .
   ?g2 rdf:type ciops:SeatGrant ; ciops:hasGrantState ciops:ActiveGrant .
   FILTER (?g1 != ?g2)
-  { ?g1 ciops:hasCheckout ?c . ?g2 ciops:hasCheckout ?c . BIND("same-checkout" AS ?arm) }
+  { ?g1 ciops:hasCheckout ?c ; ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .
+    ?g2 ciops:hasCheckout ?c ; ciops:hasCoordinationProtocol "scheduler-origin-concurrency/v1" .
+    BIND("same-checkout" AS ?arm) }
   UNION
   { ?g1 ciops:hasOriginKey ?o ; ciops:hasCoordinationProtocol "legacy-origin-lock/v1" .
     ?g2 ciops:hasOriginKey ?o . FILTER (?o != "") BIND("legacy-origin-drain" AS ?arm) }
