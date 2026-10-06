@@ -581,14 +581,13 @@ describe("beep session", () => {
             const error = yield* withCwd(lane, runSession(args)).pipe(Effect.flip);
             expect(error.message).toContain(message);
           }
-          const rowCause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
-          const rowEncoder = vi.spyOn(RegisterRowJson, "encode").mockReturnValue(Effect.fail(rowCause));
+          const cause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
+          const rowEncoder = vi.spyOn(RegisterRowJson, "encode").mockReturnValue(Effect.fail(cause));
           const rowError = yield* withCwd(
             lane,
             runSession(["register", "add", "--kind", "codex-lane", "--address", "PR #9", "--orphan-plan", "take over"])
           ).pipe(Effect.flip, Effect.ensuring(Effect.sync(() => rowEncoder.mockRestore())));
           expect(rowError.message).toBe("[session] Failed to encode the register row.");
-          const cause = yield* S.encodeUnknownEffect(RegisterReport)(undefined).pipe(Effect.flip);
           const encoder = vi.spyOn(RegisterReportJson, "encode").mockReturnValue(Effect.fail(cause));
           const error = yield* withCwd(clone, runSession(["register", "list", "--json"])).pipe(
             Effect.flip,

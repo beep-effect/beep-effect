@@ -485,28 +485,24 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
 
     it.effect("a decline without a message, and a merge without a sha, are still reported", () =>
       Effect.gen(function* () {
-        const declined = yield* withScriptedGh(
-          { ...defaultScript, mergeResponse: JSON.stringify({ merged: false }) },
-          () =>
-            runMergeGate(context, {
-              prNumber: pullFixture.number,
-              wantSha: headSha,
-              tolerate: [],
-              forceWindow: false,
-              dryRun: false,
-            }).pipe(Effect.flip)
+        const declined = yield* withScriptedGh({ ...defaultScript, mergeResponse: '{"merged":false}' }, () =>
+          runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: headSha,
+            tolerate: [],
+            forceWindow: false,
+            dryRun: false,
+          }).pipe(Effect.flip)
         );
         expect(declined.message).toContain("no message");
-        const decision = yield* withScriptedGh(
-          { ...defaultScript, mergeResponse: JSON.stringify({ merged: true }) },
-          () =>
-            runMergeGate(context, {
-              prNumber: pullFixture.number,
-              wantSha: headSha,
-              tolerate: [],
-              forceWindow: true,
-              dryRun: false,
-            })
+        const decision = yield* withScriptedGh({ ...defaultScript, mergeResponse: '{"merged":true}' }, () =>
+          runMergeGate(context, {
+            prNumber: pullFixture.number,
+            wantSha: headSha,
+            tolerate: [],
+            forceWindow: true,
+            dryRun: false,
+          })
         );
         expect(decision._tag).toBe("merge");
       })
