@@ -19,6 +19,7 @@ import {
   CacheEvidenceReference,
   CachePolicyAuditReport,
   CachePolicyBaseline,
+  CachePolicyBaselineRecord,
   CachePolicyFinding,
   CachePolicyProjection,
   CacheQualificationEntry,
@@ -57,7 +58,7 @@ const key = CacheQualificationKey.make({
 const reference = CacheEvidenceReference.make({ path: "review.json", sha256: digest });
 const review = CacheReviewDecision.make({ reviewer: "fixture", reason: "bounded fixture review", basis: reference });
 const baseline = CachePolicyBaseline.make({
-  review,
+  reviews: { "//": review },
   scope: [key.computation],
   profile: key.profile,
   epoch: key.epoch,
@@ -150,6 +151,7 @@ const defaultBaselineRequest = CacheBaselineRequest.make({
   scope: baseline.scope,
   profile: baseline.profile,
   epoch: baseline.epoch,
+  subjects: O.none(),
   previous: O.none(),
 });
 
@@ -191,7 +193,7 @@ const fixture = Effect.fn("CacheDispatchTest.fixture")(function* (
         Effect.sync(() => {
           expect(request).toEqual(baselineRequest);
           A.appendInPlace(calls, "baseline");
-          return baseline;
+          return CachePolicyBaselineRecord.make({ baseline, stamped: ["//"], carried: [], dropped: [] });
         })
       ),
       transition: Effect.fn("CacheDispatchTest.transition")((_root, request) =>
