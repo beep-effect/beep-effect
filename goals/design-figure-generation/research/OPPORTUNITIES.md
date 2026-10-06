@@ -38,3 +38,15 @@
   header rewrite to the requested version).
 - **Would have prevented it:** nothing in-repo; recorded so the next PDF driver starts from
   the per-page route.
+
+## 2026-10-06 — `Test Unit (repo-cli-2)` red is inherited from main (#1432)
+
+- **Doing:** babysitting PR #1439 at head `3b63bee`.
+- **Evidence:** `packages/tooling/tool/cli/test/runners-bake.test.ts` ("keeps the cloud bootstrap on
+  pinned archives") expects `.cursor/install.sh` to contain the bun release URL; #1432
+  (`b877057bc4`, merged to main 2026-10-05) rewrote `.cursor/install.sh` into the shared cloud
+  bootstrap and the assertion no longer matches. Reproduced locally in the lane; the lane does not
+  touch `.cursor/`, `scripts/cloud/`, or that test.
+- **Cost:** one wave diagnosis.
+- **Would have prevented it:** #1432 updating the assertion in the same PR; or the monitor
+  attributing a red to the last commit that touched the asserted file.
