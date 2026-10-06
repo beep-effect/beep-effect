@@ -543,3 +543,15 @@ rendered to `goals/ciops-ontology-pipeline/research/s7-live-replay-evidence.md`
 by `apps/labs/ciops/scripts/generate-live-replay-evidence.ts`. Like
 `evidence:s7`, it is check-by-default: only `--write` renders. The frozen
 `research/s7-replay-evidence.md` is never re-rendered.
+
+### 8.4 2026-10-06 (P3 close) — CQ-009 in the live replay
+
+The live report replaces the "temporally out of scope" CQ-009 line with a typed `Cq009Verdict` (goal
+decision log, P3 close, Rulings 33–34). The same-checkout arm is evaluated over the replay's own active
+grant set; on the `run4-fleet` pin it holds with 0 pairs across 200 grants. The legacy-origin-drain arm is
+always reported as unobservable with its census, never as a pass, because the admission journal carries
+no coordination-protocol field. Pairs with no recorded protocol stay in the same-checkout scope; only a
+pair in which a grant records `legacy-origin-lock/v1` by value is drain-window state. A censorship line
+names what the replay cannot see. CQ-009's same-checkout branch is scoped to current-protocol grants, with
+a `rows_eq_0` drain-window fixture. The engine and admission `s7-emission/v2` bytes are unchanged, and the
+frozen `research/s7-replay-evidence.md` is not re-rendered.

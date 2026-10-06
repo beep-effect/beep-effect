@@ -66,6 +66,7 @@ FIXTURES = [
     ("must-fail/cq009-two-grants.ttl", "temporal/cq-009-pre929", "rows_ge_1"),
     ("must-fail/cq009-same-checkout.ttl", "cq-009", "rows_ge_1_all_bound"),
     ("must-fail/cq009-legacy-drain.ttl", "cq-009", "rows_ge_1_all_bound"),
+    ("must-fail/cq009-drain-window-checkout.ttl", "cq-009", "rows_eq_0"),
     ("must-fail/cq010-oversize.ttl", "cq-010", "rows_ge_1"),
     ("must-fail/cq010-string-tokens.ttl", "cq-010", "rows_ge_1"),
     ("must-fail/cq019-filtered-trust.ttl", "cq-019", "rows_ge_1"),
