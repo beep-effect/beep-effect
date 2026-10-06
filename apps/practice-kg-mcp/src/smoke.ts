@@ -298,6 +298,74 @@ const runCompiledHost = Effect.fn("PracticeKgSmoke.runCompiledHost")(function* (
   });
 });
 
+// Claude Desktop opens every server with a classic `initialize` handshake. The
+// first hand-off of a stateless-only host failed there with "initialize is not
+// supported by the configured MCP protocols", so the smoke proves the handshake
+// against the compiled artifact as well as the stateless framing above.
+const HANDSHAKE_PROTOCOL_VERSION = "2025-11-25";
+
+class SmokeInitializeResult extends S.Class<SmokeInitializeResult>($I`SmokeInitializeResult`)(
+  { protocolVersion: S.Literal(HANDSHAKE_PROTOCOL_VERSION), serverInfo: SmokeServerInfo },
+  $I.annote("SmokeInitializeResult", { description: "Initialize result negotiated by the compiled MCP host." })
+) {}
+
+class SmokeInitializeResponse extends S.Class<SmokeInitializeResponse>($I`SmokeInitializeResponse`)(
+  { id: S.Literal(0), result: SmokeInitializeResult },
+  $I.annote("SmokeInitializeResponse", { description: "Initialize JSON-RPC response from the compiled MCP host." })
+) {}
+
+class SmokeHandshakeToolsResponse extends S.Class<SmokeHandshakeToolsResponse>($I`SmokeHandshakeToolsResponse`)(
+  { id: S.Literal(1), result: SmokeToolsResult },
+  $I.annote("SmokeHandshakeToolsResponse", { description: "Tool list returned after an initialize handshake." })
+) {}
+
+const decodeInitialize = S.decodeUnknownEffect(S.fromJsonString(SmokeInitializeResponse));
+const decodeHandshakeTools = S.decodeUnknownEffect(S.fromJsonString(SmokeHandshakeToolsResponse));
+
+const runCompiledHandshake = Effect.fn("PracticeKgSmoke.runCompiledHandshake")(function* (
+  executable: string,
+  bundleOut: string,
+  neutralCwd: string
+) {
+  const path = yield* Path.Path;
+  const initialize = `{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"${HANDSHAKE_PROTOCOL_VERSION}","capabilities":{},"clientInfo":{"name":"compiled-smoke","version":"0.0.0"}}}`;
+  const pipeScript =
+    `{ printf '%s\\n' '${initialize}'; sleep 2; ` +
+    `printf '%s\\n' '{"jsonrpc":"2.0","method":"notifications/initialized"}'; sleep 1; ` +
+    `printf '%s\\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'; sleep 3; } | "$1"`;
+  const responseText = yield* Effect.tryPromise({
+    try: () =>
+      new Response(
+        Bun.spawn(["sh", "-c", pipeScript, "practice-kg-handshake", executable], {
+          cwd: neutralCwd,
+          env: { ...Bun.env, BUNDLE_DIR: bundleOut, NODE_PATH: path.join(path.dirname(executable), "node_modules") },
+          stderr: "inherit",
+          stdout: "pipe",
+        }).stdout
+      ).text(),
+    catch: (cause) => SmokeFailure.make({ cause, message: "Compiled host handshake smoke failed." }),
+  });
+  const lines = A.filter(Str.split("\n")(Str.trim(responseText)), Str.isNonEmpty);
+  const handshakeFailure = (message: string) => (cause: unknown) => SmokeFailure.make({ cause, message });
+  yield* Effect.fromOption(A.get(lines, 0)).pipe(
+    Effect.flatMap(decodeInitialize),
+    Effect.mapError(
+      handshakeFailure(`Compiled host did not negotiate initialize ${HANDSHAKE_PROTOCOL_VERSION}: ${responseText}`)
+    )
+  );
+  const tools = yield* Effect.fromOption(A.get(lines, 1)).pipe(
+    Effect.flatMap(decodeHandshakeTools),
+    Effect.mapError(handshakeFailure("Compiled host returned no tool list after the initialize handshake."))
+  );
+  yield* Effect.succeed(A.length(tools.result.tools)).pipe(
+    Effect.filterOrFail(
+      (count) => count === A.length(ExpectedTools),
+      (count) => SmokeFailure.make({ message: `Handshake session listed ${count} tools.` })
+    )
+  );
+  yield* Effect.logInfo("COMPILED_HANDSHAKE_OK", { protocolVersion: HANDSHAKE_PROTOCOL_VERSION });
+});
+
 const program = Effect.scoped(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
@@ -311,6 +379,7 @@ const program = Effect.scoped(
       });
     }
     yield* runCompiledHost(executable, bundleOut, root);
+    yield* runCompiledHandshake(executable, bundleOut, root);
   })
 );
 runEntrypoint({ isMain: import.meta.main, program });

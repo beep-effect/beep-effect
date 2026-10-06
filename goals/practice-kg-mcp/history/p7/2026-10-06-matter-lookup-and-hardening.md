@@ -92,7 +92,23 @@ consequences: the update path on this machine is **Settings → Extensions**
 (uninstall the old extension, install the new `.mcpb`, set the bundle folder),
 and the manifest version had to change, because the July package and the first
 2026-10-06 package both said `0.0.0` and the app could not tell them apart. The
-manifest version is now `0.2.0` and is bumped per hand-off.
+manifest version is bumped per hand-off (`0.2.1` after the handshake fix).
+
+## Handshake failure on first install, and the fix (D-17)
+
+Installing the first package in Claude Desktop failed for every session:
+"initialize is not supported by the configured MCP protocols (requested
+'2025-11-25')". The host had been stateless-only since the stateless-kit
+change; Claude Desktop always opens with `initialize`. The eleven-check
+Windows run above did not catch it because its driver spoke the stateless
+framing directly. That run proved the tools and the bundle on Windows; it did
+not prove that the real client could start the server.
+
+Fix: the host lists the handshake-era protocol versions after the stateless
+one. Proven on the workstation with the compiled binary: `initialize`
+negotiates `2025-11-25`, `tools/list` returns ten tools, a tool call succeeds,
+and a stateless client still works on the same binary. The compiled smoke now
+has a handshake leg (`COMPILED_HANDSHAKE_OK`). Package version `0.2.1`.
 
 ## Not done here
 

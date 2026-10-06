@@ -29,7 +29,7 @@ const $I = $PracticeKgMcpId.create("package");
  * version are indistinguishable to it. Bump this for every package that is
  * handed to a user; the July 2026 hand-off shipped as 0.0.0.
  */
-const ExtensionVersion = "0.2.0";
+const ExtensionVersion = "0.2.1";
 
 const DuckDbVersion = "1.5.6-r.1";
 /*

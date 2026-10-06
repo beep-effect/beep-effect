@@ -23,6 +23,7 @@ import {
   PracticeKgProjectionsLive,
   PracticeKgQueries,
   PracticeKgToolkitLayer,
+  practiceKgMcpProtocols,
   readPracticeKgClaimsCarry,
   runPracticeKgClaimsBatch,
   verifyPracticeKgBundle,
@@ -565,6 +566,15 @@ describe("practice KG projections", () => {
         }),
       { arbitrary: fcRuns(10) }
     );
+  });
+
+  it("answers the handshake Claude Desktop opens with, and keeps the stateless protocol first", () => {
+    // Regression: a stateless-only list made the installed extension fail with
+    // "initialize is not supported by the configured MCP protocols (requested '2025-11-25')".
+    const versions = A.map(practiceKgMcpProtocols, (protocol) => protocol.protocolVersion);
+    expect(A.headNonEmpty(versions)).toBe("2026-07-28");
+    expect(versions).toContain("2025-11-25");
+    expect(versions).toContain("2025-06-18");
   });
 
   it.effect(
