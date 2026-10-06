@@ -31,11 +31,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Inheritance — complete 2026-10-05 (W1 landed, W2 declined by P0 Ruling 1). Next: P1 Stage
-C capture (W3–W4), the first irreversible step.
+P1 Stage C capture — complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger` pinned, the
+first irreversible step; P0 complete 2026-10-05). Next: P2 projection on live data (W6 S7-v2
+seam first, then W5 live replay and the `planEpisode` body).
 
 ## Latest Evidence
 
+- 2026-10-06, W3+W4: `corpus/run4-fleet/` (937 files, 260 checkouts, 11,179 events) and
+  `corpus/run4-ledger/` (9 ledgers, 8,082 rows, gate holds: C4.1 checked, 3,628 post-cut pre-push
+  facts, merged-preview dormant) pinned by the new sibling generators under P1 Rulings 1–8; lane
+  reports in `explorations/beep-ci-operational-ontology/research/run4-lanes/stage-c-*-report.md`.
 - 2026-10-05, W1: `research/SOURCES.md` §4 refreshed against `8b7392fe00`; 39 change-event rows
   backfilled into `explorations/beep-ci-operational-ontology/research/control-interventions.yaml`
   (42 rows) by the reproducible query in `research/scripts/w1_lever_query.sh`, under P0 Rulings
@@ -50,5 +55,6 @@ C capture (W3–W4), the first irreversible step.
   rulings land in [`research/decisions.md`](./research/decisions.md).
 - The ontology tree and `research/scripts/**` stay under the exploration; this goal owns them
   by back-link (graduation Ruling 7). `ontology/extraction/**` is byte-immutable.
-- Run 4 waits on the graduation Ruling 1 gate: time-to-certainty C4.1 checked plus
-  post-#1321 owning-clone proof-ledger facts from both local stages.
+- Run 4 waits on the graduation Ruling 1 gate as amended by P1 Rulings 1–2 (2026-10-05):
+  time-to-certainty C4.1 checked plus post-#1321 pre-push proof-ledger facts in the fleet's
+  owning-clone ledgers; the merged-preview legs stay flagged beside the C4.2 legs.

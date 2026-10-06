@@ -800,3 +800,41 @@
   so the first census counted 46 PRs instead of 155; the per-family zero counts caught it.
   Prevention: the committed `research/scripts/w1_lever_query.sh` is bash and was diffed
   against the inline census (244 rows, identical).
+
+## 2026-10-05: P1 Stage C capture drive — friction
+- The run-4 gate's premise (graduation Ruling 1: ledger facts "from both local stages") did not
+  hold at the first re-read: 3,442 post-#1321 facts in eight clones, every one `pre-push`, and no
+  `merged-preview` attempt anywhere in the fleet since 2026-09-09, before the C4.1 writer shipped.
+  Handling: P1 Ruling 1 amended the gate to pre-push facts and flagged the merged-preview legs.
+  Prevention: a gate that names a stage should cite the last time that stage ran; a census-only
+  probe (`proof-report --json --since <instant>` per clone) belongs in the docket before the gate
+  is written.
+- The hosted Secret Scanning check reads main's `.gitleaks.toml`, so a ledger pin that carries
+  64-hex values under a member named `key` cannot allowlist itself in its own PR (`generic-api-key`
+  flags `"key":"<hex64>"`; probed with `gitleaks stdin`). Handling: P1 Ruling 3 pins the two `key`
+  members as 12-hex prefixes with an injectivity assertion. Prevention: probe every new payload
+  shape with `gitleaks stdin --config .gitleaks.toml` before choosing a projection.
+- A verbatim copy of the run3b discovery would today publish the private duplicate clone (the
+  `beep-effect*` glob matches it), miss 17 `.claude/worktrees` checkouts, skip the `promotions`
+  family and turn 2,068 quarantined lease files into about 4,100 payload files. Handling: P1
+  Ruling 5. Prevention: every fleet capture should filter by the origin URL read from the git
+  config and receipt the excluded count; quarantine should be censused before a layout is chosen.
+- The five-lane read-only survey workflow was lost to an account switch mid-run (the critic lane
+  had started; the five notes were already on disk). Handling: resumed with `resumeFromRunId`, the
+  five cached lanes replayed and only the critic re-ran. Prevention: keep every lane's deliverable
+  on disk (the notes were), and resume rather than relaunch.
+- The gitleaks `generic-api-key` rule has a 3.5-bit Shannon-entropy cut, so a 12-hex prefix whose
+  twelve digits are all distinct (log2 12 = 3.585) is flagged while most 12-hex values pass; the
+  W4 lane measured 64 findings over its dry root at 12 hex and 0 at 11. Handling: P1 Ruling 3
+  amended to 11 hex. Prevention: probe a projection width with a full dry root, not a sample value.
+- `origin/main` moved four times during the P1 lanes (#1427, #1429, #1440, #1447) and rewrote a
+  cited file, so every plain dry run failed the Ruling 4 byte-equality guard until the orchestrator
+  merged main; the lanes proved their changes through a scratch runner pinned to the merged
+  commit. Prevention: merge `origin/main` into the capture branch right before each dry run that
+  must pass the guard, and treat the guard's message as the instruction it is.
+- Two Workflow runs were lost to desktop-session restarts (account switches) mid-lane; both
+  resumed from the run id with the finished lanes cached. Prevention: keep every lane deliverable
+  on disk and resume rather than relaunch (the same receipt as the survey loss).
+- A same-length mutation fixture in a generator test misspelled a word on purpose and tripped
+  `typos` on the authored files, and the receipt that quoted it tripped it again; the fixture now
+  swaps a whole word. Prevention: mutate a word, never a spelling, and never quote the misspelling.
