@@ -448,7 +448,8 @@ const keyedFamilyKeys = (path: string): ReadonlyArray<string> =>
   A.getSomes(
     A.map(A.fromIterable(path.matchAll(keyedDocketPattern)), (match) =>
       pipe(
-        familyOfDocket(match[2] ?? ""),
+        O.fromNullishOr(match[2]),
+        O.flatMap(familyOfDocket),
         O.map((family) => `${match[1]}.${family}`)
       )
     )
