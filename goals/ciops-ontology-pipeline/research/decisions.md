@@ -989,7 +989,7 @@ projections are pin bytes already on main.
 shared-span pair inside one batch: `chg` (45: the 44 change-event ledger rows with KPI law section 2;
 Queue G), `tier` (41: KPI law section 6, the literal-domains rows and rulings, the `ProofStage` line,
 both pin manifests' census blocks and the 16 attempt observations; Queue H), `prf` (32: the
-proof-ledger observations; Queue B issuance and custody), `adm` (61: the 60 admission-journal
+proof-ledger observations; Queue B issuance and custody), `jrn` (61: the 60 admission-journal
 observations with the live-state record; Queue D), and `lpl` (25: S7 contract section 8 with the
 lane-plan Turtle; the Queue E lane-plan terms). Call (w) placed the stage-bearing ledger observations
 with Queue H; they stay in `prf` instead, because the tier batch already reads the ledger's stage
@@ -1022,3 +1022,39 @@ logged; the earlier canary already showed no memory path and no ontology skill u
 The six seat briefs are installed as `research/run4-lanes/p3-seat-{common,denotation,foundational,
 blinded,synthesis,adversary}-brief.md`; every input manifest lists the seat-common brief and the
 seat's own brief, and the blinded seat receives Part A of its brief only, as the root's brief file.
+
+**Call (ac) — denotation results and the consolidation pass.** The five seats wrote 56 hypotheses
+(`chg` 6, `tier` 15, `prf` 12, `jrn` 14, `lpl` 9), every observation cited by its own batch, no stop.
+The cross-batch check found the same kinds under several prefixes: a verification attempt under
+`tier`, `prf` and `jrn`; a proof stage, tier values, a grouping of attempts under one run and a lane
+execution under `tier` and `prf`; the admission work kind under `jrn` and, as a merged-preview
+reading, under `tier`. Under call (w) the consolidation pass runs once over those three batches with
+the fresh output prefix `vfy` and a union batch of 134 observations; `vfy` is the prefix of every later
+stage for that material, and the 41 source records are retired after an exact coverage check (kept
+outside the repository for audit, never committed). `chg` and `lpl` share no kind with them and keep
+their prefixes; the `lpl` hypothesis of the same-checkout admission skip is a mechanism reading from
+prose, not an instance of the seat-grant or checkout kinds, so it is not consolidated. Reversal: a
+re-run of the consolidation pass before foundational analysis starts.
+
+**Call (ad) — the denotation stage closes.** The consolidation pass merged the `tier`, `prf` and `jrn`
+hypotheses into 35 `vfy` records over their 134 observations; an exact coverage check confirmed the
+union, and the 41 source records were retired outside the repository. An independent skeptic per
+prefix then checked every hypothesis against its records. The recurring defects were wording a seat
+took from its brief and stated as a record fact (for example "applied outside the repository", which no
+change-event row says), viable rival readings collapsed into one, and queue answers stated beyond the
+records (the merged-preview records read the deployed `proofTier=full` as placing an attempt in an
+assurance tier, although that mapping is open). Two repair rounds fixed every blocker and major from
+landed rows in the call (ab) shape, and a last majors-only round split the head-plus-diff working state
+into its own hypothesis and removed one unsupported claim; the remaining minors are tracked follow-ups
+for the synthesis seat. The stage ends with 54 hypotheses (`chg` 6, `vfy` 36, `lpl` 12), every
+observation cited, and the repository-fidelity scan in the pin worktree showing only the 138 expected
+lines. Survivors under the validator's rule (null rejected, a discriminator, a domain-referent or
+information-artifact status) are `chg` 1 and `vfy` 16; the lane-plan batch has none, as call (ab)
+expects, so the foundational and blinded seats run for `chg` and `vfy` only. Notable outcomes the later
+seats inherit: the assurance-tier class and the change-event landing instant both stand
+null-standing and unresolved for want of a record-backed discriminator, so the Queue G property and the
+Queue H tier class reach synthesis without an analysis pair unless a later record supplies one; the
+merged-preview stage and work-kind readings survive, the tier reading does not. The blinded seat's
+memory canary passed before launch (it reports nothing in context and loads no memory path), and the
+launch log records the pre-launch checks. Reversal: a re-run of the affected denotation pass before
+the foundational pairs are reviewed.

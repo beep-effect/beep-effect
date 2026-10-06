@@ -999,3 +999,25 @@
   variant. Evidence: the exact-once guard printed `SUBSTITUTION-COUNT=0 (not applied)` for the
   literal form of the escape; a pattern that does not spell the escape applied once. Prevention:
   keep the exact-once count guard on every substitution, and match such bytes by pattern.
+
+## 2026-10-06: P3 run 4 — denotation seats (filed by the orchestrator under call v)
+- Missing output directory. Work: the first hypothesis write of the `chg` seat. Evidence: the write
+  failed with `FileNotFoundError` because `ONT/work/hypotheses/` did not exist in the lane. Prevention:
+  the orchestrator creates every seat output directory before a launch, and the seat brief says who
+  creates it.
+- Records read as JSON. Work: reading a batch. Evidence: the adapter and transcriber write observation
+  files as JSON under a `.yaml` extension, and a plain `cat` of one batch's source records filled about
+  46 KB of context with instance identifiers. Prevention: the seat-common brief names the layout and
+  gives a compact one-line-per-fact dump through the recorded Python runtime.
+- Writing full ids. Work: emitting hypotheses that cite up to 61 observations. Evidence: the briefs
+  forbid retyping ids and allow only fixed one-liners, so seats expanded 12-hex file prefixes to full
+  ids with shell `grep`/`sed` against an id list, and one seat's quoting pass left nine files
+  unparsable until a second `sed` fixed them. Prevention: ship a reviewed id-expansion helper with the
+  seat-common brief instead of per-seat shell.
+- Residue scan scope. Work: the hygiene check over a seat's own records. Evidence: scan A does not match
+  UUID-shaped attempt ids, run ids or 40/64-hex digests copied into prose fields; one seat added a hand
+  check. Prevention: add those shapes to scan A for prose fields, excluding the `observation_refs` ids.
+- Shared directory listing. Work: confirming that no earlier file of the seat's prefix existed.
+  Evidence: a listing of `ONT/work/hypotheses/` piped through `grep -c` touched the shared directory
+  while other seats wrote into it, and one seat ran a bare `python3` with an empty heredoc against the
+  brief. Prevention: the orchestrator states the empty-prefix precondition in the launch message.
