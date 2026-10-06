@@ -29,7 +29,7 @@ import {
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
-import { ConfigProvider, DateTime, Effect, FileSystem, Path, Ref } from "effect";
+import { ConfigProvider, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -314,34 +314,33 @@ describe("account report rendering", () => {
 const respond = (request: HttpClientRequest.HttpClientRequest, body: string, status = 200) =>
   HttpClientResponse.fromWeb(request, new Response(body, { status }));
 
-const runLive = <A, E>(
+const runLive = Effect.fn("runLive")(function* <A, E>(
   files: Readonly<Record<string, string>>,
   client: HttpClient.HttpClient,
   program: Effect.Effect<A, E, AccountsUsage>
-) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
-    yield* fs.makeDirectory(path.join(root, "snapshots"));
-    yield* Effect.forEach(
-      Object.entries(files),
-      ([name, content]) => fs.writeFileString(path.join(root, name), content),
-      {
-        discard: true,
-      }
-    );
-    return yield* program.pipe(
-      Effect.provide(layerAccountsUsageLive),
-      Effect.provideService(HttpClient.HttpClient, client),
-      Effect.provideService(
-        ConfigProvider.ConfigProvider,
-        ConfigProvider.fromEnv({
-          env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
-        })
-      )
-    );
-  }).pipe(Effect.provide(NodeServices.layer));
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "accounts-usage-test-" });
+  yield* fs.makeDirectory(path.join(root, "snapshots"));
+  yield* Effect.forEach(
+    Object.entries(files),
+    ([name, content]) => fs.writeFileString(path.join(root, name), content),
+    {
+      discard: true,
+    }
+  );
+  return yield* Layer.build(layerAccountsUsageLive).pipe(
+    Effect.flatMap((context) => Effect.provideContext(program, context)),
+    Effect.provideService(HttpClient.HttpClient, client),
+    Effect.provideService(
+      ConfigProvider.ConfigProvider,
+      ConfigProvider.fromEnv({
+        env: { BEEP_ACCOUNTS_AUTH_DIR: root, BEEP_ACCOUNTS_SNAPSHOT_DIR: path.join(root, "snapshots"), HOME: root },
+      })
+    )
+  );
+});
 
 const authFiles = {
   "claude-me.json": `{"type":"claude","email":"me@example.com","access_token":"claude-token","disabled":false}`,
@@ -354,7 +353,7 @@ const authFiles = {
   "broken.json": "{",
 };
 
-describe("live account poller", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("live account poller", (it) => {
   it.effect("lists every supported login and polls each with its own token", () =>
     Effect.gen(function* () {
       const seen = yield* Ref.make(A.empty<ReadonlyArray<string | undefined>>());
@@ -382,7 +381,12 @@ describe("live account poller", () => {
         ["grok", "me@example.com", "Ok"],
         ["muse", "me@example.com", "Ok"],
       ]);
-      expect(A.sort(yield* Ref.get(seen), (left, right) => (String(left[1]) < String(right[1]) ? -1 : 1))).toEqual([
+      expect(
+        A.sort(
+          yield* Ref.get(seen),
+          Order.mapInput(Order.String, (entry: ReadonlyArray<string | undefined>) => String(entry[1]))
+        )
+      ).toEqual([
         ["GET", "https://api.anthropic.com/api/oauth/usage", "Bearer claude-token", "oauth-2025-04-20"],
         ["POST", "https://api.meta.ai/muse-code/key", "Bearer muse-device", undefined],
         ["GET", "https://chatgpt.com/backend-api/wham/usage", "Bearer codex-token", "acct-1"],
@@ -423,7 +427,7 @@ describe("live account poller", () => {
   );
 });
 
-describe("local snapshots", () => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("local snapshots", (it) => {
   const snapshot = `{"schemaVersion":"accounts-snapshot/v1","provider":"cursor","label":"me@example.com","capturedAt":"2026-01-04T21:00:00.000Z","plan":"Ultra","windows":[{"kind":"cycle","scope":null,"usedPercent":14,"resetsAt":"2026-01-05T10:00:00.000Z"},{"kind":"cycle-scoped","scope":"Auto","usedPercent":11,"resetsAt":null}]}`;
 
   it.effect("shows a snapshot file as a row and skips one it cannot read", () =>

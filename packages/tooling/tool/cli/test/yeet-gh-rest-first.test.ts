@@ -178,7 +178,7 @@ it.layer(
   budgetLayer({
     graphql: () =>
       Effect.fail(
-        new GitHubGraphQLError({
+        GitHubGraphQLError.make({
           kind: "rateLimited",
           operation: "rateLimit",
           reason: "API rate limit exceeded",
