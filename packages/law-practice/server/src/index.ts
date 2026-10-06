@@ -45,6 +45,7 @@ export * from "./PracticeKg.families.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKg.host.ts";
+export * from "./PracticeKg.matters.ts";
 /**
  * @category services
  * @since 0.0.0
@@ -71,6 +72,7 @@ export * from "./PracticeKg.schemas.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKg.tool-handlers.ts";
+export * from "./PracticeKg.verify.ts";
 /**
  * @category tools
  * @since 0.0.0

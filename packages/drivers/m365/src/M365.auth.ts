@@ -1,7 +1,9 @@
 /**
- * Delegated Microsoft Graph token acquisition for the Microsoft 365 driver.
+ * Microsoft Graph token acquisition for the Microsoft 365 driver: the
+ * delegated lane below, and the app-only lane (`M365Auth.makeAppOnlyLayer`,
+ * client-credentials against Graph `/.default`, certificate-first).
  *
- * Implements OAuth2 authorization-code + PKCE as a public client via
+ * The delegated lane implements OAuth2 authorization-code + PKCE as a public client via
  * `@azure/msal-node` with silent refresh, optionally persisting the MSAL token
  * cache encrypted via `@azure/msal-node-extensions` when `tokenCachePath` is
  * configured (DPAPI / Keychain / libsecret). That extension is an optional peer
@@ -22,16 +24,23 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ResolvedM365Config, resolveM365Config } from "./M365.config.ts";
+import {
+  M365AppOnlyCredential,
+  m365AppOnlyScope,
+  ResolvedM365Config,
+  resolveM365AppOnlyAuthority,
+  resolveM365Config,
+} from "./M365.config.ts";
 import { M365Error } from "./M365.errors.ts";
 import type {
   AccountInfo,
   AuthenticationResult,
+  ConfidentialClientApplication,
   Configuration,
   CryptoProvider,
   PublicClientApplication,
 } from "@azure/msal-node";
-import type { M365ConfigInput } from "./M365.config.ts";
+import type { M365AppOnlyConfigInput, M365ConfigInput } from "./M365.config.ts";
 
 const $I = $M365Id.create("M365.auth");
 
@@ -295,6 +304,31 @@ const acquireToken = Effect.fn("M365Auth.acquireToken")(function* (
   return Redacted.make(result.accessToken);
 });
 
+type ConfidentialClientAuth = Pick<NonNullable<Configuration["auth"]>, "clientCertificate" | "clientSecret">;
+
+const confidentialClientAuth: (credential: M365AppOnlyCredential) => ConfidentialClientAuth =
+  M365AppOnlyCredential.match({
+    M365CertificateCredential: (credential) => ({
+      clientCertificate: {
+        privateKey: Redacted.value(credential.privateKey),
+        thumbprintSha256: credential.thumbprintSha256,
+      },
+    }),
+    M365ClientSecretCredential: (credential) => ({ clientSecret: Redacted.value(credential.clientSecret) }),
+  });
+
+const acquireAppOnlyToken = Effect.fn("M365Auth.acquireAppOnlyToken")(function* (
+  cca: ConfidentialClientApplication,
+  scope: string
+): Effect.fn.Return<Redacted.Redacted<string>, M365Error> {
+  // MSAL serves this from its in-memory cache until the token nears expiry.
+  const result = yield* Effect.tryPromise({
+    try: () => cca.acquireTokenByClientCredential({ scopes: [scope] }),
+    catch: (cause) => M365Error.fromReason("auth", { cause }),
+  }).pipe(Effect.flatMap(requireAuthenticationResult));
+  return Redacted.make(result.accessToken);
+});
+
 /**
  * The token-provider contract consumed by the {@link M365} service: a
  * re-runnable Effect yielding a redacted Graph access token (silent when a
@@ -401,6 +435,66 @@ export class M365Auth extends Context.Service<M365Auth, M365AuthShape>()($I`M365
           resolved,
         });
         return M365Auth.of({ acquireToken: acquireToken(runtime) });
+      })
+    );
+
+  /**
+   * Build the live app-only token provider (client-credentials grant against
+   * Graph `/.default`, certificate-first).
+   *
+   * **Details**
+   *
+   * There is no user, redirect or persisted cache on this lane. The token's
+   * reach is whatever the service principal has been assigned; for mailbox
+   * access that should be an Exchange RBAC-for-Applications assignment scoped
+   * to specific mailboxes, never a tenant-wide application permission.
+   *
+   * **Example** (Build app-only MSAL layer)
+   *
+   * ```ts
+   * import { M365AppOnlyConfigInput, M365Auth, M365CertificateCredential } from "@beep/m365"
+   * import { Redacted } from "effect"
+   *
+   * const layer = M365Auth.makeAppOnlyLayer(
+   *   M365AppOnlyConfigInput.make({
+   *     clientId: "client-id",
+   *     credential: M365CertificateCredential.make({
+   *       privateKey: Redacted.make("pem-private-key-from-a-protected-store"),
+   *       thumbprintSha256: "AB12"
+   *     }),
+   *     tenantId: "tenant-id"
+   *   })
+   * )
+   * console.log(layer)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly makeAppOnlyLayer = (config: M365AppOnlyConfigInput): Layer.Layer<M365Auth, M365Error> =>
+    Layer.effect(
+      M365Auth,
+      Effect.gen(function* () {
+        const Msal = yield* importMsalNode;
+        const cca = yield* Effect.try({
+          try: () =>
+            new Msal.ConfidentialClientApplication({
+              auth: {
+                authority: resolveM365AppOnlyAuthority(config),
+                clientId: config.clientId,
+                ...confidentialClientAuth(config.credential),
+              },
+              system: {
+                loggerOptions: {
+                  logLevel: Msal.LogLevel.Error,
+                  loggerCallback: () => {},
+                  piiLoggingEnabled: false,
+                },
+              },
+            }),
+          catch: (cause) => M365Error.fromReason("config", { cause }),
+        });
+        return M365Auth.of({ acquireToken: acquireAppOnlyToken(cca, m365AppOnlyScope(config.graphBaseUrl)) });
       })
     );
 }
