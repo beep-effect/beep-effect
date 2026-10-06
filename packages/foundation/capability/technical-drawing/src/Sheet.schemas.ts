@@ -64,6 +64,14 @@ const PositiveFinite = S.Finite.check(
 /**
  * Points per centimetre.
  *
+ * **Example** (Use PT_PER_CM)
+ *
+ * ```ts
+ * import { PT_PER_CM } from "@beep/technical-drawing"
+ *
+ * console.log(PT_PER_CM * 2.5) // top margin in points
+ * ```
+ *
  * @category sheets
  * @since 0.0.0
  */
@@ -71,6 +79,14 @@ export const PT_PER_CM = 72 / 2.54;
 
 /**
  * Points per millimetre.
+ *
+ * **Example** (Use PT_PER_MM)
+ *
+ * ```ts
+ * import { PT_PER_MM } from "@beep/technical-drawing"
+ *
+ * console.log(PT_PER_MM * 0.35) // 0.35 mm line in points
+ * ```
  *
  * @category sheets
  * @since 0.0.0
@@ -131,6 +147,14 @@ export const pageSizePt: (format: SheetFormat) => PagePoints = PageSizePt.implem
 /**
  * Minimum margins of 37 CFR 1.84(g), in centimetres.
  *
+ * **Example** (Use MARGINS_CM)
+ *
+ * ```ts
+ * import { MARGINS_CM } from "@beep/technical-drawing"
+ *
+ * console.log(MARGINS_CM.top, MARGINS_CM.bottom)
+ * ```
+ *
  * @category sheets
  * @since 0.0.0
  */
@@ -138,6 +162,14 @@ export const MARGINS_CM = { top: 2.5, left: 2.5, right: 1.5, bottom: 1.0 } as co
 
 /**
  * Minimum lettering height of 37 CFR 1.84(p)(3), in centimetres.
+ *
+ * **Example** (Use MIN_LETTER_HEIGHT_CM)
+ *
+ * ```ts
+ * import { MIN_LETTER_HEIGHT_CM } from "@beep/technical-drawing"
+ *
+ * console.log(MIN_LETTER_HEIGHT_CM)
+ * ```
  *
  * @category sheets
  * @since 0.0.0

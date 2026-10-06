@@ -20,6 +20,8 @@
     "packages/drivers/firecrawl/src/**",
     "packages/drivers/libpff/package.json",
     "packages/drivers/libpff/src/**",
+    "packages/drivers/m365/package.json",
+    "packages/drivers/m365/src/**",
     "packages/drivers/obs/package.json",
     "packages/drivers/obs/src/**",
     "packages/drivers/occt/package.json",

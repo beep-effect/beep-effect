@@ -35,6 +35,14 @@ const isBoundary = (line: string): boolean => A.some(BOUNDARY_PATTERNS, (pattern
  * Split text into lines, dropping only trailing whitespace and carriage
  * returns, never leading characters.
  *
+ * **Example** (CRLF and trailing spaces)
+ *
+ * ```ts
+ * import { textLines } from "@beep/technical-drawing"
+ *
+ * console.log(textLines("a  \r\n  b\n")) // ["a", "  b", ""]
+ * ```
+ *
  * @category approval
  * @since 0.0.0
  */
