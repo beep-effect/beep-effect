@@ -19,6 +19,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { readEmailRows } from "./PracticeKg.emails.ts";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import {
+  applyPracticeKgPathEvidence,
   attributeDocuments,
   PracticeKgAttributeDocumentsInput,
   PracticeKgResolveAnchorsInput,
@@ -26,13 +27,16 @@ import {
   resolveAnchors,
 } from "./PracticeKg.families.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { buildMatterTables, PracticeKgMatterGraph, writeMatterTables } from "./PracticeKg.matters.ts";
 import { readReferenceScans } from "./PracticeKg.references.ts";
+import { practiceKgRegisterClientNames, readPracticeKgDocketRegister } from "./PracticeKg.register.ts";
 import { PracticeKgCatalogRow, PracticeKgEnrichmentRow, stripPrefix, withDuckDb } from "./PracticeKg.rows.ts";
 import {
   encodePracticeKgBundleManifestJson,
   encodePracticeKgCountsJson,
   encodePracticeKgNodePayloadJson,
   encodePracticeKgSummaryJson,
+  PRACTICE_KG_REFRESH_RUN,
   PracticeKgBundleManifest,
   PracticeKgCounts,
   PracticeKgEdgeRow,
@@ -45,6 +49,7 @@ import {
 import type { KgAttributionSource, KgEdgePredicate, KgNodeKind } from "@beep/law-practice-domain/values";
 import type { PracticeKgAnchorResolution, PracticeKgDocumentAttribution } from "./PracticeKg.families.ts";
 import type { PracticeKgReferenceScans } from "./PracticeKg.references.ts";
+import type { PracticeKgDocketRegisterRow } from "./PracticeKg.register.ts";
 import type {
   PracticeKgEmailHeaderRow,
   PracticeKgEpistemicStatus,
@@ -53,7 +58,8 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-05-01";
+const graphBundleVersion = "2026-10-06-02";
+const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
 
 This folder is a read-only local data bundle for the Practice KG MCP server.
@@ -75,7 +81,25 @@ const decodeCatalogRows = S.decodeUnknownEffect(S.Array(PracticeKgCatalogRow));
 const decodeEnrichmentRows = S.decodeUnknownEffect(S.Array(PracticeKgEnrichmentRow));
 const decodeReconciliationRows = S.decodeUnknownEffect(S.Array(GraphReconciliationRow));
 
-const catalogRowsSql = (includeRefresh: boolean) => `
+/*
+ * `$1` is the folded-in run labels joined by `runListSeparator`.
+ *
+ * A run is optional when it holds at least one file the organizer never saw
+ * (a digest with no `corpus_organized` row). An optional run that is not
+ * included is skipped whole, so its copies of organized files do not change
+ * those files' size, date, or origin chain. An included run adds each of its
+ * unorganized files once, flagged `runFolded`.
+ */
+const catalogRowsSql = `
+WITH included_runs AS (
+  SELECT UNNEST(string_split($1, '${runListSeparator}')) AS run_label
+),
+skipped_runs AS (
+  SELECT DISTINCT f.run_label
+  FROM corpus_source_files f
+  WHERE NOT EXISTS (SELECT 1 FROM corpus_organized o WHERE o.digest = f.digest)
+    AND NOT EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label)
+)
 SELECT
   o.digest,
   o.source_label AS "sourceLabel",
@@ -91,6 +115,7 @@ SELECT
   COALESCE(s.mtime_iso, '1970-01-01T00:00:00.000Z') AS "mtimeIso",
   COALESCE(s.run_label, 'base') AS "runLabel"
   ,COALESCE(s.source_origin_chain, o.source_relative_path) AS "sourceOriginChain"
+  ,FALSE AS "runFolded"
 FROM corpus_organized o
 LEFT JOIN (
   SELECT
@@ -99,42 +124,38 @@ LEFT JOIN (
     ARG_MIN(mtime_iso, run_label || ':' || source_label || ':' || relative_path) AS mtime_iso,
     ARG_MIN(run_label, run_label || ':' || source_label || ':' || relative_path) AS run_label
     ,STRING_AGG(run_label || ':' || source_label || ':' || relative_path, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
-  FROM corpus_source_files
-  ${includeRefresh ? "" : "WHERE run_label <> '2026-07-refresh'"}
+  FROM corpus_source_files f
+  WHERE NOT EXISTS (SELECT 1 FROM skipped_runs k WHERE k.run_label = f.run_label)
   GROUP BY digest
 ) s USING (digest)
-${
-  includeRefresh
-    ? `
 UNION ALL
 SELECT
-  refresh.digest,
-  refresh.source_label AS "sourceLabel",
-  refresh.relative_path AS "sourceRelativePath",
+  folded.digest,
+  folded.source_label AS "sourceLabel",
+  folded.relative_path AS "sourceRelativePath",
   'unsorted' AS category,
   NULL AS client,
   NULL AS docket,
   NULL AS "docketFamily",
   NULL AS "organizedRelativePath",
-  regexp_extract(refresh.relative_path, '[^/\\\\]+$', 0) AS "effectiveName",
+  regexp_extract(folded.relative_path, '[^/\\\\]+$', 0) AS "effectiveName",
   FALSE AS restored,
-  CAST(refresh.size_bytes AS DOUBLE) AS "sizeBytes",
-  refresh.mtime_iso AS "mtimeIso",
-  refresh.run_label AS "runLabel"
-  ,refresh.run_label || ':' || refresh.source_label || ':' || refresh.relative_path AS "sourceOriginChain"
+  CAST(folded.size_bytes AS DOUBLE) AS "sizeBytes",
+  folded.mtime_iso AS "mtimeIso",
+  folded.run_label AS "runLabel"
+  ,folded.run_label || ':' || folded.source_label || ':' || folded.relative_path AS "sourceOriginChain"
+  ,TRUE AS "runFolded"
 FROM (
-  SELECT *,
+  SELECT f.*,
     ROW_NUMBER() OVER (
-      PARTITION BY digest
-      ORDER BY source_label, relative_path
+      PARTITION BY f.digest
+      ORDER BY f.run_label, f.source_label, f.relative_path
     ) AS digest_ord
-  FROM corpus_source_files
-  WHERE run_label = '2026-07-refresh'
-) refresh
-WHERE refresh.digest_ord = 1
-  AND NOT EXISTS (SELECT 1 FROM corpus_organized organized WHERE organized.digest = refresh.digest)`
-    : ""
-}
+  FROM corpus_source_files f
+  WHERE EXISTS (SELECT 1 FROM included_runs i WHERE i.run_label = f.run_label)
+) folded
+WHERE folded.digest_ord = 1
+  AND NOT EXISTS (SELECT 1 FROM corpus_organized organized WHERE organized.digest = folded.digest)
 ORDER BY digest, "sourceLabel", "sourceRelativePath"`;
 
 const enrichmentRowsSql = `
@@ -151,11 +172,19 @@ SELECT
 FROM corpus_enrichment
 ORDER BY candidate`;
 
+// Base digests are those of the runs the organizer covered in full; see `catalogRowsSql`.
 const reconciliationSql = `
+WITH optional_runs AS (
+  SELECT DISTINCT f.run_label
+  FROM corpus_source_files f
+  WHERE NOT EXISTS (SELECT 1 FROM corpus_organized o WHERE o.digest = f.digest)
+)
 SELECT
   CAST((SELECT COUNT(*) FROM corpus_source_files) AS DOUBLE) AS "sourceRows",
-  CAST((SELECT COUNT(DISTINCT digest) FROM corpus_source_files WHERE run_label <> '2026-07-refresh') AS DOUBLE)
-    AS "baseDigests",
+  CAST((
+    SELECT COUNT(DISTINCT f.digest) FROM corpus_source_files f
+    WHERE NOT EXISTS (SELECT 1 FROM optional_runs r WHERE r.run_label = f.run_label)
+  ) AS DOUBLE) AS "baseDigests",
   CAST((SELECT COUNT(*) FROM corpus_organized WHERE category = 'docket') AS DOUBLE) AS "docketFiles",
   CAST((SELECT COUNT(DISTINCT docket_family) FROM corpus_organized WHERE docket_family IS NOT NULL) AS DOUBLE)
     AS "docketFamilies",
@@ -225,11 +254,14 @@ const firstOrFail = <A>(rows: ReadonlyArray<A>, label: string): Effect.Effect<A,
     })
   );
 
-const readCatalog = Effect.fn("PracticeKg.readCatalog")(function* (databasePath: string, includeRefresh: boolean) {
+const readCatalog = Effect.fn("PracticeKg.readCatalog")(function* (
+  databasePath: string,
+  includedRuns: ReadonlyArray<string>
+) {
   return yield* Effect.gen(function* () {
     const db = yield* DuckDb;
     const catalogRows = yield* db
-      .query(catalogRowsSql(includeRefresh))
+      .query(catalogRowsSql, [A.join(includedRuns, runListSeparator)])
       .pipe(
         Effect.flatMap(decodeCatalogRows),
         PracticeKgProjectionError.mapError("Graph catalog rows failed schema validation.")
@@ -311,6 +343,8 @@ const recycledStatus = (attribution: PracticeKgDocumentAttribution): PracticeKgE
 
 type GraphSink = {
   readonly addEdge: (edge: PracticeKgEdgeRow) => void;
+  /** The docket register's name for a client number, or the number itself. */
+  readonly clientLabel: (client: string) => string;
   /** First write wins: spine nodes are minted once per key, stubs never replace a node. */
   readonly addNode: (node: PracticeKgNodeRow) => void;
   /** Whether at least one non-recycled document backs this spine key. */
@@ -411,9 +445,17 @@ const projectClientSpine = (sink: GraphSink, row: PracticeKgCatalogRow, attribut
   const [provenanceKind, provenanceRef]: readonly [PracticeKgProvenanceKind, string] =
     attribution.attributionSource === "client-map" ? ["organize-row", row.sourceLabel] : ["catalog-digest", row.digest];
   sink.addNode(
-    createNode("client", client, client, provenanceKind, provenanceRef, attribution.attributionSource, {
-      epistemicStatus: spineStatus(sink, "client", client),
-    })
+    createNode(
+      "client",
+      client,
+      sink.clientLabel(client),
+      provenanceKind,
+      provenanceRef,
+      attribution.attributionSource,
+      {
+        epistemicStatus: spineStatus(sink, "client", client),
+      }
+    )
   );
   sink.addEdge(
     createEdge("client", client, "has_docket_family", "docket_family", familyKey, provenanceKind, provenanceRef)
@@ -580,7 +622,8 @@ const projectArchiveLinks = (
 const buildGraphRows = (
   catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
   attributions: ReadonlyArray<PracticeKgDocumentAttribution>,
-  resolutions: ReadonlyArray<PracticeKgAnchorResolution>
+  resolutions: ReadonlyArray<PracticeKgAnchorResolution>,
+  registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>
 ): {
   readonly edges: ReadonlyArray<PracticeKgEdgeRow>;
   readonly nodes: ReadonlyArray<PracticeKgNodeRow>;
@@ -601,10 +644,12 @@ const buildGraphRows = (
         ])
     )
   );
+  const clientNameOf = practiceKgRegisterClientNames(registerRows);
   const sink: GraphSink = {
     addEdge: (edge) => {
       MutableHashMap.set(edges, edgeKey(edge), edge);
     },
+    clientLabel: (client) => O.getOrElse(clientNameOf(client), () => client),
     addNode: (node) => {
       if (!MutableHashMap.has(nodes, node.iri)) {
         MutableHashMap.set(nodes, node.iri, node);
@@ -654,10 +699,11 @@ const buildGraphRows = (
 const projectGraph = (
   catalogRows: ReadonlyArray<PracticeKgCatalogRow>,
   enrichmentRows: ReadonlyArray<PracticeKgEnrichmentRow>,
-  scans: PracticeKgReferenceScans
+  scans: PracticeKgReferenceScans,
+  registerRows: ReadonlyArray<PracticeKgDocketRegisterRow>
 ): ReturnType<typeof buildGraphRows> => {
   const attributions = attributeDocuments(
-    PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences })
+    PracticeKgAttributeDocumentsInput.make({ catalogRows, docketReferences: scans.docketReferences, registerRows })
   );
   const resolutions = resolveAnchors(
     PracticeKgResolveAnchorsInput.make({
@@ -666,7 +712,7 @@ const projectGraph = (
       numberMentions: scans.numberMentions,
     })
   );
-  return buildGraphRows(catalogRows, attributions, resolutions);
+  return buildGraphRows(catalogRows, attributions, resolutions, registerRows);
 };
 
 const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(function* (
@@ -722,7 +768,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
     `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at, corpus_snapshot_at) VALUES ($1, $2, $3::jsonb, $4, $5)`,
     [
       graphBundleVersion,
-      sourceRuns.refresh202607 === "included" ? "base | 2026-07-refresh" : "base",
+      A.join(A.prepend(sourceRuns.includedRuns, "base"), runListSeparator),
       countsJson,
       builtAt,
       corpusSnapshotAt,
@@ -732,11 +778,14 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
 
 const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function* (
   corpusRoot: string,
-  includeRefresh: boolean
+  includedRuns: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<GraphTextSourceSpec>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const roots = includeRefresh ? ["staging/extract", "staging/extract-2026-07-refresh"] : ["staging/extract"];
+  const roots = A.prepend(
+    A.map(includedRuns, (run) => `staging/extract-${run}`),
+    "staging/extract"
+  );
   const candidates = yield* Effect.forEach(roots, (root) => {
     const sourcesPath = path.join(corpusRoot, root, "sources.jsonl");
     const textDir = path.join(corpusRoot, root, "text");
@@ -751,6 +800,20 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
   });
   return A.getSomes(candidates);
 });
+
+const readRegisterRows = (
+  options: PracticeKgOptions
+): Effect.Effect<ReadonlyArray<PracticeKgDocketRegisterRow>, PracticeKgProjectionError, FileSystem.FileSystem> =>
+  pipe(
+    O.fromUndefinedOr(options.docketRegisterPath),
+    O.match({
+      onNone: () => Effect.succeed(A.empty<PracticeKgDocketRegisterRow>()),
+      onSome: (registerPath) =>
+        readPracticeKgDocketRegister(registerPath).pipe(
+          Effect.mapError((cause) => PracticeKgProjectionError.make({ cause, message: cause.message }))
+        ),
+    })
+  );
 
 /**
  * Build a deterministic PGlite + DuckDB practice knowledge-graph bundle.
@@ -786,7 +849,7 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
  * console.log(Effect.isEffect(build)) // true
  * ```
  *
- * @param options - Corpus root, bundle destination, source-run, email, text-budget, and replacement options.
+ * @param options - Corpus root, bundle destination, source-run, docket-register, email, text-budget, and replacement options.
  * @returns Stable bundle and reconciliation counts.
  * @effects Reads the corpus catalog and extraction trees, replaces the requested derived bundle, and writes its summary report.
  * @category use-cases
@@ -817,8 +880,14 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     .makeDirectory(bundleOut, { recursive: true })
     .pipe(PracticeKgProjectionError.mapError(`Failed creating graph bundle "${bundleOut}".`));
 
-  const { catalogRows, enrichmentRows, reconciliation } = yield* readCatalog(catalogPath, options.includeRefresh);
-  const sourceSpecs = yield* existingSourceSpecs(options.corpusRoot, options.includeRefresh);
+  const includedRuns = PracticeKgOptions.includedRuns(options);
+  const registerRows = yield* readRegisterRows(options);
+  const catalog = yield* readCatalog(catalogPath, includedRuns);
+  const { enrichmentRows, reconciliation } = catalog;
+  // Folder-path evidence goes in before the DuckDB store is written, so the
+  // reference scans read a working file under the docket its folder names.
+  const catalogRows = applyPracticeKgPathEvidence(catalog.catalogRows);
+  const sourceSpecs = yield* existingSourceSpecs(options.corpusRoot, includedRuns);
   const emailRows = options.skipEmails
     ? A.empty<PracticeKgEmailHeaderRow>()
     : yield* readEmailRows(path.join(options.corpusRoot, "staging", "extract", "children"));
@@ -832,7 +901,10 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     options.maxTextBytes
   );
   const scans = yield* readReferenceScans(duckDbPath);
-  const graph = projectGraph(catalogRows, enrichmentRows, scans);
+  const graph = projectGraph(catalogRows, enrichmentRows, scans, registerRows);
+  yield* writeMatterTables(duckDbPath)(
+    buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows }))
+  );
   const builtAt = DateTime.formatIso(yield* DateTime.now);
   const counts = PracticeKgCounts.make({
     documents: S.Natural.make(duckCounts.documents),
@@ -842,7 +914,8 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   });
   const sourceRuns = PracticeKgSourceRuns.make({
     base: "included",
-    refresh202607: options.includeRefresh ? "included" : "excluded",
+    includedRuns,
+    refresh202607: A.contains(includedRuns, PRACTICE_KG_REFRESH_RUN) ? "included" : "excluded",
   });
   yield* writePgliteProjection(graph.nodes, graph.edges, counts, sourceRuns, builtAt, reconciliation.snapshotIso).pipe(
     PracticeKgProjectionError.mapError(`Failed building graph PGlite store "${path.join(bundleOut, "kg.pglite")}".`)
@@ -854,7 +927,7 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     corpusRootExpected: true,
     corpusSnapshotAt: reconciliation.snapshotIso,
     counts,
-    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
+    schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "3", pglite: "3" }),
     sourceRuns,
   });
   const manifestJson = yield* encodePracticeKgBundleManifestJson(manifest).pipe(
@@ -874,7 +947,8 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
     docketFamilies: S.Natural.make(reconciliation.docketFamilies),
     docketFiles: S.Natural.make(reconciliation.docketFiles),
     familyAnchors: S.Natural.make(reconciliation.familyAnchors),
-    includeRefresh: options.includeRefresh,
+    includeRefresh: A.contains(includedRuns, PRACTICE_KG_REFRESH_RUN),
+    includedRuns,
     sourceRows: S.Natural.make(reconciliation.sourceRows),
   });
   const summaryJson = yield* encodePracticeKgSummaryJson(summary).pipe(

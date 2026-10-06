@@ -45,6 +45,8 @@ import type { CodexPacketPlan } from "./Findings.schemas.ts";
 const UnknownJson = S.fromJsonString(S.Unknown);
 
 const SOURCE_URL = "https://chatgpt.com/codex/cloud/security/findings/";
+const SECURITY_CLOUD_URL =
+  "https://chatgpt.com/mcp-app/connector_openai_defense_factory/open_defense_factory#/findings";
 
 /**
  * Recover the capture date from the export's own filename.
@@ -183,8 +185,9 @@ const decodeCapturePayload = Effect.fn("CodexFindings.decodeCapturePayload")(fun
   const payloadInput = {
     schemaVersion: "codex-findings-capture/v1",
     capture: {
+      source: parsed.source,
       capturedAt,
-      sourceUrl: SOURCE_URL,
+      sourceUrl: parsed.source === "security-cloud-csv" ? SECURITY_CLOUD_URL : SOURCE_URL,
       repository: parsed.repository,
       findingsView: `repo-scoped, status=${A.join(A.map(parsed.statuses, Str.toLowerCase), "|")}`,
       expectedCount: O.getOrElse(expectedCount, () => A.length(parsed.findings)),
@@ -279,6 +282,12 @@ const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(func
     };
   }
   const parsed = yield* readCodexFindingsExport(options.from);
+  if (options.source === "security-cloud-csv" && parsed.source !== "security-cloud-csv") {
+    return yield* CodexFindingsIngestError.make({
+      reason: "csv-header-unsupported",
+      message: "The selected Security Cloud source requires its verified 10-column export header.",
+    });
+  }
   const capturedAt = yield* resolveCaptureDate(options.date, path.basename(options.from));
   const payload = yield* decodeCapturePayload(parsed, capturedAt, options.expectedCount);
   // Must match the slug planPacket will derive, or prior identifiers would be

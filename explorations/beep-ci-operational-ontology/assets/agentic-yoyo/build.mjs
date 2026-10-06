@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// fallow-ignore-file unused-file -- run by hand to rebuild the illustrated page; nothing in the workspace graph imports it
 // Builds the illustrated "The Agentic Yoyo" page from the canonical article
 // (THE_AGENTIC_YOYO.md at the repo root) plus the shell and data in this dir.
 // Node stdlib only; output is byte-deterministic for a given input set.
@@ -66,7 +65,63 @@ function beatButtons(slugKey) {
   return `<div class="beats">${out.join("")}</div>`;
 }
 
-// fallow-ignore-next-line complexity -- one-pass markdown renderer for a hand-run docs asset, not product code
+function readLines(lines, start, accepts, transform) {
+  let next = start;
+  const values = [];
+  while (next < lines.length && accepts(lines[next])) {
+    values.push(transform(lines[next]));
+    next++;
+  }
+  return { values, next };
+}
+
+function readQuote(lines, start) {
+  const { values, next } = readLines(lines, start, (line) => /^> ?/.test(line), (line) => line.replace(/^> ?/, ""));
+  const isCitation = (line) => /^— |^-- /.test(line);
+  const body = values.filter((line) => !isCitation(line));
+  const cite = values.find(isCitation);
+  const citation = cite ? `<cite>${inline(cite.replace(/^— |^-- /, ""))}</cite>` : "";
+  return { next, blocks: [`<blockquote>${body.map((line) => `<p>${inline(line)}</p>`).join("")}${citation}</blockquote>`] };
+}
+
+function listReader(tag, pattern, strip) {
+  return (lines, start) => {
+    const { values, next } = readLines(lines, start, (line) => pattern.test(line), (line) => line.replace(strip, ""));
+    return { next, blocks: [`<${tag}>${values.map((item) => `<li>${inline(item)}</li>`).join("")}</${tag}>`] };
+  };
+}
+
+function readParagraph(lines, start) {
+  const { values, next } = readLines(
+    lines,
+    start,
+    (line) => line.trim() !== "" && !/^(#{1,6} |>|- |\d+\. )/.test(line),
+    (line) => line
+  );
+  if (values.length === 0) fail(`unhandled markdown at line ${start + 1}: ${lines[start]}`);
+  return { next, blocks: [`<p>${inline(values.join(" "))}</p>`] };
+}
+
+const blockReaders = [
+  { pattern: /^# |^\s*$/, read: (_lines, start) => ({ next: start + 1, blocks: [] }) },
+  {
+    pattern: /^#{3,6} /,
+    read: (lines, start) => {
+      const line = lines[start];
+      const level = Math.min(6, line.match(/^#+/)[0].length);
+      return { next: start + 1, blocks: [`<h${level}>${inline(line.replace(/^#+ /, "").trim())}</h${level}>`] };
+    },
+  },
+  { pattern: /^> ?/, read: readQuote },
+  { pattern: /^- /, read: listReader("ul", /^- /, /^- /) },
+  { pattern: /^\d+\. /, read: listReader("ol", /^\d+\. /, /^\d+\. /) },
+];
+
+function readBlock(lines, start) {
+  const reader = blockReaders.find(({ pattern }) => pattern.test(lines[start]));
+  return (reader?.read ?? readParagraph)(lines, start);
+}
+
 function renderMarkdown(src) {
   // article-level comment frame + any other HTML comments are not visible prose
   let text = src;
@@ -77,74 +132,21 @@ function renderMarkdown(src) {
   const lines = text.split("\n");
   const chapters = [];
   let cur = { slug: "__intro__", title: null, blocks: [] };
-  const push = () => {
-    chapters.push(cur);
-  };
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    if (/^# /.test(line)) {
-      i++;
-      continue;
-    } // page header already carries the h1
     if (/^## /.test(line)) {
-      push();
+      chapters.push(cur);
       const title = line.slice(3).trim();
       cur = { slug: slug(title), title, blocks: [] };
       i++;
       continue;
     }
-    if (/^#{3,6} /.test(line)) {   // deeper headings stay inside the current chapter
-      const level = Math.min(6, line.match(/^#+/)[0].length);
-      cur.blocks.push(`<h${level}>${inline(line.replace(/^#+ /, "").trim())}</h${level}>`);
-      i++;
-      continue;
-    }
-    if (/^> ?/.test(line)) {
-      const q = [];
-      while (i < lines.length && /^> ?/.test(lines[i])) {
-        q.push(lines[i].replace(/^> ?/, ""));
-        i++;
-      }
-      const body = q.filter((l) => !/^— /.test(l) && !/^-- /.test(l));
-      const cite = q.find((l) => /^— |^-- /.test(l));
-      cur.blocks.push(
-        `<blockquote>${body.map((l) => `<p>${inline(l)}</p>`).join("")}${cite ? `<cite>${inline(cite.replace(/^— |^-- /, ""))}</cite>` : ""}</blockquote>`
-      );
-      continue;
-    }
-    if (/^- /.test(line)) {
-      const items = [];
-      while (i < lines.length && /^- /.test(lines[i])) {
-        items.push(lines[i].slice(2));
-        i++;
-      }
-      cur.blocks.push(`<ul>${items.map((it) => `<li>${inline(it)}</li>`).join("")}</ul>`);
-      continue;
-    }
-    if (/^\d+\. /.test(line)) {
-      const items = [];
-      while (i < lines.length && /^\d+\. /.test(lines[i])) {
-        items.push(lines[i].replace(/^\d+\. /, ""));
-        i++;
-      }
-      cur.blocks.push(`<ol>${items.map((it) => `<li>${inline(it)}</li>`).join("")}</ol>`);
-      continue;
-    }
-    if (line.trim() === "") {
-      i++;
-      continue;
-    }
-    // paragraph: consecutive non-blank, non-structural lines
-    const p = [];
-    while (i < lines.length && lines[i].trim() !== "" && !/^(#{1,6} |>|- |\d+\. )/.test(lines[i])) {
-      p.push(lines[i]);
-      i++;
-    }
-    if (p.length === 0) fail(`unhandled markdown at line ${i + 1}: ${lines[i]}`);   // never loop without consuming a line
-    cur.blocks.push(`<p>${inline(p.join(" "))}</p>`);
+    const { blocks, next } = readBlock(lines, i);
+    cur.blocks.push(...blocks);
+    i = next;
   }
-  push();
+  chapters.push(cur);
   return chapters;
 }
 
@@ -248,18 +250,21 @@ process.stdout.write(
 );
 
 /* ---------------- helpers ---------------- */
-// fallow-ignore-next-line complexity -- flat argv switch for a hand-run docs asset, not product code
 function parseArgs(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a.startsWith("--")) {
       const k = a.slice(2);
-      const v = argv[i + 1] && !argv[i + 1].startsWith("--") ? argv[++i] : "true";
+      const hasValue = argumentHasValue(argv[i + 1]);
+      const v = hasValue ? argv[++i] : "true";
       out[k] = v;
     }
   }
   return out;
+}
+function argumentHasValue(value) {
+  return Boolean(value) && !value.startsWith("--");
 }
 function fail(msg) {
   process.stderr.write(`build.mjs: ${msg}\n`);

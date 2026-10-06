@@ -7,11 +7,10 @@
 
 import * as B from "@beep/box";
 import { $BoxProvisioningId } from "@beep/identity";
-import { Context, Effect, Equal, Layer, pipe } from "effect";
+import { Context, Effect, Equal, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
 import {
   BoxDiscoveryAvailable,
   BoxDiscoveryPermissionBlocked,
@@ -24,9 +23,11 @@ import {
   listFolderItems,
   listObservedWebhooks,
   markerQuery,
+  observeBoxIdentity,
   toObservedCollaboration,
   toObservedFolderFromMini,
 } from "./internal/live.ts";
+import type { BoxProvisioningInvariantError } from "./BoxProvisioningErrors.ts";
 import type { BoxDesiredState } from "./BoxProvisioningIntent.ts";
 import type { BoxDiscovery, BoxDiscoveryKind, BoxObservedFolder } from "./BoxProvisioningObserved.ts";
 import type { MarkerPage } from "./internal/live.ts";
@@ -172,25 +173,10 @@ const observeSignTemplates = (box: B.Box["Service"]) =>
     )
   );
 
-const enterpriseIdFromUser = (user: B.UserFull): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
-  pipe(
-    O.fromNullishOr(user.enterprise),
-    O.flatMap((enterprise) => O.fromNullishOr(enterprise.id)),
-    O.match({
-      onNone: () => Effect.fail(BoxProvisioningInvariantError.make({ code: "missing-enterprise-id" })),
-      onSome: (enterpriseId) => Effect.succeed(BoxProviderId.make(enterpriseId)),
-    })
-  );
-
 const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
   observe: Effect.fn("BoxProvisioningInventory.observe")(function* (desired) {
     const rootFolderId = desired.rootFolderId;
-    const user = yield* box.users.getUserMe(
-      B.UsersGetUserMePayload.make({
-        queryParams: B.GetUserMeQueryParams.make({ fields: ["id", "enterprise"] }),
-      })
-    );
-    const enterpriseId = yield* enterpriseIdFromUser(user);
+    const { enterpriseId, subjectId } = yield* observeBoxIdentity(box);
     const folders = yield* scanFolderTree(box, rootFolderId);
     const [collaborations, webhooks, metadata, retention, signRequests, signTemplates] = yield* Effect.all(
       [
@@ -205,7 +191,7 @@ const makeService = (box: B.Box["Service"]): BoxProvisioningInventoryShape => ({
     );
     return BoxObservedState.make({
       enterpriseId,
-      subjectId: BoxProviderId.make(user.id),
+      subjectId,
       rootFolderId,
       folders,
       collaborations,

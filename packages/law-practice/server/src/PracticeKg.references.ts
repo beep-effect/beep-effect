@@ -8,7 +8,9 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { practiceKgDocketCountryCodes } from "@beep/law-practice-use-cases/server";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { PracticeKgProjectionError } from "./PracticeKg.errors.ts";
 import { PracticeKgDocketReferenceRow, PracticeKgNumberMentionRow, withDuckDb } from "./PracticeKg.rows.ts";
@@ -22,8 +24,12 @@ const decodeNumberMentionRows = S.decodeUnknownEffect(S.Array(PracticeKgNumberMe
  * The practice writes its own matter references as `<client>.<docket><country><seq>`
  * (five-digit client number, five- or six-digit family, ISO country or PCT, stage).
  * The preceding-character guard keeps `1.23456US` style decimals and dotted
- * version strings out of the match.
+ * version strings out of the match. The country stages are the one list the
+ * reference extractor uses, so the scan and the lookup recognise the same
+ * dockets.
  */
+const docketCountryAlternation = A.join(practiceKgDocketCountryCodes, "|");
+
 const docketReferencesSql = `
 WITH docket_text AS (
   SELECT d.digest, t.text
@@ -32,7 +38,7 @@ WITH docket_text AS (
   WHERE d.category = 'docket' AND d.docket_family IS NOT NULL
 ),
 tokens AS (
-  SELECT digest, UNNEST(regexp_extract_all(text, '(?:^|[^0-9.])([0-9]{4,6}\\.[0-9]{5,6}(?:US|WO|EP|CA|AU|CN|JP|PCT)[0-9]{0,3})', 1)) AS token
+  SELECT digest, UNNEST(regexp_extract_all(text, '(?:^|[^0-9.])([0-9]{4,6}\\.[0-9]{5,6}(?:${docketCountryAlternation})[0-9]{0,3})', 1)) AS token
   FROM docket_text
 )
 SELECT DISTINCT

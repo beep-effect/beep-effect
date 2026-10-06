@@ -48,8 +48,9 @@ kg_node(
   label          text NOT NULL,        -- display name (effective_name, invention_title, …)
   docket_family  text,                 -- bare family number: the organizer's spine hook
   client         text,                 -- client number from the <client>.<docket> reference form
-  attribution_source text NOT NULL,    -- D-11: 'filename' | 'restored-name' | 'text-reference'
-                                       --   | 'family-consensus' | 'client-map' | 'official-record' | 'mention'
+  attribution_source text NOT NULL,    -- D-11, D-21: 'filename' | 'restored-name' | 'docket-register'
+                                       --   | 'folder-path' | 'text-reference' | 'family-consensus'
+                                       --   | 'client-map' | 'official-record' | 'mention'
   epistemic_status text NOT NULL,      -- 'derived-from-official-records' (spine)
                                        --   | 'candidate-unreviewed' (never for spine rows)
                                        --   | 'mention-derived' (anchor mention edges)
@@ -104,6 +105,13 @@ documents/archives. `kg_docket_family` accepts either form: a bare family
 returns every keyed family sharing it.
 All keys are natural ⇒ IRIs are rerun-stable with no sequence state.
 
+**Matter tables (D-12).** The build also writes `matters` (one row per
+`docket_family` node) and `matter_dockets` (one row per `docket` node, with the
+application and patent numbers filed from it) into `practice.duckdb`. They are
+the read surface for services; shapes and rules are in
+`matter-lookup-contract.md`. `schemaVersion.duckdb` is `3`: `matters` carries
+`client_name` from the docket register (D-21).
+
 **Email messages are NOT PGlite rows.** 663k rows belong in DuckDB (§3);
 PGlite keeps the spine small and fast. Archive-level linkage (D-2 caveat) is
 expressed by `archived_in` edges plus DuckDB `email_messages.archive_digest`.
@@ -114,7 +122,7 @@ Contents (all built by `beep corpus graph`, all deterministic):
 
 | Table | Source | Notes |
 | --- | --- | --- |
-| `documents` | `corpus_organized` ⋈ `corpus_source_files` (base+refresh, deduped by digest) | one row per canonical artifact; carries `organized_relative_path`, family, docket, client, size, mtime |
+| `documents` | `corpus_organized` ⋈ `corpus_source_files`, plus the unorganized files of each included run (deduped by digest) | one row per canonical artifact; carries `organized_relative_path`, family, docket, client, size, mtime. An included run's row is `unsorted` unless its folder path names exactly one docket, in which case it is a `docket` row under that docket |
 | `document_text` | `staging/extract/text/*` ⋈ `sources.jsonl` | **full text inlined** for the 6,702 text artifacts (bounded: text artifacts are a small fraction of the 28 GB staging tree, which is dominated by PST export trees; enforce `--max-text-bytes`, default 2 MB/doc, overflow → excerpt + pointer) |
 | `email_messages` | parsed `OutlookHeaders.txt` + `Recipients.txt` per message dir | `archive_digest, folder_path, message_ord, subject, conversation_topic, sender_name, sender_email, recipients, submit_iso, delivery_iso, message_rel_path` — **headers only, no bodies**; bodies resolve via corpus-root pointer to `Message.txt` (Tom's SSD copy has the full tree) |
 | `enrichment` | `corpus_enrichment` with `docket_families` / `parent_application_numbers` **parsed from serialized strings to lists** | |
@@ -139,7 +147,8 @@ R1 spike: external addon + on-disk sidecars).
 ```
 practice-kg-bundle/
   bundle.manifest.json    # bundleVersion (date-seq), schemaVersion per store,
-                          # source runs (base, 2026-07-refresh incl/excl),
+                          # sourceRuns: base, includedRuns (labels of the folded-in
+                          # runs), refresh202607 incl/excl (kept for older readers),
                           # counts (nodes, edges, docs, emails), corpusRootExpected: bool
   kg.pglite/              # PGlite data dir (epistemic tables + kg_node/kg_edge/kg_build)
   practice.duckdb
@@ -170,11 +179,34 @@ merge-back ever. `bundle.manifest.json.bundleVersion` is surfaced by a
 bun run apps/practice-kg-mcp/src/build.ts
   --corpus-root <dir>          # existing corpusRootFlag
   --bundle-out <dir>           # default <corpus-root>/staging/practice-kg-bundle
-  --include-refresh            # fold staging/extract-2026-07-refresh in (default: false, recorded either way)
+  --include-refresh            # same as --include-run 2026-07-refresh (default: false, recorded either way)
+  --include-run <label>        # fold one later source run in; repeatable
+  --docket-register <file>     # the attorney's docket register as JSONL
   --skip-emails                # spine+text only (fast iteration)
   --max-text-bytes <n>         # per-document inline cap, default 2097152
   --overwrite                  # replace an existing bundle dir (mirrors organize --overwrite)
 ```
+
+**Folding a run in (D-21).** A run is optional when it holds at least one file
+the organizer never saw (a digest with no `corpus_organized` row). An optional
+run that is not included is left out whole, so its copies of organized files do
+not change those files' size, date, or origin chain. An included run adds:
+
+- each of its unorganized files once, as a catalog row;
+- its `staging/extract-<label>/` tree (`sources.jsonl` + `text/`), same layout
+  as `staging/extract/`, as a text source.
+
+Each added row's source path is read with `extractPracticeKgPathEvidence`.
+Exactly one docket in the path becomes the row's docket and family, and the row
+is filed as a `docket` document so the reference scans read its text. Exactly
+one `<client>.<family>` key for that family becomes the row's folder client. A
+path that names more than one is left alone.
+
+**Docket register.** One JSON object per line:
+`{"client": "12345", "docket": "10008US01", "clientName": "Example Client"}`;
+`clientName` may be null. A line that does not decode stops the build and the
+error names the line number, never its content. The register is client
+material: convert it and keep it outside the repo.
 
 Determinism rules (binding): every INSERT batch ordered by full natural key;
 no wall-clock values in any row (build time lives only in `kg_build` /
@@ -190,7 +222,7 @@ envelope carries `epistemic_status` and `bundle_version`.
 
 | Tool | Params | Store/query | Output + label |
 | --- | --- | --- | --- |
-| `kg_clients` | — | PGlite: clients + family counts via `has_docket_family`; plus "unattributed families" count | spine label. Description states client attribution is sparse (1 client today) and families are the primary spine |
+| `kg_clients` | — | PGlite: clients + family counts via `has_docket_family`; plus "unattributed families" count; a client's `label` is its docket-register name when the register gives one, otherwise the number | spine label. Description states client attribution is sparse (1 client today) and families are the primary spine |
 | `kg_docket_family` | `family` (e.g. "10008") | PGlite: family node + `has_docket` dockets + `files_as`/`granted_as` chain + top-N `has_document` (FieldTier: minimal = counts, complete = doc list) | spine label |
 | `kg_application_lookup` | `application_number \| patent_number \| docket` | PGlite: resolve node, walk `files_as`/`granted_as`/`continuation_of`/`enriched_family` | spine label |
 | `kg_find` | `query` (name/number fragment) | PGlite: ILIKE over `kg_node.label, natural_key`; note: 3,055 unsorted docs findable only via `corpus_search_text` | spine label |
@@ -198,6 +230,7 @@ envelope carries `epistemic_status` and `bundle_version`.
 | `corpus_get_document` | `digest \| organized_path`, `range?` | DuckDB `document_text`; fallback pointer into `corpus_root` when over budget/absent | spine label; enables side-by-side (two calls) |
 | `email_search` | `query?, sender?, after?, before?, family?` | DuckDB `email_messages` (subject/sender/recipients filters); family filter via archive→family heuristic **explicitly marked archive-level confidence** | spine label + linkage-confidence note |
 | `kg_candidate_claims` | `docket \| family \| digest` | PGlite epistemic tables via existing converters; join `Evidence` spans | **`candidate — unreviewed`** on every row + evidence span |
+| `kg_matter_lookup` | `reference` (docket, family, application, patent, or client number) | DuckDB `matters` + `matter_dockets`; `resolution` unique / ambiguous / none; `clientName` from the docket register | spine label |
 | `kg_provenance` | `iri \| digest \| natural_key` (none ⇒ bundle status) | PGlite node → provenance columns; digest → DuckDB `documents` row + source_files origin chain | spine label |
 
 ## 7. Determinism & tests (AC-1, AC-2)

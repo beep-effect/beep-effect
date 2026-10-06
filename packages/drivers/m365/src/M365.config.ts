@@ -182,8 +182,8 @@ const m365ConfigInputRedirectUriDefault = makeNormalizedUrl(DEFAULT_REDIRECT_URI
  * **Details**
  *
  * Public-client (delegated, auth-code + PKCE) configuration. `tenantId` and
- * `clientId` are not secrets; `clientSecret` is reserved (and `S.Redacted`) for
- * a future confidential-client path and is unused by the v1 public-client flow.
+ * `clientId` are not secrets; confidential credentials belong to the separate
+ * app-only lane ({@link M365AppOnlyConfigInput}) and cannot be supplied here.
  * This is an application-boundary input the host constructs: constant-default
  * fields (`scopes`, `redirectUri`, `graphBaseUrl`, `maxRetries`) carry their
  * defaults in the schema, so the host may omit them and {@link resolveM365Config}
@@ -219,11 +219,6 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
     authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
     }),
-    clientSecret: S.OptionFromOptionalKey(S.NonEmptyString.pipe(S.RedactedFromValue))
-      .pipe(S.withConstructorDefault(Effect.succeedNone))
-      .annotateKey({
-        description: "Reserved confidential-client secret; redacted and unused by the v1 public-client flow.",
-      }),
     graphBaseUrl: M365ConfigUrl.pipe(
       S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
@@ -300,9 +295,6 @@ export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM
     tokenCachePath: S.Option(S.NonEmptyString).annotateKey({
       description: "Resolved encrypted token-cache path, if persistence is configured.",
     }),
-    clientSecret: S.NonEmptyString.pipe(S.Redacted, S.Option).annotateKey({
-      description: "Resolved reserved confidential-client secret, if supplied.",
-    }),
   },
   $I.annote("ResolvedM365Config", {
     description: "Resolved Microsoft 365 driver configuration with defaults applied.",
@@ -341,5 +333,228 @@ export const resolveM365Config = (input: M365ConfigInput): ResolvedM365Config =>
     graphBaseUrl: makeNormalizedUrl(input.graphBaseUrl),
     maxRetries: input.maxRetries,
     tokenCachePath: input.tokenCachePath,
-    clientSecret: input.clientSecret,
   });
+
+/**
+ * Certificate credential for the app-only lane: the production credential.
+ *
+ * **Details**
+ *
+ * `thumbprintSha256` is the hex SHA-256 thumbprint of the certificate uploaded
+ * to the Entra app registration; `privateKey` is its PEM private key, resolved
+ * at runtime from a protected store and never written to configuration files.
+ *
+ * **Example** (Make certificate credential)
+ *
+ * ```ts
+ * import { M365CertificateCredential } from "@beep/m365"
+ * import { Redacted } from "effect"
+ *
+ * const credential = M365CertificateCredential.make({
+ *   privateKey: Redacted.make("pem-private-key-from-a-protected-store"),
+ *   thumbprintSha256: "AB12"
+ * })
+ * console.log(credential._tag) // "M365CertificateCredential"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365CertificateCredential extends S.TaggedClass<M365CertificateCredential>($I`M365CertificateCredential`)(
+  "M365CertificateCredential",
+  {
+    privateKey: S.NonEmptyString.pipe(S.RedactedFromValue).annotateKey({
+      description: "PEM private key of the registered certificate; redacted.",
+    }),
+    thumbprintSha256: S.NonEmptyString.annotateKey({
+      description: "Hex SHA-256 thumbprint of the registered certificate.",
+    }),
+  },
+  $I.annote("M365CertificateCredential", {
+    description: "Certificate credential for the Microsoft 365 app-only lane.",
+  })
+) {}
+
+/**
+ * Client-secret credential for the app-only lane: a dev/test fallback only.
+ *
+ * **Gotchas**
+ *
+ * Microsoft discourages client secrets for production daemons. Use
+ * {@link M365CertificateCredential} for any unattended service.
+ *
+ * **Example** (Make client-secret credential)
+ *
+ * ```ts
+ * import { M365ClientSecretCredential } from "@beep/m365"
+ * import { Redacted } from "effect"
+ *
+ * const credential = M365ClientSecretCredential.make({ clientSecret: Redacted.make("dev-secret") })
+ * console.log(credential._tag) // "M365ClientSecretCredential"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365ClientSecretCredential extends S.TaggedClass<M365ClientSecretCredential>(
+  $I`M365ClientSecretCredential`
+)(
+  "M365ClientSecretCredential",
+  {
+    clientSecret: S.NonEmptyString.pipe(S.RedactedFromValue).annotateKey({
+      description: "Entra client secret; redacted. Dev/test fallback only.",
+    }),
+  },
+  $I.annote("M365ClientSecretCredential", {
+    description: "Client-secret credential for the Microsoft 365 app-only lane (dev/test fallback).",
+  })
+) {}
+
+/**
+ * Credential accepted by the app-only lane.
+ *
+ * **Example** (Read credential tag)
+ *
+ * ```ts
+ * import type { M365AppOnlyCredential } from "@beep/m365"
+ *
+ * const tag = (credential: M365AppOnlyCredential) => credential._tag
+ * console.log(tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365AppOnlyCredential = S.Union([M365CertificateCredential, M365ClientSecretCredential]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("M365AppOnlyCredential", {
+    description: "Credential accepted by the Microsoft 365 app-only lane; the certificate is primary.",
+  })
+);
+
+/**
+ * Type for {@link M365AppOnlyCredential}.
+ *
+ * **Example** (Type a credential)
+ *
+ * ```ts
+ * import type { M365AppOnlyCredential } from "@beep/m365"
+ *
+ * const isCertificate = (credential: M365AppOnlyCredential) => credential._tag === "M365CertificateCredential"
+ * console.log(isCertificate)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365AppOnlyCredential = typeof M365AppOnlyCredential.Type;
+
+/**
+ * Runtime configuration for the app-only (confidential client) lane.
+ *
+ * **Details**
+ *
+ * The lane has no scopes, redirect URI or user token cache: it always requests
+ * the Graph `/.default` scope with the client-credentials grant, and what it
+ * may reach is decided by the role assignments on the service principal. It
+ * can never call `/me` routes, so every mailbox verb needs a `userId`.
+ *
+ * **Example** (Create app-only config input)
+ *
+ * ```ts
+ * import { M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365"
+ * import { Redacted } from "effect"
+ *
+ * const config = M365AppOnlyConfigInput.make({
+ *   clientId: "00000000-0000-0000-0000-000000000000",
+ *   credential: M365CertificateCredential.make({
+ *     privateKey: Redacted.make("pem-private-key-from-a-protected-store"),
+ *     thumbprintSha256: "AB12"
+ *   }),
+ *   tenantId: "11111111-1111-1111-1111-111111111111"
+ * })
+ *
+ * console.log(config.maxRetries) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365AppOnlyConfigInput extends S.Class<M365AppOnlyConfigInput>($I`M365AppOnlyConfigInput`)(
+  {
+    tenantId: S.NonEmptyString.annotateKey({
+      description: "Entra tenant id (a GUID or verified domain); multi-tenant aliases are not valid for app-only.",
+    }),
+    clientId: S.NonEmptyString.annotateKey({
+      description: "Entra application (confidential client) id.",
+    }),
+    credential: M365AppOnlyCredential.annotateKey({
+      description: "Certificate (production) or client-secret (dev/test) credential.",
+    }),
+    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
+    }),
+    graphBaseUrl: M365ConfigUrl.pipe(
+      S.withConstructorDefault(Effect.succeed(m365ConfigInputGraphBaseUrlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputGraphBaseUrlDefault))
+    ).annotateKey({
+      description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
+    }),
+    maxRetries: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(m365ConfigInputMaxRetriesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(m365ConfigInputMaxRetriesDefault))
+    ).annotateKey({
+      description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
+    }),
+  },
+  $I.annote("M365AppOnlyConfigInput", {
+    description: "Runtime configuration for the Microsoft 365 app-only (confidential client) lane.",
+  })
+) {}
+
+/**
+ * Resolve the authority URL of an {@link M365AppOnlyConfigInput}.
+ *
+ * **Example** (Default authority)
+ *
+ * ```ts
+ * import { M365AppOnlyConfigInput, M365ClientSecretCredential, resolveM365AppOnlyAuthority } from "@beep/m365"
+ * import { Redacted } from "effect"
+ *
+ * const authority = resolveM365AppOnlyAuthority(
+ *   M365AppOnlyConfigInput.make({
+ *     clientId: "client-id",
+ *     credential: M365ClientSecretCredential.make({ clientSecret: Redacted.make("dev-secret") }),
+ *     tenantId: "tenant-id"
+ *   })
+ * )
+ *
+ * console.log(authority) // "https://login.microsoftonline.com/tenant-id"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const resolveM365AppOnlyAuthority = (input: M365AppOnlyConfigInput): URLStr =>
+  pipe(
+    input.authority,
+    O.map(makeNormalizedUrl),
+    O.getOrElse(() => makeNormalizedUrl(`${DEFAULT_AUTHORITY_HOST}/${input.tenantId}`))
+  );
+
+/**
+ * The single scope the app-only lane requests: the `/.default` scope of the
+ * configured Graph origin.
+ *
+ * **Example** (Default Graph scope)
+ *
+ * ```ts
+ * import { m365AppOnlyScope } from "@beep/m365"
+ *
+ * console.log(m365AppOnlyScope("https://graph.microsoft.com/v1.0")) // "https://graph.microsoft.com/.default"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const m365AppOnlyScope = (graphBaseUrl: string): string => `${new URL(graphBaseUrl).origin}/.default`;
