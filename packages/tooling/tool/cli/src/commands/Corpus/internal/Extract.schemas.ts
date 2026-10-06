@@ -180,9 +180,11 @@ export const encodeCorpusExtractSummaryJson = JsonStringCodec(CorpusExtractSumma
  * recorded: succeeded, deferred, and failures that no engine routes. The last
  * carry `routingKey`, a fingerprint of the engine routing and the source's
  * format, and are reused only while it still matches; every other failure
- * carries no marker and is retried. `exportChildren` and the source record's
- * relative path are stored so a resumed run reuses a marker only for the same
- * inputs.
+ * carries no marker and is retried. `exportChildren`, `ocrEnabled` and the
+ * source record's relative path are stored so a resumed run reuses a marker
+ * only for the same inputs; a run with `--ocr` reads again every source a run
+ * without it settled, since that run never looked at its pages. Markers from
+ * before `ocrEnabled` existed decode as written without OCR.
  *
  * **Example** (Decode an extract outcome marker)
  *
@@ -209,6 +211,10 @@ export class CorpusExtractOutcomeRecord extends S.Class<CorpusExtractOutcomeReco
     exportChildren: S.Boolean,
     failure: S.OptionFromOptionalKey(FileProcessingFailureRecord),
     ocr: S.OptionFromOptionalKey(CorpusExtractOcrCounts),
+    ocrEnabled: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     routingKey: S.OptionFromOptionalKey(Sha256Hex),
     sha256: Sha256Hex,
     sourceRecord: SourceProcessingRecord,

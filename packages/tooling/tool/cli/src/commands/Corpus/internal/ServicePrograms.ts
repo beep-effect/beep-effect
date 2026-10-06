@@ -1641,6 +1641,9 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
         (candidate) =>
           candidate.sha256 === record.sha256 &&
           candidate.exportChildren === options.exportChildren &&
+          // A run without OCR never looked at the pages, so its marker does
+          // not settle the source for a run with OCR.
+          (!options.ocr || candidate.ocrEnabled) &&
           candidate.sourceRecord.operationId === ids.operationId &&
           candidate.sourceRecord.relativePath === ids.relativePath &&
           isSettledExtractOutcome(candidate) &&
@@ -1919,6 +1922,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
           exportChildren: options.exportChildren,
           failure: outcome.failure,
           ocr: outcome.ocr,
+          ocrEnabled: options.ocr,
           routingKey: outcome.routingKey,
           sha256,
           sourceRecord: outcome.sourceRecord,

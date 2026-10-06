@@ -1978,8 +1978,11 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
         { content: "no page count here", name: "unreadable.pdf" },
       ]);
 
+      // The second run resumes the first without --overwrite: markers written
+      // without OCR must not settle the scans for a run with it, while the
+      // libpff exports and good text readings of the first run are kept.
       const withoutOcr = yield* fixture.run();
-      const summary = yield* fixture.run({ ocr: true, overwrite: true });
+      const summary = yield* fixture.run({ ocr: true });
       const rows = yield* fixture.pageRows(scan);
       const composed = yield* fixture.readText(`text/${operationIdFor(scan)}.txt`);
       const firstReading = yield* fixture.readText(`ocr/first-reading/${operationIdFor(scan)}.txt`);
@@ -1993,7 +1996,9 @@ it.layer(testLayer, { excludeTestServices: true, timeout: "60 seconds" })("corpu
 
       expect(withoutOcr.ocrSourceCount).toBe(0);
       expect(withoutOcr.textArtifactCount).toBe(4);
+      expect(yield* fixture.exists(`ocr/pages/${operationIdFor(scan)}.jsonl`)).toBe(true);
 
+      // Nothing from the non-OCR run is reused: its markers never looked at the pages.
       expect(Struct.pick(summary, ocrSummaryCountKeys)).toEqual({
         alreadyCompleteCount: 0,
         extractedCount: 6,
