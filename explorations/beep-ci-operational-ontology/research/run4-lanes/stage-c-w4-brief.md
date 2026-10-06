@@ -166,3 +166,14 @@ W4-A4. **Root name.** `run4-ledger` is this capture; the first post-#1321 merged
 W4-A5. **Config location.** When resolving a checkout's origin, read `<commondir>/config` (a linked worktree's
        git dir has no `config`); canonicalize scp (`git@github.com:owner/repo.git`) and https forms; named tests
        as in the W3 addenda.
+W4-A6. **Pairing over decodable rows; tears are not fatal (PR #1434 review).** The writer appends each shadow
+       row and its fact in ONE `appendAll`, and the documented tear modes (a split append with another append
+       landing in between; a crash tail terminated by the next append's recovery prefix) always destroy one member
+       of a pair. So: (1) pairing is computed over the sequence of DECODED rows; (2) a shadow whose next decoded
+       row is not its fact, or a fact whose previous decoded row is not its shadow, is an orphan; (3) an orphan
+       whose neighbouring raw line was torn (or was the unterminated tail) is counted as
+       `pairing.unpaired_adjacent_to_tear` (per owner and total), kept in the payload bytes as issuance history,
+       and excluded from `pairing.pairs`, from hit resolution and from the paired census; (4) an orphan with no
+       adjacent tear is writer drift and fails the capture closed; (5) `torn_rows` stays in the manifest.
+       Fixture tests: one torn line between a shadow and its fact (passes, orphan counted); an orphan with intact
+       neighbours (fails closed); an unterminated tail that cuts a fact (orphan shadow counted).
