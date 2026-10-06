@@ -26,8 +26,10 @@ import {
   AttachmentFiler,
   BackfillCheckpointStore,
   BackfillCheckpointStoreShape,
+  DocumentNameTaken,
   DocumentStore,
   DocumentStoreShape,
+  DocumentUploaded,
   FilingLedger,
   FilingLedgerShape,
   MailAttachmentMeta,
@@ -37,6 +39,7 @@ import {
   MailPageCursor,
   MailTaggingJob,
   MailTaggingPortError,
+  MailTaggingStateError,
   MailTaggingUndo,
   MatterDirectory,
   MatterDirectoryShape,
@@ -60,7 +63,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 import type {
   BackfillCheckpoint,
-  FilingLedgerEntry,
+  FilingLedgerRecord,
   TagLedgerRecord,
 } from "@beep/law-practice-domain/values/MailTagging";
 import type { SetCategoriesRequest, UploadDocumentRequest } from "@beep/law-practice-use-cases/MailTagging";
@@ -107,6 +110,8 @@ export const taxonomy = defaultMailTaxonomy([acme, globex]);
 
 type EnvelopeOptions = {
   readonly at: number;
+  /** Message id; defaults to `msg-<at>`. Lets two messages share one instant. */
+  readonly id?: string;
   readonly subject?: string;
   readonly sender?: string;
   readonly recipients?: ReadonlyArray<string>;
@@ -127,7 +132,7 @@ const envelopeDefaults = {
 export const envelope = (options: EnvelopeOptions): MailEnvelope => {
   const filled = { ...envelopeDefaults, ...options };
   return MailEnvelope.make({
-    messageId: MailMessageId.make(`msg-${filled.at}`),
+    messageId: MailMessageId.make(filled.id ?? `msg-${filled.at}`),
     subject: filled.subject,
     senderAddress: O.map(O.fromUndefinedOr(filled.sender), (address) => EmailString.make(address)),
     recipientAddresses: A.map(filled.recipients, (address) => EmailString.make(address)),
@@ -179,7 +184,21 @@ type WorldShape = {
   readonly writes: Ref.Ref<ReadonlyArray<string>>;
   readonly uploads: Ref.Ref<ReadonlyArray<UploadDocumentRequest>>;
   readonly tagRecords: Ref.Ref<ReadonlyArray<TagLedgerRecord>>;
-  readonly filingEntries: Ref.Ref<ReadonlyArray<FilingLedgerEntry>>;
+  readonly filingRecords: Ref.Ref<ReadonlyArray<FilingLedgerRecord>>;
+  /** Every `upload` call, including the ones the store refused. */
+  readonly uploadCalls: Ref.Ref<number>;
+  /** Files the store holds, keyed `<folderId>/<fileName>`. */
+  readonly storedFiles: Ref.Ref<HashMap.HashMap<string, DocumentFileId>>;
+  /** 1-based `upload` call that fails before storing anything, when set. */
+  readonly failingUpload: Ref.Ref<O.Option<number>>;
+  /** 1-based `upload` call that stores the file and then reports failure, when set. */
+  readonly lyingUpload: Ref.Ref<O.Option<number>>;
+  /** Current categories of the message with this id. */
+  readonly categoriesById: (id: string) => Effect.Effect<ReadonlyArray<string>>;
+  /** 1-based filing-ledger `append` call that fails, when set. */
+  readonly failingFilingAppend: Ref.Ref<O.Option<number>>;
+  /** Makes the store report a taken name without identifying the file. */
+  readonly anonymousStore: Ref.Ref<boolean>;
   readonly checkpoint: Ref.Ref<O.Option<BackfillCheckpoint>>;
   readonly categoryWrites: Ref.Ref<ReadonlyArray<SetCategoriesRequest>>;
   readonly folderRequests: Ref.Ref<ReadonlyArray<string>>;
@@ -231,7 +250,18 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
   const writes = yield* Ref.make<ReadonlyArray<string>>([]);
   const uploads = yield* Ref.make<ReadonlyArray<UploadDocumentRequest>>([]);
   const tagRecords = yield* Ref.make<ReadonlyArray<TagLedgerRecord>>([]);
-  const filingEntries = yield* Ref.make<ReadonlyArray<FilingLedgerEntry>>([]);
+  const filingRecords = yield* Ref.make<ReadonlyArray<FilingLedgerRecord>>([]);
+  const uploadCalls = yield* Ref.make(0);
+  const storedFiles = yield* Ref.make(HashMap.empty<string, DocumentFileId>());
+  const failingUpload = yield* Ref.make<O.Option<number>>(O.none());
+  const lyingUpload = yield* Ref.make<O.Option<number>>(O.none());
+  const categoriesById = Effect.fn("World.categoriesById")(function* (id: string) {
+    const current = yield* Ref.get(messages);
+    return A.flatMap(current, (message) => (message.messageId === id ? message.categories : []));
+  });
+  const failingFilingAppend = yield* Ref.make<O.Option<number>>(O.none());
+  const anonymousStore = yield* Ref.make(false);
+  const filingAppendCalls = yield* Ref.make(0);
   const checkpoint = yield* Ref.make<O.Option<BackfillCheckpoint>>(O.none());
   const failingListCall = yield* Ref.make<O.Option<number>>(O.none());
   const failingCategoryWrite = yield* Ref.make<O.Option<number>>(O.none());
@@ -245,6 +275,26 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
   const wrote = (call: string) => Ref.update(writes, A.append(call));
   const attachmentsOf = (messageId: MailMessageId): ReadonlyArray<FakeAttachment> =>
     O.getOrElse(HashMap.get(attachments, messageId), () => []);
+
+  const refuseTakenName = (existing: DocumentFileId) =>
+    Effect.map(Ref.get(anonymousStore), (anonymous) =>
+      DocumentNameTaken.make({ existingFileId: anonymous ? O.none() : O.some(existing) })
+    );
+
+  const createFile = Effect.fn("FakeDocumentStore.createFile")(function* (
+    request: UploadDocumentRequest,
+    key: string,
+    call: number
+  ) {
+    yield* wrote(`upload:${request.fileName}`);
+    const created = yield* Ref.updateAndGet(uploads, A.append(request));
+    const fileId = DocumentFileId.make(`file-${created.length}`);
+    yield* Ref.update(storedFiles, HashMap.set(key, fileId));
+    if (O.contains(yield* Ref.get(lyingUpload), call)) {
+      return yield* MailTaggingPortError.during("DocumentStore", "upload", "connection reset after the write");
+    }
+    return DocumentUploaded.make({ fileId });
+  });
 
   const mailbox = MailboxShape.make({
     listMessagesSince: Effect.fn("FakeMailbox.listMessagesSince")(function* (request) {
@@ -311,7 +361,14 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     writes,
     uploads,
     tagRecords,
-    filingEntries,
+    filingRecords,
+    uploadCalls,
+    storedFiles,
+    failingUpload,
+    lyingUpload,
+    categoriesById,
+    failingFilingAppend,
+    anonymousStore,
     checkpoint,
     failingListCall,
     failingCategoryWrite,
@@ -330,17 +387,22 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
         ),
     }),
     categoriesOf: Effect.fn("World.categoriesOf")(function* (at: number) {
-      const current = yield* Ref.get(messages);
-      return A.flatMap(current, (message) => (message.messageId === `msg-${at}` ? message.categories : []));
+      return yield* categoriesById(`msg-${at}`);
     }),
     writesOf: Effect.fn("World.writesOf")(function* (prefix: string) {
       return A.filter(yield* Ref.get(writes), Str.startsWith(prefix));
     }),
     documents: DocumentStoreShape.make({
       upload: Effect.fn("FakeDocumentStore.upload")(function* (request) {
-        yield* wrote(`upload:${request.fileName}`);
-        const stored = yield* Ref.updateAndGet(uploads, A.append(request));
-        return DocumentFileId.make(`file-${stored.length}`);
+        const call = yield* Ref.updateAndGet(uploadCalls, N.increment);
+        if (O.contains(yield* Ref.get(failingUpload), call)) {
+          return yield* MailTaggingPortError.during("DocumentStore", "upload", "HTTP 503");
+        }
+        const key = `${request.folderId}/${request.fileName}`;
+        return yield* O.match(HashMap.get(yield* Ref.get(storedFiles), key), {
+          onNone: () => createFile(request, key, call),
+          onSome: refuseTakenName,
+        });
       }),
     }),
     tagLedger: TagLedgerShape.make({
@@ -348,8 +410,15 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
       records: Ref.get(tagRecords),
     }),
     filingLedger: FilingLedgerShape.make({
-      append: (entry) => Effect.andThen(wrote("filingLedger.append"), Ref.update(filingEntries, A.append(entry))),
-      entries: Ref.get(filingEntries),
+      append: Effect.fn("FakeFilingLedger.append")(function* (record) {
+        const call = yield* Ref.updateAndGet(filingAppendCalls, N.increment);
+        if (O.contains(yield* Ref.get(failingFilingAppend), call)) {
+          return yield* MailTaggingStateError.unavailable("filing-ledger", "filing-ledger.jsonl", "append");
+        }
+        yield* wrote(`filingLedger.append:${record._tag}`);
+        yield* Ref.update(filingRecords, A.append(record));
+      }),
+      records: Ref.get(filingRecords),
     }),
     checkpoints: BackfillCheckpointStoreShape.make({
       load: Ref.get(checkpoint),

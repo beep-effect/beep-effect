@@ -8,7 +8,10 @@ import {
   ContentSha256,
   DocumentFileId,
   DocumentFolderId,
+  FilingDestination,
+  FilingIntent,
   FilingLedgerEntry,
+  FilingLedgerRecord,
   MailAttachmentId,
   MailConversationId,
   MailMessageId,
@@ -64,18 +67,20 @@ const undone = TagUndoEntry.make({
   removedCategories: ["P: USPTO"],
   recordedAt,
 });
-const filing = FilingLedgerEntry.make({
+const filingPlan = {
+  runId,
   contentSha256: ContentSha256.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
   matterKey: acme,
-  destination: "uspto-incoming",
+  destination: FilingDestination.Enum["uspto-incoming"],
   folderId: DocumentFolderId.make("folder-acme-10001"),
-  fileId: DocumentFileId.make("file-1"),
   fileName: "2026-07-01 office-action.pdf",
   messageId,
   attachmentId: MailAttachmentId.make("att-1"),
   byteLength: 4,
   recordedAt,
-});
+};
+const intent = FilingIntent.make(filingPlan);
+const filing = FilingLedgerEntry.make({ ...filingPlan, fileId: DocumentFileId.make("file-1"), reconciled: true });
 const checkpoint = (processed: number) =>
   BackfillCheckpoint.make({
     since: DateTime.makeUnsafe("2026-07-01T00:00:00.000Z"),
@@ -106,7 +111,7 @@ const stateFile = Effect.fn("MailTaggingFilesTest.stateFile")(function* (name: s
 });
 
 const sameRecords = S.toEquivalence(S.Array(TagLedgerRecord));
-const sameFilings = S.toEquivalence(S.Array(FilingLedgerEntry));
+const sameFilings = S.toEquivalence(S.Array(FilingLedgerRecord));
 const sameCheckpoint = S.toEquivalence(BackfillCheckpoint);
 
 describe("MailTagging file-backed state", () => {
@@ -132,15 +137,17 @@ describe("MailTagging file-backed state", () => {
 
   it.layer(state(), { timeout: "30 seconds" })("filing ledger", (it) => {
     it.effect(
-      "round-trips filing entries through filing-ledger.jsonl",
+      "round-trips filing intents and completions through filing-ledger.jsonl",
       Effect.fnUntraced(function* () {
         const ledger = yield* FilingLedger;
         const fs = yield* FileSystem.FileSystem;
 
+        yield* ledger.append(intent);
         yield* ledger.append(filing);
-        yield* ledger.append(filing);
+        const records = yield* ledger.records;
 
-        expect(sameFilings(yield* ledger.entries, [filing, filing])).toBe(true);
+        expect(sameFilings(records, [intent, filing])).toBe(true);
+        expect(A.map(records, (record) => record._tag)).toStrictEqual(["FilingIntended", "FilingCompleted"]);
         expect(yield* fs.exists(yield* stateFile("filing-ledger.jsonl"))).toBe(true);
       })
     );
@@ -198,7 +205,7 @@ describe("MailTagging file-backed state", () => {
         const fs = yield* FileSystem.FileSystem;
         yield* fs.makeDirectory(yield* stateFile("filing-ledger.jsonl"), { recursive: true });
         const appendError = yield* Effect.flip(ledger.append(filing));
-        const readError = yield* Effect.flip(ledger.entries);
+        const readError = yield* Effect.flip(ledger.records);
 
         expect([appendError.failure, appendError.store, appendError.message]).toStrictEqual([
           "unavailable",

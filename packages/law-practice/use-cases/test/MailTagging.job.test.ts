@@ -1,6 +1,7 @@
 import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import {
   activeTagEntries,
+  completedFilings,
   MailTaggingJob,
   MailTaggingPortError,
   MailTaggingUndo,
@@ -10,7 +11,7 @@ import {
 } from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -40,6 +41,18 @@ const world = () =>
     attachments: [[officeAction.messageId, [attachment({ id: "att-1", name: "office-action.pdf", bytes: [1, 2, 3] })]]],
   });
 
+const tiedLater = envelope({ at: 2, id: "msg-2b", subject: "Third notice for 16/123,456" });
+
+/** Two messages share an instant across a page break: msg-2 ends page 1, msg-2b opens page 2. */
+const tiedMailbox = () =>
+  scenario({
+    envelopes: [
+      envelope({ at: 1, subject: "Notice for 16/123,456" }),
+      envelope({ at: 2, subject: "Second notice for 16/123,456" }),
+      tiedLater,
+    ],
+  });
+
 const run = Effect.fn("MailTaggingJobTest.run")(function* (mode: TaggingMode, id: string) {
   const job = yield* MailTaggingJob;
   return yield* job.run(RunMailTaggingRequest.make({ mode, since, runId: TaggingRunId.make(id) }));
@@ -55,10 +68,12 @@ const counts = (report: TaggingRunReport) => ({
   matched: report.matched,
   unmatched: report.unmatched,
   alreadyTagged: report.alreadyTagged,
+  undoneSkipped: report.undoneSkipped,
   repaired: report.repaired,
   categoryAdds: A.map(report.categoryAdds, (item) => [item.category, item.count]),
   attachmentsFiled: report.attachmentsFiled,
   attachmentsDeduped: report.attachmentsDeduped,
+  attachmentsReconciled: report.attachmentsReconciled,
 });
 
 const firstRunCounts = {
@@ -66,6 +81,7 @@ const firstRunCounts = {
   matched: 2,
   unmatched: { "no-signal": 1, "below-threshold": 1, ambiguous: 1, "needs-attorney": 0 },
   alreadyTagged: 0,
+  undoneSkipped: 0,
   repaired: 0,
   categoryAdds: [
     ["M: acme.10001", 2],
@@ -74,6 +90,7 @@ const firstRunCounts = {
   ],
   attachmentsFiled: 1,
   attachmentsDeduped: 0,
+  attachmentsReconciled: 0,
 };
 
 describe("MailTagging job", () => {
@@ -126,10 +143,11 @@ describe("MailTagging job", () => {
           null,
           null,
         ]);
-        expect(A.take(yield* Ref.get(state.writes), 9)).toStrictEqual([
+        expect(A.take(yield* Ref.get(state.writes), 10)).toStrictEqual([
           "ensureMasterCategories:P: USPTO|P: Client|P: Opposing counsel|P: Billing|P: Admin|P: Unmatched - review",
+          "filingLedger.append:FilingIntended",
           "upload:2026-07-01 office-action.pdf",
-          "filingLedger.append",
+          "filingLedger.append:FilingCompleted",
           "ensureMasterCategories:M: acme.10001",
           "tagLedger.append",
           "setCategories:msg-1",
@@ -144,9 +162,9 @@ describe("MailTagging job", () => {
           "ck-3",
           "ck-5",
         ]);
-        expect(A.map(yield* Ref.get(state.filingEntries), (entry) => entry.destination)).toStrictEqual([
-          "uspto-incoming",
-        ]);
+        expect(
+          A.map(completedFilings(yield* Ref.get(state.filingRecords)), (entry) => entry.destination)
+        ).toStrictEqual(["uspto-incoming"]);
         expect(yield* state.writesOf("checkpoint.save")).toHaveLength(3);
       })
     );
@@ -266,6 +284,72 @@ describe("MailTagging job", () => {
     );
   });
 
+  it.layer(tiedMailbox(), { timeout: "30 seconds" })("interrupted write tied with the checkpoint instant", (it) => {
+    it.effect(
+      "repairs the tied message the checkpoint does not list, then leaves a covered tie alone",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.failingCategoryWrite, O.some(3));
+        const failure = yield* Effect.flip(run("apply", runId));
+        const interrupted = yield* Ref.get(state.checkpoint);
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect(A.flatMap(O.toArray(interrupted), (saved) => saved.coveredAtBoundary)).toStrictEqual(["msg-2"]);
+        expect(yield* state.categoriesById("msg-2b")).toStrictEqual([]);
+        expect(A.map(activeTagEntries(yield* Ref.get(state.tagRecords)), (entry) => entry.messageId)).toStrictEqual([
+          "msg-1",
+          "msg-2",
+          "msg-2b",
+        ]);
+
+        const rerun = yield* run("apply", "run-0002");
+        const completed = yield* Ref.get(state.checkpoint);
+
+        expect([rerun.scanned, rerun.alreadyTagged, rerun.repaired]).toStrictEqual([2, 1, 1]);
+        expect(yield* state.categoriesById("msg-2b")).toStrictEqual(["M: acme.10001"]);
+        expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toHaveLength(3);
+        expect(A.flatMap(O.toArray(completed), (saved) => saved.coveredAtBoundary)).toStrictEqual(["msg-2", "msg-2b"]);
+
+        yield* state.mailbox.setCategories(
+          SetCategoriesRequest.make({ messageId: tiedLater.messageId, categories: [] })
+        );
+        const categoryWrites = yield* state.writesOf("setCategories:");
+        const third = yield* run("apply", "run-0003");
+
+        expect([third.alreadyTagged, third.repaired]).toStrictEqual([2, 0]);
+        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
+        expect(yield* state.categoriesById("msg-2b")).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(world(), { timeout: "30 seconds" })("store keeps the upload and reports failure", (it) => {
+    it.effect(
+      "completes on the next run with the attachment reconciled once",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.lyingUpload, O.some(1));
+        const failure = yield* Effect.flip(run("apply", runId));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect(yield* state.writesOf("setCategories:")).toStrictEqual([]);
+
+        const rerun = yield* run("apply", "run-0002");
+
+        expect([rerun.scanned, rerun.matched, rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([
+          5, 2, 1, 0,
+        ]);
+        expect(yield* state.categoriesOf(1)).toStrictEqual([
+          "Docket - unverified",
+          "Personal",
+          "M: acme.10001",
+          "P: USPTO",
+        ]);
+        expect(yield* Ref.get(state.uploads)).toHaveLength(1);
+      })
+    );
+  });
+
   it.layer(world(), { timeout: "30 seconds" })("page bound", (it) => {
     it.effect(
       "stops after the requested number of pages",
@@ -347,6 +431,44 @@ describe("MailTagging undo", () => {
         expect(yield* state.categoriesOf(5)).toStrictEqual(["Follow up"]);
         expect(activeTagEntries(yield* Ref.get(state.tagRecords))).toStrictEqual([]);
         expect((yield* undo("apply", "undo-0002")).entries).toBe(0);
+      })
+    );
+  });
+
+  it.layer(world(), { timeout: "30 seconds" })("polling after an undo", (it) => {
+    it.effect(
+      "never re-tags an undone message, and still tags a message that arrives afterwards",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* run("apply", runId);
+        yield* undo("apply", "undo-0001");
+        const categoryWrites = yield* state.writesOf("setCategories:");
+        const ledgerLines = yield* Ref.get(state.tagRecords);
+        const poll = yield* run("apply", "run-0002");
+
+        expect([poll.scanned, poll.undoneSkipped, poll.alreadyTagged]).toStrictEqual([1, 1, 0]);
+        expect(poll.categoryAdds).toStrictEqual([]);
+
+        yield* Ref.set(state.checkpoint, O.none());
+        const fromStart = yield* run("apply", "run-0003");
+
+        expect([
+          fromStart.scanned,
+          fromStart.undoneSkipped,
+          fromStart.matched,
+          fromStart.attachmentsFiled,
+        ]).toStrictEqual([5, 4, 0, 0]);
+        expect(fromStart.unmatched["no-signal"]).toBe(1);
+        expect(yield* state.writesOf("setCategories:")).toStrictEqual(categoryWrites);
+        expect(yield* Ref.get(state.tagRecords)).toStrictEqual(ledgerLines);
+        expect(yield* state.categoriesOf(1)).toStrictEqual(["Docket - unverified", "Personal"]);
+        expect(yield* state.categoriesOf(5)).toStrictEqual([]);
+
+        yield* Ref.update(state.messages, A.append(envelope({ at: 6, subject: "Notice for 16/123,456" })));
+        const later = yield* run("apply", "run-0004");
+
+        expect([later.undoneSkipped, later.matched]).toStrictEqual([1, 1]);
+        expect(yield* state.categoriesOf(6)).toStrictEqual(["M: acme.10001"]);
       })
     );
   });

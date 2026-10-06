@@ -7,6 +7,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
+  DocumentFileId,
   DocumentFolderId,
   FilingDestination,
   MailAttachmentId,
@@ -324,6 +325,102 @@ export class UploadDocumentRequest extends S.Class<UploadDocumentRequest>($I`Upl
     description: "One new file for a matter's document folder.",
   })
 ) {}
+
+/**
+ * Outcome of an upload that created the file.
+ *
+ * **Example** (Report a created file)
+ *
+ * ```ts
+ * import { DocumentFileId } from "@beep/law-practice-domain/values/MailTagging"
+ * import { DocumentUploaded } from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * const result = DocumentUploaded.make({ fileId: DocumentFileId.make("file-0001") })
+ * console.log(result._tag) // "DocumentUploaded"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocumentUploaded extends S.TaggedClass<DocumentUploaded>($I`DocumentUploaded`)(
+  "DocumentUploaded",
+  {
+    fileId: DocumentFileId.annotateKey({
+      description: "Id of the file the upload created.",
+    }),
+  },
+  $I.annote("DocumentUploaded", {
+    description: "Outcome of an upload that created the file.",
+  })
+) {}
+
+/**
+ * Outcome of an upload the store refused because the folder already has a
+ * file of that name; nothing was written.
+ *
+ * **Details**
+ *
+ * `existingFileId` is the id of the file holding the name, when the store can
+ * tell. The filer needs it to record a completion for an upload that landed
+ * before its ledger line did.
+ *
+ * **Example** (Report a held name)
+ *
+ * ```ts
+ * import { DocumentNameTaken } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as O from "effect/Option"
+ *
+ * const result = DocumentNameTaken.make({})
+ * console.log(O.isNone(result.existingFileId)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocumentNameTaken extends S.TaggedClass<DocumentNameTaken>($I`DocumentNameTaken`)(
+  "DocumentNameTaken",
+  {
+    existingFileId: S.Option(DocumentFileId).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "Id of the file that already holds the name, when the store reports it.",
+    }),
+  },
+  $I.annote("DocumentNameTaken", {
+    description: "Outcome of an upload refused because the name already exists in the folder.",
+  })
+) {}
+
+/**
+ * What a create-only upload answers: the new file, or the name being taken.
+ *
+ * **Example** (Match an upload result)
+ *
+ * ```ts
+ * import { DocumentNameTaken, DocumentUploadResult } from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * const outcome = DocumentUploadResult.match(DocumentNameTaken.make({}), {
+ *   DocumentUploaded: () => "created",
+ *   DocumentNameTaken: () => "name taken"
+ * })
+ * console.log(outcome) // "name taken"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DocumentUploadResult = S.Union([DocumentUploaded, DocumentNameTaken]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DocumentUploadResult", {
+    description: "What a create-only upload answers: the new file, or the name being taken.",
+  })
+);
+
+/**
+ * Runtime type for {@link DocumentUploadResult}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DocumentUploadResult = typeof DocumentUploadResult.Type;
 
 /**
  * Everything the pure tagger reads besides the message itself.

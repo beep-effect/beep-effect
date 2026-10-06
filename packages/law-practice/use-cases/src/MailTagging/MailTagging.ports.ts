@@ -10,7 +10,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
   BackfillCheckpoint,
-  FilingLedgerEntry,
+  FilingLedgerRecord,
   MailMessageId,
   MasterCategoryIntent,
   TagLedgerRecord,
@@ -30,7 +30,6 @@ import {
   UploadDocumentRequest,
 } from "./MailTagging.values.ts";
 import type {
-  DocumentFileId,
   DocumentFolderId,
   MailEnvelope,
   MatterIndex,
@@ -39,7 +38,7 @@ import type {
 } from "@beep/law-practice-domain/values/MailTagging";
 import type * as O from "effect/Option";
 import type { MailTaggingPortError, MailTaggingStateError } from "./MailTagging.errors.ts";
-import type { MailAttachmentMeta, MailPage } from "./MailTagging.values.ts";
+import type { DocumentUploadResult, MailAttachmentMeta, MailPage } from "./MailTagging.values.ts";
 
 const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.ports");
 
@@ -272,19 +271,21 @@ export class MatterFolderDirectory extends Context.Service<MatterFolderDirectory
  *
  * **Details**
  *
- * `upload` creates a new file and answers its id. An adapter fails rather than
- * replace a file of the same name. The port has no overwrite and no delete
+ * `upload` creates a new file and answers `DocumentUploaded` with its id. When
+ * the folder already has a file of that name it writes nothing and answers
+ * `DocumentNameTaken`, with the id of the file holding the name when the store
+ * can tell. It never replaces a file. The port has no overwrite and no delete
  * verb, so filing cannot destroy a document.
  *
  * **Example** (Build a store that names every file the same)
  *
  * ```ts
  * import { DocumentFileId } from "@beep/law-practice-domain/values/MailTagging"
- * import { DocumentStoreShape } from "@beep/law-practice-use-cases/MailTagging"
+ * import { DocumentStoreShape, DocumentUploaded } from "@beep/law-practice-use-cases/MailTagging"
  * import * as Effect from "effect/Effect"
  *
  * const store = DocumentStoreShape.make({
- *   upload: () => Effect.succeed(DocumentFileId.make("file-0001"))
+ *   upload: () => Effect.succeed(DocumentUploaded.make({ fileId: DocumentFileId.make("file-0001") }))
  * })
  * console.log(typeof store.upload) // "function"
  * ```
@@ -296,9 +297,9 @@ export class DocumentStoreShape extends S.Class<DocumentStoreShape>($I`DocumentS
   {
     upload: Fn({
       input: UploadDocumentRequest,
-      output: EffectOutput<DocumentFileId, MailTaggingPortError>(),
+      output: EffectOutput<DocumentUploadResult, MailTaggingPortError>(),
     }).annotateKey({
-      description: "Create one new file in a folder and answer its id; never replaces an existing file.",
+      description: "Create one new file in a folder, or report that its name is taken; never replaces a file.",
     }),
   },
   $I.annote("DocumentStoreShape", {
@@ -398,14 +399,20 @@ export class TagLedger extends Context.Service<TagLedger, TagLedgerShape>()($I`T
 /**
  * Service shape of the append-only filing ledger.
  *
+ * **Details**
+ *
+ * A filing writes two lines: a `FilingIntended` line before the upload and a
+ * `FilingCompleted` line after it. `records` answers every line in append
+ * order and fails closed on a line that does not decode.
+ *
  * **Example** (Build an empty filing ledger)
  *
  * ```ts
  * import { FilingLedgerShape } from "@beep/law-practice-use-cases/MailTagging"
  * import * as Effect from "effect/Effect"
  *
- * const ledger = FilingLedgerShape.make({ append: () => Effect.void, entries: Effect.succeed([]) })
- * console.log(Effect.isEffect(ledger.entries)) // true
+ * const ledger = FilingLedgerShape.make({ append: () => Effect.void, records: Effect.succeed([]) })
+ * console.log(Effect.isEffect(ledger.records)) // true
  * ```
  *
  * @category ports
@@ -414,12 +421,12 @@ export class TagLedger extends Context.Service<TagLedger, TagLedgerShape>()($I`T
 export class FilingLedgerShape extends S.Class<FilingLedgerShape>($I`FilingLedgerShape`)(
   {
     append: Fn({
-      input: FilingLedgerEntry,
+      input: FilingLedgerRecord,
       output: EffectOutput<void, MailTaggingStateError>(),
     }).annotateKey({
-      description: "Append one filed-attachment line.",
+      description: "Append one filing intent or completion line.",
     }),
-    entries: EffectOutput<ReadonlyArray<FilingLedgerEntry>, MailTaggingStateError>().annotateKey({
+    records: EffectOutput<ReadonlyArray<FilingLedgerRecord>, MailTaggingStateError>().annotateKey({
       description: "Read every line in append order, failing closed on a line that does not decode.",
     }),
   },
@@ -431,18 +438,18 @@ export class FilingLedgerShape extends S.Class<FilingLedgerShape>($I`FilingLedge
 /**
  * Filing ledger port tag.
  *
- * **Example** (Count filed attachments through the tag)
+ * **Example** (Count filing-ledger lines through the tag)
  *
  * ```ts
  * import { FilingLedger } from "@beep/law-practice-use-cases/MailTagging"
  * import * as Effect from "effect/Effect"
  *
- * const filedCount = Effect.gen(function* () {
+ * const lineCount = Effect.gen(function* () {
  *   const ledger = yield* FilingLedger
- *   const entries = yield* ledger.entries
- *   return entries.length
+ *   const records = yield* ledger.records
+ *   return records.length
  * })
- * console.log(Effect.isEffect(filedCount)) // true
+ * console.log(Effect.isEffect(lineCount)) // true
  * ```
  *
  * @category ports
@@ -614,6 +621,15 @@ export class MailTaggingJob extends Context.Service<MailTaggingJob, MailTaggingJ
 
 /**
  * Service shape of the ledger-driven undo.
+ *
+ * **Details**
+ *
+ * An undone message is settled: the tagging job never decides it again on
+ * its own. Re-tagging an undone run is a deliberate later operation.
+ *
+ * Undo restores categories only. It never removes a filed attachment: the
+ * document port has no delete verb, and the filing ledger lists every stored
+ * file for manual reversal.
  *
  * **Example** (Build an undo that finds nothing)
  *

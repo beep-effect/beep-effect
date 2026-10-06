@@ -1,13 +1,19 @@
+import { DocumentFileId, FilingLedgerEntry, FilingLedgerRecord } from "@beep/law-practice-domain/values/MailTagging";
 import {
   AttachmentFiler,
+  completedFilings,
   FileAttachmentsRequest,
   MailTaggingPortError,
+  MailTaggingStateError,
+  pendingFilingIntents,
 } from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import {
   acmeEntry,
   attachment,
@@ -64,7 +70,7 @@ describe("MailTagging attachment filer", () => {
           yield* file({ mode: "apply", message: usptoMail }),
           yield* file({ mode: "apply", message: clientMail }),
         ];
-        const entries = yield* Ref.get(state.filingEntries);
+        const entries = completedFilings(yield* Ref.get(state.filingRecords));
         const uploads = yield* Ref.get(state.uploads);
 
         expect(A.map(reports, (report) => report.attachmentsFiled)).toStrictEqual([1, 0]);
@@ -94,7 +100,9 @@ describe("MailTagging attachment filer", () => {
         expect(A.map(yield* Ref.get(state.uploads), (upload) => upload.folderId)).toStrictEqual([
           "folder-acme-from-client",
         ]);
-        expect(A.map(yield* Ref.get(state.filingEntries), (entry) => entry.destination)).toStrictEqual(["from-client"]);
+        expect(
+          A.map(completedFilings(yield* Ref.get(state.filingRecords)), (entry) => entry.destination)
+        ).toStrictEqual(["from-client"]);
       })
     );
   });
@@ -113,7 +121,7 @@ describe("MailTagging attachment filer", () => {
         expect(A.map(reports, (report) => report.attachmentsDeduped)).toStrictEqual([0, 1]);
         expect(A.map(reports, (report) => report.wrote)).toStrictEqual([false, false]);
         expect(yield* Ref.get(state.writes)).toStrictEqual([]);
-        expect(yield* Ref.get(state.filingEntries)).toStrictEqual([]);
+        expect(yield* Ref.get(state.filingRecords)).toStrictEqual([]);
       })
     );
   });
@@ -290,6 +298,279 @@ describe("MailTagging attachment filer", () => {
           folderRequests: yield* Ref.get(state.folderRequests),
           writes: yield* Ref.get(state.writes),
         }).toStrictEqual(before);
+      })
+    );
+  });
+});
+
+const sameNameTwice = () =>
+  scenario({
+    envelopes: [usptoMail, clientMail],
+    attachments: [
+      [usptoMail.messageId, [attachment({ id: "att-1", name: "office-action.pdf", bytes: pdf })]],
+      [clientMail.messageId, [attachment({ id: "att-2", name: "office-action.pdf", bytes: [9, 9] })]],
+    ],
+  });
+
+const ledgerShape = Effect.fn("MailTaggingFilerTest.ledgerShape")(function* () {
+  const state = yield* World;
+  const records = yield* Ref.get(state.filingRecords);
+  return {
+    lines: A.map(records, (record) => record._tag),
+    pending: A.map(pendingFilingIntents(records), (intent) => intent.fileName),
+    completed: A.map(completedFilings(records), (entry) => [entry.fileName, entry.fileId, entry.reconciled]),
+    uploads: A.map(yield* Ref.get(state.uploads), (upload) => `${upload.folderId}/${upload.fileName}`),
+    uploadCalls: yield* Ref.get(state.uploadCalls),
+  };
+});
+
+describe("MailTagging two-phase filing", () => {
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("completion lost after the upload", (it) => {
+    it.effect(
+      "reconciles the stored file on the rerun instead of uploading it again, then deduplicates",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.failingFilingAppend, O.some(2));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingStateError);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended"],
+          pending: ["2026-07-01 office-action.pdf"],
+          completed: [],
+          uploads: ["folder-acme-uspto-incoming/2026-07-01 office-action.pdf"],
+          uploadCalls: 1,
+        });
+
+        const writesBefore = yield* Ref.get(state.writes);
+        const preview = yield* file({ mode: "dry-run", message: usptoMail });
+
+        expect([preview.attachmentsReconciled, preview.attachmentsFiled, preview.wrote]).toStrictEqual([1, 0, false]);
+        expect(yield* Ref.get(state.writes)).toStrictEqual(writesBefore);
+        expect(yield* Ref.get(state.uploadCalls)).toBe(1);
+
+        const rerun = yield* file({ mode: "apply", message: clientMail });
+
+        expect([
+          rerun.attachmentsReconciled,
+          rerun.attachmentsFiled,
+          rerun.attachmentsDeduped,
+          rerun.wrote,
+        ]).toStrictEqual([1, 0, 0, true]);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended", "FilingCompleted"],
+          pending: [],
+          completed: [["2026-07-01 office-action.pdf", "file-1", true]],
+          uploads: ["folder-acme-uspto-incoming/2026-07-01 office-action.pdf"],
+          uploadCalls: 2,
+        });
+
+        const third = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([third.attachmentsDeduped, third.attachmentsReconciled, third.attachmentsFiled]).toStrictEqual([
+          1, 0, 0,
+        ]);
+        expect(yield* Ref.get(state.uploadCalls)).toBe(2);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("unidentified file on the reconcile path", (it) => {
+    it.effect(
+      "fails with a typed document-store error and records no completion",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.failingFilingAppend, O.some(2));
+        yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        yield* Ref.set(state.anonymousStore, true);
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect([failure.port, failure.operation]).toStrictEqual(["DocumentStore", "upload"]);
+        expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended"]);
+      })
+    );
+  });
+
+  it.layer(sameNameTwice(), { timeout: "30 seconds" })("upload lost after the intent", (it) => {
+    it.effect(
+      "uploads once on the rerun under the intent's own folder and name",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.failingUpload, O.some(1));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended"],
+          pending: ["2026-07-01 office-action.pdf"],
+          completed: [],
+          uploads: [],
+          uploadCalls: 1,
+        });
+
+        const other = yield* file({ mode: "apply", message: clientMail });
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([other.attachmentsFiled, rerun.attachmentsFiled, rerun.attachmentsReconciled]).toStrictEqual([1, 1, 0]);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended", "FilingIntended", "FilingCompleted", "FilingCompleted"],
+          pending: [],
+          completed: [
+            ["2026-07-01 office-action (31609426).pdf", "file-1", false],
+            ["2026-07-01 office-action.pdf", "file-2", false],
+          ],
+          uploads: [
+            "folder-acme-from-client/2026-07-01 office-action (31609426).pdf",
+            "folder-acme-uspto-incoming/2026-07-01 office-action.pdf",
+          ],
+          uploadCalls: 3,
+        });
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("intent append failure", (it) => {
+    it.effect(
+      "never calls the document store",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.failingFilingAppend, O.some(1));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingStateError);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: [],
+          pending: [],
+          completed: [],
+          uploads: [],
+          uploadCalls: 0,
+        });
+      })
+    );
+  });
+
+  it.layer(sameNameTwice(), { timeout: "30 seconds" })("foreign file holding a new name", (it) => {
+    it.effect(
+      "abandons the intent, files under the short-hash name, and does not treat the abandoned name as its own",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.update(
+          state.storedFiles,
+          HashMap.set("folder-acme-uspto-incoming/2026-07-01 office-action.pdf", DocumentFileId.make("foreign-1"))
+        );
+        const report = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([report.attachmentsFiled, report.attachmentsReconciled, report.wrote]).toStrictEqual([1, 0, true]);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingCompleted"],
+          pending: [],
+          completed: [["2026-07-01 office-action (315d429b).pdf", "file-1", false]],
+          uploads: ["folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf"],
+          uploadCalls: 2,
+        });
+
+        const other = yield* file({ mode: "apply", message: clientMail });
+
+        expect(other.attachmentsFiled).toBe(1);
+        expect(A.map(yield* Ref.get(state.uploads), (upload) => `${upload.folderId}/${upload.fileName}`)).toStrictEqual(
+          [
+            "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf",
+            "folder-acme-from-client/2026-07-01 office-action.pdf",
+          ]
+        );
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("foreign files holding both names", (it) => {
+    it.effect(
+      "abandons both intents, fails with a typed error, and leaves nothing pending for the next run",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.update(state.storedFiles, (stored) =>
+          HashMap.set(
+            HashMap.set(
+              stored,
+              "folder-acme-uspto-incoming/2026-07-01 office-action.pdf",
+              DocumentFileId.make("foreign-1")
+            ),
+            "folder-acme-uspto-incoming/2026-07-01 office-action (315d429b).pdf",
+            DocumentFileId.make("foreign-2")
+          )
+        );
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const abandoned = A.filter(yield* Ref.get(state.filingRecords), FilingLedgerRecord.guards.FilingAbandoned);
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect([failure.port, failure.operation]).toStrictEqual(["DocumentStore", "upload"]);
+        expect(A.map(abandoned, (line) => [line.fileName, line.reason])).toStrictEqual([
+          ["2026-07-01 office-action.pdf", "name-taken"],
+          ["2026-07-01 office-action (315d429b).pdf", "name-taken"],
+        ]);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended", "FilingAbandoned", "FilingIntended", "FilingAbandoned"],
+          pending: [],
+          completed: [],
+          uploads: [],
+          uploadCalls: 2,
+        });
+
+        const preview = yield* file({ mode: "dry-run", message: usptoMail });
+        const again = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        expect([preview.attachmentsFiled, preview.attachmentsReconciled]).toStrictEqual([1, 0]);
+        assertInstanceOf(again, MailTaggingPortError);
+        expect((yield* ledgerShape()).lines).toHaveLength(8);
+        expect((yield* ledgerShape()).completed).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("store keeps the upload and reports failure", (it) => {
+    it.effect(
+      "reconciles exactly once on the next run and is never wedged",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.lyingUpload, O.some(1));
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended"]);
+
+        const rerun = yield* file({ mode: "apply", message: usptoMail });
+        const third = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([rerun.attachmentsReconciled, rerun.attachmentsFiled]).toStrictEqual([1, 0]);
+        expect([third.attachmentsDeduped, third.attachmentsReconciled]).toStrictEqual([1, 0]);
+        expect(yield* ledgerShape()).toStrictEqual({
+          lines: ["FilingIntended", "FilingCompleted"],
+          pending: [],
+          completed: [["2026-07-01 office-action.pdf", "file-1", true]],
+          uploads: ["folder-acme-uspto-incoming/2026-07-01 office-action.pdf"],
+          uploadCalls: 2,
+        });
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("ledger read models", (it) => {
+    it.effect(
+      "settle an intent only by a later completion for the same content, matter, folder, and name",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* file({ mode: "apply", message: usptoMail });
+        const records = yield* Ref.get(state.filingRecords);
+        const intents = A.filter(records, FilingLedgerRecord.guards.FilingIntended);
+        const completions = completedFilings(records);
+        const renamed = A.map(completions, (entry) => FilingLedgerEntry.make({ ...entry, fileName: "elsewhere.pdf" }));
+
+        expect(A.map(records, (record) => record._tag)).toStrictEqual(["FilingIntended", "FilingCompleted"]);
+        expect(pendingFilingIntents(records)).toStrictEqual([]);
+        expect(pendingFilingIntents(intents)).toStrictEqual(intents);
+        expect(pendingFilingIntents(A.appendAll(completions, intents))).toStrictEqual(intents);
+        expect(pendingFilingIntents(A.appendAll(intents, renamed))).toStrictEqual(intents);
+        expect(completedFilings(intents)).toStrictEqual([]);
       })
     );
   });
