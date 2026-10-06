@@ -113,11 +113,11 @@ describe("exploration projections", () => {
               manifest("alpha", "Alpha", "active", "research"),
               readme("Alpha", "research", "active")
             );
-            return yield* Effect.fail(new Error("intentional fixture failure"));
+            return yield* Effect.fail("intentional fixture failure");
           })
         ).pipe(Effect.flip);
 
-        expect(failure.message).toBe("intentional fixture failure");
+        expect(failure).toBe("intentional fixture failure");
         expect(yield* fs.exists(root)).toBe(false);
       })
     );

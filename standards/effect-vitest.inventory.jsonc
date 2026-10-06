@@ -17611,7 +17611,7 @@
       "line": 107,
       "endLine": 118,
       "symbol": "scoped",
-      "occurrence": "v2:a3d6ff47991eb0e78adc2a509d2b055362f667dd9d87d1c6b5b90837cb18b447",
+      "occurrence": "v2:fabef521635be0f5d3cf34aaaff0def25863c90f7865c7f0aba63649e056e1ab",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { root = yield* fs.makeTempDirectoryScoped({ prefix: \"beep-exploration-atlas-failure-\" }); yield* writePacket( root, \"alpha\", manifest(\"alpha\", \"Alpha\", \"active\"",
       "replacement": {
