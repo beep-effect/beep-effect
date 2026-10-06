@@ -99,6 +99,12 @@ specifics stay out of this file.
 | D16 | 2026-10-06 | The seven client folders created on 2026-10-05 from the superseded D5 (six applicant names and `Client To Be Confirmed`) stay in the tree, empty and visible only to the service identity. | The reconciler has no rename or delete, and the engine never deletes. They receive no collaboration, so the attorney never sees them; removing them is a follow-up for a reconciler that can prune. |
 | D17 | 2026-10-06 | The PC-side work is a single ordered checklist for a Claude Code session on the attorney's PC, with person-only steps marked, kept with the orchestrator's briefs. | Operator instruction of 2026-10-06: do not wait on his workstation; a session on the PC executes the steps. |
 | D18 | 2026-10-06 | The attorney's 29 collaborations were created with one driver call each and recorded in the private intent, not applied through the reconciler. | After the migration the reconciler's inventory costs about 6,000 provider calls per pass and a dry-run plus apply needs about five passes. Thirty thousand calls for 29 collaborations is an avoidable draw on the monthly API allowance. The script refuses to run unless the collaboration is declared internal. |
+| D19 | 2026-10-06 | The attorney's live PC folder is mirrored into Box exactly as he keeps it: `<client folder>/<his matter folder>/<his subfolders>`. The KG matter key chooses the Box client folder and is recorded per matter folder for linking; it never renames or regroups his folders. | It is the layout he works in every day, with his own per-application folders and subfolders. Forcing it into the numbered template would lose them. The template folders remain for the first migration's files and the auto-filer. |
+| D20 | 2026-10-06 | A file inside one of his own matter folders is filed there whether or not the KG bundle knows the matter. The hold-until-known rule applies only to files with no home in his structure and to old-drive material. | He has already attributed those files himself. Orchestrator ruling of 2026-10-06. |
+| D21 | 2026-10-06 | Files in his live folder that are byte-identical to files from the first migration are uploaded again at their live location. Identical duplicates inside his own tree are kept where he has them. | A mirror with holes would not be a mirror. The older copies in the holding area can be retired once he confirms the layout; the engine never deletes. |
+| D22 | 2026-10-06 | Temp, lock, and backup files are not uploaded; non-client folders and loose personal or firm items wait for his answer; one file over the 5 GB per-file limit is held out. | They are not work product, or only he can say where they belong. |
+| D23 | 2026-10-06 | The attorney's spot-check is a private, tailnet-only review page with a token in its address, not a printed sheet. Its locked answers are his decisions of record. | Operator request: a link he can click through remotely. Nothing in it is public and nothing from it is in this repository. |
+| D24 | 2026-10-06 | Long migration runs are user services outside the desktop app's process group, each gated on an identical dry-run pair. | Two desktop-app crashes killed in-app background jobs mid-upload. |
 | D15 | 2026-10-05 | Sharing with clients is by shared link and File Request from `90 Client Exchange`, never by inviting the client as a collaborator. | External collaborators are billable on the Business plan. |
 
 ## Acceptance Criteria
@@ -113,7 +119,7 @@ specifics stay out of this file.
 - [x] A live dry-run plan and a live apply are recorded in `history/` as
       sanitized counts, with a post-apply plan that is all existing folders
       and identical files, and sources verified unchanged.
-- [ ] The Box Drive install runbook and the one-page how-to are in
+- [x] The Box Drive install runbook and the one-page how-to are in
       `docs/runbooks/`, and the physical install is on the operator desk.
 - [x] A private spot-check list exists for the attorney and is routed through
       the orchestrator.

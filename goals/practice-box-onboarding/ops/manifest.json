@@ -4,13 +4,13 @@
     "id": "practice-box-onboarding",
     "packetId": "goal-packet/v1:ce8a72d05d2426400a5c1f4b36e8a9604e3459a816f78e971590ba55262944c6",
     "title": "Practice Box Onboarding",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-05",
-    "updated": "2026-10-05",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-box-onboarding",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Move the solo practice onto Box: a resumable, dry-run-first, content-hash-deduped file migration into the provisioned client/matter tree, the Box Drive install steps, and the attorney how-to",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -64,12 +64,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -85,5 +85,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "2026-10-06: engine shipped on the lane; 3,772 files migrated live (verdict complete, sources unchanged); attorney collaborations applied. Open: PR to mergeable, the PC-side checklist (orchestrator-directed), and the attorney's spot-check answers."
+  "statusNote": "Completed 2026-10-06: content-migration engine shipped in @beep/box-provisioning (#1462); 10,155 files migrated live in two runs (3,772 from the salvaged drives, 6,383 from the attorney's live folder), every upload hash-verified and every source unchanged; attorney access applied; Box Drive runbook, how-to, and migration runbook written. Follow-ups outside the packet: act on the attorney's locked review answers (client names, held dockets, non-client folders), and re-link matter folders when the KG publishes its next bundle."
 }

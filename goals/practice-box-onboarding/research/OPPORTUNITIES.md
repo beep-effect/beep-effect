@@ -36,3 +36,20 @@ Friction receipts recorded while the work happened.
    before creating any client folder.
 7. **`goals bootstrap` has no writer.** The packet was materialized from the
    plan JSON by hand.
+8. **A source directory changed under a running plan.** What I was doing:
+   resuming the PC-folder upload. Evidence: the two-plan gate reported
+   non-identical plans because another session moved large files out of the
+   shared landing directory between the plans. What would have prevented it:
+   one reader per landing directory, or a read-only hard-link view per
+   consumer from the start.
+9. **Background jobs die with the desktop app.** Evidence: two app crashes
+   killed an in-flight apply and its monitor. What would have prevented it:
+   launching every long run as a user service outside the app's slice from
+   the first run, which is what the resume did.
+10. **`beep-heavy` does not forward the caller's environment.** Evidence:
+    `BOX_MIGRATION_DIR is required` from a runner started under it. Wrap the
+    command in `env NAME=value ...`.
+11. **An ad-hoc counting script misread the attorney's own matter numbers as
+    KG matter keys.** Evidence: a report of 91 matters missing from the KG
+    that was really 13. What would have prevented it: counting from the same
+    records the map builder writes, not from a separate script.
