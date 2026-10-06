@@ -7,19 +7,15 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
-import {
-  composeGatedLayers,
-  gatedLayer,
-  SourceAuthRegistration,
-  sanitizedToolkit,
-  statelessMcpProtocols,
-} from "@beep/mcp-kit";
+import { composeGatedLayers, gatedLayer, SourceAuthRegistration, sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
+import * as McpProtocol from "effect/ai/McpProtocol";
 import * as McpServer from "effect/ai/McpServer";
 import * as S from "effect/Schema";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
 import type { Path } from "effect";
+import type * as Arr from "effect/Array";
 import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
@@ -113,7 +109,40 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
 );
 
 /**
- * Instructions the host advertises through `server/discover`.
+ * MCP protocol versions the practice KG host answers.
+ *
+ * **Gotchas**
+ *
+ * This host is installed into Claude Desktop, which opens every server with an
+ * `initialize` handshake (it offered `2025-11-25` on 2026-10-06). A host that
+ * lists only the stateless `2026-07-28` adapter refuses that handshake and
+ * never starts, so the handshake-era adapters stay listed here. The stateless
+ * adapter comes first, which keeps it the default for clients that send no
+ * handshake. Do not narrow this list without proving the result against a real
+ * Claude Desktop install.
+ *
+ * **Example** (Count the supported versions)
+ *
+ * ```ts
+ * import { practiceKgMcpProtocols } from "@beep/law-practice-server"
+ *
+ * console.log(practiceKgMcpProtocols.map((protocol) => protocol.protocolVersion))
+ * // ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.ProtocolAdapter> = [
+  McpProtocol.v2026_07_28,
+  McpProtocol.v2025_11_25,
+  McpProtocol.v2025_06_18,
+  McpProtocol.v2025_03_26,
+  McpProtocol.v2024_11_05,
+];
+
+/**
+ * Instructions the host advertises on `initialize` and through `server/discover`.
  *
  * **Example** (Reading the advertised instructions)
  *
@@ -128,7 +157,7 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
  * @since 0.0.0
  */
 export const PRACTICE_KG_MCP_INSTRUCTIONS =
-  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Call tools directly; the host is stateless and needs no initialize handshake.";
+  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Build the stdio MCP server layer from the toolkit registration.
@@ -165,7 +194,7 @@ export const makePracticeKgServerLayer = (
         name: config.name,
         version: config.version,
         instructions: PRACTICE_KG_MCP_INSTRUCTIONS,
-        protocols: statelessMcpProtocols,
+        protocols: practiceKgMcpProtocols,
       })
     ),
     Layer.orDie

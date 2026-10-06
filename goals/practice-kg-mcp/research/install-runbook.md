@@ -27,11 +27,55 @@ administrator instead.
 
 ## Refresh
 
+## Updating an existing install
+
+Claude Desktop identifies an extension by name and version. Uninstall the
+existing **Beep Practice Knowledge Graph** extension in **Settings →
+Extensions** first, then install the new `.mcpb` and set **Practice KG data
+bundle** to the new bundle folder. Uninstalling removes only the extension;
+bundle folders are untouched. Confirm with `kg_provenance` (no arguments): it
+reports the bundle version, and the tool list includes `kg_matter_lookup`.
+
+Do not register this server by editing `claude_desktop_config.json` on a
+machine that uses the extension: some Claude Desktop installs keep their data
+under a virtualized path, so the file a script finds is not the one the app
+reads, and a second registration would duplicate the server.
+
+### Where Claude Desktop keeps extensions on Windows
+
+The Microsoft Store build of Claude Desktop does not use the plain
+`%APPDATA%\Claude` folder. Its data root is
+`%LOCALAPPDATA%\Packages\Claude_<publisher id>\LocalCache\Roaming\Claude`,
+and that is where `Claude Extensions\` and `extensions-installations.json`
+live. A script that reads or edits `%APPDATA%\Claude` on such a machine is
+looking at the wrong files.
+
+If the Settings → Extensions install does not take (the listed version does
+not change), the extension can be replaced by file with Claude Desktop closed:
+back up the extension folder, mirror the unpacked new package into it, and
+update that extension's entry in `extensions-installations.json` (version, and
+`hash` = the SHA-256 of the `.mcpb` file). This was done on the attorney's PC on
+2026-10-06 for version `0.2.1`.
+
+After any install, proof that it works is a tool call from a chat
+(`kg_provenance` with no arguments reporting the expected bundle version), not
+only a running process.
+
+The server and the bundle ship as a pair: this server reads store format
+pglite 2 / duckdb 2 and refuses any other bundle with a message naming both
+formats. Replace the extension and the bundle folder together.
+
 Refresh always means full replacement; never merge database files. Close
 Claude Desktop, rename the current `practice-kg-bundle/` to
 `practice-kg-bundle.bak/`, copy the new folder into its place, reopen Claude
 Desktop, and call `kg_provenance` with no arguments to confirm the new bundle
 version. Delete the backup only after the gauntlet passes.
+
+## Before asking evaluation questions
+
+Claude Desktop memory crosses chats. Before a gauntlet or acceptance run,
+open **Settings → Memory**, clear saved memories (or turn memory off), and
+start a new chat, so earlier answers cannot leak into the run.
 
 ## Optional USPTO companion
 

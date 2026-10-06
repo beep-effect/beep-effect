@@ -5,12 +5,12 @@
     "title": "Practice KG MCP",
     "status": "active",
     "created": "2026-07-27",
-    "updated": "2026-10-05",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-kg-mcp",
   "lifecycle": "active",
-  "statusNote": "P6 graph-integrity repair is in the build and the bundle is rebuilt (2026-10-05): families key on <client>.<family>, anchors join only by unique mention, every node carries an attribution source. Still open: claims-batch rerun onto the rebuilt bundle, G-1/G-3 spot re-runs on the Windows target, Tom's correctness calls on G-1..G-5, and AC-2 node provenance (P7).",
+  "statusNote": "P6 and P7 are complete (2026-10-06): client-keyed graph, AC-2 proved by the bundle verification sweep, AC-5 proved under network isolation, and a stable matter-lookup contract for downstream services. Open: AC-6 (runbook-only install on the attorney's PC) and his correctness calls on G-1 through G-5, both of which need a person.",
   "mission": "Ship the first queryable IP-law knowledge graph over the Oppold corpus to Tom's Claude Desktop as a read-only, local-first, .mcpb-packaged stdio MCP server over a portable data bundle, taking live ownership of the orphaned knowledge-graph scope.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -35,7 +35,10 @@
     "goals/practice-kg-mcp/GOAL.md",
     "goals/practice-kg-mcp/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/matter-lookup-contract.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -79,16 +82,21 @@
     {
       "id": "P6",
       "name": "Graph-integrity repair",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Server hardening",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Handoff + close",
+      "status": "in-progress"
+    },
+    {
+      "id": "P9",
+      "name": "Working-files bundle",
       "status": "pending"
     }
   ],

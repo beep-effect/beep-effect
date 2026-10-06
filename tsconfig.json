@@ -2030,6 +2030,12 @@
       ],
       "@beep/file-processing/PageOcr": [
         "./packages/foundation/capability/file-processing/src/PageOcr/index.ts"
+      ],
+      "@beep/law-practice-domain/values/DocketDeadline": [
+        "./packages/law-practice/domain/src/values/DocketDeadline/index.ts"
+      ],
+      "@beep/law-practice-use-cases/DocketIntake": [
+        "./packages/law-practice/use-cases/src/DocketIntake/index.ts"
       ]
     }
   }

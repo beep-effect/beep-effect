@@ -28,7 +28,7 @@ const manifest = PracticeKgBundleManifest.make({
     emails: S.Natural.make(1),
     nodes: S.Natural.make(4),
   }),
-  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "1", pglite: "2" }),
+  schemaVersion: PracticeKgSchemaVersions.make({ duckdb: "2", pglite: "2" }),
   sourceRuns: PracticeKgSourceRuns.make({ base: "included", refresh202607: "excluded" }),
 });
 
@@ -82,8 +82,8 @@ for (const [adapter, services] of [
 
           const error = yield* Effect.flip(loadPracticeKgBundleContext(bundleDir));
 
-          expect(error.message).toContain("graph store format 1");
-          expect(error.message).toContain("reads format 2");
+          expect(error.message).toContain("store format pglite 1 / duckdb 1");
+          expect(error.message).toContain("reads pglite 2 / duckdb 2");
         })
       );
 
