@@ -1854,6 +1854,12 @@
   "@beep/schema/PatternOntology": [
     "./packages/foundation/modeling/schema/src/PatternOntology/index.ts"
   ],
+  "@beep/law-practice-domain/values/DocketDeadline": [
+    "./packages/law-practice/domain/src/values/DocketDeadline/index.ts"
+  ],
+  "@beep/law-practice-use-cases/DocketIntake": [
+    "./packages/law-practice/use-cases/src/DocketIntake/index.ts"
+  ],
   "@beep/occt": ["./packages/drivers/occt/src/index.ts"],
   "@beep/occt/*": ["./packages/drivers/occt/src/*"],
   "@beep/pdf-tools": ["./packages/drivers/pdf-tools/src/index.ts"],
