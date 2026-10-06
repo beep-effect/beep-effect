@@ -34,7 +34,12 @@ const runSmoke = Effect.fnUntraced(function* (script: Partial<M365Script>, write
   return {
     calls: yield* Ref.get(fake.calls),
     failed: O.map(Exit.match(exit, { onFailure: Cause.findErrorOption, onSuccess: O.none }), (error) => error.failed),
-    lines: A.filter(yield* TestConsole.logLines, (line): line is string => Str.isString(line)),
+    // The console also carries Effect log lines when a runner turns logging on; only the
+    // check's own PASS/FAIL report is asserted.
+    lines: A.filter(
+      yield* TestConsole.logLines,
+      (line): line is string => Str.isString(line) && (Str.startsWith("PASS ")(line) || Str.startsWith("FAIL ")(line))
+    ),
   };
 });
 

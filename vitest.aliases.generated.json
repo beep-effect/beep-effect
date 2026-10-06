@@ -1859,5 +1859,8 @@
   ],
   "@beep/law-practice-use-cases/DocketIntake": [
     "./packages/law-practice/use-cases/src/DocketIntake/index.ts"
+  ],
+  "@beep/law-practice-server/DocketIntake": [
+    "./packages/law-practice/server/src/DocketIntake/index.ts"
   ]
 }

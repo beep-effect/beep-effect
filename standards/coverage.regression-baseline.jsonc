@@ -4358,6 +4358,117 @@
         }
       }
     },
+    "@beep/docket-intake": {
+      "path": "apps/docket-intake",
+      "lines": 99.07,
+      "statements": 99.15,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 1,
+        "statements": 1,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "apps/docket-intake/src/Commands.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Config.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Cycle.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Digest.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Main.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/Smoke.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/bin.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/docket-intake/src/runtime/Layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/documents-domain": {
       "path": "packages/documents/domain",
       "lines": 92.78,
