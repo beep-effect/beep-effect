@@ -41,8 +41,11 @@ const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =>
   Layer.succeed(
     M365,
     M365.of({
+      addMessageAttachment: unused,
+      createDraftMessage: unused,
       createEvent: unused,
       createMasterCategory: unused,
+      deleteDraftMessage: unused,
       deleteEvent: unused,
       deltaDriveItems: unused,
       downloadDriveItemContent: unused,
@@ -53,6 +56,7 @@ const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =>
       getListItem: unused,
       getMailFolder: unused,
       getMessage: unused,
+      getMessageAuthoredText: unused,
       getSite: unused,
       listDriveItemVersions: unused,
       listDrives: unused,
@@ -61,6 +65,7 @@ const makeM365Stub = (overrides: Partial<M365Shape>): Layer.Layer<M365> =>
       listMessageAttachments: unused,
       listMessages: unused,
       listSites: unused,
+      sendDraftMessage: unused,
       updateEvent: unused,
       updateMessageCategories: unused,
       ...overrides,
