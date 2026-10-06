@@ -1,19 +1,27 @@
 /**
- * Effect service for Microsoft Graph `v1.0` read-only driver calls.
+ * Effect service for Microsoft Graph `v1.0` driver calls.
  *
  * The driver uses raw Graph REST requests through `effect/http`,
  * decodes every JSON payload with `effect/Schema`, and records only technical
  * counts/sizes in spans. It never logs tokens, mail bodies, file bytes, or
  * document content.
  *
+ * Two lanes share the verbs. The delegated lane is read-only by scope. The
+ * app-only lane adds mailbox writes (calendar events, categories); it never
+ * uses `/me` routes, and a create that may or may not have reached Graph fails
+ * as `"ambiguous write"` instead of being replayed.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $M365Id } from "@beep/identity";
+import { LiteralKit, URLStr } from "@beep/schema";
+import { addDays } from "@beep/schema/LocalDate";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Context, Duration, Effect, flow, Layer, pipe, SchemaGetter } from "effect";
+import { Config, Context, Duration, Effect, flow, HashSet, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -22,21 +30,28 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { M365Auth } from "./M365.auth.ts";
-import { M365ConfigInput, ResolvedM365Config, resolveM365Config } from "./M365.config.ts";
+import { M365ConfigInput, resolveM365Config } from "./M365.config.ts";
 import { M365Error } from "./M365.errors.ts";
 import {
+  GraphAttachment,
+  GraphBodyContentType,
+  GraphCategoryColor,
   GraphCollection,
   GraphDrive,
   GraphDriveItem,
   GraphDriveItemVersion,
   GraphEvent,
+  GraphEventShowAs,
   GraphListItem,
   GraphMessage,
   GraphMessageAuthoredText,
+  GraphOutlookCategory,
   GraphSite,
 } from "./M365.schemas.ts";
+import type { LocalDate } from "@beep/schema/LocalDate";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type { M365AuthShape, M365InteractiveAuthorizer } from "./M365.auth.ts";
+import type { M365AppOnlyConfigInput } from "./M365.config.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" })).annotate({
   title: "PosInt",
@@ -90,11 +105,28 @@ const HttpClientFromSelf = S.declare((u: unknown): u is HttpClient.HttpClient =>
   })
 );
 
+const M365Lane = LiteralKit(["delegated", "app-only"]).pipe(
+  $I.annoteSchema("M365Lane", {
+    description: "Token lane a Microsoft 365 service instance runs on.",
+  })
+);
+
+class M365ServiceConfig extends S.Class<M365ServiceConfig>($I`M365ServiceConfig`)(
+  {
+    graphBaseUrl: URLStr,
+    lane: M365Lane,
+    maxRetries: S.Natural,
+  },
+  $I.annote("M365ServiceConfig", {
+    description: "Lane-independent settings the Microsoft Graph request executor needs.",
+  })
+) {}
+
 class M365Runtime extends S.Class<M365Runtime>($I`M365Runtime`)(
   {
     auth: M365AuthShapeFromSelf,
     client: HttpClientFromSelf,
-    config: ResolvedM365Config,
+    config: M365ServiceConfig,
   },
   $I.annote("M365Runtime", {
     description: "In-process Microsoft Graph service runtime: token provider, HTTP client, and resolved config.",
@@ -580,9 +612,19 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
  */
 export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I`M365ListMessagesRequest`)(
   {
+    bodyContentType: S.OptionFromOptionalKey(GraphBodyContentType)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Optional body format to ask Graph for (`text` strips HTML)." }),
     filter: S.OptionFromOptionalKey(S.String)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional Graph OData `$filter` query value." }),
+    nextLink: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description:
+        "Optional `@odata.nextLink` of the previous page; must target the configured Graph origin. When present, filter, orderby and top are ignored.",
+    }),
+    orderby: S.OptionFromOptionalKey(S.String)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Optional Graph OData `$orderby` query value." }),
     top: S.OptionFromOptionalKey(PosInt)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "Optional Graph `$top` page size." }),
@@ -612,6 +654,9 @@ export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I
  */
 export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M365GetMessageRequest`)(
   {
+    bodyContentType: S.OptionFromOptionalKey(GraphBodyContentType)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Optional body format to ask Graph for (`text` strips HTML)." }),
     messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
     userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's message.",
@@ -680,6 +725,715 @@ export class M365GetEventRequest extends S.Class<M365GetEventRequest>($I`M365Get
   $I.annote("M365GetEventRequest", {
     description: "Request for reading one Outlook calendar event.",
   })
+) {}
+
+/**
+ * Decoded Graph master-category collection.
+ *
+ * **Example** (Make empty category collection)
+ *
+ * ```ts
+ * import { M365OutlookCategoryCollection } from "@beep/m365"
+ *
+ * const collection = M365OutlookCategoryCollection.make({ value: [] })
+ * console.log(collection.value.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365OutlookCategoryCollection = GraphCollection(GraphOutlookCategory).pipe(
+  $I.annoteSchema("M365OutlookCategoryCollection", {
+    description: "Decoded Microsoft Graph Outlook master-category collection envelope.",
+  })
+);
+
+/**
+ * Type for {@link M365OutlookCategoryCollection}.
+ *
+ * **Example** (Count category collection length)
+ *
+ * ```ts
+ * import type { M365OutlookCategoryCollection } from "@beep/m365"
+ *
+ * const count = (collection: M365OutlookCategoryCollection) => collection.value.length
+ * console.log(count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365OutlookCategoryCollection = typeof M365OutlookCategoryCollection.Type;
+
+/**
+ * Decoded Graph message-attachment metadata collection.
+ *
+ * **Example** (Make empty attachment collection)
+ *
+ * ```ts
+ * import { M365AttachmentCollection } from "@beep/m365"
+ *
+ * const collection = M365AttachmentCollection.make({ value: [] })
+ * console.log(collection.value.length)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365AttachmentCollection = GraphCollection(GraphAttachment).pipe(
+  $I.annoteSchema("M365AttachmentCollection", {
+    description: "Decoded Microsoft Graph message-attachment metadata collection envelope.",
+  })
+);
+
+/**
+ * Type for {@link M365AttachmentCollection}.
+ *
+ * **Example** (Count attachment collection length)
+ *
+ * ```ts
+ * import type { M365AttachmentCollection } from "@beep/m365"
+ *
+ * const count = (collection: M365AttachmentCollection) => collection.value.length
+ * console.log(count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365AttachmentCollection = typeof M365AttachmentCollection.Type;
+
+/**
+ * Caller-supplied idempotency key for an event create.
+ *
+ * **Details**
+ *
+ * The key is written to the event twice: as Graph's `transactionId`, which
+ * drops a retried create inside Graph's own short window, and as a
+ * single-value extended property, which {@link M365FindEventsByIdempotencyKeyRequest}
+ * can look up at any later time. The alphabet is restricted so the key can be
+ * embedded in an OData filter without escaping.
+ *
+ * **Example** (Decode an idempotency key)
+ *
+ * ```ts
+ * import { M365IdempotencyKey } from "@beep/m365"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(M365IdempotencyKey)("docket:3f9a1c2b7d")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const M365IdempotencyKey = S.String.check(
+  S.isPattern(/^[A-Za-z0-9._:-]{8,128}$/, {
+    message: "Idempotency keys are 8-128 characters of letters, digits, '.', '_', ':' or '-'.",
+  })
+).pipe(
+  $I.annoteSchema("M365IdempotencyKey", {
+    description: "Caller-supplied idempotency key stored on a created Outlook event.",
+  })
+);
+
+/**
+ * Type for {@link M365IdempotencyKey}.
+ *
+ * **Example** (Type an idempotency key)
+ *
+ * ```ts
+ * import type { M365IdempotencyKey } from "@beep/m365"
+ *
+ * const length = (key: M365IdempotencyKey) => key.length
+ * console.log(length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type M365IdempotencyKey = typeof M365IdempotencyKey.Type;
+
+/**
+ * Id of the single-value extended property that carries an event's
+ * {@link M365IdempotencyKey}.
+ *
+ * **Example** (Read the property id)
+ *
+ * ```ts
+ * import { M365_IDEMPOTENCY_KEY_PROPERTY_ID } from "@beep/m365"
+ *
+ * console.log(M365_IDEMPOTENCY_KEY_PROPERTY_ID)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const M365_IDEMPOTENCY_KEY_PROPERTY_ID =
+  "String {6f1d2c1e-8a4b-4d5e-9c3f-2b7a1e0d4c59} Name BeepIdempotencyKey" as const;
+
+/**
+ * Body written to an Outlook event.
+ *
+ * **Example** (Make a text body)
+ *
+ * ```ts
+ * import { M365EventBody } from "@beep/m365"
+ *
+ * const body = M365EventBody.make({ content: "Review the source document.", contentType: "text" })
+ * console.log(body.contentType) // "text"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EventBody extends S.Class<M365EventBody>($I`M365EventBody`)(
+  {
+    content: S.String.annotateKey({ description: "Body content (never logged in spans)." }),
+    contentType: GraphBodyContentType.annotateKey({ description: "Body content type." }),
+  },
+  $I.annote("M365EventBody", { description: "Body written to an Outlook event." })
+) {}
+
+/**
+ * Wall-clock date-time and time zone written to an Outlook event.
+ *
+ * **Example** (Make an event date-time)
+ *
+ * ```ts
+ * import { M365EventDateTime } from "@beep/m365"
+ *
+ * const start = M365EventDateTime.make({ dateTime: "2030-01-15T00:00:00", timeZone: "UTC" })
+ * console.log(start.timeZone) // "UTC"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EventDateTime extends S.Class<M365EventDateTime>($I`M365EventDateTime`)(
+  {
+    dateTime: S.NonEmptyString.annotateKey({ description: "ISO-8601 local date-time without offset." }),
+    timeZone: S.NonEmptyString.annotateKey({ description: "IANA or Windows time-zone name." }),
+  },
+  $I.annote("M365EventDateTime", { description: "Wall-clock date-time and zone written to an Outlook event." })
+) {}
+
+type M365AllDayWindow = { readonly end: M365EventDateTime; readonly start: M365EventDateTime };
+
+/**
+ * Start and end of an all-day event on one calendar date.
+ *
+ * **Details**
+ *
+ * Graph requires an all-day event to start and end at midnight in the same
+ * time zone, with the end on the following day.
+ *
+ * **Example** (All-day window)
+ *
+ * ```ts
+ * import { m365AllDayWindow } from "@beep/m365"
+ * import { LocalDate } from "@beep/schema/LocalDate"
+ *
+ * const window = m365AllDayWindow(LocalDate.make({ year: 2030, month: 1, day: 31 }), "UTC")
+ * console.log(window.end.dateTime) // "2030-02-01T00:00:00"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const m365AllDayWindow: {
+  (timeZone: string): (date: LocalDate) => M365AllDayWindow;
+  (date: LocalDate, timeZone: string): M365AllDayWindow;
+} = dual(
+  2,
+  (date: LocalDate, timeZone: string): M365AllDayWindow => ({
+    end: M365EventDateTime.make({ dateTime: `${addDays(date, 1).toISOString()}T00:00:00`, timeZone }),
+    start: M365EventDateTime.make({ dateTime: `${date.toISOString()}T00:00:00`, timeZone }),
+  })
+);
+
+const eventOpt = <Sch extends S.Top>(schema: Sch, description: string) =>
+  S.OptionFromOptionalKey(schema).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({ description });
+
+/**
+ * Fields of a new Outlook event.
+ *
+ * **Example** (Draft an all-day tentative event)
+ *
+ * ```ts
+ * import { m365AllDayWindow, M365EventDraft } from "@beep/m365"
+ * import { LocalDate } from "@beep/schema/LocalDate"
+ * import * as O from "effect/Option"
+ *
+ * const draft = M365EventDraft.make({
+ *   ...m365AllDayWindow(LocalDate.make({ year: 2030, month: 1, day: 15 }), "UTC"),
+ *   categories: ["Docket - unverified"],
+ *   isAllDay: true,
+ *   showAs: O.some("tentative"),
+ *   subject: "Response due"
+ * })
+ * console.log(draft.isAllDay) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EventDraft extends S.Class<M365EventDraft>($I`M365EventDraft`)(
+  {
+    subject: S.NonEmptyString.annotateKey({ description: "Event subject (never logged in spans)." }),
+    start: M365EventDateTime.annotateKey({ description: "Event start." }),
+    end: M365EventDateTime.annotateKey({ description: "Event end; the following midnight for an all-day event." }),
+    isAllDay: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({ description: "Whether the event spans whole days." }),
+    categories: S.Array(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeed([])), S.withDecodingDefaultTypeKey(Effect.succeed([])))
+      .annotateKey({ description: "Outlook category display names to apply." }),
+    body: eventOpt(M365EventBody, "Event body."),
+    isReminderOn: eventOpt(S.Boolean, "Whether a reminder alert is set."),
+    reminderMinutesBeforeStart: eventOpt(S.Natural, "Minutes before the start at which the reminder fires."),
+    showAs: eventOpt(GraphEventShowAs, "Free/busy status to show."),
+  },
+  $I.annote("M365EventDraft", { description: "Fields of a new Outlook event." })
+) {}
+
+/**
+ * Fields to change on an existing Outlook event; absent fields are left as
+ * they are.
+ *
+ * **Gotchas**
+ *
+ * `categories` replaces the event's whole category list. Read the event first
+ * and keep every category the caller did not add.
+ *
+ * **Example** (Patch the subject)
+ *
+ * ```ts
+ * import { M365EventPatch } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const patch = M365EventPatch.make({ subject: O.some("Response due (confirmed)") })
+ * console.log(O.isSome(patch.subject)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EventPatch extends S.Class<M365EventPatch>($I`M365EventPatch`)(
+  {
+    body: eventOpt(M365EventBody, "Replacement event body."),
+    categories: eventOpt(S.Array(S.NonEmptyString), "Replacement for the whole category list."),
+    end: eventOpt(M365EventDateTime, "Replacement event end."),
+    isAllDay: eventOpt(S.Boolean, "Whether the event spans whole days."),
+    isReminderOn: eventOpt(S.Boolean, "Whether a reminder alert is set."),
+    reminderMinutesBeforeStart: eventOpt(S.Natural, "Minutes before the start at which the reminder fires."),
+    showAs: eventOpt(GraphEventShowAs, "Free/busy status to show."),
+    start: eventOpt(M365EventDateTime, "Replacement event start."),
+    subject: eventOpt(S.NonEmptyString, "Replacement event subject."),
+  },
+  $I.annote("M365EventPatch", { description: "Fields to change on an existing Outlook event." })
+) {}
+
+const mailboxUserId = (description: string) =>
+  S.OptionFromOptionalKey(GraphPathSegment).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+    description,
+  });
+
+/**
+ * Request for creating an Outlook calendar event in the default calendar.
+ *
+ * **Details**
+ *
+ * The create is not replayed after an ambiguous failure. Supply an
+ * `idempotencyKey`, and on an `"ambiguous write"` error look the key up with
+ * `findEventsByIdempotencyKey` before deciding to create again.
+ *
+ * **Example** (Create event request)
+ *
+ * ```ts
+ * import { M365CreateEventRequest, M365EventDateTime, M365EventDraft } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365CreateEventRequest.make({
+ *   event: M365EventDraft.make({
+ *     end: M365EventDateTime.make({ dateTime: "2030-01-16T00:00:00", timeZone: "UTC" }),
+ *     isAllDay: true,
+ *     start: M365EventDateTime.make({ dateTime: "2030-01-15T00:00:00", timeZone: "UTC" }),
+ *     subject: "Response due"
+ *   }),
+ *   idempotencyKey: O.some("docket:3f9a1c2b7d"),
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.event.subject)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365CreateEventRequest extends S.Class<M365CreateEventRequest>($I`M365CreateEventRequest`)(
+  {
+    event: M365EventDraft.annotateKey({ description: "Fields of the event to create." }),
+    idempotencyKey: S.OptionFromOptionalKey(M365IdempotencyKey)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Optional key stored on the event for retry de-duplication and later lookup." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365CreateEventRequest", { description: "Request for creating an Outlook calendar event." })
+) {}
+
+/**
+ * Request for updating fields of an Outlook calendar event.
+ *
+ * **Example** (Update event request)
+ *
+ * ```ts
+ * import { M365EventPatch, M365UpdateEventRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365UpdateEventRequest.make({
+ *   eventId: "event-id",
+ *   patch: M365EventPatch.make({ subject: O.some("Response due") }),
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.eventId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365UpdateEventRequest extends S.Class<M365UpdateEventRequest>($I`M365UpdateEventRequest`)(
+  {
+    eventId: GraphPathSegment.annotateKey({ description: "Graph event id." }),
+    patch: M365EventPatch.annotateKey({ description: "Fields to change." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365UpdateEventRequest", { description: "Request for updating an Outlook calendar event." })
+) {}
+
+/**
+ * Request for deleting an Outlook calendar event (Outlook moves it to Deleted
+ * Items).
+ *
+ * **Example** (Delete event request)
+ *
+ * ```ts
+ * import { M365DeleteEventRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365DeleteEventRequest.make({ eventId: "event-id", userId: O.some("mailbox-id") })
+ * console.log(request.eventId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365DeleteEventRequest extends S.Class<M365DeleteEventRequest>($I`M365DeleteEventRequest`)(
+  {
+    eventId: GraphPathSegment.annotateKey({ description: "Graph event id." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365DeleteEventRequest", { description: "Request for deleting an Outlook calendar event." })
+) {}
+
+/**
+ * Request for finding the events that carry an {@link M365IdempotencyKey}.
+ *
+ * **Example** (Find events by key)
+ *
+ * ```ts
+ * import { M365FindEventsByIdempotencyKeyRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365FindEventsByIdempotencyKeyRequest.make({
+ *   idempotencyKey: "docket:3f9a1c2b7d",
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.idempotencyKey)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365FindEventsByIdempotencyKeyRequest extends S.Class<M365FindEventsByIdempotencyKeyRequest>(
+  $I`M365FindEventsByIdempotencyKeyRequest`
+)(
+  {
+    idempotencyKey: M365IdempotencyKey.annotateKey({ description: "Key the events were created with." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365FindEventsByIdempotencyKeyRequest", {
+    description: "Request for finding Outlook events by their stored idempotency key.",
+  })
+) {}
+
+/**
+ * Request for listing a mailbox's Outlook master categories.
+ *
+ * **Example** (List master categories)
+ *
+ * ```ts
+ * import { M365ListMasterCategoriesRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365ListMasterCategoriesRequest.make({ userId: O.some("mailbox-id") })
+ * console.log(request.userId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365ListMasterCategoriesRequest extends S.Class<M365ListMasterCategoriesRequest>(
+  $I`M365ListMasterCategoriesRequest`
+)(
+  {
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365ListMasterCategoriesRequest", {
+    description: "Request for listing a mailbox's Outlook master categories.",
+  })
+) {}
+
+/**
+ * A master category to create: its name and preset color.
+ *
+ * **Example** (Describe a category)
+ *
+ * ```ts
+ * import { M365MasterCategoryDraft } from "@beep/m365"
+ *
+ * const draft = M365MasterCategoryDraft.make({ color: "preset0", displayName: "Docket - unverified" })
+ * console.log(draft.color) // "preset0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365MasterCategoryDraft extends S.Class<M365MasterCategoryDraft>($I`M365MasterCategoryDraft`)(
+  {
+    color: GraphCategoryColor.pipe(
+      S.withConstructorDefault(Effect.succeed("none" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("none" as const))
+    ).annotateKey({ description: "Preset color; defaults to `none`." }),
+    displayName: S.NonEmptyString.annotateKey({ description: "Category name; unique in the mailbox." }),
+  },
+  $I.annote("M365MasterCategoryDraft", { description: "A master category to create." })
+) {}
+
+/**
+ * Request for creating one Outlook master category.
+ *
+ * **Example** (Create master category)
+ *
+ * ```ts
+ * import { M365CreateMasterCategoryRequest, M365MasterCategoryDraft } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365CreateMasterCategoryRequest.make({
+ *   category: M365MasterCategoryDraft.make({ displayName: "Docket - unverified" }),
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.category.displayName)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365CreateMasterCategoryRequest extends S.Class<M365CreateMasterCategoryRequest>(
+  $I`M365CreateMasterCategoryRequest`
+)(
+  {
+    category: M365MasterCategoryDraft.annotateKey({ description: "The category to create." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365CreateMasterCategoryRequest", {
+    description: "Request for creating one Outlook master category.",
+  })
+) {}
+
+/**
+ * Request for making sure a set of master categories exists, creating only
+ * the missing ones. Existing categories are never changed or removed.
+ *
+ * **Example** (Ensure master categories)
+ *
+ * ```ts
+ * import { M365EnsureMasterCategoriesRequest, M365MasterCategoryDraft } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365EnsureMasterCategoriesRequest.make({
+ *   categories: [M365MasterCategoryDraft.make({ displayName: "Docket - unverified" })],
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.categories.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EnsureMasterCategoriesRequest extends S.Class<M365EnsureMasterCategoriesRequest>(
+  $I`M365EnsureMasterCategoriesRequest`
+)(
+  {
+    categories: S.Array(M365MasterCategoryDraft).annotateKey({ description: "Categories that must exist." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365EnsureMasterCategoriesRequest", {
+    description: "Request for ensuring a set of Outlook master categories exists.",
+  })
+) {}
+
+/**
+ * Result of {@link M365EnsureMasterCategoriesRequest}: which requested
+ * categories were already present and which were created.
+ *
+ * **Example** (Make an ensure result)
+ *
+ * ```ts
+ * import { M365EnsuredMasterCategories } from "@beep/m365"
+ *
+ * const result = M365EnsuredMasterCategories.make({ created: [], existing: [] })
+ * console.log(result.created.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365EnsuredMasterCategories extends S.Class<M365EnsuredMasterCategories>($I`M365EnsuredMasterCategories`)(
+  {
+    created: S.Array(GraphOutlookCategory).annotateKey({ description: "Categories this call created." }),
+    existing: S.Array(S.String).annotateKey({
+      description: "Requested display names that were already present (or created concurrently).",
+    }),
+  },
+  $I.annote("M365EnsuredMasterCategories", {
+    description: "Result of ensuring a set of Outlook master categories exists.",
+  })
+) {}
+
+/**
+ * Request for replacing the category list of one mail message.
+ *
+ * **Gotchas**
+ *
+ * `categories` replaces the whole list. Read the message first and keep every
+ * category the caller did not add. Supplying the `changeKey` that read
+ * returned makes the write conditional: Graph rejects it with HTTP 412 when
+ * the message changed in between.
+ *
+ * **Example** (Update message categories)
+ *
+ * ```ts
+ * import { M365UpdateMessageCategoriesRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365UpdateMessageCategoriesRequest.make({
+ *   categories: ["Docket - entered"],
+ *   messageId: "message-id",
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.categories.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365UpdateMessageCategoriesRequest extends S.Class<M365UpdateMessageCategoriesRequest>(
+  $I`M365UpdateMessageCategoriesRequest`
+)(
+  {
+    categories: S.Array(S.NonEmptyString).annotateKey({ description: "The complete new category list." }),
+    changeKey: S.OptionFromOptionalKey(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Optional change key from the last read; sent as `If-Match`." }),
+    messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365UpdateMessageCategoriesRequest", {
+    description: "Request for replacing the category list of one mail message.",
+  })
+) {}
+
+/**
+ * Request for listing a message's attachment metadata (no bytes).
+ *
+ * **Example** (List attachments)
+ *
+ * ```ts
+ * import { M365ListMessageAttachmentsRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365ListMessageAttachmentsRequest.make({ messageId: "message-id", userId: O.some("mailbox-id") })
+ * console.log(request.messageId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365ListMessageAttachmentsRequest extends S.Class<M365ListMessageAttachmentsRequest>(
+  $I`M365ListMessageAttachmentsRequest`
+)(
+  {
+    messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365ListMessageAttachmentsRequest", {
+    description: "Request for listing a message's attachment metadata.",
+  })
+) {}
+
+/**
+ * Request for downloading the raw bytes of one file attachment.
+ *
+ * **Example** (Download an attachment)
+ *
+ * ```ts
+ * import { M365DownloadMessageAttachmentRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
+ *
+ * const request = M365DownloadMessageAttachmentRequest.make({
+ *   attachmentId: "attachment-id",
+ *   messageId: "message-id",
+ *   userId: O.some("mailbox-id")
+ * })
+ * console.log(request.attachmentId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365DownloadMessageAttachmentRequest extends S.Class<M365DownloadMessageAttachmentRequest>(
+  $I`M365DownloadMessageAttachmentRequest`
+)(
+  {
+    attachmentId: GraphPathSegment.annotateKey({ description: "Graph attachment id." }),
+    messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
+    userId: mailboxUserId("Mailbox user id or address; required on the app-only lane."),
+  },
+  $I.annote("M365DownloadMessageAttachmentRequest", {
+    description: "Request for downloading the raw bytes of one file attachment.",
+  })
+) {}
+
+/**
+ * Raw bytes of a downloaded message attachment.
+ *
+ * **Example** (Construct attachment content)
+ *
+ * ```ts
+ * import { M365AttachmentContent } from "@beep/m365"
+ *
+ * const content = M365AttachmentContent.make({ bytes: new Uint8Array([1, 2, 3]) })
+ * console.log(content.bytes.byteLength) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class M365AttachmentContent extends S.Class<M365AttachmentContent>($I`M365AttachmentContent`)(
+  {
+    bytes: S.Uint8Array.annotateKey({ description: "Attachment bytes (never logged)." }),
+  },
+  $I.annote("M365AttachmentContent", { description: "Raw bytes of a downloaded message attachment." })
 ) {}
 
 /**
@@ -803,10 +1557,24 @@ export type M365DriveItemDownload = typeof M365DriveItemDownload.Type;
  * @since 0.0.0
  */
 export type M365Shape = {
+  readonly createEvent: (request: M365CreateEventRequest) => Effect.Effect<GraphEvent, M365Error>;
+  readonly createMasterCategory: (
+    request: M365CreateMasterCategoryRequest
+  ) => Effect.Effect<GraphOutlookCategory, M365Error>;
+  readonly deleteEvent: (request: M365DeleteEventRequest) => Effect.Effect<void, M365Error>;
   readonly deltaDriveItems: (request: M365DeltaDriveItemsRequest) => Effect.Effect<M365DriveItemCollection, M365Error>;
   readonly downloadDriveItemContent: (
     request: M365DownloadDriveItemContentRequest
   ) => Effect.Effect<M365DriveItemDownload, M365Error>;
+  readonly downloadMessageAttachment: (
+    request: M365DownloadMessageAttachmentRequest
+  ) => Effect.Effect<M365AttachmentContent, M365Error>;
+  readonly ensureMasterCategories: (
+    request: M365EnsureMasterCategoriesRequest
+  ) => Effect.Effect<M365EnsuredMasterCategories, M365Error>;
+  readonly findEventsByIdempotencyKey: (
+    request: M365FindEventsByIdempotencyKeyRequest
+  ) => Effect.Effect<M365EventCollection, M365Error>;
   readonly getEvent: (request: M365GetEventRequest) => Effect.Effect<GraphEvent, M365Error>;
   readonly getListItem: (request: M365GetListItemRequest) => Effect.Effect<GraphListItem, M365Error>;
   readonly getMessage: (request: M365GetMessageRequest) => Effect.Effect<GraphMessage, M365Error>;
@@ -819,8 +1587,18 @@ export type M365Shape = {
   ) => Effect.Effect<M365DriveItemVersionCollection, M365Error>;
   readonly listDrives: (request: M365ListDrivesRequest) => Effect.Effect<M365DriveCollection, M365Error>;
   readonly listEvents: (request: M365ListEventsRequest) => Effect.Effect<M365EventCollection, M365Error>;
+  readonly listMasterCategories: (
+    request: M365ListMasterCategoriesRequest
+  ) => Effect.Effect<M365OutlookCategoryCollection, M365Error>;
+  readonly listMessageAttachments: (
+    request: M365ListMessageAttachmentsRequest
+  ) => Effect.Effect<M365AttachmentCollection, M365Error>;
   readonly listMessages: (request: M365ListMessagesRequest) => Effect.Effect<M365MessageCollection, M365Error>;
   readonly listSites: (request: M365ListSitesRequest) => Effect.Effect<M365SiteCollection, M365Error>;
+  readonly updateEvent: (request: M365UpdateEventRequest) => Effect.Effect<GraphEvent, M365Error>;
+  readonly updateMessageCategories: (
+    request: M365UpdateMessageCategoriesRequest
+  ) => Effect.Effect<GraphMessage, M365Error>;
 };
 
 // Decode a request schema at the M365 boundary, translating any decode failure into the
@@ -851,13 +1629,17 @@ const queryString = (params: ReadonlyArray<QueryParam>): string => {
   return A.length(pairs) === 0 ? "" : `?${A.join(pairs, "&")}`;
 };
 
-const graphUrl = (config: ResolvedM365Config, path: string, params: ReadonlyArray<QueryParam> = []): string =>
+const graphUrl = (config: M365ServiceConfig, path: string, params: ReadonlyArray<QueryParam> = []): string =>
   `${config.graphBaseUrl}${path}${queryString(params)}`;
+
+type RequestHeaders = Readonly<Record<string, string>>;
+
+const NO_HEADERS: RequestHeaders = {};
 
 const signedJsonGet = Effect.fnUntraced(function* (
   auth: M365AuthShape,
   url: string,
-  headers: Readonly<Record<string, string>> = {}
+  headers: RequestHeaders = NO_HEADERS
 ): Effect.fn.Return<HttpClientRequest.HttpClientRequest, M365Error> {
   const token = yield* auth.acquireToken;
   return pipe(
@@ -865,6 +1647,60 @@ const signedJsonGet = Effect.fnUntraced(function* (
     HttpClientRequest.bearerToken(token),
     HttpClientRequest.accept(REQUEST_ACCEPT),
     HttpClientRequest.setHeaders(headers)
+  );
+});
+
+// Raw content routes (`/$value`) answer with the stored media type, so no JSON `Accept` is sent.
+const signedBytesGet = Effect.fnUntraced(function* (
+  auth: M365AuthShape,
+  url: string
+): Effect.fn.Return<HttpClientRequest.HttpClientRequest, M365Error> {
+  const token = yield* auth.acquireToken;
+  return pipe(HttpClientRequest.get(url), HttpClientRequest.bearerToken(token));
+});
+
+const M365WriteMethod = LiteralKit(["POST", "PATCH", "DELETE"]).pipe(
+  $I.annoteSchema("M365WriteMethod", {
+    description: "HTTP methods the Microsoft 365 driver uses for mailbox writes.",
+  })
+);
+type M365WriteMethod = typeof M365WriteMethod.Type;
+
+class M365WriteCall extends S.Class<M365WriteCall>($I`M365WriteCall`)(
+  {
+    body: S.Option(S.Unknown),
+    headers: S.Record(S.String, S.String),
+    method: M365WriteMethod,
+    resource: S.String,
+    url: S.String,
+  },
+  $I.annote("M365WriteCall", {
+    description: "One encoded Microsoft Graph write: method, URL, extra headers and optional JSON body.",
+  })
+) {}
+
+const signedWrite = Effect.fnUntraced(function* (
+  auth: M365AuthShape,
+  call: M365WriteCall
+): Effect.fn.Return<HttpClientRequest.HttpClientRequest, M365Error> {
+  const token = yield* auth.acquireToken;
+  const request = pipe(
+    HttpClientRequest.make(call.method)(call.url),
+    HttpClientRequest.bearerToken(token),
+    HttpClientRequest.accept(REQUEST_ACCEPT),
+    HttpClientRequest.setHeaders(call.headers)
+  );
+  return yield* pipe(
+    call.body,
+    O.match({
+      onNone: () => Effect.succeed(request),
+      onSome: (body) =>
+        HttpClientRequest.bodyJson(request, body).pipe(
+          Effect.mapError((cause) =>
+            M365Error.fromReason("request encoding", { cause, resource: call.resource, url: call.url })
+          )
+        ),
+    })
   );
 });
 
@@ -907,12 +1743,19 @@ const ensureSuccess = Effect.fnUntraced(function* (
   return yield* M365Error.fromReason("response status", { resource, status: response.status, url });
 });
 
+const isThrottled = (error: M365Error): boolean => error.reason === "throttled";
+
+// A 429 is an explicit refusal, so replaying a create after it is safe. A 503 or a
+// transport failure leaves the outcome of a create unknown.
+const isRejectedBeforeProcessing = (error: M365Error): boolean => isThrottled(error) && O.contains(error.status, 429);
+
 const executeWithRetry = Effect.fnUntraced(function* (
   client: HttpClient.HttpClient,
   makeRequest: Effect.Effect<HttpClientRequest.HttpClientRequest, M365Error>,
   resource: string,
   url: string,
-  remaining: number
+  remaining: number,
+  isRetryable: (error: M365Error) => boolean = isThrottled
 ): Effect.fn.Return<HttpClientResponse.HttpClientResponse, M365Error> {
   const request = yield* makeRequest;
   const response = yield* client
@@ -921,7 +1764,7 @@ const executeWithRetry = Effect.fnUntraced(function* (
 
   return yield* ensureSuccess(response, resource, url).pipe(
     Effect.catchIf(
-      (error) => error.reason === "throttled" && remaining > 0,
+      (error) => isRetryable(error) && remaining > 0,
       (error) =>
         Effect.sleep(
           Duration.seconds(
@@ -930,28 +1773,17 @@ const executeWithRetry = Effect.fnUntraced(function* (
               O.getOrElse(() => DEFAULT_THROTTLE_RETRY_AFTER_SECONDS)
             )
           )
-        ).pipe(Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1)))
+        ).pipe(Effect.flatMap(() => executeWithRetry(client, makeRequest, resource, url, remaining - 1, isRetryable)))
     )
   );
 });
 
-const executeJson = Effect.fnUntraced(function* <Schema extends S.Top>(
-  runtime: M365Runtime,
-  url: string,
+const decodeJsonResponse = Effect.fnUntraced(function* <Schema extends S.Top>(
+  response: HttpClientResponse.HttpClientResponse,
   schema: Schema,
   resource: string,
-  headers: Readonly<Record<string, string>> = {}
+  url: string
 ): Effect.fn.Return<Schema["Type"], M365Error, Schema["DecodingServices"]> {
-  yield* Effect.annotateCurrentSpan({
-    m365_resource: resource,
-  });
-  const response = yield* executeWithRetry(
-    runtime.client,
-    signedJsonGet(runtime.auth, url, headers),
-    resource,
-    url,
-    runtime.config.maxRetries
-  );
   const body = yield* response.json.pipe(
     Effect.mapError((cause) =>
       M365Error.fromReason("response decoding", { cause, resource, status: response.status, url })
@@ -964,12 +1796,81 @@ const executeJson = Effect.fnUntraced(function* <Schema extends S.Top>(
   );
 });
 
+const isAmbiguousCreateFailure = (error: M365Error): boolean =>
+  error.reason === "transport" || (isThrottled(error) && !isRejectedBeforeProcessing(error));
+
+const executeWrite = Effect.fnUntraced(function* (
+  runtime: M365Runtime,
+  call: M365WriteCall
+): Effect.fn.Return<HttpClientResponse.HttpClientResponse, M365Error> {
+  yield* Effect.annotateCurrentSpan({
+    m365_method: call.method,
+    m365_resource: call.resource,
+  });
+  const execute = (isRetryable: (error: M365Error) => boolean) =>
+    executeWithRetry(
+      runtime.client,
+      signedWrite(runtime.auth, call),
+      call.resource,
+      call.url,
+      runtime.config.maxRetries,
+      isRetryable
+    );
+
+  // PATCH and DELETE set a final state, so replaying them is harmless. A POST creates:
+  // when its outcome is unknown the caller must reconcile before creating again.
+  return yield* M365WriteMethod.is.POST(call.method)
+    ? execute(isRejectedBeforeProcessing).pipe(
+        Effect.mapError((error) =>
+          isAmbiguousCreateFailure(error)
+            ? M365Error.fromReason("ambiguous write", {
+                cause: error,
+                resource: call.resource,
+                url: call.url,
+                ...getSomesStruct({ status: error.status }),
+              })
+            : error
+        )
+      )
+    : execute(isThrottled);
+});
+
+const executeJsonWrite = Effect.fnUntraced(function* <Schema extends S.Top>(
+  runtime: M365Runtime,
+  call: M365WriteCall,
+  schema: Schema
+): Effect.fn.Return<Schema["Type"], M365Error, Schema["DecodingServices"]> {
+  const response = yield* executeWrite(runtime, call);
+  return yield* decodeJsonResponse(response, schema, call.resource, call.url);
+});
+
+const executeJson = Effect.fnUntraced(function* <Schema extends S.Top>(
+  runtime: M365Runtime,
+  url: string,
+  schema: Schema,
+  resource: string,
+  headers: RequestHeaders = NO_HEADERS
+): Effect.fn.Return<Schema["Type"], M365Error, Schema["DecodingServices"]> {
+  yield* Effect.annotateCurrentSpan({
+    m365_resource: resource,
+  });
+  const response = yield* executeWithRetry(
+    runtime.client,
+    signedJsonGet(runtime.auth, url, headers),
+    resource,
+    url,
+    runtime.config.maxRetries
+  );
+  return yield* decodeJsonResponse(response, schema, resource, url);
+});
+
 const executeBytes = Effect.fnUntraced(function* (
   runtime: M365Runtime,
   url: string,
-  resource: string
+  resource: string,
+  makeRequest: Effect.Effect<HttpClientRequest.HttpClientRequest, M365Error> = unsignedGet(url)
 ): Effect.fn.Return<Uint8Array, M365Error> {
-  const response = yield* executeWithRetry(runtime.client, unsignedGet(url), resource, url, runtime.config.maxRetries);
+  const response = yield* executeWithRetry(runtime.client, makeRequest, resource, url, runtime.config.maxRetries);
   const buffer = yield* response.arrayBuffer.pipe(
     Effect.mapError((cause) =>
       M365Error.fromReason("response decoding", { cause, resource, status: response.status, url })
@@ -1014,7 +1915,11 @@ const driveItemDownloadUrl = (item: GraphDriveItem, resource: string, url: strin
     })
   );
 
-const isTrustedDeltaLink = (config: ResolvedM365Config, link: string): Effect.Effect<boolean, M365Error> =>
+const isTrustedGraphLink = (
+  config: M365ServiceConfig,
+  link: string,
+  resource: string
+): Effect.Effect<boolean, M365Error> =>
   Effect.try({
     try: () => {
       const base = new URL(config.graphBaseUrl);
@@ -1026,37 +1931,103 @@ const isTrustedDeltaLink = (config: ResolvedM365Config, link: string): Effect.Ef
         (candidate.pathname === base.pathname || Str.startsWith(basePathWithBoundary)(candidate.pathname))
       );
     },
-    catch: (cause) => M365Error.fromReason("request encoding", { cause, resource: "driveItems", url: link }),
+    catch: (cause) => M365Error.fromReason("request encoding", { cause, resource, url: link }),
   });
 
-const deltaUrl = (config: ResolvedM365Config, request: M365DeltaDriveItemsRequest): Effect.Effect<string, M365Error> =>
+const trustedGraphLink = (
+  config: M365ServiceConfig,
+  link: string,
+  resource: string
+): Effect.Effect<string, M365Error> =>
+  pipe(
+    isTrustedGraphLink(config, link, resource),
+    Effect.flatMap((isTrusted) =>
+      isTrusted ? Effect.succeed(link) : M365Error.failEffectFromReason("request encoding", { resource, url: link })
+    )
+  );
+
+const deltaUrl = (config: M365ServiceConfig, request: M365DeltaDriveItemsRequest): Effect.Effect<string, M365Error> =>
   pipe(
     request.deltaLink,
     O.match({
       onNone: () => Effect.succeed(graphUrl(config, `/drives/${request.driveId}/root/delta`)),
-      onSome: (link) =>
-        pipe(
-          isTrustedDeltaLink(config, link),
-          Effect.flatMap((isTrusted) =>
-            isTrusted
-              ? Effect.succeed(link)
-              : M365Error.failEffectFromReason("request encoding", {
-                  resource: "driveItems",
-                  url: link,
-                })
-          )
-        ),
+      onSome: (link) => trustedGraphLink(config, link, "driveItems"),
     })
   );
 
-const mailboxPath = (userId: O.Option<string>, suffix: string): string =>
+// The app-only lane has no signed-in user, so `/me` cannot resolve there: fail before any HTTP.
+const signedInUserPath = (
+  config: M365ServiceConfig,
+  path: string,
+  resource: string
+): Effect.Effect<string, M365Error> =>
+  M365Lane.is["app-only"](config.lane)
+    ? M365Error.failEffectFromReason("request encoding", { resource })
+    : Effect.succeed(path);
+
+const mailboxPath = (
+  config: M365ServiceConfig,
+  userId: O.Option<string>,
+  suffix: string,
+  resource: string
+): Effect.Effect<string, M365Error> =>
   pipe(
     userId,
     O.match({
-      onNone: () => `/me/${suffix}`,
-      onSome: (id) => `/users/${id}/${suffix}`,
+      onNone: () => signedInUserPath(config, `/me/${suffix}`, resource),
+      onSome: (id) => Effect.succeed(`/users/${id}/${suffix}`),
     })
   );
+
+const mailboxUrl = (
+  config: M365ServiceConfig,
+  userId: O.Option<string>,
+  suffix: string,
+  resource: string,
+  params: ReadonlyArray<QueryParam> = []
+): Effect.Effect<string, M365Error> =>
+  pipe(
+    mailboxPath(config, userId, suffix, resource),
+    Effect.map((path) => graphUrl(config, path, params))
+  );
+
+const bodyContentTypeHeaders: (bodyContentType: O.Option<GraphBodyContentType>) => RequestHeaders = O.match({
+  onNone: () => NO_HEADERS,
+  onSome: (contentType) => ({ prefer: `outlook.body-content-type="${contentType}"` }),
+});
+
+const encodeWriteBody = <Sch extends S.Top>(schema: Sch, resource: string) => {
+  const encode = S.encodeEffect(schema);
+
+  return (value: Sch["Type"]): Effect.Effect<Sch["Encoded"], M365Error, Sch["EncodingServices"]> =>
+    encode(value).pipe(Effect.mapError((cause) => M365Error.fromReason("request encoding", { cause, resource })));
+};
+
+const encodeEventDraft = encodeWriteBody(M365EventDraft, "events");
+const encodeEventPatch = encodeWriteBody(M365EventPatch, "events");
+const encodeMasterCategoryDraft = encodeWriteBody(M365MasterCategoryDraft, "masterCategories");
+
+const idempotencyKeyFields = O.match({
+  onNone: () => ({}),
+  onSome: (key: M365IdempotencyKey) => ({
+    singleValueExtendedProperties: [{ id: M365_IDEMPOTENCY_KEY_PROPERTY_ID, value: key }],
+    transactionId: key,
+  }),
+});
+
+const idempotencyKeyFilter = (key: M365IdempotencyKey): string =>
+  `singleValueExtendedProperties/Any(ep: ep/id eq '${M365_IDEMPOTENCY_KEY_PROPERTY_ID}' and ep/value eq '${key}')`;
+
+const IDEMPOTENCY_KEY_EXPAND = `singleValueExtendedProperties($filter=id eq '${M365_IDEMPOTENCY_KEY_PROPERTY_ID}')`;
+const ATTACHMENT_METADATA_SELECT = "id,name,contentType,size,isInline,lastModifiedDateTime";
+const CONFLICT_STATUS = 409;
+
+const normalizeCategoryName = flow(Str.trim, Str.toLowerCase);
+
+const changeKeyHeaders: (changeKey: O.Option<string>) => RequestHeaders = O.match({
+  onNone: () => NO_HEADERS,
+  onSome: (key) => ({ "if-match": `W/"${key}"` }),
+});
 
 const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
   const tenantId = yield* Config.String("M365_TENANT_ID");
@@ -1093,7 +2064,79 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
   }).pipe(Effect.mapError((cause) => M365Error.fromReason("config", { cause })));
 });
 
+const listMasterCategories = Effect.fnUntraced(function* (
+  runtime: M365Runtime,
+  userId: O.Option<string>
+): Effect.fn.Return<M365OutlookCategoryCollection, M365Error> {
+  const url = yield* mailboxUrl(runtime.config, userId, "outlook/masterCategories", "masterCategories");
+  return yield* executeJson(runtime, url, M365OutlookCategoryCollection, "masterCategories");
+});
+
+const createMasterCategory = Effect.fnUntraced(function* (
+  runtime: M365Runtime,
+  userId: O.Option<string>,
+  category: M365MasterCategoryDraft
+): Effect.fn.Return<GraphOutlookCategory, M365Error> {
+  const url = yield* mailboxUrl(runtime.config, userId, "outlook/masterCategories", "masterCategories");
+  const body = yield* encodeMasterCategoryDraft(category);
+  return yield* executeJsonWrite(
+    runtime,
+    M365WriteCall.make({
+      body: O.some(body),
+      headers: NO_HEADERS,
+      method: "POST",
+      resource: "masterCategories",
+      url,
+    }),
+    GraphOutlookCategory
+  );
+});
+
+// Graph answers 409 when the name already exists: another writer created it between
+// the list and this create, which is the outcome "ensure" wants.
+const createMasterCategoryUnlessPresent = (
+  runtime: M365Runtime,
+  userId: O.Option<string>,
+  category: M365MasterCategoryDraft
+): Effect.Effect<O.Option<GraphOutlookCategory>, M365Error> =>
+  createMasterCategory(runtime, userId, category).pipe(
+    Effect.asSome,
+    Effect.catchIf(
+      (error) => error.reason === "response status" && O.contains(error.status, CONFLICT_STATUS),
+      () => Effect.succeedNone
+    )
+  );
+
 const makeService = (runtime: M365Runtime): M365Shape => ({
+  createEvent: Effect.fn("M365.createEvent")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365CreateEventRequest, "events")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, "events", "events");
+    const event = yield* encodeEventDraft(request.event);
+    yield* Effect.annotateCurrentSpan({ m365_has_idempotency_key: O.isSome(request.idempotencyKey) });
+    return yield* executeJsonWrite(
+      runtime,
+      M365WriteCall.make({
+        body: O.some({ ...event, ...idempotencyKeyFields(request.idempotencyKey) }),
+        headers: NO_HEADERS,
+        method: "POST",
+        resource: "events",
+        url,
+      }),
+      GraphEvent
+    );
+  }),
+  createMasterCategory: Effect.fn("M365.createMasterCategory")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365CreateMasterCategoryRequest, "masterCategories")(rawRequest);
+    return yield* createMasterCategory(runtime, request.userId, request.category);
+  }),
+  deleteEvent: Effect.fn("M365.deleteEvent")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365DeleteEventRequest, "events")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `events/${request.eventId}`, "events");
+    yield* executeWrite(
+      runtime,
+      M365WriteCall.make({ body: O.none(), headers: NO_HEADERS, method: "DELETE", resource: "events", url })
+    );
+  }),
   deltaDriveItems: Effect.fn("M365.deltaDriveItems")(function* (rawRequest) {
     const request = yield* decodeRequest(M365DeltaDriveItemsRequest, "driveItems")(rawRequest);
     const url = yield* deltaUrl(runtime.config, request);
@@ -1118,9 +2161,53 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
     const bytes = yield* executeBytes(runtime, downloadUrl, "driveItemContent");
     return M365DownloadedContent.make({ bytes, item });
   }),
+  downloadMessageAttachment: Effect.fn("M365.downloadMessageAttachment")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365DownloadMessageAttachmentRequest, "attachments")(rawRequest);
+    const url = yield* mailboxUrl(
+      runtime.config,
+      request.userId,
+      `messages/${request.messageId}/attachments/${request.attachmentId}/$value`,
+      "attachments"
+    );
+    const bytes = yield* executeBytes(runtime, url, "attachmentContent", signedBytesGet(runtime.auth, url));
+    return M365AttachmentContent.make({ bytes });
+  }),
+  ensureMasterCategories: Effect.fn("M365.ensureMasterCategories")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365EnsureMasterCategoriesRequest, "masterCategories")(rawRequest);
+    const present = yield* listMasterCategories(runtime, request.userId);
+    const presentNames = HashSet.fromIterable(
+      A.map(present.value, (category) => normalizeCategoryName(category.displayName))
+    );
+    const isPresent = (category: M365MasterCategoryDraft): boolean =>
+      HashSet.has(presentNames, normalizeCategoryName(category.displayName));
+    const attempts = yield* Effect.forEach(A.filter(request.categories, P.not(isPresent)), (category) =>
+      createMasterCategoryUnlessPresent(runtime, request.userId, category).pipe(
+        Effect.map((created) => ({ created, displayName: category.displayName }))
+      )
+    );
+    const created = A.getSomes(A.map(attempts, (attempt) => attempt.created));
+    yield* Effect.annotateCurrentSpan({ m365_created_count: A.length(created) });
+    return M365EnsuredMasterCategories.make({
+      created,
+      existing: pipe(
+        A.filter(request.categories, isPresent),
+        A.appendAll(A.filter(attempts, (attempt) => O.isNone(attempt.created))),
+        A.map((category) => category.displayName)
+      ),
+    });
+  }),
+  findEventsByIdempotencyKey: Effect.fn("M365.findEventsByIdempotencyKey")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365FindEventsByIdempotencyKeyRequest, "events")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, "events", "events", [
+      ["$expand", O.some(IDEMPOTENCY_KEY_EXPAND)],
+      ["$filter", O.some(idempotencyKeyFilter(request.idempotencyKey))],
+    ]);
+    const collection = yield* executeJson(runtime, url, M365EventCollection, "events");
+    return yield* annotateCollectionCount(collection);
+  }),
   getEvent: Effect.fn("M365.getEvent")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetEventRequest, "events")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, `events/${request.eventId}`));
+    const url = yield* mailboxUrl(runtime.config, request.userId, `events/${request.eventId}`, "events");
     return yield* executeJson(runtime, url, GraphEvent, "events");
   }),
   getListItem: Effect.fn("M365.getListItem")(function* (rawRequest) {
@@ -1132,12 +2219,12 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   }),
   getMessage: Effect.fn("M365.getMessage")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, `messages/${request.messageId}`));
-    return yield* executeJson(runtime, url, GraphMessage, "messages");
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages");
+    return yield* executeJson(runtime, url, GraphMessage, "messages", bodyContentTypeHeaders(request.bodyContentType));
   }),
   getMessageAuthoredText: Effect.fn("M365.getMessageAuthoredText")(function* (rawRequest) {
     const request = yield* decodeRequest(M365GetMessageRequest, "messages")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, `messages/${request.messageId}`), [
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages", [
       ["$select", O.some(AUTHORED_TEXT_SELECT)],
     ]);
     return yield* executeJson(runtime, url, GraphMessageAuthoredText, "messages", PREFER_TEXT_BODY);
@@ -1155,11 +2242,11 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   }),
   listDrives: Effect.fn("M365.listDrives")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListDrivesRequest, "drives")(rawRequest);
-    const path = pipe(
+    const path = yield* pipe(
       request.siteId,
       O.match({
-        onNone: () => "/me/drives",
-        onSome: (siteId) => `/sites/${siteId}/drives`,
+        onNone: () => signedInUserPath(runtime.config, "/me/drives", "drives"),
+        onSome: (siteId) => Effect.succeed(`/sites/${siteId}/drives`),
       })
     );
     const collection = yield* executeJson(runtime, graphUrl(runtime.config, path), M365DriveCollection, "drives");
@@ -1167,17 +2254,48 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   }),
   listEvents: Effect.fn("M365.listEvents")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListEventsRequest, "events")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, "events"), [["$top", request.top]]);
+    const url = yield* mailboxUrl(runtime.config, request.userId, "events", "events", [["$top", request.top]]);
     const collection = yield* executeJson(runtime, url, M365EventCollection, "events");
+    return yield* annotateCollectionCount(collection);
+  }),
+  listMasterCategories: Effect.fn("M365.listMasterCategories")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365ListMasterCategoriesRequest, "masterCategories")(rawRequest);
+    const collection = yield* listMasterCategories(runtime, request.userId);
+    return yield* annotateCollectionCount(collection);
+  }),
+  listMessageAttachments: Effect.fn("M365.listMessageAttachments")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365ListMessageAttachmentsRequest, "attachments")(rawRequest);
+    const url = yield* mailboxUrl(
+      runtime.config,
+      request.userId,
+      `messages/${request.messageId}/attachments`,
+      "attachments",
+      [["$select", O.some(ATTACHMENT_METADATA_SELECT)]]
+    );
+    const collection = yield* executeJson(runtime, url, M365AttachmentCollection, "attachments");
     return yield* annotateCollectionCount(collection);
   }),
   listMessages: Effect.fn("M365.listMessages")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListMessagesRequest, "messages")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, "messages"), [
-      ["$filter", request.filter],
-      ["$top", request.top],
-    ]);
-    const collection = yield* executeJson(runtime, url, M365MessageCollection, "messages");
+    const url = yield* pipe(
+      request.nextLink,
+      O.match({
+        onNone: () =>
+          mailboxUrl(runtime.config, request.userId, "messages", "messages", [
+            ["$filter", request.filter],
+            ["$orderby", request.orderby],
+            ["$top", request.top],
+          ]),
+        onSome: (link) => trustedGraphLink(runtime.config, link, "messages"),
+      })
+    );
+    const collection = yield* executeJson(
+      runtime,
+      url,
+      M365MessageCollection,
+      "messages",
+      bodyContentTypeHeaders(request.bodyContentType)
+    );
     return yield* annotateCollectionCount(collection);
   }),
   listSites: Effect.fn("M365.listSites")(function* (rawRequest) {
@@ -1190,10 +2308,37 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
     );
     return yield* annotateCollectionCount(collection);
   }),
+  updateEvent: Effect.fn("M365.updateEvent")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365UpdateEventRequest, "events")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `events/${request.eventId}`, "events");
+    const body = yield* encodeEventPatch(request.patch);
+    return yield* executeJsonWrite(
+      runtime,
+      M365WriteCall.make({ body: O.some(body), headers: NO_HEADERS, method: "PATCH", resource: "events", url }),
+      GraphEvent
+    );
+  }),
+  updateMessageCategories: Effect.fn("M365.updateMessageCategories")(function* (rawRequest) {
+    const request = yield* decodeRequest(M365UpdateMessageCategoriesRequest, "messages")(rawRequest);
+    const url = yield* mailboxUrl(runtime.config, request.userId, `messages/${request.messageId}`, "messages");
+    yield* Effect.annotateCurrentSpan({ m365_category_count: A.length(request.categories) });
+    return yield* executeJsonWrite(
+      runtime,
+      M365WriteCall.make({
+        body: O.some({ categories: request.categories }),
+        headers: changeKeyHeaders(request.changeKey),
+        method: "PATCH",
+        resource: "messages",
+        url,
+      }),
+      GraphMessage
+    );
+  }),
 });
 
 /**
- * Microsoft Graph `v1.0` read-only driver service.
+ * Microsoft Graph `v1.0` driver service (read verbs on both lanes; mailbox
+ * writes on the app-only lane).
  *
  * **Example** (Build layer from config)
  *
@@ -1237,8 +2382,105 @@ export class M365 extends Context.Service<M365, M365Shape>()($I`M365`) {
       Effect.gen(function* () {
         const auth = yield* M365Auth;
         const client = yield* HttpClient.HttpClient;
-        return M365.of(makeService(M365Runtime.make({ auth, client, config: resolveM365Config(config) })));
+        const resolved = resolveM365Config(config);
+        return M365.of(
+          makeService(
+            M365Runtime.make({
+              auth,
+              client,
+              config: M365ServiceConfig.make({
+                graphBaseUrl: resolved.graphBaseUrl,
+                lane: "delegated",
+                maxRetries: resolved.maxRetries,
+              }),
+            })
+          )
+        );
       })
+    );
+
+  /**
+   * Build a testable app-only Microsoft Graph service layer.
+   *
+   * **Details**
+   *
+   * Requires an injected {@link M365Auth} and `HttpClient.HttpClient`. On this
+   * lane every mailbox verb needs a `userId`: a request that would resolve to
+   * a `/me` route fails with `"request encoding"` before any HTTP call.
+   *
+   * **Example** (Make testable app-only layer)
+   *
+   * ```ts
+   * import { M365, M365AppOnlyConfigInput, M365ClientSecretCredential } from "@beep/m365"
+   * import { Redacted } from "effect"
+   *
+   * const layer = M365.makeAppOnlyLayer(
+   *   M365AppOnlyConfigInput.make({
+   *     clientId: "client-id",
+   *     credential: M365ClientSecretCredential.make({ clientSecret: Redacted.make("dev-secret") }),
+   *     tenantId: "tenant-id"
+   *   })
+   * )
+   * console.log(layer)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly makeAppOnlyLayer = (
+    config: M365AppOnlyConfigInput
+  ): Layer.Layer<M365, never, M365Auth | HttpClient.HttpClient> =>
+    Layer.effect(
+      M365,
+      Effect.gen(function* () {
+        const auth = yield* M365Auth;
+        const client = yield* HttpClient.HttpClient;
+        return M365.of(
+          makeService(
+            M365Runtime.make({
+              auth,
+              client,
+              config: M365ServiceConfig.make({
+                graphBaseUrl: URLStr.make(config.graphBaseUrl),
+                lane: "app-only",
+                maxRetries: config.maxRetries,
+              }),
+            })
+          )
+        );
+      })
+    );
+
+  /**
+   * Build a live app-only Microsoft Graph service layer (client-credentials
+   * token provider and `FetchHttpClient`).
+   *
+   * **Example** (Make live app-only layer)
+   *
+   * ```ts
+   * import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365"
+   * import { Redacted } from "effect"
+   *
+   * const layer = M365.makeAppOnlyLiveLayer(
+   *   M365AppOnlyConfigInput.make({
+   *     clientId: "client-id",
+   *     credential: M365CertificateCredential.make({
+   *       privateKey: Redacted.make("pem-private-key-from-a-protected-store"),
+   *       thumbprintSha256: "AB12"
+   *     }),
+   *     tenantId: "tenant-id"
+   *   })
+   * )
+   * console.log(layer)
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly makeAppOnlyLiveLayer = (config: M365AppOnlyConfigInput): Layer.Layer<M365, M365Error> =>
+    M365.makeAppOnlyLayer(config).pipe(
+      Layer.provide(M365Auth.makeAppOnlyLayer(config)),
+      Layer.provide(FetchHttpClient.layer)
     );
 
   /**
