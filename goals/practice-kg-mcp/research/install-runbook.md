@@ -40,8 +40,9 @@ and the running extension already holds it; a second process on the same
 bundle is unproven on Windows and may fail or damage the store. Run the check
 before Claude Desktop starts, or after quitting it.
 
-It opens the bundle the same way the server does, counts one table in each
-store, prints one line and exits. It does not start the MCP server and does
+It reads the manifest the same way the server does, checks that both stores
+are present and already built, opens each one, checks that its tables have the
+columns the tools read, counts its rows, prints one line and exits. It does not start the MCP server and does
 not read input. A working install prints this shape and exits with code 0:
 
 ```json
@@ -54,15 +55,18 @@ over and that `nodes` and `matters` are not zero. Anything else prints
 the problem the line also carries `"cause"`, the underlying error text, and
 the message is one of two kinds:
 
-- **"could not be opened"**: the store named in the message is held by another
-  process, unreadable or corrupt. Close Claude Desktop and run the check again;
+- **"could not be opened"**: the store named in the message (`graph store
+  (kg.pglite)` or `matter store (practice.duckdb)`) is held by another process,
+  unreadable or corrupt. Close Claude Desktop and run the check again;
   if it still fails, read `cause`. Do not replace the bundle for this alone.
 - **"does not answer the queries this server's tools run"**: the store opened,
   but its tables are not the ones this server reads. Install the bundle that
   was handed over with this extension version.
 
-Other messages name their own cause, such as a manifest for another store
-format or a store missing from the folder. A `--bundle-dir` that does not
+A store that is missing, an empty `kg.pglite` folder or an empty
+`practice.duckdb` file is reported as "missing or not an initialised store";
+the check never creates a store in the bundle folder. Other messages name their
+own cause, such as a manifest for another store format. A `--bundle-dir` that does not
 exist is rejected before the check starts, with usage text instead of the
 JSON line.
 
