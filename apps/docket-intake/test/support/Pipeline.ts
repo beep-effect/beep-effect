@@ -2,6 +2,7 @@
  * The real docket intake pipeline over in-memory ports, for the app's cycle
  * and command proofs. Every fixture is synthetic.
  */
+import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import { DocketMatterLookupUnavailableLive } from "@beep/law-practice-server/DocketIntake";
 import {
   DocketCalendar,
@@ -16,6 +17,7 @@ import {
   DocketWrittenEntry,
   makeDocketIntakeLayer,
   ParalegalDocketEntry,
+  ParalegalRevision,
   SecretaryReview,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LocalDate } from "@beep/schema/LocalDate";
@@ -58,11 +60,26 @@ const HarnessLayer = Layer.effect(
   })
 );
 
+// The text the fixture entry cites for its dates and period; the review checks it is in the message.
+const CITED = "Mailed January 8, 2030. A response is due within three months, by April 8, 2030";
+
 const message = DocketMessage.make({
-  bodyText: "Synthetic fixture body mentioning FIX-0001.",
+  bodyText: `Synthetic fixture body mentioning FIX-0001. ${CITED}.`,
   messageId: "m1",
   receivedAt: "2030-01-09T10:00:00.000Z",
   receivedDate: LocalDate.make({ year: 2030, month: 1, day: 9 }),
+});
+
+const MAIL_DATE = LocalDate.make({ year: 2030, month: 1, day: 8 });
+const THREE_MONTHS = DocketResponsePeriod.make({ amount: 3, unit: "months" });
+
+// The secretary reads the same date, period and reference for itself, so the review accepts.
+const agreeingReview = SecretaryReview.make({
+  isDocketItem: true,
+  mailDate: O.some(MAIL_DATE),
+  matterReferences: ["FIX-0001"],
+  notes: "Fixture review.",
+  responsePeriod: O.some(THREE_MONTHS),
 });
 
 const written = (key: string): DocketWrittenEntry =>
@@ -98,20 +115,33 @@ const PortsLayer = Layer.mergeAll(
       enter: Effect.fnUntraced(function* () {
         return yield* Effect.succeed(
           ParalegalDocketEntry.make({
+            citedText: O.some(CITED),
+            mailDate: O.some(MAIL_DATE),
             matterReferences: ["FIX-0001"],
             rationale: "States a due date.",
+            responsePeriod: O.some(THREE_MONTHS),
             statedDueDate: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })),
             title: "Due Date: fixture response",
           })
         );
+      }),
+      // The fixture review accepts in its first round, so nothing is ever disputed.
+      revise: Effect.fnUntraced(function* (input) {
+        return yield* Effect.succeed(ParalegalRevision.make({ entry: input.previous }));
       }),
     })
   ),
   Layer.succeed(
     DocketSecretary,
     DocketSecretary.of({
+      critique: Effect.fnUntraced(function* () {
+        return yield* Effect.succeed([]);
+      }),
+      reread: Effect.fnUntraced(function* () {
+        return yield* Effect.succeed(agreeingReview);
+      }),
       review: Effect.fnUntraced(function* () {
-        return yield* Effect.succeed(SecretaryReview.make({ isDocketItem: true, notes: "Fixture review." }));
+        return yield* Effect.succeed(agreeingReview);
       }),
     })
   ),

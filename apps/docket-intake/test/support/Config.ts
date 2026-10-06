@@ -1,6 +1,7 @@
 /**
  * A synthetic service configuration for the app's proofs.
  */
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { DateTime, Redacted } from "effect";
 import * as O from "effect/Option";
 import { DocketIntakeAppConfig } from "@/Config";
@@ -25,6 +26,8 @@ export const fixtureConfig = DocketIntakeAppConfig.make({
   clientId: "client-id",
   mailbox: MAILBOX,
   maxConsecutiveFailures: 2,
+  reviewAcceptThreshold: UnitInterval.make(0.85),
+  reviewMaxRounds: 3,
   reviewNegatives: true,
   startAt: O.none(),
   stateDirectory: STATE_DIRECTORY,

@@ -4,16 +4,22 @@
  * Every fixture is synthetic: invented ids, `*.invalid` hosts and placeholder
  * text. No real mail, sender, matter or client appears here.
  */
+
+import { DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import { DocketAgentsOptions, makeDocketAgentsLayer } from "@beep/law-practice-server/DocketIntake";
 import {
   DocketMessage,
   DocketParalegal,
   DocketSecretary,
   DocketSourceDocument,
+  ExtractorFieldResponse,
   ParalegalDocketEntry,
   ParalegalNotDocketItem,
+  ReviewDispute,
+  ReviewFinding,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LocalDate } from "@beep/schema/LocalDate";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -39,6 +45,8 @@ type ScriptedModelShape = {
   readonly responsesRef: Ref.Ref<A.NonEmptyReadonlyArray<ScriptedResponse>>;
   /** Property names of the answer schema each call handed to the provider. */
   readonly answerFields: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
+  /** How many shared definitions (`$defs`) each answer schema needed. */
+  readonly answerDefinitions: Ref.Ref<ReadonlyArray<number>>;
   readonly seen: Ref.Ref<ReadonlyArray<Prompt.Prompt>>;
 };
 
@@ -55,6 +63,10 @@ const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const json = (value: unknown): Effect.Effect<string> => Effect.orDie(encodeJson(value));
 
 const JsonObjectSchema = S.Struct({ schema: S.Struct({ properties: S.Record(S.String, S.Unknown) }) });
+// How many shared definitions the JSON schema of a structured call carries. Provider
+// structured-output modes reject them, so every wire schema has to come out flat.
+const answerDefinitionsOf = (format: LanguageModel.ProviderOptions["responseFormat"]): number =>
+  format.type === "json" ? A.length(R.keys(S.toJsonSchemaDocument(format.schema).definitions)) : -1;
 
 // The property names of the JSON schema a structured call asks the provider to answer in.
 const answerFieldsOf = (format: LanguageModel.ProviderOptions["responseFormat"]): ReadonlyArray<string> =>
@@ -73,6 +85,7 @@ const ScriptedModelLayer = Layer.effect(
     const responsesRef = yield* Ref.make<A.NonEmptyReadonlyArray<ScriptedResponse>>([Effect.succeed("{}")]);
     const seen = yield* Ref.make<ReadonlyArray<Prompt.Prompt>>([]);
     return ScriptedModel.of({
+      answerDefinitions: yield* Ref.make<ReadonlyArray<number>>([]),
       answerFields: yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]),
       prompts: Ref.get(seen),
       respondInTurn: Effect.fn("ScriptedModel.respondInTurn")(function* (responses) {
@@ -95,6 +108,7 @@ const LanguageModelLayer = Layer.effect(
       generateText: Effect.fnUntraced(function* (options) {
         yield* Ref.update(scripted.seen, A.append(options.prompt));
         yield* Ref.update(scripted.answerFields, A.append(answerFieldsOf(options.responseFormat)));
+        yield* Ref.update(scripted.answerDefinitions, A.append(answerDefinitionsOf(options.responseFormat)));
         const text = yield* yield* Ref.modify(scripted.responsesRef, (responses) => [
           A.headNonEmpty(responses),
           A.match(A.tailNonEmpty(responses), { onEmpty: () => responses, onNonEmpty: (rest) => rest }),
@@ -136,6 +150,7 @@ const message = DocketMessage.make({
 const pdf = DocketSourceDocument.make({ bytes: new Uint8Array([1, 2, 3]), contentType: "application/pdf" });
 
 const paralegalWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
+  citedText: "Mailed January 8, 2030. A response is due within three months",
   isDocketItem: true,
   mailDate: "2030-01-08",
   matterReferences: ["FIX-0001"],
@@ -147,14 +162,27 @@ const paralegalWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
 });
 
 const secretaryWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
+  citedText: "Mailed January 8, 2030. A response is due within three months",
   isDocketItem: true,
   mailDate: "2030-01-08",
   matterReferences: ["FIX-0001"],
   notes: "Read the attached fixture action. The period is on its first page.",
   readFromSourceDocument: true,
   responsePeriod: { amount: 3, unit: "months" },
+  statedDueDate: null,
   ...overrides,
 });
+
+const SECRETARY_FIELDS = [
+  "citedText",
+  "isDocketItem",
+  "mailDate",
+  "matterReferences",
+  "notes",
+  "readFromSourceDocument",
+  "responsePeriod",
+  "statedDueDate",
+];
 
 const paralegalEntry = ParalegalDocketEntry.make({
   matterReferences: ["FIX-0001"],
@@ -171,6 +199,52 @@ const bareMessage = DocketMessage.make({
 });
 
 const dismissedEntry = ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." });
+
+const revisionWire = (overrides: Readonly<Record<string, unknown>> = {}) => ({
+  ...paralegalWire({ responsePeriod: { amount: 2, unit: "months" } }),
+  confidence: 0.8,
+  responses: [
+    { action: "revised", citedText: "A response is due within two months", field: "response-period" },
+    { action: "defended", citedText: " ", field: "mail-date" },
+  ],
+  ...overrides,
+});
+
+const disputes = [
+  ReviewDispute.make({ field: "response-period", reasons: ["The two readings differ.", "The period is misread."] }),
+  ReviewDispute.make({ field: "mail-date", reasons: ["The two readings differ."] }),
+];
+
+const datedEntry = ParalegalDocketEntry.make({
+  citedText: O.some("Mailed January 8, 2030. A response is due within three months"),
+  mailDate: O.some(LocalDate.make({ year: 2030, month: 1, day: 8 })),
+  matterReferences: ["FIX-0001"],
+  rationale: "States a response period.",
+  responsePeriod: O.some(DocketResponsePeriod.make({ amount: 3, unit: "months" })),
+  title: "Fixture response due",
+});
+
+const extractorResponses = [
+  ExtractorFieldResponse.make({
+    action: "revised",
+    citedText: O.some("A response is due within two months"),
+    field: "response-period",
+  }),
+  ExtractorFieldResponse.make({ action: "defended", field: "mail-date" }),
+];
+
+const rereadInput = (
+  documents: ReadonlyArray<DocketSourceDocument>,
+  findings: ReadonlyArray<ReviewFinding> = [
+    ReviewFinding.make({ field: "response-period", reason: "The period looks misread.", severity: "P1" }),
+  ]
+) => ({
+  documents,
+  extractorResponses,
+  fields: ["mail-date", "response-period"] as const,
+  findings,
+  message,
+});
 
 const userParts = (prompt: Prompt.Prompt): ReadonlyArray<Prompt.UserMessagePart> =>
   A.flatMap(prompt.content, (entry) => (entry.role === "user" ? entry.content : []));
@@ -220,10 +294,24 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           ),
           [3, "months"]
         );
+        assertSome(
+          O.flatMap(docketEntry, (entered) => entered.citedText),
+          "Mailed January 8, 2030. A response is due within three months"
+        );
         assertTrue(O.exists(A.head(prompts), mentions("FIX-0001")));
         expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
-          ["isDocketItem", "mailDate", "matterReferences", "rationale", "responsePeriod", "statedDueDate", "title"],
+          [
+            "citedText",
+            "isDocketItem",
+            "mailDate",
+            "matterReferences",
+            "rationale",
+            "responsePeriod",
+            "statedDueDate",
+            "title",
+          ],
         ]);
+        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
         expect(A.flatMap(prompts, fileParts)).toStrictEqual([]);
       })
     );
@@ -365,12 +453,13 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           O.map(review.responsePeriod, (period) => [period.amount, period.unit]),
           [3, "months"]
         );
-        // The schema the provider answers in has nowhere to put a due date.
-        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
-          ["isDocketItem", "mailDate", "matterReferences", "notes", "readFromSourceDocument", "responsePeriod"],
-        ]);
+        // The schema the provider answers in takes a due date the source states and has nowhere to
+        // put a computed one.
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
+        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
         expect(R.keys(review)).not.toContain("dueDate");
-        expect(R.keys(review)).not.toContain("statedDueDate");
+        assertSome(iso(review.statedDueDate), "2030-04-08");
+        assertSome(review.citedText, "Mailed January 8, 2030. A response is due within three months");
         expect(A.map(files, (file) => [file.mediaType, file.data])).toStrictEqual([
           ["application/pdf", new Uint8Array([1, 2, 3])],
         ]);
@@ -386,7 +475,7 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
       Effect.fnUntraced(function* () {
         const scripted = yield* ScriptedModel;
         const secretary = yield* DocketSecretary;
-        yield* scripted.respondWith(json(secretaryWire({ mailDate: "", responsePeriod: null })));
+        yield* scripted.respondWith(json(secretaryWire({ citedText: " ", mailDate: "", responsePeriod: null })));
 
         const review = yield* secretary.review({ documents: [], entry: paralegalEntry, message });
         const prompt = A.last(yield* scripted.prompts);
@@ -394,6 +483,9 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
         expect(review.readFromSourceDocument).toBe(false);
         assertNone(review.mailDate);
         assertNone(review.responsePeriod);
+        // The fixture states no due date and the blank citation is no citation.
+        assertNone(review.statedDueDate);
+        assertNone(review.citedText);
         assertTrue(O.exists(prompt, mentions("No source document is attached.")));
       })
     );
@@ -443,10 +535,12 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
 
         yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
         const badDate = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
+        yield* scripted.respondWith(json(secretaryWire({ statedDueDate: "mid April" })));
+        const badStated = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
         yield* scripted.respondWith(json(secretaryWire({ responsePeriod: { amount: -1, unit: "days" } })));
         const badPeriod = yield* failureOf(secretary.review({ documents: [pdf], entry: paralegalEntry, message }));
 
-        for (const failure of [badDate, badPeriod]) {
+        for (const failure of [badDate, badStated, badPeriod]) {
           assertSome(
             O.map(failure, (error) => [error.stage, error.cause]),
             ["review", "wire-decode"]
@@ -549,6 +643,275 @@ describe("@beep/law-practice-server DocketIntake agents", () => {
           ["review", "model:InvalidRequestError"]
         );
         expect(yield* scripted.prompts).toHaveLength(2);
+      })
+    );
+  });
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "asks the paralegal to revise with the disputed fields and reasons, and decodes its responses and confidence",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const paralegal = yield* DocketParalegal;
+        yield* scripted.respondWith(json(revisionWire()));
+
+        const revision = yield* paralegal.revise({ disputes, message, previous: datedEntry });
+        const prompt = A.last(yield* scripted.prompts);
+        const revised = asDocketEntry(revision.entry);
+
+        assertSome(
+          O.map(
+            O.flatMap(revised, (entry) => entry.responsePeriod),
+            (period) => [period.amount, period.unit]
+          ),
+          [2, "months"]
+        );
+        expect(A.map(revision.responses, (response) => [response.field, response.action])).toStrictEqual([
+          ["response-period", "revised"],
+          ["mail-date", "defended"],
+        ]);
+        // A blank quotation is no quotation.
+        expect(A.map(revision.responses, (response) => O.isSome(response.citedText))).toStrictEqual([true, false]);
+        assertSome(revision.selfReportedConfidence, UnitInterval.make(0.8));
+        for (const fragment of [
+          "You entered this message as a docket item.",
+          "Mail date: 2030-01-08",
+          "Response period: 3 months",
+          "Stated due date: (not given)",
+          "Cited text: Mailed January 8, 2030. A response is due within three months",
+          "Disputed fields:",
+          "- response-period: The two readings differ. The period is misread.",
+          "- mail-date: The two readings differ.",
+        ]) {
+          assertTrue(O.exists(prompt, mentions(fragment)));
+        }
+        expect(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>))).toStrictEqual([]);
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([
+          [
+            "citedText",
+            "isDocketItem",
+            "mailDate",
+            "matterReferences",
+            "rationale",
+            "responsePeriod",
+            "statedDueDate",
+            "title",
+            "confidence",
+            "responses",
+          ],
+        ]);
+        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "lets the paralegal concede, drops a confidence that is no probability, and fails a revision it cannot decode",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const paralegal = yield* DocketParalegal;
+        const conceded = {
+          citedText: null,
+          isDocketItem: false,
+          mailDate: null,
+          matterReferences: [],
+          rationale: "On a second look, a newsletter.",
+          responsePeriod: null,
+          responses: [{ action: "revised", citedText: null, field: "classification" }],
+          statedDueDate: null,
+          title: null,
+        };
+
+        yield* scripted.respondWith(json({ ...conceded, confidence: 1.7 }));
+        const outOfRange = yield* paralegal.revise({ disputes, message, previous: dismissedEntry });
+        yield* scripted.respondWith(json({ ...conceded, confidence: null }));
+        const unstated = yield* paralegal.revise({ disputes, message, previous: dismissedEntry });
+        yield* scripted.respondWith(json(revisionWire({ mailDate: "early January" })));
+        const badDate = yield* failureOf(paralegal.revise({ disputes, message, previous: paralegalEntry }));
+        const prompts = yield* scripted.prompts;
+
+        expect(outOfRange.entry).toMatchObject({
+          _tag: "ParalegalNotDocketItem",
+          rationale: "On a second look, a newsletter.",
+        });
+        assertNone(outOfRange.selfReportedConfidence);
+        assertNone(unstated.selfReportedConfidence);
+        assertSome(
+          O.map(badDate, (error) => [error.stage, error.cause]),
+          ["enter", "wire-decode"]
+        );
+        assertTrue(O.exists(A.head(prompts), mentions("You found nothing to docket in this message.")));
+        assertTrue(O.exists(A.head(prompts), mentions("Rationale: Fixture newsletter.")));
+        assertTrue(O.exists(A.last(prompts), mentions("Stated due date: 2031-07-19")));
+        assertTrue(O.exists(A.last(prompts), mentions("Mail date: (not given)")));
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "decodes the secretary's findings, shows it the entry without its dates, and sends the documents",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondWith(
+          json({
+            findings: [
+              { field: "matter-references", reason: "Names a matter the message does not mention.", severity: "P1" },
+              { field: "title", reason: "Names no date type.", severity: "P3" },
+            ],
+          })
+        );
+
+        const findings = yield* secretary.critique({ documents: [pdf], entry: paralegalEntry, message });
+        const prompt = A.last(yield* scripted.prompts);
+
+        expect(A.map(findings, (finding) => [finding.severity, finding.field, finding.reason])).toStrictEqual([
+          ["P1", "matter-references", "Names a matter the message does not mention."],
+          ["P3", "title", "Names no date type."],
+        ]);
+        assertTrue(O.exists(prompt, mentions("Title: Fixture response due")));
+        assertTrue(O.exists(prompt, mentions("1 source document(s) are attached to this request.")));
+        assertTrue(!O.exists(prompt, mentions("2031-07-19")));
+        expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([["findings"]]);
+        expect(yield* Ref.get(scripted.answerDefinitions)).toStrictEqual([0]);
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "accepts an empty list of findings, fails one without a reason, and asks once more without refused documents",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+
+        yield* scripted.respondWith(json({ findings: [] }));
+        const none = yield* secretary.critique({ documents: [], entry: dismissedEntry, message: bareMessage });
+        yield* scripted.respondWith(json({ findings: [{ field: "title", reason: "", severity: "P2" }] }));
+        const unexplained = yield* failureOf(secretary.critique({ documents: [], entry: paralegalEntry, message }));
+        const before = A.length(yield* scripted.prompts);
+        yield* scripted.respondInTurn([rejected, json({ findings: [] })]);
+        const retried = yield* secretary.critique({ documents: [pdf], entry: paralegalEntry, message });
+        const prompts = A.drop(yield* scripted.prompts, before);
+
+        expect(none).toStrictEqual([]);
+        assertSome(
+          O.map(unexplained, (error) => [error.stage, error.cause]),
+          ["review", "wire-decode"]
+        );
+        expect(retried).toStrictEqual([]);
+        expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);
+        assertTrue(O.exists(A.last(prompts), mentions("No source document is attached.")));
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "asks the secretary to read the disputed fields again against the text the paralegal relies on",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+        yield* scripted.respondWith(
+          json(
+            secretaryWire({
+              matterReferences: [],
+              responsePeriod: { amount: 2, unit: "months" },
+              statedDueDate: "2030-04-15",
+            })
+          )
+        );
+
+        const reading = yield* secretary.reread(rereadInput([pdf]));
+        const prompt = A.last(yield* scripted.prompts);
+
+        expect(reading.readFromSourceDocument).toBe(true);
+        assertSome(iso(reading.mailDate), "2030-01-08");
+        assertSome(
+          O.map(reading.responsePeriod, (period) => [period.amount, period.unit]),
+          [2, "months"]
+        );
+        for (const fragment of [
+          "Fields to read again: mail-date, response-period",
+          "Your earlier findings on these fields:",
+          "- response-period: The period looks misread.",
+          "- response-period: revised",
+          "- mail-date: defended",
+          "1 source document(s) are attached to this request.",
+        ]) {
+          assertTrue(O.exists(prompt, mentions(fragment)));
+        }
+        // The paralegal's quoted text is checked in code and never shown to the critic.
+        assertTrue(!O.exists(prompt, mentions("within two months")));
+        assertTrue(!O.exists(prompt, mentions("relies on")));
+        expect(A.length(pipe(prompt, O.map(fileParts), O.getOrElse(A.empty<Prompt.FilePart>)))).toBe(1);
+        // The same answer shape as the first reading.
+        expect(yield* Ref.get(scripted.answerFields)).toStrictEqual([SECRETARY_FIELDS]);
+        assertSome(iso(reading.statedDueDate), "2030-04-15");
+      })
+    );
+  });
+
+  it.layer(agentsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "re-reads once more without refused documents, and fails a re-reading whose date is unusable",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const secretary = yield* DocketSecretary;
+
+        yield* scripted.respondInTurn([rejected, json(secretaryWire())]);
+        const reading = yield* secretary.reread(rereadInput([pdf]));
+        const prompts = yield* scripted.prompts;
+        yield* scripted.respondWith(json(secretaryWire({ mailDate: "early January" })));
+        const badDate = yield* failureOf(secretary.reread(rereadInput([], [])));
+        const noFindings = A.last(yield* scripted.prompts);
+
+        assertTrue(O.exists(noFindings, mentions("- none; the two readings differed or a check failed")));
+        // With nothing attached, the reading cannot have come from a source document.
+        expect(reading.readFromSourceDocument).toBe(false);
+        expect(A.map(A.map(prompts, fileParts), A.length)).toStrictEqual([1, 0]);
+        assertSome(
+          O.map(badDate, (error) => [error.stage, error.cause]),
+          ["review", "wire-decode"]
+        );
+      })
+    );
+  });
+
+  // Real clock and a one-millisecond base, so the retry delays elapse on their own.
+  it.layer(fastRetryLayer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
+    it.effect(
+      "retries a retryable failure of each loop call, and reports one that is not retryable at its stage",
+      Effect.fnUntraced(function* () {
+        const scripted = yield* ScriptedModel;
+        const paralegal = yield* DocketParalegal;
+        const secretary = yield* DocketSecretary;
+
+        yield* scripted.respondInTurn([rateLimited, json(revisionWire())]);
+        const revision = yield* paralegal.revise({ disputes, message, previous: datedEntry });
+        yield* scripted.respondInTurn([rateLimited, json({ findings: [] })]);
+        const findings = yield* secretary.critique({ documents: [], entry: paralegalEntry, message });
+        yield* scripted.respondInTurn([rateLimited, json(secretaryWire())]);
+        const reading = yield* secretary.reread(rereadInput([]));
+        const asked = A.length(yield* scripted.prompts);
+        yield* scripted.respondWith(rejected);
+        const failures = [
+          yield* failureOf(paralegal.revise({ disputes, message, previous: datedEntry })),
+          yield* failureOf(secretary.critique({ documents: [], entry: paralegalEntry, message })),
+          yield* failureOf(secretary.reread(rereadInput([]))),
+        ];
+
+        expect(A.length(revision.responses)).toBe(2);
+        expect(findings).toStrictEqual([]);
+        expect(reading.isDocketItem).toBe(true);
+        expect(asked).toBe(6);
+        expect(A.map(A.getSomes(failures), (error) => [error.stage, error.cause])).toStrictEqual([
+          ["enter", "model:InvalidRequestError"],
+          ["review", "model:InvalidRequestError"],
+          ["review", "model:InvalidRequestError"],
+        ]);
       })
     );
   });

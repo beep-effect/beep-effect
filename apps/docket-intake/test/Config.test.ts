@@ -23,11 +23,12 @@ const load = (env: Readonly<Record<string, string>>) =>
 
 describe("@beep/docket-intake configuration", () => {
   it.effect(
-    "applies the defaults: negatives are reviewed, no start time, state under the home directory",
+    "applies the defaults: negatives are reviewed, three review rounds at 0.85, no start time, state under the home directory",
     Effect.fnUntraced(function* () {
       const config = yield* load(required);
 
       expect(config.reviewNegatives).toBe(true);
+      expect([config.reviewMaxRounds, config.reviewAcceptThreshold]).toStrictEqual([3, 0.85]);
       expect(config.maxConsecutiveFailures).toBe(6);
       assertNone(config.startAt);
       expect(config.stateDirectory).toBe("/home/fixture/.local/state/beep/docket-intake");
@@ -44,6 +45,8 @@ describe("@beep/docket-intake configuration", () => {
       const explicit = yield* load({
         ...required,
         DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2",
+        DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "0.9",
+        DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "5",
         DOCKET_INTAKE_REVIEW_NEGATIVES: "false",
         DOCKET_INTAKE_START_AT: "2030-01-01T06:00:00Z",
         DOCKET_INTAKE_STATE_DIR: "/srv/fixture/docket",
@@ -53,13 +56,14 @@ describe("@beep/docket-intake configuration", () => {
       expect(xdg.stateDirectory).toBe("/var/fixture/state/beep/docket-intake");
       expect(explicit.stateDirectory).toBe("/srv/fixture/docket");
       expect(explicit.reviewNegatives).toBe(false);
+      expect([explicit.reviewMaxRounds, explicit.reviewAcceptThreshold]).toStrictEqual([5, 0.9]);
       expect(explicit.maxConsecutiveFailures).toBe(2);
       assertSome(O.map(explicit.startAt, DateTime.formatIso), "2030-01-01T06:00:00.000Z");
     })
   );
 
   it.effect(
-    "fails when a required setting is missing, the time zone included",
+    "fails when a required setting is missing or a setting is out of range, the time zone and the review loop included",
     Effect.fnUntraced(function* () {
       const { DOCKET_INTAKE_TIME_ZONE: _zone, ...withoutZone } = required;
       const { DOCKET_INTAKE_MAILBOX: _mailbox, ...withoutMailbox } = required;
@@ -72,6 +76,12 @@ describe("@beep/docket-intake configuration", () => {
         Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "0" })),
         Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2.5" })),
         Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "often" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "0" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "11" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "2.5" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "1.2" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "-0.1" })),
+        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "high" })),
       ]);
 
       for (const result of results) {

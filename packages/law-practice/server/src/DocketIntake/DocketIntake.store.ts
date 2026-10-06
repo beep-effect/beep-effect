@@ -15,6 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { LocalDate } from "@beep/schema/LocalDate";
+import type * as PlatformError from "effect/PlatformError";
 
 const $I = $LawPracticeServerId.create("DocketIntake/DocketIntake.store");
 
@@ -126,18 +127,29 @@ const sameContents = O.makeEquivalence(Str.Equivalence);
 const discard = (fs: FileSystem.FileSystem, path: string): Effect.Effect<void> =>
   fs.remove(path, { force: true }).pipe(Effect.ignore);
 
+const lockWriteFailed = storeError("lock");
+
+const lockExists = (error: PlatformError.PlatformError): boolean => error.reason._tag === "AlreadyExists";
+
 // Put the complete lock in place in one step: write it under a unique name, then hard-link that
-// name to the lock path. Linking fails when the lock path exists, and the lock file is never
-// visible empty or half written.
+// name to the lock path. The lock file is never visible empty or half written. The answer is
+// whether the lock was placed: linking fails when the lock path exists, and only that failure
+// means someone else holds the lock. A directory that cannot be written (read-only, full, no hard
+// links) is not a held lock, and fails with cause `lock`.
 const placeLock = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   lockPath: string,
   pid: string,
   contents: string
-) {
+): Effect.fn.Return<boolean, DocketIntakeError> {
   const temporary = yield* uniqueName(lockPath, pid, "tmp");
-  yield* fs.writeFileString(temporary, contents, { flag: "wx" });
-  yield* fs.link(temporary, lockPath).pipe(Effect.ensuring(discard(fs, temporary)));
+  yield* fs.writeFileString(temporary, contents, { flag: "wx" }).pipe(Effect.mapError(lockWriteFailed));
+  return yield* fs.link(temporary, lockPath).pipe(
+    Effect.as(true),
+    Effect.catchIf(lockExists, () => Effect.succeed(false)),
+    Effect.mapError(lockWriteFailed),
+    Effect.ensuring(discard(fs, temporary))
+  );
 });
 
 // Move a lock judged stale out of the way, and make sure the file that was moved is the one that
@@ -191,10 +203,17 @@ const acquireLock = Effect.fnUntraced(function* (
         () => "unreadable"
       ),
     });
-    yield* place.pipe(Effect.mapError(stateLocked), Effect.ensuring(discard(fs, aside)));
+    // Another starter can still win here: its lock is then the one in place.
+    const placed = yield* place.pipe(Effect.ensuring(discard(fs, aside)));
+    if (!placed) {
+      return yield* stateLocked();
+    }
   });
 
-  yield* place.pipe(Effect.catch(takeOver));
+  const placed = yield* place;
+  if (!placed) {
+    yield* takeOver();
+  }
 });
 
 /**
@@ -209,7 +228,8 @@ const acquireLock = Effect.fnUntraced(function* (
  *
  * The layer holds `state.lock` in the directory for as long as its scope is
  * open, so one process writes the state at a time. A second process fails to
- * build with cause `state-locked`. A lock is taken over when its holder is
+ * build with cause `state-locked`. A state directory the lock cannot be
+ * written to fails with cause `lock`. A lock is taken over when its holder is
  * gone: the process id no longer exists, the kernel started the process that
  * has that id now at a different time, the lock is from an earlier boot, it
  * names this very process id, or it cannot be read. A killed service
