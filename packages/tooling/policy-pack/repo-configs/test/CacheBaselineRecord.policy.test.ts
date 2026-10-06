@@ -60,8 +60,10 @@ const projectionOf = (nodes: ReadonlyArray<CachePolicyNode>, source = 1) =>
     nodes,
     sources: [CachePolicySource.make({ path: "turbo.json", sha256: digest(source) })],
   });
-const nodes = [node("@beep/beta#lint", 13), node("//#lint:policy", 10), node("@beep/alpha#lint", 11)];
-const base = projectionOf(nodes);
+const betaNode = node("@beep/beta#lint", 13);
+const rootNode = node("//#lint:policy", 10);
+const alphaNode = node("@beep/alpha#lint", 11);
+const base = projectionOf([betaNode, rootNode, alphaNode]);
 const main = decision("main", 100);
 const alpha = decision("alpha", 101);
 
@@ -118,7 +120,7 @@ describe("cache baseline per-subject review records", () => {
   });
 
   it("stamps only the changed subject and carries the other reviews forward", () => {
-    const next = record(prior, projectionOf([nodes[0], nodes[1], node("@beep/alpha#lint", 99)]), alpha);
+    const next = record(prior, projectionOf([betaNode, rootNode, node("@beep/alpha#lint", 99)]), alpha);
     expect(next.stamped).toStrictEqual(["@beep/alpha"]);
     expect(next.carried).toStrictEqual(["//", "@beep/beta"]);
     assertSome(Rec.get(next.baseline.reviews, "@beep/alpha"), alpha);
@@ -128,7 +130,7 @@ describe("cache baseline per-subject review records", () => {
   });
 
   it("stamps the root subject when any root posture changes", () => {
-    expect(record(prior, projectionOf(nodes, 2), alpha).stamped).toStrictEqual(["//"]);
+    expect(record(prior, projectionOf([betaNode, rootNode, alphaNode], 2), alpha).stamped).toStrictEqual(["//"]);
     expect(
       record(prior, CachePolicyProjection.make({ ...base, globalConfiguration: { ui: "stream" } }), alpha).stamped
     ).toStrictEqual(["//"]);
@@ -138,7 +140,7 @@ describe("cache baseline per-subject review records", () => {
   });
 
   it("stamps new subjects and drops subjects that left the projection", () => {
-    const next = record(prior, projectionOf([nodes[1], nodes[2], node("@beep/delta#lint", 16)]), alpha);
+    const next = record(prior, projectionOf([rootNode, alphaNode, node("@beep/delta#lint", 16)]), alpha);
     expect(next.stamped).toStrictEqual(["@beep/delta"]);
     expect(next.dropped).toStrictEqual(["@beep/beta"]);
     expect(Rec.keys(next.baseline.reviews)).toStrictEqual(["//", "@beep/alpha", "@beep/delta"]);
@@ -147,7 +149,7 @@ describe("cache baseline per-subject review records", () => {
   it("honours named subjects and rejects drift outside them", () => {
     const forced = record(prior, base, alpha, { subjects: O.some(["@beep/beta"]) });
     expect(forced.stamped).toStrictEqual(["@beep/beta"]);
-    const drifted = projectionOf([node("@beep/beta#lint", 98), nodes[1], node("@beep/alpha#lint", 99)]);
+    const drifted = projectionOf([node("@beep/beta#lint", 98), rootNode, node("@beep/alpha#lint", 99)]);
     assertFailure(
       attempt(prior, drifted, alpha, { subjects: O.some(["@beep/alpha"]) }),
       CachePolicyBaselineRejection.make({ unreviewed: ["@beep/beta"], unknown: [] })
