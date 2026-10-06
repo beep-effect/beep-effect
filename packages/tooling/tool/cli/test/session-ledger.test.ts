@@ -205,13 +205,17 @@ describe("sweep ledger gate", () => {
       sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, pullRequestState: O.some("OPEN") }), O.none())
     ).toBe(false);
     expect(sweepWritesLedgerDone(SweepGitState.make(gitStateBase), O.none())).toBe(false);
-    // `yeet sweep --branch feat/lane` from a checkout parked on main.
-    const parked = SweepGitState.make({ ...merged, headBranch: "main" });
+    // `yeet sweep --branch feat/lane` as the second pass from a clone already
+    // back on main: the documented case, so the row closes.
+    expect(sweepWritesLedgerDone(SweepGitState.make({ ...merged, headBranch: "main" }), O.none())).toBe(true);
+    // The same command from a checkout parked on a third branch: that
+    // checkout's own row stays.
+    const parked = SweepGitState.make({ ...merged, headBranch: "feat/other" });
     expect(sweepWritesLedgerDone(parked, O.none())).toBe(false);
     // A retirement vouches for the lane it removed.
     expect(sweepWritesLedgerDone(parked, O.some("/lanes/lane"))).toBe(true);
     expect(
-      sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, headBranch: "main" }), O.some("/lanes/lane"))
+      sweepWritesLedgerDone(SweepGitState.make({ ...gitStateBase, headBranch: "feat/other" }), O.some("/lanes/lane"))
     ).toBe(false);
   });
 });

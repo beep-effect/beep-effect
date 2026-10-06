@@ -20,7 +20,7 @@ file="$root/github.com__${owner}__${name}.jsonl"
 # `fromjson?`, so a torn or corrupt line drops only itself, and a long
 # uncompacted ledger still costs one process.
 jq -r -R -s '
-  [splits("\n") | select(length > 0) | (fromjson? // empty) | select(type == "object")]
+  [split("\n")[] | select(length > 0) | (fromjson? // empty) | select(type == "object")]
   | group_by(.checkout)
   | map(max_by(.recordedAt))
   | map(select(.state != "done"))
