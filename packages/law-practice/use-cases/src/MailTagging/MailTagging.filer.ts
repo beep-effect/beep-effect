@@ -29,11 +29,17 @@ import {
   AttachmentFilerShape,
   DocumentStore,
   FilingLedger,
+  KnownDocuments,
   Mailbox,
   MatterFolderDirectory,
 } from "./MailTagging.ports.ts";
 import { senderRuleCategories } from "./MailTagging.tagger.ts";
-import { DownloadAttachmentRequest, MatterFolderRequest, UploadDocumentRequest } from "./MailTagging.values.ts";
+import {
+  DownloadAttachmentRequest,
+  KnownDocumentRequest,
+  MatterFolderRequest,
+  UploadDocumentRequest,
+} from "./MailTagging.values.ts";
 import type {
   AttachmentSkipReason,
   DocumentFolderId,
@@ -96,13 +102,10 @@ const freeName = (known: ReadonlyArray<FiledContent>, content: FiledContent): st
 const isUsptoSender = (request: FileAttachmentsRequest): boolean =>
   A.contains(senderRuleCategories(request.taxonomy, request.envelope), PracticeCategory.Enum["P: USPTO"]);
 
-const isMatterContact = (request: FileAttachmentsRequest): boolean =>
-  A.some(O.toArray(request.envelope.senderAddress), (address) => A.contains(request.matter.contactAddresses, address));
-
 const destinationOf = (request: FileAttachmentsRequest): O.Option<FilingDestination> =>
   isUsptoSender(request)
     ? O.some(FilingDestination.Enum["uspto-incoming"])
-    : O.liftPredicate(FilingDestination.Enum["from-client"], () => isMatterContact(request));
+    : O.liftPredicate(FilingDestination.Enum["from-client"], () => request.senderIsExclusiveContact);
 
 const skipChecks: ReadonlyArray<
   readonly [AttachmentSkipReason, (meta: MailAttachmentMeta, policy: TaggingPolicy) => boolean]
@@ -148,14 +151,16 @@ const decodeContentHash = S.decodeEffect(Sha256HexFromBytes);
 
 /**
  * Builds the attachment filer over the mailbox, the matter-folder directory,
- * the document store, and the filing ledger.
+ * the document store, the known-documents index, and the filing ledger.
  *
  * **Details**
  *
  * The sender picks the destination. A sender the taxonomy's USPTO rule
- * matches files to `uspto-incoming`; a sender that is a contact address of the
- * matched matter files to `from-client`; any other sender skips every
- * attachment as `sender-not-routable` and downloads nothing. A destination
+ * matches files to `uspto-incoming`; a sender the request marks as an
+ * exclusive contact (a contact address of the matched matter and of no other
+ * matter) files to `from-client`; any other sender, including an address
+ * shared by two matters, skips every attachment as `sender-not-routable` and
+ * downloads nothing. A destination
  * without a folder skips every attachment as `no-folder`.
  *
  * Inline parts, non-file attachments, zero-byte parts, and parts larger than
@@ -163,7 +168,9 @@ const decodeContentHash = S.decodeEffect(Sha256HexFromBytes);
  * any download. Everything else is downloaded and hashed with SHA-256.
  *
  * Content already in the filing ledger for the same matter is counted as
- * deduplicated and not uploaded, whichever destination it went to. A new file
+ * deduplicated and not uploaded, whichever destination it went to. So is
+ * content the known-documents index reports for the matter: it is not
+ * uploaded and gets no filing-ledger line, in either mode. A new file
  * is named `<UTC received date> <sanitized original name>`. When the ledger
  * already has that name in the matter with different content, the first eight
  * hex characters of the hash go before the extension, so a new upload never
@@ -189,11 +196,12 @@ const decodeContentHash = S.decodeEffect(Sha256HexFromBytes);
 export const makeAttachmentFiler: Effect.Effect<
   AttachmentFilerShape,
   never,
-  Mailbox | MatterFolderDirectory | DocumentStore | FilingLedger | Crypto.Crypto
+  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Crypto.Crypto
 > = Effect.gen(function* () {
   const mailbox = yield* Mailbox;
   const folders = yield* MatterFolderDirectory;
   const documents = yield* DocumentStore;
+  const knownDocuments = yield* KnownDocuments;
   const ledger = yield* FilingLedger;
   const crypto = yield* Crypto.Crypto;
   const planned = yield* Ref.make(HashMap.empty<TaggingRunId, ReadonlyArray<FiledContent>>());
@@ -207,6 +215,13 @@ export const makeAttachmentFiler: Effect.Effect<
     );
     return ContentSha256.make(digest);
   });
+
+  const isKnown = (known: ReadonlyArray<FiledContent>, content: FiledContent) =>
+    isContentFiled(known, content)
+      ? Effect.succeed(true)
+      : knownDocuments.has(
+          KnownDocumentRequest.make({ contentSha256: content.contentSha256, matterKey: content.matterKey })
+        );
 
   const store = Effect.fn("AttachmentFiler.store")(function* (
     target: FilingTarget,
@@ -249,7 +264,7 @@ export const makeAttachmentFiler: Effect.Effect<
     );
     const contentSha256 = yield* contentHash(bytes);
     const candidate = { contentSha256, matterKey, fileName: datedName(target.request, meta) };
-    if (isContentFiled(state.known, candidate)) {
+    if (yield* isKnown(state.known, candidate)) {
       return deduped(state);
     }
     const content = { ...candidate, fileName: freeName(state.known, candidate) };

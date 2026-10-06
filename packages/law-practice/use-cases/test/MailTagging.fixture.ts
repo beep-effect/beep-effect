@@ -30,6 +30,8 @@ import {
   DocumentStoreShape,
   FilingLedger,
   FilingLedgerShape,
+  KnownDocuments,
+  KnownDocumentsShape,
   MailAttachmentMeta,
   Mailbox,
   MailboxShape,
@@ -170,6 +172,8 @@ type WorldOptions = {
   readonly envelopes: ReadonlyArray<MailEnvelope>;
   readonly attachments?: ReadonlyArray<readonly [MailMessageId, ReadonlyArray<FakeAttachment>]>;
   readonly pageSize?: number;
+  /** Matter index the directory answers; the two-matter `index` when absent. */
+  readonly index?: MatterIndex;
   /** Makes every SHA-256 digest fail, as an unavailable platform would. */
   readonly digestFails?: boolean;
 };
@@ -184,6 +188,9 @@ type WorldShape = {
   readonly categoryWrites: Ref.Ref<ReadonlyArray<SetCategoriesRequest>>;
   readonly folderRequests: Ref.Ref<ReadonlyArray<string>>;
   readonly downloads: Ref.Ref<number>;
+  /** `<sha256> <matterKey>` pairs the document system already holds. */
+  readonly knownDocuments: Ref.Ref<ReadonlyArray<string>>;
+  readonly index: MatterIndex;
   /** 1-based `listMessagesSince` call that fails, when set. */
   readonly failingListCall: Ref.Ref<O.Option<number>>;
   /** 1-based `setCategories` call that fails, when set. */
@@ -195,6 +202,7 @@ type WorldShape = {
   readonly writesOf: (prefix: string) => Effect.Effect<ReadonlyArray<string>>;
   readonly mailbox: MailboxShape;
   readonly documents: DocumentStoreShape;
+  readonly known: KnownDocumentsShape;
   readonly tagLedger: TagLedgerShape;
   readonly filingLedger: FilingLedgerShape;
   readonly checkpoints: BackfillCheckpointStoreShape;
@@ -238,6 +246,7 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
   const categoryWrites = yield* Ref.make<ReadonlyArray<SetCategoriesRequest>>([]);
   const folderRequests = yield* Ref.make<ReadonlyArray<string>>([]);
   const downloads = yield* Ref.make(0);
+  const knownDocuments = yield* Ref.make<ReadonlyArray<string>>([]);
   const categoryCalls = yield* Ref.make(0);
   const listCalls = yield* Ref.make(0);
   const attachments = HashMap.fromIterable(options.attachments ?? []);
@@ -318,6 +327,12 @@ const makeWorld = Effect.fn("MailTaggingFixture.makeWorld")(function* (options: 
     categoryWrites,
     folderRequests,
     downloads,
+    knownDocuments,
+    index: options.index ?? index,
+    known: KnownDocumentsShape.make({
+      has: (request) =>
+        Effect.map(Ref.get(knownDocuments), A.contains(`${request.contentSha256} ${request.matterKey}`)),
+    }),
     mailbox,
     folders: MatterFolderDirectoryShape.make({
       folderFor: (request) =>
@@ -383,7 +398,14 @@ const Ports = Layer.mergeAll(
     MatterFolderDirectory,
     Effect.map(World, (world) => world.folders)
   ),
-  Layer.succeed(MatterDirectory, MatterDirectoryShape.make({ snapshot: Effect.succeed(index) }))
+  Layer.effect(
+    KnownDocuments,
+    Effect.map(World, (world) => world.known)
+  ),
+  Layer.effect(
+    MatterDirectory,
+    Effect.map(World, (world) => MatterDirectoryShape.make({ snapshot: Effect.succeed(world.index) }))
+  )
 );
 
 const UseCases = Layer.merge(

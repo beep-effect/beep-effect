@@ -16,17 +16,16 @@ import {
   BackfillCheckpointStoreShape,
   FilingLedger,
   FilingLedgerShape,
-  MailTaggingStateError,
   TagLedger,
   TagLedgerShape,
 } from "@beep/law-practice-use-cases/MailTagging";
-import { Effect, FileSystem, Layer, Path } from "effect";
-import * as A from "effect/Array";
+import { Effect, Layer, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { decodeLines, makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
 import { MailTaggingStateLocation } from "./MailTagging.state.ts";
 import type { MailTaggingStateStore } from "@beep/law-practice-use-cases/MailTagging";
+import type { FileSystem } from "effect";
 
 type StateRequirements = MailTaggingStateLocation | FileSystem.FileSystem | Path.Path;
 
@@ -35,46 +34,13 @@ type JsonLineCodec<A> = {
   readonly decode: (line: string) => Effect.Effect<A, S.SchemaError>;
 };
 
-const textEncoder = new TextEncoder();
-
-const numbered = (line: string, index: number): readonly [number, string] => [index + 1, line];
-
-const numberedLines = (text: string): ReadonlyArray<readonly [number, string]> =>
-  A.filter(A.map(Str.split(text, "\n"), numbered), ([, line]) => Str.isNonEmpty(line));
-
 const makeStateFile = Effect.fn("MailTaggingState.makeStateFile")(function* (
   store: MailTaggingStateStore,
   file: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const location = yield* MailTaggingStateLocation;
-  const target = path.join(location.stateDirectory, file);
-  const staging = `${target}.tmp`;
-  const failing = (operation: string) =>
-    Effect.mapError((cause: unknown) => MailTaggingStateError.unavailable(store, file, operation, cause));
-
-  const write = (destination: string, flag: "a" | "w", text: string) =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        yield* fs.makeDirectory(location.stateDirectory, { recursive: true });
-        const handle = yield* fs.open(destination, { flag });
-        yield* handle.writeAll(textEncoder.encode(text));
-        yield* handle.sync;
-      })
-    );
-
-  return {
-    corrupt: (line: O.Option<number>) => () => MailTaggingStateError.corrupt(store, file, line),
-    unencodable: () => MailTaggingStateError.unavailable(store, file, "encode"),
-    read: Effect.gen(function* () {
-      const exists = yield* fs.exists(target);
-      return exists ? O.some(yield* fs.readFileString(target)) : O.none<string>();
-    }).pipe(failing("read")),
-    append: (text: string) => write(target, "a", text).pipe(failing("append")),
-    replace: (text: string) =>
-      Effect.andThen(write(staging, "w", text), fs.rename(staging, target)).pipe(failing("save")),
-  };
+  return yield* makeStateFileAt(store, path.join(location.stateDirectory, file));
 });
 
 const makeJsonlLedger = Effect.fn("MailTaggingState.makeJsonlLedger")(function* <A>(
@@ -83,15 +49,15 @@ const makeJsonlLedger = Effect.fn("MailTaggingState.makeJsonlLedger")(function* 
   codec: JsonLineCodec<A>
 ) {
   const state = yield* makeStateFile(store, file);
-  const decodeLine = ([number, line]: readonly [number, string]) =>
-    Effect.mapError(codec.decode(line), state.corrupt(O.some(number)));
 
   return {
     append: Effect.fn("MailTaggingState.appendLine")(function* (value: A) {
       const line = yield* Effect.mapError(codec.encode(value), state.unencodable);
       yield* state.append(`${line}\n`);
     }),
-    read: Effect.flatMap(state.read, (text) => Effect.forEach(numberedLines(O.getOrElse(text, () => "")), decodeLine)),
+    read: Effect.flatMap(state.read, (text) =>
+      decodeLines({ decode: codec.decode, corrupt: state.corrupt })(O.getOrElse(text, () => ""))
+    ),
   };
 });
 

@@ -166,6 +166,14 @@ const matterToFile = (scope: JobScope, verdict: Verdict): O.Option<MatterIndexEn
     (matterKey) => A.findFirst(scope.index.entries, (entry) => entry.matterKey === matterKey)
   );
 
+const isContactOf = (entry: MatterIndexEntry, envelope: MailEnvelope): boolean =>
+  A.some(O.toArray(envelope.senderAddress), (address) => A.contains(entry.contactAddresses, address));
+
+// A sender listed under more than one matter says nothing about which matter a file belongs to.
+const isExclusiveContact = (index: MatterIndex, matter: MatterIndexEntry, envelope: MailEnvelope): boolean =>
+  isContactOf(matter, envelope) &&
+  !A.some(index.entries, (entry) => entry.matterKey !== matter.matterKey && isContactOf(entry, envelope));
+
 const unensuredMatter = (ensured: HashSet.HashSet<MatterKey>, verdict: Verdict): O.Option<MatterKey> =>
   O.filter(
     matchedMatter(verdict.decision),
@@ -206,7 +214,8 @@ const hasPagesLeft = (pagesLeft: O.Option<number>): boolean =>
  *
  * Any other message is decided; the categories to add are the decision's
  * categories the message does not carry yet. For a matched message with
- * attachments the filer runs first. Then, in `apply` with at least one
+ * attachments the filer runs first; the job tells it whether the sender is a
+ * contact address of the matched matter and of no other matter in the index. Then, in `apply` with at least one
  * category to add, the job appends the ledger entry and only afterwards writes
  * the existing categories followed by the additions, so foreign categories and
  * their order survive. A match updates the in-memory conversation map, so
@@ -259,6 +268,7 @@ export const makeMailTaggingJob: Effect.Effect<
             envelope: verdict.envelope,
             matter,
             taxonomy: scope.taxonomy,
+            senderIsExclusiveContact: isExclusiveContact(scope.index, matter, verdict.envelope),
             mode: scope.request.mode,
             runId: scope.request.runId,
             policy: scope.request.policy,
@@ -270,6 +280,7 @@ export const makeMailTaggingJob: Effect.Effect<
     mailbox.setCategories(
       SetCategoriesRequest.make({
         messageId: envelope.messageId,
+        expected: envelope.categories,
         categories: A.appendAll(envelope.categories, adds),
         changeKey: envelope.changeKey,
       })

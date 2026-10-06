@@ -7,6 +7,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
+  ContentSha256,
   DocumentFolderId,
   FilingDestination,
   MailAttachmentId,
@@ -138,6 +139,12 @@ export class MailPage extends S.Class<MailPage>($I`MailPage`)(
  * is the envelope's version token, passed through so the adapter can detect a
  * concurrent edit; re-reading and retrying is the adapter's concern.
  *
+ * `expected` is the list the caller read before it computed `categories`. The
+ * difference between the two is the edit the caller means: what `categories`
+ * adds to `expected` and what it drops from it. An adapter that finds the
+ * message changed underneath replays that edit on the fresh list, so a
+ * category someone else added or removed in between is kept as they left it.
+ *
  * **Example** (Append an owned category)
  *
  * ```ts
@@ -146,6 +153,7 @@ export class MailPage extends S.Class<MailPage>($I`MailPage`)(
  *
  * const request = SetCategoriesRequest.make({
  *   messageId: MailMessageId.make("msg-0001"),
+ *   expected: ["Personal"],
  *   categories: ["Personal", "P: USPTO"]
  * })
  * console.log(request.categories.length) // 2
@@ -158,6 +166,9 @@ export class SetCategoriesRequest extends S.Class<SetCategoriesRequest>($I`SetCa
   {
     messageId: MailMessageId.annotateKey({
       description: "Message whose categories are replaced.",
+    }),
+    expected: S.Array(S.String).annotateKey({
+      description: "Category list the caller read before computing the new one.",
     }),
     categories: S.Array(S.String).annotateKey({
       description: "Complete category list the message carries afterwards, in order.",
@@ -326,6 +337,40 @@ export class UploadDocumentRequest extends S.Class<UploadDocumentRequest>($I`Upl
 ) {}
 
 /**
+ * Question put to the known-documents index: is this content already in the
+ * document system for this matter.
+ *
+ * **Example** (Ask about one hash)
+ *
+ * ```ts
+ * import { ContentSha256, MatterKey } from "@beep/law-practice-domain/values/MailTagging"
+ * import { KnownDocumentRequest } from "@beep/law-practice-use-cases/MailTagging"
+ *
+ * const request = KnownDocumentRequest.make({
+ *   contentSha256: ContentSha256.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   matterKey: MatterKey.make("acme.10001")
+ * })
+ * console.log(request.matterKey) // "acme.10001"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnownDocumentRequest extends S.Class<KnownDocumentRequest>($I`KnownDocumentRequest`)(
+  {
+    contentSha256: ContentSha256.annotateKey({
+      description: "SHA-256 of the content in question.",
+    }),
+    matterKey: MatterKey.annotateKey({
+      description: "Matter the content would be filed under.",
+    }),
+  },
+  $I.annote("KnownDocumentRequest", {
+    description: "Content hash and matter to look up in the known-documents index.",
+  })
+) {}
+
+/**
  * Everything the pure tagger reads besides the message itself.
  *
  * **Example** (Build a context with the default policy)
@@ -395,6 +440,7 @@ export class MatterTaggerContext extends S.Class<MatterTaggerContext>($I`MatterT
  *   }),
  *   matter: MatterIndexEntry.make({ matterKey, clientKey: MatterClientKey.make("acme") }),
  *   taxonomy: defaultMailTaxonomy([matterKey]),
+ *   senderIsExclusiveContact: false,
  *   mode: "dry-run",
  *   runId: TaggingRunId.make("run-0001")
  * })
@@ -414,6 +460,9 @@ export class FileAttachmentsRequest extends S.Class<FileAttachmentsRequest>($I`F
     }),
     taxonomy: MailTaxonomy.annotateKey({
       description: "Taxonomy whose USPTO rule routes office mail.",
+    }),
+    senderIsExclusiveContact: S.Boolean.annotateKey({
+      description: "Whether the sender is a contact address of the matched matter and of no other matter in the index.",
     }),
     mode: TaggingMode.annotateKey({
       description: "Whether to upload or only count.",

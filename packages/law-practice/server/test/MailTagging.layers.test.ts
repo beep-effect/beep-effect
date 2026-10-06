@@ -27,6 +27,8 @@ import {
 import {
   DocumentStore,
   DocumentStoreShape,
+  KnownDocuments,
+  KnownDocumentsShape,
   MailAttachmentMeta,
   Mailbox,
   MailboxShape,
@@ -129,6 +131,7 @@ const Providers = Layer.mergeAll(
       ),
     })
   ),
+  Layer.succeed(KnownDocuments, KnownDocumentsShape.make({ has: () => Effect.succeed(false) })),
   Layer.succeed(
     MatterFolderDirectory,
     MatterFolderDirectoryShape.make({

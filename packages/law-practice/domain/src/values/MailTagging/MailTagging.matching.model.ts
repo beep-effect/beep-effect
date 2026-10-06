@@ -103,6 +103,11 @@ export class MatterIndexEntry extends S.Class<MatterIndexEntry>($I`MatterIndexEn
  * and never verified, has no safe `MatterKey`. Mail that names one of its
  * identifiers is never tagged to a matter; it is left for the attorney.
  *
+ * `familyKeys` holds the matter's family key, client-keyed or bare. A tagger
+ * compares it only with the family of a docket reference it extracted, never
+ * with a loose word of the message, because a bare family is a short digit
+ * run that ordinary text repeats.
+ *
  * **Example** (Describe an unattributed matter)
  *
  * ```ts
@@ -134,6 +139,11 @@ export class UnattributedMatter extends S.Class<UnattributedMatter>($I`Unattribu
       .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
       .annotateKey({
         description: "Digits-only patent numbers granted in the matter.",
+      }),
+    familyKeys: S.Array(MatterDocketNumber)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed([])), S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description: "Family keys of the matter, client-keyed or bare; compared only with extracted docket references.",
       }),
   },
   $I.annote("UnattributedMatter", {

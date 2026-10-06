@@ -19,6 +19,7 @@ import type {
   BackfillCheckpointStore,
   DocumentStore,
   FilingLedger,
+  KnownDocuments,
   Mailbox,
   MatterDirectory,
   MatterFolderDirectory,
@@ -45,7 +46,7 @@ import type * as Crypto from "effect/Crypto";
 export const AttachmentFilerLive: Layer.Layer<
   AttachmentFiler,
   never,
-  Mailbox | MatterFolderDirectory | DocumentStore | FilingLedger | Crypto.Crypto
+  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Crypto.Crypto
 > = Layer.effect(AttachmentFiler, makeAttachmentFiler);
 
 /**
@@ -98,8 +99,8 @@ export const MailTaggingUndoLive: Layer.Layer<MailTaggingUndo, never, Mailbox | 
  * **Details**
  *
  * What remains to provide is every port: the mailbox, the matter and
- * matter-folder directories, the document store, both ledgers, the checkpoint
- * store, and `Crypto` for content hashes.
+ * matter-folder directories, the document store, the known-documents index,
+ * both ledgers, the checkpoint store, and `Crypto` for content hashes.
  *
  * **Example** (Wire every mail-tagging use-case)
  *
@@ -120,6 +121,7 @@ export const MailTaggingUseCasesLive: Layer.Layer<
   | MatterDirectory
   | MatterFolderDirectory
   | DocumentStore
+  | KnownDocuments
   | TagLedger
   | FilingLedger
   | BackfillCheckpointStore

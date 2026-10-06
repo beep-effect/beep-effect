@@ -8,6 +8,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import {
   acmeEntry,
   attachment,
@@ -30,15 +31,22 @@ type Filing = {
   readonly mode: TaggingMode;
   readonly message: MailEnvelope;
   readonly matter?: MatterIndexEntry;
+  /** Whether the job found the sender to be a contact of this matter alone; derived from the matter when absent. */
+  readonly exclusive?: boolean;
 };
+
+const isContactOf = (matter: MatterIndexEntry, message: MailEnvelope): boolean =>
+  A.some(O.toArray(message.senderAddress), (address) => A.contains(matter.contactAddresses, address));
 
 const file = Effect.fn("MailTaggingFilerTest.file")(function* (filing: Filing) {
   const filer = yield* AttachmentFiler;
+  const matter = filing.matter ?? acmeEntry;
   return yield* filer.file(
     FileAttachmentsRequest.make({
       envelope: filing.message,
-      matter: filing.matter ?? acmeEntry,
+      matter,
       taxonomy,
+      senderIsExclusiveContact: filing.exclusive ?? isContactOf(matter, filing.message),
       mode: filing.mode,
       runId,
     })
@@ -95,6 +103,52 @@ describe("MailTagging attachment filer", () => {
           "folder-acme-from-client",
         ]);
         expect(A.map(yield* Ref.get(state.filingEntries), (entry) => entry.destination)).toStrictEqual(["from-client"]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("shared contact", (it) => {
+    it.effect(
+      "does not route a contact address that another matter also lists",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const report = yield* file({ mode: "apply", message: clientMail, exclusive: false });
+
+        expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
+        expect(report.attachmentsFiled).toBe(0);
+        expect(yield* Ref.get(state.downloads)).toBe(0);
+        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("known documents", (it) => {
+    it.effect(
+      "counts content the document system already holds for the matter as deduplicated and uploads nothing",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.knownDocuments, [`${pdfSha256} acme.10001`]);
+        const applied = yield* file({ mode: "apply", message: usptoMail });
+        const preview = yield* file({ mode: "dry-run", message: clientMail });
+
+        expect([applied.attachmentsDeduped, applied.attachmentsFiled, applied.wrote]).toStrictEqual([1, 0, false]);
+        expect([preview.attachmentsDeduped, preview.attachmentsFiled]).toStrictEqual([1, 0]);
+        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+        expect(yield* Ref.get(state.filingEntries)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(repeatedPdf(), { timeout: "30 seconds" })("known documents of another matter", (it) => {
+    it.effect(
+      "still files content the index holds only for another matter",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        yield* Ref.set(state.knownDocuments, [`${pdfSha256} globex.20002`]);
+        const report = yield* file({ mode: "apply", message: usptoMail });
+
+        expect([report.attachmentsDeduped, report.attachmentsFiled]).toStrictEqual([0, 1]);
+        expect(yield* state.writesOf("upload:")).toStrictEqual(["upload:2026-07-01 office-action.pdf"]);
       })
     );
   });

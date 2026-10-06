@@ -1,4 +1,4 @@
-import { TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
+import { MatterIndex, MatterIndexEntry, TaggingRunId } from "@beep/law-practice-domain/values/MailTagging";
 import {
   activeTagEntries,
   MailTaggingJob,
@@ -14,7 +14,18 @@ import { assertNone } from "@effect/vitest/utils";
 import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { acme, attachment, envelope, runId, scenario, since, World } from "./MailTagging.fixture.ts";
+import {
+  acme,
+  acmeEntry,
+  attachment,
+  envelope,
+  globexEntry,
+  index,
+  runId,
+  scenario,
+  since,
+  World,
+} from "./MailTagging.fixture.ts";
 import type { MailEnvelope, TaggingMode, TaggingRunReport } from "@beep/law-practice-domain/values/MailTagging";
 
 const officeAction = envelope({
@@ -38,6 +49,27 @@ const world = () =>
   scenario({
     envelopes: mailbox,
     attachments: [[officeAction.messageId, [attachment({ id: "att-1", name: "office-action.pdf", bytes: [1, 2, 3] })]]],
+  });
+
+const clientReply = envelope({
+  at: 6,
+  subject: "Re: 16/123,456 signed declaration",
+  sender: "counsel@acme.example.test",
+  categories: ["Personal"],
+  hasAttachments: true,
+});
+
+// The same contact address listed under a second matter.
+const sharedContactIndex = MatterIndex.make({
+  builtAt: since,
+  entries: [acmeEntry, MatterIndexEntry.make({ ...globexEntry, contactAddresses: acmeEntry.contactAddresses })],
+});
+
+const clientWorld = (matters: MatterIndex) =>
+  scenario({
+    envelopes: [clientReply],
+    attachments: [[clientReply.messageId, [attachment({ id: "att-9", name: "declaration.pdf", bytes: [9] })]]],
+    index: matters,
   });
 
 const run = Effect.fn("MailTaggingJobTest.run")(function* (mode: TaggingMode, id: string) {
@@ -249,7 +281,7 @@ describe("MailTagging job", () => {
         const state = yield* World;
         yield* run("apply", runId);
         yield* state.mailbox.setCategories(
-          SetCategoriesRequest.make({ messageId: envelope({ at: 5 }).messageId, categories: [] })
+          SetCategoriesRequest.make({ messageId: envelope({ at: 5 }).messageId, expected: [], categories: [] })
         );
         const categoryWrites = yield* state.writesOf("setCategories:");
         const ledgerLines = yield* Ref.get(state.tagRecords);
@@ -281,6 +313,43 @@ describe("MailTagging job", () => {
   });
 });
 
+describe("MailTagging job client filing", () => {
+  it.layer(clientWorld(index), { timeout: "30 seconds" })("exclusive contact", (it) => {
+    it.effect(
+      "files a matched message from a contact of that matter alone under from-client",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const report = yield* run("apply", runId);
+        const undone = yield* undo("apply", "undo-0001");
+        const categoryWrites = yield* Ref.get(state.categoryWrites);
+
+        expect([report.matched, report.attachmentsFiled]).toStrictEqual([1, 1]);
+        expect(A.map(yield* Ref.get(state.filingEntries), (entry) => entry.destination)).toStrictEqual(["from-client"]);
+        expect(undone.categoriesRemoved).toBe(2);
+        expect(A.map(categoryWrites, (write) => [write.expected, write.categories])).toStrictEqual([
+          [["Personal"], ["Personal", "M: acme.10001", "P: Client"]],
+          [["Personal", "M: acme.10001", "P: Client"], ["Personal"]],
+        ]);
+      })
+    );
+  });
+
+  it.layer(clientWorld(sharedContactIndex), { timeout: "30 seconds" })("shared contact", (it) => {
+    it.effect(
+      "tags the message and files nothing when another matter lists the same contact address",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const report = yield* run("apply", runId);
+
+        expect([report.matched, report.attachmentsFiled]).toStrictEqual([1, 0]);
+        expect(report.attachmentsSkipped["sender-not-routable"]).toBe(1);
+        expect(yield* state.writesOf("upload:")).toStrictEqual([]);
+        expect(yield* state.categoriesOf(6)).toStrictEqual(["Personal", "M: acme.10001", "P: Client"]);
+      })
+    );
+  });
+});
+
 describe("MailTagging undo", () => {
   it.layer(world(), { timeout: "30 seconds" })("after another actor's edit", (it) => {
     it.effect(
@@ -290,7 +359,11 @@ describe("MailTagging undo", () => {
         yield* run("apply", runId);
         const tagged = yield* state.categoriesOf(2);
         yield* state.mailbox.setCategories(
-          SetCategoriesRequest.make({ messageId: envelope({ at: 2 }).messageId, categories: ["Follow up", ...tagged] })
+          SetCategoriesRequest.make({
+            messageId: envelope({ at: 2 }).messageId,
+            expected: tagged,
+            categories: ["Follow up", ...tagged],
+          })
         );
         const writesBefore = yield* Ref.get(state.writes);
         const planned = yield* undo("dry-run", "undo-0000");
@@ -327,7 +400,11 @@ describe("MailTagging undo", () => {
           A.filter((message) => message.messageId !== "msg-3")
         );
         yield* state.mailbox.setCategories(
-          SetCategoriesRequest.make({ messageId: envelope({ at: 5 }).messageId, categories: ["Follow up"] })
+          SetCategoriesRequest.make({
+            messageId: envelope({ at: 5 }).messageId,
+            expected: [],
+            categories: ["Follow up"],
+          })
         );
         const categoryWrites = yield* state.writesOf("setCategories:");
         const report = yield* undo("apply", "undo-0001");

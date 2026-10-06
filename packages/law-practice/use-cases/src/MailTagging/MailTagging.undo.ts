@@ -103,6 +103,7 @@ export const makeMailTaggingUndo: Effect.Effect<MailTaggingUndoShape, never, Mai
             mailbox.setCategories(
               SetCategoriesRequest.make({
                 messageId: envelope.messageId,
+                expected: envelope.categories,
                 categories: remaining(envelope, restoration.removed),
                 changeKey: envelope.changeKey,
               })

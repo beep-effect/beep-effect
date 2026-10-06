@@ -38,6 +38,7 @@ export const MailTaggingPort = LiteralKit([
   "MatterDirectory",
   "MatterFolderDirectory",
   "DocumentStore",
+  "KnownDocuments",
   "ContentHasher",
 ]).pipe(
   $I.annoteSchema("MailTaggingPort", {
@@ -52,6 +53,41 @@ export const MailTaggingPort = LiteralKit([
  * @since 0.0.0
  */
 export type MailTaggingPort = typeof MailTaggingPort.Type;
+
+/**
+ * How a mail-tagging port call failed.
+ *
+ * **Details**
+ *
+ * `unavailable` is any provider failure. `conflict` is a create the provider
+ * refused because the target already exists. `throttled` is a rate-limit or
+ * quota refusal: the run must stop instead of trying the next message.
+ *
+ * **Example** (Guard a port failure kind)
+ *
+ * ```ts
+ * import { MailTaggingPortFailure } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(MailTaggingPortFailure)("throttled")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MailTaggingPortFailure = LiteralKit(["unavailable", "conflict", "throttled"]).pipe(
+  $I.annoteSchema("MailTaggingPortFailure", {
+    description: "Whether a port call failed, hit an existing target, or was rate limited.",
+  })
+);
+
+/**
+ * Runtime type for {@link MailTaggingPortFailure}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MailTaggingPortFailure = typeof MailTaggingPortFailure.Type;
 
 /**
  * A mailbox, matter-directory, folder-directory, document-store, or hashing
@@ -83,6 +119,11 @@ export class MailTaggingPortError extends S.TaggedError<MailTaggingPortError>($I
     port: MailTaggingPort.annotateKey({
       description: "Port whose call failed.",
     }),
+    failure: MailTaggingPortFailure.pipe(
+      S.withConstructorDefault(Effect.succeed(MailTaggingPortFailure.Enum.unavailable))
+    ).annotateKey({
+      description: "Whether the call failed, hit an existing target, or was rate limited.",
+    }),
     operation: S.NonEmptyString.annotateKey({
       description: "Port method that failed.",
     }),
@@ -112,6 +153,33 @@ export class MailTaggingPortError extends S.TaggedError<MailTaggingPortError>($I
     reason: string,
     cause?: unknown
   ): MailTaggingPortError => MailTaggingPortError.make({ cause: O.fromUndefinedOr(cause), port, operation, reason });
+
+  /**
+   * Builds the failure of a create the provider refused because the target
+   * already exists.
+   *
+   * @param port - Port whose call failed.
+   * @param operation - Port method that failed.
+   * @param reason - Diagnostic made of ids, counts, and status text only.
+   * @returns The typed conflict failure.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly conflict = (port: MailTaggingPort, operation: string, reason: string): MailTaggingPortError =>
+    MailTaggingPortError.make({ port, operation, reason, failure: "conflict" });
+
+  /**
+   * Builds the failure of a rate-limit or quota refusal, which ends the run.
+   *
+   * @param port - Port whose call failed.
+   * @param operation - Port method that failed.
+   * @param reason - Diagnostic made of ids, counts, and status text only.
+   * @returns The typed throttled failure.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly throttled = (port: MailTaggingPort, operation: string, reason: string): MailTaggingPortError =>
+    MailTaggingPortError.make({ port, operation, reason, failure: "throttled" });
 }
 
 /**
@@ -129,9 +197,17 @@ export class MailTaggingPortError extends S.TaggedError<MailTaggingPortError>($I
  * @category schemas
  * @since 0.0.0
  */
-export const MailTaggingStateStore = LiteralKit(["tag-ledger", "filing-ledger", "checkpoint"]).pipe(
+export const MailTaggingStateStore = LiteralKit([
+  "tag-ledger",
+  "filing-ledger",
+  "checkpoint",
+  "matter-contacts",
+  "matter-folders",
+  "known-documents",
+  "provider-call-ledger",
+]).pipe(
   $I.annoteSchema("MailTaggingStateStore", {
-    description: "Durable state a mail-tagging run reads and writes.",
+    description: "Durable state and private operator files a mail-tagging run reads and writes.",
   })
 );
 

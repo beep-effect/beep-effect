@@ -22,6 +22,7 @@ import { EffectOutput } from "../internal/effectOutput.ts";
 import {
   DownloadAttachmentRequest,
   FileAttachmentsRequest,
+  KnownDocumentRequest,
   ListMessagesSinceRequest,
   MatterFolderRequest,
   RunMailTaggingRequest,
@@ -56,7 +57,9 @@ const $I = $LawPracticeUseCasesId.create("MailTagging/MailTagging.ports");
  * `since`. An implementation covers the inbox, its subfolders, and Sent Items,
  * and excludes Drafts, Deleted Items, and Junk. `getEnvelope` answers none for
  * a message the mailbox no longer has. `setCategories` carries the envelope's
- * `changeKey`; detecting a stale token and re-reading is the adapter's job.
+ * `changeKey` and the list the caller read; detecting a stale token,
+ * re-reading, and replaying the caller's edit on the fresh list is the
+ * adapter's job.
  * `ensureMasterCategories` creates the missing master categories and answers
  * how many it created.
  *
@@ -333,6 +336,65 @@ export class DocumentStoreShape extends S.Class<DocumentStoreShape>($I`DocumentS
  * @since 0.0.0
  */
 export class DocumentStore extends Context.Service<DocumentStore, DocumentStoreShape>()($I`DocumentStore`) {}
+
+/**
+ * Service shape of the known-documents index: content the document system
+ * already holds for a matter, whoever put it there.
+ *
+ * **Details**
+ *
+ * The filing ledger knows only what this service uploaded. The index also
+ * covers files a migration or a person placed, so the filer asks it after
+ * hashing and before any upload.
+ *
+ * **Example** (Build an index that knows nothing)
+ *
+ * ```ts
+ * import { KnownDocumentsShape } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as Effect from "effect/Effect"
+ *
+ * const known = KnownDocumentsShape.make({ has: () => Effect.succeed(false) })
+ * console.log(typeof known.has) // "function"
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class KnownDocumentsShape extends S.Class<KnownDocumentsShape>($I`KnownDocumentsShape`)(
+  {
+    has: Fn({
+      input: KnownDocumentRequest,
+      output: EffectOutput<boolean, MailTaggingPortError>(),
+    }).annotateKey({
+      description: "Whether the document system already holds this content for this matter.",
+    }),
+  },
+  $I.annote("KnownDocumentsShape", {
+    description: "Known-documents port: content the document system already holds for a matter.",
+  })
+) {}
+
+/**
+ * Known-documents port tag.
+ *
+ * **Example** (Provide an index that knows nothing)
+ *
+ * ```ts
+ * import { KnownDocuments, KnownDocumentsShape } from "@beep/law-practice-use-cases/MailTagging"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const KnownDocumentsNone = Layer.succeed(
+ *   KnownDocuments,
+ *   KnownDocumentsShape.make({ has: () => Effect.succeed(false) })
+ * )
+ * console.log(Layer.isLayer(KnownDocumentsNone)) // true
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class KnownDocuments extends Context.Service<KnownDocuments, KnownDocumentsShape>()($I`KnownDocuments`) {}
 
 /**
  * Service shape of the append-only tag ledger.
