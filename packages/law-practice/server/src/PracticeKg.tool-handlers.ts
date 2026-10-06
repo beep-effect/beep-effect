@@ -10,6 +10,8 @@ import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgGraphToolRow,
+  PracticeKgMatterLookupRequest,
+  PracticeKgMatterToolRow,
   PracticeKgToolError,
   PracticeKgToolkit,
   PracticeKgToolResult,
@@ -18,14 +20,17 @@ import {
   practiceKgEmailFieldTiers,
   practiceKgFamilyFieldTiers,
   practiceKgGraphFieldTiers,
+  practiceKgMatterFieldTiers,
 } from "@beep/law-practice-use-cases/server";
 import { estimateJsonSize, FieldTierName, projectFieldTier, toColumnarEnvelope } from "@beep/mcp-kit";
 import * as O from "@beep/utils/Option";
 import { Effect, Path } from "effect";
 import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
+import { lookupPracticeKgMatters } from "./PracticeKg.matters.ts";
 import { PracticeKgQueries } from "./PracticeKg.queries.ts";
 import {
   addPracticeKgCorpusPointers,
@@ -36,6 +41,7 @@ import {
   decodePracticeKgGraphRows,
   toToolRecord,
 } from "./PracticeKg.rows.ts";
+import type { PracticeKgToolFailureReason } from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
 import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
@@ -45,7 +51,18 @@ const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-record
 const candidateStatus = PracticeKgEpistemicStatus.Enum["candidate-unreviewed"];
 const emailLinkageNote =
   "Matter linkage is archive-level confidence only; a matching message header is not message-level matter proof.";
+const nodeProvenanceNote =
+  "A node's provenance names the catalog row or USPTO record it was projected from. attributionSource says why it sits in its family: filename and restored-name come from file names alone, text-reference and family-consensus from the documents' own client references, mention means the number is only cited there. recycled-unverified rows rest on recycle-bin restore stubs.";
+const provenanceNotFoundNote =
+  "No graph node or document in this bundle has that identity. Check the key with kg_find or kg_matter_lookup; application and patent numbers are stored as digits only.";
+const matterLookupNote =
+  "Only resolution unique is safe to act on. ambiguous means several matters share the reference; none means the bundle does not know it. A matter with no client, or with recycled-unverified status, needs a person to confirm it.";
 const tierOrder = A.reverse(FieldTierName.literals);
+
+const withheldColumnsFor = (
+  tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
+  tier: FieldTierName
+): ReadonlyArray<string> => A.difference(R.keys(tiers.complete.fields), R.keys(tiers[tier].fields));
 
 const likePattern = (value: string | undefined): string | null =>
   O.map(O.fromUndefinedOr(value), (fragment) => `%${fragment}%`).pipe(O.getOrNull);
@@ -85,6 +102,7 @@ const projectRows = (
           data: toColumnarEnvelope(A.take(minimalRows, fitting)),
           tier: "minimal",
           truncated: fitting < A.length(rows),
+          withheld_columns: withheldColumnsFor(tiers, "minimal"),
         });
       },
       onSome: ({ data, tier }) =>
@@ -93,26 +111,59 @@ const projectRows = (
           data,
           tier,
           truncated: false,
+          ...(tier === "complete" ? {} : { withheld_columns: withheldColumnsFor(tiers, tier) }),
         }),
     })
   );
 };
 
+const isToolError = S.is(PracticeKgToolError);
+
+const failureMessages: Readonly<Record<PracticeKgToolFailureReason, string>> = {
+  "row-decode-failed":
+    "The bundle returned rows this server version does not understand; the bundle and server were probably built from different versions.",
+  "store-query-failed": "The bundle store rejected the query; the bundle is damaged or does not match this server.",
+};
+
+const failureOf =
+  (reason: PracticeKgToolFailureReason) =>
+  (_cause: unknown): PracticeKgToolError =>
+    PracticeKgToolError.make({ message: failureMessages[reason], reason, tool: "bundle" });
+
+/*
+ * Stamps the tool name on a failure. A failure that already carries a reason
+ * keeps it, so a caller can tell a store fault from a version mismatch; anything
+ * else is reported as a store fault.
+ */
 const toolFailure =
   (tool: string) =>
-  (_cause: unknown): PracticeKgToolError =>
-    PracticeKgToolError.make({
-      message: "Practice knowledge-graph bundle query failed.",
-      tool,
-    });
+  (cause: unknown): PracticeKgToolError =>
+    isToolError(cause)
+      ? PracticeKgToolError.make({
+          message: cause.message,
+          tool,
+          ...O.getSomesStruct({ reason: O.fromUndefinedOr(cause.reason) }),
+        })
+      : PracticeKgToolError.make({
+          message: failureMessages["store-query-failed"],
+          reason: "store-query-failed",
+          tool,
+        });
+
+const decodeRows =
+  <A>(decode: (input: unknown) => Effect.Effect<ReadonlyArray<A>, S.SchemaError>) =>
+  (rows: unknown): Effect.Effect<ReadonlyArray<A>, PracticeKgToolError> =>
+    decode(rows).pipe(Effect.mapError(failureOf("row-decode-failed")));
 
 const queryPglite = <A>(
   sql: SqlClient.SqlClient,
   statement: string,
   parameters: ReadonlyArray<unknown>,
-  decode: (input: unknown) => Effect.Effect<ReadonlyArray<A>, unknown>
+  decode: (input: unknown) => Effect.Effect<ReadonlyArray<A>, S.SchemaError>
 ): Effect.Effect<ReadonlyArray<A>, PracticeKgToolError> =>
-  sql.unsafe(statement, parameters).pipe(Effect.flatMap(decode), Effect.mapError(toolFailure("pglite")));
+  sql
+    .unsafe(statement, parameters)
+    .pipe(Effect.mapError(failureOf("store-query-failed")), Effect.flatMap(decodeRows(decode)));
 
 /**
  * Live toolkit handlers over injected PGlite SQL, DuckDB, and bundle metadata.
@@ -183,7 +234,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         const rows = yield* duckdb
           .query(PracticeKgQueries.searchText, [request.query, request.family ?? null, request.limit])
           .pipe(
-            Effect.flatMap(decodePracticeKgDocumentRows),
+            Effect.mapError(failureOf("store-query-failed")),
+            Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
             Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_search_text"))
           );
@@ -198,7 +250,8 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             request.range.length,
           ])
           .pipe(
-            Effect.flatMap(decodePracticeKgDocumentRows),
+            Effect.mapError(failureOf("store-query-failed")),
+            Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
             Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
             Effect.mapError(toolFailure("corpus_get_document"))
           );
@@ -213,7 +266,11 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             request.before ?? null,
             likePattern(request.family),
           ])
-          .pipe(Effect.flatMap(decodePracticeKgEmailRows), Effect.mapError(toolFailure("email_search")));
+          .pipe(
+            Effect.mapError(failureOf("store-query-failed")),
+            Effect.flatMap(decodeRows(decodePracticeKgEmailRows)),
+            Effect.mapError(toolFailure("email_search"))
+          );
         return projectRows(
           A.map(rows, toToolRecord),
           practiceKgEmailFieldTiers,
@@ -250,6 +307,56 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
         },
         Effect.mapError(toolFailure("kg_candidate_claims"))
       ),
+      kg_matter_lookup: Effect.fn("PracticeKgTools.kg_matter_lookup")(
+        function* (request) {
+          const result = yield* lookupPracticeKgMatters(
+            PracticeKgMatterLookupRequest.make({ reference: request.reference })
+          ).pipe(Effect.provideService(DuckDb, duckdb), Effect.provideService(PracticeKgBundle, bundle));
+          const rows = A.flatMap(result.matters, (matter) => {
+            const shared = {
+              attributionSource: matter.attributionSource,
+              client: matter.client,
+              family: matter.family,
+              familyKey: matter.familyKey,
+              matchedOn: matter.matchedOn,
+              resolution: result.resolution,
+            };
+            return A.isReadonlyArrayNonEmpty(matter.dockets)
+              ? A.map(matter.dockets, (docket) =>
+                  PracticeKgMatterToolRow.make({
+                    ...shared,
+                    applications: A.join(docket.applicationNumbers, " | "),
+                    docket: docket.docket,
+                    docketKey: docket.docketKey,
+                    docketMatched: docket.matched,
+                    documentCount: docket.documentCount,
+                    epistemicStatus: docket.epistemicStatus,
+                    patents: A.join(docket.patentNumbers, " | "),
+                  })
+                )
+              : [
+                  PracticeKgMatterToolRow.make({
+                    ...shared,
+                    applications: "",
+                    docket: null,
+                    docketKey: null,
+                    docketMatched: false,
+                    documentCount: matter.documentCount,
+                    epistemicStatus: matter.epistemicStatus,
+                    patents: "",
+                  }),
+                ];
+          });
+          return projectRows(
+            A.map(rows, toToolRecord),
+            practiceKgMatterFieldTiers,
+            request.budgetBytes,
+            version,
+            `${matterLookupNote} resolution: ${result.resolution}.`
+          );
+        },
+        Effect.mapError(toolFailure("kg_matter_lookup"))
+      ),
       kg_provenance: Effect.fn("PracticeKgTools.kg_provenance")(
         function* (request) {
           const hasKey = request.iri !== undefined || request.natural_key !== undefined || request.digest !== undefined;
@@ -273,14 +380,16 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             const documents = yield* duckdb
               .query(PracticeKgQueries.provenanceDocument, [request.digest])
               .pipe(
-                Effect.flatMap(decodePracticeKgDocumentRows),
+                Effect.mapError(failureOf("store-query-failed")),
+                Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
                 Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path))
               );
             return projectRows(
               A.map(documents, toToolRecord),
               practiceKgDocumentFieldTiers,
               request.budgetBytes,
-              version
+              version,
+              A.isReadonlyArrayNonEmpty(documents) ? undefined : provenanceNotFoundNote
             );
           }
           const rows = yield* queryPglite(
@@ -289,7 +398,13 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
             [request.iri ?? null, request.natural_key ?? null, null],
             decodePracticeKgGraphRows
           );
-          return projectRows(A.map(rows, toToolRecord), practiceKgGraphFieldTiers, request.budgetBytes, version);
+          return projectRows(
+            A.map(rows, toToolRecord),
+            practiceKgGraphFieldTiers,
+            request.budgetBytes,
+            version,
+            A.isReadonlyArrayNonEmpty(rows) ? nodeProvenanceNote : provenanceNotFoundNote
+          );
         },
         Effect.mapError(toolFailure("kg_provenance"))
       ),
