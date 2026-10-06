@@ -502,6 +502,7 @@ const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(func
     });
   }
   const base = Str.replace(/^origin\//, "")(context.base);
+  const headOwner = yield* originPushOwner(context);
   const rest = yield* capture(
     "gh",
     [
@@ -512,7 +513,7 @@ const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(func
       "-f",
       `title=${input.title}`,
       "-f",
-      `head=${context.branch}`,
+      `head=${headOwner}:${context.branch}`,
       "-f",
       `base=${base}`,
       "-F",

@@ -563,24 +563,31 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       })
     );
 
-    it.effect("creates a draft through REST after GraphQL rate limiting and a confirmed absent PR", () =>
+    it.effect("creates a fork-head draft through REST after GraphQL rate limiting and a confirmed absent PR", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-pr-rest-" });
+        const branch = "repo-cli/fix";
         const commands = yield* makeCommands;
         const recorder = yield* makeRecorder;
-        const pullRequest = yield* ensurePullRequest(contextAt(root), recorder, O.some(draftCreateStep), O.none(), {
-          findOpen: () => Effect.succeedNone,
-        }).pipe(
+        const pullRequest = yield* ensurePullRequest(
+          contextAt(root, branch),
+          recorder,
+          O.some(draftCreateStep),
+          O.none(),
+          {
+            findOpen: () => Effect.succeedNone,
+          }
+        ).pipe(
           withProcesses(
             [
               ["log -1", 0, "feat(repo-cli): ship\n"],
               ["log --reverse", 0, "## feat(repo-cli): ship\n"],
               ["gh pr create", 1, "GraphQL: API rate limit exceeded"],
-              ["git remote get-url --push origin", 0, "git@github.com:beep-effect/beep-effect.git"],
+              ["git remote get-url --push origin", 0, "git@github.com:fork-owner/beep-effect.git"],
               ["gh api repos/{owner}/{repo}/pulls?head=", 0, "[]"],
               ["gh api -X POST repos/{owner}/{repo}/pulls", 0, `${PR_URL}\n`],
-              ["gh pr view", 0, prView()],
+              ["gh pr view", 0, prView({ headRefName: branch })],
             ],
             commands
           )
@@ -589,6 +596,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         assertSome(pullRequest.url, PR_URL);
         expect(A.some(yield* Ref.get(commands), Str.includes("draft=true"))).toBe(true);
         expect(A.some(yield* Ref.get(commands), Str.includes("base=main"))).toBe(true);
+        expect(A.some(yield* Ref.get(commands), Str.includes("head=fork-owner:repo-cli/fix"))).toBe(true);
         expect(A.some(yield* Ref.get(commands), Str.includes("body=@"))).toBe(true);
         const recorded = yield* Ref.get(recorder);
         expect(recorded[0]?.result.commandText).toBe("gh api -X POST repos/{owner}/{repo}/pulls");
