@@ -22,10 +22,12 @@ import {
   FieldTierName,
   FourHintAnnotations,
 } from "@beep/mcp-kit";
+import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import { Tool } from "effect/ai";
 import * as S from "effect/Schema";
 import { PosInt } from "./internal/PosInt.ts";
+import { PracticeKgMatterMatchedOn, PracticeKgMatterResolution } from "./PracticeKg.matter-lookup.ts";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);
@@ -38,6 +40,52 @@ const defaultBudgetBytes = PosInt.make(8000);
  */
 const PracticeKgToolNodeKind = S.Union([KgNodeKind, S.Literal("bundle")]);
 const PracticeKgToolProvenanceKind = S.Union([PracticeKgProvenanceKind, S.Literal("bundle-manifest")]);
+
+/**
+ * Why a practice knowledge-graph tool call failed.
+ *
+ * **Details**
+ *
+ * `store-query-failed` means the bundle store rejected the query, which points
+ * at a damaged or mismatched bundle. `row-decode-failed` means rows came back in
+ * a shape this server does not understand, which points at a bundle built by a
+ * different server version. Neither is the same as "no such record": a lookup
+ * that finds nothing succeeds with zero rows and a note.
+ *
+ * **Example** (Decode a failure reason)
+ *
+ * ```ts
+ * import { PracticeKgToolFailureReason } from "@beep/law-practice-use-cases/server"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(PracticeKgToolFailureReason)("row-decode-failed")) // "row-decode-failed"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PracticeKgToolFailureReason = LiteralKit(["store-query-failed", "row-decode-failed"]).pipe(
+  $I.annoteSchema("PracticeKgToolFailureReason", {
+    description: "Sanitized cause class for a failed practice knowledge-graph tool call.",
+  })
+);
+
+/**
+ * Runtime type for {@link PracticeKgToolFailureReason}.
+ *
+ * **Example** (Type a failure reason)
+ *
+ * ```ts
+ * import type { PracticeKgToolFailureReason } from "@beep/law-practice-use-cases/server"
+ *
+ * const reason: PracticeKgToolFailureReason = "store-query-failed"
+ * console.log(reason) // "store-query-failed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgToolFailureReason = typeof PracticeKgToolFailureReason.Type;
 
 const BudgetBytes = PosInt.pipe(
   S.withConstructorDefault(Effect.succeed(defaultBudgetBytes)),
@@ -138,7 +186,9 @@ class CandidateClaimsParams extends S.Class<CandidateClaimsParams>($I`CandidateC
     budgetBytes: BudgetBytes,
     digest: S.optionalKey(S.NonEmptyString),
     docket: S.optionalKey(S.NonEmptyString),
-    family: S.optionalKey(S.NonEmptyString),
+    family: S.optionalKey(S.NonEmptyString).annotateKey({
+      description: "Docket family, bare (10008) or client-keyed (12345.10008).",
+    }),
   },
   $I.annote("CandidateClaimsParams", {
     description: "Candidate-claim lookup key accepted before the claims batch is loaded.",
@@ -173,6 +223,7 @@ class ProvenanceParams extends S.Class<ProvenanceParams>($I`ProvenanceParams`)(
 export class PracticeKgToolError extends S.Class<PracticeKgToolError>($I`PracticeKgToolError`)(
   {
     message: S.NonEmptyString,
+    reason: S.optionalKey(PracticeKgToolFailureReason),
     tool: S.NonEmptyString,
   },
   $I.annote("PracticeKgToolError", {
@@ -213,6 +264,10 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
     tier: FieldTierName,
     total: S.Natural,
     truncated: S.Boolean,
+    withheld_columns: S.String.pipe(S.Array, S.optionalKey).annotateKey({
+      description:
+        "Columns the complete tier carries that this response left out to fit the byte budget. Re-ask with a larger budgetBytes to get them.",
+    }),
   },
   $I.annote("PracticeKgToolResult", {
     description: "Budgeted columnar practice KG response with authority and bundle labels.",
@@ -380,6 +435,7 @@ export class PracticeKgDocumentToolRow extends S.Class<PracticeKgDocumentToolRow
     digest: S.String,
     docket: S.NullOr(S.String),
     family: S.NullOr(S.String),
+    matchOffset: S.NullOr(S.Finite),
     organizedPath: S.NullOr(S.String),
     pointer: S.NullOr(S.String),
     score: S.NullOr(S.Finite),
@@ -442,11 +498,13 @@ export class PracticeKgCandidateClaimToolRow extends S.Class<PracticeKgCandidate
   {
     activityOperation: S.String,
     claimText: S.String,
+    client: S.NullOr(S.String),
     digest: S.String,
     docket: S.String,
     endChar: S.Natural,
     evidenceQuote: S.String,
     family: S.String,
+    familyKey: S.NullOr(S.String),
     label: S.Literal("candidate — unreviewed"),
     sourceDocumentDigest: S.NullOr(S.String),
     sourceFile: S.String,
@@ -552,6 +610,7 @@ export const practiceKgDocumentFieldTiers = defineFieldTiers({
     digest: PracticeKgDocumentToolRow.fields.digest,
     docket: PracticeKgDocumentToolRow.fields.docket,
     family: PracticeKgDocumentToolRow.fields.family,
+    matchOffset: PracticeKgDocumentToolRow.fields.matchOffset,
     organizedPath: PracticeKgDocumentToolRow.fields.organizedPath,
     pointer: PracticeKgDocumentToolRow.fields.pointer,
     score: PracticeKgDocumentToolRow.fields.score,
@@ -618,6 +677,7 @@ class PracticeKgCandidateClaimBalancedRow extends S.Class<PracticeKgCandidateCla
     docket: PracticeKgCandidateClaimToolRow.fields.docket,
     evidenceQuote: PracticeKgCandidateClaimToolRow.fields.evidenceQuote,
     family: PracticeKgCandidateClaimToolRow.fields.family,
+    familyKey: PracticeKgCandidateClaimToolRow.fields.familyKey,
     label: PracticeKgCandidateClaimToolRow.fields.label,
     sourceDocumentDigest: PracticeKgCandidateClaimToolRow.fields.sourceDocumentDigest,
   },
@@ -651,6 +711,92 @@ export const practiceKgCandidateClaimFieldTiers = defineFieldTiers({
  * MCP openWorldHint must be false — the mcp-kit readOnly preset advertises an
  * open world, which is wrong here.
  */
+class MatterLookupParams extends S.Class<MatterLookupParams>($I`MatterLookupParams`)(
+  {
+    budgetBytes: BudgetBytes,
+    reference: S.NonEmptyString.annotateKey({
+      description:
+        "One identifier as it appears in mail or a document: client-keyed docket (12345.10008US01), bare docket (10008US01), family, USPTO application (14/783,547) or patent number, or client number.",
+    }),
+  },
+  $I.annote("MatterLookupParams", { description: "Single reference to resolve to practice matters." })
+) {}
+
+/**
+ * Matter-lookup tool row: one row per docket of each matched matter.
+ *
+ * **Example** (Inspect matter row fields)
+ *
+ * ```ts
+ * import { PracticeKgMatterToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgMatterToolRow.fields.resolution)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgMatterToolRow extends S.Class<PracticeKgMatterToolRow>($I`PracticeKgMatterToolRow`)(
+  {
+    applications: S.String,
+    attributionSource: KgAttributionSource,
+    client: S.NullOr(S.String),
+    clientName: S.NullOr(S.String),
+    docket: S.NullOr(S.String),
+    docketKey: S.NullOr(S.String),
+    docketMatched: S.Boolean,
+    documentCount: S.Finite,
+    epistemicStatus: PracticeKgEpistemicStatus,
+    family: S.String,
+    familyKey: S.String,
+    matchedOn: S.Array(PracticeKgMatterMatchedOn),
+    patents: S.String,
+    resolution: PracticeKgMatterResolution,
+  },
+  $I.annote("PracticeKgMatterToolRow", {
+    description: "One docket of a matched practice matter with how the reference resolved.",
+  })
+) {}
+
+/**
+ * Progressive fields for matter-lookup rows.
+ *
+ * **Example** (List minimal matter fields)
+ *
+ * ```ts
+ * import { practiceKgMatterFieldTiers } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(Object.keys(practiceKgMatterFieldTiers.minimal.fields))
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export const practiceKgMatterFieldTiers = defineFieldTiers({
+  minimal: S.Struct({
+    client: PracticeKgMatterToolRow.fields.client,
+    docketKey: PracticeKgMatterToolRow.fields.docketKey,
+    familyKey: PracticeKgMatterToolRow.fields.familyKey,
+    resolution: PracticeKgMatterToolRow.fields.resolution,
+  }),
+  balanced: S.Struct({
+    applications: PracticeKgMatterToolRow.fields.applications,
+    attributionSource: PracticeKgMatterToolRow.fields.attributionSource,
+    client: PracticeKgMatterToolRow.fields.client,
+    clientName: PracticeKgMatterToolRow.fields.clientName,
+    docketKey: PracticeKgMatterToolRow.fields.docketKey,
+    docketMatched: PracticeKgMatterToolRow.fields.docketMatched,
+    epistemicStatus: PracticeKgMatterToolRow.fields.epistemicStatus,
+    familyKey: PracticeKgMatterToolRow.fields.familyKey,
+    matchedOn: PracticeKgMatterToolRow.fields.matchedOn,
+    patents: PracticeKgMatterToolRow.fields.patents,
+    resolution: PracticeKgMatterToolRow.fields.resolution,
+  }),
+  complete: S.Struct({
+    ...PracticeKgMatterToolRow.fields,
+  }),
+});
+
 const closedWorldReadOnlyHints = FourHintAnnotations.make({
   destructive: false,
   idempotent: true,
@@ -690,7 +836,7 @@ const readTool = <Name extends string, Parameters extends S.Top, Success extends
  */
 export const KgClientsTool = readTool(
   "kg_clients",
-  "List client attribution. Attribution is sparse; docket families are the primary practice spine.",
+  "List client attribution. naturalKey is the client number; label is the client name when the attorney's docket register names the client, otherwise the number. Attribution is sparse; docket families are the primary practice spine.",
   BudgetParams,
   PracticeKgToolResult
 );
@@ -730,7 +876,7 @@ export const KgDocketFamilyTool = readTool(
  */
 export const KgApplicationLookupTool = readTool(
   "kg_application_lookup",
-  "Resolve an application and walk docket, grant, continuation, and enriched-family relationships.",
+  "Resolve an application, patent, or docket (bare or client-keyed) and walk docket, grant, continuation, and family-mention relationships. A mentioned_in_family link means the family's documents cite the number, not that the application belongs to it.",
   ApplicationLookupParams,
   PracticeKgToolResult
 );
@@ -830,9 +976,29 @@ export const EmailSearchTool = readTool(
  */
 export const KgCandidateClaimsTool = readTool(
   "kg_candidate_claims",
-  "Return candidate — unreviewed claims with resolvable evidence spans, or a typed not-loaded result for older bundles.",
+  "Use this first for any question about an office action in a docket or family: what was rejected, which references were cited, how the response distinguished them. Returns candidate — unreviewed claims, each with its evidence quote, character span, and source document digest. Always repeat the candidate — unreviewed label when you report these. Returns a typed not-loaded result when the bundle carries no claims.",
   CandidateClaimsParams,
   PracticeKgCandidateClaimsResult
+);
+
+/**
+ * Resolves one reference from mail or a document to the practice matter it belongs to.
+ *
+ * **Example** (Log matter-lookup tool name)
+ *
+ * ```ts
+ * import { KgMatterLookupTool } from "@beep/law-practice-use-cases/server"
+ * console.log(KgMatterLookupTool.name)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const KgMatterLookupTool = readTool(
+  "kg_matter_lookup",
+  "Resolve one reference from mail or a document to the practice matter it belongs to: client number, client name where the docket register gives one, client-keyed family, dockets, and the applications and patents filed from them. resolution is unique, ambiguous, or none; only unique is safe to act on, and a matter with no client or with recycled-unverified status needs a person to confirm it.",
+  MatterLookupParams,
+  PracticeKgToolResult
 );
 
 /**
@@ -850,7 +1016,7 @@ export const KgCandidateClaimsTool = readTool(
  */
 export const KgProvenanceTool = readTool(
   "kg_provenance",
-  "Resolve node or document provenance; with no identity, return bundle build status.",
+  "Resolve provenance for a graph node (by iri or natural_key) or a document (by digest); with no identity, return bundle build status. A node row names the catalog row or USPTO record it was projected from and its attribution_source says why it sits in its family. Zero rows with a note means no such record; an error names a store or decode failure.",
   ProvenanceParams,
   PracticeKgToolResult
 );

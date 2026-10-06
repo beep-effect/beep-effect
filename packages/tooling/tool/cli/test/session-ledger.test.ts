@@ -1,26 +1,33 @@
 import { sessionCommand } from "@beep/repo-cli";
 import {
   decodeSessionLedger,
+  layerSessionLedgerMemory,
   makeSessionLedgerLive,
   openSessionRows,
   PrRepository,
   recordSweepDone,
   renderSessionRow,
+  SessionLedger,
   SessionLedgerError,
   SessionLedgerRow,
+  SessionOpenReport,
+  SessionOpenReportJson,
   sessionCheckoutFacts,
   sessionHarness,
   sessionLedgerFileName,
 } from "@beep/repo-cli/test/Session";
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
-import { assert, describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it, vi } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
-import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Console, DateTime, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
 import * as O from "effect/Option";
-import { ChildProcess } from "effect/process";
+import * as PlatformError from "effect/PlatformError";
+import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
@@ -126,6 +133,25 @@ const captureOutput = Effect.fnUntraced(function* <A, E, R>(effect: Effect.Effec
     })
   );
   return A.join(A.map(output, String), "\n");
+});
+
+describe("session report encoding", () => {
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("reports a failed JSON report encode through the CLI error boundary", () =>
+      withScratchCheckout(({ clone }) =>
+        Effect.gen(function* () {
+          const cause = yield* S.encodeUnknownEffect(SessionOpenReport)(undefined).pipe(Effect.flip);
+          const encoder = vi.spyOn(SessionOpenReportJson, "encode").mockReturnValue(Effect.fail(cause));
+          const error = yield* withCwd(clone, runSession(["open", "--json"])).pipe(
+            Effect.flip,
+            Effect.ensuring(Effect.sync(() => encoder.mockRestore()))
+          );
+          expect(error._tag).toBe("CliReportedExit");
+          expect(error.message).toBe("[session] Failed to encode the session report.");
+        })
+      )
+    );
+  });
 });
 
 const runSession = Command.runWith(sessionCommand, { version: "0.0.0" });
@@ -367,6 +393,141 @@ describe("beep session", () => {
           expect(usage).toContain("Session commands:");
         })
       )
+    );
+  });
+});
+
+describe("session ledger row supersession", () => {
+  it("keeps the newer row when an older one for the same checkout is read after it", () => {
+    const rows = openSessionRows([row({ next: "newer", recordedAt: 2 }), row({ next: "older", recordedAt: 1 })]);
+    expect(A.map(rows, (item) => item.next)).toStrictEqual(["newer"]);
+  });
+});
+
+describe("session ledger memory layer", () => {
+  it.layer(Layer.fresh(layerSessionLedgerMemory), { timeout: "30 seconds" })((it) => {
+    it.effect("lists only the rows of the asked repository", () =>
+      Effect.gen(function* () {
+        const ledger = yield* SessionLedger;
+        const elsewhere = (overrides: Partial<{ owner: string; name: string }>, next: string) =>
+          SessionLedgerRow.make({
+            ...row({ next }),
+            repository: PrRepository.make({
+              host: "github.com",
+              owner: "beep-effect",
+              name: "beep-effect",
+              ...overrides,
+            }),
+          });
+        yield* ledger.append(row({ next: "ours" }));
+        yield* ledger.append(elsewhere({ owner: "someone" }, "other owner"));
+        yield* ledger.append(elsewhere({ name: "other" }, "other name"));
+        expect(A.map(yield* ledger.list(repository), (item) => item.next)).toStrictEqual(["ours"]);
+        expect(yield* ledger.list(PrRepository.make({ ...repository, name: "missing" }))).toStrictEqual([]);
+      })
+    );
+  });
+});
+
+describe("session ledger failures", () => {
+  const denied = (method: string) =>
+    Effect.fail(
+      PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "SessionLedgerTest",
+        method,
+        pathOrDescriptor: "/",
+      })
+    );
+  // A file system whose state directory cannot be created or read.
+  const deniedFileSystem = FileSystem.layerNoop({
+    makeDirectory: () => denied("makeDirectory"),
+    exists: () => denied("exists"),
+    readFileString: () => denied("readFileString"),
+  });
+  const handle = (exitCode: number, output: string) =>
+    ChildProcessSpawner.makeHandle({
+      all: Stream.make(new TextEncoder().encode(output)),
+      stdout: Stream.make(new TextEncoder().encode(output)),
+      stderr: Stream.empty,
+      stdin: Sink.drain,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      unref: Effect.succeed(Effect.void),
+    });
+  // A git that knows its origin, then either exits nonzero or cannot be
+  // spawned for every other question.
+  const gitWithoutCheckout = (spawnable: boolean) =>
+    ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+      const line = A.join(command.args, " ");
+      if (pipe(line, Str.includes("remote.origin.url"))) {
+        return Effect.succeed(handle(0, "git@github.com:beep-effect/beep-effect.git\n"));
+      }
+      return spawnable
+        ? Effect.succeed(handle(128, "fatal: not a git repository"))
+        : Effect.fail(
+            PlatformError.systemError({
+              _tag: "NotFound",
+              module: "SessionLedgerTest",
+              method: "spawn",
+              pathOrDescriptor: line,
+            })
+          );
+    });
+
+  it.layer(Layer.fresh(Layer.mergeAll(deniedFileSystem, Path.layer)), { timeout: "30 seconds" })((it) => {
+    it.effect("reports a permission failure as denied", () =>
+      Effect.gen(function* () {
+        const ledger = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: "/state", HOME: "/home" } })
+          )
+        );
+        const error = yield* ledger.append(row()).pipe(Effect.flip);
+        expect(error).toMatchObject({ _tag: "SessionLedgerError", reason: "denied" });
+      })
+    );
+
+    it.effect("refuses to append a row that cannot be encoded", () =>
+      Effect.gen(function* () {
+        const ledger = yield* makeSessionLedgerLive().pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: "/state", HOME: "/home" } })
+          )
+        );
+        const unencodable = SessionLedgerRow.make({ ...row(), pr: O.some(-1) }, { disableChecks: true });
+        const error = yield* ledger.append(unencodable).pipe(Effect.flip);
+        expect(error).toMatchObject({
+          _tag: "SessionLedgerError",
+          reason: "decode",
+          message: "Failed to encode the session ledger row.",
+        });
+      })
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("reports a git exit and an unspawnable git as git failures", () =>
+      Effect.gen(function* () {
+        const facts = (spawnable: boolean) =>
+          sessionCheckoutFacts("/nowhere").pipe(
+            Effect.flip,
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gitWithoutCheckout(spawnable))
+          );
+        const exited = yield* facts(true);
+        expect(exited).toMatchObject({ _tag: "SessionLedgerError", reason: "git" });
+        expect(exited.message).toContain("exited with 128");
+        const unspawnable = yield* facts(false);
+        expect(unspawnable).toMatchObject({ _tag: "SessionLedgerError", reason: "git" });
+        expect(unspawnable.message).toContain("spawn git rev-parse --show-toplevel");
+      })
     );
   });
 });

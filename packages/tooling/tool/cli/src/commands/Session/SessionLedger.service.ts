@@ -27,6 +27,7 @@ import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 import type { PrProvenanceHarness } from "../Yeet/internal/Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Session/SessionLedger.service");
+const equivalentRepository = S.toEquivalence(PrRepository);
 
 /**
  * Service contract: append a row, or list every row of one repository.
@@ -221,16 +222,7 @@ export const layerSessionLedgerMemory = Layer.effect(
       SessionLedger.of({
         append: Effect.fn("SessionLedger.memory.append")((row) => Ref.update(rows, A.append(row))),
         list: Effect.fn("SessionLedger.memory.list")((repository) =>
-          Ref.get(rows).pipe(
-            Effect.map(
-              A.filter(
-                (row) =>
-                  row.repository.host === repository.host &&
-                  row.repository.owner === repository.owner &&
-                  row.repository.name === repository.name
-              )
-            )
-          )
+          Ref.get(rows).pipe(Effect.map(A.filter((row) => equivalentRepository(row.repository, repository))))
         ),
       })
     )

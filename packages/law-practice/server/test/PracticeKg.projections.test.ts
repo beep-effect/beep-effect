@@ -7,19 +7,35 @@ import {
   PatentApplicationDocument,
 } from "@beep/law-practice-domain/values/PatentDocument";
 import {
+  attributeDocuments,
   buildPracticeKgBundle,
   LawPracticeServerLive,
   PRACTICE_KG_MCP_INSTRUCTIONS,
+  PracticeKgAttributeDocumentsInput,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
+  PracticeKgCatalogRow,
+  PracticeKgClaimsCarry,
+  PracticeKgClaimsCarryWrite,
   PracticeKgClaimsOptions,
+  PracticeKgDocketReferenceRow,
+  PracticeKgEnrichmentRow,
+  PracticeKgMatterLookup,
+  PracticeKgMatterLookupLive,
+  PracticeKgNumberMentionRow,
   PracticeKgOptions,
   PracticeKgPatentDocumentInput,
   PracticeKgProjectionsLive,
   PracticeKgQueries,
   PracticeKgToolkitLayer,
+  practiceKgMcpProtocols,
+  readPracticeKgClaimsCarry,
+  reconcileAnchors,
+  resolveAnchors,
   runPracticeKgClaimsBatch,
+  verifyPracticeKgBundle,
+  writePracticeKgClaimsCarry,
 } from "@beep/law-practice-server";
 import { DbSchema } from "@beep/law-practice-tables";
 import { OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
@@ -27,6 +43,7 @@ import {
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCandidateClaimsResult,
   PracticeKgCandidateClaimToolRow,
+  PracticeKgMatterLookupRequest,
   PracticeKgToolError,
   PracticeKgToolResult,
 } from "@beep/law-practice-use-cases/server";
@@ -47,6 +64,7 @@ import * as McpServer from "effect/ai/McpServer";
 import * as Response from "effect/ai/Response";
 import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -106,6 +124,27 @@ const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgTo
 const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const decodeCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
 const decodePracticeKgOptions = S.decodeEffect(PracticeKgOptions);
+const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
+const decodeClaimsCarry = S.decodeUnknownEffect(PracticeKgClaimsCarry);
+const carriedRowBase = {
+  createdAt: 1,
+  createdByPrincipal: "{}",
+  orgId: 1,
+  rowVersion: 1,
+  schemaVersion: "1",
+  source: "fixture",
+  updatedAt: 1,
+  updatedByPrincipal: "{}",
+};
+const carriedCandidate = (publicId: string, snapshot: string, sourceFile: string | null) => ({
+  ...carriedRowBase,
+  entityType: "EpistemicCandidateClaim",
+  fixtureKey: `claim:${publicId}`,
+  lifecycle: "candidate",
+  publicId,
+  snapshot,
+  sourceFile,
+});
 const decodePracticeKgToolResult = S.decodeEffect(PracticeKgToolResult);
 const decodeUnknownPracticeKgToolResult = S.decodeUnknownEffect(PracticeKgToolResult);
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
@@ -402,6 +441,95 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
   yield* fs.makeDirectory(path.join(archiveCollectionRoot, "not-an-artifact"));
 });
 
+// A later source run the organizer never saw, laid out like the attorney's
+// working folders. Every name and number here is invented.
+const workingRun = "2026-10-working-files";
+const workingDigests = {
+  ambiguous: `sha256:${Str.repeat(64)("2")}`,
+  keyed: `sha256:${Str.repeat(64)("9")}`,
+  newMatter: `sha256:${Str.repeat(64)("8")}`,
+  registered: `sha256:${Str.repeat(64)("6")}`,
+  textKeyed: `sha256:${Str.repeat(64)("7")}`,
+};
+const workingClients = { register: "33333", text: "44444" } as const;
+const workingFiles = [
+  [
+    workingDigests.keyed,
+    `Clients/Example Client ${fixtureClients.alpha}/20001US01 - ${fixtureClients.alpha}.00012/Filing receipt.txt`,
+  ],
+  [
+    workingDigests.newMatter,
+    `Clients/Second Client ${fixtureClients.beta}/30002BR01 - ${fixtureClients.beta}.00003/Annuity notice.txt`,
+  ],
+  [workingDigests.textKeyed, "Loose files/40004ZA01/Notice.txt"],
+  // no client in the path or the text, and no other document in its family: the register may speak
+  [workingDigests.registered, "Loose files/50005US01/Letter.txt"],
+  [workingDigests.ambiguous, `Clients/Example Client ${fixtureClients.alpha}/20001US01 and 20001US02/Combined.txt`],
+  // a second copy of an organized file adds no document
+  [fixtureDigests.family, "Loose files/family-notes copy.txt"],
+] as const;
+
+const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(function* (corpusRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* Effect.gen(function* () {
+    const db = yield* DuckDb;
+    yield* Effect.forEach(
+      workingFiles,
+      ([digest, relativePath], index) =>
+        db.run(
+          `INSERT INTO corpus_source_files VALUES ('${workingRun}', 'source-b', $1, $2, '2026-01-02T03:04:07.000Z', $3)`,
+          [relativePath, index + 30, digest]
+        ),
+      { discard: true }
+    );
+  }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
+  const extractRoot = path.join(corpusRoot, "staging", `extract-${workingRun}`);
+  yield* fs.makeDirectory(path.join(extractRoot, "text"), { recursive: true });
+  const texts = [
+    // the text names another client for the folder's docket: the folder wins
+    ["keyed", workingDigests.keyed, `filing receipt for ${fixtureClients.beta}.20001US01`],
+    // only the text names a client, under a country stage the old scan did not know
+    ["text", workingDigests.textKeyed, `notice for ${workingClients.text}.40004ZA01`],
+  ] as const;
+  const sourceLines = yield* Effect.forEach(texts, ([name, digest]) =>
+    encodeFixtureSource(
+      FixtureSourceRow.make({
+        artifactId: `artifact-working-${name}`,
+        digest,
+        engine: "tika",
+        format: "text",
+        operationId: `operation:op-working-${name}`,
+        relativePath: `text/operation:op-working-${name}.txt`,
+        sizeBytes: 20,
+        status: "succeeded",
+      })
+    )
+  );
+  yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
+  yield* Effect.forEach(
+    texts,
+    ([name, , text]) => fs.writeFileString(path.join(extractRoot, "text", `operation:op-working-${name}.txt`), text),
+    { discard: true }
+  );
+  const registerPath = path.join(corpusRoot, "docket-register.jsonl");
+  yield* fs.writeFileString(
+    registerPath,
+    A.join(
+      [
+        `{"client":"${fixtureClients.alpha}","docket":"20001US09","clientName":"Example Client"}`,
+        // the beta document's own text names its client; the register must not move it
+        `{"client":"${workingClients.register}","docket":"20001US02","clientName":"Register Client"}`,
+        `{"client":"${workingClients.register}","docket":"50005US01","clientName":"Register Client"}`,
+        `{"client":"${fixtureClients.beta}","docket":"30002BR01","clientName":"Second Client"}`,
+        `{"client":"${fixtureClients.beta}","docket":"30002BR02","clientName":"Second Client LLC"}`,
+      ],
+      "\n"
+    )
+  );
+  return registerPath;
+});
+
 const makeFixtureCorpus = Effect.fn("PracticeKgTest.makeFixtureCorpus")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -536,6 +664,15 @@ describe("practice KG projections", () => {
         }),
       { arbitrary: fcRuns(10) }
     );
+  });
+
+  it("answers the handshake Claude Desktop opens with, and keeps the stateless protocol first", () => {
+    // Regression: a stateless-only list made the installed extension fail with
+    // "initialize is not supported by the configured MCP protocols (requested '2025-11-25')".
+    const versions = A.map(practiceKgMcpProtocols, (protocol) => protocol.protocolVersion);
+    expect(A.headNonEmpty(versions)).toBe("2026-07-28");
+    expect(versions).toContain("2025-11-25");
+    expect(versions).toContain("2025-06-18");
   });
 
   it.effect(
@@ -742,7 +879,7 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
-            '{"bundle_version":"2026-10-05-01","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
+            '{"bundle_version":"2026-10-06-02","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
           ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
       }),
@@ -752,7 +889,7 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
-      "serves all nine tools from the synthetic fixture bundle and degrades oversized results",
+      "serves all ten tools from the synthetic fixture bundle and degrades oversized results",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -768,7 +905,7 @@ describe("practice KG projections", () => {
           DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
           Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
         );
-        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(
+        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer, PracticeKgMatterLookupLive).pipe(
           Layer.provideMerge(resources)
         );
 
@@ -797,6 +934,103 @@ describe("practice KG projections", () => {
           const search = O.getOrThrow(A.get(results, 4));
           const searchRow = R.fromEntries(A.zip(search.data.columns, O.getOrThrow(A.head(search.data.rows))));
           expect(searchRow.digest).toBe(fixtureDigests.docket);
+          expect(searchRow.matchOffset).toBe(1);
+
+          // Matter lookup: the stable contract other services build against.
+          const lookupRows = (reference: string) =>
+            callToolText("kg_matter_lookup", { budgetBytes: 20_000, reference }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => ({
+                note: result.note ?? "",
+                rows: A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))),
+              }))
+            );
+          const keyedDocket = yield* lookupRows(`${fixtureClients.alpha}.20001US01`);
+          expect(A.map(keyedDocket.rows, (row) => [row.resolution, row.familyKey, row.docketMatched])).toStrictEqual([
+            ["unique", `${fixtureClients.alpha}.20001`, true],
+          ]);
+          const bareDocket = yield* lookupRows("20001us01");
+          expect(A.map(bareDocket.rows, (row) => [row.resolution, row.docketKey, row.matchedOn])).toStrictEqual([
+            ["unique", `${fixtureClients.alpha}.20001US01`, ["docket"]],
+          ]);
+          const byApplication = yield* lookupRows("87/654,321");
+          expect(
+            A.map(byApplication.rows, (row) => [row.resolution, row.client, row.matchedOn, row.patents])
+          ).toStrictEqual([["unique", fixtureClients.alpha, ["application"], "12345678"]]);
+          const byPatent = yield* lookupRows("US 12,345,678 B2");
+          expect(A.map(byPatent.rows, (row) => [row.resolution, row.matchedOn])).toStrictEqual([
+            ["unique", ["patent"]],
+          ]);
+          const bareFamily = yield* lookupRows("20001");
+          expect(A.dedupe(A.map(bareFamily.rows, (row) => row.resolution))).toStrictEqual(["ambiguous"]);
+          expect(A.dedupe(A.map(bareFamily.rows, (row) => row.familyKey))).toStrictEqual([
+            `${fixtureClients.alpha}.20001`,
+            "20001",
+            `${fixtureClients.beta}.20001`,
+          ]);
+          const newCountryStage = yield* lookupRows(`${fixtureClients.beta}.20001EP07`);
+          expect(
+            A.map(newCountryStage.rows, (row) => [row.resolution, row.familyKey, row.docketMatched])
+          ).toStrictEqual([["unique", `${fixtureClients.beta}.20001`, false]]);
+          const unknownReference = yield* lookupRows("99999US01");
+          expect(unknownReference.rows).toStrictEqual([]);
+          expect(unknownReference.note).toContain("resolution: none");
+          const mentionOnly = yield* lookupRows("11/223,344");
+          expect(mentionOnly.rows).toStrictEqual([]);
+
+          const service = yield* PracticeKgMatterLookup;
+          const serviceResult = yield* service.lookup(
+            PracticeKgMatterLookupRequest.make({ reference: `${fixtureClients.alpha}.20001` })
+          );
+          expect(serviceResult.resolution).toBe("unique");
+          expect(serviceResult.bundleVersion).toBe(manifest.bundleVersion);
+          expect(A.map(serviceResult.matters, (matter) => [matter.client, matter.docketCount])).toStrictEqual([
+            [fixtureClients.alpha, 1],
+          ]);
+
+          const verified = yield* verifyPracticeKgBundle;
+          expect(verified.ok).toBe(true);
+          expect([verified.nodes, verified.nodesResolved, verified.matters, verified.matterDockets]).toStrictEqual([
+            20, 20, 3, 3,
+          ]);
+
+          // Remaining request shapes: lookups by application number and by docket,
+          // a document read by organized path, and a digest nobody has.
+          const byApplicationNumber = yield* callToolText("kg_application_lookup", {
+            application_number: "87654321",
+          }).pipe(Effect.flatMap(decodeToolResultJson));
+          const byDocket = yield* callToolText("kg_application_lookup", { docket: "20001US01" }).pipe(
+            Effect.flatMap(decodeToolResultJson)
+          );
+          expect([byApplicationNumber.total > 0, byDocket.total > 0]).toStrictEqual([true, true]);
+          const byOrganizedPath = yield* callToolText("corpus_get_document", {
+            organized_path: "dockets/20001/20001US02/beta-response.txt",
+          }).pipe(Effect.flatMap(decodeToolResultJson));
+          expect(byOrganizedPath.total).toBe(1);
+          const missingDigest = yield* callToolText("kg_provenance", { digest: "sha256:no-such-document" }).pipe(
+            Effect.flatMap(decodeToolResultJson)
+          );
+          expect([missingDigest.total, missingDigest.note]).toStrictEqual([
+            0,
+            O.getOrThrow(O.fromNullishOr(missingDigest.note)),
+          ]);
+          expect(missingDigest.note).toContain("No graph node or document");
+          // Some budget between "everything fits" and "nothing fits" lands on the
+          // balanced tier, which must name what it left out.
+          const budgeted = yield* Effect.forEach(A.range(2, 14), (step) =>
+            callToolText("kg_docket_family", { budgetBytes: step * 50, family: "20001" }).pipe(
+              Effect.flatMap(decodeToolResultJson)
+            )
+          );
+          const balanced = O.getOrThrow(A.findFirst(budgeted, (result) => result.tier === "balanced"));
+          pipe(balanced.truncated, assertFalse);
+          expect(balanced.withheld_columns).toContain("documentDigest");
+
+          const missingProvenance = yield* callToolText("kg_provenance", { natural_key: "no-such-key" }).pipe(
+            Effect.flatMap(decodeToolResultJson)
+          );
+          expect(missingProvenance.total).toBe(0);
+          expect(missingProvenance.note).toContain("No graph node or document");
           expect(searchRow.snippet).toContain(`alpha docket ${fixtureClients.alpha}.20001US01`);
           const familyKeysOf = (result: PracticeKgToolResult): ReadonlyArray<unknown> => {
             const familyColumn = O.getOrThrow(A.findFirstIndex(result.data.columns, (column) => column === "family"));
@@ -834,11 +1068,20 @@ describe("practice KG projections", () => {
           }).pipe(Effect.flatMap(decodeToolResultJson));
           expect(degraded.tier).toBe("minimal");
           pipe(degraded.truncated, assertTrue);
+          expect(degraded.withheld_columns).toContain("documentDigest");
 
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
           yield* sql.unsafe("DROP TABLE kg_node CASCADE");
+          // A failure below the tool layer is still reported as a typed store fault.
+          const duckdb = yield* DuckDb;
+          yield* duckdb.run("DROP TABLE matter_dockets");
+          const lookupFailure = yield* callToolText("kg_matter_lookup", { reference: "20001" }).pipe(
+            Effect.flatMap(decodeToolErrorJson)
+          );
+          expect([lookupFailure.tool, lookupFailure.reason]).toStrictEqual(["kg_matter_lookup", "store-query-failed"]);
           const failure = yield* callToolText("kg_clients", {}).pipe(Effect.flatMap(decodeToolErrorJson));
           expect(failure.tool).toBe("kg_clients");
+          expect(failure.reason).toBe("store-query-failed");
         }).pipe(provideScopedLayer(host));
       }),
       { timeout: 120_000 }
@@ -901,11 +1144,229 @@ describe("practice KG projections", () => {
 
   it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
     it.effect(
+      "folds an included run in, reads its folder paths, and keeps the docket register for unnamed families",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const registerPath = yield* addWorkingFilesRun(corpusRoot);
+        const baseOut = path.join(corpusRoot, "bundle-base");
+        const bundleOut = path.join(corpusRoot, "bundle-working");
+
+        // Left out, the run changes nothing: not the documents, not their origin chains.
+        const base = yield* runBuild(
+          PracticeKgOptions.make({ ...graphOptions(corpusRoot, baseOut), skipEmails: true }),
+          baseOut
+        );
+        expect([base.counts.documents, base.baseDigests, base.includedRuns]).toStrictEqual([6, 6, []]);
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          const originLines = yield* db
+            .query(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT run_label, source_origin_chain FROM documents WHERE digest = $1) x",
+              [fixtureDigests.family]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(originLines, (row) => row.line)).toStrictEqual([
+            '{"run_label":"base","source_origin_chain":"base:fixture-source:family-notes.txt"}',
+          ]);
+        }).pipe(withDuckDb(path.join(baseOut, "practice.duckdb")));
+
+        const summary = yield* runBuild(
+          PracticeKgOptions.make({
+            ...graphOptions(corpusRoot, bundleOut),
+            docketRegisterPath: registerPath,
+            includeRuns: [workingRun],
+            skipEmails: true,
+          }),
+          bundleOut
+        );
+        expect([summary.counts.documents, summary.baseDigests, summary.includeRefresh]).toStrictEqual([11, 6, false]);
+        expect(summary.includedRuns).toStrictEqual([workingRun]);
+        const manifest = yield* fs
+          .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+          .pipe(Effect.flatMap(decodeManifestJson));
+        expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
+          "2026-10-06-02",
+          "3",
+          "3",
+        ]);
+        expect([
+          manifest.sourceRuns.base,
+          manifest.sourceRuns.includedRuns,
+          manifest.sourceRuns.refresh202607,
+        ]).toStrictEqual(["included", [workingRun], "excluded"]);
+
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          const lines = (statement: string) =>
+            db.query(statement).pipe(Effect.flatMap(decodeDumpLines), Effect.map(A.map((row) => row.line)));
+          // One docket in the path files the row under it; two leave it unsorted.
+          expect(
+            yield* lines(
+              `SELECT to_json(x)::VARCHAR AS line FROM (SELECT category, docket, docket_family, effective_name FROM documents WHERE run_label = '${workingRun}' AND digest <> '${fixtureDigests.family}' ORDER BY digest) x`
+            )
+          ).toStrictEqual([
+            '{"category":"unsorted","docket":null,"docket_family":null,"effective_name":"Combined.txt"}',
+            '{"category":"docket","docket":"50005US01","docket_family":"50005","effective_name":"Letter.txt"}',
+            '{"category":"docket","docket":"40004ZA01","docket_family":"40004","effective_name":"Notice.txt"}',
+            '{"category":"docket","docket":"30002BR01","docket_family":"30002","effective_name":"Annuity notice.txt"}',
+            '{"category":"docket","docket":"20001US01","docket_family":"20001","effective_name":"Filing receipt.txt"}',
+          ]);
+          expect(
+            yield* lines("SELECT to_json(x)::VARCHAR AS line FROM (SELECT COUNT(*) AS text_rows FROM document_text) x")
+          ).toStrictEqual(['{"text_rows":6}']);
+          expect(
+            yield* lines(
+              "SELECT to_json(x)::VARCHAR AS line FROM (SELECT family_key, client, client_name, attribution_source, document_count FROM matters ORDER BY family_key) x"
+            )
+          ).toStrictEqual([
+            `{"family_key":"${fixtureClients.alpha}.20001","client":"${fixtureClients.alpha}","client_name":"Example Client","attribution_source":"folder-path","document_count":2}`,
+            '{"family_key":"20001","client":null,"client_name":null,"attribution_source":"filename","document_count":2}',
+            // the register lists another client for 20001US02, and names this client two ways
+            `{"family_key":"${fixtureClients.beta}.20001","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
+            `{"family_key":"${fixtureClients.beta}.30002","client":"${fixtureClients.beta}","client_name":null,"attribution_source":"folder-path","document_count":1}`,
+            `{"family_key":"${workingClients.register}.50005","client":"${workingClients.register}","client_name":"Register Client","attribution_source":"docket-register","document_count":1}`,
+            `{"family_key":"${workingClients.text}.40004","client":"${workingClients.text}","client_name":null,"attribution_source":"text-reference","document_count":1}`,
+          ]);
+        }).pipe(withDuckDb(path.join(bundleOut, "practice.duckdb")));
+
+        const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+        const resources = Layer.mergeAll(
+          Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }),
+          DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
+          Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
+        );
+        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer, PracticeKgMatterLookupLive).pipe(
+          Layer.provideMerge(resources)
+        );
+        yield* Effect.gen(function* () {
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          const documentLines = yield* sql
+            .unsafe(
+              "SELECT row_to_json(x)::text AS line FROM (SELECT client, docket_family, attribution_source FROM kg_node WHERE kind = 'document' AND natural_key IN ($1, $2, $3, $4, $5, $6) ORDER BY natural_key) x",
+              [
+                workingDigests.registered,
+                workingDigests.ambiguous,
+                workingDigests.textKeyed,
+                workingDigests.newMatter,
+                workingDigests.keyed,
+                fixtureDigests.beta,
+              ]
+            )
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(documentLines, (row) => row.line)).toStrictEqual([
+            '{"client":null,"docket_family":null,"attribution_source":"filename"}',
+            `{"client":"${workingClients.register}","docket_family":"50005","attribution_source":"docket-register"}`,
+            `{"client":"${workingClients.text}","docket_family":"40004","attribution_source":"text-reference"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"30002","attribution_source":"folder-path"}`,
+            `{"client":"${fixtureClients.alpha}","docket_family":"20001","attribution_source":"folder-path"}`,
+            `{"client":"${fixtureClients.beta}","docket_family":"20001","attribution_source":"text-reference"}`,
+          ]);
+          const buildLines = yield* sql
+            .unsafe("SELECT row_to_json(x)::text AS line FROM (SELECT built_from_runs FROM kg_build) x")
+            .pipe(Effect.flatMap(decodeDumpLines));
+          expect(A.map(buildLines, (row) => row.line)).toStrictEqual([`{"built_from_runs":"base | ${workingRun}"}`]);
+
+          const toolRows = (name: string, args: Readonly<Record<string, unknown>>) =>
+            callToolText(name, { budgetBytes: 20_000, ...args }).pipe(
+              Effect.flatMap(decodeToolResultJson),
+              Effect.map((result) => A.map(result.data.rows, (row) => R.fromEntries(A.zip(result.data.columns, row))))
+            );
+          const registered = yield* toolRows("kg_matter_lookup", { reference: "50005us01" });
+          expect(A.map(registered, (row) => [row.resolution, row.familyKey, row.clientName])).toStrictEqual([
+            ["unique", `${workingClients.register}.50005`, "Register Client"],
+          ]);
+          const notMoved = yield* toolRows("kg_matter_lookup", { reference: "20001US02" });
+          expect(A.map(notMoved, (row) => [row.resolution, row.familyKey])).toStrictEqual([
+            ["unique", `${fixtureClients.beta}.20001`],
+          ]);
+          const newStage = yield* toolRows("kg_matter_lookup", { reference: "30002BR01" });
+          // null cells are stripped before the envelope is built, so an all-null column is absent
+          expect(A.map(newStage, (row) => [row.resolution, row.docketKey, row.clientName ?? null])).toStrictEqual([
+            ["unique", `${fixtureClients.beta}.30002BR01`, null],
+          ]);
+          const clients = yield* toolRows("kg_clients", {});
+          expect(
+            A.map(
+              A.filter(clients, (row) => row.kind === "client"),
+              (row) => [row.naturalKey, row.label]
+            )
+          ).toStrictEqual([
+            [fixtureClients.alpha, "Example Client"],
+            [fixtureClients.beta, fixtureClients.beta],
+            [workingClients.register, "Register Client"],
+            [workingClients.text, workingClients.text],
+          ]);
+
+          const service = yield* PracticeKgMatterLookup;
+          const byClient = yield* service.lookup(
+            PracticeKgMatterLookupRequest.make({ reference: fixtureClients.alpha })
+          );
+          expect(A.map(byClient.matters, (matter) => [matter.familyKey, matter.clientName])).toStrictEqual([
+            [`${fixtureClients.alpha}.20001`, "Example Client"],
+          ]);
+          const verified = yield* verifyPracticeKgBundle;
+          expect(verified.ok).toBe(true);
+        }).pipe(provideScopedLayer(host));
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "builds from an included run that has no extract tree, and will not replace a bundle unasked",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const bundleOut = path.join(corpusRoot, "bundle-unextracted-run");
+        const options = PracticeKgOptions.make({
+          ...graphOptions(corpusRoot, bundleOut),
+          includeRuns: ["never-extracted"],
+          skipEmails: true,
+        });
+
+        const summary = yield* runBuild(options, bundleOut);
+        expect([summary.counts.documents, summary.includedRuns]).toStrictEqual([6, ["never-extracted"]]);
+
+        const error = yield* Effect.flip(runBuild(options, bundleOut));
+        expect(error.message).toBe(`Graph bundle already exists at "${bundleOut}"; pass --overwrite to replace it.`);
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
+      "refuses to build from a docket register with a bad line, naming the line",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const registerPath = path.join(corpusRoot, "docket-register.jsonl");
+        yield* fs.writeFileString(registerPath, '{"client":"11111","docket":"20001US01"}\n{"client":"11111"}\n');
+        const bundleOut = path.join(corpusRoot, "bundle-bad-register");
+
+        const error = yield* Effect.flip(
+          runBuild(
+            PracticeKgOptions.make({ ...graphOptions(corpusRoot, bundleOut), docketRegisterPath: registerPath }),
+            bundleOut
+          )
+        );
+
+        expect(error._tag).toBe("PracticeKgProjectionError");
+        expect(error.message).toBe(`Docket register "${registerPath}" line 2 is not a valid register row.`);
+      }),
+      { timeout: 120_000 }
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
       "persists docket-scoped normalized patents with exact claims-section evidence and bounded input",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const bundleOut = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-bundle-" });
+        const patentCorpusRoot = yield* makeFixtureCorpus();
+        const bundleOut = path.join(patentCorpusRoot, "bundle-patents");
+        yield* runBuild(graphOptions(patentCorpusRoot, bundleOut), bundleOut);
         const inputs = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-inputs-" });
         const document = yield* normalizePatentApplicationDocument(normalizedPatentFixture);
         const forbiddenReview = OfficeActionReview.of({
@@ -936,19 +1397,41 @@ describe("practice KG projections", () => {
               PracticeKgPatentDocumentInput.make({
                 docket: "20001US05",
                 document,
-                sourceDocumentDigest: yield* S.decodeUnknownEffect(ContentDigest)(fixtureDigests.docket),
+                sourceDocumentDigest: yield* decodeContentDigest(fixtureDigests.beta),
                 sourceFile: "20001US05-patent.md",
               }),
               PracticeKgPatentDocumentInput.make({
                 docket: "20001US06",
                 document,
                 sourceFile: "20001US06-patent.md",
+                sourceDocumentDigest: ContentDigest.make(`sha256:${Str.repeat(64)("a")}`),
               }),
             ],
           })
         ).pipe(provideScopedLayer(claimsLayer));
 
         expect(summary).toMatchObject({ claims: 6, failedFiles: 0, files: 2 });
+
+        // A bundle directory with no DuckDB store yet still accepts claims; they
+        // simply carry no catalogued source document.
+        const bareBundle = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-patent-bare-" });
+        const bareSummary = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({
+            bundleOut: bareBundle,
+            inputs,
+            patentDocuments: [
+              PracticeKgPatentDocumentInput.make({ docket: "20001US05", document, sourceFile: "20001US05-patent.md" }),
+            ],
+          })
+        ).pipe(
+          provideScopedLayer(
+            Layer.mergeAll(
+              Layer.succeed(OfficeActionReview, forbiddenReview),
+              Pglite.makeLayer({ dataDir: path.join(bareBundle, "kg.pglite") })
+            )
+          )
+        );
+        expect(bareSummary).toMatchObject({ claims: 3, failedFiles: 0, files: 1 });
         const missingDuckDbSummary = yield* runPracticeKgClaimsBatch(
           PracticeKgClaimsOptions.make({
             bundleOut,
@@ -975,13 +1458,19 @@ describe("practice KG projections", () => {
           ).pipe(Effect.map(A.flatten));
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
 
+        expect(
+          A.dedupe(A.map(rows, ({ docket, sourceDocumentDigest }) => [docket, sourceDocumentDigest]))
+        ).toStrictEqual([
+          ["20001US05", fixtureDigests.beta],
+          ["20001US06", fixtureDigests.docket],
+        ]);
         expect(A.map(rows, ({ claimText }) => claimText)).toStrictEqual(
           A.appendAll(
             A.map(document.claims, ({ claimText }) => claimText),
             A.map(document.claims, ({ claimText }) => claimText)
           )
         );
-        expect(O.getOrThrow(A.head(rows)).sourceDocumentDigest).toBe(fixtureDigests.docket);
+        expect(O.getOrThrow(A.head(rows)).sourceDocumentDigest).toBe(fixtureDigests.beta);
         pipe(
           A.every(
             rows,
@@ -1002,6 +1491,36 @@ describe("practice KG projections", () => {
           A.every(rows, ({ startChar }) => startChar > claimsSectionStart),
           assertTrue
         );
+
+        // A missing catalog remains a supported batch input even when the filesystem probe fails.
+        const unavailableCatalog = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            exists: () => Effect.fail(PlatformError.badArgument({ module: "FileSystem", method: "exists" })),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(unavailableCatalog).toMatchObject({ files: 0, failedFiles: 0, claims: missingDuckDbSummary.claims });
+
+        // An existing corrupt catalog must report source resolution failure instead of losing provenance.
+        yield* fs.writeFileString(path.join(bundleOut, "practice.duckdb"), "not a DuckDB database");
+        const catalogFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({
+            bundleOut,
+            inputs,
+            patentDocuments: [
+              PracticeKgPatentDocumentInput.make({
+                docket: "20001US09",
+                document,
+                sourceFile: "20001US09-patent.md",
+              }),
+            ],
+          })
+        ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
+        expect(catalogFailure.message).toContain("Failed resolving the source document");
+        yield* fs.remove(path.join(bundleOut, "practice.duckdb"));
 
         const oversizedDocument = PatentApplicationDocument.make({
           claims: document.claims,
@@ -1089,6 +1608,28 @@ describe("practice KG projections", () => {
         expect(summary.claims).toBe(2);
         expect(summary.files).toBe(2);
         expect(summary.failedFiles).toBe(2);
+
+        // Carry: a rebuilt bundle starts with no claims; lifting them from the old
+        // store must reproduce them without calling the model again.
+        const carriedOut = path.join(corpusRoot, "bundle-claims-carried");
+        yield* runBuild(graphOptions(corpusRoot, carriedOut), carriedOut);
+        const carry = yield* readPracticeKgClaimsCarry.pipe(
+          provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }))
+        );
+        const carryWrite = PracticeKgClaimsCarryWrite.make({ bundleOut: carriedOut, carry });
+        const carried = yield* writePracticeKgClaimsCarry(carryWrite).pipe(
+          provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(carriedOut, "kg.pglite") }))
+        );
+        expect([carried.claims, carried.evidence, carried.withSourceDocument]).toStrictEqual([2, 2, 1]);
+        const recarried = yield* Effect.gen(function* () {
+          yield* writePracticeKgClaimsCarry(carryWrite);
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          return yield* sql.unsafe(PracticeKgQueries.candidateClaims, [null, `${fixtureClients.alpha}.20001`, null]);
+        }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(carriedOut, "kg.pglite") })));
+        const recarriedRows = yield* decodeCandidateClaimRows(recarried);
+        expect(A.map(recarriedRows, (row) => [row.client, row.familyKey, row.sourceDocumentDigest])).toStrictEqual([
+          [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, fixtureDigests.docket],
+        ]);
         const duckDbPath = path.join(bundleOut, "practice.duckdb");
         const duckDbBackupPath = path.join(bundleOut, "practice.duckdb.backup");
         yield* fs.rename(duckDbPath, duckDbBackupPath);
@@ -1154,6 +1695,22 @@ describe("practice KG projections", () => {
           PracticeKgClaimsOptions.make({ bundleOut, inputs })
         ).pipe(Effect.flip, provideScopedLayer(claimsLayer));
         expect(oversizedClaimsFailure.message).toContain("not a bounded regular file");
+        yield* fs.remove(oversizedClaimsPath);
+
+        // The file can grow between stat and read; the byte guard must reject the actual payload.
+        yield* fs.writeFileString(oversizedClaimsPath, "bounded at stat time");
+        const grownClaimsFailure = yield* runPracticeKgClaimsBatch(
+          PracticeKgClaimsOptions.make({ bundleOut, inputs })
+        ).pipe(
+          Effect.flip,
+          Effect.provideService(FileSystem.FileSystem, {
+            ...fs,
+            readFile: (file) =>
+              file === oversizedClaimsPath ? Effect.succeed(new Uint8Array(2 * 1024 * 1024 + 1)) : fs.readFile(file),
+          }),
+          provideScopedLayer(claimsLayer)
+        );
+        expect(grownClaimsFailure.message).toContain("Claims input exceeds 2097152 bytes");
         yield* fs.remove(oversizedClaimsPath);
 
         const insideClaimsTarget = path.join(inputs, "inside-claims-target.txt");
@@ -1233,11 +1790,31 @@ describe("practice KG projections", () => {
           DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
           Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
         );
-        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(Layer.provide(resources));
+        const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(
+          Layer.provideMerge(resources)
+        );
         const result = yield* callToolText("kg_candidate_claims", { docket: "20001US01" }).pipe(
           Effect.flatMap(decodeToolResultJson),
           provideScopedLayer(host)
         );
+        // Family and digest filters reach the same claim, and a claims-bearing
+        // bundle still passes the acceptance sweep.
+        const filtered = yield* Effect.gen(function* () {
+          const byFamily = yield* callToolText("kg_candidate_claims", {
+            family: `${fixtureClients.alpha}.20001`,
+          }).pipe(Effect.flatMap(decodeToolResultJson));
+          const byDigest = yield* callToolText("kg_candidate_claims", { digest: "sha256:not-a-claim" }).pipe(
+            Effect.flatMap(decodeToolResultJson)
+          );
+          const verified = yield* verifyPracticeKgBundle;
+          return { byDigest: byDigest.total, byFamily: byFamily.total, verified };
+        }).pipe(provideScopedLayer(host));
+        expect([filtered.byFamily, filtered.byDigest]).toStrictEqual([1, 0]);
+        expect([
+          filtered.verified.ok,
+          filtered.verified.claims,
+          filtered.verified.claimsWithSourceDocument,
+        ]).toStrictEqual([true, 2, 1]);
         expect(result.epistemic_status).toBe("candidate-unreviewed");
         expect(result.total).toBe(1);
         const row = R.fromEntries(A.zip(result.data.columns, O.getOrThrow(A.head(result.data.rows))));
@@ -1248,6 +1825,62 @@ describe("practice KG projections", () => {
         expect(row.sourceDocumentDigest).toBe(fixtureDigests.docket);
         expect(OFFICE_ACTION_FIXTURE.slice(Number(row.startChar), Number(row.endChar))).toBe(row.evidenceQuote);
         expect(row.activityOperation).toContain("operation:");
+      }),
+      { timeout: 120_000 }
+    );
+  });
+
+  it.layer(Layer.fresh(testLayer), { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "reports claims-carry failures by cause and carries claims that name no source file",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const corpusRoot = yield* makeFixtureCorpus();
+        const bundleOut = path.join(corpusRoot, "bundle-carry-edges");
+        yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+        const target = Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") });
+
+        // A bundle that never had claims cannot be a carry source.
+        const noClaims = yield* Effect.flip(readPracticeKgClaimsCarry.pipe(provideScopedLayer(target)));
+        expect(noClaims.message).toBe("Failed reading candidate claims from the source bundle.");
+
+        const snapshot = '{"claimText":"x","docket":"20001US01","evidenceFixtureKey":"e1","family":"20001"}';
+        const unnamed = yield* decodeClaimsCarry({
+          candidates: [carriedCandidate("claim_unnamed", snapshot, null)],
+          evidence: [],
+        });
+        const unnamedSummary = yield* writePracticeKgClaimsCarry(
+          PracticeKgClaimsCarryWrite.make({ bundleOut, carry: unnamed })
+        ).pipe(provideScopedLayer(target));
+        expect([unnamedSummary.claims, unnamedSummary.withSourceDocument]).toStrictEqual([1, 0]);
+
+        // A store-level failure is reported as a carry failure, not leaked raw.
+        const malformed = yield* decodeClaimsCarry({
+          candidates: [carriedCandidate("claim_malformed", "not-json", null)],
+          evidence: [],
+        });
+        const malformedFailure = yield* Effect.flip(
+          writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut, carry: malformed })).pipe(
+            provideScopedLayer(target)
+          )
+        );
+        expect(malformedFailure.message).toBe("Failed carrying candidate claims into the bundle.");
+
+        // An unreadable DuckDB store names the file whose document could not be resolved.
+        const brokenBundle = path.join(corpusRoot, "bundle-carry-broken");
+        yield* fs.makeDirectory(brokenBundle, { recursive: true });
+        yield* fs.writeFileString(path.join(brokenBundle, "practice.duckdb"), "this is not a duckdb file");
+        const named = yield* decodeClaimsCarry({
+          candidates: [carriedCandidate("claim_named", snapshot, "1_Response OA - 20001US01.txt")],
+          evidence: [],
+        });
+        const brokenFailure = yield* Effect.flip(
+          writePracticeKgClaimsCarry(PracticeKgClaimsCarryWrite.make({ bundleOut: brokenBundle, carry: named })).pipe(
+            provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(brokenBundle, "kg.pglite") }))
+          )
+        );
+        expect(brokenFailure.message).toContain("Failed resolving the source document");
       }),
       { timeout: 120_000 }
     );
@@ -1353,5 +1986,127 @@ it.layer(ConformanceBundleLive, { timeout: "2 minutes" })("native conformance bu
       arguments: { query: "alpha" },
       invalidArguments: { query: 1 },
     },
+  });
+});
+
+describe("family attribution fallback contracts", () => {
+  const row = (digest: string, fields: Partial<PracticeKgCatalogRow> = {}) =>
+    PracticeKgCatalogRow.make({
+      category: "docket",
+      client: null,
+      digest,
+      docket: "20001US01",
+      docketFamily: "20001",
+      effectiveName: "fixture.txt",
+      mtimeIso: "2026-10-01T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "fixture.txt",
+      ...fields,
+    });
+  const reference = (digest: string, docket: string) =>
+    PracticeKgDocketReferenceRow.make({ digest, docket, client: "12345", family: "20001" });
+
+  it("inherits a unanimous client for an unreferenced family document", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a"), row("b", { docket: null })],
+        docketReferences: [reference("a", "20001US01")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "12345", attributionSource: "family-consensus" },
+    ]);
+  });
+
+  it("accepts all family-level references and isolates other-docket citations", () => {
+    const result = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row("a", { docket: null }), row("b", { client: "67890" })],
+        docketReferences: [reference("a", "20001US02"), reference("b", "20001US010")],
+      })
+    );
+    expect(result).toMatchObject([
+      { digest: "a", client: "12345", attributionSource: "text-reference" },
+      { digest: "b", client: "67890", attributionSource: "client-map" },
+    ]);
+  });
+});
+
+describe("patent-only filename anchors", () => {
+  it("keeps client-map placement and resolves patent-only filename anchors", () => {
+    const row = PracticeKgCatalogRow.make({
+      category: "document",
+      client: "12345",
+      digest: "mapped",
+      docket: "10008US01",
+      docketFamily: "10008",
+      effectiveName: "patent.pdf",
+      mtimeIso: "2026-10-05T00:00:00Z",
+      organizedRelativePath: null,
+      restored: false,
+      sourceOriginChain: "fixture",
+      runLabel: "fixture",
+      sizeBytes: 1,
+      sourceLabel: "fixture",
+      sourceRelativePath: "patent.pdf",
+    });
+    const attributions = attributeDocuments(
+      PracticeKgAttributeDocumentsInput.make({
+        catalogRows: [row],
+        docketReferences: [
+          PracticeKgDocketReferenceRow.make({
+            digest: "absent",
+            client: "99999",
+            docket: "10008US01",
+            family: "10008",
+          }),
+        ],
+      })
+    );
+    expect(attributions).toEqual([
+      expect.objectContaining({ attributionSource: "client-map", familyKey: "12345.10008" }),
+    ]);
+    const enrichment = PracticeKgEnrichmentRow.make({
+      applicationNumber: null,
+      candidate: "1234567",
+      docketFamilies: "10008",
+      firstApplicantName: null,
+      firstInventorName: null,
+      inventionTitle: null,
+      parentApplicationNumbers: "",
+      patentNumber: "1234567",
+      status: "resolved",
+    });
+    const anchors = reconcileAnchors([
+      enrichment,
+      PracticeKgEnrichmentRow.make({ ...enrichment, candidate: "7654321", patentNumber: null }),
+    ]);
+    expect(anchors).toHaveLength(2);
+    expect(anchors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ applicationNumber: null, patentNumber: null, numbers: ["7654321"] }),
+      ])
+    );
+    const resolutions = resolveAnchors({
+      anchors,
+      attributions,
+      numberMentions: [PracticeKgNumberMentionRow.make({ digest: "mapped", number: "1234567", source: "filename" })],
+    });
+    expect(resolutions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          attributionSource: "filename",
+          memberFamilyKey: "12345.10008",
+          memberDocketKeys: ["12345.10008US01"],
+        }),
+        expect.objectContaining({ attributionSource: "mention", memberFamilyKey: null }),
+      ])
+    );
   });
 });

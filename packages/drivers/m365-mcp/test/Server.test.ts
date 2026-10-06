@@ -87,8 +87,25 @@ const M365McpServerConfigArbitrary = Arbitrary.schema(M365McpServerConfig);
 const sameM365ToolError = S.toEquivalence(M365ToolError);
 const sameM365McpServerConfig = S.toEquivalence(M365McpServerConfig);
 
+// The MCP server exposes read tools only; the driver's mailbox write and attachment
+// verbs are deliberately not wired to any tool.
+const notExposedByMcp = Effect.fn("M365Test.notExposedByMcp")(() =>
+  Effect.die(new Error("not exposed by the MCP server"))
+);
+
 const createMockM365 = () =>
   M365.of({
+    createEvent: notExposedByMcp,
+    createMasterCategory: notExposedByMcp,
+    deleteEvent: notExposedByMcp,
+    downloadMessageAttachment: notExposedByMcp,
+    ensureMasterCategories: notExposedByMcp,
+    findEventsByIdempotencyKey: notExposedByMcp,
+    getMailFolder: notExposedByMcp,
+    listMasterCategories: notExposedByMcp,
+    listMessageAttachments: notExposedByMcp,
+    updateEvent: notExposedByMcp,
+    updateMessageCategories: notExposedByMcp,
     deltaDriveItems: Effect.fn("M365Test.deltaDriveItems")(function* () {
       return M365DriveItemCollection.make({ value: [item] });
     }),

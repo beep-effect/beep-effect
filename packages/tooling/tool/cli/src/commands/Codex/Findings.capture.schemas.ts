@@ -72,7 +72,17 @@ export type CodexFindingSeverity = typeof CodexFindingSeverity.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CodexFindingStatus = LiteralKit(["Open", "New", "Closed"]).pipe(
+export const CodexFindingStatus = LiteralKit([
+  "Open",
+  "New",
+  "Closed",
+  "Triaged",
+  "In Progress",
+  "Fixed",
+  "Won't fix",
+  "Duplicate",
+  "False positive",
+]).pipe(
   $I.annoteSchema("CodexFindingStatus", {
     description: "Lifecycle status a finding carries on the Codex Cloud dashboard.",
   })
@@ -174,6 +184,47 @@ export const CodexFindingId = S.String.check(CodexFindingIdChecks).pipe(
 export type CodexFindingId = typeof CodexFindingId.Type;
 
 /**
+ * Source-qualified commit finding identity exported by Security Cloud.
+ *
+ * **Details**
+ *
+ * Keep the provider's namespace intact. A legacy bare ID is not automatically
+ * an alias: refresh must never silently merge identities across export formats.
+ *
+ * **Example** (Recognizing a commit finding)
+ *
+ * ```ts
+ * import { SecurityCloudFindingId } from "@beep/repo-cli/commands/Codex/Findings.capture.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(SecurityCloudFindingId)("commit:d2b9e11e8550819193516057a336ff90") // => true
+ * ```
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const SecurityCloudFindingId = S.String.check(
+  S.isPattern(/^commit:[0-9a-f]{32}$/, {
+    identifier: $I`SecurityCloudFindingIdPatternCheck`,
+    title: "Security Cloud Finding Id",
+    description: "A commit namespace followed by the provider's 32-character lowercase hexadecimal identity.",
+    message: "Expected a Security Cloud commit finding identity",
+  })
+).pipe(
+  $I.annoteSchema("SecurityCloudFindingId", {
+    description: "Source-qualified Security Cloud commit finding identity, preserved verbatim.",
+  })
+);
+
+/**
+ * Identity of a finding from the Security Cloud CSV contract.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SecurityCloudFindingId = typeof SecurityCloudFindingId.Type;
+
+/**
  * Disjoint cloud and local finding identities used by packet bindings.
  *
  * **Example** (Recognizing a local source identity)
@@ -188,6 +239,7 @@ export type CodexFindingId = typeof CodexFindingId.Type;
  */
 export const CapturedFindingId = S.Union([
   CodexFindingId,
+  SecurityCloudFindingId,
   S.String.check(S.isPattern(/^local:csf_[a-f0-9]{24}$/)),
 ]).pipe(
   $I.annoteSchema("CapturedFindingId", { description: "Cloud ID or explicitly namespaced local stable finding ID." })
@@ -212,7 +264,7 @@ export type CapturedFindingId = typeof CapturedFindingId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-bundle"]).pipe(
+export const CodexCaptureSource = LiteralKit(["cloud-csv", "security-cloud-csv", "security-bundle"]).pipe(
   $I.annoteSchema("CodexCaptureSource", { description: "Discriminates cloud exports from local sealed bundles." })
 );
 /**
