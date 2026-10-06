@@ -52,9 +52,11 @@ git diff --check -- goals/<slug>
 
 Decide changes to public API, schema, data migration, auth, infra, security
 behavior, dependencies, lockfiles, generated files, or destructive state
-yourself when the goal needs them: record each in the decision log with its
-reason and how to reverse it, then continue. Escalate only what AGENTS.md
-"Autonomy" lists.
+yourself when the goal needs them: record each in SPEC.md's Decision Log with
+its reason and how to reverse it, then continue. Land the reversal path for an
+irreversible change (a tested down-migration, a backup of deleted state) before
+the change merges, and ship a breaking public API or schema change with a major
+changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
 Done only when the goal reaches `completed-retained` (acceptance passes,
 verification is complete, closeout and reflection landed), or when a blocker
