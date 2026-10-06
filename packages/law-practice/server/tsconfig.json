@@ -15,6 +15,9 @@
       "path": "../../drivers/libpff/tsconfig.json"
     },
     {
+      "path": "../../drivers/m365/tsconfig.json"
+    },
+    {
       "path": "../../drivers/pglite/tsconfig.json"
     },
     {

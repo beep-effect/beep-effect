@@ -10,6 +10,9 @@
       "path": "apps/architecture-lab-proof"
     },
     {
+      "path": "apps/docket-intake"
+    },
+    {
       "path": "apps/oip-web"
     },
     {

@@ -1,0 +1,55 @@
+{
+  "name": "@beep/docket-intake",
+  "version": "0.0.0",
+  "description": "Docket intake service: watches a mailbox, has two agents enter and review deadlines, and writes tentative calendar entries.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/docket-intake",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "apps/docket-intake"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:build": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "start": "bun src/bin.ts run",
+    "test": "bun run beep:test"
+  },
+  "bin": {
+    "docket-intake": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@beep/anthropic": "workspace:^",
+    "@beep/identity": "workspace:^",
+    "@beep/law-practice-domain": "workspace:^",
+    "@beep/law-practice-server": "workspace:^",
+    "@beep/law-practice-use-cases": "workspace:^",
+    "@beep/m365": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@beep/test-runner": "workspace:^",
+    "@beep/test-utils": "workspace:^",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

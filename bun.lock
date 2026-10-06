@@ -64,6 +64,31 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/docket-intake": {
+      "name": "@beep/docket-intake",
+      "version": "0.0.0",
+      "bin": {
+        "docket-intake": "./src/bin.ts",
+      },
+      "dependencies": {
+        "@beep/anthropic": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/law-practice-domain": "workspace:^",
+        "@beep/law-practice-server": "workspace:^",
+        "@beep/law-practice-use-cases": "workspace:^",
+        "@beep/m365": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/labs/api-docs": {
       "name": "@beep/api-docs",
       "version": "0.0.0",
@@ -2565,6 +2590,7 @@
         "@beep/law-practice-tables": "workspace:^",
         "@beep/law-practice-use-cases": "workspace:^",
         "@beep/libpff": "workspace:^",
+        "@beep/m365": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -3731,6 +3757,8 @@
     "@beep/dock": ["@beep/dock@workspace:packages/foundation/ui-system/dock"],
 
     "@beep/dock-react": ["@beep/dock-react@workspace:packages/foundation/ui-system/dock-react"],
+
+    "@beep/docket-intake": ["@beep/docket-intake@workspace:apps/docket-intake"],
 
     "@beep/documents-domain": ["@beep/documents-domain@workspace:packages/documents/domain"],
 
