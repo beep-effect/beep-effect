@@ -90,7 +90,8 @@ const addresses = (description: string) => S.Array(S.String).annotateKey({ descr
  *
  * **Details**
  *
- * Its existence is what lets `delete_draft` delete the draft later. The
+ * Its existence is what lets `send_draft` send the draft and `delete_draft`
+ * delete it later. The
  * attachment digests are a record of what was attached; the send guard does
  * not read them, it hashes the stored bytes.
  *
@@ -247,6 +248,10 @@ export class OutboxSendOutcomeRecord extends S.TaggedClass<OutboxSendOutcomeReco
 
 /**
  * Audit record of a calendar event the server created.
+ *
+ * **Details**
+ *
+ * Its existence is what lets `update_event` change the event later.
  *
  * **Example** (Record a created event)
  *
@@ -505,6 +510,7 @@ export class OutboxAuditIds extends Context.Service<OutboxAuditIds, OutboxAuditI
 export type OutboxAuditLogShape = {
   readonly append: (record: OutboxAuditRecord) => Effect.Effect<void, OutboxAuditError>;
   readonly hasCreatedDraft: (draftId: string) => Effect.Effect<boolean, OutboxAuditError>;
+  readonly hasCreatedEvent: (eventId: string) => Effect.Effect<boolean, OutboxAuditError>;
   readonly nextAuditId: Effect.Effect<string>;
 };
 
@@ -512,6 +518,7 @@ const AuditLine = S.fromJsonString(OutboxAuditRecord);
 const encodeLine = S.encodeEffect(AuditLine);
 const decodeLine = S.decodeUnknownOption(AuditLine);
 const isDraftCreated = S.is(OutboxDraftCreatedRecord);
+const isEventCreated = S.is(OutboxEventCreatedRecord);
 
 const failure = (reason: OutboxAuditErrorReason, message: string) => (): OutboxAuditError =>
   OutboxAuditError.make({ message, reason });
@@ -552,7 +559,9 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
 
   const appendLine = Effect.fnUntraced(function* (fileName: string, line: string) {
     const file = yield* fs.open(path.join(directory, fileName), { flag: "a", mode: AUDIT_FILE_MODE });
-    yield* file.writeAll(textEncoder.encode(`${line}\n`));
+    // The leading newline ends whatever a crash left unterminated at the end of the file, so a
+    // torn fragment costs only itself and never the record appended after it.
+    yield* file.writeAll(textEncoder.encode(`\n${line}\n`));
     // The record must be on disk before the caller acts on it.
     yield* file.sync;
   }, Effect.scoped);
@@ -563,7 +572,8 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
       pipe(A.filter(names, Str.endsWith(AUDIT_FILE_SUFFIX)), A.sort(Order.String)),
       (name) => fs.readFileString(path.join(directory, name))
     );
-    // A torn last line after a crash is skipped rather than blocking every later send.
+    // Empty lines separate records. A line that does not decode (a torn write after a crash)
+    // is skipped rather than blocking every later send.
     return pipe(
       texts,
       A.flatMap(Str.split("\n")),
@@ -572,6 +582,12 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
       A.getSomes
     );
   });
+
+  const hasRecord = (matches: (record: OutboxAuditRecord) => boolean) =>
+    readRecords().pipe(
+      Effect.map(A.some(matches)),
+      Effect.mapError(failure("read", "The audit log could not be read."))
+    );
 
   return OutboxAuditLog.of({
     append: Effect.fn("OutboxAuditLog.append")(function* (record) {
@@ -583,10 +599,12 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
         .withPermits(1)(appendLine(outboxAuditFileName(record), line))
         .pipe(Effect.mapError(failure("append", "The audit record could not be appended.")));
     }),
-    hasCreatedDraft: Effect.fn("OutboxAuditLog.hasCreatedDraft")(function* (draftId) {
-      const records = yield* readRecords().pipe(Effect.mapError(failure("read", "The audit log could not be read.")));
-      return A.some(records, (record) => isDraftCreated(record) && record.draftId === draftId);
-    }),
+    hasCreatedDraft: Effect.fn("OutboxAuditLog.hasCreatedDraft")((draftId) =>
+      hasRecord((record) => isDraftCreated(record) && record.draftId === draftId)
+    ),
+    hasCreatedEvent: Effect.fn("OutboxAuditLog.hasCreatedEvent")((eventId) =>
+      hasRecord((record) => isEventCreated(record) && record.eventId === eventId)
+    ),
     nextAuditId: ids.next,
   });
 });
@@ -616,8 +634,10 @@ export class OutboxAuditLog extends Context.Service<OutboxAuditLog, OutboxAuditL
    *
    * The directory is created with mode 0700 when the layer is built, and the
    * layer fails when it cannot be. Each append opens the month's file in
-   * append mode, writes one line and flushes it to disk before it returns.
-   * Appends are serialized.
+   * append mode, writes a newline, the record's line and a newline, and
+   * flushes them to disk before it returns. The leading newline keeps the
+   * record on a line of its own when a crash left the file's last line
+   * unterminated; readers skip empty lines. Appends are serialized.
    *
    * **Example** (Build the layer over a directory)
    *

@@ -4,9 +4,12 @@
  * **Details**
  *
  * The handlers compose the `@beep/m365` driver's app-only verbs with the
- * attachment source, the send guard and the audit log. Exactly one handler,
- * `m365_outbox_send_draft`, calls the driver's send verb, and it does so only
- * after the guard has passed and the intent record is on disk. The guard sees
+ * attachment source, the send guard, the event update guard and the audit
+ * log. Exactly one handler, `m365_outbox_send_draft`, calls the driver's send
+ * verb, and it does so only for a draft this server recorded creating, after
+ * the guard has passed and the intent record is on disk. An event is updated
+ * only when this server recorded creating it and it has no attendee, because
+ * Graph mails a meeting's attendees when it changes. The send guard sees
  * the stored attachments as they are: each one is downloaded and hashed on
  * every read and every send. Spans carry
  * counts and outcomes only: never an address, a subject, a body, a file name
@@ -25,6 +28,7 @@ import {
   M365CreateEventRequest,
   M365DeleteDraftMessageRequest,
   M365EventPatch,
+  M365GetEventRequest,
   M365GetMessageRequest,
   M365IdempotencyKey,
   M365MailBody,
@@ -50,6 +54,7 @@ import {
   OutboxSendIntentRecord,
   OutboxSendOutcomeRecord,
 } from "./OutboxAuditLog.ts";
+import { checkEventUpdate, OutboxEventUpdateCheck, storedAttendeeCount } from "./OutboxEventGuard.ts";
 import { checkSendExpectation, OutboxSendCheck, sameAttachments, storedRecipientAddresses } from "./OutboxSendGuard.ts";
 import { OutboxStoredAttachmentsRequest, readStoredAttachments } from "./OutboxStoredAttachments.ts";
 import {
@@ -67,6 +72,7 @@ import type * as Tool from "effect/ai/Tool";
 import type * as Layer from "effect/Layer";
 import type { OutboxAttachmentError } from "./OutboxAttachmentSource.ts";
 import type { OutboxAuditError, OutboxSendOutcome } from "./OutboxAuditLog.ts";
+import type { OutboxEventUpdateRefusalReason } from "./OutboxEventGuard.ts";
 import type { OutboxSendMismatchField } from "./OutboxSendGuard.ts";
 import type { OutboxStoredAttachmentError } from "./OutboxStoredAttachments.ts";
 import type { OutboxCreateDraftParams, OutboxSendDraftParams, OutboxUpdateEventParams } from "./OutboxTools.ts";
@@ -134,6 +140,12 @@ const completedWithoutAudit = (what: string) => (): OutboxRefusal =>
     message: `${what}, but its audit record could not be written. Do not repeat the call.`,
     reason: "audit",
   });
+
+const EVENT_UPDATE_REFUSAL_MESSAGE: Readonly<Record<OutboxEventUpdateRefusalReason, string>> = {
+  "has-attendees":
+    "The event has attendees, and Microsoft 365 mails them when it changes, so it was not updated. This server sends mail only through m365_outbox_send_draft.",
+  "not-created-here": "This server has no record of creating that event, so it was not updated.",
+};
 
 const decodeIdempotencyKey = S.decodeUnknownOption(M365IdempotencyKey);
 
@@ -380,12 +392,6 @@ export const makeOutboxToolkitHandlers = (
         ),
         m365_outbox_send_draft: Effect.fn("M365Outbox.m365_outbox_send_draft")(
           function* (params: OutboxSendDraftParams) {
-            const draft = yield* readMessage(params.draftId);
-            // Attachments that cannot be listed are a tool error; ones that cannot be verified refuse the send.
-            const stored = yield* readStored(params.draftId).pipe(
-              Effect.asSome,
-              Effect.catchTag("OutboxStoredAttachmentError", () => Effect.succeedNone)
-            );
             const auditId = yield* audit.nextAuditId;
 
             // Returns whether the outcome record reached the log; the send has already been decided.
@@ -412,6 +418,17 @@ export const makeOutboxToolkitHandlers = (
               return OutboxSendResult.make({ auditId, auditRecorded, mismatches, outcome: "refused" });
             });
 
+            // Only a draft this server recorded creating is sent. The guard below proves the caller
+            // restated the draft, not that the draft is the session's own. Nothing is read or downloaded.
+            if (!(yield* audit.hasCreatedDraft(params.draftId))) {
+              return yield* refused(["not-created-here"]);
+            }
+            const draft = yield* readMessage(params.draftId);
+            // Attachments that cannot be listed are a tool error; ones that cannot be verified refuse the send.
+            const stored = yield* readStored(params.draftId).pipe(
+              Effect.asSome,
+              Effect.catchTag("OutboxStoredAttachmentError", () => Effect.succeedNone)
+            );
             if (O.isNone(stored)) {
               return yield* refused(["attachments"]);
             }
@@ -461,6 +478,18 @@ export const makeOutboxToolkitHandlers = (
         ),
         m365_outbox_update_event: Effect.fn("M365Outbox.m365_outbox_update_event")(
           function* (params: OutboxUpdateEventParams) {
+            // Both gates run before any PATCH: Graph mails a meeting's attendees when it changes,
+            // which would be a send outside the send guard.
+            const createdHere = yield* audit.hasCreatedEvent(params.eventId);
+            const stored = yield* m365.getEvent(M365GetEventRequest.make({ eventId: params.eventId, userId }));
+            yield* Effect.annotateCurrentSpan({
+              m365_outbox_event_attendee_count: storedAttendeeCount(stored),
+              m365_outbox_event_created_here: createdHere,
+            });
+            const refusal = checkEventUpdate(OutboxEventUpdateCheck.make({ createdHere, event: stored }));
+            if (O.isSome(refusal)) {
+              return yield* refuse(refusal.value.reason, EVENT_UPDATE_REFUSAL_MESSAGE[refusal.value.reason]);
+            }
             const event = yield* m365.updateEvent(
               M365UpdateEventRequest.make({
                 eventId: params.eventId,

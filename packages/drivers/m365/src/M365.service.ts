@@ -23,7 +23,7 @@ import { getSomesStruct } from "@beep/utils/Option";
 import { Config, Context, Duration, Effect, flow, HashSet, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as Base64 from "effect/encoding/Base64";
-import { dual } from "effect/Function";
+import { constTrue, dual } from "effect/Function";
 import { FetchHttpClient } from "effect/http";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -2527,6 +2527,9 @@ const uploadAttachmentInChunks = Effect.fnUntraced(function* (
   const chunks = uploadChunks(request.content);
   yield* Effect.annotateCurrentSpan({ m365_upload_chunk_count: A.length(chunks) });
   // A chunk PUT names its byte range, so replaying one after a throttle is safe.
+  // The upload URL carries the session token in its query, and the HTTP client's own span
+  // records `url.full` and `url.query`, so client tracing is off for the chunk requests.
+  // The enclosing driver span still records the size and the chunk count.
   const responses = yield* Effect.forEach(chunks, (chunk) =>
     executeWithRetry(
       runtime.client,
@@ -2535,7 +2538,7 @@ const uploadAttachmentInChunks = Effect.fnUntraced(function* (
       sessionUrl,
       runtime.config.maxRetries
     )
-  );
+  ).pipe(Effect.provideService(HttpClient.TracerDisabledWhen, constTrue));
   const id = yield* pipe(
     A.last(responses),
     O.flatMapNullishOr((response) => response.headers.location),

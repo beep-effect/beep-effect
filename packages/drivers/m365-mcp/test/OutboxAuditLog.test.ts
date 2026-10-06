@@ -4,6 +4,7 @@ import {
   OutboxAuditLog,
   OutboxAuditRecord,
   OutboxDraftCreatedRecord,
+  OutboxEventCreatedRecord,
   OutboxSendIntentRecord,
   OutboxSendOutcomeRecord,
   outboxAuditFileName,
@@ -119,8 +120,8 @@ describe("@beep/m365-mcp outbox audit log", () => {
         assert.deepStrictEqual(
           A.map(lines, (fileLines) => A.map(fileLines, (line) => (Str.isEmpty(line) ? "" : "record"))),
           [
-            ["record", ""],
-            ["record", ""],
+            ["", "record", ""],
+            ["", "record", ""],
           ]
         );
         assert.deepStrictEqual(
@@ -163,6 +164,39 @@ describe("@beep/m365-mcp outbox audit log", () => {
         );
 
         assert.deepStrictEqual(found, [false, true, true, false]);
+      })
+    );
+
+    it.effect(
+      "keeps the record appended after a torn fragment that has no trailing newline",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* tempDirectory;
+
+        const found = yield* useLog(directory, (log) =>
+          Effect.gen(function* () {
+            // What a crash in the middle of a write leaves: part of a record and no newline.
+            yield* fs.writeFileString(path.join(directory, "2030-01.jsonl"), '{"_tag":"draft-crea');
+            yield* log.append(draftCreated(january, []));
+            yield* log.append(
+              OutboxEventCreatedRecord.make({
+                at: january,
+                auditId: "audit-0",
+                eventId: "event-1",
+                subject: "Fixture event",
+              })
+            );
+            return [
+              yield* log.hasCreatedDraft(DRAFT_ID),
+              yield* log.hasCreatedEvent("event-1"),
+              yield* log.hasCreatedEvent(DRAFT_ID),
+              yield* log.hasCreatedDraft("event-1"),
+            ];
+          })
+        );
+
+        assert.deepStrictEqual(found, [true, true, false, false]);
       })
     );
 

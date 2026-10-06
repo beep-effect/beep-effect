@@ -66,6 +66,13 @@ export * from "./OutboxAuditLog.ts";
  */
 export * from "./OutboxConfig.ts";
 /**
+ * The outbox event update guard.
+ *
+ * @category guards
+ * @since 0.1.0
+ */
+export * from "./OutboxEventGuard.ts";
+/**
  * Outbox tool handlers.
  *
  * @category handlers

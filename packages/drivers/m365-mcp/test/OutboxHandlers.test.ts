@@ -1,4 +1,4 @@
-import { M365Error } from "@beep/m365";
+import { GraphEmailAddress, GraphEvent, GraphEventAttendee, M365Error } from "@beep/m365";
 import {
   makeOutboxToolkitHandlers,
   OutboxDraftCreated,
@@ -22,6 +22,7 @@ import {
   digestOf,
   draftCreatedRecord,
   EVENT_ID,
+  eventCreatedRecord,
   FIXTURE_CONTENT,
   fixtureFile,
   MAILBOX,
@@ -332,6 +333,42 @@ describe("@beep/m365-mcp outbox handlers", () => {
     );
   });
 
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("send_draft for a draft this server did not create", (it) => {
+    it.effect(
+      "refuses with not-created-here alone, reads and downloads nothing, and records one refused outcome",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        // The stored draft matches the expectation in every field; only the creation record is missing.
+        yield* world.script({ knownDraftIds: [] });
+
+        const output = yield* send;
+        const records = yield* world.records;
+
+        assert.isFalse(output.isFailure);
+        assert.isTrue(isSendResult(output.result));
+        if (isSendResult(output.result)) {
+          assert.strictEqual(output.result.outcome, "refused");
+          assert.deepStrictEqual(output.result.mismatches, ["not-created-here"]);
+          assert.isTrue(output.result.auditRecorded);
+        }
+        assert.deepStrictEqual(yield* world.calls, []);
+        assert.deepStrictEqual(
+          A.map(records, (record) =>
+            record._tag === "send-outcome" ? [record._tag, record.outcome, record.mismatches] : [record._tag]
+          ),
+          [["send-outcome", "refused", ["not-created-here"]]]
+        );
+
+        // The same draft, once this server has a creation record for it, is sent.
+        yield* world.script({ records: [draftCreatedRecord([])] });
+        const own = yield* send;
+
+        assert.isTrue(isSendResult(own.result) && own.result.outcome === "sent");
+        assert.deepStrictEqual(sends(yield* world.calls), ["sendDraftMessage"]);
+      })
+    );
+  });
+
   it.layer(HandlersLayer, { timeout: "10 seconds" })("send_draft when the intent record cannot be written", (it) => {
     it.effect(
       "fails the call and never reaches the send verb",
@@ -425,6 +462,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
           .handle("m365_outbox_delete_draft", { draftId: DRAFT_ID })
           .pipe(Effect.flatMap(head));
 
+        yield* world.script({ knownDraftIds: [] });
         const unrecorded = yield* deleteDraft;
         yield* world.script({
           draft: { ...storedDraft, isDraft: O.some(false) },
@@ -461,8 +499,56 @@ describe("@beep/m365-mcp outbox handlers", () => {
 
         assert.isFalse(created.isFailure);
         assert.isFalse(updated.isFailure);
-        assert.deepStrictEqual(yield* world.calls, ["createEvent", "updateEvent"]);
-        assert.deepStrictEqual(yield* world.userIds, [O.some(MAILBOX), O.some(MAILBOX)]);
+        // The update reads the event before it changes it.
+        assert.deepStrictEqual(yield* world.calls, ["createEvent", "getEvent", "updateEvent"]);
+        assert.deepStrictEqual(yield* world.userIds, A.replicate(O.some(MAILBOX), 3));
+        assert.deepStrictEqual(tags(yield* world.records), ["event-created", "event-updated"]);
+      })
+    );
+  });
+
+  it.layer(HandlersLayer, { timeout: "10 seconds" })("update_event outside the send guard", (it) => {
+    it.effect(
+      "refuses an event this server did not create and an own event that gained an attendee, never patching",
+      Effect.fnUntraced(function* () {
+        const world = yield* OutboxWorld;
+        const toolkit = yield* OutboxToolkit;
+        const updateEvent = toolkit
+          .handle("m365_outbox_update_event", { eventId: EVENT_ID, subject: "Fixture event (moved)" })
+          .pipe(Effect.flatMap(head));
+        const reasonOf = (output: { readonly result: unknown }) =>
+          isToolError(output.result) ? output.result.reason : O.none();
+        const meeting = GraphEvent.make({
+          attendees: O.some([
+            GraphEventAttendee.make({
+              emailAddress: O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") })),
+              type: O.some("required"),
+            }),
+          ]),
+          id: EVENT_ID,
+        });
+
+        // An attendee-less event that exists in the mailbox but has no creation record here.
+        const foreign = yield* updateEvent;
+        yield* world.script({ event: meeting, records: [eventCreatedRecord] });
+        const gainedAttendee = yield* updateEvent;
+        const refusedCalls = yield* world.calls;
+        const refusedRecords = yield* world.records;
+        yield* world.script({ event: GraphEvent.make({ attendees: O.some([]), id: EVENT_ID }) });
+        const own = yield* updateEvent;
+
+        assert.isTrue(foreign.isFailure);
+        assertSome(reasonOf(foreign), "not-created-here");
+        assert.isTrue(gainedAttendee.isFailure);
+        assertSome(reasonOf(gainedAttendee), "has-attendees");
+        if (isToolError(gainedAttendee.result)) {
+          assert.isFalse(gainedAttendee.result.retryable);
+          assert.notInclude(gainedAttendee.result.message, "guest@example.test");
+        }
+        assert.deepStrictEqual(refusedCalls, ["getEvent", "getEvent"]);
+        assert.deepStrictEqual(tags(refusedRecords), ["event-created"]);
+        assert.isFalse(own.isFailure);
+        assert.deepStrictEqual(yield* world.calls, ["getEvent", "getEvent", "getEvent", "updateEvent"]);
         assert.deepStrictEqual(tags(yield* world.records), ["event-created", "event-updated"]);
       })
     );

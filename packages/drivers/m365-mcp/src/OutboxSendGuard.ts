@@ -66,7 +66,14 @@ export class OutboxSendExpectation extends S.Class<OutboxSendExpectation>($I`Out
 ) {}
 
 /**
- * A part of a stored draft that can differ from a send expectation.
+ * A reason a send is refused: a part of the stored draft that differs from
+ * the send expectation, or `not-created-here`.
+ *
+ * **Details**
+ *
+ * `not-created-here` means this server has no record of creating the draft.
+ * The handler reports it alone, before it reads the draft;
+ * {@link checkSendExpectation} never returns it.
  *
  * **Example** (Guard a mismatch field)
  *
@@ -81,6 +88,7 @@ export class OutboxSendExpectation extends S.Class<OutboxSendExpectation>($I`Out
  * @since 0.1.0
  */
 export const OutboxSendMismatchField = LiteralKit([
+  "not-created-here",
   "not-a-draft",
   "to",
   "cc",
@@ -90,7 +98,8 @@ export const OutboxSendMismatchField = LiteralKit([
   "attachment-digest",
 ]).pipe(
   $I.annoteSchema("OutboxSendMismatchField", {
-    description: "A part of a stored draft that differs from the send expectation.",
+    description:
+      "A reason a send is refused: a part of the stored draft that differs from the send expectation, or `not-created-here` when this server did not create the draft.",
   })
 );
 

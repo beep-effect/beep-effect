@@ -20,6 +20,7 @@ import {
   OutboxAuditError,
   OutboxAuditLog,
   OutboxDraftCreatedRecord,
+  OutboxEventCreatedRecord,
   OutboxHandlerSettings,
 } from "@beep/m365-mcp";
 import { Sha256Hex } from "@beep/schema";
@@ -101,9 +102,12 @@ type WorldState = {
   readonly calls: ReadonlyArray<string>;
   readonly corruptUploads: boolean;
   readonly draft: GraphMessage;
+  readonly event: GraphEvent;
   readonly failDownloads: boolean;
   readonly failAttachmentAt: O.Option<number>;
   readonly files: ReadonlyArray<StoredFile>;
+  /** Draft ids an earlier server run recorded creating, beyond what `records` holds. */
+  readonly knownDraftIds: ReadonlyArray<string>;
   readonly nextId: number;
   readonly records: ReadonlyArray<OutboxAuditRecord>;
   readonly sendFailure: O.Option<M365Error>;
@@ -115,9 +119,11 @@ const initialState: WorldState = {
   calls: [],
   corruptUploads: false,
   draft: storedDraft,
+  event: GraphEvent.make({ id: EVENT_ID }),
   failDownloads: false,
   failAttachmentAt: O.none(),
   files: [fixtureFile],
+  knownDraftIds: [DRAFT_ID],
   nextId: 1,
   records: [],
   sendFailure: O.none(),
@@ -222,7 +228,10 @@ const StubM365Layer = Layer.effect(
       }),
       ensureMasterCategories: notScripted,
       findEventsByIdempotencyKey: notScripted,
-      getEvent: notScripted,
+      getEvent: Effect.fn("StubM365.getEvent")(function* (request) {
+        yield* called("getEvent", request);
+        return (yield* Ref.get(state)).event;
+      }),
       getListItem: notScripted,
       getMailFolder: notScripted,
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
@@ -269,6 +278,7 @@ const StubM365Layer = Layer.effect(
 );
 
 const isDraftCreated = S.is(OutboxDraftCreatedRecord);
+const isEventCreated = S.is(OutboxEventCreatedRecord);
 
 const StubAuditLogLayer = Layer.effect(
   OutboxAuditLog,
@@ -284,7 +294,14 @@ const StubAuditLogLayer = Layer.effect(
       }),
       hasCreatedDraft: Effect.fn("StubAuditLog.hasCreatedDraft")(function* (draftId) {
         const current = yield* Ref.get(state);
-        return A.some(current.records, (record) => isDraftCreated(record) && record.draftId === draftId);
+        return (
+          A.contains(current.knownDraftIds, draftId) ||
+          A.some(current.records, (record) => isDraftCreated(record) && record.draftId === draftId)
+        );
+      }),
+      hasCreatedEvent: Effect.fn("StubAuditLog.hasCreatedEvent")(function* (eventId) {
+        const current = yield* Ref.get(state);
+        return A.some(current.records, (record) => isEventCreated(record) && record.eventId === eventId);
       }),
       nextAuditId: Ref.modify(state, (current) => [
         `audit-${current.nextId}`,
@@ -335,6 +352,14 @@ export const OutboxWorldServices = Layer.mergeAll(StubM365Layer, StubAuditLogLay
 );
 
 const FIXED_AT = DateTime.makeUnsafe("2030-01-15T12:00:00Z");
+
+/** The record `create_event` would have written for the stored event. */
+export const eventCreatedRecord = OutboxEventCreatedRecord.make({
+  at: FIXED_AT,
+  auditId: "audit-0",
+  eventId: EVENT_ID,
+  subject: "Fixture event",
+});
 
 /** The record `create_draft` would have written for the stored draft. */
 export const draftCreatedRecord = (attachments: ReadonlyArray<OutboxAttachmentDigest>): OutboxDraftCreatedRecord =>

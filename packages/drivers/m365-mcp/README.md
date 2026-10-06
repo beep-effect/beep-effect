@@ -27,20 +27,40 @@ configured mailbox. Contract and decisions: `goals/m365-agent-outbox/SPEC.md`.
 | Tool | Does | Sends mail |
 | --- | --- | --- |
 | `m365_outbox_create_draft` | Creates a draft and attaches files from local paths. Returns the draft id and each attachment's name, size and sha256. | No |
-| `m365_outbox_get_draft` | Returns the stored draft's recipients, subject, body length, and each stored attachment's name, size and sha256. | No |
+| `m365_outbox_get_draft` | Returns the stored draft's recipients, subject, body length, and each stored attachment's name, size and sha256. Reads any draft id in the mailbox. | No |
 | `m365_outbox_delete_draft` | Deletes a draft this server created that is still a draft. | No |
-| `m365_outbox_send_draft` | Checks the stored draft against an `expect` block, then sends it. | **Yes, the only one** |
+| `m365_outbox_send_draft` | Sends a draft this server created, after checking the stored draft against an `expect` block. | **Yes, the only one** |
 | `m365_outbox_create_event` | Creates a calendar event. No attendees. | No |
-| `m365_outbox_update_event` | Changes fields of a calendar event. No attendees. | No |
+| `m365_outbox_update_event` | Changes fields of a calendar event this server created, when the event has no attendees. | No |
 
 No tool takes a mailbox: it is fixed by `M365_OUTBOX_MAILBOX`.
+
+"This server created" means the audit log holds a `draft-created` or
+`event-created` record for the id. `get_draft` reads any draft; sending,
+deleting and updating are limited to what the log records.
+
+### Calendar events
+
+`update_event` reads the event before it changes anything and refuses when:
+
+- the audit log has no `event-created` record for the id (`not-created-here`);
+- the event has at least one attendee (`has-attendees`), for example because
+  someone added one in Outlook.
+
+Microsoft Graph mails every attendee of a meeting when its subject, body or
+time changes. That would be a send outside the `expect` check and the audit
+pair, so an event with attendees is never changed by this server.
 
 ### Sending
 
 `send_draft` takes the draft id and `expect`: the `to`, `cc` and `bcc`
 addresses, the subject, and every attachment as `{ name, size, sha256 }`, all
-three required. It reads the draft back, downloads each stored attachment and
-hashes it, and sends only when:
+three required. A draft id the audit log has no `draft-created` record for is
+refused with the single field `not-created-here`; nothing is read or
+downloaded. A draft created here and later edited in Outlook is still
+sendable once `expect` restates it. For a draft it created, the server reads
+the draft back, downloads each stored attachment and hashes it, and sends
+only when:
 
 - the message is still a draft;
 - each recipient list equals the expected one as a set (case and surrounding
@@ -92,9 +112,17 @@ Append-only JSON Lines, one `YYYY-MM.jsonl` per month, in
 send that passes the guard writes `send-intent`, flushed to disk before the
 Graph call, then `send-outcome` with the same `auditId`; if the intent cannot
 be written, nothing is sent. A send the guard refuses writes one refused
-`send-outcome`. Draft creation, draft deletion and event writes write one
-record each. Records hold recipients, subjects, attachment names, sizes and
+`send-outcome`, and so does a send of a draft the log has no creation record
+for. Draft creation, draft deletion and event writes write one record each; a
+refused event update writes none. Records hold recipients, subjects, attachment names, sizes and
 digests, never a body or bytes. The log stays on the workstation.
+
+Each append writes a newline, the record and a newline, so a file has an empty
+line between records. If a crash leaves a partial record at the end of a file,
+the next record still starts on its own line; readers skip empty lines and
+lines that do not decode. The `draft-created` and `event-created` records are
+what later permit sending, deleting and updating, so do not delete or trim the
+log files while drafts or events made through this server are still in use.
 
 ### Configuration
 
@@ -115,8 +143,12 @@ The five required values are 1Password references in `outbox.env`, resolved at
 launch:
 
 ```bash
-op run --env-file=./packages/drivers/m365-mcp/outbox.env -- bun run ./packages/drivers/m365-mcp/src/bin-outbox.ts
+op run --no-masking --env-file=./packages/drivers/m365-mcp/outbox.env -- bun run ./packages/drivers/m365-mcp/src/bin-outbox.ts
 ```
+
+`--no-masking` is required: the server's stdout is the MCP JSON-RPC channel,
+and without the flag `op run` rewrites any tool result that contains the
+mailbox address to `<concealed by 1Password>`.
 
 The repository's `.mcp.json` registers that command as `beep-m365-outbox`.
 Without the credentials the server exits with a configuration error naming the

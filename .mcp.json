@@ -32,6 +32,7 @@
       "command": "op",
       "args": [
         "run",
+        "--no-masking",
         "--env-file=./packages/drivers/m365-mcp/outbox.env",
         "--",
         "bun",

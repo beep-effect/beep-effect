@@ -29,6 +29,8 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as Tracer from "effect/Tracer";
 import type { M365Error } from "@beep/m365";
 
 const GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
@@ -36,8 +38,8 @@ const MAILBOX = "mailbox-id";
 const MAILBOX_URL = `${GRAPH_BASE_URL}/users/${MAILBOX}`;
 const MESSAGE_URL = `${MAILBOX_URL}/messages/message-id`;
 const TOKEN = "m365-app-only-token";
-const UPLOAD_URL =
-  "https://outlook.example.test/api/v2.0/Users('mailbox-id')/Messages('message-id')/AttachmentSessions('session-id')?authtoken=fixture-session-token";
+const UPLOAD_SESSION_TOKEN = "fixture-session-token";
+const UPLOAD_URL = `https://outlook.example.test/api/v2.0/Users('mailbox-id')/Messages('message-id')/AttachmentSessions('session-id')?authtoken=${UPLOAD_SESSION_TOKEN}`;
 const JSON_CONTENT_TYPE = "application/json";
 
 type CapturedRequest = {
@@ -163,6 +165,25 @@ const reasonOf = <A>(effect: Effect.Effect<A, M365Error>) =>
   failureOf(effect).pipe(Effect.map(O.map((error) => error.reason)));
 
 const routes = A.map((capture: CapturedRequest) => `${capture.method} ${capture.url}`);
+
+// Every span the effect under test starts, with whatever attributes it ends up carrying.
+const makeRecordingTracer = (): { readonly spans: Array<Tracer.NativeSpan>; readonly tracer: Tracer.Tracer } => {
+  const spans: Array<Tracer.NativeSpan> = [];
+  const tracer = Tracer.make({
+    span: (options) => {
+      const span = new Tracer.NativeSpan(options);
+      spans.push(span);
+      return span;
+    },
+  });
+  return { spans, tracer };
+};
+
+const spanTexts = (spans: ReadonlyArray<Tracer.NativeSpan>): ReadonlyArray<string> =>
+  A.flatMap(spans, (span) => [
+    span.name,
+    ...A.flatMap(A.fromIterable(span.attributes), ([key, value]) => [key, `${value}`]),
+  ]);
 
 const syntheticBytes = (size: number): Uint8Array => Uint8Array.from({ length: size }, (_, index) => index % 251);
 
@@ -393,10 +414,32 @@ describe("@beep/m365 mail outbound verbs", () => {
           )
         );
 
-        const attachment = yield* m365.addMessageAttachment(attachmentRequest(content));
+        const { spans, tracer } = makeRecordingTracer();
+
+        const attachment = yield* m365.addMessageAttachment(attachmentRequest(content)).pipe(Effect.withTracer(tracer));
         const captures = yield* testHttp.captures;
         const session = A.get(captures, 0);
         const puts = A.drop(captures, 1);
+        const texts = spanTexts(spans);
+        const driverSpan = A.findFirst(spans, (span) => span.name === "M365.addMessageAttachment");
+
+        // The upload URL's session token must not reach any span: not as a name, a key or a value.
+        expect(
+          A.filter(
+            texts,
+            (text) => pipe(text, Str.includes(UPLOAD_SESSION_TOKEN)) || pipe(text, Str.includes("authtoken"))
+          )
+        ).toStrictEqual([]);
+        // The tracer did record: the driver span carries the size and chunk count, and the bearer-token
+        // session request still has its HTTP client span.
+        assertSome(
+          O.map(driverSpan, (span) => [
+            span.attributes.get("m365_attachment_size_bytes"),
+            span.attributes.get("m365_upload_chunk_count"),
+          ]),
+          [total, 3]
+        );
+        expect(A.filter(texts, (text) => text === `${MESSAGE_URL}/attachments/createUploadSession`)).toHaveLength(1);
 
         expect(routes(captures)).toStrictEqual([
           `POST ${MESSAGE_URL}/attachments/createUploadSession`,

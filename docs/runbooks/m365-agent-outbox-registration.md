@@ -232,8 +232,11 @@ run inside a checkout. For sessions started elsewhere, register it once at
 user level. `<clone>` is the primary checkout of this repository:
 
 ```bash
-claude mcp add --scope user beep-m365-outbox -- op run --env-file=<clone>/packages/drivers/m365-mcp/outbox.env -- bun run <clone>/packages/drivers/m365-mcp/src/bin-outbox.ts
+claude mcp add --scope user beep-m365-outbox -- op run --no-masking --env-file=<clone>/packages/drivers/m365-mcp/outbox.env -- bun run <clone>/packages/drivers/m365-mcp/src/bin-outbox.ts
 ```
+
+Keep `--no-masking`: the server's stdout is the MCP JSON-RPC channel, and
+masking would rewrite tool results that contain the mailbox address.
 
 Files to attach go in the staging directory
 `${XDG_DATA_HOME:-$HOME/.local/share}/beep/m365-outbox/attachments`, which the

@@ -5,7 +5,9 @@
  *
  * Six tools: prepare, read and delete a mail draft; send a draft; create and
  * update a calendar event. Exactly one of them, `m365_outbox_send_draft`,
- * sends mail. None takes a mailbox, and none takes attendees.
+ * sends mail. None takes a mailbox, and none takes attendees. `get_draft`
+ * reads any draft id; sending and deleting are limited to drafts this server
+ * created, and updating to events it created that have no attendee.
  *
  * @category tools
  * @since 0.1.0
@@ -274,7 +276,7 @@ export class OutboxSendResult extends S.Class<OutboxSendResult>($I`OutboxSendRes
     }),
     mismatches: emptyByDefault(
       OutboxSendMismatchField,
-      "When refused: the fields in which the stored draft differs from expect."
+      "When refused: the fields in which the stored draft differs from expect, or `not-created-here` alone when this server did not create the draft."
     ),
     outcome: OutboxSendOutcome.annotateKey({
       description:
@@ -406,7 +408,7 @@ export const OutboxCreateDraftTool = annotateFourHints(
 export const OutboxGetDraftTool = annotateFourHints(
   Tool.make("m365_outbox_get_draft", {
     description:
-      "Read a draft as the mailbox stores it: whether it is still a draft, its recipients, subject and attachments (name, size and sha256 of the stored bytes, downloaded and hashed on each call). The body is not returned, only its length. Call this after a send_draft outcome of unknown: a draft that is gone or is no longer a draft was sent.",
+      "Read a draft as the mailbox stores it: whether it is still a draft, its recipients, subject and attachments (name, size and sha256 of the stored bytes, downloaded and hashed on each call). The body is not returned, only its length. This reads any draft id in the mailbox, but only a draft created by this server's create_draft can be sent or deleted. Call this after a send_draft outcome of unknown: a draft that is gone or is no longer a draft was sent.",
     failure: OutboxToolError,
     failureMode: "return",
     parameters: OutboxDraftRef,
@@ -461,7 +463,7 @@ export const OutboxDeleteDraftTool = annotateFourHints(
 export const OutboxSendDraftTool = annotateFourHints(
   Tool.make("m365_outbox_send_draft", {
     description:
-      "SENDS MAIL. This is the only tool that sends. It sends exactly the stored draft, and only if the draft equals expect: the same to, cc and bcc addresses, the same subject, and the same attachments by name, size and sha256 (restate them exactly as create_draft or get_draft returned them; every attachment needs all three). The stored attachments are downloaded and hashed before sending. If anything differs it sends nothing and returns outcome refused with the differing fields; read the draft again with get_draft before restating. Outcome unknown means the request may or may not have reached Microsoft Graph: call get_draft (a draft that is gone or no longer a draft was sent) and never send again blindly. Every call is written to a local audit log.",
+      "SENDS MAIL. This is the only tool that sends. It sends only a draft that this server's create_draft created; any other draft id sends nothing and returns outcome refused with the single field not-created-here. A draft created here and then edited in Outlook can still be sent once expect restates it as get_draft returns it. It sends exactly the stored draft, and only if the draft equals expect: the same to, cc and bcc addresses, the same subject, and the same attachments by name, size and sha256 (restate them exactly as create_draft or get_draft returned them; every attachment needs all three). The stored attachments are downloaded and hashed before sending. If anything differs it sends nothing and returns outcome refused with the differing fields; read the draft again with get_draft before restating. Outcome unknown means the request may or may not have reached Microsoft Graph: call get_draft (a draft that is gone or no longer a draft was sent) and never send again blindly. Every call is written to a local audit log.",
     failure: OutboxToolError,
     failureMode: "return",
     parameters: OutboxSendDraftParams,
@@ -498,7 +500,8 @@ export const OutboxCreateEventTool = annotateFourHints(
 );
 
 /**
- * Updates fields of a calendar event.
+ * Updates fields of a calendar event this server created, when the event has
+ * no attendee.
  *
  * **Example** (Read the update event tool name)
  *
@@ -515,7 +518,7 @@ export const OutboxCreateEventTool = annotateFourHints(
 export const OutboxUpdateEventTool = annotateFourHints(
   Tool.make("m365_outbox_update_event", {
     description:
-      "Change fields of an event in the configured mailbox's calendar. Absent fields are left as they are; categories replaces the whole category list. Attendees are not accepted.",
+      "Change fields of an event that this server's create_event created and that has no attendees. Any other event is refused with reason not-created-here, and an event that has gained attendees (for example in Outlook) is refused with reason has-attendees, because Microsoft 365 mails attendees when a meeting changes; nothing is changed in either case. Absent fields are left as they are; categories replaces the whole category list. Attendees are not accepted.",
     failure: OutboxToolError,
     failureMode: "return",
     parameters: OutboxUpdateEventParams,
