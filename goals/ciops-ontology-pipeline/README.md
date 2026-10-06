@@ -34,8 +34,9 @@ Use this command for execution-capable sessions:
 P3 auditor run 4 (W7) — complete 2026-10-06: run 4 ratified eight flagged accepts (`rat-071..078`) with
 the gate PASSED at the pin before and after the scribe (#1490), and the lab's CQ-009 lift reports a typed
 verdict (the same-checkout arm holds with 0 pairs; the legacy-origin-drain arm is unobservable in the
-journal) under P3 close Rulings 33–35. P0–P2 complete. P4, the KPI reading and verdict (W8–W9), is next,
-from the P4 hand-off in the run-4 closing entry of `research/decisions.md`.
+journal) under P3 close Rulings 33–35. P0–P2 complete. P4, the KPI reading and verdict (W8–W9), opened
+2026-10-06 under its launch sitting (Rulings 1–12, from `research/p4-survey.md`): the KPI ETL lands in
+`apps/labs/ciops/src/kpi/` (PR-A), then the verdict beside time-to-certainty's M1 (PR-B).
 
 ## Latest Evidence
 

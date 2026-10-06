@@ -1415,3 +1415,113 @@ The next run pins the new digest. Reversal: revert the query and the fixture.
 **Ruling 35 — P3 is complete.** Its exit criterion (gate passed and sittings scribed) was met by run 4,
 and the CQ-009 lift that PLAN ties to W7 lands here. P3 is marked complete in PLAN, README and the
 manifest; P4 (the KPI reading and verdict) starts next, from the P4 hand-off in the run-4 closing entry.
+
+## 2026-10-06 — P4 opened; launch sitting (orchestrator under the autonomy charter)
+
+P4 (the KPI reading and verdict, W8–W9) opens at once after P3 closed (P3 close Rulings 33–35). The
+sitting rules from the P4 survey, committed as [`research/p4-survey.md`](./p4-survey.md), which cites every
+fact by path and line; "D n" below is the survey's decision n. Every ruling is the orchestrator's call
+under the operator autonomy charter (escalate only money), named honestly as in the run-4 launch
+sitting's Ruling 2, and each is listed in the P4 closing entry for the operator's asynchronous review.
+The completion gate's "operator-ratified post-baseline window" is read as charter-ratified, and the
+closing entry says so. Unless a ruling says otherwise, its reversal is a later entry before the PR that
+carries it merges, then a follow-up PR.
+
+What the survey settled: S7 §6 still excludes a KPI ETL from the lab; KPI law v1.1 misstates M1's keying
+(M1 groups by checkout and branch, as this KPI does) and uses "cut" in two senses; no ruled rule assigns
+an attempt to an assurance tier; no pinned input carries hosted runs; the seat-request clock exists for
+about 4.7 days of pinned data, and only 56 of 243 v3 enqueues join a pinned attempt (retired lanes lose
+their attempt journals, a survivorship censoring that touches M1 the same way); `stage`, `proofTier` and
+`resolvedHeadSha` first appear on attempt starts at the time-to-certainty post-baseline cut.
+
+**Ruling 1 — module home (D1, D2).** W8 lives in `apps/labs/ciops/src/kpi/` behind a `CiOpsKpi`
+`Context.Service`, opened by a dated S7 §9 that supersedes only §6's "No KPI ETL" bullet with five clauses:
+its own service, pins read by path and sha256, no A-Box emission, admission and emission bytes unchanged,
+and check-by-default evidence. Rejected: a new lab (a second home for one projection) and a packet script.
+
+**Ruling 2 — KPI law v1.2 first (D3).** The first commit of the W8 PR is a dated §7 amendment to
+`kpi-measurement-rules.md`: the M1 keying erratum, a glossary for the two meanings of "cut", the tier
+rule (Ruling 3), the clock rules (Ruling 6), the censoring and survivorship rules (Ruling 7), the declared
+starvation bound (Ruling 9), and a restated pointer that §5's self-erasing bullet is superseded. A
+number that cannot name the rule that produced it is not a KPI reading. Rejected: rules kept only in code.
+
+**Ruling 3 — tier assignment is ETL classification by stage (D4).** repair-loop → TierRepairGreen;
+pre-push with proof tier full → TierLocalFullProof; merged-preview stage → the merged-preview
+sub-partition of TierLocalFullProof; hosted → TierCiMergeGreen. Pre-push cheap-gates and every review-fix
+attempt go to a reported "unassigned" bucket, and stage-less starts are counted as "untiered". Merged
+preview is identified by stage, never by admission kind. Streaks are computed within each tier's
+attempt subsequence per checkout and branch. This assigns attempts to existing ratified tiers; it
+ratifies no vocabulary. Rejected: proof tier alone (the conflation Ruling 32 refuted) and cheap-gates as
+TierRepairGreen (an equivalence no ruling makes).
+
+**Ruling 4 — TierCiMergeGreen is reported unmeasured (D5).** No pin carries hosted input. The
+time-to-certainty hosted envelope is cited beside it as workflow durations, never as episodes. Rejected:
+a hosted capture pin inside a verdict phase, and deriving episodes from workflow durations.
+
+**Ruling 5 — the window (D6, D7, D12, D18, D24).** W = [2026-09-03T06:29:33.572Z, 2026-10-06T03:19:28.440Z),
+membership by episode start: the time-to-certainty post-baseline cut to the `run4-fleet` capture. It
+matches M1's post-baseline start, is the only window in which tiers and adoption are derivable from
+pinned bytes, and holds 38 of the 44 change events. Two slices are reported inside it: W-a, ending at M1's
+measurement instant 2026-09-28T12:57:53.988Z, for the like-for-like M1-replica; W-b, the canonical
+retained admission window, where the seat-request clock is complete. Admission rows come from the
+`run4-fleet` canonical journal plus the 2026-10-01 redacted snapshot, deduplicated by nonce and event tag,
+failing closed on a mismatch. The reading uses the law's population (no mode filter); an M1-replica row
+(M1 modes, no tiers, the 24 h cut and uncut) is labelled "M1 definition over the fleet pin, not M1".
+M1's post-baseline row is the primary comparison, its close and baseline rows context. The 24 h ceiling
+appears only in the M1-replica. Rejected: the exact M1 window (no seat-request clock), W-b alone (too few
+starts for tiers), and waiting for a new capture.
+
+**Ruling 6 — the clock (D8, D9).** A ticket joins an attempt by attempt id, checked against branch and
+checkout where present. An episode opens at the earlier of its first attempt's start and the enqueue of
+any ticket joined to that first attempt, and carries its clock label (seat-request or attempt-start).
+It stops at the closing attempt's finish record, else its start; a reconciler-stamped termination never
+ends a duration.
+
+**Ruling 7 — censoring (D10, D11, D22).** An open streak's uncut lower bound is its last measured
+instant (M1's convention). An episode is left-censored when a compaction receipt's cutoff is at or after
+its opening, and streaks opening at the first retained attempt of an at-cap journal with no receipt are
+counted as "possibly truncated" (the pin has no receipts, so receipts alone would claim completeness).
+Survivorship (enqueues naming attempts with no pinned journal) is counted, never imputed. CQ-012's
+queue-wait shares are reported on W-b only, and printed as void unless every episode in the slice
+decomposes.
+
+**Ruling 8 — change events and #1427 (D14, D15, D16).** Adoption is read from a committed adoption table
+that a check-by-default script generates with `git merge-base --is-ancestor` over each episode's
+resolved head and each row's merge commit; the lab reads the table by path and sha256 and never spawns
+git. Classes: pre, post-adopted, post-unadopted (reported, outside post) and unknown. Each row's tiers
+come from a typed constant table in the lab, asserted against the ledger's sha256 and covering all 44
+ids; the ledger bytes the run-4 archive cites stay unchanged. #1427 partitions the local series only,
+compares populations rather than one population's percentiles, carries the squash-undercount caveat
+and its post-period n, and names the hosted confounder and iv-1422 in prose (as already ruled).
+
+**Ruling 9 — the starvation bound is declared before computing (D13).** 120000 ms, the packet's only
+declared value. The population is every v3 request in the window; a request's wait runs from enqueue to
+its admission, withdrawal or eviction, or to the capture if open. Exceptions are reported as
+unobservable, and counts at 15 and 60 minutes are shown as non-normative sensitivity rows. Rejected: a
+bound fitted to the observed distribution (tuning to the reading). A failing count is a lawful verdict.
+
+**Ruling 10 — outputs and the verdict (D17, D19, D23).** The lab generates `research/kpi-reading.json`
+(schema `ciops-kpi-reading/v1`) and `research/kpi-reading.md`, check-by-default; W9 writes
+`research/kpi-verdict.md` by hand, beside M1 in content only (no time-to-certainty file is edited). The
+verdict carries the episode-definition mapping, the M1-replica, the change-event table, the #1427
+paragraph and the S9 statement: the admission route agrees 197 of 200 with the 3 disagreements
+attributed to the #929 same-checkout skip; CQ-009's same-checkout arm holds and its legacy arm is
+unobservable; lane-route agreement holds by construction; the projection makes no route claim; and the
+`ciops-yeet-projection` trigger is not measurable on the pins. No KPI figure is emitted to the A-Box.
+
+**Ruling 11 — two PRs; P5 and P6 are states of the last one (D20, D21).** PR-A carries W8 (the S7 §9 and
+law v1.2 amendments first, then schemas and the service contract, the adoption and change-event tables,
+the fold, the evidence script, tests and the generated reading). PR-B carries W9 (the verdict, the status
+flips to `completed-retained`, the closeout reflection and its lint). This amends PLAN's sequencing
+line, which named one verdict PR; P5 (Yeet to mergeable) and P6 (close) are the states PR-B reaches, not
+separate PRs. Rejected: one verdict PR carrying the ETL, the verdict and the close (unreviewable).
+
+**Ruling 12 — four clarifications the W8 contract surfaced.** (a) A change-event row's tiers are a
+series, `local` or `hosted`, read from its adoption caveat; `local` covers both local tiers and the
+unassigned bucket (as Ruling 8 partitions #1427), and `hosted` is unmeasured under Ruling 4. (b) W is
+half-open, [start, end); the slices are closed intervals matching their sources: W-a ends at M1's
+measurement instant inclusive, and W-b spans the canonical root's first to last retained rows inclusive.
+(c) The 2026-10-01 snapshot carries a checkout surrogate rather than a checkout root, so a snapshot row
+joins an attempt by attempt id and branch only; the checkout check applies where both rows carry the
+same field. (d) CQ-012 is reported as the queue-wait share only; the other shares have no pinned
+decomposition source.
