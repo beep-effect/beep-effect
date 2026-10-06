@@ -22,8 +22,11 @@ import { parseCsvRows } from "@beep/schema/CsvParser";
 import { ParserOptions } from "@beep/schema/ParserOptions";
 import { A, O, Str } from "@beep/utils";
 import { Effect } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { SecurityCloudFindingId } from "./Findings.capture.schemas.ts";
 import { CodexFindingsIngestError } from "./Findings.errors.ts";
+import type { CodexCaptureSource } from "./Findings.capture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Codex/Findings.csv");
 
@@ -65,6 +68,38 @@ export const CODEX_CSV_COLUMNS = [
   "commit_hash",
   "relevant_paths",
   "resolution_reason",
+] as const;
+
+/**
+ * Exact Security Cloud CSV header verified against the October 2026 export.
+ *
+ * **Details**
+ *
+ * Summary is not a complete report: validation and attack-path evidence are
+ * available separately in finding details. Unknown headers remain unsupported.
+ *
+ * **Example** (Checking the current export width)
+ *
+ * ```ts
+ * import { SECURITY_CLOUD_CSV_COLUMNS } from "@beep/repo-cli/commands/Codex/Findings.csv"
+ *
+ * SECURITY_CLOUD_CSV_COLUMNS.length // => 10
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SECURITY_CLOUD_CSV_COLUMNS = [
+  "Finding ID",
+  "Source",
+  "Repository",
+  "Title",
+  "Summary",
+  "Severity",
+  "Status",
+  "Paths",
+  "Observed revision",
+  "Detected at",
 ] as const;
 
 /**
@@ -136,6 +171,12 @@ export const CodexCsvStatus = MappedLiteralKit([
   ["new", "New"],
   ["open", "Open"],
   ["closed", "Closed"],
+  ["triaged", "Triaged"],
+  ["in_progress", "In Progress"],
+  ["fixed", "Fixed"],
+  ["wontfix", "Won't fix"],
+  ["duplicate", "Duplicate"],
+  ["false_positive", "False positive"],
 ]).pipe(
   $I.annoteSchema("CodexCsvStatus", {
     description: "Codec from the CSV export's lowercase status to the capitalized packet domain.",
@@ -240,6 +281,70 @@ const cellAt = (row: ReadonlyArray<string>, column: (typeof CODEX_CSV_COLUMNS)[n
 const decodeSeverity = S.decodeUnknownOption(CodexCsvSeverity);
 const decodeStatus = S.decodeUnknownOption(CodexCsvStatus);
 
+// Only the source-qualified Diff scan identity is verified by a real export.
+// A new source namespace must be admitted with its own fixture, never stripped.
+class SecurityCloudCsvRow extends S.Class<SecurityCloudCsvRow>($I`SecurityCloudCsvRow`)(
+  {
+    "Finding ID": SecurityCloudFindingId,
+    Source: S.Literals(["Diff scan"]),
+    Repository: S.String.check(
+      S.isPattern(/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/, {
+        identifier: $I`SecurityCloudRepositoryUrlCheck`,
+        title: "Security Cloud Repository Url",
+        description: "Canonical HTTPS GitHub repository URL without credentials, query, or fragment.",
+      })
+    ),
+    Title: S.String,
+    Summary: S.String,
+    Severity: CodexCsvSeverity,
+    Status: CodexCsvStatus,
+    Paths: S.String,
+    "Observed revision": S.String,
+    "Detected at": S.String,
+  },
+  $I.annote("SecurityCloudCsvRow", {
+    description: "Verified Security Cloud summary export row; the full detail evidence is not exported.",
+  })
+) {}
+
+const decodeSecurityCloudRow = Effect.fn("CodexFindings.decodeSecurityCloudRow")(function* (
+  row: ReadonlyArray<string>,
+  index: number
+) {
+  if (A.length(row) !== A.length(SECURITY_CLOUD_CSV_COLUMNS)) {
+    return yield* CodexFindingsIngestError.make({
+      reason: "csv-row-malformed",
+      message: `Row ${index + 2} does not match the Security Cloud export width. Download the export again.`,
+    });
+  }
+  const decoded = yield* S.decodeUnknownEffect(SecurityCloudCsvRow)(
+    R.fromEntries(A.zip(SECURITY_CLOUD_CSV_COLUMNS, row))
+  ).pipe(
+    Effect.mapError(() =>
+      CodexFindingsIngestError.make({
+        reason: "csv-row-malformed",
+        message: `Row ${index + 2} has an unsupported Security Cloud identity, source, repository, severity, or status. Values are refused rather than guessed.`,
+      })
+    )
+  );
+  return {
+    repository: Str.slice(Str.length("https://github.com/"))(decoded.Repository),
+    finding: {
+      codexId: decoded["Finding ID"],
+      title: decoded.Title,
+      severity: decoded.Severity,
+      codexStatus: decoded.Status,
+      commit: decoded["Observed revision"],
+    },
+    report: CodexRawReport.make({
+      codexId: decoded["Finding ID"],
+      description: decoded.Summary,
+      relevantPaths: decoded.Paths,
+      detectedAt: decoded["Detected at"],
+    }),
+  };
+});
+
 /**
  * Decode one data row into its tracked projection and its raw report body.
  *
@@ -276,6 +381,7 @@ const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index
   }
 
   return {
+    repository: cellAt(row, "repository"),
     finding: {
       codexId: codexId.value,
       title: cellAt(row, "title"),
@@ -291,6 +397,9 @@ const decodeRow = Effect.fnUntraced(function* (row: ReadonlyArray<string>, index
     }),
   };
 });
+
+const matchesCsvColumns = (actual: ReadonlyArray<string>, expected: ReadonlyArray<string>): boolean =>
+  A.length(actual) === A.length(expected) && Str.equivalence(A.join(actual, ","), A.join(expected, ","));
 
 /**
  * Decode a signed-in CSV export into capture findings, dropping personal data.
@@ -336,9 +445,10 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
       })
     )
   );
-  const header = A.head(rows);
-
-  if (O.isNone(header) || A.join(header.value, ",") !== A.join(CODEX_CSV_COLUMNS, ",")) {
+  const header = O.getOrElse(A.head(rows), A.empty<string>);
+  const legacy = matchesCsvColumns(header, CODEX_CSV_COLUMNS);
+  const securityCloud = matchesCsvColumns(header, SECURITY_CLOUD_CSV_COLUMNS);
+  if (!legacy && !securityCloud) {
     // A signed-out export is an HTML login document, which lands here rather
     // than as a parse crash. Both cases mean "no usable export", so the
     // operator gets one instruction instead of a stack trace.
@@ -351,9 +461,9 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
     });
   }
 
-  const dataRows = A.filter(A.drop(1)(rows), (row) => A.length(row) > 1);
+  const dataRows = A.filter(A.drop(1)(rows), (row) => !(A.length(row) === 1 && row[0] === ""));
 
-  const decoded = yield* Effect.forEach(dataRows, decodeRow);
+  const decoded = yield* Effect.forEach(dataRows, securityCloud ? decodeSecurityCloudRow : decodeRow);
   const findings = A.map(decoded, (entry) => entry.finding);
   const reports = A.map(decoded, (entry) => entry.report);
 
@@ -366,15 +476,22 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
     });
   }
 
+  const repositories = A.dedupe(A.map(decoded, (entry) => entry.repository));
+  if (A.length(repositories) > 1) {
+    return yield* CodexFindingsIngestError.make({
+      reason: "csv-row-malformed",
+      message: "The export contains multiple repositories. Scope the findings view to one repository and export again.",
+    });
+  }
+
+  const source: CodexCaptureSource = securityCloud ? "security-cloud-csv" : "cloud-csv";
   return {
+    source,
     findings,
     reports,
     // Every row of one export names the same repository; the head row is the
     // only place it needs to be read from.
-    repository: O.getOrElse(
-      O.map(A.head(dataRows), (row) => cellAt(row, "repository")),
-      () => ""
-    ),
+    repository: O.getOrElse(A.head(repositories), () => ""),
     statuses: A.dedupe(A.map(findings, (finding) => finding.codexStatus)),
   };
 });

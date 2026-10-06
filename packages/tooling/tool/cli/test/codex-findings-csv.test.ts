@@ -3,6 +3,7 @@ import {
   CODEX_CSV_PII_COLUMNS,
   codexIdFromFindingUrl,
   decodeCodexFindingsCsv,
+  SECURITY_CLOUD_CSV_COLUMNS,
 } from "@beep/repo-cli/test/Codex";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -188,6 +189,73 @@ describe("codex findings csv refusals", () => {
       const decoded = yield* decode(csv([]));
 
       expect(A.length(decoded.findings)).toBe(0);
+    })
+  );
+});
+
+const cloudRow = (overrides: ReadonlyArray<readonly [number, string]> = []): string => {
+  const cells = [
+    `commit:${id("a")}`,
+    "Diff scan",
+    "https://github.com/example/repository",
+    "Synthetic finding",
+    "Summary, with comma.\nSecond line.",
+    "medium",
+    "new",
+    "packages/x.ts; packages/y.ts",
+    sha("b"),
+    "2026-10-05T12:00:00.123000+00:00",
+  ];
+  for (const [index, value] of overrides) cells[index] = value;
+  return A.join(A.map(cells, quote), ",");
+};
+const cloudCsv = (rows: ReadonlyArray<string>): string =>
+  A.join([A.join(A.map(SECURITY_CLOUD_CSV_COLUMNS, quote), ","), ...rows], "\n");
+
+describe("Security Cloud export migration", () => {
+  it.effect("preserves namespaced identities and summary evidence without inventing detail reports", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decode(cloudCsv([cloudRow()]));
+      expect(decoded.source).toBe("security-cloud-csv");
+      expect(decoded.repository).toBe("example/repository");
+      expect(decoded.findings[0]?.codexId).toBe(`commit:${id("a")}`);
+      expect(decoded.reports[0]?.description).toBe("Summary, with comma.\nSecond line.");
+      expect(encodeJson(decoded.findings)).not.toContain("Second line.");
+    })
+  );
+  it.effect("refuses mixed repositories in both formats", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* reason(
+          cloudCsv([
+            cloudRow(),
+            cloudRow([
+              [0, `commit:${id("b")}`],
+              [2, "https://github.com/example/other"],
+            ]),
+          ])
+        )
+      ).toBe("csv-row-malformed");
+      expect(
+        yield* reason(csv([row({ seed: "a" }), row({ seed: "b" }).replace("kriegcloud/beep-effect", "example/other")]))
+      ).toBe("csv-row-malformed");
+    })
+  );
+  it.effect("refuses malformed identity, unsupported source, repository origin, and status", () =>
+    Effect.gen(function* () {
+      for (const override of [
+        [0, id("a")],
+        [1, "Unknown scan"],
+        [2, "https://evil.example/example/repository"],
+        [6, "unknown"],
+      ] satisfies ReadonlyArray<readonly [number, string]>) {
+        expect(yield* reason(cloudCsv([cloudRow([override])]))).toBe("csv-row-malformed");
+      }
+      expect(yield* reason(cloudCsv([`commit:${id("a")}`]))).toBe("csv-row-malformed");
+      expect(yield* reason(cloudCsv([cloudRow()]).replace('"Finding ID","Source"', '"Finding ID,Source"'))).toBe(
+        "csv-header-unsupported"
+      );
+      expect(yield* reason(cloudCsv([cloudRow(), cloudRow()]))).toBe("csv-duplicate-finding");
     })
   );
 });
