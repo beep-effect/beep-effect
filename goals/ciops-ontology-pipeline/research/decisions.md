@@ -1334,3 +1334,46 @@ and no tier chain survived denotation. No tier proposal exists, so no fourth Ass
 ratified: the member stays blocked on the parked AssuranceTierId domain, and KPI law §6 keeps merged
 preview a sub-partition of TierLocalFullProof. This goes to the P4 hand-off. Reversal for Rulings 28–32:
 a later sitting supersedes with revise or reject ratifications; a scribed ratification is never deleted.
+
+## 2026-10-06 — run-4 closing entry and P4 hand-off (orchestrator under the autonomy charter)
+
+Auditor run 4 (`orun-2026-10-06T15:51:01Z`, pin `71c7357adc`) is closed: the gate passed at the pin before
+and after the scribe, the run is rotated (`runs/orun-2026-10-06T15:51:01Z.{manifest,index,README}`,
+`prior_index_sha256_12` `2d70f0ffcaf5`, observations at the sibling shelter), and the run report with every
+tracked follow-up is `explorations/beep-ci-operational-ontology/research/run4-lanes/p3-run4-report.md`. P3's
+exit criterion is met; the P3 status flip rides the lab's CQ-009 lift PR (Ruling 15).
+
+Accepts for the operator's asynchronous review (Ruling 2), each a flagged accept in the orchestrator's own
+words: rat-071 OperationalChangeEvent; rat-072 VerificationAttempt (reuse, support arm); rat-073
+WorkUnitExecution; rat-074 CommittedFailure; rat-075 SeatRequest (reuse); rat-076 SeatGrant (reuse);
+rat-077 admissionChargeTokens (reuse); rat-078 VerificationLane (reuse, its first flags). Withdrawn with
+named evidence: CacheEpoch, Checkout, VerificationEvidence (Ruling 18), TreeState, MergedPreviewWork
+(Ruling 26), AdmissionWorkKind (Ruling 27).
+
+**Call (aj) — the projection.** Under Ruling 14 the accepts are projected in the run PR through the #1089
+footprint: TAXONOMY gains the three new classes (52 to 55 terms) and, on the five reuse rows, run-4 flag
+segments that open with their ratification id plus an additive `later_ratifications` list, with every
+ratified value unchanged (Ruling 28); DISPOSITIONS turns the CommittedFailure and WorkUnitExecution rows
+from parked to accepted and adds four later ratifications; PREDICATES regenerates byte-identically (no new
+property); ABOX is unchanged; both contract docs carry a dated note. `validate_packet.py`, `--s5` and `--s6`
+are green on the final tree (`--s5` was red at the run commit until the projection, as Ruling 14 expects).
+The S5 gate does not yet check the TAXONOMY `later_ratifications` list; that is a tracked follow-up.
+Reversal: a revert commit.
+
+P4 hand-off (Ruling 17):
+
+- Tier outcome: Queue H stays open. No tier chain survived denotation, every cited `proofTier` is `full`,
+  merged preview is dormant in the capture window, and the run-2 refutation of reading proof tiers as
+  AssuranceTiers stands (Ruling 32). KPI law §2 and the W8 text keep the three ratified tiers; §6 keeps
+  merged preview a sub-partition of TierLocalFullProof.
+- Change-event ratification state: OperationalChangeEvent is ratified (rat-071) and closes all 44
+  change-event rows and the KPI law §2 block; `ciops:landedAt` stays seed-only and unproposed, so CQ-016 is
+  answered for its subject only and W8 partitions on the seed `landedAt` values as before.
+- W1 freshness at the pin: pass 5 re-ran the lever query from `8b7392fe00` to the run base `50b79e470b` (ten
+  PRs, two rows kept: `iv-1427-push-first-publish`, `iv-1422-spot-pool-drop-r6a`); the ledger holds 44 rows,
+  `f520b302424f`, at the pin.
+- Lane-plan terms: the eleven provisional terms entered intake through the lpl batch; none survived
+  denotation (no pinned lane-order CQ), so none was analysed or proposed and they stay provisional.
+- Tier derivation for change-event rows: rows carry no structured tier member in this phase; deriving one
+  for W8 is P4 work (Ruling 10), with #1427 partitioning the local series only and the hosted population
+  shift named as a confounder at that instant.

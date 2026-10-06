@@ -2,9 +2,10 @@
 # with the sitting-4 fidelity and ruling layers applied.
 # RATIFIED by the steward 2026-08-30 (DECISIONS.md, S5 sitting 4).
 # 2026-09-10 amendment: additive run-2/run-3 ratification projection; see the contract.
+# 2026-10-06 amendment: additive run-4 ratification projection (rat-071..rat-078); see the contract.
 generated_by: scripts/merge_taxonomy.py
 contract: ontology/docs/s5-taxonomy-contract.md
-term_count: 52
+term_count: 55
 dropped_unaccepted:
 - HardFloorException
 - PublishPriority
@@ -121,7 +122,12 @@ terms:
   - con:admission-scheduler-I08
   - con:literalkits-I12
   ratification: rat-066
-  flags: with account-copy identity and effective authorization continuity deferred to run 4 as flagged.
+  flags: 'with account-copy identity and effective authorization continuity deferred to run 4 as flagged.
+    rat-076 (run 4; the flag persists, no lift claimed): the relator-against-held-phase question, the
+    unshown legacy-origin arm, the absent capacity-pool dependence, and the superseded mention of the
+    withdrawn checkout proposal.'
+  later_ratifications:
+  - rat-076
 - term: SeatRequest
   kind: class
   parents: []
@@ -141,8 +147,12 @@ terms:
   - con:admission-scheduler-I01
   - con:admission-scheduler-I08
   ratification: rat-061
-  flags: with demand-versus-description grain and handling/resubmission continuity deferred to run 4 as
-    flagged.
+  flags: 'with demand-versus-description grain and handling/resubmission continuity deferred to run 4
+    as flagged. rat-075 (run 4; the flag persists, no lift claimed): the relator-against-waiting-phase
+    category question, the attempt-alias and demand-continuity rivals, the unshown capacity dependence,
+    and the journal tickets with no enqueue row.'
+  later_ratifications:
+  - rat-075
 - term: StarvationException
   kind: class
   parents: []
@@ -228,8 +238,12 @@ terms:
   constraint_refs:
   - con:admission-scheduler-I08
   ratification: rat-053
-  flags: with repricing, assertion replacement, request/grant continuity and pre-admission capacity evidence
-    deferred to run 4 as flagged.
+  flags: 'with repricing, assertion replacement, request/grant continuity and pre-admission capacity evidence
+    deferred to run 4 as flagged. rat-077 (run 4; the flag persists, no lift claimed): the four category
+    readings and the ungrounded capacity at admission, and its mention of the withdrawn work-kind proposal
+    is superseded.'
+  later_ratifications:
+  - rat-077
 - term: admittedBy
   kind: property
   parents: []
@@ -405,6 +419,11 @@ terms:
   identity_ref: ic:jv-verification-attempt:001
   parameters: []
   ratification: rat-033
+  flags: 'rat-069 (run 3): with account-version identity and effective invocation continuity deferred
+    to run 4 as flagged. rat-072 (run 4; the flag persists, no lift claimed): the seat-request alias rival,
+    the process-while-running rival and the unshown request tie.'
+  later_ratifications:
+  - rat-072
 - term: dependsOnTransitive
   kind: property
   parents: []
@@ -423,6 +442,11 @@ terms:
   identity_ref: ic:pa-turbo-task-specification:001
   parameters: []
   ratification: rat-039
+  flags: 'rat-078 (run 4; the row''s first flags, no lift claimed): identity by lane name against command
+    content, information object against process type, the single observed lane class, and the grain beside
+    the turbo task specification card.'
+  later_ratifications:
+  - rat-078
 - term: dependsOn
   kind: property
   parents: []
@@ -533,3 +557,31 @@ terms:
   ratification: rat-065
   flags: with process/event category, unity, attempt membership and closure identity explicitly deferred
     to run 4 as flagged.
+- term: OperationalChangeEvent
+  kind: class
+  parents: []
+  rigidity: rigid
+  identity_ref: ic:chg-change-landing:001
+  parameters: []
+  ratification: rat-071
+  flags: identity unresolved with the pull request and merge commit as evidence only; the apply-or-go-live
+    act against the merge; one landing spanning superseding rows; the ledger row and the change artifact
+    as information-object rivals; and CQ-016 answered for its subject only while landedAt stays seed-only.
+- term: WorkUnitExecution
+  kind: class
+  parents: []
+  rigidity: unresolved
+  identity_ref: ic:vfy-lane-execution:001
+  parameters: []
+  ratification: rat-073
+  flags: rigidity, the process-while-running rival, wrapper parthood beyond the containment shown, reruns,
+    whole-attempt executions, and the ungrounded execution predicates.
+- term: CommittedFailure
+  kind: class
+  parents: []
+  rigidity: unresolved
+  identity_ref: ic:vfy-committed-failure:001
+  parameters: []
+  ratification: rat-074
+  flags: rigidity under a retried step or revised failed step, the obsoletion-point rival with its exit-instant
+    discriminator, the single cited verdict, and the parked inAttempt edge.
