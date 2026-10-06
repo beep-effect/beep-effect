@@ -3285,7 +3285,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The normalized-patent test creates its native PGlite bundle in the test body. Each claims invocation closes that client before validation or independent SQL read-back; the public outer fixture owns temporary directories. This occurrence includes the explicitly supplied source digest and preserves exact claims/evidence assertions."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1122:provideScopedLayer@10#1",
@@ -3371,7 +3372,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1216:provideScopedLayer@28#1",
@@ -3392,7 +3394,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1237:provideScopedLayer@28#1",
@@ -3674,7 +3677,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "The claims batch uses a body-created native bundle and scripted or forbidden model service. Each invocation closes its PGlite connection before independent SQL read-back, repeated validation, or MCP hosting. The new probe, corrupt-catalog, and stat/read-growth cases retain those shorter scopes and assert the exact outcome."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1417:provideScopedLayer@28#1",
@@ -9081,7 +9085,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "This planner dispatch block invokes the real CLI against the checkout under its existing scoped platform fixture. Added status and sweep calls use plan mode only; the scope closes after all dispatch assertions and introduces no longer-lived resource."
     },
     {
       "id": "EV002:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:369:provideScopedLayer@12#1",
@@ -25132,13 +25137,13 @@
       "reason": "Native filesystem staging and outputs are the scripted suites subject; the integration additionally requires actual ffmpeg and ffprobe for timestamp, artifact and container metadata proof. MemoryFS or fake native output would erase those subjects."
     },
     {
-      "id": "EV010:packages/drivers/gov-legal-mcp/test/Server.test.ts:46:@effect/platform-node/NodeServices@0#1",
+      "id": "EV010:packages/drivers/gov-legal-mcp/test/Server.test.ts:49:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 46,
-      "endLine": 46,
+      "line": 49,
+      "endLine": 49,
       "symbol": "@effect/platform-node/NodeServices",
       "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
       "class": "platform-resource-provenance-review",
@@ -32960,13 +32965,13 @@
       "reason": "Named fixtures construct native service handles and independent scripted recorders. The deferred first-frame witness is awaited only inside the scripted process behavior, not during layer acquisition. Preserve default hook budgets and all original body budgets, including native120seconds."
     },
     {
-      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:318:it.layer@2#1",
+      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:321:it.layer@2#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 318,
-      "endLine": 318,
+      "line": 321,
+      "endLine": 321,
       "symbol": "it.layer",
       "occurrence": "v2:387fa703c0dbd9dffaa8a8510f232f65330cde6c6b17498c3739ef55362420f9",
       "class": "resource-layer-without-hook-timeout",
@@ -32982,13 +32987,13 @@
       "reason": "The harness layer supplies hermetic in-memory fixtures or platform services without external startup acquisition. Preserve the existing default hook deadline; the real temporary directory is scoped inside its test body."
     },
     {
-      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:342:it.layer@2#1",
+      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:345:it.layer@2#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 342,
-      "endLine": 342,
+      "line": 345,
+      "endLine": 345,
       "symbol": "it.layer",
       "occurrence": "v2:aa95038ac472e6de65d304aa16af8d00984d4ea08049a6de311047b5d3adfa43",
       "class": "resource-layer-without-hook-timeout",
@@ -33004,13 +33009,13 @@
       "reason": "The harness layer supplies hermetic in-memory fixtures or platform services without external startup acquisition. Preserve the existing default hook deadline; the real temporary directory is scoped inside its test body."
     },
     {
-      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:364:it.layer@2#1",
+      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:367:it.layer@2#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 364,
-      "endLine": 364,
+      "line": 367,
+      "endLine": 367,
       "symbol": "it.layer",
       "occurrence": "v2:322a92dcc3dc8d39145a53c87841cb4c32f1103334af7d3be7bae8501fc4bb57",
       "class": "resource-layer-without-hook-timeout",
@@ -33026,13 +33031,13 @@
       "reason": "The harness layer supplies hermetic in-memory fixtures or platform services without external startup acquisition. Preserve the existing default hook deadline; the real temporary directory is scoped inside its test body."
     },
     {
-      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:492:it.layer@2#1",
+      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:495:it.layer@2#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 492,
-      "endLine": 492,
+      "line": 495,
+      "endLine": 495,
       "symbol": "it.layer",
       "occurrence": "v2:03709f917f0667fc8a2a234a83239399b91c645ba0f56bede53515c544e9cd70",
       "class": "resource-layer-without-hook-timeout",
@@ -33048,13 +33053,13 @@
       "reason": "The harness layer supplies hermetic in-memory fixtures or platform services without external startup acquisition. Preserve the existing default hook deadline; the real temporary directory is scoped inside its test body."
     },
     {
-      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:667:it.layer@2#1",
+      "id": "EV014:packages/drivers/gov-legal-mcp/test/Server.test.ts:670:it.layer@2#1",
       "lens": "resource",
       "ruleId": "EV014",
       "package": "@beep/gov-legal-mcp",
       "file": "packages/drivers/gov-legal-mcp/test/Server.test.ts",
-      "line": 667,
-      "endLine": 667,
+      "line": 670,
+      "endLine": 670,
       "symbol": "it.layer",
       "occurrence": "v2:3c855f8252322521038477567dcd0969d54f67a26d0ddc82c55d41a6a6ec901b",
       "class": "resource-layer-without-hook-timeout",
