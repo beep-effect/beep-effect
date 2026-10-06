@@ -480,36 +480,54 @@ const readVarint = (bytes: Uint8Array, start: number): O.Option<readonly [value:
   return O.none();
 };
 
+type ProtoRead = readonly [field: ProtoField, next: number];
+
+const sliceProtoField = (
+  bytes: Uint8Array,
+  number: number,
+  wireType: number,
+  from: number,
+  end: number
+): O.Option<ProtoRead> =>
+  end > bytes.length
+    ? O.none()
+    : O.some<ProtoRead>([{ number, wireType, varint: 0, bytes: bytes.subarray(from, end) }, end]);
+
+const fixedProtoWidth = (wireType: number): O.Option<number> =>
+  wireType === 5 ? O.some(4) : wireType === 1 ? O.some(8) : O.none();
+
+const readProtoValue = (bytes: Uint8Array, number: number, wireType: number, start: number): O.Option<ProtoRead> => {
+  if (wireType === 0) {
+    return O.map(
+      readVarint(bytes, start),
+      ([varint, next]): ProtoRead => [{ number, wireType, varint, bytes: NO_BYTES }, next]
+    );
+  }
+  if (wireType === 2) {
+    return O.flatMap(readVarint(bytes, start), ([length, from]) =>
+      sliceProtoField(bytes, number, wireType, from, from + length)
+    );
+  }
+  return O.flatMap(fixedProtoWidth(wireType), (width) =>
+    sliceProtoField(bytes, number, wireType, start, start + width)
+  );
+};
+
+const readProtoField = (bytes: Uint8Array, offset: number): O.Option<ProtoRead> =>
+  O.flatMap(readVarint(bytes, offset), ([key, afterTag]) =>
+    readProtoValue(bytes, Math.floor(key / 8), key % 8, afterTag)
+  );
+
 // Split one protobuf message into its fields. A truncated or unknown field
 // ends the read with what was decoded so far.
 const protoFields = (bytes: Uint8Array): ReadonlyArray<ProtoField> => {
   let fields = A.empty<ProtoField>();
   let offset = 0;
   while (offset < bytes.length) {
-    const tag = readVarint(bytes, offset);
-    if (O.isNone(tag)) return fields;
-    const [key, afterTag] = tag.value;
-    const number = Math.floor(key / 8);
-    const wireType = key % 8;
-    if (wireType === 0) {
-      const varint = readVarint(bytes, afterTag);
-      if (O.isNone(varint)) return fields;
-      fields = A.append(fields, { number, wireType, varint: varint.value[0], bytes: NO_BYTES });
-      offset = varint.value[1];
-    } else if (wireType === 2) {
-      const length = readVarint(bytes, afterTag);
-      if (O.isNone(length) || length.value[1] + length.value[0] > bytes.length) return fields;
-      const end = length.value[1] + length.value[0];
-      fields = A.append(fields, { number, wireType, varint: 0, bytes: bytes.subarray(length.value[1], end) });
-      offset = end;
-    } else if (wireType === 5 || wireType === 1) {
-      const end = afterTag + (wireType === 5 ? 4 : 8);
-      if (end > bytes.length) return fields;
-      fields = A.append(fields, { number, wireType, varint: 0, bytes: bytes.subarray(afterTag, end) });
-      offset = end;
-    } else {
-      return fields;
-    }
+    const read = readProtoField(bytes, offset);
+    if (O.isNone(read)) return fields;
+    fields = A.append(fields, read.value[0]);
+    offset = read.value[1];
   }
   return fields;
 };

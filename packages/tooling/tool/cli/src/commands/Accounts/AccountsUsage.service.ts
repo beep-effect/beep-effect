@@ -137,6 +137,30 @@ const failed = (detail: string) => AccountUsageOutcome.cases.Failed.make({ detai
 
 const isRejectedStatus = (status: number): boolean => status === 401 || status === 403;
 
+type UsageTextResponse = {
+  readonly identity: O.Option<string>;
+  readonly status: number;
+  readonly body: string;
+};
+
+// The shared shape of a JSON usage reply: a rejected login asks for a new
+// sign-in, any other non-200 or undecodable body is a failure, and a decoded
+// body becomes the provider's own outcome.
+const decodedOutcome =
+  <Body>(
+    name: string,
+    decode: (text: string) => O.Option<Body>,
+    toOutcome: (body: Body, response: UsageTextResponse) => AccountUsageOutcome
+  ) =>
+  (response: UsageTextResponse): AccountUsageOutcome => {
+    if (isRejectedStatus(response.status)) return loginRejected;
+    if (response.status !== 200) return failed(`${name} answered HTTP ${response.status}`);
+    return O.match(decode(response.body), {
+      onNone: () => failed(`${name} answered with a body this version cannot read`),
+      onSome: (body) => toOutcome(body, response),
+    });
+  };
+
 /**
  * Turn a Claude usage response into an outcome.
  *
@@ -159,11 +183,7 @@ const isRejectedStatus = (status: number): boolean => status === 401 || status =
  * @category utilities
  * @since 0.0.0
  */
-export const claudeUsageOutcome = (response: {
-  readonly identity: O.Option<string>;
-  readonly status: number;
-  readonly body: string;
-}): AccountUsageOutcome => {
+export const claudeUsageOutcome = (response: UsageTextResponse): AccountUsageOutcome => {
   if (isRejectedStatus(response.status)) return loginRejected;
   return O.match(ClaudeUsageBodyJson.decodeOption(response.body), {
     onNone: () => failed(`Claude usage answered HTTP ${response.status} with a body this version cannot read`),
@@ -201,26 +221,19 @@ export const claudeUsageOutcome = (response: {
  * @category utilities
  * @since 0.0.0
  */
-export const codexUsageOutcome = (response: {
-  readonly identity: O.Option<string>;
-  readonly status: number;
-  readonly body: string;
-}): AccountUsageOutcome => {
-  if (isRejectedStatus(response.status)) return loginRejected;
-  if (response.status !== 200) return failed(`Codex usage answered HTTP ${response.status}`);
-  return O.match(CodexUsageBodyJson.decodeOption(response.body), {
-    onNone: () => failed("Codex usage answered with a body this version cannot read"),
-    onSome: (body) =>
-      AccountUsageOutcome.cases.Ok.make({
-        identity: response.identity,
-        plan: O.fromNullishOr(body.plan_type),
-        windows: codexUsageWindows(body),
-        credits: codexCreditBalances(body),
-        limitResets: codexLimitResets(body),
-        asOf: O.none(),
-      }),
-  });
-};
+export const codexUsageOutcome: (response: UsageTextResponse) => AccountUsageOutcome = decodedOutcome(
+  "Codex usage",
+  CodexUsageBodyJson.decodeOption,
+  (body, response) =>
+    AccountUsageOutcome.cases.Ok.make({
+      identity: response.identity,
+      plan: O.fromNullishOr(body.plan_type),
+      windows: codexUsageWindows(body),
+      credits: codexCreditBalances(body),
+      limitResets: codexLimitResets(body),
+      asOf: O.none(),
+    })
+);
 
 /**
  * Turn a Muse Code key response into an outcome.
@@ -240,26 +253,19 @@ export const codexUsageOutcome = (response: {
  * @category utilities
  * @since 0.0.0
  */
-export const museUsageOutcome = (response: {
-  readonly identity: O.Option<string>;
-  readonly status: number;
-  readonly body: string;
-}): AccountUsageOutcome => {
-  if (isRejectedStatus(response.status)) return loginRejected;
-  if (response.status !== 200) return failed(`Muse Code answered HTTP ${response.status}`);
-  return O.match(MuseKeyBodyJson.decodeOption(response.body), {
-    onNone: () => failed("Muse Code answered with a body this version cannot read"),
-    onSome: (body) =>
-      AccountUsageOutcome.cases.Ok.make({
-        identity: response.identity,
-        plan: O.fromNullishOr(body.subs_tier_name),
-        windows: museUsageWindows(body),
-        credits: [],
-        limitResets: O.none(),
-        asOf: O.none(),
-      }),
-  });
-};
+export const museUsageOutcome: (response: UsageTextResponse) => AccountUsageOutcome = decodedOutcome(
+  "Muse Code",
+  MuseKeyBodyJson.decodeOption,
+  (body, response) =>
+    AccountUsageOutcome.cases.Ok.make({
+      identity: response.identity,
+      plan: O.fromNullishOr(body.subs_tier_name),
+      windows: museUsageWindows(body),
+      credits: [],
+      limitResets: O.none(),
+      asOf: O.none(),
+    })
+);
 
 /**
  * Turn a Grok Build billing reply into an outcome.
@@ -386,11 +392,7 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
   const fetchText = (
     request: HttpClientRequest.HttpClientRequest,
     identity: O.Option<string>,
-    toOutcome: (response: {
-      readonly identity: O.Option<string>;
-      readonly status: number;
-      readonly body: string;
-    }) => AccountUsageOutcome
+    toOutcome: (response: UsageTextResponse) => AccountUsageOutcome
   ) =>
     Effect.flatMap(client.execute(request), (response) =>
       Effect.map(response.text, (body) => toOutcome({ identity, status: response.status, body }))
