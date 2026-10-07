@@ -155,10 +155,10 @@ const hostedSeriesTiers: ReadonlyArray<KpiTier> = ["ci-merge-green"];
  *     schemaVersion: "ciops-kpi-adoption-table/v1",
  *     generator: "apps/labs/ciops/scripts/generate-adoption-table.ts",
  *     probe: "git merge-base --is-ancestor",
+ *     generation: "local clone with full history; never a CI check",
  *     windowStart: DateTime.makeUnsafe("2026-09-03T06:29:33.572Z"),
  *     windowEnd: DateTime.makeUnsafe("2026-10-06T03:19:28.440Z"),
- *     fleetManifestSha256: sha,
- *     changeEventLedgerSha256: sha,
+ *     pins: [PinnedKpiInput.make({ role: "change-event-ledger", path: "ledger.yaml", sha256: sha })],
  *     rows: []
  *   }),
  *   changeEvents: changeEventTable

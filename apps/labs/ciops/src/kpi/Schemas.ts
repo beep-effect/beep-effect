@@ -637,7 +637,8 @@ export class AdoptionProbe extends S.Class<AdoptionProbe>($I`AdoptionProbe`)(
 ) {}
 
 /**
- * Bounds of one window slice: `[start, end)`, membership by episode start.
+ * Bounds of one window slice, membership by episode start: `W` is half-open, `[start, end)`;
+ * `W-a` and `W-b` are closed intervals matching their sources (P4 Ruling 12b).
  *
  * **Example** (Bound the post-baseline window)
  *
