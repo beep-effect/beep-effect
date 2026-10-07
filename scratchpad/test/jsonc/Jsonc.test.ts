@@ -15,7 +15,7 @@ import {
   JsoncStringifyError,
   JsoncStringifyErrorCode,
   JsoncStringifyOptions,
-} from "@beep/scratchpad/effected/jsonc/index";
+} from "../../effected/jsonc/index.ts";
 
 const deeplyNested = `${"[".repeat(20000)}1${"]".repeat(20000)}`;
 

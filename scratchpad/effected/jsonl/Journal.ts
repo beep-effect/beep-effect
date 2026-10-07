@@ -6,7 +6,7 @@
 // The `Journal` service: one append-only, schema-validated JSONL file.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Channel from "effect/Channel";
@@ -55,6 +55,7 @@ import type { JsonlEvent } from "./JsonlEvent.ts";
 import { Line } from "./Line.ts";
 import { LineSlice } from "./LineSlice.ts";
 import { CursoredSlice, matchesFrame } from "./Slice.ts";
+import { flow } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/jsonl/Journal");
 
@@ -614,7 +615,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     bomBytes = bom;
     const reading = yield* restore(decodeRange(consumed, logicalSize)).pipe(
       Effect.map(Result.succeed),
-      Effect.catchTag("InvalidUtf8", (failure) => Effect.succeed(Result.fail(failure)))
+      Effect.catchTag("InvalidUtf8", flow(Result.fail, Effect.succeed))
     );
     if (Result.isFailure(reading)) {
       const failure = reading.failure;

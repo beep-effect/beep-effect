@@ -1,4 +1,4 @@
-import { Journal, JsonlEvent } from "@beep/scratchpad/effected/jsonl/index";
+import { Journal, JsonlEvent } from "../../effected/jsonl/index.ts";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";

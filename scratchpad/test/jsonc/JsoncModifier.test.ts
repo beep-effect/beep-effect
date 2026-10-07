@@ -10,7 +10,7 @@ import {
   JsoncModifier,
   JsoncModifyOptions,
   JsoncStringifyError,
-} from "@beep/scratchpad/effected/jsonc/index";
+} from "../../effected/jsonc/index.ts";
 
 const apply = (text: string, edits: ReadonlyArray<JsoncEdit>): string => JsoncEdit.applyAll(text, edits);
 

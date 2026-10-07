@@ -3,7 +3,7 @@ import { assertDefined } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { Jsonc, JsoncParseOptions, JsoncVisitor, JsoncVisitorEvent } from "@beep/scratchpad/effected/jsonc/index";
+import { Jsonc, JsoncParseOptions, JsoncVisitor, JsoncVisitorEvent } from "../../effected/jsonc/index.ts";
 
 const collect = (text: string, options?: JsoncParseOptions) => Stream.runCollect(JsoncVisitor.visit(text, options));
 const tags = (text: string, options?: JsoncParseOptions) => Effect.map(collect(text, options), (events) => events.map((e) => e._tag));

@@ -7,7 +7,7 @@ import {
   JsoncFormattingOptions,
   JsoncFormattingOptionsLike,
   JsoncRange,
-} from "@beep/scratchpad/effected/jsonc/index";
+} from "../../effected/jsonc/index.ts";
 
 describe("JsoncEdit", () => {
   describe("schemas", () => {

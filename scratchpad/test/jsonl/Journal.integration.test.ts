@@ -1,5 +1,5 @@
 // Adapted from upstream integration/Journal.int.test.ts (MIT).
-import { Envelope, Line } from "@beep/scratchpad/effected/jsonl/index";
+import { Envelope, Line } from "../../effected/jsonl/index.ts";
 import { NodeFileSystem } from "@effect/platform-node";
 import { assert, it } from "@effect/vitest";
 import { assertSome, assertSuccess } from "@effect/vitest/utils";

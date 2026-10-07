@@ -13,7 +13,7 @@ import {
   JsonlEvent,
   Line,
   LineSlice,
-} from "@beep/scratchpad/effected/jsonl/index";
+} from "../effected/jsonl/index.ts";
 import { canMerge, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
 import { probeBomBytes, readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";

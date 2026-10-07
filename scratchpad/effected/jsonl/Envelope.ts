@@ -6,9 +6,9 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
-import { Effect, pipe } from "effect";
+import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";

@@ -6,7 +6,7 @@ import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { Jsonc, JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "@beep/scratchpad/effected/jsonc/index";
+import { Jsonc, JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "../../effected/jsonc/index.ts";
 import { makeNodeUnsafe } from "@beep/scratchpad/effected/jsonc/JsoncNode";
 
 const tree = (text: string): JsoncNode => Jsonc.parseTreeResult(text).pipe(Result.getOrThrow, O.getOrThrow);

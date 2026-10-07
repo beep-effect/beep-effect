@@ -9,13 +9,13 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { JsoncDigest } from "@beep/scratchpad/effected/jsonc/index";
+import type { JsoncDigest } from "../../effected/jsonc/index.ts";
 import {
   JsoncCanonicalizeError,
   JsoncCanonicalizeErrorCode,
   JsoncFingerprint,
   JsoncTextHashOptions,
-} from "@beep/scratchpad/effected/jsonc/index";
+} from "../../effected/jsonc/index.ts";
 
 // A real SHA-256 backend over WebCrypto, wired through core's Crypto.make so
 // the tests exercise the exact service contract consumers provide.
