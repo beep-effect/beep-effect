@@ -3817,10 +3817,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       // to the hosted plan; the changed-scope state phase still carries them.
       const localFull = rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, false);
       expect(A.map(localFull, (step) => step.label)).toEqual(A.map(full, (step) => step.label));
-      expect(taskNames(O.getOrThrow(A.get(localFull, 1)))).toEqual(
-        A.filter(
-          taskNames(O.getOrThrow(A.get(full, 1))),
-          (task) => task !== "knowledge:semantic-delta" && task !== "knowledge:refs-check"
+      expect(pipe(A.get(localFull, 1), O.getOrThrow, taskNames)).toEqual(
+        pipe(
+          A.get(full, 1),
+          O.getOrThrow,
+          taskNames,
+          A.filter((task) => task !== "knowledge:semantic-delta" && task !== "knowledge:refs-check")
         )
       );
       expect(A.every(full, (step) => !A.contains(step.args, "--affected"))).toBe(true);
