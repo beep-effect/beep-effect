@@ -67,3 +67,7 @@ git diff --check -- goals/effect-v4-workflow-engine-spike explorations/effect-or
 bun run beep yeet verify
 bun run beep lint reflection-artifacts
 ```
+
+## Research evidence intake (2026-10-06)
+
+Review [Workflow boundary evidence](./research/RESEARCH-CORPUS-2026-10.md) within the existing phase gates. P0 must incorporate A1–A8 into the existing fourteen-row proof map and retain explicit unsupported boundaries before P1. No runtime change or new experiment is started by this attachment.

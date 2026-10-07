@@ -129,3 +129,7 @@ files were deleted:
   with `SPEC.md` seeded from the brief, the provenance ledger carried over, and
   both manifests cross-linked. Packet closes as `graduated`; three dependent
   candidates stay named in `MAP.md` rather than holding this packet fake-active.
+
+## Research corpus attachment (2026-10-06)
+
+[Authority consumer re-entry evidence](./research/RESEARCH-CORPUS-2026-10.md) records source-bound findings and bounded owner-intake candidates. Lifecycle and current execution phase are unchanged; the attachment is an async handoff, not owner consent or proof that an experiment ran.

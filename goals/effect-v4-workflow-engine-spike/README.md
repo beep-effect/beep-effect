@@ -47,3 +47,7 @@ Not started.
   compile-time fixture and behavioral kill/restart proof.
 - The result feeds `goals/law-docketing-reliability`; this packet does not build
   a product reminder workflow.
+
+## Research corpus attachment (2026-10-06)
+
+[Workflow boundary evidence](./research/RESEARCH-CORPUS-2026-10.md) records source-bound findings and bounded owner-intake candidates. Lifecycle and current execution phase are unchanged; the attachment is an async handoff, not owner consent or proof that an experiment ran.

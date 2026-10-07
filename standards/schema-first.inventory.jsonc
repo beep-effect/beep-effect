@@ -352,14 +352,6 @@
       "reason": "Mixed terminal Chalk runtime: level is data-like, while the recursive styling surface and call signature are executable; color and option domains are already schema-backed."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.service.ts",
-      "symbol": "FileProcessingEngineShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/file-processing",
-      "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
-    },
-    {
       "file": "packages/foundation/capability/file-processing/src/PageOcr/PageOcr.service.ts",
       "symbol": "PageOcrEngineShape",
       "kind": "exported-type-literal",
@@ -374,6 +366,14 @@
       "status": "exception",
       "owner": "@beep/file-processing",
       "reason": "Mixed service contract: the engine identities are already schema-backed, while recognizePage is an Effectful service operation."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Service/FileProcessing.service.ts",
+      "symbol": "FileProcessingEngineShape",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/file-processing",
+      "reason": "Mixed service contract: FileProcessingEngineDescriptor is already schema-backed, while the remaining members are Effectful driver operations."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
@@ -972,6 +972,26 @@
       "line": 12,
       "owner": "@beep/repo-cli",
       "reason": "Turbo input regression encodes fixed JSON fixture documents and decodes turbo summaries through S.fromJsonString codecs; the schemas are external turbo shapes exercised against real output, not domain schemas with a round-trip law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/research-library-acquisition.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 80,
+      "owner": "@beep/repo-cli",
+      "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/research-library-views.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 264,
+      "owner": "@beep/repo-cli",
+      "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },
     {
       "file": "packages/tooling/tool/cli/test/test-tsgo-turbo-inputs.test.ts",

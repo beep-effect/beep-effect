@@ -38,6 +38,10 @@ reply-all and forward drafts plus draft update, and tests that raise the
 "Coverage rows"). After slice 3: the closeout reflection and the flip to
 `completed-retained`.
 
+The research D-28 reconciliation and versioned audit follow-up remain
+unimplemented. Its attachment does not change the owner's slice 3 or closeout
+sequence.
+
 ## Latest Evidence
 
 - 2026-10-06: packet and registration runbook (slice 0).
@@ -54,3 +58,7 @@ reply-all and forward drafts plus draft update, and tests that raise the
   through the orchestrator session in one sitting with workstream A's.
 - The claude.ai Microsoft 365 connector cannot attach files even with its
   write scopes; do not plan around it for attachments.
+
+Research intake: [unknown send-outcome correction](research/RESEARCH-CORPUS-2026-10.md)
+from [research-corpus-synthesis](../../explorations/research-corpus-synthesis/README.md),
+with SPEC D-28 and a fixture-phase checkpoint. Lifecycle is unchanged.

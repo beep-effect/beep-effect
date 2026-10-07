@@ -1,0 +1,7 @@
+{
+  "sourceId": "2cf76720d55f68421855f57fc63b16492054b58b1c2e5d44a365ee1afc040090",
+  "path": "repos/github/vals-ai/legal-research-bench/data/public.json",
+  "sha256": "7489b3efb9676094908d8a0e3fd7d1b125ca1851af82a228c4ce40690af5a66d",
+  "inspected": "JSONstructure: dataset public/version1.0.0/tests length5; no full legal analysis of questions",
+  "executed": false
+}
