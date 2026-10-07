@@ -32,18 +32,18 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
-    "@effect/platform-bun": "catalog:",
-    "effect": "catalog:",
     "@beep/law-practice-server": "workspace:^",
     "@beep/law-practice-use-cases": "workspace:^",
     "@beep/schema": "workspace:^",
-    "@beep/uspto": "workspace:^"
+    "@beep/uspto": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "typescript": "catalog:",
-    "@effect/platform-node": "catalog:"
+    "typescript": "catalog:"
   },
   "bin": {
     "practice-identify": "./src/bin.ts"
