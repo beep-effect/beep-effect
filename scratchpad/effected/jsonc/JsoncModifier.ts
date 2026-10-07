@@ -188,10 +188,11 @@ export abstract class JsoncModifier {
     }
 
     return yield* NavigateResult.match(navigate(text, path), {
-      Mismatch: ({
-                   depth,
-                   expected,
-                 }): Modify => Effect.fail(JsoncModificationError.make({
+      Mismatch: (
+        {
+          depth,
+          expected,
+        }): Modify => Effect.fail(JsoncModificationError.make({
         path,
         expected,
         depth,
@@ -229,7 +230,7 @@ export abstract class JsoncModifier {
             // depth so a nested object lands at the same column as its siblings.
             const serialized = Str.replaceAll("\n", `${fmt.eol}${indent}`)(yield* serialize());
             const entry =
-              insert.container === "object" ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}` : serialized;
+              P.isObjectKeyword(insert.container) ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}` : serialized;
             const content = insert.isFirst ? `${fmt.eol}${indent}${entry}${fmt.eol}${outdent}` : `,${fmt.eol}${indent}${entry}`;
             return edits(JsoncEdit.make({
               offset: insert.at,

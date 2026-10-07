@@ -390,7 +390,7 @@ export abstract class JsoncFingerprint {
    * @returns The canonical JSON text, or a {@link JsoncCanonicalizeError}.
    */
   static canonicalizeResult(value: unknown): Result.Result<string, JsoncCanonicalizeError> {
-    return emit(value, "", 0);
+    return emit(value, Str.empty, 0);
   }
 
   /**

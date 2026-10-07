@@ -617,17 +617,17 @@ export abstract class Jsonc {
     const space = resolved.insertSpaces ? resolved.tabSize : "\t";
     // The replacer runs ahead of serialization and classifies the failure the
     // codec is about to report: the codec itself only knows "not JSON".
-    let code: JsoncStringifyErrorCode = "SerializationFailed";
+    let code: JsoncStringifyErrorCode = JsoncStringifyErrorCode.Enum.SerializationFailed;
     let ancestors = A.empty<object>();
     const codec = S.fromJsonString(S.Unknown, {
       space,
       replacer: function (this: unknown, _key: string, current: unknown): unknown {
         if (P.isBigInt(current)) {
-          code = "BigIntValue";
+          code = JsoncStringifyErrorCode.Enum.BigIntValue;
         } else if (P.isObjectKeyword(current)) {
           ancestors = A.reverse(A.dropWhile(A.reverse(ancestors), (ancestor) => ancestor !== this));
           if (A.some(ancestors, (ancestor) => ancestor === current)) {
-            code = "CircularReference";
+            code = JsoncStringifyErrorCode.Enum.CircularReference;
           }
           ancestors = A.append(ancestors, current);
         }
@@ -705,7 +705,7 @@ export abstract class Jsonc {
       }
       kind = scanner.scan();
     }
-    return A.join(A.append(parts, text.substring(lastOffset)), "");
+    return A.join(A.append(parts, text.substring(lastOffset)), Str.empty);
   }
 
   /**

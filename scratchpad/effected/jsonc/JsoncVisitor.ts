@@ -70,7 +70,7 @@ export const JsoncVisitorEvent = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("JsoncVisitorEvent", {
     description: "One event of a JSONC document walk: structure, values, separators, comments or recovered errors.",
-  })
+  }),
 );
 
 /**
@@ -148,11 +148,11 @@ const isNotConsumable = S.is(SyntaxKind.pick(["CloseBrace", "CloseBracket", "EOF
 
 const literalValue = (kind: SyntaxKind, tokenValue: string): unknown =>
   Match.value(kind).pipe(
-    Match.when("String", (): unknown => tokenValue),
-    Match.when("Number", (): unknown => Number.parseFloat(tokenValue)),
-    Match.when("True", (): unknown => true),
-    Match.when("False", (): unknown => false),
-    Match.orElse((): unknown => null)
+    Match.when(SyntaxKind.Enum.String, (): unknown => tokenValue),
+    Match.when(SyntaxKind.Enum.Number, (): unknown => Number.parseFloat(tokenValue)),
+    Match.when(SyntaxKind.Enum.True, (): unknown => true),
+    Match.when(SyntaxKind.Enum.False, (): unknown => false),
+    Match.orElse((): unknown => null),
   );
 
 type Events = Generator<JsoncVisitorEvent, void>;
@@ -166,8 +166,14 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   // event and skips the over-deep subtree iteratively.
   let depth = 0;
 
-  const span = () => ({ offset: scanner.getTokenOffset(), length: scanner.getTokenLength() });
-  const error = (code: JsoncParseErrorCode): JsoncVisitorEvent => JsoncVisitorEvent.cases.Error.make({ ...span(), code });
+  const span = () => ({
+    offset: scanner.getTokenOffset(),
+    length: scanner.getTokenLength(),
+  });
+  const error = (code: JsoncParseErrorCode): JsoncVisitorEvent => JsoncVisitorEvent.cases.Error.make({
+    ...span(),
+    code,
+  });
   const separator = (character: "," | ":"): JsoncVisitorEvent =>
     JsoncVisitorEvent.cases.Separator.make({ ...span(), character });
 
@@ -184,7 +190,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   };
 
   function* scanNext(): Events {
-    for (;;) {
+    for (; ;) {
       const kind = scanner.scan();
       const code = scanErrorToCode(scanner.getTokenError());
       if (O.isSome(code)) {
@@ -214,12 +220,16 @@ function* visitGen(text: string, disallowComments: boolean): Events {
 
   function* visitValue(): Events {
     const kind = scanner.getToken();
-    if (kind === "OpenBrace") {
+    if (SyntaxKind.is.OpenBrace(kind)) {
       yield* visitContainer(visitObject);
-    } else if (kind === "OpenBracket") {
+    } else if (SyntaxKind.is.OpenBracket(kind)) {
       yield* visitContainer(visitArray);
     } else if (isScalar(kind)) {
-      yield JsoncVisitorEvent.cases.LiteralValue.make({ ...span(), value: literalValue(kind, scanner.getTokenValue()), path });
+      yield JsoncVisitorEvent.cases.LiteralValue.make({
+        ...span(),
+        value: literalValue(kind, scanner.getTokenValue()),
+        path,
+      });
       yield* scanNext();
     } else {
       yield error("ValueExpected");
@@ -236,7 +246,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   // missing-comma error. Returns `false` when a trailing comma closed the
   // container.
   function* entrySeparator(closer: SyntaxKind, needsComma: boolean): Generator<JsoncVisitorEvent, boolean> {
-    if (scanner.getToken() === "Comma") {
+    if (SyntaxKind.is.Comma(scanner.getToken())) {
       yield separator(",");
       yield* scanNext();
       return scanner.getToken() !== closer;
@@ -260,20 +270,24 @@ function* visitGen(text: string, disallowComments: boolean): Events {
     yield JsoncVisitorEvent.cases.ObjectBegin.make({ ...span(), path });
     yield* scanNext(); // skip {
     let needsComma = false;
-    while (scanner.getToken() !== "CloseBrace" && scanner.getToken() !== "EOF") {
+    while (!SyntaxKind.is.CloseBrace(scanner.getToken()) && !SyntaxKind.is.EOF(scanner.getToken())) {
       if (!(yield* entrySeparator("CloseBrace", needsComma))) {
         break;
       }
-      if (scanner.getToken() !== "String") {
+      if (!SyntaxKind.is.String(scanner.getToken())) {
         yield error("PropertyNameExpected");
         yield* scanNext();
         continue;
       }
       const key = scanner.getTokenValue();
-      yield JsoncVisitorEvent.cases.ObjectProperty.make({ ...span(), property: key, path });
+      yield JsoncVisitorEvent.cases.ObjectProperty.make({
+        ...span(),
+        property: key,
+        path,
+      });
       path = A.append(path, key);
       yield* scanNext(); // skip key
-      if (scanner.getToken() === "Colon") {
+      if (SyntaxKind.is.Colon(scanner.getToken())) {
         yield separator(":");
         yield* scanNext(); // skip colon
       } else {
@@ -291,7 +305,7 @@ function* visitGen(text: string, disallowComments: boolean): Events {
     yield* scanNext(); // skip [
     let index = 0;
     let needsComma = false;
-    while (scanner.getToken() !== "CloseBracket" && scanner.getToken() !== "EOF") {
+    while (!SyntaxKind.is.CloseBracket(scanner.getToken()) && !SyntaxKind.is.EOF(scanner.getToken())) {
       if (!(yield* entrySeparator("CloseBracket", needsComma))) {
         break;
       }
@@ -305,9 +319,9 @@ function* visitGen(text: string, disallowComments: boolean): Events {
   }
 
   yield* scanNext();
-  if (scanner.getToken() !== "EOF") {
+  if (!SyntaxKind.is.EOF(scanner.getToken())) {
     yield* visitValue();
-    if (scanner.getToken() !== "EOF") {
+    if (!SyntaxKind.is.EOF(scanner.getToken())) {
       yield error("EndOfFileExpected");
     }
   }

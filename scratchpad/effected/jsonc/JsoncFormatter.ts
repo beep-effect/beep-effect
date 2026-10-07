@@ -13,7 +13,11 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { createScanner, SyntaxKind } from "./internal/scanner.ts";
 import type { JsoncRange } from "./JsoncEdit.ts";
-import { JsoncEdit, JsoncFormattingOptions, type JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
+import {
+  JsoncEdit,
+  JsoncFormattingOptions,
+  type JsoncFormattingOptionsLike,
+} from "./JsoncEdit.ts";
 import { thunk0 } from "@beep/utils/thunk";
 
 const isSkipped = S.is(SyntaxKind.pick(["Trivia", "LineBreak"]));
@@ -100,19 +104,28 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
   const breakOrSpace = (gap: string, depth: number): string => (Str.includes("\n")(gap) ? newline(depth) : " ");
 
   // The canonical gap before a token, given what came before it.
+  const applyGapDepthFromNewLine = <T extends {
+    depth: number
+  }>({ depth }: T) => newline(depth);
   const expectedGap: (gap: Gap) => string = Match.type<Gap>().pipe(
-    Match.when({ kind: isCloser }, (g) => newline(g.depth)),
-    Match.when({ prevToken: isOpener }, (g) => newline(g.depth)),
-    Match.when({ prevToken: "Comma" }, (g) => newline(g.depth)),
-    Match.when({ prevToken: "Colon" }, () => " "),
+    Match.when({ kind: isCloser }, applyGapDepthFromNewLine),
+    Match.when({ prevToken: isOpener }, applyGapDepthFromNewLine),
+    Match.when({ prevToken: SyntaxKind.Enum.Comma }, applyGapDepthFromNewLine),
+    Match.when({ prevToken: SyntaxKind.Enum.Colon }, () => " "),
     Match.when({ kind: isComment }, (g) => breakOrSpace(g.gap, g.depth)),
-    Match.when({ prevToken: "LineComment" }, (g) => newline(g.depth)),
-    Match.when({ prevToken: "BlockComment" }, (g) => breakOrSpace(g.gap, g.depth)),
-    Match.orElse((g) => g.gap)
+    Match.when({ prevToken: SyntaxKind.Enum.LineComment }, applyGapDepthFromNewLine),
+    Match.when({ prevToken: SyntaxKind.Enum.BlockComment }, (g) => breakOrSpace(g.gap, g.depth)),
+    Match.orElse((g) => g.gap),
   );
 
-  const rangeStart = O.match(range, { onNone: thunk0, onSome: (r) => r.offset });
-  const rangeEnd = O.match(range, { onNone: () => text.length, onSome: (r) => r.offset + r.length });
+  const rangeStart = O.match(range, {
+    onNone: thunk0,
+    onSome: (r) => r.offset,
+  });
+  const rangeEnd = O.match(range, {
+    onNone: () => text.length,
+    onSome: (r) => r.offset + r.length,
+  });
 
   let edits = A.empty<JsoncEdit>();
   const addEdit = (offset: number, length: number, content: string): void => {
@@ -125,7 +138,7 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
   let depth = 0;
   let previous = O.none<{ readonly token: SyntaxKind; readonly end: number }>();
 
-  for (let kind = scanner.scan(); kind !== "EOF"; kind = scanner.scan()) {
+  for (let kind = scanner.scan(); !SyntaxKind.is.EOF(kind); kind = scanner.scan()) {
     if (isSkipped(kind)) {
       continue;
     }
@@ -144,7 +157,10 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
     if (isOpener(kind)) {
       depth++;
     }
-    previous = O.some({ token: kind, end: tokenOffset + scanner.getTokenLength() });
+    previous = O.some({
+      token: kind,
+      end: tokenOffset + scanner.getTokenLength(),
+    });
   }
 
   if (options.insertFinalNewline && O.isSome(previous)) {

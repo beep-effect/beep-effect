@@ -339,7 +339,7 @@ export const makeNodeUnsafe = (props: JsoncNode.Encoded): JsoncNode =>
   JsoncNode.make(props, { disableChecks: true });
 
 const propertyKey = (prop: JsoncNode): O.Option<string> =>
-  prop.type === "property"
+  JsoncNodeType.is.property(prop.type)
     ? O.fromUndefinedOr(prop.children).pipe(
       O.flatMap(A.head),
       O.map((keyNode) => keyNode.value),
@@ -353,14 +353,14 @@ const covers = (node: JsoncNode, offset: number): boolean =>
 const childAt = (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode> => {
   const children = O.fromUndefinedOr(node.children);
   if (P.isString(segment)) {
-    return node.type === "object"
+    return JsoncNodeType.is.object(node.type)
       ? children.pipe(
         O.flatMap(A.findFirst((child) => O.contains(propertyKey(child), segment))),
         O.flatMap((prop) => O.flatMap(O.fromUndefinedOr(prop.children), A.get(1))),
       )
       : O.none();
   }
-  return node.type === "array" ? O.flatMap(children, A.get(segment)) : O.none();
+  return JsoncNodeType.is.array(node.type) ? O.flatMap(children, A.get(segment)) : O.none();
 };
 
 // Recursive walkers below cap their descent at MAX_NESTING_DEPTH. A tree built
@@ -394,7 +394,7 @@ const buildPath = (
   if (node.children === undefined || depth >= MAX_NESTING_DEPTH) {
     return O.some(currentPath);
   }
-  if (node.type === "object") {
+  if (JsoncNodeType.is.object(node.type)) {
     for (const prop of node.children) {
       const key = propertyKey(prop);
       if (O.isSome(key) && covers(prop, offset)) {
@@ -409,7 +409,7 @@ const buildPath = (
     }
     return O.some(currentPath);
   }
-  if (node.type === "array") {
+  if (JsoncNodeType.is.array(node.type)) {
     let index = 0;
     for (const child of node.children) {
       if (covers(child, offset)) {

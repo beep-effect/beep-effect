@@ -9,6 +9,7 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
+import * as Str from "effect/String";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
@@ -243,7 +244,7 @@ export class JsoncEdit extends S.Class<JsoncEdit>($I`JsoncEdit`)(
       onNone: () =>
         Result.succeed(
           A.reduce(sorted, text, (result, edit) =>
-            result.substring(0, edit.offset) + edit.content + result.substring(edit.offset + edit.length)
+            Str.substring( 0, edit.offset)(result) + edit.content + Str.substring(edit.offset + edit.length)(result)
           )
         ),
       onSome: ([upper, lower]) => Result.fail(JsoncEditOverlapError.make({ lower: lower.offset, upper: upper.offset })),
