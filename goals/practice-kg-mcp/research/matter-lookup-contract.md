@@ -293,9 +293,12 @@ contact_addresses(                  -- which contact owns an address
 
 This contract describes store format pglite 4 / duckdb 4, which the build
 writes from bundle version `2026-10-07-01` on; extension `0.4.0` reads it and
-refuses format 3 and older by name. The current bundle is `2026-10-07-02`
-(`<corpus>/staging/practice-kg-bundle-2026-10-07-02`, archive mail in the
-correspondent tables, D-26); `2026-10-07-01` stays on disk beside it. The
+refuses format 3 and older by name. The current bundle is `2026-10-07-04`
+(`<corpus>/staging/practice-kg-bundle-2026-10-07-04`, archive mail in the
+correspondent tables, D-26, each message counted once, D-27);
+`2026-10-07-03` and `2026-10-07-02` (earlier builds of the same day, with
+some messages counted twice) and `2026-10-07-01` stay on disk beside it.
+The
 last format 3 bundle is
 `<corpus>/staging/practice-kg-bundle-2026-10-06-03`; `practice-kg-bundle-p9`
 is `2026-10-06-02` (same matters, fewer documents with text, and a wrong

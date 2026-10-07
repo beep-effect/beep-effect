@@ -9,8 +9,9 @@ with counts and his verdicts only; quote no client documents.
 
 1. Confirm the install over SSH with Claude Desktop closed:
    `practice-kg-mcp.exe --self-check --bundle-dir <bundle folder>` prints one
-   line with `"ok":true` and the current bundle version (`2026-10-07-02` once
-   the P11 swap has run, `2026-10-07-01` before). Then relaunch Claude Desktop.
+   line with `"ok":true`, the installed bundle version (`2026-10-07-04` once
+   the P11 swap has run, `2026-10-07-01` before) and its `nodes` count. Note
+   both. Then relaunch Claude Desktop.
 2. Choose the five placeholders with the attorney's own matters, using the
    selection guidance in `research/acceptance-gauntlet.md` (bottom section).
    Write them on paper, not in the repo.
@@ -18,8 +19,8 @@ with counts and his verdicts only; quote no client documents.
 ## 1. In-chat install check (2 minutes)
 
 In a new Claude Desktop chat: "Call kg_provenance with no arguments." Pass:
-the reply names the bundle version from step 1, 15,002 rows, and lists the
-knowledge-graph tools. Fail: the tools are missing or the call errors — stop
+the reply names the bundle version from step 1, the same number of rows as
+the `nodes` count from step 1, and lists the knowledge-graph tools. Fail: the tools are missing or the call errors — stop
 and send the error text to the practice-KG session.
 
 ## 2. The five gauntlet questions (25 minutes)

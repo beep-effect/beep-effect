@@ -32,3 +32,22 @@ Friction receipts, recorded when they happened.
   and docket keys only, so a consumer found it. Prevention: have `verify.ts
   --compare-to <old bundle>` report changed application and patent numbers per
   docket. Landed as D-25.
+
+## 2026-10-07 — P11 mail archives
+
+- **A bundle zip without empty directories does not open.** Zipping a bundle
+  file by file dropped the 14 empty directories of `kg.pglite`; on the PC the
+  self-check answered `could not be opened` / `PgliteClient: Failed to
+  connect`. Caught only because the staged copy was self-checked before the
+  switch. Prevention: package with directory entries, then extract the zip
+  and run `--self-check` on the extracted copy before sending it; make that a
+  packaging command of the app instead of a hand-written script.
+- **Section order in JSDoc reaches hosted CI unseen.** A `**Details**`
+  paragraph placed after an `**Example**` passed the package `lint:jsdoc` and
+  the cheap gates, and failed the hosted JSDoc Ratchet
+  (`section-after-example: 1 > 0`). Prevention: run the ratchet's totals
+  check in the cheap gates for changed packages.
+- **A merged PR left its own coverage red on main.** The P11 change merged
+  with the Coverage Regression lane red on its own new file. Prevention: run
+  the scoped coverage of new and changed files before calling a PR final.
+
