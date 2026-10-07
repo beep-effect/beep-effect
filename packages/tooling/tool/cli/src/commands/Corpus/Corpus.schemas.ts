@@ -54,6 +54,7 @@ export * from "./internal/Organize.schemas.ts";
  * @since 0.0.0
  */
 export * from "./internal/Preservation.schemas.ts";
+export * from "./internal/ProvenanceIndex.schemas.ts";
 /**
  * Recycle-bin schema exports for corpus curation commands.
  *

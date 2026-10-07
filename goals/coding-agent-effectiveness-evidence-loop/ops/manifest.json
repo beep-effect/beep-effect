@@ -5,7 +5,7 @@
     "title": "Coding Agent Effectiveness Evidence Loop",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-09-25",
+    "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/coding-agent-effectiveness-evidence-loop",
@@ -31,7 +31,8 @@
     "goals/coding-agent-effectiveness-evidence-loop/SPEC.md",
     "goals/coding-agent-effectiveness-evidence-loop/PLAN.md",
     "goals/coding-agent-effectiveness-evidence-loop/GOAL.md",
-    "goals/coding-agent-effectiveness-evidence-loop/research/SOURCES.md"
+    "goals/coding-agent-effectiveness-evidence-loop/research/SOURCES.md",
+    "goals/coding-agent-effectiveness-evidence-loop/research/RESEARCH-CORPUS-2026-10.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -44,7 +45,8 @@
     "research/2026-09-03-p1-phone-transport-disposition.md",
     "research/2026-09-03-p2-contract-foundation.md",
     "history/outputs/2026-09-03-p1-sharp-cutover.md",
-    "history/evidence/2026-08-01-hook-pulse-spike.ndjson"
+    "history/evidence/2026-08-01-hook-pulse-spike.ndjson",
+    "research/RESEARCH-CORPUS-2026-10.md"
   ],
   "agentLaunchers": [
     {

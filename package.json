@@ -599,6 +599,7 @@
     "apps/docket-intake",
     "packages/drivers/occt",
     "packages/drivers/pdf-tools",
-    "apps/practice-mail-tagging"
+    "apps/practice-mail-tagging",
+    "apps/practice-identify"
   ]
 }

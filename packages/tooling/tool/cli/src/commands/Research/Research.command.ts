@@ -16,6 +16,7 @@ import * as Str from "effect/String";
 import { resolveOperatorPath, resolveUnitBunPath, systemdUnitPathRule } from "../../internal/systemd/index.ts";
 import { installResearchTimers, readRecordedResearchTimer, uninstallResearchTimers } from "./internal/Timers.ts";
 import { resolveVaultRoot } from "./internal/Vault.ts";
+import { libraryCommand } from "./Library/Library.command.ts";
 import { ResearchCommandError } from "./Research.errors.ts";
 import { printResearchIndex } from "./Research.render.ts";
 import {
@@ -459,6 +460,7 @@ const researchStatusCommand = Command.make(
 export const researchCommand = Command.make("research", {}, () => printResearchIndex).pipe(
   Command.withDescription("Research capture and knowledge-vault curation commands"),
   Command.withSubcommands([
+    libraryCommand,
     researchCaptureCommand,
     researchCognifyCommand,
     researchDailyCommand,

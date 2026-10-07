@@ -12,6 +12,7 @@ import { Console, DateTime, Effect, FileSystem, HashMap, HashSet, Order, Path } 
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { bytesEqual } from "../../../internal/cli/FsGuards.ts";
@@ -190,6 +191,37 @@ const archiveError = (message: string): CorpusCommandError => CorpusCommandError
 const nonNegative = (value: number): number => S.Natural.make(Math.max(0, Math.floor(value)));
 
 const digestBytes = (bytes: Uint8Array): Sha256Hex => Sha256Hex.make(bytesToHex(sha256(bytes)));
+
+// Streaming SHA-256. The CLI runs under Bun, whose native hasher measured
+// 1.68 GB/s against 187 MB/s for the pure-JS hasher on the 147 GB root
+// archive (2026-10-06); Effect's `Crypto` service only offers one-shot
+// digests. Node (tests) falls back to the pure-JS hasher; digests are
+// identical either way. The probe checks the hasher surface, not the `Bun`
+// global: `vitest.setup.ts` installs a partial Bun shim under Node that has
+// no `CryptoHasher`.
+interface StreamingSha256 {
+  readonly digestHex: () => Sha256Hex;
+  readonly update: (chunk: Uint8Array) => void;
+}
+const hasNativeSha256 = (): boolean => P.hasProperty(globalThis, "Bun") && P.isFunction(Bun.CryptoHasher);
+const createStreamingSha256 = (): StreamingSha256 => {
+  if (hasNativeSha256()) {
+    const native = new Bun.CryptoHasher("sha256");
+    return {
+      update: (chunk) => {
+        native.update(chunk);
+      },
+      digestHex: () => Sha256Hex.make(native.digest("hex")),
+    };
+  }
+  const portable = sha256.create();
+  return {
+    update: (chunk) => {
+      portable.update(chunk);
+    },
+    digestHex: () => Sha256Hex.make(bytesToHex(portable.digest())),
+  };
+};
 
 const digestText = (value: string): Sha256Hex => digestBytes(utf8ToBytes(value));
 
@@ -910,7 +942,7 @@ const hashOpenedRestorationFile = Effect.fn("CorpusRestoration.hashOpenedFile")(
   const file = yield* fs
     .open(filePath, { flag: "r" })
     .pipe(CorpusCommandError.mapError("Failed opening archive object for streaming hash."));
-  const hasher = sha256.create();
+  const hasher = createStreamingSha256();
   let sizeBytes = 0;
   while (true) {
     const chunk = yield* file
@@ -920,7 +952,7 @@ const hashOpenedRestorationFile = Effect.fn("CorpusRestoration.hashOpenedFile")(
     hasher.update(chunk.value);
     sizeBytes += chunk.value.length;
   }
-  return { sha256: Sha256Hex.make(bytesToHex(hasher.digest())), sizeBytes };
+  return { sha256: hasher.digestHex(), sizeBytes };
 });
 
 /**
@@ -1566,7 +1598,7 @@ const hashResumedArchivePrefix = Effect.fn("CorpusRestoration.hashResumedPrefix"
   sourcePath: string,
   resumeBytes: number,
   chunkSize: number,
-  hasher: ReturnType<typeof sha256.create>
+  hasher: StreamingSha256
 ): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Scope.Scope> {
   const fs = yield* FileSystem.FileSystem;
   const prefix = yield* fs
@@ -1587,7 +1619,7 @@ const copyArchiveRemainder = Effect.fn("CorpusRestoration.copyArchiveRemainder")
   source: FileSystem.File,
   destination: FileSystem.File,
   chunkSize: number,
-  hasher: ReturnType<typeof sha256.create>
+  hasher: StreamingSha256
 ): Effect.fn.Return<void, CorpusCommandError> {
   while (true) {
     const chunk = yield* source
@@ -1664,13 +1696,13 @@ const copyArchiveBytes = Effect.fn("CorpusRestoration.copyArchiveBytes")(functio
   yield* source
     .seek(BigInt(partialState.resumeBytes), "start")
     .pipe(CorpusCommandError.mapError("Failed seeking preservation source copy handle."));
-  const hasher = sha256.create();
+  const hasher = createStreamingSha256();
   if (partialState.resumeBytes > 0) {
     yield* hashResumedArchivePrefix(context.object.sourcePath, partialState.resumeBytes, context.chunkSize, hasher);
   }
   yield* copyArchiveRemainder(source, destination, context.chunkSize, hasher);
   yield* destination.sync.pipe(CorpusCommandError.mapError("Failed syncing preservation payload."));
-  return Sha256Hex.make(bytesToHex(hasher.digest()));
+  return hasher.digestHex();
 });
 
 const promoteAndVerifyArchiveCopy = Effect.fn("CorpusRestoration.promoteAndVerifyArchiveCopy")(function* (
@@ -1959,6 +1991,11 @@ const writeInheritedLossRecords = Effect.fn("CorpusRestoration.writeInheritedLos
     ["missing-recycle-payload", context.options.expectedMissingRecyclePayloadCount],
     ["mutated-destination", context.collector.mutatedDestinationCount],
     ["stripped-filesystem-metadata", context.inventory.files.length + context.inventory.directories.length],
+    // Optional fifth class (2026-10-06): collector destinations the operator
+    // deliberately removed from the source after the approved preflight.
+    ...(context.options.expectedOperatorDeletedDestinationCount > 0
+      ? ([["operator-deleted-noise", context.options.expectedOperatorDeletedDestinationCount]] as const)
+      : []),
   ];
   for (const [category, count] of counts) {
     yield* appendArchiveRecord(
@@ -2396,12 +2433,25 @@ const validateCurrentArchiveRun = Effect.fn("CorpusRestoration.validateCurrentRu
       "A sealed preservation run cannot contain any archive failure record."
     );
   }
-  const inheritedLossRows = A.filter(currentRecords, (record) => record.recordType === "inherited-loss");
-  if (inheritedLossRows.length !== 4) {
+  const inheritedLossCategories = A.getSomes(
+    A.map(currentRecords, (record) => (record.recordType === "inherited-loss" ? O.some(record.category) : O.none()))
+  );
+  const ratifiedOpeningClasses = HashSet.make(
+    "collector-error",
+    "missing-recycle-payload",
+    "mutated-destination",
+    "stripped-filesystem-metadata"
+  );
+  const hasEveryRatifiedClass = HashSet.every(ratifiedOpeningClasses, (category) =>
+    A.contains(inheritedLossCategories, category)
+  );
+  const hasDistinctClasses =
+    HashSet.size(HashSet.fromIterable(inheritedLossCategories)) === inheritedLossCategories.length;
+  if (!hasEveryRatifiedClass || !hasDistinctClasses) {
     return yield* failArchiveVerification(
       archiveRoot,
       "manifest-corrupt",
-      "Current sealed run does not contain all four inherited-loss opening classes."
+      "Current sealed run does not contain the four ratified inherited-loss opening classes exactly once each."
     );
   }
   return { currentPreflight, currentRecords };
@@ -2656,6 +2706,7 @@ export const restorationArchiveTesting = {
   decodeObservedWriterClaim,
   encodeRestorationWriterClaim,
   filesystemRootFor,
+  createStreamingSha256,
   hashResumedArchivePrefix,
   indexArchiveTerminals,
   inspectArchiveAttemptSource,

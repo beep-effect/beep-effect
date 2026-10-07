@@ -29,9 +29,13 @@
     "goals/m365-agent-outbox/PLAN.md",
     "goals/m365-agent-outbox/GOAL.md",
     "goals/m365-agent-outbox/research/SOURCES.md",
-    "docs/runbooks/m365-agent-outbox-registration.md"
+    "docs/runbooks/m365-agent-outbox-registration.md",
+    "goals/m365-agent-outbox/research/RESEARCH-CORPUS-2026-10.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/RESEARCH-CORPUS-2026-10.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

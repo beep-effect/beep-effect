@@ -439,3 +439,7 @@ jq . goals/coding-agent-effectiveness-evidence-loop/ops/manifest.json
 rg -n "coding-agent-effectiveness-evidence-loop|GOAL.md|agentLaunchers|packetAnchorDocument" goals/coding-agent-effectiveness-evidence-loop
 git diff --check -- goals/coding-agent-effectiveness-evidence-loop
 ```
+
+## Research evidence intake (2026-10-06)
+
+Review [Paired outcome evidence](./research/RESEARCH-CORPUS-2026-10.md) within the existing phase gates. P2 remains current. The paired baseline/abstention candidate belongs to P5/P7 after telemetry/replay gates; DeFA diagnosis and host-return stress need separate owner intake and evidence gates. No runtime change or new experiment is started by this attachment.

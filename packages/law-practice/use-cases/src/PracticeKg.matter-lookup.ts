@@ -352,6 +352,15 @@ export const practiceKgDocketCountryCodes: ReadonlyArray<string> = [
   "ID",
   "NZ",
   "MX",
+  "IT",
+  "TW",
+  "CL",
+  "CO",
+  "TR",
+  "MY",
+  "EM",
+  "EO",
+  "ZK",
 ];
 const docketBody = `[0-9]{5,6}(?:${A.join(practiceKgDocketCountryCodes, "|")})[0-9]{0,3}(?:-[A-Z]{2}[0-9]+)?(?![0-9A-Z])`;
 const docketReferencePattern = new RegExp(`(?<![0-9.A-Z])(?:[0-9]{4,6}\\.)?${docketBody}`, "giu");

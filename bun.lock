@@ -290,6 +290,28 @@
         "typescript": "catalog:",
       },
     },
+    "apps/practice-identify": {
+      "name": "@beep/practice-identify",
+      "version": "0.0.0",
+      "bin": {
+        "practice-identify": "./src/bin.ts",
+      },
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/law-practice-server": "workspace:^",
+        "@beep/law-practice-use-cases": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/uspto": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "apps/practice-kg-mcp": {
       "name": "@beep/practice-kg-mcp",
       "version": "0.0.0",
@@ -2738,6 +2760,7 @@
         "@beep/schema": "workspace:^",
         "@beep/shared-use-cases": "workspace:^",
         "@beep/tika": "workspace:^",
+        "@beep/uspto": "workspace:^",
         "@beep/utils": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -2790,6 +2813,7 @@
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -4064,6 +4088,8 @@
     "@beep/poppler": ["@beep/poppler@workspace:packages/drivers/poppler"],
 
     "@beep/postgres": ["@beep/postgres@workspace:packages/drivers/postgres"],
+
+    "@beep/practice-identify": ["@beep/practice-identify@workspace:apps/practice-identify"],
 
     "@beep/practice-kg-mcp": ["@beep/practice-kg-mcp@workspace:apps/practice-kg-mcp"],
 

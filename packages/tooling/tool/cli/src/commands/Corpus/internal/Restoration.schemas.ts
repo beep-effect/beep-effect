@@ -231,6 +231,10 @@ export class RestorationPreserveOptions extends S.Class<RestorationPreserveOptio
         Effect.succeed(restorationPreserveOptionsExpectedCollectorExcludedSecretCountDefault)
       )
     ),
+    expectedOperatorDeletedDestinationCount: S.Natural.pipe(
+      S.withConstructorDefault(Effect.succeed(S.Natural.make(0))),
+      S.withDecodingDefaultTypeKey(Effect.succeed(S.Natural.make(0)))
+    ),
     expectedCollectorPresentSuccessfulRowCount: S.Natural.pipe(
       S.withConstructorDefault(
         Effect.succeed(restorationPreserveOptionsExpectedCollectorPresentSuccessfulRowCountDefault)
@@ -752,6 +756,7 @@ const InheritedLossCategory = LiteralKit([
   "missing-recycle-payload",
   "mutated-destination",
   "stripped-filesystem-metadata",
+  "operator-deleted-noise",
 ]).pipe(
   $I.annoteSchema("InheritedLossCategory", {
     description: "Ratified opening-loss class carried without a recovery claim.",

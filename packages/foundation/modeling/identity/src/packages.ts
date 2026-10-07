@@ -203,7 +203,8 @@ const generatedComposers = $I.compose(
   "practice-mail-tagging",
   "occt",
   "pdf-tools",
-  "technical-drawing"
+  "technical-drawing",
+  "practice-identify"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -2807,3 +2808,20 @@ export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = compose
  * @since 0.0.0
  */
 export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-drawing"> = composers.$TechnicalDrawingId;
+
+/**
+ * Identity composer for `@beep/practice-identify`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $PracticeIdentifyId } from "@beep/identity/packages"
+ *
+ * const id = $PracticeIdentifyId.make("PracticeIdentify")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $PracticeIdentifyId: Identity.IdentityComposer<"@beep/practice-identify"> = composers.$PracticeIdentifyId;

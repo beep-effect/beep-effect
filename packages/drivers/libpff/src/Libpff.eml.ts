@@ -10,8 +10,13 @@
  * @since 0.0.0
  */
 
+import { $LibpffId } from "@beep/identity";
 import { A, O, R, Str } from "@beep/utils";
+import { Match, MutableHashMap } from "effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as S from "effect/Schema";
+
+const $I = $LibpffId.create("Libpff.eml");
 
 const CRLF = "\r\n";
 const base64LineLength = 76;
@@ -199,6 +204,9 @@ export const rfc5322DateFromOutlookTimestamp = (value: string): O.Option<string>
     O.map(({ day, hour, minute, month, second, year }) => `${day} ${month} ${year} ${hour}:${minute}:${second} +0000`)
   );
 
+const isStructuralHeader = (line: string) =>
+  headerName(line).pipe(O.exists((name) => A.contains(structuralHeaderNames, name)));
+
 /**
  * Normalize a verbatim transport-header block for reuse in an assembled EML.
  *
@@ -228,26 +236,9 @@ export const stripMimeStructuralHeaders = (headerBlock: string): string => {
   const kept: Array<string> = [];
   let dropping = false;
 
-  for (const line of headerBlock.split(lineBreakPattern)) {
-    if (Str.isEmpty(Str.trim(line))) {
-      break;
-    }
-
-    if (continuationPattern.test(line)) {
-      if (!dropping) {
-        kept.push(...foldHeaderLine(line));
-      }
-      continue;
-    }
-
-    dropping = O.match(headerName(line), {
-      onNone: () => false,
-      onSome: (name) => A.contains(structuralHeaderNames, name),
-    });
-
-    if (!dropping) {
-      kept.push(...foldHeaderLine(line));
-    }
+  for (const line of A.takeWhile(Str.split(headerBlock, lineBreakPattern), (line) => Str.isNonEmpty(Str.trim(line)))) {
+    dropping = continuationPattern.test(line) ? dropping : isStructuralHeader(line);
+    if (!dropping) kept.push(...foldHeaderLine(line));
   }
 
   return A.join(kept, CRLF);
@@ -467,4 +458,119 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
 
   sections.push(`--${input.boundary}--`);
   return A.join(sections, CRLF);
+};
+
+/**
+ * Parsed transport headers, keyed by lowercase field name.
+ *
+ * **Example** (Describe a header map)
+ *
+ * ```ts
+ * import type { InternetHeaderMap } from "@beep/libpff"
+ *
+ * const headers: InternetHeaderMap = { to: ["a@example.com"] }
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const InternetHeaderMap = S.Record(S.String, S.Array(S.String)).pipe(
+  $I.annoteSchema("InternetHeaderMap", {
+    title: "Internet Header Map",
+    description: "Unfolded RFC 5322 headers keyed by lowercase field name; repeated fields keep input order.",
+  })
+);
+
+/**
+ * Type for {@link InternetHeaderMap}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InternetHeaderMap = typeof InternetHeaderMap.Type;
+
+const addressSeparator = (
+  state: { quoted: boolean; escaped: boolean; angleDepth: number; commentDepth: number },
+  c: string | undefined
+): boolean => {
+  if (state.escaped) {
+    state.escaped = false;
+    return false;
+  }
+  if (c === "\\") {
+    state.escaped = true;
+    return false;
+  }
+  if (c === '"' && state.commentDepth === 0) state.quoted = !state.quoted;
+  if (state.quoted) return false;
+  updateAddressDepth(state, c);
+  return state.commentDepth === 0 && c === "," && state.angleDepth === 0;
+};
+const updateAddressDepth = (state: { angleDepth: number; commentDepth: number }, c: string | undefined) => {
+  if (c === "(") state.commentDepth++;
+  if (c === ")") state.commentDepth = Math.max(0, state.commentDepth - 1);
+  if (state.commentDepth !== 0) return;
+  if (c === "<") state.angleDepth++;
+  if (c === ">") state.angleDepth = Math.max(0, state.angleDepth - 1);
+};
+
+const splitAddresses = (value: string): ReadonlyArray<string> => {
+  const parts: Array<string> = [];
+  const state = { quoted: false, escaped: false, angleDepth: 0, commentDepth: 0 };
+  let start = 0;
+  for (let i = 0; i < value.length; i++) {
+    if (addressSeparator(state, value[i])) {
+      parts.push(Str.trim(value.slice(start, i)));
+      start = i + 1;
+    }
+  }
+  parts.push(Str.trim(value.slice(start)));
+  return A.filter(parts, Str.isNonEmpty);
+};
+
+const appendUnfoldedLine = (lines: Array<string>, line: string) => {
+  if (!/^[ \t]/.test(line)) {
+    lines.push(line);
+    return;
+  }
+  const last = lines.pop();
+  if (last !== undefined) lines.push(`${last} ${Str.trim(line)}`);
+};
+const unfoldInternetHeaders = (text: string) => {
+  const lines: Array<string> = [];
+  for (const line of A.takeWhile(Str.split(text, /\r?\n/), Str.isNonEmpty)) {
+    appendUnfoldedLine(lines, line);
+  }
+  return lines;
+};
+const internetHeaderValues = Match.type<{ key: string; value: string }>().pipe(
+  Match.when({ key: Match.is("to", "cc") }, ({ value }) => splitAddresses(value)),
+  Match.when({ key: "references" }, ({ value }) => A.filter(Str.split(value, /\s+/), Str.isNonEmpty)),
+  Match.orElse(({ value }) => [value])
+);
+
+/** Unfold RFC 5322 headers and retain repeated fields in input order.
+ * **Example** (Read folded addresses)
+ * ```ts
+ * import { parseInternetHeaders } from "@beep/libpff"
+ * console.log(parseInternetHeaders("To: a@example.com,\n b@example.com").to)
+ * ```
+ * @category parsers
+ * @since 0.0.0
+ */
+export const parseInternetHeaders = (text: string): InternetHeaderMap => {
+  const headers = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  for (const line of unfoldInternetHeaders(text)) {
+    const colon = line.indexOf(":");
+    if (colon <= 0) continue;
+    const key = Str.toLowerCase(Str.trim(line.slice(0, colon)));
+    const value = Str.trim(line.slice(colon + 1));
+    const previous = O.getOrElse(MutableHashMap.get(headers, key), () => A.empty<string>());
+    MutableHashMap.set(headers, key, A.appendAll(previous, internetHeaderValues({ key, value })));
+  }
+  // `R.fromEntries` defines own data properties, so a `Constructor:` or
+  // `__proto__:` header becomes an ordinary key; indexing a plain object
+  // literal would read `Object` / `Object.prototype` instead and throw on
+  // spread.
+  return R.fromEntries(headers);
 };

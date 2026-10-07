@@ -1,0 +1,51 @@
+{
+  "name": "@beep/practice-identify",
+  "version": "0.0.0",
+  "description": "Practice document identification: resolves the client and docket of unplaced documents with measured precision per evidence tier.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/practice-identify",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "apps/practice-identify"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "beep:build": "tsgo -p tsconfig.check.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:jsdoc": "beep-cli lint jsdoc --package .",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test"
+  },
+  "dependencies": {
+    "@beep/identity": "workspace:^",
+    "@beep/law-practice-server": "workspace:^",
+    "@beep/law-practice-use-cases": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/uspto": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  },
+  "bin": {
+    "practice-identify": "./src/bin.ts"
+  }
+}

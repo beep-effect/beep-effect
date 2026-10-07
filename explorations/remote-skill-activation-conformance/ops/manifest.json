@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "remote-skill-activation-conformance",
+    "title": "Remote Skill Activation Conformance",
+    "status": "parked",
+    "stage": "research",
+    "openQuestions": [
+      "Pin one existing host revision and native activation route.",
+      "Identify supported cache/copy/restart surfaces and controlled cleanup.",
+      "Record parent intake and receipt projection without displacing current first-consumer gates."
+    ],
+    "sources": [
+      "research/SOURCES.md",
+      "RESEARCH.md",
+      "BRIEF.md",
+      "MAP.md",
+      "DECISIONS.md"
+    ],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-06",
+    "updated": "2026-10-06"
+  }
+}

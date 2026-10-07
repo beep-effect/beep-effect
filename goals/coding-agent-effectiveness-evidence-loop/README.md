@@ -187,3 +187,7 @@ every ledger value is an enum, UUID, path, timestamp, or tool name.
   P0–P8; the map lives at the top of `PLAN.md`.
 - Depends on `goals/effect-v4-workflow-engine-spike` (durability boundary)
   and consumes `goals/ai-metrics-stack` P7f output; reopens neither.
+
+## Research corpus attachment (2026-10-06)
+
+[Paired outcome evidence](./research/RESEARCH-CORPUS-2026-10.md) records source-bound findings and bounded owner-intake candidates. Lifecycle and current execution phase are unchanged; the attachment is an async handoff, not owner consent or proof that an experiment ran.
