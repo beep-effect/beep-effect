@@ -12,7 +12,6 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
-import { sha256 } from "@noble/hashes/sha2.js";
 import { ByteSize, Context, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
@@ -1112,7 +1111,7 @@ describe("restoration archive boundary helpers", () => {
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         (yield* Effect.scoped(
-          RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, sha256.create())
+          RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, RA.createStreamingSha256())
         ).pipe(Effect.exit)).pipe(Exit.isFailure, assertTrue);
 
         const options = preserveOptions(sourceRoot, sourcePath, root, path.join(root, "collector.jsonl"));

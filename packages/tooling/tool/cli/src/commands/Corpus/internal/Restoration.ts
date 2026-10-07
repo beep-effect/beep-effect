@@ -2705,6 +2705,7 @@ export const restorationArchiveTesting = {
   decodeObservedWriterClaim,
   encodeRestorationWriterClaim,
   filesystemRootFor,
+  createStreamingSha256,
   hashResumedArchivePrefix,
   indexArchiveTerminals,
   inspectArchiveAttemptSource,

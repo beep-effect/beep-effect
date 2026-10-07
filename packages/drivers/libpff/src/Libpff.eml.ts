@@ -10,10 +10,13 @@
  * @since 0.0.0
  */
 
+import { $LibpffId } from "@beep/identity";
 import { A, O, R, Str } from "@beep/utils";
 import { Match } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
+
+const $I = $LibpffId.create("Libpff.eml");
 
 const CRLF = "\r\n";
 const base64LineLength = 76;
@@ -457,18 +460,33 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
   return A.join(sections, CRLF);
 };
 
-/** Parsed transport headers, keyed by lowercase field name.
+/**
+ * Parsed transport headers, keyed by lowercase field name.
+ *
  * **Example** (Describe a header map)
+ *
  * ```ts
  * import type { InternetHeaderMap } from "@beep/libpff"
+ *
  * const headers: InternetHeaderMap = { to: ["a@example.com"] }
  * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
-export const InternetHeaderMap = S.Record(S.String, S.Array(S.String));
-/** @category models
- * @since 0.0.0 */
+export const InternetHeaderMap = S.Record(S.String, S.Array(S.String)).pipe(
+  $I.annoteSchema("InternetHeaderMap", {
+    title: "Internet Header Map",
+    description: "Unfolded RFC 5322 headers keyed by lowercase field name; repeated fields keep input order.",
+  })
+);
+
+/**
+ * Type for {@link InternetHeaderMap}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type InternetHeaderMap = typeof InternetHeaderMap.Type;
 
 const addressSeparator = (
