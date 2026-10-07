@@ -592,7 +592,10 @@ For large files, it supplies bounded excerpts from the target definitions so a
 batch near the end of a file does not receive only the first 18 KB. These are
 excerpts, explicitly labelled as such; use source queries to read full definitions.
 The model, output-token limit and existing empty-response retries stay configured
-as before.
+as before. If a later batch throws a transport error, completed summaries survive
+and the collector retries only missing ids. An unrecovered transport error remains
+visible in the final failure tally; a fully recovered retry clears it. Cancellation
+and failures before any usable summary still propagate.
 
 Apply the patch kit, then run its transport-free regression checks:
 
@@ -603,11 +606,30 @@ node --test scripts/graft/crux-batches.test.js
 ```
 
 The checks use the installed module with a fake model; they make no network or
-paid model calls. `GRAFT_CRUX_MODULE` can point to a disposable patched module
-while porting the patch to a new Graft version.
+paid model calls. `GRAFT_CRUX_MODULE` can point to `dist/ai/crux.js` in a
+disposable patched package while porting to a new Graft version. The collector
+checks also import that package's adjacent `dist/graph/enrich.js`; apply the full
+patch kit to the fixture first.
 
 Once the prior build has exited, rerun the strict deep build. Ready summaries
 remain cached; only pending symbols require model work. Preserve the failed
 attempt's log separately. Verify the final meaning tally has zero pending and
 stale symbols: `graft check` can exit successfully for a structurally current
 graph while warning that its meaning tier is incomplete.
+
+### Zero-token empty results and provider refusals
+
+For an empty result with zero output tokens, inspect the upstream stop reason
+before changing batch sizes. A two-target native C file returned an empty
+`record_symbols` object through the local OpenAI-compatible proxy. A bounded
+request with the same model, source, target ids, schema and tool choice through
+the proxy's native Anthropic protocol exposed `stop_reason=refusal`. The
+converter had reported `finish_reason=tool_calls` because an empty tool block
+was present. No non-empty argument payload had been lost.
+
+Keep probe receipts limited to stop reasons, token counts and tool-input shape;
+never log authorization headers or secret configuration. A confirmed refusal
+remains an incomplete meaning tier: retain the pending targets and strict
+failure receipt, and report the exact coverage. Do not fabricate summaries or
+exclude the file to claim complete ingestion. Repeated identical requests do
+not provide additional diagnostic evidence.

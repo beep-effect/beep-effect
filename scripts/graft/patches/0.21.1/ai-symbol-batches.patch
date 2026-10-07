@@ -38,7 +38,7 @@
  }
  /** Normalize the tool's parsed argument object into a {@link NodeCrux} list. */
  function parseResults(obj) {
-@@ -116,6 +136,18 @@
+@@ -116,6 +136,32 @@
          this.model = model;
      }
      async describeFile(input) {
@@ -47,8 +47,22 @@
 +        const results = [];
 +        let miss = null;
 +        for (let start = 0; start < input.nodes.length; start += 20) {
-+            results.push(...await this.describeBatch({ ...input, nodes: input.nodes.slice(start, start + 20) }));
-+            miss ??= this.lastMiss;
++            try {
++                results.push(...await this.describeBatch({ ...input, nodes: input.nodes.slice(start, start + 20) }));
++                miss ??= this.lastMiss;
++            }
++            catch (error) {
++                // Cancellation and total failures must still reach the caller.
++                if (!results.some((entry) => entry.summary.trim()) || error?.name === "AbortError"
++                    || error?.code === "ABORT_ERR" || error?.constructor?.name === "APIUserAbortError")
++                    throw error;
++                // The collector retries only missing ids, retaining these completed batches.
++                // Keep lastMiss for reply classifications; a thrown transport has no finish reason.
++                console.error(`  crux ${input.path}: batch transport failed after ${results.length} summaries; retaining partial results`);
++                // Per-call metadata avoids mixing failures from concurrently described files.
++                Object.defineProperty(results, "batchError", { value: error });
++                break;
++            }
 +        }
 +        this.lastMiss = miss;
 +        return results;
@@ -57,3 +71,21 @@
          this.lastMiss = null;
          if (input.nodes.length === 0)
              return [];
+--- a/graph/enrich.js
++++ b/graph/enrich.js
+@@ -200,10 +200,15 @@
+     for (let attempt = 0; attempt < 2 && missing.length > 0; attempt++) {
+         try {
+             const list = await summarizer.describeFile({ path, source, nodes: missing });
++            // A batched call can return progress and a transport failure together.
++            if (Object.hasOwn(list, "batchError"))
++                error = list.batchError instanceof Error ? list.batchError.message : String(list.batchError);
+             for (const r of list)
+                 if (!results.has(r.id))
+                     results.set(r.id, r);
+             missing = refs.filter((r) => !results.has(r.id));
++            if (missing.length === 0 && refs.every((ref) => results.get(ref.id)?.summary.trim()))
++                error = undefined; // A transient transport failure fully recovered.
+         }
+         catch (err) {
+             error = err instanceof Error ? err.message : String(err);

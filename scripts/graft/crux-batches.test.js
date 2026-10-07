@@ -12,6 +12,7 @@ const binary = process.env.GRAFT_CRUX_MODULE
   : execFileSync("which", ["graft"], { encoding: "utf8" }).trim();
 const modulePath = process.env.GRAFT_CRUX_MODULE ?? join(dirname(realpathSync(binary)), "ai/crux.js");
 const { ChatCruxSummarizer } = await import(pathToFileURL(modulePath).href);
+const { enrichGraph } = await import(pathToFileURL(join(dirname(modulePath), "../graph/enrich.js")).href);
 
 function fixture(count, respond) {
   const requests = [];
@@ -101,4 +102,135 @@ test("a missed batch preserves successful batches and remains retryable", async 
     [input.nodes[20].id]
   );
   assert.deepEqual(summarizer.lastMiss, { kind: "truncated", finishReason: "length" });
+});
+
+test("a later transport throw retains completed batches and leaves the rest retryable", async () => {
+  const failure = new Error("simulated transport failure");
+  const { summarizer, input, requests } = fixture(41, (_, call) => {
+    if (call > 1) throw failure;
+  });
+  const diagnostics = [];
+  const originalError = console.error;
+  let result;
+  try {
+    console.error = (message) => diagnostics.push(message);
+    result = await summarizer.describeFile(input);
+  } finally {
+    console.error = originalError;
+  }
+  assert.deepEqual(
+    result.map((entry) => entry.id),
+    input.nodes.slice(0, 20).map((node) => node.id)
+  );
+  assert.equal(requests.length, 2); // Stop before the third, unattempted batch.
+  assert.match(diagnostics[0], /transport failed after 20 summaries; retaining partial results/);
+  assert.equal(summarizer.lastMiss, null); // Transport errors have no provider finish reason.
+  assert.equal(result.batchError, failure);
+  assert.equal(Object.keys(result).includes("batchError"), false); // Metadata stays out of JSON/iteration.
+  const missing = input.nodes.filter((node) => !result.some((entry) => entry.id === node.id));
+  assert.equal(missing.length, 21);
+  await assert.rejects(summarizer.describeFile({ ...input, nodes: missing }), (error) => error === failure);
+});
+
+test("a transport failure with no successful batch remains observable", async () => {
+  const failure = new Error("simulated total failure");
+  const { summarizer, input, requests } = fixture(21, () => {
+    throw failure;
+  });
+  await assert.rejects(summarizer.describeFile(input), (error) => error === failure);
+  assert.equal(requests.length, 1);
+});
+
+for (const cancellation of [
+  Object.assign(new Error("cancelled"), { name: "AbortError" }),
+  Object.assign(new Error("cancelled"), { code: "ABORT_ERR" }),
+  new (class APIUserAbortError extends Error {})(),
+]) {
+  test(`cancellation ${cancellation.name}/${cancellation.code ?? cancellation.constructor.name} still rejects after a completed batch`, async () => {
+    const { summarizer, input, requests } = fixture(21, (_, call) => {
+      if (call === 2) throw cancellation;
+    });
+    await assert.rejects(summarizer.describeFile(input), (error) => error === cancellation);
+    assert.equal(requests.length, 2);
+  });
+}
+
+async function collectFixture(input, summarizer) {
+  const nodes = input.nodes.map((node) => ({
+    ...node,
+    name: node.id,
+    path: input.path,
+    span: `L${node.startLine}-L${node.endLine}`,
+    signature: null,
+    exported: true,
+    origin: "ast",
+    body_hash: node.id,
+    summary_state: "pending",
+    summary: null,
+    crux: null,
+  }));
+  const stats = await enrichGraph(nodes, new Map(), new Map([[input.path, input.source]]), {
+    summarizer,
+    concurrency: 1,
+  });
+  return { nodes, stats };
+}
+
+test("the collector retains both partial attempts and reports their unrecovered transport failure", async () => {
+  const failure = new Error("simulated persistent partial failure");
+  const { summarizer, input, requests } = fixture(61, (_, call) => {
+    if (call % 2 === 0) throw failure;
+  });
+  const { nodes, stats } = await collectFixture(input, summarizer);
+  assert.equal(requests.length, 4);
+  assert.equal(stats.computed, 40);
+  assert.equal(stats.pending, 21);
+  assert.equal(stats.failedFiles, 1);
+  assert.deepEqual(stats.errors, ["fixture.ts: simulated persistent partial failure"]);
+  assert.equal(nodes.filter((node) => node.summary_state === "ready").length, 40);
+  assert.equal(nodes.filter((node) => node.summary_state === "pending").length, 21);
+});
+
+test("the collector clears a transient transport failure only after every missing id recovers", async () => {
+  const failure = new Error("simulated transient partial failure");
+  const { summarizer, input, requests } = fixture(61, (_, call) => {
+    if (call === 2) throw failure;
+  });
+  const { nodes, stats } = await collectFixture(input, summarizer);
+  assert.equal(requests.length, 5);
+  assert.equal(stats.computed, 61);
+  assert.equal(stats.pending, 0);
+  assert.equal(stats.failedFiles, 0);
+  assert.deepEqual(stats.errors, []);
+  assert.ok(nodes.every((node) => node.summary_state === "ready"));
+});
+
+test("blank retry summaries do not erase the original transport failure", async () => {
+  const failure = new Error("simulated unrecovered partial failure");
+  const { summarizer, input } = fixture(61, (ids, call) => {
+    if (call === 2) throw failure;
+    if (call > 2)
+      return {
+        text: "",
+        stopReason: "tool_calls",
+        toolCalls: [
+          {
+            name: "record_symbols",
+            args: {
+              symbols: ids.map((id) => ({
+                id,
+                summary: "",
+                crux_start: 0,
+                crux_end: 0,
+              })),
+            },
+          },
+        ],
+      };
+  });
+  const { stats } = await collectFixture(input, summarizer);
+  assert.equal(stats.computed, 20);
+  assert.equal(stats.pending, 41);
+  assert.equal(stats.failedFiles, 1);
+  assert.deepEqual(stats.errors, ["fixture.ts: simulated unrecovered partial failure"]);
 });
