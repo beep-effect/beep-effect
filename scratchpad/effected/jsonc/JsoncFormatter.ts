@@ -9,10 +9,12 @@ import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { createScanner, SyntaxKind } from "./internal/scanner.ts";
 import type { JsoncRange } from "./JsoncEdit.ts";
 import { JsoncEdit, JsoncFormattingOptions, type JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
+import { thunk0 } from "@beep/utils/thunk";
 
 const isSkipped = S.is(SyntaxKind.pick(["Trivia", "LineBreak"]));
 const isCloser = S.is(SyntaxKind.pick(["CloseBrace", "CloseBracket"]));
@@ -61,7 +63,7 @@ export abstract class JsoncFormatter {
    * @returns The edits that bring `text` to canonical shape.
    */
   static format(text: string, range?: JsoncRange, options?: JsoncFormattingOptionsLike): ReadonlyArray<JsoncEdit> {
-    return formatImpl(text, O.fromUndefinedOr(range), JsoncFormattingOptions.make(options ?? {}));
+    return formatImpl(text, O.fromUndefinedOr(range), JsoncFormattingOptions.make(options ?? R.empty()));
   }
 
   /**
@@ -109,7 +111,7 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
     Match.orElse((g) => g.gap)
   );
 
-  const rangeStart = O.match(range, { onNone: () => 0, onSome: (r) => r.offset });
+  const rangeStart = O.match(range, { onNone: thunk0, onSome: (r) => r.offset });
   const rangeEnd = O.match(range, { onNone: () => text.length, onSome: (r) => r.offset + r.length });
 
   let edits = A.empty<JsoncEdit>();
