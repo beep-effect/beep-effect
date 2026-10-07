@@ -1068,14 +1068,93 @@
       ]
     },
     "//#jsdoc:inventory:check": {
-      "cache": false,
+      "cache": true,
       "outputs": [".beep/ci/jsdoc-documentation.inventory.*"],
       "dependsOn": ["//#lint:policy-fingerprint"],
       "inputs": [
         "**/docgen.json",
         "**/package.json",
         "{packages,apps,infra}/**/*.{ts,tsx}",
-        "tsdoc.json"
+        "scratchpad/**/*.ts",
+        "tools/**/*.{ts,tsx}",
+        "tsdoc.json",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/test/fixtures/**",
+        "!scratchpad/docs/**",
+        "!scratchpad/.jsdoc-loop/**"
+      ]
+    },
+    "//#lint:tsconfig-overlay": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{apps,infra,packages}/**/tsconfig*.json",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/test/fixtures/**"
+      ]
+    },
+    "//#lint:package-test-typecheck": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{apps,infra,packages}/**/package.json",
+        "{apps,infra,packages}/**/tsconfig*.json",
+        "{apps,infra,packages}/**/test/**/*.{ts,tsx,mts,cts}",
+        "standards/test-typecheck.blindspot-baseline.jsonc",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!**/test/fixtures/**"
+      ]
+    },
+    "//#lint:effect-vitest": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint"],
+      "inputs": [
+        "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
+        "{apps,packages,infra}/**/test/**/*.ts",
+        "!{apps,packages,infra}/**/node_modules/**",
+        "standards/effect-vitest.inventory.jsonc",
+        "standards/effect-vitest.primitives.jsonc"
+      ]
+    },
+    "//#jsdoc:ratchet:check": {
+      "cache": true,
+      "outputs": [],
+      "dependsOn": ["//#lint:policy-fingerprint", "//#jsdoc:inventory:check"],
+      "inputs": [
+        "{packages,apps}/**/src/**/*.{ts,tsx}",
+        "standards/jsdoc-totals.regression-baseline.jsonc",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/build/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**"
       ]
     },
     "//#changeset:status": {

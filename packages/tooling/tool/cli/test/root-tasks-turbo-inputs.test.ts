@@ -1,6 +1,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  EffectVitestInventoryPath,
+  EffectVitestPrimitiveGraphPath,
+  EffectVitestSourceFileGlobs,
+} from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
-import { TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
+import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -79,7 +84,6 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "fallow:flags:advisory",
   "fallow:security:advisory",
   "fallow:fix-preview:advisory",
-  "jsdoc:inventory:check",
   "changeset:status",
   "fallow:dead-code:check",
   "repo-sanity:bun-audit",
@@ -120,6 +124,10 @@ const directInputs: Readonly<Record<string, string>> = {
   "fallow:security:advisory": ".fallow/plugins/c3-probe.ts",
   "fallow:fix-preview:advisory": ".fallow/plugins/c3-probe.ts",
   "jsdoc:inventory:check": "packages/fixture/docgen.json",
+  "lint:tsconfig-overlay": "packages/fixture/tsconfig.check.json",
+  "lint:package-test-typecheck": "standards/test-typecheck.blindspot-baseline.jsonc",
+  "lint:effect-vitest": "standards/effect-vitest.inventory.jsonc",
+  "jsdoc:ratchet:check": "standards/jsdoc-totals.regression-baseline.jsonc",
   "changeset:status": ".changeset/c3-probe.md",
   "config-sync:check": "packages/fixture/docgen.json",
   "repo-sanity:changeset-graph": ".changeset/c3-probe.md",
@@ -162,7 +170,10 @@ const expectRootTaskContract = (id: string, task: RootTask, scripts: Readonly<Re
   expect(R.has(directInputs, name), id).toBe(true);
   expect(R.has(scripts, name), id).toBe(true);
   if (expectsFingerprintEdge(id, O.getOrThrow(R.get(scripts, name)))) {
-    expect(task.dependsOn, id).toEqual([fingerprintId]);
+    // The JSDoc ratchet compares the inventory its producer task restores from cache.
+    expect(task.dependsOn, id).toEqual(
+      id === "//#jsdoc:ratchet:check" ? [fingerprintId, "//#jsdoc:inventory:check"] : [fingerprintId]
+    );
   }
   expect(task.cache, id).toBe(!A.contains(nonReusableTasks, name));
   expect(task.env, id).toEqual(isFallowEnvelope(name) ? ["BEEP_PROOF_BASE"] : []);
@@ -431,6 +442,13 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make("//#lint:ecosystem-polarity", "packages/ecosystem/fixture/src/docs/consumer.ts"),
           Tuple.make("//#lint:effect-imports-markdown", "docs/_internal/cache-contract.md"),
+          // The zero-legacy gate reads every tracked `packages|apps/**/src/**` file, fixtures
+          // included; the inventory analyzes every workspace, scratchpad and tools included;
+          // the D9 scan reads fixture tests.
+          Tuple.make("//#jsdoc:ratchet:check", "packages/tooling/fixture/test/fixtures/pkg/src/index.ts"),
+          Tuple.make("//#jsdoc:inventory:check", "scratchpad/c3-probe.ts"),
+          Tuple.make("//#jsdoc:inventory:check", "tools/fixture/src/c3-probe.ts"),
+          Tuple.make("//#lint:effect-vitest", "packages/drivers/fixture/test/fixtures/zz-probe.test.ts"),
         ];
         for (const [taskId, input] of probes) {
           const baseline = yield* dryRun(root, binary, [taskId], false);
@@ -441,6 +459,25 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         }
       }),
       { timeout: 60_000 }
+    );
+
+    it.effect(
+      "keeps scanner-owned root inputs equal to the scanner's own constants",
+      Effect.fnUntraced(function* () {
+        const { tasks } = yield* fixture();
+        const effectVitest = O.getOrThrow(R.get(tasks, "//#lint:effect-vitest"));
+        expect(effectVitest.inputs).toEqual([
+          ...EffectVitestSourceFileGlobs,
+          EffectVitestInventoryPath,
+          EffectVitestPrimitiveGraphPath,
+        ]);
+        // The ratchet's input glob and the gate's predicate must agree on fixture sources.
+        const fixtureSource = "packages/tooling/fixture/test/fixtures/pkg/src/index.ts";
+        expect(isPackageSourceFile(fixtureSource)).toBe(true);
+        const ratchet = O.getOrThrow(R.get(tasks, "//#jsdoc:ratchet:check"));
+        expect(ratchet.inputs).not.toContain("!**/test/fixtures/**");
+        expect(ratchet.inputs).toContain("{packages,apps}/**/src/**/*.{ts,tsx}");
+      })
     );
 
     it.effect(

@@ -602,16 +602,14 @@ const expectPolicyGroupFailure = (exit: Exit.Exit<unknown, unknown>, failedLabel
   }
 };
 
-// Local runs stop after a red cheap phase; every run skips the ratchet compare once the
-// inventory phase is red.
+// Local runs stop after a red cheap phase; hosted runs collect every phase. The JSDoc
+// ratchet compare is a Turbo dependent of the inventory task, so a red inventory phase
+// skips it inside Turbo rather than in the plan runner.
 const expectedPolicyRun = (
   plan: ReadonlyArray<QualityTaskStep>,
   full: boolean,
   failedLabel: string
-): ReadonlyArray<QualityTaskStep> =>
-  !full && failedLabel === "lint:policy:cheap"
-    ? A.take(plan, 1)
-    : A.filter(plan, (step) => failedLabel === "lint:policy:cheap" || step.label !== "ci:jsdoc-ratchet:ratchet");
+): ReadonlyArray<QualityTaskStep> => (!full && failedLabel === "lint:policy:cheap" ? A.take(plan, 1) : plan);
 
 // Session probes (`op …`) and git reads are spawned around the plan; only commands with a
 // step launcher token are plan steps.
@@ -3736,17 +3734,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     });
 
     it("plans ordered D10 policy runs with bare affected selectors and unfiltered state checks", () => {
-      const local = rootLintPolicyStepsForTesting("/repo", ["README.md"], "review-base");
+      const local = rootLintPolicyStepsForTesting("/repo", ["README.md"], "review-base", undefined, true);
       expect(A.map(local, (step) => step.label)).toEqual([
         "lint:policy:cheap",
         "lint:policy:medium",
         "lint:policy:state",
         "lint:deprecated-apis",
-        "lint:tsconfig-overlay",
-        "lint:package-test-typecheck",
-        "lint:effect-vitest",
         "quality:test-tsgo",
-        "ci:jsdoc-ratchet:ratchet",
       ]);
       const taskNames = (step: QualityTaskStep) =>
         A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg));
@@ -3769,6 +3763,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:circular",
         "lint:effect-imports",
         "lint:effect-imports-markdown",
+        "lint:tsconfig-overlay",
+        "lint:package-test-typecheck",
+        "lint:effect-vitest",
         "lint:jsdoc",
         "lint:jsdoc:root",
       ]);
@@ -3781,6 +3778,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:shadcn",
         "lint:typos",
         "jsdoc:inventory:check",
+        "jsdoc:ratchet:check",
       ]);
       for (const index of [0, 1, 3]) {
         const step = O.getOrThrow(A.get(local, index));
@@ -3798,34 +3796,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       {
         const optionUnderTest = A.last(local);
         const expectedOptionValue = expect.objectContaining({
-          args: repoCliEntryArgs(
-            "quality",
-            "jsdoc-ratchet",
-            "--inventory",
-            ".beep/ci/jsdoc-documentation.inventory.jsonc"
-          ),
+          args: repoCliEntryArgs("quality", "test-tsgo"),
         });
         optionUnderTest.pipe(O.isSome, assertTrue);
         expect(O.getOrThrow(optionUnderTest)).toEqual(expectedOptionValue);
       }
-      const full = rootLintPolicyStepsForTesting("/repo");
+      const full = rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, true);
       expect(A.map(full, (step) => step.label)).toEqual([
         "lint:policy:cheap",
         "lint:policy:medium",
         "lint:jsdoc",
         "lint:deprecated-apis",
-        "lint:tsconfig-overlay",
-        "lint:package-test-typecheck",
-        "lint:effect-vitest",
         "quality:test-tsgo",
-        "ci:jsdoc-ratchet:ratchet",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(7)),
+        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(10)),
         ...pipe(A.get(local, 2), O.getOrThrow, taskNames),
       ]);
+      // A local full-scope plan (no review base) leaves the two git-delta knowledge checks
+      // to the hosted plan; the changed-scope state phase still carries them.
+      const localFull = rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, false);
+      expect(A.map(localFull, (step) => step.label)).toEqual(A.map(full, (step) => step.label));
+      expect(pipe(A.get(localFull, 1), O.getOrThrow, taskNames)).toEqual(
+        pipe(
+          A.get(full, 1),
+          O.getOrThrow,
+          taskNames,
+          A.filter((task) => task !== "knowledge:semantic-delta" && task !== "knowledge:refs-check")
+        )
+      );
       expect(A.every(full, (step) => !A.contains(step.args, "--affected"))).toBe(true);
-      expect(policyTurboStep("lint:jsdoc").args).toEqual(["eslint", ".", "--max-warnings=0"]);
+      expect(policyTurboStep("lint:jsdoc").args).toEqual([
+        "eslint",
+        ".",
+        "--max-warnings=0",
+        "--cache",
+        "--cache-location",
+        "node_modules/.cache/eslint-root/.eslintcache",
+        "--cache-strategy",
+        "content",
+      ]);
       expect(policyTurboStep("lint:deprecated-apis").args).toEqual(
         repoCliEntryArgs("lint", "deprecated-apis", "--full")
       );
@@ -3835,7 +3845,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))).toEqual([
         expect.objectContaining({ label: "lint", args: expectedRootTurboArgs("lint", []) }),
-        ...full,
+        ...rootLintPolicyStepsForTesting("/repo"),
       ]);
     });
 
@@ -3869,7 +3879,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ];
       expect(before).toHaveLength(25);
       for (const base of [undefined, "review-base"]) {
-        const steps = rootLintPolicyStepsForTesting("/repo", undefined, base);
+        const steps = rootLintPolicyStepsForTesting("/repo", undefined, base, undefined, true);
         const after = pipe(
           steps,
           A.flatMap((step) =>
@@ -3885,10 +3895,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:native-runtime:roots",
           "lint:jsdoc:root",
           "jsdoc:inventory:check",
+          "jsdoc:ratchet:check",
           "lint:shadcn",
           "lint:effect-vitest",
           "quality:test-tsgo",
-          "ci:jsdoc-ratchet:ratchet",
         ];
         expect(
           A.sort(
