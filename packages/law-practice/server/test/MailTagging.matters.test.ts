@@ -149,9 +149,13 @@ const correspondents = PracticeKgCorrespondentTables.make({
     contact({ address: "unlinked@acme.example.test", contactId: "c-unlinked" }),
     // Spelling traps: the practice flag is filed under the lowercase spelling, and one address owned by two
     // contacts under two spellings is shared.
-    contact({ address: "Cased@Acme.example.test", contactId: "c-cased" }),
+    contact({ address: "Cased@Firm.example.test", contactId: "c-cased" }),
     contact({ address: "Twin@acme.example.test", contactId: "c-twin-1" }),
     contact({ address: "'twin@acme.example.test'", contactId: "c-twin-2" }),
+    // One contact under two spellings is still one owner; a quoted practice address that filed mail never
+    // flagged is still the practice's own, by its domain.
+    contact({ address: "'Counsel@acme.example.test'", contactId: "c-counsel" }),
+    contact({ address: "'paralegal@practice.example.test'", contactId: "c-quoted-practice" }),
   ],
   links: [
     link("c-counsel", "1234.10001"),
@@ -169,12 +173,13 @@ const correspondents = PracticeKgCorrespondentTables.make({
     link("c-cased", "1234.10001"),
     link("c-twin-1", "1234.10001"),
     link("c-twin-2", "1234.10001"),
+    link("c-quoted-practice", "1234.10001"),
   ],
   // A candidate by message count, and practice addresses that only filed email marks as such.
   correspondents: [
     filed("inferred@acme.example.test", false),
     filed("relay@practice.example.test", true),
-    filed("cased@acme.example.test", true),
+    filed("cased@firm.example.test", true),
   ],
 });
 
@@ -280,7 +285,7 @@ describe("MailTagging practice-KG matter directory", () => {
         ).toStrictEqual([
           [
             "1234.10001",
-            ["quoted@acme.example.test", "counsel@acme.example.test", "shared@acme.example.test"],
+            ["counsel@acme.example.test", "quoted@acme.example.test", "shared@acme.example.test"],
             ["acme.example.test"],
           ],
           ["1234.20002", ["shared@acme.example.test"], []],
@@ -375,7 +380,7 @@ describe("MailTagging practice-KG matter directory", () => {
       "attaches only the addresses the graph resolves unique to a matter, normalized, and no domain",
       Effect.fnUntraced(function* () {
         expect(yield* contactsOf(yield* seeded)).toStrictEqual([
-          ["1234.10001", ["quoted@acme.example.test", "counsel@acme.example.test"], []],
+          ["1234.10001", ["counsel@acme.example.test", "quoted@acme.example.test"], []],
           ["1234.20002", [], []],
         ]);
       })

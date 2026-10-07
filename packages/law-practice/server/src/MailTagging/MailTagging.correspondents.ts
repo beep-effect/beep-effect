@@ -23,6 +23,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { mailAddressOf } from "../internal/MailAddress.ts";
 import type { EmailString } from "@beep/schema/Email";
 
@@ -139,6 +140,7 @@ type AddressTables = {
   readonly contacts: Record<string, ReadonlyArray<AddressContactRow>>;
   readonly links: Record<string, ReadonlyArray<AddressLinkRow>>;
   readonly practiceAddresses: HashSet.HashSet<string>;
+  readonly practiceDomains: HashSet.HashSet<string>;
   readonly matterKeys: HashSet.HashSet<string>;
 };
 
@@ -159,22 +161,47 @@ const byNormalizedAddress = <Row extends { readonly address: string }>(
 const normalizedAddresses = (rows: ReadonlyArray<{ readonly address: string }>): ReadonlyArray<EmailString> =>
   A.getSomes(A.map(rows, (row) => mailAddressOf(row.address)));
 
+// One contact that lists two spellings of an address is one owner, and its links are one set of links: the
+// bundle builder trims and lowercases a contact's addresses but keeps their quotes, so the same contact can
+// hold two `contact_addresses` rows that normalize to one address.
+const oneOwnerEach = (rows: ReadonlyArray<AddressContactRow>): ReadonlyArray<AddressContactRow> =>
+  A.dedupeWith(rows, (left, right) => left.contactId === right.contactId);
+
+const oneLinkEach = (rows: ReadonlyArray<AddressLinkRow>): ReadonlyArray<AddressLinkRow> =>
+  A.dedupeWith(
+    rows,
+    (left, right) =>
+      left.contactId === right.contactId &&
+      left.clientNumber === right.clientNumber &&
+      left.familyKey === right.familyKey &&
+      left.source === right.source &&
+      left.evidence === right.evidence
+  );
+
+const domainOf = (address: EmailString): string => O.getOrElse(A.last(Str.split("@")(address)), () => "");
+
+// The builder marks an address as the practice's own by its domain, after trimming and lowercasing only, so
+// a quoted spelling of a practice address can reach the bundle unflagged. The guard therefore also holds the
+// domains of the flagged addresses and applies the builder's rule to the normalized address.
+const isPracticeAddress = (tables: AddressTables, address: EmailString): boolean =>
+  HashSet.has(tables.practiceAddresses, address) || HashSet.has(tables.practiceDomains, domainOf(address));
+
 const rowsAt = <Row>(byAddress: Record<string, ReadonlyArray<Row>>, address: string): ReadonlyArray<Row> =>
   O.getOrElse(R.get(byAddress, address), (): ReadonlyArray<Row> => []);
 
 // Message-count candidates only separate `ambiguous` from `none`; a unique answer never reads them.
-const evidenceAt = (tables: AddressTables, address: string): PracticeKgCorrespondentEvidence => {
-  const links = A.map(rowsAt(tables.links, address), (row) => PracticeKgCorrespondentLink.make(row));
+const evidenceAt = (tables: AddressTables, address: EmailString): PracticeKgCorrespondentEvidence => {
+  const links = A.map(oneLinkEach(rowsAt(tables.links, address)), (row) => PracticeKgCorrespondentLink.make(row));
   return PracticeKgCorrespondentEvidence.make({
     candidates: [],
-    contacts: A.map(rowsAt(tables.contacts, address), (row) => PracticeKgCorrespondentContact.make(row)),
+    contacts: A.map(oneOwnerEach(rowsAt(tables.contacts, address)), (row) => PracticeKgCorrespondentContact.make(row)),
     links,
     matterFamilyKeys: A.dedupe(
       A.filter(A.getSomes(A.map(links, (link) => O.fromNullishOr(link.familyKey))), (familyKey) =>
         HashSet.has(tables.matterKeys, familyKey)
       )
     ),
-    practiceAddress: HashSet.has(tables.practiceAddresses, address),
+    practiceAddress: isPracticeAddress(tables, address),
   });
 };
 
@@ -210,7 +237,9 @@ const unreadable = () => MailTaggingPortError.during("MatterDirectory", "snapsho
  * address, so two spellings of one address are one address. Only a `unique`
  * answer counts, so a candidate, a role mailbox, a practice address, and an
  * address shared by two contacts are never evidence. A row whose address is
- * not a mail address is dropped.
+ * not a mail address is dropped. One contact listing two spellings of an
+ * address is one owner, and an address on the domain of any flagged practice
+ * address is a practice address, as the builder flags by domain.
  *
  * **Example** (Read the correspondents of a bundle)
  *
@@ -234,10 +263,12 @@ export const uniqueMatterCorrespondents = Effect.fn("MatterDirectoryPracticeKg.u
   const read = <Row>(statement: string, decode: (rows: unknown) => Effect.Effect<Row, S.SchemaError>) =>
     db.query(statement).pipe(Effect.flatMap(decode), Effect.mapError(unreadable));
   const contacts = yield* read(contactsSql, decodeContactRows);
+  const practiceAddresses = normalizedAddresses(yield* read(practiceAddressesSql, decodePracticeRows));
   const tables: AddressTables = {
     contacts: byNormalizedAddress(contacts),
     links: byNormalizedAddress(yield* read(linksSql, decodeLinkRows)),
-    practiceAddresses: HashSet.fromIterable(normalizedAddresses(yield* read(practiceAddressesSql, decodePracticeRows))),
+    practiceAddresses: HashSet.fromIterable(practiceAddresses),
+    practiceDomains: HashSet.fromIterable(A.map(practiceAddresses, domainOf)),
     matterKeys: HashSet.fromIterable(matterKeys),
   };
   return pipe(A.dedupe(normalizedAddresses(contacts)), A.map(uniqueMatterOf(tables)), A.getSomes, groupedByMatter);
