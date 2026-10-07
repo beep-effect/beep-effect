@@ -23,7 +23,7 @@ Friction receipts, recorded when they happened.
   treat landing areas as read-only; build a hard-link view for a subset.
 - **Register-first attribution removed existing matters.** Caught only by
   diffing the old and new `matters` tables. Prevention: make that diff a step of
-  `verify.ts` (`--compare-to <old bundle>`).
+  `verify.ts` (`--compare-to <old bundle>`). Landed as D-25.
 - **Cheap gates do not run the JSDoc lint.** A wrapped code span passed
   `yeet publish` and failed hosted Lint Policy 40 minutes later. Prevention: run
   the package `lint:jsdoc` on changed packages in cheap gates.
@@ -31,4 +31,4 @@ Friction receipts, recorded when they happened.
   application from a matter's 9 dockets; my old-versus-new diff compared matter
   and docket keys only, so a consumer found it. Prevention: have `verify.ts
   --compare-to <old bundle>` report changed application and patent numbers per
-  docket.
+  docket. Landed as D-25.

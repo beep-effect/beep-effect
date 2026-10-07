@@ -29,7 +29,7 @@ const gitStub = `#!/bin/sh
 printf 'git %s %s\\n' "\${PWD##*/}" "$*" >> "$HOME/commands.log"
 case "$1" in
   status) [ ! -f dirty ] || printf '?? dirty\\n' ;;
-  branch) if [ -f off-main ]; then printf 'topic\\n'; else printf 'main\\n'; fi ;;
+  branch) if [ -f current-branch ]; then cat current-branch; elif [ -f off-main ]; then printf 'topic\\n'; else printf 'main\\n'; fi ;;
   rev-parse) [ ! -f rev-parse-fail ] || { printf 'fatal: bad object HEAD\\n' >&2; exit 128; }
     if [ -f advanced ]; then printf 'new-head\\n'; else printf 'old-head\\n'; fi ;;
   pull) [ ! -f pull-fail ] || exit 7; [ ! -f advance ] || touch advanced ;;
@@ -106,7 +106,7 @@ describe("reference planning and refresh", () => {
       expect(
         (yield* ReferenceWorkspaceManifest.decode({
           ...manifest,
-          members: [{ name: "effect", url: "upstream", tier: "deep", branch: "topic" }],
+          members: [{ name: "effect", url: "upstream", tier: "deep", revision: "topic" }],
         }).pipe(Effect.result))._tag
       ).toBe("Failure");
     })
@@ -173,6 +173,39 @@ describe("reference planning and refresh", () => {
           expect(saved.members).toEqual(status.members);
           // Skips are policy, not failure: no critical notification fires for them.
           expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(false);
+        })
+      );
+    }
+  );
+
+  it.layer(referenceFixtureLayer, { timeout: "30 seconds" })(
+    "pulls the manifest branch explicitly and preserves a checkout on another branch",
+    (it) => {
+      it.effect(
+        "pulls the manifest branch explicitly and preserves a checkout on another branch",
+        Effect.fnUntraced(function* () {
+          const f = yield* prepare();
+          const manifestFile = f.path.join(f.owner, "scripts/references.json");
+          const manifest = yield* ReferenceWorkspaceManifest.decodeJson(yield* f.fs.readFileString(manifestFile));
+          const pinned = ReferenceWorkspaceManifest.make({
+            ...manifest,
+            members: A.map(manifest.members, (member) => ({ ...member, branch: "v2" })),
+          });
+          yield* f.fs.writeFileString(manifestFile, yield* ReferenceWorkspaceManifest.encodeJson(pinned));
+          const absentPlan = A.join(yield* workspace.use((service) => service.plan(f.home, f.root)), "\n");
+          expect(absentPlan).toContain("--branch v2");
+          for (const member of pinned.members)
+            yield* f.fs.makeDirectory(f.path.join(f.root, member.name, ".git"), { recursive: true });
+          yield* f.fs.writeFileString(f.path.join(f.root, "effect", "current-branch"), "v2\n");
+          const plan = A.join(yield* workspace.use((service) => service.plan(f.home, f.root)), "\n");
+          expect(plan).toContain("pull --ff-only origin v2 only if clean and on v2");
+          const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
+          expect(A.map(status.members, (report) => report.outcome)).toEqual(["unchanged", "skipped-off-branch"]);
+          const log = yield* f.fs.readFileString(f.path.join(f.home, "commands.log"));
+          expect(log).toContain("git effect pull --ff-only origin v2");
+          expect(log).not.toContain("git effect-tsgo pull");
+          expect(log).not.toContain("git effect checkout");
+          expect(log).not.toContain("git effect-tsgo checkout");
         })
       );
     }
@@ -257,7 +290,9 @@ describe("reference planning and refresh", () => {
           }
           const status = yield* workspace.use((service) => service.refresh(f.home, f.root, 2));
           expect(status.members.map((report) => report.outcome)).toEqual(["pull-failed", "build-failed"]);
-          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toBe("git pull --ff-only exited 7");
+          expect(O.getOrElse(status.members[0]?.detail ?? O.none(), () => "")).toBe(
+            "git pull --ff-only origin main exited 7"
+          );
           expect(O.getOrElse(status.members[1]?.detail ?? O.none(), () => "")).toBe("graft exited 8");
           expect(yield* f.fs.exists(f.path.join(f.home, "notifications.log"))).toBe(true);
         })

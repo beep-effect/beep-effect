@@ -46,10 +46,10 @@ Workflow:
 
 Acceptance:
 
-- [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] Required verification commands pass, or unrelated failures are reproduced
+- [x] `SPEC.md` acceptance criteria are satisfied.
+- [x] Required verification commands pass, or unrelated failures are reproduced
       and recorded separately.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Verification:
 

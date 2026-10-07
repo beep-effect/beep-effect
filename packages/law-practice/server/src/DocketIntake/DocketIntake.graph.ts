@@ -47,7 +47,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
   DocketCalendarEntry,
+  DocketCalendarShape,
   DocketIntakeStage,
+  DocketMailboxShape,
   DocketSourceFolder,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import type { GraphAttachment, GraphCategoryColor, GraphEvent, GraphMessage, M365Error, M365Shape } from "@beep/m365";
@@ -342,6 +344,64 @@ const toWrittenEntry = (event: GraphEvent): O.Option<DocketWrittenEntry> =>
 const isStaleWrite = (error: M365Error): boolean =>
   error.reason === "response status" && O.contains(error.status, PRECONDITION_FAILED);
 
+/**
+ * Rewrite one message's category list, conditional on the change key just
+ * read, so a concurrent edit is never overwritten.
+ *
+ * **Details**
+ *
+ * The categories are read, empty names are dropped, and `edit` returns the
+ * new list. Nothing is written when the edit leaves the list the same length.
+ * A write refused with 412 because the message changed in between is retried
+ * once from a fresh read.
+ *
+ * **Example** (Add the entered category)
+ *
+ * ```ts
+ * import { rewriteMessageCategories, withDocketCategory } from "@beep/law-practice-server/DocketIntake";
+ * import { M365 } from "@beep/m365";
+ *
+ * const program = M365.use((m365) =>
+ *   rewriteMessageCategories({
+ *     edit: withDocketCategory("Docket - entered"),
+ *     m365,
+ *     mailbox: "mailbox-id",
+ *     messageId: "message-id"
+ *   })
+ * );
+ * console.log(program);
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rewriteMessageCategories: (input: {
+  readonly edit: (existing: ReadonlyArray<string>) => ReadonlyArray<string>;
+  readonly m365: M365Shape;
+  readonly mailbox: string;
+  readonly messageId: string;
+}) => Effect.Effect<void, M365Error> = Effect.fn("DocketGraph.rewriteMessageCategories")(
+  function* (input) {
+    const { m365, messageId } = input;
+    const userId = O.some(input.mailbox);
+    const current = yield* m365.getMessage(M365GetMessageRequest.make({ messageId, userId }));
+    const existing = A.filter(O.getOrElse(current.categories, A.empty<string>), Str.isNonEmpty);
+    const categories = input.edit(existing);
+    if (A.length(categories) === A.length(existing)) {
+      return;
+    }
+    yield* m365.updateMessageCategories(
+      M365UpdateMessageCategoriesRequest.make({
+        categories,
+        changeKey: O.filter(current.changeKey, Str.isNonEmpty),
+        messageId,
+        userId,
+      })
+    );
+  },
+  Effect.retry({ times: 1, while: isStaleWrite })
+);
+
 const toEventDraft = (entry: DocketCalendarEntry, timeZone: string): M365EventDraft =>
   M365EventDraft.make({
     ...m365AllDayWindow(entry.date, timeZone),
@@ -394,31 +454,14 @@ const makeMailbox = (m365: M365Shape, config: DocketGraphConfig, folders: Mailbo
       return A.appendAll(page.value, rest);
     });
 
-  // Read the current categories, then write them back with the docket one added. The write is
-  // conditional on the change key just read, so a concurrent edit is never overwritten.
-  const addEnteredCategory = Effect.fnUntraced(function* (messageId: string) {
-    const current = yield* m365.getMessage(M365GetMessageRequest.make({ messageId, userId }));
-    const existing = A.filter(O.getOrElse(current.categories, A.empty<string>), Str.isNonEmpty);
-    const categories = withDocketCategory(existing, ENTERED_CATEGORY);
-    if (A.length(categories) === A.length(existing)) {
-      return;
-    }
-    yield* m365.updateMessageCategories(
-      M365UpdateMessageCategoriesRequest.make({
-        categories,
-        changeKey: O.filter(current.changeKey, Str.isNonEmpty),
-        messageId,
-        userId,
-      })
-    );
-  });
-
   return DocketMailbox.of({
     markEntered: Effect.fn("DocketGraph.markEntered")(function* (message) {
-      yield* addEnteredCategory(message.messageId).pipe(
-        Effect.retry({ times: 1, while: isStaleWrite }),
-        Effect.mapError(mailboxError)
-      );
+      yield* rewriteMessageCategories({
+        edit: withDocketCategory(ENTERED_CATEGORY),
+        m365,
+        mailbox: config.mailbox,
+        messageId: message.messageId,
+      }).pipe(Effect.mapError(mailboxError));
     }),
     receivedSince: Effect.fn("DocketGraph.receivedSince")(function* (since) {
       const floor = O.getOrElse(since, () => config.initialSince);
@@ -500,6 +543,29 @@ const makeCalendar = (m365: M365Shape, config: DocketGraphConfig) => {
   });
 };
 
+// Resolve the folder ids of one mailbox once: the folders whose mail is never inbound, and the
+// folders whose mail is docketed with where it was found.
+const resolveFolders = Effect.fnUntraced(function* (
+  m365: M365Shape,
+  config: DocketGraphConfig
+): Effect.fn.Return<MailboxFolders, DocketIntakeError> {
+  const folderId = (folder: string) =>
+    m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })).pipe(
+      Effect.map((resolved) => resolved.id),
+      Effect.mapError(mailboxError)
+    );
+  const excluded = yield* Effect.forEach(EXCLUDED_FOLDERS, folderId, { concurrency: 1 });
+  const marked = yield* Effect.forEach(
+    MARKED_FOLDERS,
+    ([folder, sourceFolder]) => Effect.map(folderId(folder), (id) => [id, sourceFolder] as const),
+    { concurrency: 1 }
+  );
+  return { excluded: HashSet.fromIterable(excluded), marked: HashMap.fromIterable(marked) };
+});
+
+const portsLayer = (mailbox: DocketMailboxShape, calendar: DocketCalendarShape) =>
+  Layer.merge(Layer.succeed(DocketMailbox, mailbox), Layer.succeed(DocketCalendar, calendar));
+
 /**
  * Build the Graph-backed mailbox and calendar ports of the docket intake
  * pipeline.
@@ -549,27 +615,56 @@ export const makeDocketGraphLayer = (
           M365EnsureMasterCategoriesRequest.make({ categories: masterCategories, userId: O.some(config.mailbox) })
         )
         .pipe(Effect.mapError(mailboxError));
-      const folderId = (folder: string) =>
-        m365.getMailFolder(M365GetMailFolderRequest.make({ folder, userId: O.some(config.mailbox) })).pipe(
-          Effect.map((resolved) => resolved.id),
-          Effect.mapError(mailboxError)
-        );
-      const excluded = yield* Effect.forEach(EXCLUDED_FOLDERS, folderId, { concurrency: 1 });
-      const marked = yield* Effect.forEach(
-        MARKED_FOLDERS,
-        ([folder, sourceFolder]) => Effect.map(folderId(folder), (id) => [id, sourceFolder] as const),
-        { concurrency: 1 }
-      );
+      const folders = yield* resolveFolders(m365, config);
       yield* Effect.annotateCurrentSpan({ docket_categories_created: A.length(ensured.created) });
-      return Layer.merge(
-        Layer.succeed(
-          DocketMailbox,
-          makeMailbox(m365, config, {
-            excluded: HashSet.fromIterable(excluded),
-            marked: HashMap.fromIterable(marked),
-          })
-        ),
-        Layer.succeed(DocketCalendar, makeCalendar(m365, config))
-      );
+      return portsLayer(makeMailbox(m365, config, folders), makeCalendar(m365, config));
     }).pipe(Effect.withSpan("DocketGraph.make"))
+  );
+
+const readOnly = (stage: DocketIntakeStage) => () => Effect.fail(DocketIntakeError.make({ cause: "read-only", stage }));
+
+/**
+ * Build Graph-backed mailbox and calendar ports that only read, for a dry run.
+ *
+ * **Details**
+ *
+ * The ports read mail, attachments and calendar entries exactly as the
+ * ports of {@link makeDocketGraphLayer} do, but building the layer creates no
+ * master category, and `markEntered` and `create` fail with cause
+ * `read-only` instead of writing. A dry run replaces those two with recording
+ * versions; if it ever reached them, nothing would be written.
+ *
+ * **Example** (Make the read-only Graph ports layer)
+ *
+ * ```ts
+ * import { DocketGraphConfig, makeDocketGraphReadOnlyLayer } from "@beep/law-practice-server/DocketIntake";
+ * import * as O from "effect/Option";
+ * import * as S from "effect/Schema";
+ *
+ * const layer = O.map(
+ *   S.decodeUnknownOption(DocketGraphConfig)({
+ *     initialSince: "2030-01-01T00:00:00.000Z",
+ *     mailbox: "mailbox-id",
+ *     timeZone: "America/Chicago"
+ *   }),
+ *   makeDocketGraphReadOnlyLayer
+ * );
+ * console.log(layer);
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeDocketGraphReadOnlyLayer = (
+  config: DocketGraphConfig
+): Layer.Layer<DocketCalendar | DocketMailbox, DocketIntakeError, M365> =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const m365 = yield* M365;
+      const folders = yield* resolveFolders(m365, config);
+      return portsLayer(
+        { ...makeMailbox(m365, config, folders), markEntered: readOnly("mailbox") },
+        { ...makeCalendar(m365, config), create: readOnly("calendar") }
+      );
+    }).pipe(Effect.withSpan("DocketGraph.makeReadOnly"))
   );

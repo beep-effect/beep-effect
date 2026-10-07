@@ -81,9 +81,48 @@ export const makeAnthropicLanguageModelLayer = (
   options: AnthropicLanguageModelOptions = AnthropicLanguageModelOptions.make({})
 ) =>
   AnthropicLanguageModel.layer({
-    config: { max_tokens: options.maxTokens },
+    config:
+      options.temperature === undefined
+        ? { max_tokens: options.maxTokens }
+        : { max_tokens: options.maxTokens, temperature: options.temperature },
     model: options.model,
   }).pipe(Layer.provide(AnthropicLive));
+
+/**
+ * Live language-model layer for the configured Anthropic model, with request settings.
+ *
+ * **Details**
+ *
+ * The model id resolves from `AI_ANTHROPIC_MODEL` at layer acquisition and
+ * falls back to {@link ANTHROPIC_DEFAULT_MODEL}; every other
+ * {@link AnthropicLanguageModelOptions} field, such as `temperature`, comes
+ * from the caller.
+ *
+ * **Example** (Deterministic live model)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { makeAnthropicLanguageModelLiveLayer } from "@beep/anthropic"
+ *
+ * const layer = makeAnthropicLanguageModelLiveLayer({ temperature: 0 })
+ *
+ * strictEqual(typeof layer, "object")
+ * ```
+ *
+ * @effects
+ * - Reads `AI_ANTHROPIC_MODEL` from Effect Config when the layer is acquired.
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeAnthropicLanguageModelLiveLayer = (
+  options: Omit<ConstructorParameters<typeof AnthropicLanguageModelOptions>[0], "model"> = {}
+) =>
+  Layer.unwrap(
+    Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(
+      Config.withDefault(ANTHROPIC_DEFAULT_MODEL),
+      Effect.map((model) => makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ ...options, model })))
+    )
+  );
 
 /**
  * Live language-model layer for the default Anthropic model.
@@ -112,12 +151,7 @@ export const makeAnthropicLanguageModelLayer = (
  * @category layers
  * @since 0.0.0
  */
-export const AnthropicLanguageModelLive = Layer.unwrap(
-  Config.NonEmptyString(ANTHROPIC_MODEL_ENV).pipe(
-    Config.withDefault(ANTHROPIC_DEFAULT_MODEL),
-    Effect.map((model) => makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model })))
-  )
-);
+export const AnthropicLanguageModelLive = makeAnthropicLanguageModelLiveLayer();
 
 /**
  * Build an acquisition-only execution plan for Anthropic turns.
