@@ -10,8 +10,8 @@ Citation key (repository-relative paths; `:n` is a line number):
 
 | Key | Path | SHA-256 at authoring |
 | --- | --- | --- |
-| READ | `goals/ciops-ontology-pipeline/research/kpi-reading.md` | `92ae675b4ebbd30c46b19272a0b3a1ae29f8cff0652121e07079b801169af0e3` |
-| READ.json | `goals/ciops-ontology-pipeline/research/kpi-reading.json` | `63f3535c27c1a1d8b25e25782a18653ef2d2f6cd3de27696760ee5586296bc21` |
+| READ | `goals/ciops-ontology-pipeline/research/kpi-reading.md` | `59a5f65fd9e9abf8afa2c9fe372b75e98ce7ec18c819b3113bbe102e886dd1ea` |
+| READ.json | `goals/ciops-ontology-pipeline/research/kpi-reading.json` | `ef220e276b51d47d4e148ed8ff63236ca6118803e03cb1dcc209ecd5304db55e` |
 | LAW | `explorations/beep-ci-operational-ontology/research/kpi-measurement-rules.md` (v1.2) | — |
 | GD | `goals/ciops-ontology-pipeline/research/decisions.md` | — |
 | EC | `goals/time-to-certainty/research/economics-close.md` | `11969e5ee90dd3d894801613cbc5a138892044a38a49b8af32670add7c218697` |
