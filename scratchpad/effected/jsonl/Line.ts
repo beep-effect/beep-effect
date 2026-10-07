@@ -4,8 +4,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { pipe } from "effect";
+import { pipe, flow } from "effect";
 import * as A from "effect/Array";
+import * as P from "effect/Predicate";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -19,6 +20,7 @@ import * as Str from "effect/String";
 import { utf8Length } from "./internal/utf8.ts";
 import { MalformedLine } from "./JsonlError.ts";
 import { LineSlice } from "./LineSlice.ts";
+import { thunk0 } from "@beep/utils/thunk";
 
 const $I = $ScratchpadId.create("effected/jsonl/Line");
 
@@ -53,21 +55,22 @@ export class ParsedLine extends S.Class<ParsedLine>($I`ParsedLine`)(
     line: LineSlice.pipe(
       $I.annoteKey("ParsedLine.line", {
         description: "Where this line lives in the source.",
-      })
+      }),
     ),
     /** The parsed JSON value — any JSON value, not necessarily an object. */
     value: S.Unknown.pipe(
       $I.annoteKey("ParsedLine.value", {
         description: "The parsed JSON value — any JSON value, not necessarily an object.",
-      })
+      }),
     ),
   },
   $I.annote("ParsedLine", {
     description: "A line that parsed as JSON, paired with the slice it came from.",
     documentation:
       "`value` is deliberately `unknown`: this layer knows JSON, not envelopes.\nValidating `event`, `at`, `scope` and the registered payload schema is the\nenvelope layer's job, and keeping the split means a malformed *envelope* and\na malformed *line* stay distinguishable failures.",
-  })
-) {}
+  }),
+) {
+}
 
 /** Whether a line carries nothing but whitespace. */
 const isBlank = (line: LineSlice): boolean => Str.isEmpty(Str.trim(line.text));
@@ -176,7 +179,13 @@ export const Line = {
       const content = hadCarriageReturn ? Str.slice(0, -1)(raw) : raw;
       const length = utf8Length(content);
       const end = offset + length + (terminated ? (hadCarriageReturn ? 2 : 1) : 0);
-      return [end, LineSlice.make({ offset, end, length, text: content, terminated })];
+      return [end, LineSlice.make({
+        offset,
+        end,
+        length,
+        text: content,
+        terminated,
+      })];
     })[1];
   },
 
@@ -206,7 +215,7 @@ export const Line = {
       Line.split(text),
       A.last,
       O.map((last) => (last.terminated ? last.end : last.offset)),
-      O.getOrElse(() => 0)
+      O.getOrElse(thunk0),
     );
   },
 
@@ -239,7 +248,7 @@ export const Line = {
   parseResult(line: LineSlice): Result.Result<ParsedLine, MalformedLine> {
     return decodeJson(line.text).pipe(
       Result.map((value) => ParsedLine.make({ line, value })),
-      Result.mapError(() => MalformedLine.make({ line }))
+      Result.mapError(() => MalformedLine.make({ line })),
     );
   },
 
@@ -274,8 +283,8 @@ export const Line = {
   parseAll(text: string): ReadonlyArray<Result.Result<ParsedLine, MalformedLine>> {
     return pipe(
       Line.split(text),
-      A.filter((line) => !isBlank(line)),
-      A.map(Line.parseResult)
+      A.filter(P.not(isBlank)),
+      A.map(Line.parseResult),
     );
   },
 
@@ -314,10 +323,13 @@ export const Line = {
    * @category parsing
    * @since 0.0.0
    */
-  lastValid(text: string): O.Option<ParsedLine> {
-    return pipe(
-      Line.split(text),
-      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(Line.parseResult(line))))
-    );
-  },
+  lastValid: (text: string): O.Option<ParsedLine> => pipe(
+    Line.split(text),
+    A.findLast(
+      flow(
+        O.liftPredicate(P.not(isBlank)),
+        O.flatMap(flow(Line.parseResult, Result.getSuccess)),
+      ),
+    ),
+  ),
 };

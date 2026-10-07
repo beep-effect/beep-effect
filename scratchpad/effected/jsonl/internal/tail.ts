@@ -79,8 +79,9 @@ export class TailWindow extends S.Class<TailWindow>($I`TailWindow`)(
   { text: S.String, start: ByteCount, atFileStart: S.Boolean, size: ByteCount },
   $I.annote("TailWindow", {
     description: "A tail read beginning at a line boundary, with post-BOM offsets.",
-  })
-) {}
+  }),
+) {
+}
 
 /** Does the buffer begin with a UTF-8 BOM? */
 const hasBom = (bytes: Uint8Array): boolean =>
@@ -106,27 +107,30 @@ const readWindow = Effect.fn("Jsonl.readWindow")(function* (
   length: number,
   bomBytes: number,
   skipPartialLine: boolean,
-  completeOnly: boolean
+  completeOnly: boolean,
 ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
   const file = yield* fs.open(path, { flag: "r" });
   yield* file.seek(BigInt(from), "start");
   const bytes = yield* readBytes(file, length);
   const cursor = skipPartialLine
     ? A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
-        O.map((newline) => newline + 1),
-        O.getOrElse(() => bytes.length)
-      )
+      O.map((newline) => newline + 1),
+      O.getOrElse(() => bytes.length),
+    )
     : 0;
   const end = completeOnly
     ? A.findLastIndex(bytes, (byte) => byte === LF).pipe(
-        O.map((newline) => newline + 1),
-        O.getOrElse(() => 0)
-      )
+      O.map((newline) => newline + 1),
+      O.getOrElse(() => 0),
+    )
     : bytes.length;
   // Discard byte fragments before decoding. A cursor can point into a UTF-8
   // sequence, and an unfinished suffix can contain a pending multi-byte code point.
   const text = yield* Effect.try({
-    try: () => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(cursor, end)),
+    try: () => new TextDecoder("utf-8", {
+      fatal: true,
+      ignoreBOM: true,
+    }).decode(bytes.subarray(cursor, end)),
     catch: (cause) => InvalidUtf8.make({ path, offset: from + cursor, cause }),
   });
   return TailWindow.make({
@@ -172,14 +176,14 @@ export const readRangeWindow: {
     from: number,
     length: number,
     bomBytes: number,
-    skipPartialLine?: boolean
+    skipPartialLine?: boolean,
   ): Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
   (
     path: string,
     from: number,
     length: number,
     bomBytes: number,
-    skipPartialLine?: boolean
+    skipPartialLine?: boolean,
   ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
 } = dual(
   (args) => P.isObject(args[0]),
@@ -190,9 +194,9 @@ export const readRangeWindow: {
       from: number,
       length: number,
       bomBytes: number,
-      skipPartialLine = false
-    ) => readWindow(fs, path, from, length, bomBytes, skipPartialLine, true)
-  )
+      skipPartialLine = false,
+    ) => readWindow(fs, path, from, length, bomBytes, skipPartialLine, true),
+  ),
 );
 
 /**
@@ -232,12 +236,12 @@ export const probeBomBytes: {
   2,
   Effect.fn("Jsonl.probeBomBytes")(function* (
     fs: FileSystem.FileSystem,
-    path: string
+    path: string,
   ): Effect.fn.Return<number, PlatformError.PlatformError, Scope.Scope> {
     const file = yield* fs.open(path, { flag: "r" });
     const bytes = yield* readBytes(file, BOM.length);
     return hasBom(bytes) ? BOM.length : 0;
-  }, Effect.scoped)
+  }, Effect.scoped),
 );
 
 /**
@@ -294,13 +298,13 @@ export const readTail: {
     path: string,
     window: number,
     bomBytes: number,
-    completeOnly?: boolean
+    completeOnly?: boolean,
   ): Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
   (
     path: string,
     window: number,
     bomBytes: number,
-    completeOnly?: boolean
+    completeOnly?: boolean,
   ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
 } = dual(
   (args) => P.isObject(args[0]),
@@ -309,7 +313,7 @@ export const readTail: {
     path: string,
     window: number,
     bomBytes: number,
-    completeOnly = false
+    completeOnly = false,
   ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8> {
     const info = yield* fs.stat(path);
     const physicalSize = ByteSize.toNumberUnsafe(info.size);
@@ -317,8 +321,16 @@ export const readTail: {
     // this particular window happens to reach the start of the file.
     const contentStart = Math.min(bomBytes, physicalSize);
     const from = Math.min(physicalSize, Math.max(contentStart, physicalSize - window));
-    return yield* readWindow(fs, path, from, physicalSize - from, contentStart, from !== contentStart, completeOnly);
-  })
+    return yield* readWindow(
+      fs,
+      path,
+      from,
+      physicalSize - from,
+      contentStart,
+      from !== contentStart,
+      completeOnly
+    );
+  }),
 );
 
 /**
@@ -359,14 +371,14 @@ export const readTailUntil: {
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
     initialWindow?: number,
-    completeOnly?: boolean
+    completeOnly?: boolean,
   ): Effect.Effect<O.Option<A>, PlatformError.PlatformError | InvalidUtf8>;
   <A>(
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
     initialWindow?: number,
-    completeOnly?: boolean
+    completeOnly?: boolean,
   ): (fs: FileSystem.FileSystem) => Effect.Effect<O.Option<A>, PlatformError.PlatformError | InvalidUtf8>;
 } = dual(
   (args) => P.isObject(args[0]),
@@ -376,10 +388,10 @@ export const readTailUntil: {
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
     initialWindow = DEFAULT_WINDOW,
-    completeOnly = false
+    completeOnly = false,
   ): Effect.fn.Return<O.Option<A>, PlatformError.PlatformError | InvalidUtf8> {
     let window = initialWindow;
-    for (;;) {
+    for (; ;) {
       const tail = yield* readTail(fs, path, window, bomBytes, completeOnly);
       const found = decode(tail);
       if (O.isSome(found)) {
@@ -391,7 +403,7 @@ export const readTailUntil: {
       }
       window *= 4;
     }
-  })
+  }),
 );
 
 /** Read granularity for incremental tail reads. */
