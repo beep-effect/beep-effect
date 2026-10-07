@@ -1068,3 +1068,32 @@
   record's top level, but the field sits under `operational_warrant`, so the support targets were not
   listed and the seat stopped on a truncated closure for both. Prevention: the builder reads the field
   where the contract puts it and asserts that every support target and parent is listed.
+- A Workflow seat lost to a session restart. Work: the W8 implementation seat. Evidence: after the
+  orchestrator session was compacted and restarted, the harness reported no completion record for the
+  seat; its three new modules were on disk and its result was not, and a resume recovers only completed
+  agent calls. Prevention: a long seat writes a progress file in the lane as it goes, and the relaunch
+  prompt names it; the orchestrator keeps the brief on disk and relaunches with a resume note.
+- Interactive-shell noise on every tool command. Work: every lane command run as `zsh -ic`. Evidence:
+  each call printed gitstatus and zle warnings ("can't change option: zle", "gitstatus failed to
+  initialize"), so output needed a grep filter and exit codes needed `pipestatus`. Prevention: a
+  non-interactive wrapper that loads the toolchain without the interactive rc.
+- Admission queue waits on small proofs. Work: single-package type checks and fallow runs through
+  `beep-heavy`. Evidence: the three slots were often all busy, adding minutes to proofs that run in
+  seconds. Prevention: a slot reserved for sub-minute checks, or a quick lane for single-package tsgo.
+- A `dual` wrapper only to share a helper. Work: exporting `topLevelBlock` from the projection evidence
+  module for the KPI sources reader. Evidence: the tsgo effect plugin's missingPipeableSignature rule
+  rejects a plain two-argument export, so the helper gained a `dual` wrapper to be shared at all.
+  Prevention: an allowlist for internal non-pipeable helpers, or a shared internal module outside the
+  rule's scope.
+- No scoped write for the effect-vitest inventory. Work: the EV010 exception row for the new KPI test
+  file. Evidence: the inventory is a 23k-line JSONC with no per-file `--write`, so the row was spliced in
+  by a JSON round-trip by hand. Prevention: `beep lint effect-vitest --write --file <path>`.
+- Typos reads 10-hex commit prefixes as words. Work: rendering the change-event table. Evidence: one
+  merge commit's 10-hex prefix was flagged as a misspelt three-letter word, so the Markdown renders full
+  40-hex merge commits to pass. Prevention: a typos config that treats runs of 10 or more hex characters
+  as identifiers.
+- A derived lint profile that the cheap gates do not check. Work: adding two generated files to a biome
+  formatter override. Evidence: `biome.identity.jsonc` is generated from `biome.jsonc` and checked only by
+  the hosted lint-a lane ("Identity lint profile is stale; regenerate it with cache profile --write"), so
+  the publish's cheap gates passed and the PR went red one push later. Prevention: run `beep cache
+  profile` in the cheap gates, or regenerate the profile in the same step that validates `biome.jsonc`.
