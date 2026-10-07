@@ -622,16 +622,18 @@ const metadataFields = {
 };
 const ExiftoolTagSet = S.Record(S.String, S.Unknown);
 const ExiftoolRows = S.Array(ExiftoolTagSet).pipe(S.fromJsonString);
-const TagText = S.Union([S.String, S.Finite, S.Array(S.String)]);
+const TagTextList = S.Array(S.String);
+const TagText = S.Union([S.String, S.Finite, TagTextList]);
+const decodeTagText = S.decodeUnknownOption(TagText);
+const isTagTextList = S.is(TagTextList);
 const normalizeTag = (value: unknown) =>
-  S.decodeUnknownOption(TagText)(value).pipe(
-    O.map((tag) => (S.is(S.Array(S.String))(tag) ? A.join(tag, "; ") : `${tag}`))
-  );
+  decodeTagText(value).pipe(O.map((tag) => (isTagTextList(tag) ? A.join(tag, "; ") : `${tag}`)));
 const metadataVersion = Effect.fn("Provenance.metadataVersion")(function* (command: string) {
   const result = yield* capture(command, ["-ver"]);
   if (result.code !== 0) return yield* CorpusCommandError.make({ message: "exiftool version lookup failed." });
   return Str.trim(result.stdout);
 });
+const decodeNaturalOption = S.decodeOption(S.Natural);
 const selectMetadata = (tags: typeof ExiftoolTagSet.Type | undefined) => {
   const source = tags ?? {};
   const fields = R.getSomes(
@@ -639,8 +641,7 @@ const selectMetadata = (tags: typeof ExiftoolTagSet.Type | undefined) => {
       A.findFirst(keys, (candidate) => source[candidate] !== undefined).pipe(
         O.flatMap((tag) => normalizeTag(source[tag])),
         O.flatMap(
-          (text): O.Option<string | number> =>
-            key === "pageCount" ? S.decodeOption(S.Natural)(Number(text)) : O.some(text)
+          (text): O.Option<string | number> => (key === "pageCount" ? decodeNaturalOption(Number(text)) : O.some(text))
         )
       )
     )
