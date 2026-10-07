@@ -12,7 +12,7 @@
 
 import { $LibpffId } from "@beep/identity";
 import { A, O, R, Str } from "@beep/utils";
-import { Match } from "effect";
+import { Match, MutableHashMap } from "effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as S from "effect/Schema";
 
@@ -559,15 +559,18 @@ const internetHeaderValues = Match.type<{ key: string; value: string }>().pipe(
  * @since 0.0.0
  */
 export const parseInternetHeaders = (text: string): InternetHeaderMap => {
-  const lines = unfoldInternetHeaders(text);
-  const headers: Record<string, ReadonlyArray<string>> = {};
-  for (const line of lines) {
+  const headers = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  for (const line of unfoldInternetHeaders(text)) {
     const colon = line.indexOf(":");
     if (colon <= 0) continue;
     const key = Str.toLowerCase(Str.trim(line.slice(0, colon)));
     const value = Str.trim(line.slice(colon + 1));
-    const values = internetHeaderValues({ key, value });
-    headers[key] = [...(headers[key] ?? []), ...values];
+    const previous = O.getOrElse(MutableHashMap.get(headers, key), () => A.empty<string>());
+    MutableHashMap.set(headers, key, A.appendAll(previous, internetHeaderValues({ key, value })));
   }
-  return headers;
+  // `Object.fromEntries` defines own data properties, so a `Constructor:` or
+  // `__proto__:` header becomes an ordinary key; indexing a plain object
+  // literal would read `Object` / `Object.prototype` instead and throw on
+  // spread.
+  return Object.fromEntries(headers);
 };

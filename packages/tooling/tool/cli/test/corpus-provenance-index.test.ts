@@ -99,6 +99,8 @@ const fixture = Effect.fn("test.provenance.fixture")(function* () {
   yield* fs.writeFile(path.join(attachments, "4_blob"), Uint8Array.from([0, 1, 254, 233, 0, 129, 145, 0]));
   // pffexport keeps Windows backslashes inside attachment names; the repair must treat them as plain bytes.
   yield* fs.writeFileString(path.join(attachments, "5_memo\\draft.p"), pdf);
+  // An in-boundary directory symlink back to an ancestor: every walker must skip it instead of looping.
+  yield* fs.symlink(children, path.join(second, "loop"));
   return { root, first, second, embedded, attachments };
 });
 const lines = (text: string) => A.filter(Str.split(text, /\r?\n/), Str.isNonEmpty);

@@ -314,4 +314,15 @@ describe("parseInternetHeaders", () => {
       "folded value",
     ]);
   });
+
+  it("keeps prototype-named header fields as ordinary own keys", () => {
+    const headers = parseInternetHeaders("Subject: hi\nConstructor: x\n__proto__: y\nHasOwnProperty: z\n");
+    expect(Object.entries(headers)).toStrictEqual([
+      ["subject", ["hi"]],
+      ["constructor", ["x"]],
+      ["__proto__", ["y"]],
+      ["hasownproperty", ["z"]],
+    ]);
+    expect(Object.getPrototypeOf(headers)).toBe(Object.prototype);
+  });
 });

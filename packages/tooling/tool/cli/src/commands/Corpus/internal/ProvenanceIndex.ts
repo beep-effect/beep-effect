@@ -2,7 +2,7 @@
 
 import { parseInternetHeaders, parseOutlookHeaders } from "@beep/libpff";
 import { O } from "@beep/utils";
-import { DateTime, Effect, FileSystem, HashSet, Layer, Match, Path, Stream } from "effect";
+import { DateTime, Effect, FileSystem, HashSet, Layer, Match, MutableHashSet, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import { ChildProcess } from "effect/process";
@@ -38,17 +38,23 @@ const relative = (path: Path.Path, root: string, file: string) => P.CorpusRelati
 // `boundary` is the directory a resolved entry may not escape; the census
 // passes the corpus home so symlinks from `organized/` into `raw/` resolve
 // to their canonical path (and dedupe there) instead of failing the walk.
+// Because in-boundary symlinks are followed, `visited` holds every canonical
+// directory already walked: a link back to an ancestor is skipped, not looped.
 const walk = Effect.fn("Provenance.walk")(function* (
   boundary: string,
   root: string,
-  visit: (file: string, info: FileSystem.File.Info) => Effect.Effect<void, CorpusCommandError, Io>
+  visit: (file: string, info: FileSystem.File.Info) => Effect.Effect<void, CorpusCommandError, Io>,
+  visited: MutableHashSet.MutableHashSet<string> = MutableHashSet.empty<string>()
 ): Effect.fn.Return<void, CorpusCommandError, Io> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  for (const name of yield* fs.readDirectory(root).pipe(Effect.mapError(fail))) {
-    const file = yield* resolveWithinRoot(boundary, path.join(root, name), "Walk path escapes root");
+  const canonical = yield* fs.realPath(root).pipe(Effect.mapError(fail));
+  if (MutableHashSet.has(visited, canonical)) return;
+  MutableHashSet.add(visited, canonical);
+  for (const name of yield* fs.readDirectory(canonical).pipe(Effect.mapError(fail))) {
+    const file = yield* resolveWithinRoot(boundary, path.join(canonical, name), "Walk path escapes root");
     const info = yield* fs.stat(file).pipe(Effect.mapError(fail));
-    if (info.type === "Directory") yield* walk(boundary, file, visit);
+    if (info.type === "Directory") yield* walk(boundary, file, visit, visited);
     else if (info.type === "File") yield* visit(file, info);
   }
 });
