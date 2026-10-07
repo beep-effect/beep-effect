@@ -12,6 +12,7 @@ import { Console, DateTime, Effect, FileSystem, HashMap, HashSet, Order, Path } 
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { bytesEqual } from "../../../internal/cli/FsGuards.ts";
@@ -202,7 +203,7 @@ interface StreamingSha256 {
   readonly digestHex: () => Sha256Hex;
   readonly update: (chunk: Uint8Array) => void;
 }
-const hasNativeSha256 = (): boolean => typeof Bun !== "undefined" && typeof Bun.CryptoHasher === "function";
+const hasNativeSha256 = (): boolean => P.hasProperty(globalThis, "Bun") && P.isFunction(Bun.CryptoHasher);
 const createStreamingSha256 = (): StreamingSha256 => {
   if (hasNativeSha256()) {
     const native = new Bun.CryptoHasher("sha256");

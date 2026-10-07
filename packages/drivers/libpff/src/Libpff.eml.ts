@@ -568,9 +568,9 @@ export const parseInternetHeaders = (text: string): InternetHeaderMap => {
     const previous = O.getOrElse(MutableHashMap.get(headers, key), () => A.empty<string>());
     MutableHashMap.set(headers, key, A.appendAll(previous, internetHeaderValues({ key, value })));
   }
-  // `Object.fromEntries` defines own data properties, so a `Constructor:` or
+  // `R.fromEntries` defines own data properties, so a `Constructor:` or
   // `__proto__:` header becomes an ordinary key; indexing a plain object
   // literal would read `Object` / `Object.prototype` instead and throw on
   // spread.
-  return Object.fromEntries(headers);
+  return R.fromEntries(headers);
 };

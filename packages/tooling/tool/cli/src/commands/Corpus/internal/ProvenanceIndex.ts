@@ -109,8 +109,7 @@ const parseRecipients = (text: string) =>
   });
 const decodeOutlook = Effect.fn("Provenance.decodeOutlook")(function* (headers: Record<string, string>) {
   const fields: Record<string, string | number> = {};
-  for (const [key, label] of Object.entries(outlookFields))
-    if (headers[label] !== undefined) fields[key] = headers[label];
+  for (const [key, label] of R.toEntries(outlookFields)) if (headers[label] !== undefined) fields[key] = headers[label];
   if (headers.Size !== undefined && /^\d+$/.test(headers.Size)) fields.sizeBytes = Number(headers.Size);
   return yield* S.decodeEffect(P.OutlookMessageHeaders)(fields).pipe(Effect.mapError(fail));
 });
