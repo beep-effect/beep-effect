@@ -329,9 +329,11 @@ export const resolve: {
     }
   });
   fullReferences(document.text, "full-reference");
-  // A public result may contribute only when this document actually cites its numeric key.
+  // A public result may contribute only when this document actually cites its numeric key. Only the
+  // separators that appear inside a number are stripped; whitespace stays a boundary so a number
+  // followed by a date (the USPTO cover-sheet layout) still counts as cited.
   const cited = (number: string) =>
-    new RegExp(`(?<![0-9])${number}(?![0-9])`, "u").test(Str.replace(/[/, .-]/gu, "")(document.text)) ||
+    new RegExp(`(?<![0-9])${number}(?![0-9])`, "u").test(Str.replace(/[/,.-]/gu, "")(document.text)) ||
     O.exists(document.extraction, (e) =>
       A.some([...e.extraction.applicationNumbers, ...e.extraction.patentNumbers], (n) => digits(n) === number)
     );

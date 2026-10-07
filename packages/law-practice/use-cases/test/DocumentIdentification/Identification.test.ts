@@ -180,7 +180,11 @@ describe("resolver", () => {
       }),
     ];
     expect(resolve(document("Application 18/900,001", { uspto })).tier).toBe("identified");
+    // Cover-sheet layout: the number is followed by whitespace and a date, so whitespace must stay a boundary.
+    expect(resolve(document("APPLICATION NO. FILING DATE\n18/900,001 10/06/2025", { uspto })).tier).toBe("identified");
+    expect(resolve(document("Application No. 18/900,001 12 pages", { uspto })).tier).toBe("identified");
     expect(resolve(document("Application 18/900,002", { uspto })).tier).toBe("unknown");
+    expect(resolve(document("Application 118/900,001", { uspto })).tier).toBe("unknown");
   });
   it("requires critic-confirmed content for identified-content; text alone stays a candidate", () => {
     const c = context({ clients: [clientEntry], contacts: [linked("Acme Widgets LLC")] });
