@@ -791,7 +791,7 @@ candidate. Candidates (not decisions):
 
 | Dep | Module | Candidate |
 | --- | --- | --- |
-| `@octokit/core`, `@octokit/plugin-paginate-rest`, `@octokit/types` | github | `effect/unstable/http` HttpClient + `effect/unstable/httpapi` client; pagination as a `Stream` |
+| `@octokit/core`, `@octokit/plugin-paginate-rest`, `@octokit/types` | github | `effect/http/HttpClient` + an `effect/http-api` client (the live import paths across `packages/**`); pagination as a `Stream` |
 | `universal-github-app-jwt`, `tweetnacl`, `blakejs` | github | Effect crypto surface where it exists; otherwise a `drivers/*` home at promotion |
 | `@azure/storage-blob` | github-actions | HttpClient against the blob REST surface |
 | `@sigstore/bundle`, `@sigstore/sign` | sbom | keep; isolate behind a port interface at promotion |
