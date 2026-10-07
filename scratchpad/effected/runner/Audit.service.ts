@@ -38,6 +38,8 @@ import {
   type Stage,
 } from "./Ledger.schema.ts";
 import {
+  type AppendField,
+  appendToRow,
   backfillCommits,
   blockRow,
   findRow,
@@ -50,6 +52,7 @@ import {
 } from "./LedgerStore.ts";
 import { isModuleTarget, labPaths, type RunnerConfig, resolveRunnerConfig } from "./Paths.ts";
 import { capture } from "./Process.ts";
+import { runCliSeats, writeBrief } from "./Review.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Audit.service");
 
@@ -142,6 +145,21 @@ export interface AuditShape {
   readonly ledgerNote: (module: ModuleName, note: string) => Effect.Effect<LedgerRow, RunnerError>;
   /** Fill a row from upstream without copying files. @since 0.0.0 */
   readonly ledgerAdd: (module: ModuleName) => Effect.Effect<LedgerRow, RunnerError>;
+  /** Append schema-validated records to an accumulating row field. @since 0.0.0 */
+  readonly ledgerAppend: (
+    module: ModuleName,
+    payload: { readonly field: AppendField; readonly json: string }
+  ) => Effect.Effect<LedgerRow, RunnerError>;
+  /** Write the reviewer brief for a round on HEAD. @since 0.0.0 */
+  readonly reviewBrief: (
+    module: ModuleName,
+    round: number
+  ) => Effect.Effect<{ readonly directory: string; readonly commit: string; readonly brief: string }, RunnerError>;
+  /** Run the Grok and Sol seats on a round's brief and report reviewer edits. @since 0.0.0 */
+  readonly reviewSeats: (
+    module: ModuleName,
+    round: number
+  ) => Effect.Effect<{ readonly directory: string; readonly edits: ReadonlyArray<string> }, RunnerError>;
 }
 
 /**
@@ -330,6 +348,19 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
     }, provide),
     ledgerAdd: Effect.fn("Audit.ledgerAdd")(function* (module: ModuleName) {
       return yield* registerExisting(config, module);
+    }, provide),
+    ledgerAppend: Effect.fn("Audit.ledgerAppend")(function* (
+      module: ModuleName,
+      payload: { readonly field: AppendField; readonly json: string }
+    ) {
+      return yield* appendToRow(config, module, payload);
+    }, provide),
+    reviewBrief: Effect.fn("Audit.reviewBrief")(function* (module: ModuleName, round: number) {
+      return yield* writeBrief(config, module, round);
+    }, provide),
+    reviewSeats: Effect.fn("Audit.reviewSeats")(function* (module: ModuleName, round: number) {
+      const result = yield* runCliSeats(config, module, round);
+      return { directory: result.directory, edits: result.edits };
     }, provide),
   });
 });

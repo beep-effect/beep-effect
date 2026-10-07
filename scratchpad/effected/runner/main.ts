@@ -11,12 +11,14 @@ import * as A from "effect/Array";
 import { Argument, Command, Flag } from "effect/cli";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CliUsageError, LedgerIncomplete } from "./Audit.errors.ts";
 import { Audit, AuditLive } from "./Audit.service.ts";
 import { AUDIT_TARGETS, MODULE_NAMES, ModuleName, Stage } from "./Ledger.schema.ts";
+import { AppendField } from "./LedgerStore.ts";
 
 const moduleArgument = Argument.Literals("module", MODULE_NAMES);
 const targetArgument = Argument.Literals("target", AUDIT_TARGETS);
@@ -139,9 +141,47 @@ const ledger = Command.make(
   )
 );
 
+const review = Command.make(
+  "review",
+  {
+    module: moduleArgument,
+    round: Argument.Int("round"),
+    seats: Flag.Boolean("seats").pipe(Flag.withDefault(false)),
+  },
+  Effect.fnUntraced(function* ({ module, round, seats }) {
+    const service = yield* Audit;
+    const brief = yield* service.reviewBrief(module, round);
+    yield* Console.log(`[effected] ${module} review round ${round}: brief ${brief.brief} on ${brief.commit}`);
+    if (seats) {
+      const result = yield* service.reviewSeats(module, round);
+      if (A.isReadonlyArrayNonEmpty(result.edits)) {
+        return yield* CliUsageError.make({
+          detail: `reviewers changed files outside ${result.directory}: ${A.join(result.edits, ", ")} (revert them and file a receipt)`,
+        });
+      }
+    }
+  })
+).pipe(Command.withDescription("Write the round's reviewer brief; with --seats also run the Grok and Sol seats"));
+
+const append = Command.make(
+  "append",
+  {
+    module: moduleArgument,
+    field: Argument.Literals("field", AppendField.literals),
+    file: Argument.String("json-file"),
+  },
+  Effect.fnUntraced(function* ({ module, field, file }) {
+    const service = yield* Audit;
+    const fs = yield* FileSystem.FileSystem;
+    const json = yield* fs.readFileString(file);
+    const row = yield* service.ledgerAppend(module, { field, json });
+    yield* Console.log(`[effected] ${row.id}: appended ${field} from ${file}`);
+  })
+).pipe(Command.withDescription("Append a JSON array of deviations, backlog, reviewRounds or exportsAdded to a ledger row"));
+
 const root = Command.make("audit:effected").pipe(
   Command.withDescription("Gates and ledger of the @effected/* port lab (scratchpad/EFFECTED_PORT_GOAL.md)"),
-  Command.withSubcommands([copy, carry, parity, check, lint, test, docgen, audit, ledger])
+  Command.withSubcommands([copy, carry, parity, check, lint, test, docgen, audit, ledger, review, append])
 );
 
 const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));

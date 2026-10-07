@@ -35,6 +35,8 @@ import {
 import { findRow, pendingRow } from "../../effected/runner/LedgerStore.ts";
 import { isModuleTarget, labPaths, upstreamPaths } from "../../effected/runner/Paths.ts";
 import { heavy, renderLaunch } from "../../effected/runner/Process.ts";
+import { LAW_SURFACES, outOfScopeChanges, reviewBrief, roundDir, seatLaunches } from "../../effected/runner/Review.ts";
+import { AppendField } from "../../effected/runner/LedgerStore.ts";
 
 const emptyLedger = (rows: ReadonlyArray<LedgerRow>): Ledger =>
   Ledger.make({
@@ -272,5 +274,41 @@ describe("source analysis", () => {
         assert.deepStrictEqual(A.sort(kinds, Order.String), ["angle-cast", "any", "as", "non-null", "ts-ignore"]);
       })
     );
+  });
+});
+
+describe("review loop", () => {
+  it("places round evidence under the module's .review directory", () => {
+    assert.strictEqual(roundDir("yaml", 3), "scratchpad/effected/yaml/.review/round-3");
+    assert.strictEqual(pipe("glob", roundDir(1)), "scratchpad/effected/glob/.review/round-1");
+  });
+  it("renders the section 12.3 brief with the previous inventory from round 2", () => {
+    const first = reviewBrief("jsonl", { round: 1, commit: "abc" });
+    assert.include(first, "Module: jsonl. Commit: abc. Round: 1.");
+    assert.include(first, "Previous rounds: none (first round).");
+    assert.include(first, "REQUIRED: <n>");
+    for (const surface of LAW_SURFACES) {
+      assert.include(first, surface);
+    }
+    const second = pipe("jsonl", reviewBrief({ round: 2, commit: "def" }));
+    assert.include(second, "scratchpad/effected/jsonl/.review/round-1/INVENTORY.md");
+  });
+  it("launches Grok in plan mode and Sol read-only, writing reports beside the brief", () => {
+    const seats = seatLaunches("/repo", "scratchpad/effected/jsonl/.review/round-1");
+    assert.deepStrictEqual(A.map(seats, (seat) => seat.seat), ["grok", "sol"]);
+    const scripts = A.map(seats, (seat) => A.join(seat.launch.args, " "));
+    assert.include(scripts[0] ?? "", "--permission-mode plan");
+    assert.include(scripts[0] ?? "", "grok-4.7 --reasoning-effort xhigh");
+    assert.include(scripts[1] ?? "", "-s read-only");
+    assert.include(scripts[1] ?? "", 'model_reasoning_effort="high"');
+    assert.include(scripts[1] ?? "", "round-1/sol.md");
+  });
+  it("finds reviewer edits outside the round directory", () => {
+    const status = [" M scratchpad/effected/jsonl/Line.ts", "?? scratchpad/effected/jsonl/.review/round-1/grok.md", ""].join("\n");
+    assert.deepStrictEqual(outOfScopeChanges(status, "scratchpad/effected/jsonl/.review/"), ["scratchpad/effected/jsonl/Line.ts"]);
+    assert.deepStrictEqual(pipe("", outOfScopeChanges("x/")), []);
+  });
+  it("names the accumulating ledger fields", () => {
+    assert.deepStrictEqual(AppendField.literals, ["deviations", "backlog", "reviewRounds", "exportsAdded"]);
   });
 });

@@ -17,16 +17,22 @@ import * as S from "effect/Schema";
 import { catalogEntry, MODULE_CATALOG, rowId } from "./Catalog.ts";
 import { LedgerInvalid, LedgerMissing, LedgerRowMissing, LedgerStageSkip } from "./Audit.errors.ts";
 import {
+  BacklogItem,
+  Deviation,
   DONE_STAGE,
+  ExportEntry,
   Ledger,
   LedgerCheckpoint,
   LedgerJson,
   LedgerRow,
   type ModuleName,
   nextStage,
+  ReviewRound,
   type Stage,
   StageCommit,
 } from "./Ledger.schema.ts";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { capture } from "./Process.ts";
 import type { RunnerConfig } from "./Paths.ts";
 
@@ -467,3 +473,89 @@ export const noteRow = Effect.fn("Ledger.noteRow")(function* (config: RunnerConf
  */
 export const openRows = (ledger: Ledger): ReadonlyArray<LedgerRow> =>
   A.filter(ledger.rows, (row) => row.status !== "done");
+
+const $I = $ScratchpadId.create("effected/runner/LedgerStore");
+
+/**
+ * Row fields that accumulate records over a module's life.
+ *
+ * **Example** (Guard a field name)
+ *
+ * ```ts
+ * import { AppendField } from "@beep/scratchpad/effected/runner/LedgerStore"
+ *
+ * console.log(AppendField.is.deviations("deviations")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AppendField = LiteralKit(["deviations", "backlog", "reviewRounds", "exportsAdded"]).annotate(
+  $I.annote("AppendField", { description: "A ledger row field that accumulates records." })
+);
+
+/**
+ * The union of append field literals.
+ *
+ * @see {@link AppendField} for the runtime kit.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AppendField = typeof AppendField.Type;
+
+const decodeDeviations = S.decodeUnknownEffect(S.fromJsonString(S.Array(Deviation)));
+const decodeBacklog = S.decodeUnknownEffect(S.fromJsonString(S.Array(BacklogItem)));
+const decodeRounds = S.decodeUnknownEffect(S.fromJsonString(S.Array(ReviewRound)));
+const decodeExports = S.decodeUnknownEffect(S.fromJsonString(S.Array(ExportEntry)));
+
+/**
+ * Appends schema-validated records (a JSON array) to one accumulating field
+ * of a row; review rounds replace an existing entry with the same round.
+ *
+ * **Example** (Record a deviation)
+ *
+ * ```ts
+ * import { appendToRow } from "@beep/scratchpad/effected/runner/LedgerStore"
+ * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
+ * import * as Effect from "effect/Effect"
+ *
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * console.log(Effect.isEffect(appendToRow(config, "jsonc", { field: "deviations", json: "[]" }))) // true
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const appendToRow = Effect.fn("Ledger.appendToRow")(function* (
+  config: RunnerConfig,
+  module: ModuleName,
+  payload: { readonly field: AppendField; readonly json: string }
+) {
+  const invalid = (issue: unknown) => LedgerInvalid.make({ path: `--append ${payload.field}`, detail: String(issue) });
+  return yield* updateRow(config, module, (row) =>
+    AppendField.$match(payload.field, {
+      deviations: () =>
+        Effect.map(decodeDeviations(payload.json).pipe(Effect.mapError(invalid)), (items) =>
+          LedgerRow.make({ ...row, deviations: [...row.deviations, ...items] })
+        ),
+      backlog: () =>
+        Effect.map(decodeBacklog(payload.json).pipe(Effect.mapError(invalid)), (items) =>
+          LedgerRow.make({ ...row, backlog: [...row.backlog, ...items] })
+        ),
+      reviewRounds: () =>
+        Effect.map(decodeRounds(payload.json).pipe(Effect.mapError(invalid)), (items) =>
+          LedgerRow.make({
+            ...row,
+            reviewRounds: [
+              ...A.filter(row.reviewRounds, (existing) => !A.some(items, (item) => item.round === existing.round)),
+              ...items,
+            ],
+          })
+        ),
+      exportsAdded: () =>
+        Effect.map(decodeExports(payload.json).pipe(Effect.mapError(invalid)), (items) =>
+          LedgerRow.make({ ...row, exportsAdded: [...row.exportsAdded, ...items] })
+        ),
+    })
+  );
+});
