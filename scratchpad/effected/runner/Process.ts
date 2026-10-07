@@ -104,12 +104,47 @@ export const capture = Effect.fn("Runner.capture")(function* (launch: Launch) {
       stderr: "inherit",
     })
   );
-  const output = yield* Stream.mkString(Stream.decodeText(handle.stdout));
+  const output = yield* handle.stdout.pipe(Stream.decodeText, Stream.mkString);
   const exitCode = Number(yield* handle.exitCode);
   if (exitCode !== 0) {
     return yield* CommandFailed.make({ command: renderLaunch(launch), exitCode });
   }
   return output.trim();
+}, Effect.scoped);
+
+/**
+ * Runs a command and returns its exit code with stdout and stderr merged,
+ * without failing on a non-zero exit; for gates that must read what a red
+ * command reported.
+ *
+ * **Example** (Capture a red command)
+ *
+ * ```ts
+ * import { captureExit } from "@beep/scratchpad/effected/runner/Process"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = captureExit({ command: "false", args: [], cwd: "." })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const captureExit = Effect.fn("Runner.captureExit")(function* (launch: Launch) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const handle = yield* spawner.spawn(
+    ChildProcess.make(launch.command, launch.args, {
+      cwd: launch.cwd,
+      env: launch.env,
+      extendEnv: true,
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "pipe",
+    })
+  );
+  const output = yield* handle.all.pipe(Stream.decodeText, Stream.mkString);
+  const exitCode = Number(yield* handle.exitCode);
+  return { exitCode, output };
 }, Effect.scoped);
 
 /**

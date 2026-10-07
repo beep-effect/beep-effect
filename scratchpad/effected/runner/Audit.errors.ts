@@ -65,8 +65,19 @@ export class GateFailed extends S.TaggedError<GateFailed>($I`GateFailed`)(
   },
   $I.annoteError<GateFailed>("GateFailed", { description: "A runner gate went red for a target." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered GateFailed message)
+   *
+   * ```ts
+   * import { GateFailed } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(GateFailed.make({ target: "yaml", gate: "check", exitCode: 2, problems: ["x.ts:1 bad"] }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
-    const detail = A.isNonEmptyReadonlyArray(this.problems) ? `\n  ${A.join(this.problems, "\n  ")}` : "";
+    const detail = A.isReadonlyArrayNonEmpty(this.problems) ? `\n  ${A.join(this.problems, "\n  ")}` : "";
     return `${this.target} ${this.gate}: red (exit ${this.exitCode})${detail}`;
   }
 }
@@ -94,6 +105,17 @@ export class CommandFailed extends S.TaggedError<CommandFailed>($I`CommandFailed
   },
   $I.annoteError<CommandFailed>("CommandFailed", { description: "A helper subprocess exited non-zero." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered CommandFailed message)
+   *
+   * ```ts
+   * import { CommandFailed } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(CommandFailed.make({ command: "git rev-parse HEAD", exitCode: 128 }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `command failed (exit ${this.exitCode}): ${this.command}`;
   }
@@ -118,6 +140,17 @@ export class LedgerMissing extends S.TaggedError<LedgerMissing>($I`LedgerMissing
   { path: S.String },
   $I.annoteError<LedgerMissing>("LedgerMissing", { description: "No ledger file exists at the expected path." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered LedgerMissing message)
+   *
+   * ```ts
+   * import { LedgerMissing } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(LedgerMissing.make({ path: "scratchpad/effected/PORT_LEDGER.json" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `ledger missing: ${this.path} (run \`ledger --init\`)`;
   }
@@ -142,6 +175,17 @@ export class LedgerInvalid extends S.TaggedError<LedgerInvalid>($I`LedgerInvalid
   { path: S.String, detail: S.String },
   $I.annoteError<LedgerInvalid>("LedgerInvalid", { description: "The ledger file failed schema validation." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered LedgerInvalid message)
+   *
+   * ```ts
+   * import { LedgerInvalid } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(LedgerInvalid.make({ path: "x.json", detail: "rows: expected array" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `ledger invalid: ${this.path}\n${this.detail}`;
   }
@@ -166,6 +210,17 @@ export class LedgerRowMissing extends S.TaggedError<LedgerRowMissing>($I`LedgerR
   { module: ModuleName },
   $I.annoteError<LedgerRowMissing>("LedgerRowMissing", { description: "No ledger row exists for the module." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered LedgerRowMissing message)
+   *
+   * ```ts
+   * import { LedgerRowMissing } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(LedgerRowMissing.make({ module: "yaml" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `ledger has no row for ${this.module}`;
   }
@@ -190,6 +245,17 @@ export class LedgerStageSkip extends S.TaggedError<LedgerStageSkip>($I`LedgerSta
   { module: ModuleName, from: Stage, to: Stage },
   $I.annoteError<LedgerStageSkip>("LedgerStageSkip", { description: "A stage transition skipped a stage." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered LedgerStageSkip message)
+   *
+   * ```ts
+   * import { LedgerStageSkip } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(LedgerStageSkip.make({ module: "yaml", from: 1, to: 3 }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `${this.module}: cannot move from stage ${this.from} to ${this.to}; stages are left one at a time`;
   }
@@ -214,6 +280,17 @@ export class UpstreamMissing extends S.TaggedError<UpstreamMissing>($I`UpstreamM
   { path: S.String },
   $I.annoteError<UpstreamMissing>("UpstreamMissing", { description: "An expected upstream path does not exist." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered UpstreamMissing message)
+   *
+   * ```ts
+   * import { UpstreamMissing } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(UpstreamMissing.make({ path: "packages/yaml/src" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `upstream path missing: ${this.path}`;
   }
@@ -239,6 +316,17 @@ export class AlreadyCopied extends S.TaggedError<AlreadyCopied>($I`AlreadyCopied
   { module: ModuleName, path: S.String },
   $I.annoteError<AlreadyCopied>("AlreadyCopied", { description: "The module's lab directory already exists." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered AlreadyCopied message)
+   *
+   * ```ts
+   * import { AlreadyCopied } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(AlreadyCopied.make({ module: "jsonl", path: "scratchpad/effected/jsonl" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `${this.module} is already in the lab at ${this.path}; copy refuses to overwrite`;
   }
@@ -265,6 +353,17 @@ export class UnexpectedDependency extends S.TaggedError<UnexpectedDependency>($I
     description: "Upstream declares a dependency outside the inventory allowlist.",
   })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered UnexpectedDependency message)
+   *
+   * ```ts
+   * import { UnexpectedDependency } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(UnexpectedDependency.make({ module: "yaml", name: "left-pad", field: "dependencies" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `${this.module}: upstream ${this.field} names ${this.name}, which the catalog does not list; extend Catalog.ts with a ledger note`;
   }
@@ -290,8 +389,89 @@ export class ManifestInvalid extends S.TaggedError<ManifestInvalid>($I`ManifestI
   { path: S.String, detail: S.String },
   $I.annoteError<ManifestInvalid>("ManifestInvalid", { description: "A JSON manifest failed to decode." })
 ) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered ManifestInvalid message)
+   *
+   * ```ts
+   * import { ManifestInvalid } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(ManifestInvalid.make({ path: "scratchpad/package.json", detail: "not an object" }).message.length > 0) // true
+   * ```
+   */
   override get message(): string {
     return `manifest invalid: ${this.path}: ${this.detail}`;
+  }
+}
+
+/**
+ * The command line named a missing or malformed argument.
+ *
+ * **Example** (Report a usage error)
+ *
+ * ```ts
+ * import { CliUsageError } from "@beep/scratchpad/effected/runner/Audit.errors"
+ *
+ * console.log(CliUsageError.make({ detail: "expected a module name" }).message) // "usage: expected a module name"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class CliUsageError extends S.TaggedError<CliUsageError>($I`CliUsageError`)(
+  "CliUsageError",
+  { detail: S.String },
+  $I.annoteError<CliUsageError>("CliUsageError", { description: "The command line was missing or malformed." })
+) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered CliUsageError message)
+   *
+   * ```ts
+   * import { CliUsageError } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(CliUsageError.make({ detail: "expected a module name" }).message.length > 0) // true
+   * ```
+   */
+  override get message(): string {
+    return `usage: ${this.detail}`;
+  }
+}
+
+/**
+ * `ledger --verify` found rows that are not done, blocked rows, or stale rows.
+ *
+ * **Example** (Report an incomplete ledger)
+ *
+ * ```ts
+ * import { LedgerIncomplete } from "@beep/scratchpad/effected/runner/Audit.errors"
+ *
+ * console.log(LedgerIncomplete.make({ done: 3, total: 29 }).message) // "ledger incomplete: 3/29 done"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LedgerIncomplete extends S.TaggedError<LedgerIncomplete>($I`LedgerIncomplete`)(
+  "LedgerIncomplete",
+  { done: S.Int, total: S.Int },
+  $I.annoteError<LedgerIncomplete>("LedgerIncomplete", { description: "The ledger is not fully done." })
+) {
+  /**
+   * Renders the failure as one human-readable line for terminal output.
+   *
+   * **Example** (Read the rendered LedgerIncomplete message)
+   *
+   * ```ts
+   * import { LedgerIncomplete } from "@beep/scratchpad/effected/runner/Audit.errors"
+   *
+   * console.log(LedgerIncomplete.make({ done: 3, total: 29 }).message.length > 0) // true
+   * ```
+   */
+  override get message(): string {
+    return `ledger incomplete: ${this.done}/${this.total} done`;
   }
 }
 
@@ -322,6 +502,8 @@ export const AuditError = S.Union([
   AlreadyCopied,
   UnexpectedDependency,
   ManifestInvalid,
+  CliUsageError,
+  LedgerIncomplete,
 ]).annotate($I.annote("AuditError", { description: "The union of effected-port runner failures." }));
 
 /**

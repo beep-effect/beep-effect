@@ -8,7 +8,9 @@
  */
 
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import type { ModuleName } from "./Ledger.schema.ts";
 
@@ -31,11 +33,13 @@ const OKF_LINK = /okf\/[A-Za-z0-9_./-]+\.md/g;
  * @category parsing
  * @since 0.0.0
  */
-export const okfLinks = (module: ModuleName, claudeMd: string): ReadonlyArray<string> => {
-  const own = `okf/modules/${module}.md`;
+export const okfLinks: {
+  (claudeMd: string): (module: ModuleName) => ReadonlyArray<string>;
+  (module: ModuleName, claudeMd: string): ReadonlyArray<string>;
+} = dual(2, (module: ModuleName, claudeMd: string): ReadonlyArray<string> => {
   const found = A.map(A.fromIterable(claudeMd.matchAll(OKF_LINK)), (match) => match[0]);
-  return A.dedupe(A.prepend(found, own));
-};
+  return A.dedupe(A.prepend(found, `okf/modules/${module}.md`));
+});
 
 /**
  * One carried file: its upstream-relative path and its text, or none when the
@@ -50,6 +54,17 @@ export interface KnowledgeSection {
 }
 
 /**
+ * The knowledge-bundle header naming the module and the upstream commit.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface KnowledgeHeader {
+  readonly module: ModuleName;
+  readonly commit: string;
+}
+
+/**
  * The KNOWLEDGE.md text of section 10.4: provenance header, then every
  * section verbatim under an HTML comment naming its upstream path.
  *
@@ -59,18 +74,23 @@ export interface KnowledgeSection {
  * import { assembleKnowledge } from "@beep/scratchpad/effected/runner/Knowledge"
  * import * as O from "effect/Option"
  *
- * const text = assembleKnowledge("yaml", "abc", [{ path: "packages/yaml/CLAUDE.md", content: O.some("# yaml\n") }])
+ * const text = assembleKnowledge({ module: "yaml", commit: "abc" }, [
+ *   { path: "packages/yaml/CLAUDE.md", content: O.some("# yaml\n") },
+ * ])
  * console.log(text.startsWith("# yaml — upstream knowledge bundle (verbatim)")) // true
  * ```
  *
  * @category formatting
  * @since 0.0.0
  */
-export const assembleKnowledge = (module: ModuleName, commit: string, sections: ReadonlyArray<KnowledgeSection>): string => {
-  const header = [
-    `# ${module} — upstream knowledge bundle (verbatim)`,
+export const assembleKnowledge: {
+  (sections: ReadonlyArray<KnowledgeSection>): (header: KnowledgeHeader) => string;
+  (header: KnowledgeHeader, sections: ReadonlyArray<KnowledgeSection>): string;
+} = dual(2, (header: KnowledgeHeader, sections: ReadonlyArray<KnowledgeSection>): string => {
+  const lead = [
+    `# ${header.module} — upstream knowledge bundle (verbatim)`,
     "",
-    `Provenance: ~/YeeBois/references/effect/effected @ ${commit}; files listed below.`,
+    `Provenance: ~/YeeBois/references/effect/effected @ ${header.commit}; files listed below.`,
     "Relative `okf/...` links refer to that checkout. Content is carried verbatim; port",
     "decisions live in README.md → Port notes, not here.",
     "",
@@ -81,8 +101,8 @@ export const assembleKnowledge = (module: ModuleName, commit: string, sections: 
     O.getOrElse(section.content, () => `<!-- missing in the upstream checkout: ${section.path} -->`),
     "",
   ]);
-  return `${A.join([...header, ...body], "\n").trimEnd()}\n`;
-};
+  return `${Str.trimEnd(A.join([...lead, ...body], "\n"))}\n`;
+});
 
 const NOTICE = /copyright|ported from|vendored|derived from|adapted from|\bMIT\b|licen[cs]e/i;
 const HEADER_LINES = 40;
@@ -102,16 +122,23 @@ const HEADER_LINES = 40;
  * ```ts
  * import { scanVendorNotices } from "@beep/scratchpad/effected/runner/Knowledge"
  *
- * console.log(scanVendorNotices("a.ts", "// Ported from minimatch (ISC)\nexport const x = 1;")) // ["a.ts:1 // Ported from minimatch (ISC)"]
+ * const notices = scanVendorNotices("a.ts", "// Ported from minimatch (ISC)\nexport const x = 1;")
+ * console.log(notices) // ["a.ts:1 // Ported from minimatch (ISC)"]
  * ```
  *
  * @category parsing
  * @since 0.0.0
  */
-export const scanVendorNotices = (label: string, text: string): ReadonlyArray<string> =>
-  A.filterMap(A.fromIterable(A.take(Str.split("\n")(text), HEADER_LINES).entries()), ([index, line]) =>
-    NOTICE.test(line) ? O.some(`${label}:${index + 1} ${Str.trim(line)}`) : O.none()
-  );
+export const scanVendorNotices: {
+  (text: string): (label: string) => ReadonlyArray<string>;
+  (label: string, text: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (label: string, text: string): ReadonlyArray<string> =>
+    A.filterMap(A.take(Str.split("\n")(text), HEADER_LINES), (line, index) =>
+      NOTICE.test(line) ? Result.succeed(`${label}:${index + 1} ${Str.trim(line)}`) : Result.failVoid
+    )
+);
 
 /**
  * What the README attribution block states for one module.
@@ -120,12 +147,15 @@ export const scanVendorNotices = (label: string, text: string): ReadonlyArray<st
  * @since 0.0.0
  */
 export interface Attribution {
+  readonly module: ModuleName;
   readonly packageName: string;
   readonly version: string;
   readonly commit: string;
   readonly hasLicense: boolean;
   readonly notices: ReadonlyArray<string>;
 }
+
+const labTitle = (module: ModuleName): string => `# ${module} (lab port of @effected/${module})`;
 
 /**
  * The adapted README of section 10.3: the upstream text with the lab title,
@@ -137,7 +167,8 @@ export interface Attribution {
  * ```ts
  * import { readmeSkeleton } from "@beep/scratchpad/effected/runner/Knowledge"
  *
- * const text = readmeSkeleton("yaml", "# @effected/yaml\n\nBody.\n", {
+ * const text = readmeSkeleton("# @effected/yaml\n\nBody.\n", {
+ *   module: "yaml",
  *   packageName: "@effected/yaml",
  *   version: "0.19.0",
  *   commit: "abc",
@@ -151,16 +182,16 @@ export interface Attribution {
  * @category formatting
  * @since 0.0.0
  */
-export const readmeSkeleton = (module: ModuleName, upstreamReadme: string, attribution: Attribution): string => {
-  const lines = Str.split("\n")(upstreamReadme);
-  const titled = A.match(lines, {
-    onEmpty: () => [`# ${module} (lab port of @effected/${module})`],
-    onNonEmpty: (all) =>
-      Str.startsWith("# ")(all[0])
-        ? A.prepend(A.drop(all, 1), `# ${module} (lab port of @effected/${module})`)
-        : A.prepend(all, `# ${module} (lab port of @effected/${module})`),
+export const readmeSkeleton: {
+  (attribution: Attribution): (upstreamReadme: string) => string;
+  (upstreamReadme: string, attribution: Attribution): string;
+} = dual(2, (upstreamReadme: string, attribution: Attribution): string => {
+  const title = labTitle(attribution.module);
+  const titled = A.match(Str.split("\n")(upstreamReadme), {
+    onEmpty: () => [title],
+    onNonEmpty: (all) => (Str.startsWith("# ")(all[0]) ? A.prepend(A.drop(all, 1), title) : A.prepend(all, title)),
   });
-  const noticeLines = A.isNonEmptyReadonlyArray(attribution.notices)
+  const noticeLines = A.isReadonlyArrayNonEmpty(attribution.notices)
     ? A.map(attribution.notices, (notice) => `- ${notice}`)
     : ["- Vendored-engine notices: none found in source headers."];
   const notes = [
@@ -189,8 +220,8 @@ export const readmeSkeleton = (module: ModuleName, upstreamReadme: string, attri
     "None.",
     "",
   ];
-  return `${A.join([...titled, ...notes], "\n").trimEnd()}\n`;
-};
+  return `${Str.trimEnd(A.join([...titled, ...notes], "\n"))}\n`;
+});
 
 /**
  * The per-module tsconfig of section 5.3.
@@ -200,7 +231,7 @@ export const readmeSkeleton = (module: ModuleName, upstreamReadme: string, attri
  * ```ts
  * import { moduleTsconfig } from "@beep/scratchpad/effected/runner/Knowledge"
  *
- * console.log(moduleTsconfig("yaml").includes('"../../test/yaml/**/*.ts"')) // true
+ * console.log(moduleTsconfig("yaml").includes("../../test/yaml/")) // true
  * ```
  *
  * @category formatting

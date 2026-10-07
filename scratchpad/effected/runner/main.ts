@@ -14,19 +14,21 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { CliUsageError, LedgerIncomplete } from "./Audit.errors.ts";
 import { Audit, AuditLive } from "./Audit.service.ts";
-import { AUDIT_TARGETS, MODULE_NAMES, Stage } from "./Ledger.schema.ts";
+import { AUDIT_TARGETS, MODULE_NAMES, ModuleName, Stage } from "./Ledger.schema.ts";
 
 const moduleArgument = Argument.Literals("module", MODULE_NAMES);
 const targetArgument = Argument.Literals("target", AUDIT_TARGETS);
-const decodeStage = S.decodeUnknownEffect(Stage);
+const decodeModule = S.decodeUnknownEffect(ModuleName);
+const decodeStage = S.decodeUnknownEffect(S.FiniteFromString.pipe(S.decodeTo(Stage)));
 
-const copy = Command.make("copy", { module: moduleArgument }, ({ module }) =>
-  Effect.gen(function* () {
+const copy = Command.make("copy", { module: moduleArgument }, Effect.fnUntraced(function* ({ module }) {
     const audit = yield* Audit;
     const report = yield* audit.copy(module);
+    const deps = A.isReadonlyArrayNonEmpty(report.newDeps) ? A.join(report.newDeps, ",") : "none";
     yield* Console.log(
-      `[effected] ${module} copy: ${report.sourceFiles} source file(s), ${report.testFiles} test file(s), ${report.fixturesBytes} fixture byte(s), ${report.exportsExpected} expected export(s), deps ${A.join(report.newDeps, ",") || "none"}, ${report.notices} header notice(s)`
+      `[effected] ${module} copy: ${report.sourceFiles} source file(s), ${report.testFiles} test file(s), ${report.fixturesBytes} fixture byte(s), ${report.exportsExpected} expected export(s), deps ${deps}, ${report.notices} header notice(s)`
     );
   })
 ).pipe(Command.withDescription("S0: copy a module verbatim from upstream and fill its ledger row"));
@@ -34,8 +36,7 @@ const copy = Command.make("copy", { module: moduleArgument }, ({ module }) =>
 const parity = Command.make(
   "parity",
   { module: moduleArgument, strict: Flag.Boolean("strict").pipe(Flag.withDefault(false)) },
-  ({ module, strict }) =>
-    Effect.gen(function* () {
+  Effect.fnUntraced(function* ({ module, strict }) {
       const audit = yield* Audit;
       const report = yield* audit.parity(module, strict);
       yield* Effect.forEach(report.added, (entry) => Console.log(`  added: ${entry.entry} ${entry.name} (${entry.kind})`));
@@ -65,60 +66,63 @@ const audit = Command.make("audit", { target: targetArgument }, ({ target }) =>
   Effect.flatMap(Audit, (service) => Effect.asVoid(service.audit(target)))
 ).pipe(Command.withDescription("Every gate in order for the target's stage; stops at the first red"));
 
+const moduleAt = (rest: ReadonlyArray<string>, index: number) =>
+  decodeModule(rest[index]).pipe(
+    Effect.mapError(() =>
+      CliUsageError.make({ detail: `expected a module name at position ${index + 1}, got ${rest[index] ?? "nothing"}` })
+    )
+  );
+
+const tail = (rest: ReadonlyArray<string>, from: number): string => A.join(A.drop(rest, from), " ");
+
 const ledger = Command.make(
   "ledger",
   {
     init: Flag.Boolean("init").pipe(Flag.withDefault(false)),
-    show: Flag.Boolean("show").pipe(Flag.withDefault(false)),
     verify: Flag.Boolean("verify").pipe(Flag.withDefault(false)),
     set: Flag.Boolean("set").pipe(Flag.withDefault(false)),
     block: Flag.Boolean("block").pipe(Flag.withDefault(false)),
     note: Flag.Boolean("note").pipe(Flag.withDefault(false)),
     add: Flag.Boolean("add").pipe(Flag.withDefault(false)),
+    show: Flag.Boolean("show").pipe(Flag.withDefault(false)),
     finding: Flag.String("finding").pipe(Flag.optional),
-    rest: Argument.String("args").pipe(Argument.variadic),
+    rest: Argument.String("args").pipe(Argument.variadic()),
   },
-  ({ init, show, verify, set, block, note, add, finding, rest }) =>
-    Effect.gen(function* () {
+  Effect.fnUntraced(function* ({ init, verify, set, block, note, add, finding, rest }) {
       const service = yield* Audit;
-      const moduleAt = (index: number) =>
-        S.decodeUnknownEffect(S.Literals(MODULE_NAMES))(rest[index]).pipe(
-          Effect.mapError(() => new Error(`ledger: expected a module name at position ${index + 1}, got ${rest[index] ?? "nothing"}`))
-        );
       if (init) {
         const created = yield* service.ledgerInit;
         return yield* Console.log(`ledger: initialized ${created.rows.length} rows at ${created.effectedCommit}`);
       }
       if (verify) {
         const report = yield* service.ledgerVerify;
-        return report.ok ? undefined : yield* Effect.fail(new Error("ledger: not complete"));
+        return report.ok ? undefined : yield* LedgerIncomplete.make({ done: report.done, total: report.total });
       }
       if (set) {
-        const module = yield* moduleAt(0);
-        const stage = yield* decodeStage(Number(rest[1])).pipe(
-          Effect.mapError(() => new Error(`ledger: expected a stage 0..5, got ${rest[1] ?? "nothing"}`))
+        const module = yield* moduleAt(rest, 0);
+        const stage = yield* decodeStage(rest[1]).pipe(
+          Effect.mapError(() => CliUsageError.make({ detail: `expected a stage 0..5, got ${rest[1] ?? "nothing"}` }))
         );
-        const row = yield* service.ledgerSet(module, stage, A.join(A.drop(rest, 2), " "));
+        const row = yield* service.ledgerSet(module, stage, tail(rest, 2));
         return yield* Console.log(`ledger: ${row.id} now at stage ${row.stage} (${row.status})`);
       }
       if (block) {
-        const module = yield* moduleAt(0);
-        const row = yield* service.ledgerBlock(module, A.join(A.drop(rest, 1), " "), O.toArray(finding));
+        const module = yield* moduleAt(rest, 0);
+        const row = yield* service.ledgerBlock(module, tail(rest, 1), O.toArray(finding));
         return yield* Console.log(`ledger: ${row.id} blocked at stage ${row.stage}`);
       }
       if (note) {
-        const module = yield* moduleAt(0);
-        const row = yield* service.ledgerNote(module, A.join(A.drop(rest, 1), " "));
+        const module = yield* moduleAt(rest, 0);
+        const row = yield* service.ledgerNote(module, tail(rest, 1));
         return yield* Console.log(`ledger: ${row.id} noted (${row.notes.length} notes)`);
       }
       if (add) {
-        const module = yield* moduleAt(0);
+        const module = yield* moduleAt(rest, 0);
         const row = yield* service.ledgerAdd(module);
         return yield* Console.log(`ledger: ${row.id} registered with ${row.exportsExpected.length} expected export(s)`);
       }
-      void show;
-      const module = A.isNonEmptyReadonlyArray(rest) ? O.some(yield* moduleAt(0)) : O.none();
-      return yield* service.ledgerShow(module);
+      const selected = A.isReadonlyArrayNonEmpty(rest) ? O.some(yield* moduleAt(rest, 0)) : O.none<ModuleName>();
+      return yield* service.ledgerShow(selected);
     })
 ).pipe(
   Command.withDescription(
@@ -131,8 +135,32 @@ const root = Command.make("audit:effected").pipe(
   Command.withSubcommands([copy, parity, check, lint, test, docgen, audit, ledger])
 );
 
+const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));
+
 /**
- * Runs the CLI with the Bun platform services and the live runner.
+ * The CLI program: builds the runner's layers once and runs the command tree
+ * against the process arguments.
+ *
+ * **Example** (Reference the program)
+ *
+ * ```ts
+ * import { program } from "@beep/scratchpad/effected/runner/main"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const program = RunnerLayers.pipe(
+  Layer.build,
+  Effect.flatMap((context) => Command.run(root, { version: "0.0.0" }).pipe(Effect.provideContext(context))),
+  Effect.scoped
+);
+
+/**
+ * Runs {@link program} on the Bun runtime.
  *
  * **Example** (Reference the entry point)
  *
@@ -145,9 +173,4 @@ const root = Command.make("audit:effected").pipe(
  * @category cli-commands
  * @since 0.0.0
  */
-export const main = (): void =>
-  BunRuntime.runMain(
-    Command.run(root, { version: "0.0.0" }).pipe(
-      Effect.provide(AuditLive.pipe(Layer.provideMerge(BunServices.layer)))
-    )
-  );
+export const main = (): void => BunRuntime.runMain(program);

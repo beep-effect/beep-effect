@@ -15,6 +15,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -207,7 +208,7 @@ export const nextStage = (stage: Stage): O.Option<Stage> =>
     number2: () => O.some<Stage>(3),
     number3: () => O.some<Stage>(4),
     number4: () => O.some<Stage>(5),
-    number5: () => O.none<Stage>(),
+    number5: O.none<Stage>,
   });
 
 /**
@@ -295,20 +296,28 @@ export type ExportKind = typeof ExportKind.Type;
  * ```ts
  * import { exportKindCovers } from "@beep/scratchpad/effected/runner/Ledger.schema"
  *
+ * import { pipe } from "effect/Function"
+ *
  * console.log(exportKindCovers("both", "type")) // true
  * console.log(exportKindCovers("value", "type")) // false
- * console.log(exportKindCovers("type", "type")) // true
+ * console.log(pipe("type", exportKindCovers("type"))) // true
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const exportKindCovers = (actual: ExportKind, expected: ExportKind): boolean =>
-  ExportKind.$match(actual, {
-    both: () => true,
-    value: () => ExportKind.is.value(expected),
-    type: () => ExportKind.is.type(expected),
-  });
+export const exportKindCovers: {
+  (expected: ExportKind): (actual: ExportKind) => boolean;
+  (actual: ExportKind, expected: ExportKind): boolean;
+} = dual(
+  2,
+  (actual: ExportKind, expected: ExportKind): boolean =>
+    ExportKind.$match(actual, {
+      both: () => true,
+      value: () => ExportKind.is.value(expected),
+      type: () => ExportKind.is.type(expected),
+    })
+);
 
 /**
  * Runtime versus development (oracle) dependency.

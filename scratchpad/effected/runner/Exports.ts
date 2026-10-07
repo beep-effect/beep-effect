@@ -10,10 +10,12 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ModuleKind, ModuleResolutionKind, Node, Project, ScriptTarget, SyntaxKind } from "ts-morph";
@@ -38,7 +40,7 @@ const makeProject = (): Project =>
     },
   });
 
-const byName = Order.mapInput(Order.string, (entry: ExportEntry) => entry.name);
+const byName = Order.mapInput(Order.String, (entry: ExportEntry) => entry.name);
 
 const kindOf = (value: boolean, type: boolean): ExportKind => (value && type ? "both" : type ? "type" : "value");
 
@@ -70,7 +72,7 @@ const facetsOf = (declarations: ReadonlyArray<Node>): ExportKind => {
 const addTypeOnlyNames = (declaration: ExportDeclaration, names: MutableHashSet.MutableHashSet<string>): void => {
   const named = declaration.getNamedExports();
   if (declaration.isTypeOnly()) {
-    if (A.isNonEmptyReadonlyArray(named)) {
+    if (A.isReadonlyArrayNonEmpty(named)) {
       for (const specifier of named) {
         MutableHashSet.add(names, specifier.getAliasNode()?.getText() ?? specifier.getName());
       }
@@ -121,7 +123,10 @@ const typeOnlyNames = (sourceFile: SourceFile): MutableHashSet.MutableHashSet<st
  * @category parsing
  * @since 0.0.0
  */
-export const readExportFacets = (entryPath: string, entry: string): ReadonlyArray<ExportEntry> => {
+export const readExportFacets: {
+  (entry: string): (entryPath: string) => ReadonlyArray<ExportEntry>;
+  (entryPath: string, entry: string): ReadonlyArray<ExportEntry>;
+} = dual(2, (entryPath: string, entry: string): ReadonlyArray<ExportEntry> => {
   const project = makeProject();
   const sourceFile = project.addSourceFileAtPath(entryPath);
   project.resolveSourceFileDependencies();
@@ -134,7 +139,7 @@ export const readExportFacets = (entryPath: string, entry: string): ReadonlyArra
     })
   );
   return A.sort(entries, byName);
-};
+});
 
 /**
  * The kinds of unsafe type assertion D15 forbids.
@@ -187,6 +192,17 @@ export class UnsafeAssertion extends S.Class<UnsafeAssertion>($I`UnsafeAssertion
   },
   $I.annote("UnsafeAssertion", { description: "A D15 violation at file:line:column." })
 ) {
+  /**
+   * Renders the finding as `file:line:column kind`, the form gate output uses.
+   *
+   * **Example** (Render a finding)
+   *
+   * ```ts
+   * import { UnsafeAssertion } from "@beep/scratchpad/effected/runner/Exports"
+   *
+   * console.log(UnsafeAssertion.make({ file: "b.ts", line: 9, column: 2, kind: "any" }).render()) // "b.ts:9:2 any"
+   * ```
+   */
   render(): string {
     return `${this.file}:${this.line}:${this.column} ${this.kind}`;
   }
@@ -264,10 +280,16 @@ const FOREIGN = /["']@effected\/[^"']*["']/;
  * @category parsing
  * @since 0.0.0
  */
-export const foreignSpecifierLines = (label: string, text: string): ReadonlyArray<string> =>
-  A.filterMap(A.fromIterable(Str.split("\n")(text).entries()), ([index, line]) =>
-    FOREIGN.test(line) ? O.some(`${label}:${index + 1}`) : O.none()
-  );
+export const foreignSpecifierLines: {
+  (text: string): (label: string) => ReadonlyArray<string>;
+  (label: string, text: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (label: string, text: string): ReadonlyArray<string> =>
+    A.filterMap(Str.split("\n")(text), (line, index) =>
+      FOREIGN.test(line) ? Result.succeed(`${label}:${index + 1}`) : Result.failVoid
+    )
+);
 
 /**
  * The exports map of each upstream kit package, by package name
@@ -281,6 +303,14 @@ export type KitExports = HashMap.HashMap<string, HashMap.HashMap<string, string>
 /**
  * The specifier-bearing spans the copy rewrites: `from`, bare `import`,
  * dynamic `import(`, `vi.mock(` and `require(`.
+ *
+ * **Example** (Match a dynamic import)
+ *
+ * ```ts
+ * import { SPECIFIER_PATTERN } from "@beep/scratchpad/effected/runner/Exports"
+ *
+ * console.log(Array.from('await import("./x.js")'.matchAll(SPECIFIER_PATTERN), (m) => m[3])) // ["./x.js"]
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -352,7 +382,10 @@ const KIT = /^@effected\/([^/]+)(?:\/(.+))?$/;
  * @category utilities
  * @since 0.0.0
  */
-export const rewriteSpecifiers = (text: string, resolver: SpecifierResolver): string =>
+export const rewriteSpecifiers: {
+  (resolver: SpecifierResolver): (text: string) => string;
+  (text: string, resolver: SpecifierResolver): string;
+} = dual(2, (text: string, resolver: SpecifierResolver): string =>
   text.replace(SPECIFIER_PATTERN, (whole, lead: string, quote: string, specifier: string) => {
     const kit = KIT.exec(specifier);
     if (kit !== null) {
@@ -368,4 +401,5 @@ export const rewriteSpecifiers = (text: string, resolver: SpecifierResolver): st
       return `${lead}${quote}${tsExtension(resolved)}${quote}`;
     }
     return whole;
-  });
+  })
+);

@@ -30,7 +30,7 @@ const $I = $ScratchpadId.create("effected/runner/Copy");
 
 const JsonObjectText = S.fromJsonString(S.JsonObject, { space: 2 });
 const decodeJsonObject = S.decodeUnknownEffect(JsonObjectText);
-const encodeJsonObject = S.encodeSync(JsonObjectText);
+const encodeJsonObject = S.encodeEffect(JsonObjectText);
 
 /**
  * Reads a JSON object file, failing typed when it is absent or malformed.
@@ -58,8 +58,10 @@ export const readJsonObject = Effect.fn("Copy.readJsonObject")(function* (absolu
   );
 });
 
-const stringRecord = (value: unknown): Readonly<Record<string, string>> =>
-  S.is(S.Record(S.String, S.String))(value) ? value : {};
+const isStringRecord = S.is(S.Record(S.String, S.String));
+const isString = S.is(S.String);
+
+const stringRecord = (value: unknown): Readonly<Record<string, string>> => (isStringRecord(value) ? value : {});
 
 /**
  * The `exports` map of every upstream kit package that has one, keyed by
@@ -82,8 +84,7 @@ const stringRecord = (value: unknown): Readonly<Record<string, string>> =>
 export const readKitExports = Effect.fn("Copy.readKitExports")(function* (config: RunnerConfig) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* Effect.forEach(MODULE_NAMES, (module) =>
-    Effect.gen(function* () {
+  const entries = yield* Effect.forEach(MODULE_NAMES, Effect.fnUntraced(function* (module) {
       const file = path.join(config.upstreamRoot, upstreamPaths(module).packageJson);
       if (!(yield* fs.exists(file))) {
         return O.none<readonly [string, HashMap.HashMap<string, string>]>();
@@ -141,12 +142,13 @@ const dotRelative = (relative: string): string => (Str.startsWith(".")(relative)
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import { BunServices } from "@effect/platform-bun"
  * import * as Effect from "effect/Effect"
+ * import * as HashMap from "effect/HashMap"
  *
  * const program = makeResolver(
  *   RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }),
  *   "/up/packages/walker/src/Walker.ts",
  *   "scratchpad/effected/walker/Walker.ts",
- *   new Map()
+ *   HashMap.empty()
  * ).pipe(Effect.provide(BunServices.layer))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -207,12 +209,11 @@ export const listTsFiles = Effect.fn("Copy.listTsFiles")(function* (repoRoot: st
       info.type === "File" ? O.some(`${directory}/${entry}`) : O.none<string>()
     )
   );
-  return A.sort(A.getSomes(files), Order.string);
+  return A.sort(A.getSomes(files), Order.String);
 });
 
 const rewriteTree = Effect.fn("Copy.rewriteTree")(function* (
   config: RunnerConfig,
-  module: ModuleName,
   labDir: string,
   upstreamDir: string,
   kitExports: KitExports
@@ -220,8 +221,7 @@ const rewriteTree = Effect.fn("Copy.rewriteTree")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* listTsFiles(config.repoRoot, labDir);
-  yield* Effect.forEach(files, (labFile) =>
-    Effect.gen(function* () {
+  yield* Effect.forEach(files, Effect.fnUntraced(function* (labFile) {
       const inside = path.relative(labDir, labFile);
       const upstreamFile = path.join(config.upstreamRoot, upstreamDir, inside);
       const resolver = yield* makeResolver(config, upstreamFile, labFile, kitExports);
@@ -233,7 +233,6 @@ const rewriteTree = Effect.fn("Copy.rewriteTree")(function* (
       }
     })
   );
-  void module;
   return files.length;
 });
 
@@ -313,7 +312,7 @@ const resolveSpec = Effect.fn("Copy.resolveSpec")(function* (
   ]) {
     if (yield* fs.exists(candidate)) {
       const manifest = yield* readJsonObject(candidate, candidate);
-      if (S.is(S.String)(manifest.version)) return `^${manifest.version}`;
+      if (isString(manifest.version)) return `^${manifest.version}`;
     }
   }
   return yield* ManifestInvalid.make({ path: upstreamPaths(module).packageJson, detail: `cannot resolve ${upstreamSpec} for ${name}` });
@@ -334,8 +333,7 @@ const classifyDeps = Effect.fn("Copy.classifyDeps")(function* (
   const rootManifest = yield* readJsonObject(path.join(config.repoRoot, "package.json"), "package.json");
   const rootCatalog = stringRecord(rootManifest.catalog);
   const collect = (field: string, allowed: ReadonlyArray<string>, kind: "runtime" | "dev") =>
-    Effect.forEach(R.toEntries(stringRecord(manifest[field])), ([name, spec]) =>
-      Effect.gen(function* () {
+    Effect.forEach(R.toEntries(stringRecord(manifest[field])), Effect.fnUntraced(function* ([name, spec]) {
         if (Str.startsWith("@effected/")(name) || isIgnoredUpstreamDep(name)) return O.none<NewDep>();
         if (!A.contains(allowed, name)) {
           return yield* UnexpectedDependency.make({ module, name, field });
@@ -350,8 +348,8 @@ const classifyDeps = Effect.fn("Copy.classifyDeps")(function* (
   return A.dedupeWith(A.getSomes([...runtime, ...peers, ...dev]), (a, b) => a.name === b.name);
 });
 
-const sortedObject = (record: Readonly<Record<string, unknown>>): Record<string, unknown> =>
-  R.fromEntries(A.sort(R.toEntries(record), Order.mapInput(Order.string, ([key]: readonly [string, unknown]) => key)));
+const sortedRecord = (record: Readonly<Record<string, string>>): Record<string, string> =>
+  R.fromEntries(A.sort(R.toEntries(record), Order.mapInput(Order.String, ([key]: readonly [string, string]) => key)));
 
 /**
  * Registers new dependencies in `scratchpad/package.json`, keeping each
@@ -372,13 +370,13 @@ const sortedObject = (record: Readonly<Record<string, unknown>>): Record<string,
  * @since 0.0.0
  */
 export const registerDeps = Effect.fn("Copy.registerDeps")(function* (repoRoot: string, deps: ReadonlyArray<NewDep>) {
-  if (A.isEmptyReadonlyArray(deps)) return 0;
+  if (A.isReadonlyArrayEmpty(deps)) return 0;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const file = path.join(repoRoot, "scratchpad", "package.json");
   const manifest = yield* readJsonObject(file, "scratchpad/package.json");
   let added = 0;
-  const apply = (field: string, kind: "runtime" | "dev"): Record<string, unknown> => {
+  const apply = (field: string, kind: "runtime" | "dev"): Record<string, string> => {
     const existing = stringRecord(manifest[field]);
     const next = A.reduce(
       A.filter(deps, (dep) => dep.kind === kind),
@@ -389,14 +387,17 @@ export const registerDeps = Effect.fn("Copy.registerDeps")(function* (repoRoot: 
         return R.set(acc, dep.name, dep.spec);
       }
     );
-    return sortedObject(next);
+    return sortedRecord(next);
   };
   const updated = {
     ...manifest,
     dependencies: apply("dependencies", "runtime"),
     devDependencies: apply("devDependencies", "dev"),
   };
-  yield* fs.writeFileString(file, `${encodeJsonObject(updated)}\n`);
+  const text = yield* encodeJsonObject(updated).pipe(
+    Effect.mapError((issue) => ManifestInvalid.make({ path: "scratchpad/package.json", detail: String(issue) }))
+  );
+  yield* fs.writeFileString(file, `${text}\n`);
   return added;
 });
 
@@ -431,7 +432,7 @@ export const upstreamEntries = Effect.fn("Copy.upstreamEntries")(function* (upst
     exportsMap,
     ([subpath, file]) => [subpath, Str.slice("./src/".length)(file)] as const
   );
-  return A.isEmptyReadonlyArray(entries) ? [[".", "index.ts"] as const] : entries;
+  return A.isReadonlyArrayEmpty(entries) ? [[".", "index.ts"] as const] : entries;
 });
 
 /**
@@ -496,11 +497,10 @@ const carryDocs = Effect.fn("Copy.carryDocs")(function* (
   const path = yield* Path.Path;
   const up = upstreamPaths(module);
   const lab = labPaths(module);
-  const readOptional = (relative: string) =>
-    Effect.gen(function* () {
-      const absolute = path.join(config.upstreamRoot, relative);
-      return (yield* fs.exists(absolute)) ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
-    });
+  const readOptional = Effect.fn("Copy.readOptional")(function* (relative: string) {
+    const absolute = path.join(config.upstreamRoot, relative);
+    return (yield* fs.exists(absolute)) ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
+  });
   const manifest = yield* readJsonObject(path.join(config.upstreamRoot, up.packageJson), up.packageJson);
   const license = yield* readOptional(up.license);
   if (O.isSome(license)) {
@@ -509,9 +509,10 @@ const carryDocs = Effect.fn("Copy.carryDocs")(function* (
   const readme = O.getOrElse(yield* readOptional(up.readme), () => `# @effected/${module}\n`);
   yield* fs.writeFileString(
     path.join(config.repoRoot, lab.sourceDir, "README.md"),
-    readmeSkeleton(module, readme, {
-      packageName: S.is(S.String)(manifest.name) ? manifest.name : `@effected/${module}`,
-      version: S.is(S.String)(manifest.version) ? manifest.version : "unknown",
+    readmeSkeleton(readme, {
+      module,
+      packageName: isString(manifest.name) ? manifest.name : `@effected/${module}`,
+      version: isString(manifest.version) ? manifest.version : "unknown",
       commit: effectedCommit,
       hasLicense: O.isSome(license),
       notices,
@@ -524,7 +525,7 @@ const carryDocs = Effect.fn("Copy.carryDocs")(function* (
   );
   yield* fs.writeFileString(
     path.join(config.repoRoot, lab.sourceDir, "KNOWLEDGE.md"),
-    assembleKnowledge(module, effectedCommit, sections)
+    assembleKnowledge({ module, commit: effectedCommit }, sections)
   );
   yield* fs.writeFileString(path.join(config.repoRoot, lab.tsconfig), moduleTsconfig(module));
 });
@@ -586,12 +587,12 @@ export const copyModule = Effect.fn("Copy.copyModule")(function* (
   }
   const kitExports = yield* readKitExports(config);
   yield* fs.copy(upstreamSrc, labSrc, { preserveTimestamps: true });
-  const sourceFiles = yield* rewriteTree(config, module, lab.sourceDir, up.srcDir, kitExports);
+  const sourceFiles = yield* rewriteTree(config, lab.sourceDir, up.srcDir, kitExports);
   const upstreamTest = path.join(config.upstreamRoot, up.testDir);
   let testFiles = 0;
   if (yield* fs.exists(upstreamTest)) {
     yield* fs.copy(upstreamTest, path.join(config.repoRoot, lab.testDir), { preserveTimestamps: true });
-    testFiles = yield* rewriteTree(config, module, lab.testDir, up.testDir, kitExports);
+    testFiles = yield* rewriteTree(config, lab.testDir, up.testDir, kitExports);
   }
   const bytes = yield* fixturesBytes(config.repoRoot, lab.testDir);
   const notices = yield* collectNotices(config.repoRoot, lab.sourceDir);

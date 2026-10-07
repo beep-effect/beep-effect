@@ -11,8 +11,10 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { type GateName, GateFailed } from "./Audit.errors.ts";
@@ -20,9 +22,20 @@ import { listTsFiles, upstreamEntries } from "./Copy.ts";
 import { type ExportEntry, exportKindCovers, type ModuleName, type AuditTarget } from "./Ledger.schema.ts";
 import { foreignSpecifierLines, readExportFacets, scanUnsafeAssertions, type UnsafeAssertion } from "./Exports.ts";
 import { isModuleTarget, labPaths, type RunnerConfig, upstreamPaths } from "./Paths.ts";
-import { heavy, runInherited } from "./Process.ts";
+import { captureExit, heavy, runInherited } from "./Process.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Gates");
+
+/**
+ * Which gate finished and how its command exited.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GateOutcome {
+  readonly gate: GateName;
+  readonly exitCode: number;
+}
 
 /**
  * Prints the one-line verdict of a gate.
@@ -33,17 +46,25 @@ const $I = $ScratchpadId.create("effected/runner/Gates");
  * import { verdict } from "@beep/scratchpad/effected/runner/Gates"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(verdict("yaml", "check", 0))) // true
+ * console.log(Effect.isEffect(verdict("yaml", { gate: "check", exitCode: 0 }))) // true
  * ```
  *
  * @category observability
  * @since 0.0.0
  */
-export const verdict = (target: AuditTarget, gate: GateName, exitCode: number): Effect.Effect<void> =>
-  Console.log(`[effected] ${target} ${gate}: ${exitCode === 0 ? "ok" : `red (exit ${exitCode})`}`);
+export const verdict: {
+  (outcome: GateOutcome): (target: AuditTarget) => Effect.Effect<void>;
+  (target: AuditTarget, outcome: GateOutcome): Effect.Effect<void>;
+} = dual(
+  2,
+  (target: AuditTarget, outcome: GateOutcome): Effect.Effect<void> =>
+    Console.log(
+      `[effected] ${target} ${outcome.gate}: ${outcome.exitCode === 0 ? "ok" : `red (exit ${outcome.exitCode})`}`
+    )
+);
 
 const gateExit = Effect.fn("Gates.gateExit")(function* (target: AuditTarget, gate: GateName, exitCode: number) {
-  yield* verdict(target, gate, exitCode);
+  yield* verdict(target, { gate, exitCode });
   if (exitCode !== 0) {
     return yield* GateFailed.make({ target, gate, exitCode, problems: [] });
   }
@@ -126,8 +147,7 @@ export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig,
   const expected: ReadonlyArray<ExportEntry> = A.flatMap(entries, ([entry, srcRelative]) =>
     readExportFacets(path.join(config.upstreamRoot, upstreamPaths(module).srcDir, srcRelative), entry)
   );
-  const actualPerEntry = yield* Effect.forEach(entries, ([entry, srcRelative]) =>
-    Effect.gen(function* () {
+  const actualPerEntry = yield* Effect.forEach(entries, Effect.fnUntraced(function* ([entry, srcRelative]) {
       const file = path.join(config.repoRoot, lab.sourceDir, srcRelative);
       if (!(yield* fs.exists(file))) {
         return { entry, facets: A.empty<ExportEntry>(), missingFile: O.some(`${lab.sourceDir}/${srcRelative}`) };
@@ -140,15 +160,15 @@ export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig,
     A.findFirst(haystack, (candidate) => candidate.entry === needle.entry && candidate.name === needle.name);
   const missingFiles = A.map(A.getSomes(A.map(actualPerEntry, (result) => result.missingFile)), (file) => `missing entry file ${file}`);
   const missing = A.filterMap(expected, (entry) =>
-    O.isNone(find(actual, entry)) ? O.some(`missing export ${describe(entry)}`) : O.none()
+    O.isNone(find(actual, entry)) ? Result.succeed(`missing export ${describe(entry)}`) : Result.failVoid
   );
   const mismatched = A.filterMap(expected, (entry) =>
     O.match(find(actual, entry), {
-      onNone: () => O.none<string>(),
+      onNone: () => Result.failVoid,
       onSome: (found) =>
         exportKindCovers(found.kind, entry.kind)
-          ? O.none<string>()
-          : O.some(`kind mismatch ${describe(entry)}: lab exports ${found.kind}`),
+          ? Result.failVoid
+          : Result.succeed(`kind mismatch ${describe(entry)}: lab exports ${found.kind}`),
     })
   );
   const added = A.filter(actual, (entry) => O.isNone(find(expected, entry)));
@@ -178,17 +198,78 @@ export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig,
   yield* Console.log(
     `[effected] ${module} parity: ${expected.length} expected, ${actual.length} actual, ${added.length} added, ${unsafeLines.length} unsafe assertion(s)${strict ? "" : " (advisory before S1)"}`
   );
-  if (A.isNonEmptyReadonlyArray(problems)) {
-    yield* verdict(module, "parity", 1);
+  if (A.isReadonlyArrayNonEmpty(problems)) {
+    yield* verdict(module, { gate: "parity", exitCode: 1 });
     return yield* GateFailed.make({ target: module, gate: "parity", exitCode: 1, problems });
   }
-  yield* verdict(module, "parity", 0);
+  yield* verdict(module, { gate: "parity", exitCode: 0 });
   return report;
 });
 
 /**
- * The check gate: tsgo (TypeScript plus Effect diagnostics) on the target's
- * tsconfig, admitted through `beep-heavy`.
+ * Effect diagnostics the canary file must provoke; each is a rule whose
+ * reporting proves the language-service plugin and the repo severity map are
+ * live (`missingPipeableSignature` is `off` upstream, so only the map turns it
+ * on).
+ *
+ * **Example** (List the canary codes)
+ *
+ * ```ts
+ * import { CANARY_DIAGNOSTICS } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * console.log(CANARY_DIAGNOSTICS.length) // 2
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CANARY_DIAGNOSTICS = ["effect(missingPipeableSignature)", "effect(strictBooleanExpressions)"] as const;
+
+/**
+ * Canary diagnostics a tsgo report failed to mention.
+ *
+ * **Example** (Detect a silent plugin)
+ *
+ * ```ts
+ * import { missingCanaryDiagnostics } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * console.log(missingCanaryDiagnostics("x.ts(1,1): error TS2322: nope")) // ["effect(missingPipeableSignature)", "effect(strictBooleanExpressions)"]
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const missingCanaryDiagnostics = (report: string): ReadonlyArray<string> =>
+  A.filter(CANARY_DIAGNOSTICS, (code) => !Str.includes(code)(report));
+
+const canary = Effect.fn("Gates.canary")(function* (config: RunnerConfig, target: AuditTarget) {
+  const result = yield* captureExit(
+    heavy({
+      command: "bun",
+      args: ["run", "--cwd", "scratchpad", "tsgo", "-p", "effected/.canary/tsconfig.json", "--noEmit", "--pretty", "false"],
+      cwd: config.repoRoot,
+    })
+  );
+  const missing = missingCanaryDiagnostics(result.output);
+  if (result.exitCode === 0 || A.isReadonlyArrayNonEmpty(missing)) {
+    yield* verdict(target, { gate: "check", exitCode: 1 });
+    return yield* GateFailed.make({
+      target,
+      gate: "check",
+      exitCode: 1,
+      problems: [
+        "effect diagnostics are not live: the canary at scratchpad/effected/.canary was not flagged",
+        ...A.map(missing, (code) => `canary missing ${code}`),
+      ],
+    });
+  }
+  yield* Console.log(`[effected] ${target} check: effect diagnostics live (canary flagged ${CANARY_DIAGNOSTICS.length} rules)`);
+});
+
+/**
+ * The check gate: proves Effect diagnostics are live with the canary, then
+ * runs tsgo (TypeScript plus Effect diagnostics) on the target's tsconfig,
+ * both admitted through `beep-heavy`.
  *
  * **Example** (Run the check gate)
  *
@@ -204,6 +285,7 @@ export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig,
  * @since 0.0.0
  */
 export const check = Effect.fn("Gates.check")(function* (config: RunnerConfig, target: AuditTarget) {
+  yield* canary(config, target);
   const exitCode = yield* runInherited(
     heavy({
       command: "bun",
@@ -214,11 +296,148 @@ export const check = Effect.fn("Gates.check")(function* (config: RunnerConfig, t
   yield* gateExit(target, "check", exitCode);
 });
 
-const LAWS = ["effect-imports", "effect-fn", "terse-effect", "native-runtime"] as const;
+/**
+ * The repo law canary: one file violating oxlint and each of the four laws,
+ * included in every lint run so a silent tool turns the gate red.
+ *
+ * **Example** (Name the canary)
+ *
+ * ```ts
+ * import { LAW_CANARY } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * console.log(LAW_CANARY.endsWith("LawsCanary.ts")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const LAW_CANARY = "scratchpad/effected/.canary/LawsCanary.ts";
 
 /**
- * The lint gate: oxlint over the target's directories, then the four beep
- * laws over its expanded file list.
+ * Laws run on the real paths; `effect-imports` runs separately on a mirror.
+ *
+ * **Example** (List the path laws)
+ *
+ * ```ts
+ * import { PATH_LAWS } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * console.log(PATH_LAWS.includes("effect-fn")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PATH_LAWS = ["effect-fn", "terse-effect", "native-runtime"] as const;
+
+/**
+ * The paths one linter run is judged against: the canary it must report and
+ * the target files it must not.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface ReportScope {
+  readonly canaryPath: string;
+  readonly targets: ReadonlyArray<string>;
+}
+
+/**
+ * How one linter run treated the canary (live when reported) and the target
+ * files (offenders when reported).
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface ReportVerdict {
+  readonly live: boolean;
+  readonly offenders: ReadonlyArray<string>;
+}
+
+/**
+ * Judges a linter report against its scope: a path counts as reported when a
+ * line names it as `path:` or as a bare path.
+ *
+ * **Example** (Judge a law report)
+ *
+ * ```ts
+ * import { judgeReport } from "@beep/scratchpad/effected/runner/Gates"
+ * import { pipe } from "effect/Function"
+ *
+ * const scope = { canaryPath: "canary.ts", targets: ["a.ts", "b.ts"] }
+ * console.log(judgeReport("- canary.ts:1:1 [rule] x", scope)) // { live: true, offenders: [] }
+ * console.log(pipe("a.ts:3:1 bad", judgeReport(scope))) // { live: false, offenders: ["a.ts"] }
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export const judgeReport: {
+  (scope: ReportScope): (report: string) => ReportVerdict;
+  (report: string, scope: ReportScope): ReportVerdict;
+} = dual(2, (report: string, scope: ReportScope): ReportVerdict => {
+  const lines = A.map(Str.split("\n")(report), Str.trim);
+  const mentions = (file: string): boolean => Str.includes(`${file}:`)(report) || A.contains(lines, file);
+  return { live: mentions(scope.canaryPath), offenders: A.filter(scope.targets, mentions) };
+});
+
+const judged = Effect.fn("Gates.judged")(function* (
+  target: AuditTarget,
+  tool: string,
+  report: string,
+  verdictOf: ReportVerdict
+) {
+  if (Str.isNonEmpty(Str.trim(report))) {
+    yield* Console.log(Str.trimEnd(report));
+  }
+  if (!verdictOf.live) {
+    return yield* GateFailed.make({
+      target,
+      gate: "lint",
+      exitCode: 1,
+      problems: [`${tool} did not report the canary ${LAW_CANARY}; the tool is not checking these paths`],
+    });
+  }
+  if (A.isReadonlyArrayNonEmpty(verdictOf.offenders)) {
+    return yield* GateFailed.make({
+      target,
+      gate: "lint",
+      exitCode: 1,
+      problems: A.map(verdictOf.offenders, (file) => `${tool} reported ${file}`),
+    });
+  }
+  yield* Console.log(`[effected] ${target} lint: ${tool} clean (canary flagged)`);
+});
+
+const mirrorForImports = Effect.fn("Gates.mirrorForImports")(function* (
+  config: RunnerConfig,
+  target: AuditTarget,
+  files: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = `coverage/effected-laws/${target}`;
+  yield* fs.remove(path.join(config.repoRoot, root), { recursive: true, force: true });
+  const mirrored = yield* Effect.forEach([...files, LAW_CANARY], Effect.fnUntraced(function* (file) {
+      const destination = `${root}/${file}`;
+      yield* fs.makeDirectory(path.dirname(path.join(config.repoRoot, destination)), { recursive: true });
+      yield* fs.copyFile(path.join(config.repoRoot, file), path.join(config.repoRoot, destination));
+      return destination;
+    })
+  );
+  return { root, mirrored };
+});
+
+/**
+ * The lint gate: oxlint, then the four beep laws, each run together with the
+ * law canary so a tool that silently checks nothing fails the gate.
+ *
+ * **Details**
+ *
+ * `effect-fn`, `terse-effect` and `native-runtime` scan scratchpad paths and
+ * run on the real files. `effect-imports` excludes `scratchpad/` by design
+ * and promotes no family yet, so it runs with `--candidate` on a git-ignored
+ * mirror under `coverage/effected-laws/<target>`. The laws skip test files by
+ * scope; tsgo covers tests with the same Effect rules.
  *
  * **Example** (Run the lint gate)
  *
@@ -240,27 +459,33 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
   const directories = yield* Effect.filter([lab.sourceDir, ...lab.extraSources, lab.testDir], (directory) =>
     fs.exists(path.join(config.repoRoot, directory))
   );
-  const oxlint = yield* runInherited({
+  const files = yield* targetFiles(config.repoRoot, target);
+  const cli = (args: ReadonlyArray<string>) =>
+    captureExit({ command: "bun", args: ["packages/tooling/tool/cli/src/bin.ts", ...args], cwd: config.repoRoot });
+
+  const oxlint = yield* captureExit({
     command: "bunx",
-    args: ["--no-install", "oxlint", "--quiet", "--disable-nested-config", ...directories],
+    args: ["--no-install", "oxlint", "--quiet", "--disable-nested-config", LAW_CANARY, ...directories],
     cwd: config.repoRoot,
   });
-  if (oxlint !== 0) {
-    return yield* gateExit(target, "lint", oxlint);
+  yield* judged(target, "oxlint", oxlint.output, judgeReport(oxlint.output, { canaryPath: LAW_CANARY, targets: files }));
+
+  for (const law of PATH_LAWS) {
+    const run = yield* cli(["laws", law, "--check", "--include", A.join([...files, LAW_CANARY], ",")]);
+    yield* judged(target, `law ${law}`, run.output, judgeReport(run.output, { canaryPath: LAW_CANARY, targets: files }));
   }
-  const files = yield* targetFiles(config.repoRoot, target);
-  const include = A.join(files, ",");
-  for (const law of LAWS) {
-    const exitCode = yield* runInherited({
-      command: "bun",
-      args: ["run", "beep", "laws", law, "--check", "--include", include],
-      cwd: config.repoRoot,
-    });
-    if (exitCode !== 0) {
-      yield* Console.log(`[effected] ${target} lint: law ${law} red`);
-      return yield* gateExit(target, "lint", exitCode);
-    }
-  }
+
+  const mirror = yield* mirrorForImports(config, target, files);
+  const imports = yield* cli(["laws", "effect-imports", "--check", "--candidate", "--include", A.join(mirror.mirrored, ",")]);
+  yield* judged(
+    target,
+    "law effect-imports (mirror)",
+    imports.output,
+    judgeReport(imports.output, {
+      canaryPath: `${mirror.root}/${LAW_CANARY}`,
+      targets: A.map(files, (file) => `${mirror.root}/${file}`),
+    })
+  );
   yield* gateExit(target, "lint", 0);
 });
 
@@ -305,7 +530,25 @@ export const test = Effect.fn("Gates.test")(function* (config: RunnerConfig, tar
 const TEMPLATE_PATH = "scratchpad/docgen.effected.template.json";
 
 /**
- * Writes `scratchpad/docgen.<target>.json` from the shared template.
+ * The docgen canary: a module whose one Example does not compile, proving the
+ * docgen run typechecks examples.
+ *
+ * **Example** (Name the docgen canary directory)
+ *
+ * ```ts
+ * import { DOCGEN_CANARY_SRC } from "@beep/scratchpad/effected/runner/Gates"
+ *
+ * console.log(DOCGEN_CANARY_SRC) // "effected/.canary/docgen"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DOCGEN_CANARY_SRC = "effected/.canary/docgen";
+
+/**
+ * Writes `scratchpad/<configFile>` from the shared template with `srcDir`
+ * substituted for every `effected/__MODULE__` reference.
  *
  * **Example** (Materialize a docgen config)
  *
@@ -314,22 +557,64 @@ const TEMPLATE_PATH = "scratchpad/docgen.effected.template.json";
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(writeDocgenConfig(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * console.log(Effect.isEffect(writeDocgenConfig(config, { srcDir: "effected/jsonc", configFile: "docgen.jsonc.json" }))) // true
  * ```
  *
  * @category commands
  * @since 0.0.0
  */
-export const writeDocgenConfig = Effect.fn("Gates.writeDocgenConfig")(function* (config: RunnerConfig, target: AuditTarget) {
+export const writeDocgenConfig = Effect.fn("Gates.writeDocgenConfig")(function* (
+  config: RunnerConfig,
+  options: { readonly srcDir: string; readonly configFile: string }
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const template = yield* fs.readFileString(path.join(config.repoRoot, TEMPLATE_PATH));
-  yield* fs.writeFileString(path.join(config.repoRoot, labPaths(target).docgenConfig), Str.replaceAll("__MODULE__", target)(template));
+  const outDirName = Str.replaceAll("/", "-")(Str.replace(/^effected\//, "")(options.srcDir));
+  const rendered = template
+    .replaceAll("effected/__MODULE__", options.srcDir)
+    .replaceAll("generated-docs/__MODULE__", `generated-docs/${outDirName}`);
+  yield* fs.writeFileString(path.join(config.repoRoot, "scratchpad", options.configFile), rendered);
 });
 
+const runDocgen = (config: RunnerConfig, configFile: string) =>
+  captureExit(
+    heavy({
+      command: "bun",
+      args: ["run", "--cwd", "scratchpad", "docgen", "--config-file", configFile],
+      cwd: config.repoRoot,
+    })
+  );
+
+const docgenCanary = Effect.fn("Gates.docgenCanary")(function* (config: RunnerConfig, target: AuditTarget) {
+  yield* writeDocgenConfig(config, { srcDir: DOCGEN_CANARY_SRC, configFile: "docgen.effected-canary.json" });
+  const result = yield* runDocgen(config, "docgen.effected-canary.json");
+  const live = result.exitCode !== 0 && Str.includes("DocgenCanary")(result.output) && Str.includes("TS2345")(result.output);
+  if (!live) {
+    yield* Console.log(result.output);
+    return yield* GateFailed.make({
+      target,
+      gate: "docgen",
+      exitCode: 1,
+      problems: [`docgen did not reject the ill-typed canary example under scratchpad/${DOCGEN_CANARY_SRC}`],
+    });
+  }
+  yield* Console.log(`[effected] ${target} docgen: example typechecking live (canary rejected)`);
+});
+
+const DOCTEST_FILES = /doctest: (\d+) file\(s\)/;
+
 /**
- * The docgen gate: materialize the config, run docgen with every enforcement
- * flag on, then the repo's doctest verifier scoped to the target.
+ * The docgen gate: proves example typechecking is live with the canary, runs
+ * docgen with every enforcement flag on, then the repo doctest verifier.
+ *
+ * **Details**
+ *
+ * The repo doctest verifier discovers `packages/**` and `apps/**` only, so it
+ * selects zero scratchpad files; the gate states that rather than reporting a
+ * * vacuous pass. Runnable doctest fences execute in the test
+ * gate through the `@effect/doctest` vitest plugin.
  *
  * **Example** (Run the docgen gate)
  *
@@ -345,23 +630,37 @@ export const writeDocgenConfig = Effect.fn("Gates.writeDocgenConfig")(function* 
  * @since 0.0.0
  */
 export const docgen = Effect.fn("Gates.docgen")(function* (config: RunnerConfig, target: AuditTarget) {
-  yield* writeDocgenConfig(config, target);
-  const generated = yield* runInherited(
-    heavy({
-      command: "bun",
-      args: ["run", "--cwd", "scratchpad", "docgen", "--config-file", `docgen.${target}.json`],
-      cwd: config.repoRoot,
-    })
-  );
-  if (generated !== 0) {
-    return yield* gateExit(target, "docgen", generated);
+  yield* docgenCanary(config, target);
+  const configFile = `docgen.${target}.json`;
+  yield* writeDocgenConfig(config, { srcDir: labPaths(target).docgenSrcDir, configFile });
+  const generated = yield* runDocgen(config, configFile);
+  yield* Console.log(Str.trimEnd(generated.output));
+  if (generated.exitCode !== 0) {
+    return yield* gateExit(target, "docgen", generated.exitCode);
   }
-  const verified = yield* runInherited({
+  const verified = yield* captureExit({
     command: "bun",
-    args: ["run", "beep", "docgen", "doctest", "verify", "--include", `${labPaths(target).sourceDir}/**/*.ts`],
+    args: [
+      "packages/tooling/tool/cli/src/bin.ts",
+      "docgen",
+      "doctest",
+      "verify",
+      "--include",
+      `${labPaths(target).sourceDir}/**/*.ts`,
+    ],
     cwd: config.repoRoot,
   });
-  yield* gateExit(target, "docgen", verified);
+  yield* Console.log(Str.trimEnd(verified.output));
+  const files = O.getOrElse(
+    O.map(O.fromNullOr(DOCTEST_FILES.exec(verified.output)), (match) => Number(match[1])),
+    () => -1
+  );
+  if (files === 0) {
+    yield* Console.log(
+      `[effected] ${target} docgen: doctest verify selects no scratchpad files (repo discovery is packages/** and apps/** only); runnable fences run in the test gate`
+    );
+  }
+  yield* gateExit(target, "docgen", verified.exitCode);
 });
 
 /**
@@ -381,10 +680,26 @@ export const docgen = Effect.fn("Gates.docgen")(function* (config: RunnerConfig,
  * @category utilities
  * @since 0.0.0
  */
-export const gatePlan = (
-  target: AuditTarget,
-  stage: number
-): { readonly parity: boolean; readonly strict: boolean; readonly docgen: boolean; readonly coverage: boolean } =>
-  isModuleTarget(target)
-    ? { parity: true, strict: stage >= 1, docgen: stage >= 2, coverage: stage >= 3 }
-    : { parity: false, strict: true, docgen: true, coverage: false };
+export const gatePlan: {
+  (stage: number): (target: AuditTarget) => GatePlan;
+  (target: AuditTarget, stage: number): GatePlan;
+} = dual(
+  2,
+  (target: AuditTarget, stage: number): GatePlan =>
+    isModuleTarget(target)
+      ? { parity: true, strict: stage >= 1, docgen: stage >= 2, coverage: stage >= 3 }
+      : { parity: false, strict: true, docgen: true, coverage: false }
+);
+
+/**
+ * The gates `audit` runs for one target at one stage.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface GatePlan {
+  readonly parity: boolean;
+  readonly strict: boolean;
+  readonly docgen: boolean;
+  readonly coverage: boolean;
+}

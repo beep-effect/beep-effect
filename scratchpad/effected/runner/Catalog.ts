@@ -15,6 +15,7 @@
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { MODULE_NAMES, ModuleName, ProvisionalHome } from "./Ledger.schema.ts";
@@ -203,13 +204,19 @@ export const isIgnoredUpstreamDep = (name: string): boolean =>
  * ```ts
  * import { rowId } from "@beep/scratchpad/effected/runner/Catalog"
  *
+ * import { pipe } from "effect/Function"
+ *
  * console.log(rowId(1, "yaml")) // "w1-yaml"
+ * console.log(pipe(2, rowId("walker"))) // "w2-walker"
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const rowId = (wave: number, module: ModuleName): string => `w${wave}-${module}`;
+export const rowId: {
+  (module: ModuleName): (wave: number) => string;
+  (wave: number, module: ModuleName): string;
+} = dual(2, (wave: number, module: ModuleName): string => `w${wave}-${module}`);
 
 /**
  * Every module name the inventory covers, in ledger order; equal to

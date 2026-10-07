@@ -7,6 +7,7 @@
  */
 
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -46,7 +47,7 @@ import type { RunnerConfig } from "./Paths.ts";
 export const LEDGER_PATH = "scratchpad/effected/PORT_LEDGER.json";
 
 const decodeLedger = S.decodeUnknownEffect(LedgerJson);
-const encodeLedger = S.encodeSync(LedgerJson);
+const encodeLedger = S.encodeEffect(LedgerJson);
 
 const nowIso = Effect.map(DateTime.now, DateTime.formatIso);
 
@@ -142,7 +143,10 @@ export const readLedger = Effect.fn("Ledger.read")(function* (config: RunnerConf
 export const writeLedger = Effect.fn("Ledger.write")(function* (config: RunnerConfig, ledger: Ledger) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fs.writeFileString(path.join(config.repoRoot, LEDGER_PATH), `${encodeLedger(ledger)}\n`);
+  const text = yield* encodeLedger(ledger).pipe(
+    Effect.mapError((issue) => LedgerInvalid.make({ path: LEDGER_PATH, detail: String(issue) }))
+  );
+  yield* fs.writeFileString(path.join(config.repoRoot, LEDGER_PATH), `${text}\n`);
 });
 
 /**
@@ -175,7 +179,7 @@ export const initLedger = Effect.fn("Ledger.init")(function* (config: RunnerConf
     effectedCommit,
     startedAt: yield* nowIso,
     lastCheckpoint: null,
-    rows: A.filterMap(MODULE_CATALOG, (entry) => pendingRow(entry.module)),
+    rows: A.getSomes(A.map(MODULE_CATALOG, (entry) => pendingRow(entry.module))),
     notes: [],
   });
   yield* writeLedger(config, ledger);
@@ -192,18 +196,26 @@ export const initLedger = Effect.fn("Ledger.init")(function* (config: RunnerConf
  * import { findRow } from "@beep/scratchpad/effected/runner/LedgerStore"
  * import * as Effect from "effect/Effect"
  *
+ * import * as Exit from "effect/Exit"
+ *
  * const ledger = Ledger.make({ version: 1, effectedCommit: "abc", startedAt: "now", lastCheckpoint: null, rows: [], notes: [] })
- * console.log(Effect.runSync(Effect.result(findRow(ledger, "yaml")))._tag) // "Failure"
+ * console.log(Exit.isFailure(Effect.runSyncExit(findRow(ledger, "yaml")))) // true
  * ```
  *
  * @category queries
  * @since 0.0.0
  */
-export const findRow = (ledger: Ledger, module: ModuleName): Effect.Effect<LedgerRow, LedgerRowMissing> =>
-  O.match(
-    A.findFirst(ledger.rows, (row) => row.module === module),
-    { onNone: () => LedgerRowMissing.make({ module }), onSome: Effect.succeed }
-  );
+export const findRow: {
+  (module: ModuleName): (ledger: Ledger) => Effect.Effect<LedgerRow, LedgerRowMissing>;
+  (ledger: Ledger, module: ModuleName): Effect.Effect<LedgerRow, LedgerRowMissing>;
+} = dual(
+  2,
+  (ledger: Ledger, module: ModuleName): Effect.Effect<LedgerRow, LedgerRowMissing> =>
+    Effect.fromOption(
+      A.findFirst(ledger.rows, (row) => row.module === module),
+      () => LedgerRowMissing.make({ module })
+    )
+);
 
 const replaceRow = (ledger: Ledger, row: LedgerRow): Ledger =>
   Ledger.make({ ...ledger, rows: A.map(ledger.rows, (existing) => (existing.module === row.module ? row : existing)) });
@@ -341,8 +353,7 @@ export const setStage = Effect.fn("Ledger.setStage")(function* (
   note: string
 ) {
   const at = yield* nowIso;
-  const updated = yield* updateRow(config, module, (row, ledger) =>
-    Effect.gen(function* () {
+  const updated = yield* updateRow(config, module, Effect.fnUntraced(function* (row) {
       const forward = O.getOrNull(nextStage(row.stage));
       if (stage > row.stage && stage !== forward) {
         return yield* LedgerStageSkip.make({ module, from: row.stage, to: stage });
@@ -358,7 +369,6 @@ export const setStage = Effect.fn("Ledger.setStage")(function* (
         ...(note.length > 0 && stage >= row.stage ? [`${at} S${stage}: ${note}`] : []),
       ];
       const done = stage === DONE_STAGE;
-      void ledger;
       return LedgerRow.make({
         ...backfilled,
         stage,
@@ -374,7 +384,7 @@ export const setStage = Effect.fn("Ledger.setStage")(function* (
   const checkpoint = LedgerCheckpoint.make({
     module,
     stage,
-    commit: O.getOrNull(O.flatMap(A.last(updated.commits), (commit) => O.fromNullable(commit.sha))),
+    commit: O.getOrNull(O.flatMap(A.last(updated.commits), (commit) => O.fromNullOr(commit.sha))),
     at,
   });
   yield* writeLedger(config, Ledger.make({ ...ledger, lastCheckpoint: checkpoint }));

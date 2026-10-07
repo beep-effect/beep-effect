@@ -75,6 +75,7 @@
     "pdfjs-dist": "catalog:"
   },
   "devDependencies": {
+    "@beep/fc-runs": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/doctest": "catalog:",

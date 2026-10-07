@@ -3444,6 +3444,7 @@
         "pdfjs-dist": "catalog:",
       },
       "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/doctest": "catalog:",
@@ -3452,6 +3453,7 @@
         "@types/n3": "catalog:",
         "@types/node": "catalog:",
         "drizzle-kit": "catalog:",
+        "ts-morph": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
       },
