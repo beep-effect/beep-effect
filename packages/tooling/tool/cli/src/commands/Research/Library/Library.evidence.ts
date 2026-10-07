@@ -1311,11 +1311,17 @@ const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
  * @category models
  * @since 0.0.0
  */
-export class LibraryEffectiveCapture extends S.Class<LibraryEffectiveCapture>($I`LibraryEffectiveCapture`)({
-  revision: S.String,
-  capture: S.NullOr(LibraryCapture),
-  category: S.String,
-}) {}
+export class LibraryEffectiveCapture extends S.Class<LibraryEffectiveCapture>($I`LibraryEffectiveCapture`)(
+  {
+    revision: S.String,
+    capture: S.NullOr(LibraryCapture),
+    category: S.String,
+  },
+  $I.annote("LibraryEffectiveCapture", {
+    description:
+      "Validated current claim for one requested revision: its capture, if any, and the category it settles on.",
+  })
+) {}
 
 /** Select the latest validated claim in immutable catalog append order for each required revision.
  * **Details**

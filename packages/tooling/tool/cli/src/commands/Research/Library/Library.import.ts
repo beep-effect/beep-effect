@@ -909,10 +909,11 @@ const readReviewedDisposition = Effect.fn("Library.readReviewedDisposition")(fun
 /** Revalidate an explicit reviewed disposition before acquisition preserves it.
  * **Example** (Respecting an existing source review)
  * ```ts
- * declare const catalog: LibraryCatalog
- * declare const source: LibrarySource
- * declare const capture: LibraryCapture
- * const check = libraryDispositionValid("/library", catalog, source, capture)
+ * import { libraryDispositionValid } from "@beep/repo-cli/test/ResearchLibrary"
+ * const check = (
+ *   catalog: import("@beep/repo-cli/commands/Research").LibraryCatalog,
+ *   capture: import("@beep/repo-cli/commands/Research").LibraryCapture
+ * ) => libraryDispositionValid("/library", catalog, catalog.sources[0], capture)
  * ```
  * @internal
  * @category utilities
