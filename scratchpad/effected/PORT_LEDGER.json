@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "jsonl",
-    "stage": 1,
+    "module": "jsonc",
+    "stage": 2,
     "commit": null,
-    "at": "2026-10-07T06:59:18.969Z"
+    "at": "2026-10-07T07:04:12.067Z"
   },
   "rows": [
     {
@@ -192,7 +192,7 @@
       "module": "jsonc",
       "wave": 0,
       "position": 2,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -375,12 +375,17 @@
       "commits": [
         {
           "stage": 0,
+          "sha": "301a2501692479ca58d340f419edaf41b5cbbc68"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
-        "2026-10-07T06:56:49.701Z S1: S1 green: strict parity, tsgo+canary, oxlint+4 laws (effect-imports via mirror), 210 tests. Fixed crispening regression (object insert dropped keys), restored upstream NoOp for passed array indices, D15 test casts removed, terse helper-refs, @beep/utils subpath import."
+        "2026-10-07T06:56:49.701Z S1: S1 green: strict parity, tsgo+canary, oxlint+4 laws (effect-imports via mirror), 210 tests. Fixed crispening regression (object insert dropped keys), restored upstream NoOp for passed array indices, D15 test casts removed, terse helper-refs, @beep/utils subpath import.",
+        "2026-10-07T07:04:12.067Z S2: S2 green: docgen with all enforcement flags, JSDoc law clean over 13 files, README adapted to section 10.3 (badges/install/pre-1.0 removed, examples on lab imports and probed, four Port notes subsections, deviation 5 recorded as not a deviation), KNOWLEDGE.md carried."
       ],
       "closedAt": null
     },
