@@ -1,0 +1,14 @@
+{
+  "previous": "b477c7b6eee5e37617aeea19c779fa0bb7c04fd943276dd2b90d4b50e8c8733b",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (perf/lint-turbo-cache)",
+    "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/turborepo-task-qualification/research/lint-root-plan-baseline-review.md",
+      "sha256": "4a2747df022198e351b5de16a5c65945292a284023204730e8d75b3bb9559a2b"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint", "@beep/fc-runs#lint", "@beep/test-runner#lint"],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}

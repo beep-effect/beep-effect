@@ -106,13 +106,39 @@ maintained representation of the scanner's workspace discovery.
 | `lint:effect-imports-markdown` | Retain authored Markdown consumed by the scanner, including internal docs it actually reads. |
 | `goals:index-check` | Retain goal inputs and implementation dependency. |
 | `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. |
-| `lint:oxlint`, `lint:shadcn`, `lint:jsdoc-module-tags`, `lint:typos`, `knip:check`, `jsdoc:inventory:check` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `lint:oxlint`, `lint:shadcn`, `lint:jsdoc-module-tags`, `lint:typos`, `knip:check` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `jsdoc:inventory:check` | Cached since 2026-10-06: the inventory is a pure function of workspace manifests, `docgen.json`, `tsdoc.json` and the `{packages,apps,infra}` TypeScript sources (artifact directories excluded); the declared `.beep/ci/jsdoc-documentation.inventory.*` outputs restore on a hit. It was the single largest cost of a warm `bun run lint` (about 250 s). |
+| `jsdoc:ratchet:check` | Depends on `jsdoc:inventory:check` and the fingerprint; inputs are the committed totals baseline and the `{packages,apps}` sources the zero-legacy scan reads. Turbo skips it when the inventory task is red. |
+| `lint:tsconfig-overlay` | Every `tsconfig*.json` under `apps`, `infra` and `packages` (overlays, owners and build configs), artifact directories excluded. |
+| `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
+| `lint:effect-vitest` | The scanner's own D9 globs (`*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`) plus the committed inventory; check mode writes nothing. |
 | `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
 
 Root tasks also hash root workspace dependencies through Turbo's internal
 dependency hash. A task's displayed `inputs` map alone does not explain every
 possible invalidation.
+
+## Local full-scope lint plan (2026-10-06)
+
+A warm `bun run lint` on a clean tree spent about 6 minutes, of which 4m20s was
+the `lint:policy:medium` phase waiting on three uncached root tasks
+(`jsdoc:inventory:check` 251 s, `knowledge:semantic-delta` 101 s,
+`knowledge:refs-check` 25 s) while its 156 other tasks replayed from cache in
+zero seconds. Three decisions follow:
+
+- `jsdoc:inventory:check` is cached (row above).
+- The two git-delta knowledge checks compare the merge-base archive with HEAD.
+  They stay uncached, and a local full-scope plan (no review base, no PR) no
+  longer runs them: hosted full-scope plans and the changed-scope `lint:policy`
+  run, which carries an explicit base, still do. Run them by hand with
+  `bun run beep knowledge semantic-delta` and `bun run beep knowledge refs --check`.
+- The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks moved from
+  repo-cli subprocess steps into cached root Turbo tasks inside the medium and
+  state phases. `quality:test-tsgo` stays a repo-cli step because its Turbo task
+  (`package-test-typecheck`) is uncached by tripwire ruling. The root ESLint
+  program (`lint:jsdoc`) has no Turbo task and keeps a content-keyed ESLint cache
+  under `node_modules/.cache/eslint-root/` instead.
 
 ## Workspace overrides
 

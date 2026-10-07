@@ -79,7 +79,6 @@ const nonReusableTasks: ReadonlyArray<string> = [
   "fallow:flags:advisory",
   "fallow:security:advisory",
   "fallow:fix-preview:advisory",
-  "jsdoc:inventory:check",
   "changeset:status",
   "fallow:dead-code:check",
   "repo-sanity:bun-audit",
@@ -120,6 +119,10 @@ const directInputs: Readonly<Record<string, string>> = {
   "fallow:security:advisory": ".fallow/plugins/c3-probe.ts",
   "fallow:fix-preview:advisory": ".fallow/plugins/c3-probe.ts",
   "jsdoc:inventory:check": "packages/fixture/docgen.json",
+  "lint:tsconfig-overlay": "packages/fixture/tsconfig.check.json",
+  "lint:package-test-typecheck": "standards/test-typecheck.blindspot-baseline.jsonc",
+  "lint:effect-vitest": "standards/effect-vitest.inventory.jsonc",
+  "jsdoc:ratchet:check": "standards/jsdoc-totals.regression-baseline.jsonc",
   "changeset:status": ".changeset/c3-probe.md",
   "config-sync:check": "packages/fixture/docgen.json",
   "repo-sanity:changeset-graph": ".changeset/c3-probe.md",
@@ -162,7 +165,10 @@ const expectRootTaskContract = (id: string, task: RootTask, scripts: Readonly<Re
   expect(R.has(directInputs, name), id).toBe(true);
   expect(R.has(scripts, name), id).toBe(true);
   if (expectsFingerprintEdge(id, O.getOrThrow(R.get(scripts, name)))) {
-    expect(task.dependsOn, id).toEqual([fingerprintId]);
+    // The JSDoc ratchet compares the inventory its producer task restores from cache.
+    expect(task.dependsOn, id).toEqual(
+      id === "//#jsdoc:ratchet:check" ? [fingerprintId, "//#jsdoc:inventory:check"] : [fingerprintId]
+    );
   }
   expect(task.cache, id).toBe(!A.contains(nonReusableTasks, name));
   expect(task.env, id).toEqual(isFallowEnvelope(name) ? ["BEEP_PROOF_BASE"] : []);
