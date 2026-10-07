@@ -26,7 +26,7 @@ import type * as Config from "effect/Config";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process";
 import type { AuditError } from "./Audit.errors.ts";
-import { type CopyReport, copyModule, registerExisting, upstreamEntries } from "./Copy.ts";
+import { type CarryReport, carryDocs, collectNotices, type CopyReport, copyModule, registerExisting, upstreamEntries } from "./Copy.ts";
 import { readExportFacets } from "./Exports.ts";
 import { check, docgen, gatePlan, lint, type ParityReport, parity, test } from "./Gates.ts";
 import {
@@ -108,6 +108,8 @@ export interface AuditShape {
   readonly config: RunnerConfig;
   /** HEAD of the upstream checkout. @since 0.0.0 */
   readonly upstreamCommit: Effect.Effect<string, RunnerError>;
+  /** Reassemble KNOWLEDGE.md; write LICENSE, README and tsconfig when absent. @since 0.0.0 */
+  readonly carry: (module: ModuleName) => Effect.Effect<CarryReport, RunnerError>;
   /** S0 verbatim copy of one module. @since 0.0.0 */
   readonly copy: (module: ModuleName) => Effect.Effect<CopyReport, RunnerError>;
   /** Export parity, foreign specifiers and D15 assertions. @since 0.0.0 */
@@ -283,6 +285,10 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
   return Audit.of({
     config,
     upstreamCommit,
+    carry: Effect.fn("Audit.carry")(function* (module: ModuleName) {
+      const notices = yield* collectNotices(config.repoRoot, labPaths(module).sourceDir);
+      return yield* carryDocs(config, module, { effectedCommit: yield* upstreamCommit, notices });
+    }, provide),
     copy: Effect.fn("Audit.copy")(function* (module: ModuleName) {
       return yield* copyModule(config, module, yield* upstreamCommit);
     }, provide),

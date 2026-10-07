@@ -33,6 +33,15 @@ const copy = Command.make("copy", { module: moduleArgument }, Effect.fnUntraced(
   })
 ).pipe(Command.withDescription("S0: copy a module verbatim from upstream and fill its ledger row"));
 
+const carry = Command.make("carry", { module: moduleArgument }, Effect.fnUntraced(function* ({ module }) {
+    const audit = yield* Audit;
+    const report = yield* audit.carry(module);
+    yield* Console.log(
+      `[effected] ${module} carry: KNOWLEDGE.md (${report.knowledgeSections} sections), README ${report.wroteReadme ? "written" : "kept"}, LICENSE ${report.wroteLicense ? "written" : "kept or absent upstream"}`
+    );
+  })
+).pipe(Command.withDescription("Reassemble KNOWLEDGE.md; write LICENSE, README and tsconfig only when absent"));
+
 const parity = Command.make(
   "parity",
   { module: moduleArgument, strict: Flag.Boolean("strict").pipe(Flag.withDefault(false)) },
@@ -132,7 +141,7 @@ const ledger = Command.make(
 
 const root = Command.make("audit:effected").pipe(
   Command.withDescription("Gates and ledger of the @effected/* port lab (scratchpad/EFFECTED_PORT_GOAL.md)"),
-  Command.withSubcommands([copy, parity, check, lint, test, docgen, audit, ledger])
+  Command.withSubcommands([copy, carry, parity, check, lint, test, docgen, audit, ledger])
 );
 
 const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));

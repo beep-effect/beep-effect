@@ -487,11 +487,42 @@ export class CopyReport extends S.Class<CopyReport>($I`CopyReport`)(
   $I.annote("CopyReport", { description: "Counts from one verbatim copy." })
 ) {}
 
-const carryDocs = Effect.fn("Copy.carryDocs")(function* (
+/**
+ * What `carry` wrote for one module.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface CarryReport {
+  readonly knowledgeSections: number;
+  readonly wroteReadme: boolean;
+  readonly wroteLicense: boolean;
+}
+
+/**
+ * Writes the carried documentation surfaces of D4 for one module: always
+ * reassembles `KNOWLEDGE.md`; writes `LICENSE`, the adapted `README.md` and the
+ * section 5.3 tsconfig only when the lab does not have them, so an existing
+ * port's edited README survives.
+ *
+ * **Example** (Carry the docs of a module)
+ *
+ * ```ts
+ * import { carryDocs } from "@beep/scratchpad/effected/runner/Copy"
+ * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
+ * import * as Effect from "effect/Effect"
+ *
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * console.log(Effect.isEffect(carryDocs(config, "glob", { effectedCommit: "abc", notices: [] }))) // true
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const carryDocs = Effect.fn("Copy.carryDocs")(function* (
   config: RunnerConfig,
   module: ModuleName,
-  effectedCommit: string,
-  notices: ReadonlyArray<string>
+  provenance: { readonly effectedCommit: string; readonly notices: ReadonlyArray<string> }
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -501,36 +532,64 @@ const carryDocs = Effect.fn("Copy.carryDocs")(function* (
     const absolute = path.join(config.upstreamRoot, relative);
     return (yield* fs.exists(absolute)) ? O.some(yield* fs.readFileString(absolute)) : O.none<string>();
   });
+  const labFile = (name: string) => path.join(config.repoRoot, lab.sourceDir, name);
   const manifest = yield* readJsonObject(path.join(config.upstreamRoot, up.packageJson), up.packageJson);
   const license = yield* readOptional(up.license);
-  if (O.isSome(license)) {
-    yield* fs.writeFileString(path.join(config.repoRoot, lab.sourceDir, "LICENSE"), license.value);
+  const writeLicense = O.isSome(license) && !(yield* fs.exists(labFile("LICENSE")));
+  if (writeLicense && O.isSome(license)) {
+    yield* fs.writeFileString(labFile("LICENSE"), license.value);
   }
-  const readme = O.getOrElse(yield* readOptional(up.readme), () => `# @effected/${module}\n`);
-  yield* fs.writeFileString(
-    path.join(config.repoRoot, lab.sourceDir, "README.md"),
-    readmeSkeleton(readme, {
-      module,
-      packageName: isString(manifest.name) ? manifest.name : `@effected/${module}`,
-      version: isString(manifest.version) ? manifest.version : "unknown",
-      commit: effectedCommit,
-      hasLicense: O.isSome(license),
-      notices,
-    })
-  );
+  const writeReadme = !(yield* fs.exists(labFile("README.md")));
+  if (writeReadme) {
+    const readme = O.getOrElse(yield* readOptional(up.readme), () => `# @effected/${module}\n`);
+    yield* fs.writeFileString(
+      labFile("README.md"),
+      readmeSkeleton(readme, {
+        module,
+        packageName: isString(manifest.name) ? manifest.name : `@effected/${module}`,
+        version: isString(manifest.version) ? manifest.version : "unknown",
+        commit: provenance.effectedCommit,
+        hasLicense: O.isSome(license),
+        notices: provenance.notices,
+      })
+    );
+  }
   const claudeMd = O.getOrElse(yield* readOptional(up.claudeMd), () => "");
-  const links = okfLinks(module, claudeMd);
-  const sections = yield* Effect.forEach([up.claudeMd, ...links], (relative) =>
+  const sections = yield* Effect.forEach([up.claudeMd, ...okfLinks(module, claudeMd)], (relative) =>
     Effect.map(readOptional(relative), (content) => ({ path: relative, content }))
   );
   yield* fs.writeFileString(
-    path.join(config.repoRoot, lab.sourceDir, "KNOWLEDGE.md"),
-    assembleKnowledge({ module, commit: effectedCommit }, sections)
+    labFile("KNOWLEDGE.md"),
+    assembleKnowledge({ module, commit: provenance.effectedCommit }, sections)
   );
-  yield* fs.writeFileString(path.join(config.repoRoot, lab.tsconfig), moduleTsconfig(module));
+  if (!(yield* fs.exists(path.join(config.repoRoot, lab.tsconfig)))) {
+    yield* fs.writeFileString(path.join(config.repoRoot, lab.tsconfig), moduleTsconfig(module));
+  }
+  const report: CarryReport = {
+    knowledgeSections: sections.length,
+    wroteReadme: writeReadme,
+    wroteLicense: writeLicense,
+  };
+  return report;
 });
 
-const collectNotices = Effect.fn("Copy.collectNotices")(function* (repoRoot: string, sourceDir: string) {
+/**
+ * Header notices of every source file of a lab module (README attribution
+ * leads).
+ *
+ * **Example** (Collect notices)
+ *
+ * ```ts
+ * import { collectNotices } from "@beep/scratchpad/effected/runner/Copy"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectNotices("/repo", "scratchpad/effected/jsonc"))) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const collectNotices = Effect.fn("Copy.collectNotices")(function* (repoRoot: string, sourceDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* listTsFiles(repoRoot, sourceDir);
@@ -596,7 +655,7 @@ export const copyModule = Effect.fn("Copy.copyModule")(function* (
   }
   const bytes = yield* fixturesBytes(config.repoRoot, lab.testDir);
   const notices = yield* collectNotices(config.repoRoot, lab.sourceDir);
-  yield* carryDocs(config, module, effectedCommit, notices);
+  yield* carryDocs(config, module, { effectedCommit, notices });
   const manifest = yield* readJsonObject(path.join(config.upstreamRoot, up.packageJson), up.packageJson);
   const newDeps = yield* classifyDeps(config, module, entry, manifest);
   yield* registerDeps(config.repoRoot, newDeps);
