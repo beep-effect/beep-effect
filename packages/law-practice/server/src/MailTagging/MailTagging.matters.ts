@@ -1,6 +1,7 @@
 /**
  * The matter directory over a practice knowledge-graph bundle's DuckDB matter
- * tables, with contact addresses from a private overlay file.
+ * tables, with contact addresses from its correspondent tables and a private
+ * overlay file.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -29,6 +30,11 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeStateFileAt } from "../internal/MailTaggingStateFile.ts";
+import {
+  MatterContactEvidence,
+  MatterContactEvidenceSetting,
+  uniqueMatterCorrespondents,
+} from "./MailTagging.correspondents.ts";
 import { MailTaggingStateLocation } from "./MailTagging.state.ts";
 import type { MailTaggingStateError } from "@beep/law-practice-use-cases/MailTagging";
 import type { FileSystem } from "effect";
@@ -44,9 +50,10 @@ const listSeparator = " | ";
  *
  * **Details**
  *
- * The practice knowledge graph has no contact-to-matter relation, so contacts
- * come from this file. An address may be listed under more than one family
- * key; it is loaded as written. That such an address never routes an
+ * The overlay adds to what the practice knowledge graph resolves: an address
+ * the attorney has confirmed that the graph lacks, and the sender domains of
+ * a client, which the graph never supplies. An address may be listed under
+ * more than one family key; it is loaded as written. That such an address never routes an
  * attachment is the filer's rule, not a reason to drop data here.
  *
  * **Example** (Describe one matter's contacts)
@@ -252,19 +259,36 @@ const indexOf = (bundle: Bundle, matters: ReadonlyArray<MatterRow>, builtAt: Dat
 const unreadable = (table: string) => () =>
   MailTaggingPortError.during("MatterDirectory", "snapshot", `${table} table unreadable`);
 
-const makeMatterDirectory = Effect.gen(function* () {
-  const db = yield* DuckDb;
+const readOverlay = Effect.gen(function* () {
   const path = yield* Path.Path;
   const location = yield* MailTaggingStateLocation;
   const overlay = yield* makeStateFileAt("matter-contacts", path.join(location.stateDirectory, contactsFile));
-  const contacts = yield* Effect.flatMap(
+  return yield* Effect.flatMap(
     overlay.read,
     O.match({
       onNone: () => Effect.succeed<ReadonlyArray<MatterContacts>>([]),
       onSome: (text) => Effect.mapError(decodeContacts(text), overlay.corrupt(O.none())),
     })
   );
-  const byFamily = contactsByFamily(contacts);
+});
+
+const graphContacts = (correspondents: Record<string, ReadonlyArray<EmailString>>): ReadonlyArray<MatterContacts> =>
+  A.map(R.toEntries(correspondents), ([familyKey, addresses]) => MatterContacts.make({ familyKey, addresses }));
+
+const makeMatterDirectory = Effect.gen(function* () {
+  const db = yield* DuckDb;
+  const evidence = yield* MatterContactEvidenceSetting;
+  const usesContacts = MatterContactEvidence.is.kg(evidence);
+  const overlay = usesContacts ? yield* readOverlay : [];
+
+  // The graph's unique addresses come first; the overlay adds to them.
+  const contactsOf = (matters: ReadonlyArray<MatterRow>) =>
+    usesContacts
+      ? uniqueMatterCorrespondents(A.map(matters, familyKeyOf)).pipe(
+          Effect.map((correspondents) => contactsByFamily(A.appendAll(graphContacts(correspondents), overlay))),
+          Effect.provideService(DuckDb, db)
+        )
+      : Effect.succeed<Record<string, MatterContacts>>({});
 
   return MatterDirectoryShape.make({
     snapshot: Effect.gen(function* () {
@@ -274,8 +298,9 @@ const makeMatterDirectory = Effect.gen(function* () {
       const dockets = yield* db
         .query(matterDocketsSql)
         .pipe(Effect.flatMap(decodeMatterDocketRows), Effect.mapError(unreadable("matter_dockets")));
+      const contacts = yield* contactsOf(matters);
       const builtAt = yield* DateTime.now;
-      return indexOf({ dockets: A.groupBy(dockets, familyKeyOf), contacts: byFamily }, matters, builtAt);
+      return indexOf({ dockets: A.groupBy(dockets, familyKeyOf), contacts }, matters, builtAt);
     }).pipe(Effect.withSpan("MatterDirectoryPracticeKg.snapshot")),
   });
 });
@@ -300,10 +325,17 @@ const makeMatterDirectory = Effect.gen(function* () {
  * such as `client_name`, is never selected. A row whose `client` is null, or
  * that arrives without the key, is an unattributed matter, not a failure.
  *
- * Contacts come from `matter-contacts.json` in the state directory, read once
- * when the layer is built: an array of {@link MatterContacts}. A missing file
- * means no matter has contacts. A file that does not decode fails the layer
- * with a `MailTaggingStateError`; nothing is tagged from a half-read overlay.
+ * Contact evidence follows {@link MatterContactEvidenceSetting}. With `off`,
+ * the default, no matter gets a contact address or domain and the overlay is
+ * not read. With `kg`, `snapshot` attaches to each matter the addresses the
+ * graph's correspondent rule resolves `unique` to it (see
+ * {@link uniqueMatterCorrespondents}); a candidate, a role mailbox, and a
+ * practice address never count. Then `matter-contacts.json` in the state
+ * directory, read once when the layer is built, adds its addresses after the
+ * graph's and supplies every contact domain: the graph supplies none, because
+ * a domain is shared across clients. A missing overlay adds nothing. An
+ * overlay that does not decode fails the layer with a
+ * `MailTaggingStateError`; nothing is tagged from a half-read overlay.
  *
  * **Gotchas**
  *

@@ -14,6 +14,7 @@ import {
   DocketIntakeError,
   DocketIntakeStore,
   DocketMailbox,
+  DocketPollReport,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { LiteralKit } from "@beep/schema";
 import { Context, DateTime, Effect, FileSystem, Layer, Order, Path, Ref } from "effect";
@@ -108,7 +109,10 @@ export const makeDocketRunId = (instant: DateTime.DateTime): DocketRunId =>
  * journal the create; an undo treats it as created by the adopting run. The
  * `undo-` kinds are what an undo of that run found and did: an event it
  * deleted, kept (the attorney had confirmed or recategorised it) or found
- * gone, and a message it unmarked or found gone.
+ * gone, and a message it unmarked or found gone. `run-completed` closes every
+ * poll cycle, including one that wrote nothing, with the cycle's counts, so
+ * every run is listed and can be undone; journals written before it existed
+ * simply have no such lines.
  *
  * **Example** (Check a journal kind)
  *
@@ -130,6 +134,7 @@ export const DocketJournalKind = LiteralKit([
   "undo-event-gone",
   "undo-message-unmarked",
   "undo-message-gone",
+  "run-completed",
 ]).pipe($I.annoteSchema("DocketJournalKind", { description: "What one docket intake journal line records." }));
 
 /**
@@ -187,6 +192,7 @@ export class DocketJournalEntry extends S.Class<DocketJournalEntry>($I`DocketJou
     receivedAt: optionalKey(S.NonEmptyString, "UTC receipt time of the message, on a message line."),
     idempotencyKey: optionalKey(S.NonEmptyString, "Idempotency key of a created event."),
     category: optionalKey(DocketCategory, "Docket category of a created event."),
+    counts: optionalKey(DocketPollReport, "Counts of the cycle, on a run-completed line."),
   },
   $I.annote("DocketJournalEntry", { description: "One line of the docket intake write journal." })
 ) {}
@@ -492,6 +498,35 @@ export const DocketJournalingPortsLive: Layer.Layer<
 );
 
 /**
+ * Journal the end of the current run with its counts.
+ *
+ * **Details**
+ *
+ * Every poll cycle ends with this line, also one that wrote nothing, so
+ * `runs` lists every run and `undo` of a run that wrote nothing is a clean
+ * no-op instead of an unknown run. A dry run has no journal and writes none.
+ *
+ * **Example** (Reference the completion record)
+ *
+ * ```ts
+ * import { recordDocketRunCompleted } from "@beep/law-practice-server/DocketIntake";
+ *
+ * console.log(typeof recordDocketRunCompleted);
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const recordDocketRunCompleted = Effect.fn("DocketJournal.runCompleted")(function* (report: DocketPollReport) {
+  const journal = yield* DocketIntakeJournal;
+  const runId = yield* journal.currentRun;
+  const at = yield* DateTime.now;
+  yield* journal.append([
+    DocketJournalEntry.make({ at, counts: O.some(report), kind: DocketJournalKind.Enum["run-completed"], runId }),
+  ]);
+});
+
+/**
  * Counts of one run in the journal.
  *
  * **Example** (Read a run summary)
@@ -519,6 +554,7 @@ export class DocketRunSummary extends S.Class<DocketRunSummary>($I`DocketRunSumm
     eventsAdopted: S.Natural.annotateKey({
       description: "Events the run found by key that no earlier journal line named.",
     }),
+    completed: optionalKey(DocketPollReport, "Counts of the cycle; absent for a run journaled before they were."),
   },
   $I.annote("DocketRunSummary", { description: "Counts of one docket intake run in the journal." })
 ) {}
@@ -529,6 +565,10 @@ const summarize = (lines: A.NonEmptyReadonlyArray<DocketJournalEntry>): DocketRu
   const first = A.headNonEmpty(lines);
   const count = (kind: DocketJournalKind) => A.length(A.filter(lines, (line) => line.kind === kind));
   return DocketRunSummary.make({
+    completed: O.flatMap(
+      A.findLast(lines, (line) => line.kind === DocketJournalKind.Enum["run-completed"]),
+      (line) => line.counts
+    ),
     eventsAdopted: count("event-adopted"),
     eventsCreated: count("event-created"),
     eventsDeleted: count("undo-event-deleted"),

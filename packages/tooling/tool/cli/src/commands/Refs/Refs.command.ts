@@ -48,7 +48,9 @@ const refreshCommand = Command.make(
     yield* Console.log(yield* RefsRefreshStatus.encodeJson(status));
   })
 ).pipe(
-  Command.withDescription("Pull clean main members and rebuild their reference indexes (operator only)"),
+  Command.withDescription(
+    "Pull clean members on their configured branches and rebuild reference indexes (operator only)"
+  ),
   Command.provide(ReferenceWorkspaceLive)
 );
 

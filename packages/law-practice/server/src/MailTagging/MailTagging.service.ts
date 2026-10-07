@@ -10,6 +10,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { PosInt } from "../internal/PosInt.ts";
+import { MatterContactEvidence, MatterContactEvidenceSetting } from "./MailTagging.correspondents.ts";
 import { DocumentStoreBox } from "./MailTagging.documents.ts";
 import { MailTaggingStateFile } from "./MailTagging.files.ts";
 import { MatterFolderDirectoryFile, MatterFolderMapConfig, MatterFolderMapLocation } from "./MailTagging.folders.ts";
@@ -44,6 +45,8 @@ const defaultRunLabel = "practice-mail-tagging";
  *
  * The paths are private operator state and are never tracked. `runLabel`
  * names the run in the shared Box API-call ledger; give each run its own.
+ * `contactEvidence` is `off` unless the caller turns the knowledge graph's
+ * contact evidence on with `kg`.
  * There is no environment lookup here: an entrypoint decodes this value and
  * hands it to {@link mailTaggingServiceConfigLayer}.
  *
@@ -98,6 +101,13 @@ export class MailTaggingServiceConfig extends S.Class<MailTaggingServiceConfig>(
       S.withConstructorDefault(Effect.succeed(defaultRunLabel))
     ).annotateKey({
       description: "Label of the run in the Box API-call ledger; defaults to the service name.",
+    }),
+    contactEvidence: MatterContactEvidence.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(MatterContactEvidence.Enum.off)),
+      S.withConstructorDefault(Effect.succeed(MatterContactEvidence.Enum.off))
+    ).annotateKey({
+      description:
+        "Where matter contact addresses come from: nowhere, or the knowledge graph and its overlay; defaults to off.",
     }),
   },
   $I.annote("MailTaggingServiceConfig", {
@@ -158,6 +168,7 @@ export const mailTaggingServiceConfigLayer = (
         excludedFolderIds: config.excludedFolderIds,
       })
     ),
+    Layer.succeed(MatterContactEvidenceSetting, config.contactEvidence),
     Layer.succeed(MatterFolderMapLocation, MatterFolderMapConfig.make({ path: config.folderMapPath })),
     Layer.succeed(KnownDocumentsLocation, KnownDocumentsConfig.make({ path: config.knownDocumentsPath })),
     Layer.succeed(

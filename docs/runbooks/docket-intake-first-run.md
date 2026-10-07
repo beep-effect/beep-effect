@@ -43,7 +43,7 @@ DOCKET_INTAKE_CERT_THUMBPRINT_SHA256="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_
 DOCKET_INTAKE_CERT_PRIVATE_KEY="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET_CERT_PRIVATE_KEY"
 DOCKET_INTAKE_MAILBOX="op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_M365_DOCKET_MAILBOX"
 DOCKET_INTAKE_TIME_ZONE="America/Chicago"
-DOCKET_INTAKE_STATE_DIR="/home/<you>/.local/state/beep/docket-intake-first-run"
+DOCKET_INTAKE_STATE_DIR="$HOME/.local/state/beep/docket-intake-first-run"
 AI_ANTHROPIC_API_KEY="op://BEEP_SECRETS/BEEP_SECRETS/AI_ANTHROPIC_API_KEY"
 ```
 
@@ -120,6 +120,13 @@ op run --env-file=$HOME/.config/beep-docket-intake/first-run.env -- bun run apps
 Undo also clears those messages from the service's ledger and moves its
 cursor back, so a later run reads them again. The undo counts appear on the
 run's line in `runs`.
+
+Every run is in `runs`, also one that wrote nothing; undoing such a run
+succeeds and reports all counts as 0.
+
+Undo never removes the six `Docket - *` master categories the service creates
+in the mailbox: they are harmless and the next run needs them. To remove them
+anyway, delete them by hand in Outlook (Categorize > All Categories).
 
 To throw the whole first run away afterwards, also remove the state
 directory: `rm -r ~/.local/state/beep/docket-intake-first-run`.

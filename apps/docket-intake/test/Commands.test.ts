@@ -187,6 +187,7 @@ describe("@beep/docket-intake commands", () => {
         expect(A.map(journal, (line) => line.kind)).toStrictEqual([
           ...A.replicate("event-created", 5),
           "message-marked",
+          "run-completed",
         ]);
         expect(HashMap.size(yield* Ref.get(harness.entries))).toBe(5);
         expect(yield* Ref.get(harness.marked)).toStrictEqual(["m1"]);
@@ -337,7 +338,7 @@ describe("@beep/docket-intake commands", () => {
 
         expect(before).toStrictEqual([]);
         expect(A.drop(lines, 1)).toStrictEqual([
-          '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":5,"messagesMarked":1,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0,"eventsAdopted":0}',
+          '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":5,"messagesMarked":1,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0,"eventsAdopted":0,"completed":{"entered":1,"failed":0,"needsReview":0,"notDocket":0,"processed":1,"seen":1}}',
         ]);
         assertSome(
           O.map(refused, (error) => error.kind),
@@ -397,6 +398,30 @@ describe("@beep/docket-intake commands", () => {
           ["failed", "no run run-20300101T000000000Z in the journal"],
           ["throttled", "stage calendar: throttled"],
         ]);
+      })
+    );
+  });
+
+  it.layer(CommandsLayer, { timeout: "10 seconds" })((it) => {
+    it.effect(
+      "lists a run that wrote nothing, and undoes it as a clean no-op",
+      Effect.fnUntraced(function* () {
+        const handlers = yield* makeTestHandlers;
+        const harness = yield* PipelineHarness;
+        const fake = yield* FakeM365;
+        yield* Ref.set(harness.messages, []);
+
+        yield* handlers.poll(noFlags);
+        yield* handlers.runs();
+        yield* handlers.undo({ dryRun: false, run: "latest", yes: true });
+        const journal = yield* readDocketJournal(STATE_DIRECTORY);
+
+        expect(A.drop(yield* printed, 1)).toStrictEqual([
+          '{"runId":"run-19700101T000000000Z","startedAt":"1970-01-01T00:00:00.000Z","eventsCreated":0,"messagesMarked":0,"eventsDeleted":0,"eventsKept":0,"eventsGone":0,"messagesUnmarked":0,"messagesGone":0,"eventsAdopted":0,"completed":{"entered":0,"failed":0,"needsReview":0,"notDocket":0,"processed":0,"seen":0}}',
+          '{"runId":"run-19700101T000000000Z","dryRun":false,"deleted":0,"kept":0,"gone":0,"unmarked":0,"messagesGone":0,"ledgerCleared":0,"messagesKept":0,"alreadyUndone":0}',
+        ]);
+        expect(A.map(journal, (line) => line.kind)).toStrictEqual(["run-completed"]);
+        expect(A.filter(yield* Ref.get(fake.calls), (call) => !Str.startsWith("get")(call))).toStrictEqual([]);
       })
     );
   });

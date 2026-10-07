@@ -206,6 +206,9 @@ const OptionalScope = S.Option(ProofScope);
 const pairKey = (stage: O.Option<string>, scope: O.Option<string>) =>
   `${O.getOrElse(stage, () => "<absent>")}/${O.getOrElse(scope, () => "<absent>")}`;
 
+// Hoisted: the oxlint no-inline-schema-compile rule forbids compiling a codec inside a test body.
+const decodeAdoptionTable = S.decodeEffect(S.fromJsonString(AdoptionTable));
+
 describe("@beep/ciops KPI reading", () => {
   it.effect("nearest-rank picks the sorted value at ceil(p*n/100)-1", () =>
     Effect.sync(() => {
@@ -527,7 +530,7 @@ describe("@beep/ciops KPI reading", () => {
         const fs = yield* FileSystem.FileSystem;
         const bytes = yield* fs.readFile(`${repoRoot}/${kpiOutputPaths.adoptionTable}`);
         expect(yield* sha256Of(bytes)).toBe(adoptionTableSha256);
-        const table = yield* S.decodeEffect(S.fromJsonString(AdoptionTable))(new TextDecoder().decode(bytes));
+        const table = yield* decodeAdoptionTable(new TextDecoder().decode(bytes));
         expect(yield* renderAdoptionTable(table)).toBe(new TextDecoder().decode(bytes));
         const probes = yield* (yield* CiOpsKpi).probes(kpiReadingInput(repoRoot));
         expect(
