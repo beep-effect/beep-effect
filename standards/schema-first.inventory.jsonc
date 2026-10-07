@@ -999,7 +999,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 269,
+      "line": 275,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },

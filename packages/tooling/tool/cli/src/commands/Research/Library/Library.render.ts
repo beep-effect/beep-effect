@@ -41,6 +41,10 @@ const css =
 const page = (title: string, body: string, script = "") =>
   `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(title)}</title><style>${css}</style>${body}${script}</html>`;
 
+const navigationScript = `<script>const records=[...document.querySelectorAll('.record')];const search=document.getElementById('search'),kind=document.getElementById('kind'),status=document.getElementById('status'),topic=document.getElementById('topic'),repo=document.getElementById('repo'),report=document.getElementById('report');function filter(){let shown=0;for(const record of records){record.hidden=!(record.textContent.toLowerCase().includes(search.value.toLowerCase())&&(!kind.value||record.dataset.kind===kind.value)&&(!status.value||record.dataset.status===status.value)&&(!topic.value||record.dataset.topics.split('|').includes(topic.value))&&(!repo.value||record.dataset.repo===repo.value)&&(!report.value||record.dataset.reports.split('|').includes(report.value)));if(!record.hidden)shown++;}document.getElementById('count').textContent=shown+' records shown';}for(const control of [search,kind,status,topic,repo,report])control.addEventListener('input',filter);filter();</script>`;
+// Only this static script becomes executable; callers supply already escaped projection markup.
+const indexPage = (body: string) => page("Research library", body, navigationScript);
+
 const renderProjection = Effect.fn("Research.Library.renderProjection")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -341,11 +345,8 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
       Str.isNonEmpty
     )
   )}<p id="count" aria-live="polite"></p><a href="index.md">Markdown index</a></header>`;
-  const script = `<script>const records=[...document.querySelectorAll('.record')];const search=document.getElementById('search'),kind=document.getElementById('kind'),status=document.getElementById('status'),topic=document.getElementById('topic'),repo=document.getElementById('repo'),report=document.getElementById('report');function filter(){let shown=0;for(const record of records){record.hidden=!(record.textContent.toLowerCase().includes(search.value.toLowerCase())&&(!kind.value||record.dataset.kind===kind.value)&&(!status.value||record.dataset.status===status.value)&&(!topic.value||record.dataset.topics.split('|').includes(topic.value))&&(!repo.value||record.dataset.repo===repo.value)&&(!report.value||record.dataset.reports.split('|').includes(report.value)));if(!record.hidden)shown++;}document.getElementById('count').textContent=shown+' records shown';}for(const control of [search,kind,status,topic,repo,report])control.addEventListener('input',filter);filter();</script>`;
-  yield* write(
-    "index.html",
-    page("Research library", `${header}<main>${A.join(reports, "")}${A.join(sources, "")}</main>`, script)
-  );
+
+  yield* write("index.html", indexPage(`${header}<main>${A.join(reports, "")}${A.join(sources, "")}</main>`));
   yield* write(
     "index.md",
     `# Research library\n\n${catalog.documents.length} reports; ${catalog.sources.length} sources; ${catalog.occurrences.length} citation occurrences.\n\n[Portable HTML navigation](index.html)\n\n## Reports\n\n${A.join(

@@ -126,7 +126,9 @@ runs:
         echo "BEEP_SETUP_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
 
     - name: Ensure native PDF text extraction
-      if: inputs.native-pdf-tools == 'true'
+      # The reusable heavy workflow is pinned to main. Its existing cache
+      # suffix identifies coverage before the new explicit input lands there.
+      if: inputs.native-pdf-tools == 'true' || inputs.turbo-cache-key-suffix == '-coverage'
       shell: bash
       run: |
         set -euo pipefail
