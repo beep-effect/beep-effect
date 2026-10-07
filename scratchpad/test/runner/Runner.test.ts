@@ -20,7 +20,7 @@ import {
   scanUnsafeAssertions,
   tsExtension,
 } from "../../effected/runner/Exports.ts";
-import { CANARY_DIAGNOSTICS, gatePlan, missingCanaryDiagnostics } from "../../effected/runner/Gates.ts";
+import { CANARY_DIAGNOSTICS, compareVersions, gatePlan, missingCanaryDiagnostics } from "../../effected/runner/Gates.ts";
 import { assembleKnowledge, moduleTsconfig, okfLinks, readmeSkeleton, scanVendorNotices } from "../../effected/runner/Knowledge.ts";
 import {
   AUDIT_TARGETS,
@@ -236,6 +236,11 @@ describe("gates and processes", () => {
       missingCanaryDiagnostics("a effect(missingPipeableSignature)\nb effect(strictBooleanExpressions)"),
       []
     );
+  });
+  it("orders tsgo versions numerically", () => {
+    assert.strictEqual(compareVersions("0.50.0", "0.48.1"), 1);
+    assert.strictEqual(compareVersions("0.9.0", "0.10.0"), -1);
+    assert.strictEqual(pipe("1.2.3", compareVersions("1.2.3")), 0);
   });
   it("renders and admits launches", () => {
     const launch = { command: "bun", args: ["install"], cwd: "/repo" };

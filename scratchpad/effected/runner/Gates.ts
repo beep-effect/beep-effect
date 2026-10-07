@@ -13,6 +13,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import type { Ordering } from "effect/Ordering";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -268,10 +270,84 @@ const canary = Effect.fn("Gates.canary")(function* (config: RunnerConfig, target
   yield* Console.log(`[effected] ${target} check: effect diagnostics live (canary flagged ${CANARY_DIAGNOSTICS.length} rules)`);
 });
 
+const EDITOR_TSGO_ROOT = /^(\d+)\.(\d+)\.(\d+)$/;
+
+/**
+ * Compares two semantic versions `major.minor.patch` numerically.
+ *
+ * **Example** (Order tsgo versions)
+ *
+ * ```ts
+ * import { compareVersions } from "@beep/scratchpad/effected/runner/Gates"
+ * import { pipe } from "effect/Function"
+ *
+ * console.log(compareVersions("0.50.0", "0.48.1") > 0) // true
+ * console.log(pipe("0.9.0", compareVersions("0.10.0")) < 0) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const compareVersions: {
+  (that: string): (self: string) => Ordering;
+  (self: string, that: string): Ordering;
+} = dual(2, (self: string, that: string): Ordering => {
+  const parts = (version: string) => A.map(Str.split(".")(version), Number);
+  const left = parts(self);
+  const right = parts(that);
+  const index = A.findFirstIndex(left, (value, position) => value !== (right[position] ?? 0));
+  return O.match(index, {
+    onNone: (): Ordering => 0,
+    onSome: (position) => Order.Number(left[position] ?? 0, right[position] ?? 0),
+  });
+});
+
+/**
+ * The newest effect-tsgo binary the JetBrains Effect plugin has cached, staged
+ * (with its bundled libs) under a git-ignored path so it can run; none when no
+ * editor cache exists.
+ *
+ * **Details**
+ *
+ * The editor runs its own (often newer) tsgo than the repo pin, so a developer
+ * can see Effect diagnostics the pinned gate does not report. Running the
+ * editor's binary too keeps the gate at least as strict as the IDE.
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+const stageEditorTsgo = Effect.fn("Gates.stageEditorTsgo")(function* (config: RunnerConfig) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const home = path.dirname(path.dirname(path.dirname(path.dirname(config.upstreamRoot))));
+  const cacheRoot = path.join(home, ".cache", "JetBrains");
+  if (!(yield* fs.exists(cacheRoot))) return O.none<{ readonly version: string; readonly binary: string }>();
+  const products = yield* fs.readDirectory(cacheRoot);
+  const candidates = yield* Effect.forEach(products, Effect.fnUntraced(function* (product) {
+      const root = path.join(cacheRoot, product, "effect-tsgo");
+      if (!(yield* fs.exists(root))) return A.empty<readonly [string, string]>();
+      const versions = A.filter(yield* fs.readDirectory(root), (name) => EDITOR_TSGO_ROOT.test(name));
+      return A.map(versions, (version) => [version, path.join(root, version, "@effect", "tsgo-linux-x64", "package", "lib")] as const);
+    })
+  );
+  const present = yield* Effect.filter(A.flatten(candidates), ([, lib]) => fs.exists(path.join(lib, "tsc")));
+  const newest = A.last(A.sort(present, Order.mapInput(Order.make(compareVersions), ([version]: readonly [string, string]) => version)));
+  if (O.isNone(newest)) return O.none<{ readonly version: string; readonly binary: string }>();
+  const [version, lib] = newest.value;
+  const staged = path.join(config.repoRoot, "coverage", "tsgo-editor", version);
+  if (!(yield* fs.exists(path.join(staged, "tsc")))) {
+    yield* fs.makeDirectory(path.dirname(staged), { recursive: true });
+    yield* fs.copy(lib, staged);
+    yield* fs.chmod(path.join(staged, "tsc"), 0o755);
+  }
+  return O.some({ version, binary: path.join(staged, "tsc") });
+});
+
 /**
  * The check gate: proves Effect diagnostics are live with the canary, then
  * runs tsgo (TypeScript plus Effect diagnostics) on the target's tsconfig,
- * both admitted through `beep-heavy`.
+ * both admitted through `beep-heavy`, and repeats the run with the editor's
+ * newest cached tsgo when one exists.
  *
  * **Example** (Run the check gate)
  *
@@ -287,7 +363,25 @@ const canary = Effect.fn("Gates.canary")(function* (config: RunnerConfig, target
  * @since 0.0.0
  */
 export const check = Effect.fn("Gates.check")(function* (config: RunnerConfig, target: AuditTarget) {
+  const path = yield* Path.Path;
   yield* canary(config, target);
+  const editor = yield* stageEditorTsgo(config);
+  if (O.isSome(editor)) {
+    const editorExit = yield* runInherited(
+      heavy({
+        command: editor.value.binary,
+        args: ["-p", `effected/${target}/tsconfig.json`, "--noEmit", "--pretty", "false"],
+        cwd: path.join(config.repoRoot, "scratchpad"),
+      })
+    );
+    if (editorExit !== 0) {
+      yield* Console.log(`[effected] ${target} check: editor tsgo ${editor.value.version} red`);
+      return yield* gateExit(target, "check", editorExit);
+    }
+    yield* Console.log(`[effected] ${target} check: editor tsgo ${editor.value.version} clean`);
+  } else {
+    yield* Console.log(`[effected] ${target} check: no editor tsgo cache found; pinned tsgo only`);
+  }
   const exitCode = yield* runInherited(
     heavy({
       command: "bun",
