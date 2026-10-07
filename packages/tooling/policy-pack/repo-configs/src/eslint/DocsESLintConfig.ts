@@ -12,23 +12,7 @@ import tsdoc from "eslint-plugin-tsdoc";
 import requireCategoryTagRule from "./RequireCategoryTagRule.ts";
 import type { Linter } from "eslint";
 
-// ESLint keys its result cache on the serialized config, and a plugin without `meta`
-// serializes as its bare namespace, so a rule edit would otherwise replay stale cached
-// results. The version is a digest of the rule implementation as loaded.
-const fnv1a32 = (text: string): string => {
-  let hash = 0x811c9dc5;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash.toString(16).padStart(8, "0");
-};
-const beepJsdocVersion = fnv1a32(
-  `${JSON.stringify(requireCategoryTagRule.meta)}\n${String(requireCategoryTagRule.create)}`
-);
-
 const beepJsdoc = {
-  meta: { name: "beep-jsdoc", version: beepJsdocVersion },
   rules: {
     "require-category-tag": requireCategoryTagRule,
   },

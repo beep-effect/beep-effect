@@ -18,6 +18,10 @@ inputs:
     description: Setup Node.js runtime when workflow steps require it.
     required: false
     default: "true"
+  native-pdf-tools:
+    description: Install and verify pdftotext for research acquisition tests.
+    required: false
+    default: "false"
   node-version:
     description: Optional Node.js version override; empty uses .nvmrc.
     required: false
@@ -120,6 +124,32 @@ runs:
       shell: bash
       run: |
         echo "BEEP_SETUP_STARTED_AT=$(date +%s)" >> "$GITHUB_ENV"
+
+    - name: Ensure native PDF text extraction
+      # The reusable heavy workflow is pinned to main. Its existing cache
+      # suffix identifies coverage before the new explicit input lands there.
+      if: inputs.native-pdf-tools == 'true' || inputs.turbo-cache-key-suffix == '-coverage'
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! command -v pdftotext >/dev/null 2>&1; then
+          privilege=()
+          if [[ "$EUID" -ne 0 ]]; then
+            privilege=(sudo -n)
+          fi
+          if command -v apt-get >/dev/null 2>&1; then
+            bash scripts/ci-prune-apt-sources.sh
+            "${privilege[@]}" apt-get update
+            "${privilege[@]}" apt-get install -y --no-install-recommends poppler-utils
+          elif command -v dnf >/dev/null 2>&1; then
+            "${privilege[@]}" dnf install -y poppler-utils
+          else
+            echo "::error::pdftotext is required; this runner has no supported package manager."
+            exit 1
+          fi
+        fi
+        command -v pdftotext
+        pdftotext -v
 
     - name: Free runner disk
       # Destructive image cleanup runs on ephemeral hosted images (GitHub-

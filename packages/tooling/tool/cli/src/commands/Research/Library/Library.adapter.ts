@@ -1,4 +1,6 @@
-/** Acquisition boundary helpers.
+/**
+ * Acquisition boundary helpers.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -12,9 +14,12 @@ import { LibraryError } from "./Library.errors.ts";
 import { LibraryArtifact } from "./Library.schemas.ts";
 import { saveImmutable } from "./Library.store.ts";
 
+const UnknownJson = S.fromJsonString(S.Unknown);
+
 const $I = $RepoCliId.create("commands/Research/Library/Library.adapter");
 
-/** Adapter result.
+/**
+ * Adapter result.
  * **Example** (Inspect a blocked acquisition)
  * ```ts
  * import { LibraryAdapterResult } from "@beep/repo-cli/test/ResearchLibrary"
@@ -24,7 +29,8 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.adapter");
  *
  * @internal
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryAdapterResult extends S.Class<LibraryAdapterResult>($I`LibraryAdapterResult`)(
   {
     artifacts: S.Array(LibraryArtifact),
@@ -36,7 +42,8 @@ export class LibraryAdapterResult extends S.Class<LibraryAdapterResult>($I`Libra
   $I.annote("LibraryAdapterResult", { description: "Acquisition evidence and explicit completeness disposition." })
 ) {}
 
-/** Run an argv-only command with bounded output and lifetime.
+/**
+ * Run an argv-only command with bounded output and lifetime.
  * **Example** (Prepare a bounded version probe)
  * ```ts
  * import { runLibraryCommand } from "@beep/repo-cli/test/ResearchLibrary"
@@ -46,7 +53,8 @@ export class LibraryAdapterResult extends S.Class<LibraryAdapterResult>($I`Libra
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const runLibraryCommand = Effect.fn("Library.runCommand")(function* (
   root: string,
   command: string,
@@ -81,7 +89,8 @@ export const runLibraryCommand = Effect.fn("Library.runCommand")(function* (
   return result.stdout;
 });
 
-/** Bounded credential-safe subprocess diagnostics.
+/**
+ * Bounded credential-safe subprocess diagnostics.
  * **Example** (Remove credential-shaped diagnostics)
  * ```ts
  * import { sanitizeLibraryDiagnostic } from "@beep/repo-cli/test/ResearchLibrary"
@@ -89,8 +98,11 @@ export const runLibraryCommand = Effect.fn("Library.runCommand")(function* (
  * ```
  *
  * @internal
+ * @param text - Subprocess diagnostic text that may contain credential-shaped values.
+ * @returns Redacted diagnostic text bounded to 2,000 characters.
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const sanitizeLibraryDiagnostic = (text: string) =>
   Str.slice(
     0,
@@ -102,7 +114,8 @@ export const sanitizeLibraryDiagnostic = (text: string) =>
     )(Str.replace(/(?:gh[pousr]_|github_pat_|fc-|sk-)[A-Za-z0-9_-]{10,}/g, "[redacted]")(text))
   );
 
-/** Persist evidence without replacing originals.
+/**
+ * Persist evidence without replacing originals.
  * **Example** (Prepare immutable text evidence)
  * ```ts
  * import { saveLibraryText } from "@beep/repo-cli/test/ResearchLibrary"
@@ -112,7 +125,8 @@ export const sanitizeLibraryDiagnostic = (text: string) =>
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const saveLibraryText = Effect.fn("Library.saveText")(function* (
   root: string,
   relative: string,
@@ -124,7 +138,8 @@ export const saveLibraryText = Effect.fn("Library.saveText")(function* (
   return LibraryArtifact.make({ ...artifact, mediaType, role });
 });
 
-/** Decode external JSON with a typed error.
+/**
+ * Decode external JSON with a typed error.
  * **Example** (Decode an external JSON boundary)
  * ```ts
  * import { decodeLibraryJson } from "@beep/repo-cli/test/ResearchLibrary"
@@ -134,18 +149,23 @@ export const saveLibraryText = Effect.fn("Library.saveText")(function* (
  * ```
  *
  * @internal
+ * @param schema - Codec defining the decoded acquisition response and its encoded representation.
+ * @returns A JSON text decoder that reports invalid responses as LibraryError.
  * @category utilities
- * @since 0.0.0 */
-export const decodeLibraryJson =
-  <A, I>(schema: S.Codec<A, I>) =>
-  (text: string) =>
-    S.decodeEffect(S.fromJsonString(schema))(text).pipe(
+ * @since 0.0.0
+ */
+export const decodeLibraryJson = <A, I>(schema: S.Codec<A, I>) => {
+  const decode = S.decodeEffect(S.fromJsonString(schema));
+  return (text: string) =>
+    decode(text).pipe(
       Effect.mapError(() =>
         LibraryError.make({ cause: "library-boundary", message: "Acquisition response failed schema validation." })
       )
     );
+};
 
-/** Encode evidence JSON.
+/**
+ * Encode evidence JSON.
  * **Example** (Encode a structured receipt)
  * ```ts
  * import { encodeLibraryJson } from "@beep/repo-cli/test/ResearchLibrary"
@@ -155,7 +175,8 @@ export const decodeLibraryJson =
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const encodeLibraryJson = Effect.fn("Library.encodeJson")(function* (input: unknown) {
-  return yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(input);
+  return yield* S.encodeUnknownEffect(UnknownJson)(input);
 });

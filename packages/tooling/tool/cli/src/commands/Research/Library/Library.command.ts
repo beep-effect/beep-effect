@@ -1,6 +1,7 @@
-/** Maintained research library CLI commands.
- * @packageDocumentation
+/**
+ * Maintained research library CLI commands.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { Config, Console, Effect, Path } from "effect";
@@ -94,7 +95,8 @@ const importResult = Command.make(
     yield* Console.log(`Imported source-bound result into ${root}.`);
   })
 ).pipe(Command.withDescription("Import validated Grok, alphaXiv, transcript, or explicit disposition results"));
-/** Render verification diagnostics and fail the process gate on incomplete coverage.
+/**
+ * Render verification diagnostics and fail the process gate on incomplete coverage.
  * **Example** (Prepare the process failure gate)
  * ```ts
  * import { runLibraryVerificationCommand } from "@beep/repo-cli/test/ResearchLibrary"
@@ -142,7 +144,8 @@ const status = Command.make(
   })
 ).pipe(Command.withDescription("Report coverage and provider health separately"));
 
-/** Source library command group, independent of the knowledge vault.
+/**
+ * Source library command group, independent of the knowledge vault.
  * **Example** (Register library commands)
  * ```ts
  * import { libraryCommand } from "@beep/repo-cli/commands/Research"
@@ -150,7 +153,6 @@ const status = Command.make(
  * ```
  *
  * @category cli-commands
- *
  * @since 0.0.0
  */
 export const libraryCommand = Command.make("library").pipe(

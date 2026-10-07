@@ -23367,6 +23367,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Corpus/internal/ProvenanceIndex.ts": {
+          "lines": 81.63,
+          "statements": 79.73,
+          "branches": 67.41,
+          "functions": 77.14,
+          "uncovered": {
+            "lines": 74,
+            "statements": 91,
+            "branches": 58,
+            "functions": 24
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -26497,6 +26509,222 @@
             "statements": 14,
             "branches": 20,
             "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.acquire.ts": {
+          "lines": 31.62,
+          "statements": 28.9,
+          "branches": 13.11,
+          "functions": 32.78,
+          "uncovered": {
+            "lines": 80,
+            "statements": 91,
+            "branches": 53,
+            "functions": 41
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.command.ts": {
+          "lines": 32.43,
+          "statements": 32.43,
+          "branches": 0,
+          "functions": 18.18,
+          "uncovered": {
+            "lines": 25,
+            "statements": 25,
+            "branches": 4,
+            "functions": 9
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.corrections.ts": {
+          "lines": 93.93,
+          "statements": 94.59,
+          "branches": 75,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 3,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.evidence.ts": {
+          "lines": 93.96,
+          "statements": 89.08,
+          "branches": 85.91,
+          "functions": 90.39,
+          "uncovered": {
+            "lines": 34,
+            "statements": 74,
+            "branches": 71,
+            "functions": 17
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.github.ts": {
+          "lines": 58.54,
+          "statements": 56.4,
+          "branches": 48.36,
+          "functions": 55.26,
+          "uncovered": {
+            "lines": 97,
+            "statements": 109,
+            "branches": 63,
+            "functions": 17
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.import.ts": {
+          "lines": 78.06,
+          "statements": 75.14,
+          "branches": 75.56,
+          "functions": 69.38,
+          "uncovered": {
+            "lines": 68,
+            "statements": 87,
+            "branches": 65,
+            "functions": 30
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.integrity.ts": {
+          "lines": 89.18,
+          "statements": 87.5,
+          "branches": 84.37,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 5,
+            "branches": 5,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.inventory.ts": {
+          "lines": 87.14,
+          "statements": 82.14,
+          "branches": 81.25,
+          "functions": 68.51,
+          "uncovered": {
+            "lines": 50,
+            "statements": 80,
+            "branches": 33,
+            "functions": 51
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.provenance.ts": {
+          "lines": 98.07,
+          "statements": 98.46,
+          "branches": 87.5,
+          "functions": 96.15,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 4,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.qualify.ts": {
+          "lines": 5.55,
+          "statements": 4.76,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 34,
+            "statements": 40,
+            "branches": 27,
+            "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.render.ts": {
+          "lines": 93.79,
+          "statements": 93.82,
+          "branches": 83.65,
+          "functions": 90.14,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 17,
+            "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.service.ts": {
+          "lines": 10,
+          "statements": 9.09,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 2,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.status.ts": {
+          "lines": 4.76,
+          "statements": 4.16,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 20,
+            "statements": 23,
+            "branches": 4,
+            "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.store.ts": {
+          "lines": 96.11,
+          "statements": 93.96,
+          "branches": 86.13,
+          "functions": 90.74,
+          "uncovered": {
+            "lines": 7,
+            "statements": 12,
+            "branches": 14,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.verify.ts": {
+          "lines": 91.91,
+          "statements": 91.42,
+          "branches": 86.17,
+          "functions": 94.38,
+          "uncovered": {
+            "lines": 24,
+            "statements": 29,
+            "branches": 34,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.versions.ts": {
+          "lines": 83.33,
+          "statements": 83.33,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.web.ts": {
+          "lines": 95.4,
+          "statements": 95.58,
+          "branches": 76.87,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 34,
+            "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Research/Library/Library.youtube.ts": {
+          "lines": 31.91,
+          "statements": 32.72,
+          "branches": 8.69,
+          "functions": 57.14,
+          "uncovered": {
+            "lines": 32,
+            "statements": 37,
+            "branches": 21,
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/commands/Research/Research.command.ts": {
