@@ -3,13 +3,13 @@
   "initiative": {
     "id": "practice-docket-intake",
     "title": "Practice Docket Intake",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-06",
     "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-docket-intake",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Watch the attorney Outlook mailbox from the operator workstation and write tentative, two-agent-reviewed docket calendar entries with a reminder ladder; Outlook stays the system of record.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -51,22 +51,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

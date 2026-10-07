@@ -5,9 +5,9 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { DateTime, Redacted } from "effect";
 import * as O from "effect/Option";
 import { DocketIntakeAppConfig } from "@/Config";
-import { MAILBOX } from "./Pipeline.ts";
+import { MAILBOX, STATE_DIRECTORY } from "./Pipeline.ts";
 
-export const STATE_DIRECTORY = "/fixture/state/docket-intake";
+export { STATE_DIRECTORY } from "./Pipeline.ts";
 
 export const fixtureEnv = {
   DOCKET_INTAKE_CERT_PRIVATE_KEY: "fixture-private-key",

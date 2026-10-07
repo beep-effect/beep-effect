@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Ground the design in the existing packets and packages. | `SPEC.md` relation table and Decision Log are written. |
-| P1 Implement | in progress | Build the three slices below. | Acceptance criteria are met. |
-| P2 Verify | pending | Package handoffs, property tests, live smoke after registration. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish each slice through yeet and drive it to mergeable. | Each PR is merge-ready; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | complete | Build the slices below. | Acceptance criteria are met. |
+| P2 Verify | complete | Package handoffs, property tests, live smoke after registration. Live read and write smoke passed 2026-10-06; the first live runs (D-41, unattended by operator ruling) ran the same day. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish each slice through yeet and drive it to mergeable. | Each PR is merge-ready; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
@@ -20,12 +20,13 @@ One PR per slice. Slices 2 and 3 depend on slice 1 being merged.
 
 | Slice | Content | Surfaces |
 | --- | --- | --- |
-| 0 | This packet and the registration runbook. | `goals/practice-docket-intake`, `docs/runbooks` |
-| 1 | `@beep/m365` app-only lane, per-lane scope configs, write-safe executor; calendar event create, update and find-by-key; master category list and create; message category update; paged message listing; attachment list and download. | `packages/drivers/m365`, `packages/drivers/m365-mcp` (test stubs) |
-| 2 | Docket intake values and pure policy, ports, the classify, enter and review pipeline with typed outcomes, the digest; property tests. | `packages/law-practice/domain`, `packages/law-practice/use-cases` |
-| 3 | Adapters (Graph, language model, state store, matter lookup), the service app, its systemd user unit, the live smoke. | `packages/law-practice/server`, the `docket-intake` service app |
-| 3b | The adversarial review loop: review round and verdict schemas, the typed review configuration, the confidence score behind the deterministic gate, per-round persistence and resume, and the flagged outcomes and entries. Starts when slice 3 lands. | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app |
-| 4 | Cross-check against the attorney's docket sheet: a read-only tracked-dates port, the three-way earliest-date rule and a `tracked-date-differs` flag; wire the live practice-KG matter lookup. Starts after slices 1-3 land. | `packages/law-practice/{domain,use-cases,server}`, the `docket-intake` service app |
+| 0 | This packet and the registration runbook. **Merged (#1455).** | `goals/practice-docket-intake`, `docs/runbooks` |
+| 1 | `@beep/m365` app-only lane, per-lane scope configs, write-safe executor; calendar event create, update and find-by-key; master category list and create; message category update; paged message listing; attachment list and download. **Merged (#1456, plus #1473 and #1501).** | `packages/drivers/m365`, `packages/drivers/m365-mcp` (test stubs) |
+| 2 | Docket intake values and pure policy, ports, the classify, enter and review pipeline with typed outcomes, the digest; property tests. **Merged (#1458).** | `packages/law-practice/domain`, `packages/law-practice/use-cases` |
+| 3 | Adapters (Graph, language model, state store, matter lookup), the service app, its systemd user unit, the live smoke. **Merged (#1475).** | `packages/law-practice/server`, the `docket-intake` service app |
+| 3b | The adversarial review loop: review round and verdict schemas, the typed review configuration, the confidence score behind the deterministic gate, per-round persistence and resume, and the flagged outcomes and entries. Starts when slice 3 lands. **Merged (#1502).** | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app |
+| 3c | First-run safety net: bounded `poll`, `dry-run`, write journal, `undo --run`, `runs`, and the operator runbook (D-41 to D-43). **Merged (#1517).** | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app, `docs/runbooks` |
+| 4 | Cross-check against the attorney's docket sheet: a read-only tracked-dates port, the three-way earliest-date rule and a `tracked-date-differs` flag; wire the live practice-KG matter lookup. **Merged (#1528).** | `packages/law-practice/{domain,use-cases,server}`, the `docket-intake` service app |
 
 ## Operator-Attended Steps
 

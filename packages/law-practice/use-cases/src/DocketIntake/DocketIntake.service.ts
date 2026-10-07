@@ -19,6 +19,7 @@
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import {
   DOCKET_REMINDER_OFFSETS,
+  DocketDueDate,
   DocketDueDateCandidates,
   docketDatesDiffer,
   docketReminderLadder,
@@ -32,7 +33,7 @@ import {
   Order as LocalDateOrder,
   equals as sameDate,
 } from "@beep/schema/LocalDate";
-import { Context, DateTime, Effect, HashSet, Layer, pipe } from "effect";
+import { Context, DateTime, Effect, HashSet, Layer, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Hex from "effect/encoding/Hex";
@@ -41,6 +42,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { extractPracticeKgPathEvidence, extractPracticeKgReferences } from "../PracticeKg.matter-lookup.ts";
 import {
   DocketCalendar,
   DocketIntakeError,
@@ -49,6 +51,7 @@ import {
   DocketMatterLookup,
   DocketParalegal,
   DocketSecretary,
+  DocketTrackedDates,
 } from "./DocketIntake.ports.ts";
 import {
   DocketCalendarEntry,
@@ -64,6 +67,7 @@ import {
   MatterLookupResult,
   NotDocketItem,
   ParalegalEntry,
+  TrackedDateType,
 } from "./DocketIntake.schemas.ts";
 import {
   assessReviewRound,
@@ -78,12 +82,14 @@ import {
   reviewGatePassed,
   terminalStatus,
 } from "./DocketReview.policy.ts";
-import { DocketReviewConfig, ReviewSourceText, ReviewVerdict } from "./DocketReview.schemas.ts";
-import type {
-  DocketDueDate,
-  DocketReminderRung,
-  DocketResponsePeriod,
-} from "@beep/law-practice-domain/values/DocketDeadline";
+import {
+  DocketReviewConfig,
+  ReviewFindingTrace,
+  ReviewRoundTrace,
+  ReviewSourceText,
+  ReviewVerdict,
+} from "./DocketReview.schemas.ts";
+import type { DocketReminderRung, DocketResponsePeriod } from "@beep/law-practice-domain/values/DocketDeadline";
 import type { LocalDate } from "@beep/schema/LocalDate";
 import type {
   DocketCalendarShape,
@@ -92,6 +98,7 @@ import type {
   DocketMatterLookupShape,
   DocketParalegalShape,
   DocketSecretaryShape,
+  DocketTrackedDatesShape,
 } from "./DocketIntake.ports.ts";
 import type {
   DocketEntryFlag,
@@ -102,8 +109,16 @@ import type {
   ParalegalDocketEntry,
   ReviewRound,
   SecretaryReview,
+  TrackedDate,
 } from "./DocketIntake.schemas.ts";
-import type { ReviewFinding, ReviewTerminalStatus } from "./DocketReview.schemas.ts";
+import type {
+  ExtractorFieldAction,
+  ExtractorFieldResponse,
+  FieldAgreement,
+  ReviewField,
+  ReviewFinding,
+  ReviewTerminalStatus,
+} from "./DocketReview.schemas.ts";
 
 const $I = $LawPracticeUseCasesId.create("DocketIntake/DocketIntake.service");
 
@@ -154,6 +169,42 @@ export class DocketIntakeConfig extends S.Class<DocketIntakeConfig>($I`DocketInt
   },
   $I.annote("DocketIntakeConfig", { description: "Settings of the docket intake pipeline." })
 ) {}
+
+const PositiveMessageCount = S.Int.check(S.isGreaterThan(0));
+
+/**
+ * Options of one poll cycle. With no `maxMessages` the cycle processes every
+ * pending message, as it always has.
+ *
+ * **Details**
+ *
+ * `maxMessages` bounds a cycle to the oldest pending messages. The rest stay
+ * pending for a later cycle, and the cursor never moves past a message that
+ * was not processed, because it only advances over settled messages.
+ *
+ * **Example** (Bound a cycle to five messages)
+ *
+ * ```ts
+ * import { DocketPollOptions } from "@beep/law-practice-use-cases/DocketIntake";
+ * import * as O from "effect/Option";
+ *
+ * const options = DocketPollOptions.make({ maxMessages: O.some(5) });
+ * console.log(O.getOrNull(options.maxMessages)); // 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DocketPollOptions extends S.Class<DocketPollOptions>($I`DocketPollOptions`)(
+  {
+    maxMessages: S.OptionFromOptionalKey(PositiveMessageCount)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "Most pending messages one cycle processes, oldest first; all when absent." }),
+  },
+  $I.annote("DocketPollOptions", { description: "Options of one docket intake poll cycle." })
+) {}
+
+const unboundedPoll = DocketPollOptions.make({});
 
 /**
  * Counts of one poll cycle. It carries no message content.
@@ -229,8 +280,14 @@ export class DocketDigest extends S.Class<DocketDigest>($I`DocketDigest`)(
  * @since 0.0.0
  */
 export interface DocketIntakeShape {
-  /** Run one complete poll cycle. The cursor is saved only at its end. */
-  readonly pollOnce: (today: LocalDate) => Effect.Effect<DocketPollReport, DocketIntakeError>;
+  /**
+   * Run one complete poll cycle. The cursor is saved only at its end. The options may bound the
+   * cycle to the oldest pending messages; without them every pending message is processed.
+   */
+  readonly pollOnce: (
+    today: LocalDate,
+    options?: DocketPollOptions
+  ) => Effect.Effect<DocketPollReport, DocketIntakeError>;
   /**
    * Process one message to its typed outcome. A failed step becomes `IntakeFailed`, never a thrown error.
    * Each completed review round is saved in the message's ledger record as it goes, and rounds already
@@ -266,6 +323,7 @@ type Ports = {
   readonly paralegal: DocketParalegalShape;
   readonly secretary: DocketSecretaryShape;
   readonly store: DocketIntakeStoreShape;
+  readonly tracked: O.Option<DocketTrackedDatesShape>;
 };
 
 const textEncoder = new TextEncoder();
@@ -362,12 +420,15 @@ const matterLine: (matter: O.Option<MatterLookupResult>) => string = O.match({
   onSome: MatterLookupResult.match({
     MatterAmbiguous: (matter) => `Matter: ambiguous between ${A.join(matter.familyKeys, ", ")}; needs attorney`,
     MatterNotFound: () => "Matter: not found in the practice records; needs attorney",
+    MatterSuggested: (matter) =>
+      `Matter: not attached in the records; suggested candidates: ${A.join(matter.familyKeys, ", ")}; needs attorney`,
     MatterUnique: (matter) =>
       A.join(
         A.filter(
           [
             `Matter: family ${matter.familyKey}${matter.verified ? "" : " (unverified; needs attorney)"}`,
             O.match(matter.client, { onNone: () => "", onSome: (client) => `client ${client}` }),
+            O.getOrElse(matter.clientName, () => ""),
             A.isReadonlyArrayNonEmpty(matter.dockets) ? `dockets ${A.join(matter.dockets, ", ")}` : "",
             A.isReadonlyArrayNonEmpty(matter.applications) ? `applications ${A.join(matter.applications, ", ")}` : "",
             A.isReadonlyArrayNonEmpty(matter.patents) ? `patents ${A.join(matter.patents, ", ")}` : "",
@@ -384,6 +445,7 @@ const matterFlags: (matter: O.Option<MatterLookupResult>) => ReadonlyArray<Docke
   onSome: MatterLookupResult.match({
     MatterAmbiguous: (): ReadonlyArray<DocketEntryFlag> => ["matter-ambiguous"],
     MatterNotFound: (): ReadonlyArray<DocketEntryFlag> => ["matter-not-found"],
+    MatterSuggested: (): ReadonlyArray<DocketEntryFlag> => ["matter-suggested"],
     MatterUnique: (matter): ReadonlyArray<DocketEntryFlag> => (matter.verified ? [] : ["matter-unverified"]),
   }),
 });
@@ -441,6 +503,98 @@ const needsReviewDate = (message: DocketMessage, today: LocalDate): LocalDate =>
   const dayAfterReceipt = addDays(message.receivedDate, 1);
   return isBefore(dayAfterReceipt, today) ? today : dayAfterReceipt;
 };
+
+// Rows of the docket sheet dated more than this many days before receipt are not compared: they
+// belong to an earlier step of the matter.
+const TRACKED_WINDOW_DAYS = 7;
+
+// A reference names a docket when the practice KG's own extraction reads one in it.
+const isDocketReference = (reference: string): boolean =>
+  A.isReadonlyArrayNonEmpty(extractPracticeKgPathEvidence(reference).dockets);
+
+// The dockets the sheet is asked about: those of a unique matter that the references named (all of
+// its dockets when they named the family), and every docket the references name themselves.
+const sheetDockets = (matter: O.Option<MatterLookupResult>, references: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.dedupe([
+    ...pipe(
+      O.filter(matter, MatterLookupResult.guards.MatterUnique),
+      O.match({
+        onNone: A.empty<string>,
+        onSome: (unique) => (A.isReadonlyArrayNonEmpty(unique.matchedDockets) ? unique.matchedDockets : unique.dockets),
+      })
+    ),
+    ...A.filter(A.flatMap(references, extractPracticeKgReferences), isDocketReference),
+  ]);
+
+const isDeadlineType = S.is(TrackedDateType.pick(["due-date", "final-date"]));
+
+const TrackedDateOrder = Order.mapInput(LocalDateOrder, (row: TrackedDate) => row.date);
+
+// The earliest due or final date the sheet tracks on or after a week before receipt.
+const earliestTracked = (rows: ReadonlyArray<TrackedDate>, received: LocalDate): O.Option<TrackedDate> => {
+  const from = addDays(received, -TRACKED_WINDOW_DAYS);
+  const deadlines: ReadonlyArray<TrackedDate> = A.filter(
+    rows,
+    (row) => isDeadlineType(row.dateType) && !isBefore(row.date, from)
+  );
+  return O.map(O.liftPredicate(deadlines, A.isReadonlyArrayNonEmpty), A.min(TrackedDateOrder));
+};
+
+// What the docket sheet adds to an entry: its earliest tracked date, or the flag that it could not be read.
+type TrackedCheck = { readonly flags: ReadonlyArray<DocketEntryFlag>; readonly row: O.Option<TrackedDate> };
+
+const NOTHING_TRACKED: TrackedCheck = { flags: [], row: O.none() };
+
+const SHEET_UNAVAILABLE: TrackedCheck = { flags: ["tracked-dates-unavailable"], row: O.none() };
+
+// The sheet is consulted only when the port is wired and there is a docket to ask about. A sheet
+// that cannot be read is a flag on the entry, never a failure of the message.
+const checkTrackedDates = (
+  ports: Ports,
+  message: DocketMessage,
+  matter: O.Option<MatterLookupResult>,
+  references: ReadonlyArray<string>
+): Effect.Effect<TrackedCheck> =>
+  O.match(
+    O.all({
+      dockets: O.liftPredicate(sheetDockets(matter, references), A.isReadonlyArrayNonEmpty),
+      port: ports.tracked,
+    }),
+    {
+      onNone: () => Effect.succeed(NOTHING_TRACKED),
+      onSome: ({ dockets, port }) =>
+        port.forDockets(dockets).pipe(
+          Effect.map((rows): TrackedCheck => ({ flags: [], row: earliestTracked(rows, message.receivedDate) })),
+          Effect.orElseSucceed(() => SHEET_UNAVAILABLE)
+        ),
+    }
+  );
+
+// The sheet's own words for each kind of date.
+const TRACKED_TYPE_LABELS: Readonly<Record<TrackedDateType, string>> = {
+  "due-date": "Due Date",
+  "final-date": "Final Date",
+  other: "Other",
+  reminder: "Reminder",
+};
+
+type Placement = {
+  readonly date: LocalDate;
+  readonly flags: ReadonlyArray<DocketEntryFlag>;
+  readonly lines: ReadonlyArray<string>;
+};
+
+// The standing rule with the sheet as a third source: the entry goes on the earlier date and a
+// difference is flagged. The sheet can move an entry earlier and add a flag, nothing else.
+const placeWithSheet = (date: LocalDate, check: TrackedCheck): Placement =>
+  O.match(check.row, {
+    onNone: (): Placement => ({ date, flags: check.flags, lines: [] }),
+    onSome: (row): Placement => ({
+      date: isBefore(row.date, date) ? row.date : date,
+      flags: whenFlag(!sameDate(row.date, date), "tracked-date-differs"),
+      lines: [`Docket sheet: ${iso(row.date)} (${TRACKED_TYPE_LABELS[row.dateType]}: ${row.name})`],
+    }),
+  });
 
 type ReasonText = { readonly intro: string; readonly prefix: string };
 
@@ -572,27 +726,43 @@ const enterDocketItem = Effect.fnUntraced(function* (
   }
 ): Effect.fn.Return<DocketIntakeOutcome, DocketIntakeError> {
   const { entry, review, verdict } = input;
-  const matter = yield* lookupMatter(ports, matterReferences(entry, review));
+  const references = matterReferences(entry, review);
+  const matter = yield* lookupMatter(ports, references);
+  const tracked = yield* checkTrackedDates(ports, message, matter, references);
   const missingSource = sourceFlags(review, input.hasDocuments);
   const resolved = resolveDocketDueDate(
     DocketDueDateCandidates.make({ computed: earliestDate(criticDates(review)), stated: extractorDueDate(entry) })
   );
 
   if (O.isNone(resolved)) {
+    const placed = placeWithSheet(needsReviewDate(message, today), tracked);
     return yield* writeNeedsReview(ports, message, today, {
-      date: O.none(),
-      flags: A.appendAll(matterFlags(matter), missingSource),
-      lines: [...dateLines(entry, review), matterLine(matter), ...noteLines(entry, review)],
+      date: O.some(placed.date),
+      flags: [
+        ...placed.flags,
+        ...matterFlags(matter),
+        ...missingSource,
+        ...whenFlag(isBefore(placed.date, today), "due-date-past"),
+      ],
+      lines: [...dateLines(entry, review), ...placed.lines, matterLine(matter), ...noteLines(entry, review)],
       reason: "no-usable-date",
       review: O.some(verdict),
       title: entry.title,
     });
   }
 
-  const dueDate = resolved.value;
+  const placed = placeWithSheet(resolved.value.date, tracked);
+  const movedBySheet = !sameDate(placed.date, resolved.value.date);
+  const dueDate = DocketDueDate.make({
+    basis: resolved.value.basis,
+    computed: resolved.value.computed,
+    date: placed.date,
+    stated: resolved.value.stated,
+  });
   const ladder = docketReminderLadder(dueDate.date, today);
   const flags = A.dedupe([
     ...whenFlag(docketDatesDiffer(dueDate), "dates-differ"),
+    ...placed.flags,
     ...matterFlags(matter),
     ...missingSource,
     ...whenFlag(ladder.truncated, "ladder-truncated"),
@@ -606,8 +776,9 @@ const enterDocketItem = Effect.fnUntraced(function* (
       bodyText: bodyOf([
         TENTATIVE_NOTE,
         "",
-        `Date used: ${iso(dueDate.date)} (${basisText(dueDate)})`,
+        `Date used: ${iso(dueDate.date)} (${movedBySheet ? "the docket sheet's date, earlier than the email's" : basisText(dueDate)})`,
         ...dateLines(entry, review),
+        ...placed.lines,
         NOMINAL_NOTE,
         "",
         matterLine(matter),
@@ -874,18 +1045,21 @@ const writeFlagged = Effect.fnUntraced(function* (
   const { message, ports, today } = context;
   const { entry, reading } = round;
   const candidates = [...A.fromOption(extractorDueDate(entry)), ...criticDates(reading)];
-  const date = earliestDate(candidates);
-  const matter = yield* lookupMatter(ports, matterReferences(entry, reading));
+  const references = matterReferences(entry, reading);
+  const matter = yield* lookupMatter(ports, references);
+  const tracked = yield* checkTrackedDates(ports, message, matter, references);
+  const placed = placeWithSheet(
+    O.getOrElse(earliestDate(candidates), () => needsReviewDate(message, today)),
+    tracked
+  );
   return yield* writeNeedsReview(ports, message, today, {
-    date,
+    date: O.some(placed.date),
     flags: [
       ...whenFlag(A.length(A.dedupeWith(candidates, sameDate)) > 1, "dates-differ"),
+      ...placed.flags,
       ...matterFlags(matter),
       ...sourceFlags(reading, A.isReadonlyArrayNonEmpty(context.documents)),
-      ...whenFlag(
-        O.exists(date, (value) => isBefore(value, today)),
-        "due-date-past"
-      ),
+      ...whenFlag(isBefore(placed.date, today), "due-date-past"),
     ],
     lines: [
       `Review score: ${score(verdict.finalScore)}; needed ${score(verdict.threshold)}. Rounds used: ${verdict.rounds} of ${verdict.maxRounds}.`,
@@ -896,6 +1070,7 @@ const writeFlagged = Effect.fnUntraced(function* (
       "Open findings:",
       ...openLines(round),
       ...dateLines(entry, reading),
+      ...placed.lines,
       NOMINAL_NOTE,
       matterLine(matter),
       ...noteLines(entry, reading),
@@ -920,18 +1095,53 @@ const settleAccepted = (
       })
     : escalateDisagreement(context.ports, context.message, context.today, round, verdict);
 
+const fieldsWhere = (agreement: ReadonlyArray<FieldAgreement>, agreed: boolean): ReadonlyArray<ReviewField> =>
+  A.map(
+    A.filter(agreement, (field) => field.agreed === agreed),
+    (field) => field.field
+  );
+
+const fieldsWithAction = (
+  responses: ReadonlyArray<ExtractorFieldResponse>,
+  action: ExtractorFieldAction
+): ReadonlyArray<ReviewField> =>
+  A.map(
+    A.filter(responses, (response) => response.action === action),
+    (response) => response.field
+  );
+
+// What each side decided in a round, without any of the text it read (D-46).
+const traceOf = (round: ReviewRound): ReviewRoundTrace =>
+  ReviewRoundTrace.make({
+    agreedFields: fieldsWhere(round.agreement, true),
+    criticDocketItem: round.reading.isDocketItem,
+    defendedFields: fieldsWithAction(round.extractorResponse, "defended"),
+    disagreedFields: fieldsWhere(round.agreement, false),
+    extractorDocketItem: isDocketEntry(round.entry),
+    failedChecks: A.filter(round.checks, (check) => !check.passed),
+    findings: A.map(round.findings, (finding) =>
+      ReviewFindingTrace.make({ field: finding.field, severity: finding.severity })
+    ),
+    gatePassed: reviewGatePassed(round.checks),
+    index: round.index,
+    revisedFields: fieldsWithAction(round.extractorResponse, "revised"),
+    score: round.score,
+  });
+
 const settleReviewed = (
   context: ReviewContext,
-  round: ReviewRound,
+  rounds: A.NonEmptyReadonlyArray<ReviewRound>,
   status: ReviewTerminalStatus
 ): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> => {
   const config = context.ports.config.review;
+  const round = A.lastNonEmpty(rounds);
   const verdict = ReviewVerdict.make({
     finalScore: round.score,
     maxRounds: config.maxRounds,
     rounds: round.index,
     status,
     threshold: config.acceptThreshold,
+    trace: A.map(rounds, traceOf),
   });
   return Effect.annotateCurrentSpan({
     docket_review_rounds: round.index,
@@ -951,7 +1161,7 @@ const settleReview = (
 ): Effect.Effect<DocketIntakeOutcome, DocketIntakeError> =>
   O.match(end, {
     onNone: () => Effect.succeed<DocketIntakeOutcome>(NotDocketItem.make({ messageId: context.message.messageId })),
-    onSome: (status) => settleReviewed(context, A.lastNonEmpty(rounds), status),
+    onSome: (status) => settleReviewed(context, rounds, status),
   });
 
 // The bounded loop: decide after each round, and run another only while the review has not ended.
@@ -1078,14 +1288,20 @@ const makeService = (ports: Ports): DocketIntakeShape => {
   );
 
   return {
-    pollOnce: Effect.fn("DocketIntake.pollOnce")(function* (today) {
+    pollOnce: Effect.fn("DocketIntake.pollOnce")(function* (today, options = unboundedPoll) {
       const loaded = yield* ports.store.load;
       const since = O.map(loaded.cursor, (cursor) => subtractMinutes(cursor, ports.config.overlapMinutes));
       const messages = yield* ports.mailbox.receivedSince(since);
       const ordered = A.sort(messages, (left: DocketMessage, right: DocketMessage) =>
         Str.Order(left.receivedAt, right.receivedAt)
       );
-      const pending = A.filter(ordered, (message) => !isSettled(R.get(loaded.ledger, message.messageId)));
+      const unsettled = A.filter(ordered, (message) => !isSettled(R.get(loaded.ledger, message.messageId)));
+      // A bounded cycle takes the oldest pending messages. Those it leaves are unsettled, so the
+      // cursor, which only advances over the leading run of settled messages, stops before them.
+      const pending = O.match(options.maxMessages, {
+        onNone: () => unsettled,
+        onSome: (max) => A.take(unsettled, max),
+      });
 
       const final = yield* Effect.reduce(
         pending,
@@ -1254,6 +1470,7 @@ export const makeDocketIntakeLayer = (
           paralegal: yield* DocketParalegal,
           secretary: yield* DocketSecretary,
           store: yield* DocketIntakeStore,
+          tracked: yield* Effect.serviceOption(DocketTrackedDates),
         })
       );
     })

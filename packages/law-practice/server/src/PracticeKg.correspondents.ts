@@ -367,6 +367,8 @@ export const isPracticeKgPracticeAddress =
 
 const addressEntryPattern = /(?:"([^"]*)"|([^,<"]*?))\s*<([^<>\s]+@[^<>\s]+)>|([^\s,<>";]+@[^\s,<>"';]+)/gu;
 const surroundingQuotesPattern = /^['"\s]+|['"\s]+$/gu;
+// A bare address wrapped in single quotes: the pattern keeps the opening quote and stops at the closing one.
+const bareAddressQuotePattern = /^'|'$/gu;
 
 const cleanName = (raw: string | null | undefined): string | null =>
   pipe(O.fromNullishOr(raw), O.map(Str.replace(surroundingQuotesPattern, "")), O.filter(Str.isNonEmpty), O.getOrNull);
@@ -378,7 +380,9 @@ const participantsOf = (
   A.getSomes(
     A.map(A.fromIterable(header.matchAll(addressEntryPattern)), (match) =>
       pipe(
-        O.fromNullishOr(match[3] ?? match[4]),
+        O.orElse(O.fromNullishOr(match[3]), () =>
+          O.map(O.fromNullishOr(match[4]), Str.replace(bareAddressQuotePattern, ""))
+        ),
         O.map((address) =>
           PracticeKgEmailParticipant.make({
             address: normalizeAddress(address),

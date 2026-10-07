@@ -423,8 +423,10 @@ export class MatterUnique extends S.TaggedClass<MatterUnique>($I`MatterUnique`)(
   {
     applications: stringList("Application numbers of the matter."),
     client: opt(S.String, "Client number, when the matter is attributed."),
+    clientName: opt(S.String, "Client name from the attorney's docket register, when it gives one."),
     dockets: stringList("Docket numbers of the matter."),
     familyKey: S.NonEmptyString.annotateKey({ description: "Client-keyed family key of the matter." }),
+    matchedDockets: stringList("Dockets of the matter the references named; empty when they named the family."),
     patents: stringList("Patent numbers of the matter."),
     verified: S.Boolean.annotateKey({
       description: "False when the match is unattributed or its family number is recycled and unverified.",
@@ -453,6 +455,39 @@ export class MatterAmbiguous extends S.TaggedClass<MatterAmbiguous>($I`MatterAmb
     familyKeys: stringList("Family keys of the candidate matters."),
   },
   $I.annote("MatterAmbiguous", { description: "A reference resolved to several matters." })
+) {}
+
+/**
+ * No matter owns the references, but documents of one or more matters
+ * mention one of them.
+ *
+ * **Details**
+ *
+ * The practice KG attaches an application or patent number to a matter only
+ * when the matter's own dockets were filed under it. A number that the
+ * documents of other matters merely cite is not a match, so those matters
+ * are offered to the attorney as candidates, never chosen. One candidate is
+ * still a suggestion.
+ *
+ * **Example** (Make a suggested match)
+ *
+ * ```ts
+ * import { MatterSuggested } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(MatterSuggested.make({ familyKeys: ["0000.0001"] }).familyKeys.length);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MatterSuggested extends S.TaggedClass<MatterSuggested>($I`MatterSuggested`)(
+  "MatterSuggested",
+  {
+    familyKeys: stringList("Family keys of the matters whose documents mention a reference."),
+  },
+  $I.annote("MatterSuggested", {
+    description: "No matter owns the references; matters whose documents mention one are suggested.",
+  })
 ) {}
 
 /**
@@ -491,7 +526,7 @@ export class MatterNotFound extends S.TaggedClass<MatterNotFound>($I`MatterNotFo
  * @category models
  * @since 0.0.0
  */
-export const MatterLookupResult = S.Union([MatterUnique, MatterAmbiguous, MatterNotFound]).pipe(
+export const MatterLookupResult = S.Union([MatterUnique, MatterAmbiguous, MatterSuggested, MatterNotFound]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("MatterLookupResult", { description: "Answer of a practice-KG matter lookup." })
 );
@@ -530,6 +565,7 @@ export type MatterLookupResult = typeof MatterLookupResult.Type;
 export const DocketEntryFlag = LiteralKit([
   "dates-differ",
   "matter-ambiguous",
+  "matter-suggested",
   "matter-not-found",
   "matter-unverified",
   "matter-lookup-failed",
@@ -538,6 +574,8 @@ export const DocketEntryFlag = LiteralKit([
   "due-date-past",
   "junk-folder",
   "deleted-folder",
+  "tracked-date-differs",
+  "tracked-dates-unavailable",
 ]).pipe($I.annoteSchema("DocketEntryFlag", { description: "A reason the attorney should check a tentative entry." }));
 
 /**
@@ -710,9 +748,15 @@ export type DocketNeedsReviewReason = typeof DocketNeedsReviewReason.Type;
  * @category models
  * @since 0.0.0
  */
-export const DocketIntakeStage = LiteralKit(["mailbox", "enter", "review", "lookup", "calendar", "store"]).pipe(
-  $I.annoteSchema("DocketIntakeStage", { description: "Docket intake pipeline stage." })
-);
+export const DocketIntakeStage = LiteralKit([
+  "mailbox",
+  "enter",
+  "review",
+  "lookup",
+  "tracked-dates",
+  "calendar",
+  "store",
+]).pipe($I.annoteSchema("DocketIntakeStage", { description: "Docket intake pipeline stage." }));
 
 /**
  * Type for {@link DocketIntakeStage}.
@@ -730,6 +774,78 @@ export const DocketIntakeStage = LiteralKit(["mailbox", "enter", "review", "look
  * @since 0.0.0
  */
 export type DocketIntakeStage = typeof DocketIntakeStage.Type;
+
+/**
+ * Kind of a tracked date on the attorney's docket sheet.
+ *
+ * **Details**
+ *
+ * The sheet's `Date Type` column says `Due Date` (sometimes `Due`),
+ * `Final Date` or `Reminder`; anything else is `other`. Only `due-date` and
+ * `final-date` rows are deadlines the cross-check compares.
+ *
+ * **Example** (Guard a tracked date type)
+ *
+ * ```ts
+ * import { TrackedDateType } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(TrackedDateType.is["final-date"]("final-date")); // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TrackedDateType = LiteralKit(["due-date", "reminder", "final-date", "other"]).pipe(
+  $I.annoteSchema("TrackedDateType", { description: "Kind of a tracked date on the attorney's docket sheet." })
+);
+
+/**
+ * Type for {@link TrackedDateType}.
+ *
+ * **Example** (Type a tracked date type)
+ *
+ * ```ts
+ * import type { TrackedDateType } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const type: TrackedDateType = "due-date";
+ * console.log(type);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TrackedDateType = typeof TrackedDateType.Type;
+
+/**
+ * One tracked date of one docket on the attorney's docket sheet.
+ *
+ * **Example** (Make a tracked date)
+ *
+ * ```ts
+ * import { TrackedDate } from "@beep/law-practice-use-cases/DocketIntake";
+ * import { LocalDate } from "@beep/schema/LocalDate";
+ *
+ * const tracked = TrackedDate.make({
+ *   date: LocalDate.make({ year: 2030, month: 4, day: 8 }),
+ *   dateType: "due-date",
+ *   docket: "0000.00001US01",
+ *   name: "Response"
+ * });
+ * console.log(tracked.dateType);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TrackedDate extends S.Class<TrackedDate>($I`TrackedDate`)(
+  {
+    date: LocalDateFromString.annotateKey({ description: "The tracked date." }),
+    dateType: TrackedDateType.annotateKey({ description: "Kind of tracked date." }),
+    docket: S.NonEmptyString.annotateKey({ description: "The docket the row belongs to, as asked for." }),
+    name: S.String.annotateKey({ description: "What the date is for, as the sheet names it." }),
+  },
+  $I.annote("TrackedDate", { description: "One tracked date of one docket on the attorney's docket sheet." })
+) {}
 
 /**
  * Outcome: both agents agree the message needs no docket entry.

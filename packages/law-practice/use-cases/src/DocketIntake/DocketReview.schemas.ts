@@ -486,6 +486,90 @@ export const ReviewMaxRounds = S.Int.check(S.isBetween({ maximum: 10, minimum: 1
 export type ReviewMaxRounds = typeof ReviewMaxRounds.Type;
 
 /**
+ * A critic finding without its reason: the field and the severity only.
+ *
+ * **Example** (Make a finding trace)
+ *
+ * ```ts
+ * import { ReviewFindingTrace } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(ReviewFindingTrace.make({ field: "due-date", severity: "P1" }).severity);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReviewFindingTrace extends S.Class<ReviewFindingTrace>($I`ReviewFindingTrace`)(
+  {
+    field: ReviewField.annotateKey({ description: "The field the finding is about." }),
+    severity: ReviewFindingSeverity.annotateKey({ description: "How serious the finding is." }),
+  },
+  $I.annote("ReviewFindingTrace", { description: "A critic finding without its reason text." })
+) {}
+
+const emptyFields: ReadonlyArray<ReviewField> = [];
+
+const fieldList = (description: string) =>
+  S.Array(ReviewField)
+    .pipe(
+      S.withConstructorDefault(Effect.succeed(emptyFields)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(emptyFields))
+    )
+    .annotateKey({ description });
+
+/**
+ * What each side decided in one review round, in ids and enums only.
+ *
+ * **Details**
+ *
+ * The trace is kept on a settled outcome so a review that ended differently on
+ * two runs of the same message (a dry run and a live run, say) can be
+ * explained afterwards. It holds no message text: no dates, quotes, titles or
+ * finding reasons, only which fields each side disputed, revised, defended or
+ * agreed on, the findings' severities, the failed checks, the gate result and
+ * the score.
+ *
+ * **Example** (Make a round trace)
+ *
+ * ```ts
+ * import { ReviewRoundTrace } from "@beep/law-practice-use-cases/DocketIntake";
+ * import { UnitInterval } from "@beep/schema/UnitInterval";
+ *
+ * const trace = ReviewRoundTrace.make({
+ *   criticDocketItem: true,
+ *   extractorDocketItem: true,
+ *   failedChecks: [],
+ *   findings: [],
+ *   gatePassed: true,
+ *   index: 1,
+ *   score: UnitInterval.make(1)
+ * });
+ * console.log(trace.disagreedFields.length);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReviewRoundTrace extends S.Class<ReviewRoundTrace>($I`ReviewRoundTrace`)(
+  {
+    agreedFields: fieldList("Compared fields the two readings agree on."),
+    criticDocketItem: S.Boolean.annotateKey({ description: "Whether the critic read a docket item." }),
+    defendedFields: fieldList("Disputed fields the extractor kept this round."),
+    disagreedFields: fieldList("Compared fields the two readings differ on."),
+    extractorDocketItem: S.Boolean.annotateKey({ description: "Whether the extractor entered a docket item." }),
+    failedChecks: S.Array(DeterministicCheck).annotateKey({ description: "The deterministic checks that failed." }),
+    findings: S.Array(ReviewFindingTrace).annotateKey({ description: "The critic's findings, without reasons." }),
+    gatePassed: S.Boolean.annotateKey({ description: "Whether every deterministic check passed." }),
+    index: S.Int.check(S.isGreaterThan(0)).annotateKey({ description: "1-based number of the round." }),
+    revisedFields: fieldList("Disputed fields the extractor changed this round."),
+    score: UnitInterval.annotateKey({ description: "Confidence score of the round." }),
+  },
+  $I.annote("ReviewRoundTrace", { description: "What each side decided in one review round, without text." })
+) {}
+
+const emptyTrace: ReadonlyArray<ReviewRoundTrace> = [];
+
+/**
  * The result of a finished review, as the attorney is told it.
  *
  * **Example** (Make a verdict)
@@ -514,6 +598,12 @@ export class ReviewVerdict extends S.Class<ReviewVerdict>($I`ReviewVerdict`)(
     rounds: S.Natural.annotateKey({ description: "How many rounds were used." }),
     status: ReviewTerminalStatus.annotateKey({ description: "How the review ended." }),
     threshold: UnitInterval.annotateKey({ description: "Score the review had to reach to be accepted." }),
+    trace: S.Array(ReviewRoundTrace)
+      .pipe(
+        S.withConstructorDefault(Effect.succeed(emptyTrace)),
+        S.withDecodingDefaultTypeKey(Effect.succeed(emptyTrace))
+      )
+      .annotateKey({ description: "Every round, oldest first, in ids and enums only; empty in older records." }),
   },
   $I.annote("ReviewVerdict", { description: "The result of a finished docket review." })
 ) {}

@@ -22,6 +22,7 @@ import type {
   ParalegalEntry,
   ParalegalRevision,
   SecretaryReview,
+  TrackedDate,
 } from "./DocketIntake.schemas.ts";
 import type { ExtractorFieldResponse, ReviewDispute, ReviewField, ReviewFinding } from "./DocketReview.schemas.ts";
 
@@ -248,6 +249,51 @@ export interface DocketMatterLookupShape {
  */
 export class DocketMatterLookup extends Context.Service<DocketMatterLookup, DocketMatterLookupShape>()(
   $I`DocketMatterLookup`
+) {}
+
+/**
+ * Port shape: the tracked dates on the attorney's docket sheet.
+ *
+ * **Example** (Name the tracked dates method)
+ *
+ * ```ts
+ * import type { DocketTrackedDatesShape } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * const method: keyof DocketTrackedDatesShape = "forDockets";
+ * console.log(method);
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export interface DocketTrackedDatesShape {
+  /** Every tracked date the sheet lists for these dockets; empty when it lists none. */
+  readonly forDockets: (dockets: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<TrackedDate>, DocketIntakeError>;
+}
+
+/**
+ * Port: read-only access to the tracked dates on the attorney's docket sheet.
+ *
+ * **Details**
+ *
+ * The port is optional. When no layer provides it the pipeline does no
+ * cross-check and adds no flag; when it fails the entry is flagged
+ * `tracked-dates-unavailable` and is written all the same. Nothing is ever
+ * written to the sheet.
+ *
+ * **Example** (Reference the tracked dates port)
+ *
+ * ```ts
+ * import { DocketTrackedDates } from "@beep/law-practice-use-cases/DocketIntake";
+ *
+ * console.log(DocketTrackedDates.key);
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class DocketTrackedDates extends Context.Service<DocketTrackedDates, DocketTrackedDatesShape>()(
+  $I`DocketTrackedDates`
 ) {}
 
 /**
