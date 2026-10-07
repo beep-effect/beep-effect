@@ -630,6 +630,12 @@
         ]
       },
       {
+        "name": "@beep/practice-identify",
+        "patterns": [
+          "apps/practice-identify/src/**"
+        ]
+      },
+      {
         "name": "@beep/practice-kg-mcp",
         "patterns": [
           "apps/practice-kg-mcp/src/**"
@@ -2380,6 +2386,7 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/uspto",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2409,6 +2416,7 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/tika",
+          "@beep/uspto",
           "@beep/utils"
         ]
       },
@@ -3235,6 +3243,25 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/practice-identify",
+        "allow": [
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/practice-identify",
+          "@beep/schema",
+          "@beep/uspto"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/law-practice-use-cases",
+          "@beep/practice-identify",
+          "@beep/schema",
+          "@beep/uspto"
         ]
       },
       {

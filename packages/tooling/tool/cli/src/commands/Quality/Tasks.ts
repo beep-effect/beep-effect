@@ -26,7 +26,6 @@ import {
 } from "effect";
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -2952,23 +2951,50 @@ const policyMediumTasks = [
   "lint:circular",
   "lint:effect-imports",
   "lint:effect-imports-markdown",
+  "lint:tsconfig-overlay",
+  "lint:package-test-typecheck",
+  "lint:effect-vitest",
 ];
+// The git-delta checks compare the merge-base archive with HEAD. They are uncached by
+// contract and cost about two minutes on a clean tree, so a local full-scope `bun run lint`
+// (no review base, no PR) leaves them to the hosted plan and to the changed-scope
+// `lint:policy` run, which carries an explicit base.
+const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check"];
 const policyStateTasks = [
-  "knowledge:semantic-delta",
-  "knowledge:refs-check",
+  ...policyGitDeltaTasks,
   "lint:jsdoc-module-tags",
   "goals:doctor",
   "lint:oxlint",
   "lint:shadcn",
   "lint:typos",
   "jsdoc:inventory:check",
+  "jsdoc:ratchet:check",
+];
+const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
+  hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
+// The root ESLint program has no Turbo task; a content-keyed ESLint cache keeps a
+// warm repeat near zero without changing what a cold run checks.
+const rootEslintArgs = [
+  "eslint",
+  ".",
+  "--max-warnings=0",
+  "--cache",
+  "--cache-location",
+  "node_modules/.cache/eslint-root/.eslintcache",
+  "--cache-strategy",
+  "content",
 ];
 
+// The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks are root Turbo
+// tasks (cached, fingerprint-closed) inside the medium and state phases; the JSDoc ratchet
+// depends on the inventory task, so Turbo's `--continue=dependencies-successful` skips the
+// compare whenever the inventory phase is red instead of a label-keyed rule here.
 const rootRepoLintPolicySteps = (
   repoRoot: string,
   _files: ReadonlyArray<string> | undefined,
   base: string | undefined,
-  sweeps: LintPolicySweeps
+  sweeps: LintPolicySweeps,
+  hosted: boolean
 ): ReadonlyArray<QualityTaskStep> => {
   const full = P.isUndefined(base);
   return A.map(
@@ -2977,49 +3003,26 @@ const rootRepoLintPolicySteps = (
       policyLintTurboStep(
         repoRoot,
         "lint:policy:medium",
-        [...policyMediumTasks, ...(full ? policyStateTasks : ["lint:jsdoc", "lint:jsdoc:root"])],
+        [...policyMediumTasks, ...(full ? fullScopeStateTasks(hosted) : ["lint:jsdoc", "lint:jsdoc:root"])],
         base
       ),
       ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks)]),
       // Ruling 31 retains the hosted root ESLint program independently of the
       // deprecated-API sweep switch. It has no Turbo summary of its own.
-      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"])] : []),
+      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", rootEslintArgs)] : []),
       full && sweeps.deprecatedApis === "shards"
         ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
         : deprecatedApisTurboStep(repoRoot, base),
-      // No Stage C registration exists for the overlay inventory; preserve it.
-      repoCliStep(repoRoot, "lint:tsconfig-overlay", ["lint", "tsconfig-overlay"]),
-      repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
-      // Full-scan membership ratchet against standards/effect-vitest.inventory.jsonc (about
-      // 8-10 s). Hosted here so a PR that adds test files without refreshing the inventory
-      // reds itself instead of every later local cheap-gates proof; the cheap-gates lane
-      // repeats this step under the same id (TTC ruling 28).
-      repoCliStep(repoRoot, "lint:effect-vitest", ["lint", "effect-vitest"]),
+      // The test lane's own Turbo task is `package-test-typecheck` (uncached by tripwire
+      // ruling); the orchestrating command stays a repo-cli step.
       repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
-      repoCliStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
-        "quality",
-        "jsdoc-ratchet",
-        "--inventory",
-        ".beep/ci/jsdoc-documentation.inventory.jsonc",
-      ]),
     ],
     (step) => QualityTaskStep.make({ ...step, captureTimeoutMillis: QUALITY_CAPTURE_TIMEOUT_MILLIS })
   );
 };
 
 // Run each Turbo process graph in order. Hosted runs collect every failure;
-// local runs stop after a red cheap phase. Never compare a stale inventory.
-// The JSDoc ratchet compare only reads an inventory the same run refreshed; skip it once the
-// phase that owns the inventory is red. Keyed by the PLANNED label: the resolved step may carry
-// a secret-session suffix.
-const ratchetCompareBlocked = (
-  step: QualityTaskStep,
-  full: boolean,
-  failedPlannedLabels: MutableHashSet.MutableHashSet<string>
-): boolean =>
-  step.label === "ci:jsdoc-ratchet:ratchet" &&
-  MutableHashSet.has(failedPlannedLabels, full ? "lint:policy:medium" : "lint:policy:state");
-
+// local runs stop after a red cheap phase.
 // Local runs stop after a red cheap phase; hosted runs collect every phase.
 const stopsAfterCheapRed = (step: QualityTaskStep, full: boolean, result: QualityTaskStepOutput): boolean =>
   !full && step.label === "lint:policy:cheap" && result.exitCode !== 0;
@@ -3037,18 +3040,10 @@ const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
   full: boolean
 ) {
   const results = A.empty<QualityTaskStepOutput>();
-  const failedPlannedLabels = MutableHashSet.empty<string>();
   yield* Console.log(`[beep-cli] lint:policy: running ${A.length(steps)} ordered step(s)`);
   for (const step of steps) {
-    if (ratchetCompareBlocked(step, full, failedPlannedLabels)) {
-      yield* Console.log("[beep-cli] jsdoc ratchet skipped: fresh inventory phase failed");
-      continue;
-    }
     const result = yield* runPolicyStep(step);
     A.appendInPlace(results, result);
-    if (result.exitCode !== 0) {
-      MutableHashSet.add(failedPlannedLabels, step.label);
-    }
     if (stopsAfterCheapRed(step, full, result)) {
       yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
     }
@@ -3071,6 +3066,8 @@ const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
  * @param files - Compatibility input; Turbo now owns file selection from the caller base.
  * @param base - Caller base for affected Turbo tasks; omitted for full scope.
  * @param sweeps - Explicit sweep selection; pure test plans default to shards.
+ * @param hosted - Whether the plan is a hosted (CI) plan; a local full-scope plan leaves the
+ *   git-delta knowledge checks to the hosted run. Defaults to the live CI detection.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
@@ -3079,13 +3076,15 @@ export const rootLintPolicyStepsForTesting: {
   (
     files?: ReadonlyArray<string>,
     base?: string,
-    sweeps?: LintPolicySweeps
+    sweeps?: LintPolicySweeps,
+    hosted?: boolean
   ): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
   (
     repoRoot: string,
     files?: ReadonlyArray<string>,
     base?: string,
-    sweeps?: LintPolicySweeps
+    sweeps?: LintPolicySweeps,
+    hosted?: boolean
   ): ReadonlyArray<QualityTaskStep>;
 } = dual(
   (args: IArguments) => P.isString(args[0]),
@@ -3093,8 +3092,9 @@ export const rootLintPolicyStepsForTesting: {
     repoRoot: string,
     files?: ReadonlyArray<string>,
     base?: string,
-    sweeps = shardPolicySweeps
-  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps)
+    sweeps = shardPolicySweeps,
+    hosted = isCi()
+  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted)
 );
 
 /**
@@ -3133,7 +3133,7 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   );
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
-  yield* runPolicySteps(rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps), runFull);
+  yield* runPolicySteps(rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCi()), runFull);
 });
 
 /**
@@ -3194,7 +3194,7 @@ const rootLintPolicySteps = (
     return A.empty<QualityTaskStep>();
   }
 
-  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, shardPolicySweeps);
+  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, shardPolicySweeps, isCi());
 };
 
 // The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by

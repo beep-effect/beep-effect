@@ -13806,6 +13806,54 @@
             "functions": 0
           }
         },
+        "packages/law-practice/server/src/DocumentIdentification/Identification.contacts.ts": {
+          "lines": 96.87,
+          "statements": 93.33,
+          "branches": 75,
+          "functions": 94.28,
+          "uncovered": {
+            "lines": 3,
+            "statements": 8,
+            "branches": 16,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/DocumentIdentification/Identification.extraction.ts": {
+          "lines": 93.54,
+          "statements": 94.28,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/DocumentIdentification/Identification.rdap.ts": {
+          "lines": 91.89,
+          "statements": 85.71,
+          "branches": 70,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 3,
+            "statements": 6,
+            "branches": 9,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/server/src/DocumentIdentification/Identification.uspto.ts": {
+          "lines": 95.45,
+          "statements": 95.83,
+          "branches": 100,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/law-practice/server/src/Layer.ts": {
           "lines": 100,
           "statements": 100,
@@ -14499,12 +14547,12 @@
       "path": "packages/law-practice/use-cases",
       "lines": 83.72,
       "statements": 84.13,
-      "branches": 100,
+      "branches": 88.91,
       "functions": 70,
       "uncovered": {
         "lines": 42,
         "statements": 43,
-        "branches": 0,
+        "branches": 44,
         "functions": 27
       },
       "files": {
@@ -14602,6 +14650,66 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/law-practice/use-cases/src/DocumentIdentification/Identification.contacts.ts": {
+          "lines": 96.42,
+          "statements": 93.15,
+          "branches": 65.62,
+          "functions": 89.18,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 11,
+            "functions": 4
+          }
+        },
+        "packages/law-practice/use-cases/src/DocumentIdentification/Identification.evaluation.ts": {
+          "lines": 100,
+          "statements": 95,
+          "branches": 100,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/use-cases/src/DocumentIdentification/Identification.pairs.ts": {
+          "lines": 73.52,
+          "statements": 72.36,
+          "branches": 58.33,
+          "functions": 64.44,
+          "uncovered": {
+            "lines": 18,
+            "statements": 21,
+            "branches": 10,
+            "functions": 16
+          }
+        },
+        "packages/law-practice/use-cases/src/DocumentIdentification/Identification.ports.ts": {
+          "lines": 33.33,
+          "statements": 33.33,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/law-practice/use-cases/src/DocumentIdentification/Identification.resolver.ts": {
+          "lines": 96.66,
+          "statements": 95.25,
+          "branches": 78.89,
+          "functions": 94.64,
+          "uncovered": {
+            "lines": 7,
+            "statements": 12,
+            "branches": 23,
+            "functions": 6
           }
         },
         "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts": {

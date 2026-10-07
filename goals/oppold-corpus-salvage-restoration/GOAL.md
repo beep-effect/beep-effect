@@ -54,7 +54,7 @@ Workflow:
 
 Acceptance:
 
-- [ ] P0 independently proves the current T7 state is preserved under bar v2.
+- [x] P0 independently proves the current T7 state is preserved under bar v2.
 - [ ] P1 has zero unaccounted children and records disk/time amplification.
 - [ ] P2 closes the mail, recycle, and DOC family gates with terminal ledgers.
 - [ ] P3 leaves no unapproved terminal row and records the closeout evidence.

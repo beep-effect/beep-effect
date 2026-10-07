@@ -32,7 +32,7 @@ Both routes, with different jobs:
 
 | Route | Job | Limit |
 | --- | --- | --- |
-| Firm-owned `beep-m365-outbox` MCP server (this packet) | The only route that sends mail from an agent session. Drafts with attachments, calendar writes, audit log. | Workstation sessions only (stdio, local attachment paths). |
+| Firm-owned `beep-m365-outbox` MCP server (this packet) | The guarded, audited route for drafts with attachments and calendar writes. Connector sending remains possible until its separate per-tool settings are applied (D-20). | Workstation sessions only (stdio, local attachment paths). |
 | claude.ai Microsoft 365 connector with its write permission set consented | Text-only drafts and calendar events from claude.ai chat, desktop and mobile, where no local server exists. | No attachments. Its mail send and forward tools are set to Blocked in the organization's connector settings (D-9). |
 
 ## Non-Goals
@@ -226,11 +226,47 @@ leaves a partial record at the end of a file, the next record still starts
 on a line of its own; readers skip empty lines and lines that do not decode
 (D-25).
 
-After an `unknown` outcome the caller calls `get_draft`. A draft that is still
-there was not sent. A draft that is gone from Drafts was probably sent; the
-caller confirms it in Sent Items before reporting it as sent, because a draft
-can also be deleted or moved by another client. The send is never replayed
-blindly.
+#### Required reconciliation follow-up (D-28)
+
+The implementation captured at `99d30b1b5286ae281cfab6dd7e67b169c6b01111`
+records v1 `sent` when Graph accepts the send request. That existing value means
+request acceptance, not positively observed sent state or recipient delivery.
+The runtime does not yet implement the richer reconciliation contract below or
+request immutable message IDs. Preserve historical v1 bytes and their original
+meaning; introduce the richer outcomes through a compatible, versioned journal
+change with explicit interpretation of older records.
+
+The target contract distinguishes `accepted` (HTTP 202), positively observed
+`sent`, `refused`, and unresolved `unknown`. A 202 receipt records acceptance;
+it does not establish recipient delivery. The existing guard refusal,
+server-created-draft ownership, intent-before-send and append-only boundaries
+remain in force.
+
+After an unknown outcome, reconciliation reads the message without issuing
+another send. Draft creation and subsequent message requests must consistently
+use `Prefer: IdType="ImmutableId"`. Bind the configured mailbox, exact immutable
+ID, expected message fingerprint and observed send-state fields in the receipt.
+A matching returned sent copy (`isDraft: false`, with its source-bound sent
+timestamp and expected identity) may append a sent-state reconciliation record.
+Keep the original unknown receipt; correction is append-only. This proves the
+mailbox's observed send state, not recipient delivery.
+
+A missing lookup, missing Drafts entry, timeout, or unavailable trace cannot
+resolve an unknown send. Previously recorded HTTP 202 remains known acceptance
+even if a subsequent GET returns 404. An intent persisted before a crash without
+an outcome stays unresolved and never authorizes another POST. Sent copies can
+appear later; default IDs change on moves, and immutable IDs have documented
+archive/export limits. Bounded observational retries may reconcile visibility;
+exhausting that budget proves neither failure nor success. Returning a draft
+likewise does not authorize an automatic second POST while the earlier request
+may remain unresolved. The send is never replayed blindly. An explicit delivery
+claim needs separate recipient-level provider evidence; no message-trace
+integration is required by this slice.
+
+This replaces the former missing-draft inference through research-corpus
+investigation I-01. See `research/RESEARCH-CORPUS-2026-10.md` for retained primary
+sources, synthetic proof cases and the asynchronous owner intake record. This
+specification amendment does not claim that the runtime follow-up has landed.
 
 ### Authentication
 
@@ -275,6 +311,13 @@ assignments scoped to the one mailbox: `Application Mail.ReadWrite`,
       limits.
 - [ ] No send happens when the intent record cannot be written; every send
       attempt leaves an intent and an outcome record.
+- [ ] Recovery fixtures distinguish accepted request, positively observed sent
+      copy and delivery; missing draft, delayed visibility, moved default ID,
+      deleted message, stale/mismatched identity and read timeout never turn an
+      unknown send into success or trigger another POST. A matching sent-copy
+      positive control appends reconciliation evidence without erasing history.
+- [ ] Journal evolution preserves the v1 `sent` interpretation as Graph request
+      acceptance and decodes historical records without silently relabelling them.
 - [ ] The outbox server passes the `@beep/mcp-kit` conformance runner, and a
       test proves that only `m365_outbox_send_draft` can reach the send verb.
 - [ ] `send_draft` refuses a draft the audit log has no creation record for,
@@ -346,6 +389,7 @@ Taken under the autonomy charter. Each entry names how to reverse it.
 | D-25 | Each audit append writes a newline before the record as well as after it. Files therefore hold an empty line between records, which readers skip. | After a crash that leaves a partial record with no trailing newline, the next append would otherwise land on the same line, and both would fail to decode. The record lost that way could be a `draft-created` or `event-created` record, which D-14, D-21 and D-22 depend on. With the leading newline a torn fragment costs only itself. | Write the record and one trailing newline only; existing files stay readable either way. |
 | D-26 | Recorded consequence of D-22: the read-only `beep-m365` tools `m365_get_event` and `m365_list_events` return `GraphEvent`, so their results now include `attendees` when Graph returns them. The tool list, parameters and handlers are unchanged. | The field is optional and read-only, and the alternative, a second event schema used only by the outbox, would duplicate the driver's model. | Give the outbox its own event read schema, or strip the field in the read-only handlers. |
 | D-27 | Recorded, not decided here: the outbox registration shares the Exchange management scope `beep-docket-intake-mailbox` with the docket registration. The role assignments were made on 2026-10-06. | Exchange refuses two management scopes with the same recipient filter, and both registrations are limited to the same mailbox. D-2 still holds: the service principals, certificates and role assignments are separate, and only the outbox principal holds `Application Mail.Send`. | Give the outbox a scope with a different but equivalent filter. |
+| D-28 | Keep request acceptance, observed send and recipient delivery distinct; reconcile unknown sends only from positive identity-bound evidence. | Research I-01 found that missing draft is ambiguous under documented Graph visibility and identifier behavior. Current v1 `sent` records acceptance; preserve its historical meaning through a compatible versioned journal evolution. This is required follow-up in the active packet, not an implemented runtime or mailbox repair. | Revert the amendment only with primary provider evidence and a reproducing consumer fixture establishing a stronger contract; retain historical receipts. |
 
 ## Exception Ledger
 

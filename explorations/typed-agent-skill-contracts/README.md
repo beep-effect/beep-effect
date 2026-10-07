@@ -83,3 +83,11 @@ judge settlement. See `MAP.md` §Amendment J re-entry.
   enumerated in the goal SPEC; receipt digest seam locked (today's digest types + explicit
   migration seam, not waiting on protocol-as-value); Effect rc.108→rc.111 revalidation added
   to P0. `MAP.md` gains a protocol-as-value coordination section.
+
+## Research corpus intake (2026-10-06)
+
+[Parked remote-skill activation research child](../remote-skill-activation-conformance/README.md) was independently admitted through
+[research-corpus-synthesis](../research-corpus-synthesis/README.md). This is asynchronous owner intake, not
+owner consent or a lifecycle reset. The current parent frontier and first-consumer
+ordering remain authoritative; adopt the child only through its explicit resume
+conditions. No child implementation or host experiment has run.

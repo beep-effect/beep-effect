@@ -9,10 +9,9 @@ digests while retaining the originals.
 
 ## Next action
 
-Start P0 with the archive-object and ledger schemas, then define the streaming
-hasher and archive-runner services. The existing `corpus salvage` command is
-not the P0 runner: it hashes a whole source in memory before copying and fails
-closed when the destination exists.
+P0 and P4 are complete. Hand the provenance summaries to pass-3
+identification and the practice-kg bundle; then record the P1-P2 ceilings in
+the decision log before the live mail slice.
 
 ## Launcher
 
@@ -38,6 +37,43 @@ ingestion v2, enrichment v2, and practice-kg bundle v2 remain gated MAP
 re-entry points. The solo-practice corpus kit remains deferred.
 
 ## Latest evidence
+
+2026-10-06 — P0 resumed and P4 opened (lane E, corpus provenance completion).
+The 2026-08-27 archive run had stalled at a 90.25 GB root-archive partial;
+the source tree had since lost 1,818 operator-deleted noise files (recorded
+as inherited loss, see `SPEC.md` decision log). The run resumed under
+re-measured denominators on a USB 3 link and **closed P0**: 11,451 objects /
+348,605,703,418 bytes preserved, independent verification 11,451/11,451, zero
+unapproved rows. The catalog now registers the T7 run (10,696 rows) and the
+2026-10 tom-pc run (8,237 rows; 35,707 files / 18,464 distinct digests in
+all). Full-hash reconcile: 5,086 T7 files (28.5 GB) have a copy elsewhere in
+the corpus home; 5,610 (320.1 GB, 4,354 distinct digests, including the four
+large PSTs and both OSTs) exist only in the preserved payload. P4 schemas and service contracts
+landed (`ProvenanceIndex.schemas.ts`, `ProvenanceIndex.contracts.ts`), and the
+header index ran over both mail trees: 118,771 + 122,730 messages, 72,980 +
+101,107 with RFC 5322 headers, 116,951 + 186,180 attachments, 1,539 + 1,582
+embedded items (`staging/provenance/messages-<tree>.jsonl`).
+
+2026-10-07 — P4 attachment repair applied and the census run (lane E). The
+byte-signature repair scanned 299,998 files directly under `Attachments/` in
+both mail trees and renamed 299,371 (exact completion 267,237; fully eaten
+extension 31,228; remnant mismatch 515; inexact 16; 627 left as
+`ambiguous-mime`, 375 already consistent from the interrupted first run);
+zero collisions, missing or size-changed sources. Two append-only journals
+(375 + 298,996 rows) are the undo input. pffexport keeps Windows backslashes
+inside attachment names (793 proposals in the refresh tree alone); the first
+apply stopped on them and the path schema was corrected
+(`CorpusRelativePath`, see the decision log), after which the header index
+was regenerated so its attachment paths match the repaired tree. Metadata
+census (`staging/provenance/metadata.jsonl`, exiftool 13.55, magic-identified):
+346,062 files over `raw/` (25,763), `incoming/` (16,521), `organized/`
+(3,780; its 28 symlinks into `raw/` dedupe to their canonical path) and the
+two attachment trees (115,402 + 184,596); 344,908 read cleanly, 1,154 engine
+errors kept as rows, 60,643 with an author, 102,883 with a creation date, 67
+file types (PDF 88,648; JPEG 80,115; GIF 64,599; PNG 48,679; ZIP 19,637; DOC
+13,090). P4 is complete; the hand-off to workstreams C and D goes through the
+orchestrator with file names, counts and digests only.
+
 
 2026-08-27 — P0 in progress. Bar-v2 preservation schemas landed in the repo
 CLI Corpus command family (`Preservation.schemas.ts`): occurrence identity,

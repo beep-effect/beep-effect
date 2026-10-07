@@ -1,6 +1,7 @@
 import {
   assembleEml,
   foldHeaderLine,
+  parseInternetHeaders,
   rfc5322DateFromOutlookTimestamp,
   stripMimeStructuralHeaders,
   synthesizeEmlHeaderBlock,
@@ -294,5 +295,34 @@ describe("synthesizeEmlHeaderBlock", () => {
 
     expect(block.split("\r\n").every((line) => octets(line) <= 998)).toBe(true);
     expect(block.split("\r\n").length).toBeGreaterThan(1);
+  });
+});
+
+describe("parseInternetHeaders", () => {
+  it("unfolds, lowercases, retains repeated headers and respects quoted commas", () => {
+    expect(
+      parseInternetHeaders(
+        'TO: "Doe, Ada" <ada@example.com>,\r\n\t bob@example.com\r\nTo: carol@example.com\r\nCc: "A\\" B, C" <c@example.com>\r\nReferences: <one>\r\n <two>\r\nReferences: <three>\r\nSubject: hello\r\n world\r\n\r\nTo: body'
+      )
+    ).toStrictEqual({
+      to: ['"Doe, Ada" <ada@example.com>', "bob@example.com", "carol@example.com"],
+      cc: ['"A\\" B, C" <c@example.com>'],
+      references: ["<one>", "<two>", "<three>"],
+      subject: ["hello world"],
+    });
+    expect(parseInternetHeaders("From: a@example.com\nSubject: folded\n value\nBad line").subject).toStrictEqual([
+      "folded value",
+    ]);
+  });
+
+  it("keeps prototype-named header fields as ordinary own keys", () => {
+    const headers = parseInternetHeaders("Subject: hi\nConstructor: x\n__proto__: y\nHasOwnProperty: z\n");
+    expect(Object.entries(headers)).toStrictEqual([
+      ["subject", ["hi"]],
+      ["constructor", ["x"]],
+      ["__proto__", ["y"]],
+      ["hasownproperty", ["z"]],
+    ]);
+    expect(Object.getPrototypeOf(headers)).toBe(Object.prototype);
   });
 });

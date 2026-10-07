@@ -2065,6 +2065,12 @@
       ],
       "@beep/technical-drawing/*": [
         "./packages/foundation/capability/technical-drawing/src/*"
+      ],
+      "@beep/law-practice-server/DocumentIdentification": [
+        "./packages/law-practice/server/src/DocumentIdentification/index.ts"
+      ],
+      "@beep/law-practice-use-cases/DocumentIdentification": [
+        "./packages/law-practice/use-cases/src/DocumentIdentification/index.ts"
       ]
     },
     "plugins": [

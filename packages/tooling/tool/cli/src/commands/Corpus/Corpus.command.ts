@@ -34,20 +34,29 @@ import {
   catalogCorpus,
   enrichCorpus,
   extractCorpus,
+  indexMailExportTrees,
   organizeCorpus,
   preflightT7Preservation,
   preserveRestorationArchive,
   printCorpusIndex,
   reconcileRestorationAcceptance,
+  repairAttachmentExtensions,
   restoreLegacyWord,
   restoreMail,
   restoreRecycle,
+  runMetadataCensus,
   runT7Preservation,
   salvageCorpus,
   verifyRestorationArchive,
   verifySalvage,
   verifyT7Preservation,
 } from "./Corpus.service.ts";
+import {
+  AttachmentRepairMode,
+  AttachmentRepairOptions,
+  MetadataCensusOptions,
+  ProvenanceMessagesOptions,
+} from "./internal/ProvenanceIndex.schemas.ts";
 
 const decodeRestorationLegacyWordOptions = S.decodeEffect(RestorationLegacyWordOptions);
 const decodeRestorationMailOptions = S.decodeEffect(RestorationMailOptions);
@@ -216,6 +225,18 @@ const restorationMinimumFreeFlag = Flag.Int("minimum-free-after-bytes").pipe(
 const restorationCollectorRowsFlag = Flag.Int("expected-collector-rows").pipe(
   Flag.withDefault(28_508),
   Flag.withDescription("Frozen inherited collector row denominator")
+);
+const restorationCollectorPresentRowsFlag = Flag.Int("expected-collector-present-rows").pipe(
+  Flag.withDefault(21_489),
+  Flag.withDescription(
+    "Frozen inherited collector successful-row count whose destination is still present on the source"
+  )
+);
+const restorationOperatorDeletedFlag = Flag.Int("expected-operator-deleted-destinations").pipe(
+  Flag.withDefault(0),
+  Flag.withDescription(
+    "Collector destinations the operator deliberately removed from the source after the approved preflight (optional fifth inherited-loss class)"
+  )
 );
 const restorationMissingRecycleFlag = Flag.Int("expected-missing-recycle-payloads").pipe(
   Flag.withDefault(13),
@@ -507,9 +528,11 @@ const corpusRestorationPreserveCommand = Command.make(
     collectorManifest: restorationCollectorManifestFlag,
     corpusRoot: corpusRootFlag,
     crashPoint: restorationCrashPointFlag,
+    expectedCollectorPresentRows: restorationCollectorPresentRowsFlag,
     expectedCollectorRows: restorationCollectorRowsFlag,
     expectedMissingRecyclePayloads: restorationMissingRecycleFlag,
     expectedMutatedDestinations: restorationMutatedDestinationFlag,
+    expectedOperatorDeletedDestinations: restorationOperatorDeletedFlag,
     expectedRootArchiveBytes: restorationRootArchiveBytesFlag,
     expectedSourceDirectories: restorationSourceDirectoriesFlag,
     expectedSourceFiles: restorationSourceFilesFlag,
@@ -526,9 +549,11 @@ const corpusRestorationPreserveCommand = Command.make(
     collectorManifest,
     corpusRoot,
     crashPoint,
+    expectedCollectorPresentRows,
     expectedCollectorRows,
     expectedMissingRecyclePayloads,
     expectedMutatedDestinations,
+    expectedOperatorDeletedDestinations,
     expectedRootArchiveBytes,
     expectedSourceDirectories,
     expectedSourceFiles,
@@ -544,9 +569,11 @@ const corpusRestorationPreserveCommand = Command.make(
       chunkSizeBytes,
       corpusRoot,
       crashPoint,
+      expectedCollectorPresentSuccessfulRowCount: expectedCollectorPresentRows,
       expectedCollectorRowCount: expectedCollectorRows,
       expectedMissingRecyclePayloadCount: expectedMissingRecyclePayloads,
       expectedMutatedDestinationCount: expectedMutatedDestinations,
+      expectedOperatorDeletedDestinationCount: expectedOperatorDeletedDestinations,
       expectedRootArchiveBytes,
       expectedSourceDirectoryCount: expectedSourceDirectories,
       expectedSourceFileCount: expectedSourceFiles,
@@ -822,6 +849,92 @@ const corpusPreserveCommand = Command.make("preserve", {}, () => printCorpusInde
   ])
 );
 
+const provenanceOutputFlag = Flag.String("out-dir").pipe(
+  Flag.withDescription("Output directory; defaults to staging/provenance under the corpus root"),
+  Flag.optional
+);
+const provenanceTreesFlag = Flag.String("tree").pipe(
+  Flag.withDescription("Staging tree label; repeat to scan multiple trees"),
+  Flag.atLeast(0)
+);
+const provenanceMessagesCommand = Command.make(
+  "messages",
+  { corpusRoot: corpusRootFlag, trees: provenanceTreesFlag, outputDir: provenanceOutputFlag },
+  Effect.fn(function* ({ corpusRoot, trees, outputDir }) {
+    yield* indexMailExportTrees(
+      ProvenanceMessagesOptions.make({
+        corpusRoot,
+        trees,
+        ...O.match(outputDir, { onNone: () => ({}), onSome: (outputDir) => ({ outputDir }) }),
+      })
+    );
+  })
+).pipe(Command.provide(CorpusCommandServiceLive));
+const provenanceAttachmentsCommand = Command.make(
+  "attachments",
+  {
+    corpusRoot: corpusRootFlag,
+    trees: provenanceTreesFlag,
+    outputDir: provenanceOutputFlag,
+    mode: Flag.Literals("mode", AttachmentRepairMode.literals).pipe(
+      Flag.withDefault("plan"),
+      Flag.withDescription("plan writes proposals only; apply renames and journals; undo reverts a journal")
+    ),
+    journal: Flag.String("journal").pipe(
+      Flag.withDescription(
+        "Rename journal to revert (undo) or to append to (apply); defaults under the output directory"
+      ),
+      Flag.optional
+    ),
+    fileCommand: Flag.String("file-command").pipe(
+      Flag.withDefault("file"),
+      Flag.withDescription("file(1) binary used for byte-signature sniffing")
+    ),
+  },
+  Effect.fn(function* ({ corpusRoot, trees, outputDir, mode, journal, fileCommand }) {
+    yield* repairAttachmentExtensions(
+      AttachmentRepairOptions.make({
+        corpusRoot,
+        trees,
+        mode,
+        fileCommand,
+        ...O.match(outputDir, { onNone: () => ({}), onSome: (outputDir) => ({ outputDir }) }),
+        ...O.match(journal, { onNone: () => ({}), onSome: (journalPath) => ({ journalPath }) }),
+      })
+    );
+  })
+).pipe(Command.provide(CorpusCommandServiceLive));
+const provenanceMetadataCommand = Command.make(
+  "metadata",
+  {
+    corpusRoot: corpusRootFlag,
+    roots: Flag.String("root").pipe(
+      Flag.withDescription("Corpus-relative root; repeat to scan multiple roots"),
+      Flag.atLeast(0)
+    ),
+    outputDir: provenanceOutputFlag,
+    batchSize: Flag.Int("batch-size").pipe(
+      Flag.withDefault(500),
+      Flag.withDescription("Files per exiftool invocation")
+    ),
+    concurrency: Flag.Int("concurrency").pipe(Flag.withDefault(4), Flag.withDescription("Concurrent exiftool batches")),
+    exiftoolCommand: Flag.String("exiftool-command").pipe(
+      Flag.withDefault("exiftool"),
+      Flag.withDescription("exiftool binary used for the metadata census")
+    ),
+  },
+  Effect.fn(function* ({ outputDir, ...options }) {
+    const decoded = yield* S.decodeEffect(MetadataCensusOptions)({
+      ...options,
+      ...O.match(outputDir, { onNone: () => ({}), onSome: (outputDir) => ({ outputDir }) }),
+    }).pipe(CorpusCommandError.mapError("Invalid metadata census options."));
+    yield* runMetadataCensus(decoded);
+  })
+).pipe(Command.provide(CorpusCommandServiceLive));
+const provenanceCommand = Command.make("provenance", {}, () => printCorpusIndex).pipe(
+  Command.withSubcommands([provenanceMessagesCommand, provenanceAttachmentsCommand, provenanceMetadataCommand])
+);
+
 /**
  * Corpus curation command group.
  *
@@ -840,6 +953,7 @@ const corpusPreserveCommand = Command.make("preserve", {}, () => printCorpusInde
 export const corpusCommand = Command.make("corpus", {}, () => printCorpusIndex).pipe(
   Command.withDescription("Corpus salvage and curation commands"),
   Command.withSubcommands([
+    provenanceCommand,
     corpusArchiveMoveCommand,
     corpusCatalogCommand,
     corpusEnrichCommand,

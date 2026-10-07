@@ -44,6 +44,7 @@
     "./IrToLaw": "./src/IrToLaw/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
     "./LegalPositionRelatorPolicy": "./src/LegalPositionRelatorPolicy/index.ts",
+    "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
     "./MailTagging": "./src/MailTagging/index.ts",
     "./OfficeActionReview": "./src/OfficeActionReview/index.ts",
     "./PatentClaimCandidate": "./src/PatentClaimCandidate/index.ts",
@@ -72,6 +73,7 @@
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@noble/hashes": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

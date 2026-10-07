@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "research-corpus-synthesis",
+    "title": "Research Corpus Synthesis",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": [
+      "research/SOURCES.md",
+      "PLAN.md",
+      "DECISIONS.md",
+      "RESEARCH.md",
+      "BRIEF.md",
+      "MAP.md",
+      "research/PHASE-1-GATE.md",
+      "research/ROUTING.md",
+      "research/routing.jsonl",
+      "research/CONTRADICTIONS.md",
+      "research/CAPABILITY-MAP.md",
+      "research/CAPABILITY-DELTA-2026-10-06.md",
+      "research/ADMISSION-REVIEW.md",
+      "research/OUTBOX-REVIEW.md",
+      "research/ADHD-GRADUATION.md",
+      "research/INVESTIGATIONS.md",
+      "research/OPPORTUNITIES.md",
+      "research/COVERAGE.md",
+      "research/source-ledger.jsonl",
+      "history/reflections/2026-10-06-codex.md",
+      "research/CLOSEOUT.md"
+    ],
+    "links": {
+      "goals": ["goals/oa-evidence-consumer-conformance"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-10-06",
+    "updated": "2026-10-06"
+  }
+}

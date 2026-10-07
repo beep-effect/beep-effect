@@ -72,3 +72,10 @@ jq . goals/m365-agent-outbox/ops/manifest.json
 rg -n "m365-agent-outbox|GOAL.md|agentLaunchers|packetAnchorDocument" goals/m365-agent-outbox
 git diff --check -- goals/m365-agent-outbox
 ```
+
+## Research intake checkpoint (2026-10-06)
+
+Before the send/audit fixture phase closes, implement SPEC D-28 and the bounded
+[unknown-outcome matrix](research/RESEARCH-CORPUS-2026-10.md). Preserve the owner
+and phase order; this adds positive reconciliation evidence, not another send
+path or a claim that production behavior has been fixed.
