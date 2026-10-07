@@ -149,7 +149,9 @@ export class EvidencePaths extends S.Class<EvidencePaths>($I`EvidencePaths`)(
  * Each evidence script passes its own write sibling to {@link decodeEvidenceMode}
  * so the mode-conflict refusal points the operator at the right command: the
  * admission replay (`evidence:s7:write`), the live replay
- * (`evidence:s7-live:write`) or the lane-plan golden (`evidence:lane-plan:write`).
+ * (`evidence:s7-live:write`), the lane-plan golden (`evidence:lane-plan:write`),
+ * the KPI reading (`evidence:kpi:write`) or its adoption table
+ * (`evidence:kpi-adoption:write`).
  *
  * **Example** (Name the lane-plan write script)
  *
@@ -166,6 +168,8 @@ export const EvidenceWriteScript = LiteralKit([
   "evidence:s7:write",
   "evidence:s7-live:write",
   "evidence:lane-plan:write",
+  "evidence:kpi:write",
+  "evidence:kpi-adoption:write",
 ]).pipe(
   $I.annoteSchema("EvidenceWriteScript", {
     description: "The package script that regenerates one frozen evidence record (`:write` sibling of a check script).",
@@ -460,12 +464,37 @@ const topLevelKey = /^[a-z_]+:/;
 
 const indentOf = (line: string): number => Str.length(line) - Str.length(Str.trimStart(line));
 
-// Lines after a top-level `key:` up to the next top-level key (YAML lists sit at column 0).
-const topLevelBlock = (lines: ReadonlyArray<string>, key: string): ReadonlyArray<string> =>
-  O.match(A.findFirstIndex(lines, Eq.equals(`${key}:`)), {
-    onNone: A.empty<string>,
-    onSome: (index) => A.takeWhile(A.drop(lines, index + 1), (line) => !topLevelKey.test(line)),
-  });
+/**
+ * Lines after a top-level `key:` up to the next top-level key of a known-shape manifest.
+ *
+ * **Details**
+ *
+ * A line-based read with no YAML dependency: YAML lists in the pinned
+ * manifests sit at column 0, so a block ends at the next line matching
+ * `^[a-z_]+:`. The KPI sources reuse it to read the `run4-fleet` manifest.
+ *
+ * **Example** (Read one top-level block)
+ *
+ * ```ts
+ * import { topLevelBlock } from "@/projection/Evidence"
+ *
+ * console.log(topLevelBlock(["files:", "- path: a", "next: 1"], "files")) // ["- path: a"]
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const topLevelBlock: {
+  (key: string): (lines: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (lines: ReadonlyArray<string>, key: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (lines: ReadonlyArray<string>, key: string): ReadonlyArray<string> =>
+    O.match(A.findFirstIndex(lines, Eq.equals(`${key}:`)), {
+      onNone: A.empty<string>,
+      onSome: (index) => A.takeWhile(A.drop(lines, index + 1), (line) => !topLevelKey.test(line)),
+    })
+);
 
 // Lines after the first `header` line that are indented deeper than it.
 const nestedBlock = (lines: ReadonlyArray<string>, header: string): ReadonlyArray<string> =>

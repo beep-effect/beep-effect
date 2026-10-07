@@ -1,0 +1,20 @@
+{
+  "previous": "b477c7b6eee5e37617aeea19c779fa0bb7c04fd943276dd2b90d4b50e8c8733b",
+  "subjects": ["@beep/ciops"],
+  "review": {
+    "reviewer": "Claude Fable 5.1 (ciops-ontology-pipeline P4 PR-A, feat/ciops-p4-kpi-etl)",
+    "reason": "Refresh the six @beep/ciops computations (build, check, lint, lint:deprecated-apis, lint:laws, test) after the lab added the evidence:kpi, evidence:kpi:write, evidence:kpi-adoption and evidence:kpi-adoption:write package scripts for the W8 KPI reading; the new scripts are not cached tasks, no existing computation changes its command text, output, environment key, dependency edge or cache flag beyond the package manifest input, and no qualification is granted.",
+    "basis": {
+      "path": "apps/labs/ciops/package.json",
+      "sha256": "491d1f85969a271b7fcd4894c55858dade6e53dcbfcb477c2d511024a2edcd37"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2"
+}
