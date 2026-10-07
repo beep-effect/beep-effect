@@ -1092,3 +1092,8 @@
   merge commit's 10-hex prefix was flagged as a misspelt three-letter word, so the Markdown renders full
   40-hex merge commits to pass. Prevention: a typos config that treats runs of 10 or more hex characters
   as identifiers.
+- A derived lint profile that the cheap gates do not check. Work: adding two generated files to a biome
+  formatter override. Evidence: `biome.identity.jsonc` is generated from `biome.jsonc` and checked only by
+  the hosted lint-a lane ("Identity lint profile is stale; regenerate it with cache profile --write"), so
+  the publish's cheap gates passed and the PR went red one push later. Prevention: run `beep cache
+  profile` in the cheap gates, or regenerate the profile in the same step that validates `biome.jsonc`.
