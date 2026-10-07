@@ -56,6 +56,7 @@ import { isModuleTarget, labPaths, type RunnerConfig, resolveRunnerConfig } from
 import { capture } from "./Process.ts";
 import { runCliSeats, writeBrief } from "./Review.ts";
 import { codemodImports, type ImportRewrite } from "./Codemod.ts";
+import { type ApplyReport, applyDocBlockData, type DocBlock, extractDocBlocks } from "./DocsMigrate.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Audit.service");
 
@@ -159,6 +160,10 @@ export interface AuditShape {
   ) => Effect.Effect<LedgerRow, RunnerError>;
   /** Rewrite root effect imports to per-module imports with the A/O/P/R/S aliases. @since 0.0.0 */
   readonly codemodImports: (target: AuditTarget) => Effect.Effect<ReadonlyArray<ImportRewrite>, RunnerError>;
+  /** Every legacy-carrier JSDoc block of a module, for the S2 title pass. @since 0.0.0 */
+  readonly docsExtract: (module: ModuleName) => Effect.Effect<ReadonlyArray<DocBlock>, RunnerError>;
+  /** Apply S2 titles and routing through the conservation-checked rewriter. @since 0.0.0 */
+  readonly docsApply: (module: ModuleName, json: string) => Effect.Effect<ApplyReport, RunnerError>;
   /** Write the reviewer brief for a round on HEAD. @since 0.0.0 */
   readonly reviewBrief: (
     module: ModuleName,
@@ -366,6 +371,12 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
     }, provide),
     codemodImports: Effect.fn("Audit.codemodImports")(function* (target: AuditTarget) {
       return yield* codemodImports(config, target);
+    }, provide),
+    docsExtract: Effect.fn("Audit.docsExtract")(function* (module: ModuleName) {
+      return yield* extractDocBlocks(config, module);
+    }, provide),
+    docsApply: Effect.fn("Audit.docsApply")(function* (module: ModuleName, json: string) {
+      return yield* applyDocBlockData(config, module, json);
     }, provide),
     reviewBrief: Effect.fn("Audit.reviewBrief")(function* (module: ModuleName, round: number) {
       return yield* writeBrief(config, module, round);

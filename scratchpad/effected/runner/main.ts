@@ -19,6 +19,7 @@ import { CliUsageError, LedgerIncomplete } from "./Audit.errors.ts";
 import { Audit, AuditLive } from "./Audit.service.ts";
 import { AUDIT_TARGETS, MODULE_NAMES, ModuleName, Stage } from "./Ledger.schema.ts";
 import { AppendField } from "./LedgerStore.ts";
+import { DocBlock } from "./DocsMigrate.ts";
 
 const moduleArgument = Argument.Literals("module", MODULE_NAMES);
 const targetArgument = Argument.Literals("target", AUDIT_TARGETS);
@@ -180,6 +181,40 @@ const codemod = Command.make(
   })
 ).pipe(Command.withDescription("S1: rewrite root effect imports to per-module imports with the A/O/P/R/S aliases"));
 
+const encodeDocBlocks = S.encodeEffect(DocBlock.pipe(S.Array, (schema) => S.fromJsonString(schema, { space: 2 })));
+
+const docsExtract = Command.make(
+  "docs-extract",
+  { module: moduleArgument, out: Argument.String("out-json") },
+  Effect.fnUntraced(function* ({ module, out }) {
+    const service = yield* Audit;
+    const fs = yield* FileSystem.FileSystem;
+    const blocks = yield* service.docsExtract(module);
+    const encoded = yield* encodeDocBlocks(blocks).pipe(
+      Effect.mapError((issue) => CliUsageError.make({ detail: String(issue) }))
+    );
+    yield* fs.writeFileString(out, `${encoded}\n`);
+    const examples = A.reduce(blocks, 0, (total, block) => total + block.examples);
+    const remarks = A.reduce(blocks, 0, (total, block) => total + block.remarks);
+    yield* Console.log(`[effected] ${module} docs-extract: ${blocks.length} block(s), ${examples} @example, ${remarks} @remarks -> ${out}`);
+  })
+).pipe(Command.withDescription("S2: list legacy-carrier JSDoc blocks (anchor, counts, text) as JSON for the title pass"));
+
+const docsApply = Command.make(
+  "docs-apply",
+  { module: moduleArgument, file: Argument.String("data-json") },
+  Effect.fnUntraced(function* ({ module, file }) {
+    const service = yield* Audit;
+    const fs = yield* FileSystem.FileSystem;
+    const report = yield* service.docsApply(module, yield* fs.readFileString(file));
+    for (const line of report.quarantined) yield* Console.log(`  quarantined ${line}`);
+    for (const anchor of report.unmatched) yield* Console.log(`  unmatched ${anchor}`);
+    yield* Console.log(
+      `[effected] ${module} docs-apply: ${report.rewritten} rewritten, ${report.quarantined.length} quarantined, ${report.unmatched.length} unmatched`
+    );
+  })
+).pipe(Command.withDescription("S2: apply titles/routing (JSON array of {anchor,titles,remarks?,leadEnd?,seePurposes?})"));
+
 const append = Command.make(
   "append",
   {
@@ -198,7 +233,7 @@ const append = Command.make(
 
 const root = Command.make("audit:effected").pipe(
   Command.withDescription("Gates and ledger of the @effected/* port lab (scratchpad/EFFECTED_PORT_GOAL.md)"),
-  Command.withSubcommands([copy, carry, codemod, parity, check, lint, test, docgen, audit, ledger, review, append])
+  Command.withSubcommands([copy, carry, codemod, docsExtract, docsApply, parity, check, lint, test, docgen, audit, ledger, review, append])
 );
 
 const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));
