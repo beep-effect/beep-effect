@@ -54,11 +54,6 @@
         "count": 1
       }
     },
-    "packages/drivers/libpff/src/Libpff.eml.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts": {
       "crap_moderate": {
         "count": 1
@@ -483,7 +478,7 @@
     },
     "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts": {
       "complexity_moderate": {
-        "count": 2
+        "count": 1
       }
     },
     "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts": {
@@ -652,6 +647,11 @@
         "count": 1
       }
     },
+    "packages/tooling/tool/cli/test/research-library-acquisition.test.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
     "packages/tooling/tool/cli/test/yeet-check-fidelity.test.ts": {
       "complexity_moderate": {
         "count": 1
@@ -660,8 +660,12 @@
   },
   "runtime_coverage_findings": [],
   "target_keys": [
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.protocol.ts:high impact",
+    "packages/tooling/tool/cli/src/commands/Research/Library/Library.evidence.ts:high impact",
     "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.signed.ts:high impact",
     "packages/ecosystem/effect-drizzle/src/pg/model.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Research/Library/Library.inventory.ts:high impact",
     "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:complexity",
     "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:complexity",
     "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts:complexity",
