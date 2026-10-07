@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+/** Document identification schemas, ports and pure pipeline. @category services @since 0.0.0 */
+export * as DocumentIdentification from "./DocumentIdentification/index.ts";
 /**
  * IR-to-law mapping service contract exports.
  *

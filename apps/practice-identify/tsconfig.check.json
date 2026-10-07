@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [
+    {
+      "path": "../../packages/drivers/uspto/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/server/tsconfig.json"
+    },
+    {
+      "path": "../../packages/law-practice/use-cases/tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "rootDir": "../../."
+  }
+}

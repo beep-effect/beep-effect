@@ -40,6 +40,7 @@
     "./CandorRecord": "./src/CandorRecord/index.ts",
     "./DocketIntake": "./src/DocketIntake/index.ts",
     "./LegalPositionRecord": "./src/LegalPositionRecord/index.ts",
+    "./DocumentIdentification": "./src/DocumentIdentification/index.ts",
     "./MailTagging": "./src/MailTagging/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -72,6 +73,7 @@
     "@beep/schema": "workspace:^",
     "@beep/shared-use-cases": "workspace:^",
     "@beep/tika": "workspace:^",
+    "@beep/uspto": "workspace:^",
     "@beep/utils": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"

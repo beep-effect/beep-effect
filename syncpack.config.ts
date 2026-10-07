@@ -117,6 +117,7 @@ const config = {
     "packages/drivers/occt/package.json",
     "packages/drivers/pdf-tools/package.json",
     "apps/practice-mail-tagging/package.json",
+    "apps/practice-identify/package.json",
   ],
   customTypes: {
     catalog: {
