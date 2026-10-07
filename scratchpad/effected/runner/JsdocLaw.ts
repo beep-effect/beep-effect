@@ -58,6 +58,7 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
     }
   };
   let seenTag = false;
+  let awaitingWhenToUse = false;
   for (const line of lines) {
     const trimmed = Str.trim(line);
     if (Str.startsWith("```")(trimmed)) {
@@ -72,6 +73,10 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
       continue;
     }
     if (inFence) continue;
+    if (awaitingWhenToUse && trimmed.length > 0 && SECTION.exec(trimmed) === null) {
+      awaitingWhenToUse = false;
+      if (!/^Use (to|when|as|with)\b/.test(trimmed)) findings.push(`when-to-use-opener: ${Str.slice(0, 40)(trimmed)}`);
+    }
     const section = SECTION.exec(trimmed);
     if (section !== null) {
       const name = section[1] ?? "";
@@ -85,6 +90,7 @@ export const blockFindings = (text: string): ReadonlyArray<string> => {
       if (name !== "Example" && rank === sectionRank) findings.push(`section-duplicate: **${name}** appears twice`);
       sectionRank = rank;
       currentSection = O.some(name);
+      awaitingWhenToUse = name === "When to use";
       fencesInExample = 0;
       if (name === "Example") {
         const title = /^\s*\((.+)\)\s*$/.exec(section[2] ?? "");

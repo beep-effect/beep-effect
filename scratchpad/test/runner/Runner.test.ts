@@ -174,6 +174,8 @@ describe("specifier rewrites", () => {
   it("finds leftover foreign specifiers by line", () => {
     assert.deepStrictEqual(foreignSpecifierLines("a.ts", 'ok\nimport x from "@effected/glob"\n'), ["a.ts:2"]);
     assert.deepStrictEqual(pipe("a.ts", foreignSpecifierLines("clean")), []);
+    const alias = 'import { x } from "@beep/scratchpad/effected/jsonc/index";\n * import { y } from "@beep/scratchpad/effected/jsonc/index"';
+    assert.deepStrictEqual(foreignSpecifierLines("t.ts", alias), ["t.ts:1"]);
   });
 });
 
@@ -296,11 +298,12 @@ describe("review loop", () => {
     const second = pipe("jsonl", reviewBrief({ round: 2, commit: "def" }));
     assert.include(second, "scratchpad/effected/jsonl/.review/round-1/INVENTORY.md");
   });
-  it("launches Grok in plan mode and Sol read-only, writing reports beside the brief", () => {
+  it("launches Grok with read-only tools and Sol read-only, writing reports beside the brief", () => {
     const seats = seatLaunches("/repo", "scratchpad/effected/jsonl/.review/round-1");
     assert.deepStrictEqual(A.map(seats, (seat) => seat.seat), ["grok", "sol"]);
     const scripts = A.map(seats, (seat) => A.join(seat.launch.args, " "));
-    assert.include(scripts[0] ?? "", "--permission-mode plan");
+    assert.include(scripts[0] ?? "", '--tools "read_file,grep,list_dir"');
+    assert.include(scripts[0] ?? "", '--deny "Write(**)"');
     assert.include(scripts[0] ?? "", "grok-4.7 --reasoning-effort xhigh");
     assert.include(scripts[1] ?? "", "-s read-only");
     assert.include(scripts[1] ?? "", 'model_reasoning_effort="high"');
@@ -363,6 +366,12 @@ describe("jsdoc law", () => {
   it("accepts a canonical block", () => {
     const text = block("Lead.", "", "**Details**", "", "More.", "", "**Example** (Use it)", "", "```ts", "x", "```", "", "@see {@link X} for the schema.", "@category utilities", "@since 0.0.0");
     assert.deepStrictEqual(blockFindings(text), []);
+  });
+  it("requires a When to use section to open with an allowed phrase", () => {
+    const bad = block("Lead.", "", "**When to use**", "", "Use at boundaries.", "@since 0.0.0");
+    const good = block("Lead.", "", "**When to use**", "", "Use when parsing at a boundary.", "@since 0.0.0");
+    assert.include(A.map(blockFindings(bad), (finding) => finding.split(":")[0]), "when-to-use-opener");
+    assert.deepStrictEqual(blockFindings(good), []);
   });
   it("flags legacy carriers, bare see, bad category and since, hyphens and braces", () => {
     const text = block("Lead.", "", "@remarks old", "@example", "@param {string} x - the x", "@returns - y", "@see {@link X}", "@category stuff", "@since 1.0.0");

@@ -265,9 +265,12 @@ export const scanUnsafeAssertions = (
 };
 
 const FOREIGN = /["']@effected\/[^"']*["']/;
+const LAB_ALIAS = /^\s*(?:import|export)\b.*\bfrom\s+["']@beep\/scratchpad\/effected\/|\bimport\(\s*["']@beep\/scratchpad\/effected\//;
 
 /**
- * Lines that still name an `@effected/*` specifier, as `label:line`.
+ * Lines that still name an `@effected/*` specifier, or import lab source
+ * through the `@beep/scratchpad/effected/*` alias instead of a relative path
+ * (D13; JSDoc example fences may use the alias), as `label:line`.
  *
  * **Example** (Find foreign specifiers in text)
  *
@@ -287,7 +290,7 @@ export const foreignSpecifierLines: {
   2,
   (label: string, text: string): ReadonlyArray<string> =>
     A.filterMap(Str.split("\n")(text), (line, index) =>
-      FOREIGN.test(line) ? Result.succeed(`${label}:${index + 1}`) : Result.failVoid
+      FOREIGN.test(line) || LAB_ALIAS.test(line) ? Result.succeed(`${label}:${index + 1}`) : Result.failVoid
     )
 );
 

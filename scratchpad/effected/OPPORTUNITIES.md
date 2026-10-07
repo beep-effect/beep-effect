@@ -58,3 +58,15 @@ Paths use `~`; no secrets, no machine ids.
   vitest reported `No test suite found in file .../runner/Gates.ts`.
 - **Evidence:** `includeSource` matches any file containing the marker text.
 - **Prevention:** never spell the marker in prose inside `scratchpad/effected/**`.
+
+## 2026-10-07 — the Grok seat returned an empty review in plan mode
+
+- **What:** jsonc round 1's grok.md held only the seat's opening sentence (325
+  bytes, exit 0, no REQUIRED/BACKLOG line).
+- **Evidence:** `grok ... --permission-mode plan` headless stops at its first
+  plan hand-off; `--sandbox read-only` refuses to start on this host
+  ("could not resolve runtime-socket deny path /run/podman/podman.sock").
+- **Prevention:** the seat now runs with `--tools "read_file,grep,list_dir"`,
+  `--deny "Write(**)" --deny "Edit(**)"` and `--always-approve`; the runner's
+  post-seat `git status` scope check stays the backstop. A seat report without a
+  `REQUIRED:` line counts as unavailable, never as zero findings.

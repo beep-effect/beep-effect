@@ -7,7 +7,9 @@
  *
  * The Fable seat runs inside the orchestrating session (a Workflow agent), so
  * this module only writes its brief; the two CLI seats run here, in parallel,
- * on the same commit, and their reports land in
+ * on the same commit. Grok runs with a read-only tool allowlist and write/edit
+ * deny rules (its read-only sandbox profile cannot start on this host), Sol in
+ * Codex's read-only sandbox, and their reports land in
  * `scratchpad/effected/<m>/.review/round-N/`.
  *
  * @packageDocumentation
@@ -199,7 +201,7 @@ export const seatLaunches: {
       command: "bash",
       args: [
         "-c",
-        `grok -m grok-4.7 --reasoning-effort xhigh --permission-mode plan --prompt-file "${directory}/BRIEF.md" --output-format plain --max-turns 80 > "${directory}/grok.md"`,
+        `grok -m grok-4.7 --reasoning-effort xhigh --tools "read_file,grep,list_dir" --deny "Write(**)" --deny "Edit(**)" --always-approve --prompt-file "${directory}/BRIEF.md" --output-format plain --max-turns 80 > "${directory}/grok.md"`,
       ],
       cwd: repoRoot,
     },
