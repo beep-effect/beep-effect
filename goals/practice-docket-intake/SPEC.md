@@ -138,24 +138,24 @@ rounds used, final score, threshold) and flags: `dates-differ`, `matter-ambiguou
 
 ## Acceptance Criteria
 
-- [ ] `@beep/m365` has an app-only lane and the write verbs, fixture-proven
+- [x] `@beep/m365` has an app-only lane and the write verbs, fixture-proven
       for method, URL, headers, body, decoded response and non-retry of
       non-idempotent writes; no configuration shape mixes delegated scopes
       with app-only credentials.
-- [ ] Date computation and ladder generation are property-tested (month-end
+- [x] Date computation and ladder generation are property-tested (month-end
       clamping, earlier-of, ladder ordering, no rung on or after the due date,
       no rung in the past).
-- [ ] The pipeline produces each typed outcome from fixtures and creates no
+- [x] The pipeline produces each typed outcome from fixtures and creates no
       duplicate event when a message is processed twice.
-- [ ] The poller persists its cursor only after a complete cycle and resumes
+- [x] The poller persists its cursor only after a complete cycle and resumes
       from it.
-- [ ] A daily digest lists created and flagged items by message id and event
+- [x] A daily digest lists created and flagged items by message id and event
       id, without message content.
-- [ ] The registration runbook is on the operator desk, and the live smoke
+- [x] The registration runbook is on the operator desk, and the live smoke
       (credential-gated, with a separate mutation opt-in and cleanup of its
       own uniquely marked events) has been run once.
-- [ ] `bun run beep quality package-verify` passes for every touched package.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `bun run beep quality package-verify` passes for every touched package.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

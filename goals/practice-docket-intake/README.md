@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -39,21 +39,32 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify, continuing. Slices 0 to 3c are merged (#1455, #1456, #1458,
-#1475, #1502, #1517, plus driver follow-ups #1473 and #1501); slice 4 (the
-live practice-KG matter lookup and the docket-sheet cross-check, SPEC D-44 to
-D-46) is in review. The Entra and Exchange registration is complete and the
-live read and write smoke tests passed on 2026-10-06. First live runs: the IT
-mailbox run processed 10 messages and found no docket item; the attorney
-mailbox run of 2026-10-06 processed 10 messages, entered 1, sent 2 to needs
-review, failed 0, and wrote 3 tentative events.
+P4 Close, complete. Slices 0 to 4 are merged (#1455, #1456, #1458, #1475, #1502,
+#1517, #1528, plus driver follow-ups #1473 and #1501). The Entra and Exchange
+registration is complete, the live read and write smoke tests passed on
+2026-10-06, and the first live runs ran the same day: the IT mailbox run
+processed 10 messages and found no docket item; the attorney mailbox run
+processed 10 messages, entered 1, sent 2 to needs review, failed 0, and wrote 3
+tentative events, none undone. The closeout reflection is
+[`history/reflections/2026-10-06-claude.md`](./history/reflections/2026-10-06-claude.md).
+
+Open operational items, outside the code deliverable: the attorney spot-check
+of the first tentative entries (PLAN operator-attended step 2), and the
+runbook path form fix on `main` (#1533).
 
 ## Latest Evidence
 
-Package handoffs pass for `@beep/m365`, `@beep/m365-mcp`,
-`@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
-`@beep/law-practice-server` and `@beep/docket-intake`. Live smoke against the
-attorney mailbox: read and write passed on 2026-10-06 (ids and counts only).
+- Package handoffs pass for `@beep/m365`, `@beep/m365-mcp`,
+  `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
+  `@beep/law-practice-server`, `@beep/docket-intake` and `@beep/anthropic`.
+- Live smoke against the attorney mailbox: read and write passed on 2026-10-06
+  (ids and counts only).
+- First live runs on 2026-10-06, unattended and bounded (since 2026-10-01, at
+  most 10 messages, separate state directories): IT mailbox 10 processed, 0
+  docket items, no undo needed; attorney mailbox 10 processed, 1 entered, 2 to
+  review, 0 failed, 3 tentative events, kept.
+- Review: #1517 closed three waves (seven threads) and #1528 merged with zero
+  threads; both merged at the orchestrator gate with an attributed inherited red.
 
 ## Notes
 
