@@ -318,13 +318,15 @@ describe("practice KG correspondents", () => {
         const databasePath = path.join(directory, "practice.duckdb");
         const extractRoot = path.join(directory, "extract");
         yield* fs.makeDirectory(path.join(extractRoot, "metadata"), { recursive: true });
-        // Five filed emails: three spellings of the header name, one unusable value, one message without the header.
+        // Six filed emails: three spellings of the header name, one unusable value, one message without the header,
+        // and one whose list of values opens with empty entries.
         const metadata: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
           ["a", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-Id": "<a@example.com>" }],
           ["b", { "MESSAGE:RAW-HEADER:MESSAGE-ID": [" <b@example.com> "], "Message-From": "pat@example.com" }],
           ["c", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": "<c@example.com>" }],
           ["d", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": 7 }],
           ["e", { "Message-From": "pat@example.com" }],
+          ["f", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": ["", " ", "<f@example.com>"] }],
         ];
         yield* Effect.forEach(metadata, ([name, fields]) =>
           Effect.flatMap(encodeJson(fields), (json) =>
@@ -356,6 +358,7 @@ describe("practice KG correspondents", () => {
           ["sha256:c", "c@example.com"],
           ["sha256:d", undefined],
           ["sha256:e", undefined],
+          ["sha256:f", "f@example.com"],
         ]);
       })
     );

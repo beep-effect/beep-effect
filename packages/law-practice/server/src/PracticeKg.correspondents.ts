@@ -518,8 +518,8 @@ const messageIdOf = (record: TikaRecord): O.Option<string> =>
     A.findFirst(([key]) => Str.toLowerCase(key) === messageIdMetadataKey),
     O.map(([, value]) => value),
     O.filter(isTikaValue),
-    O.flatMap((value) => O.fromNullishOr(firstValue(value))),
-    O.flatMap(normalizePracticeKgMessageId)
+    // The first value that holds an id: a list may open with an empty entry.
+    O.flatMap((value) => A.head(A.getSomes(A.map(asList(value), normalizePracticeKgMessageId))))
   );
 
 const messageFrom = (digest: string, fields: TikaEmailFields, messageId: O.Option<string>): PracticeKgEmailMessage =>

@@ -244,7 +244,8 @@ index, one `MailMessageIndexRecord` per line as the corpus tooling writes it
 `recipients` (`kind`, `emailAddress`). A line that does not decode stops the
 build with its file and line number. A message is one `Message-ID` (angle
 brackets removed), else its MAPI submit or delivery time, sender, subject
-and recipients plus its RFC 5322 From, To and Cc addresses, else its tree
+and recipients with their roles plus its RFC 5322 From, To and Cc addresses,
+else its tree
 and path (D-27); the first file given wins a duplicate. A filed `.eml` /
 `.msg` that carries the same `Message-ID` in its Tika metadata
 (`Message:Raw-Header:Message-ID`, the header name in any case) counts as

@@ -325,10 +325,13 @@ const internetParticipants = (headers: PracticeKgMailIndexInternetHeaders): Read
 const rfcParticipantsOf = (row: PracticeKgMailIndexRow): ReadonlyArray<PracticeKgEmailParticipant> =>
   pipe(O.fromUndefinedOr(row.internet), O.map(internetParticipants), O.getOrElse(A.empty<PracticeKgEmailParticipant>));
 
+// A blind copy is tallied as a copy; any other kind is a direct recipient.
+const recipientRole = (kind: string): "cc" | "to" => (kind === "cc" || kind === "bcc" ? "cc" : "to");
+
 const fieldSeparator = "\u0000";
 
 // A message without a Message-ID is its MAPI submit (else delivery) time, sender,
-// subject and recipients, then its RFC 5322 From, To and Cc addresses: the same
+// subject and recipients (each with its role), then its RFC 5322 From, To and Cc addresses: the same
 // item exported twice carries the same values, whatever the export tree and
 // artifact, and two items that differ in any participant stay apart. Only an
 // item with no time at all falls back to its place in one export.
@@ -340,7 +343,14 @@ const mapiKeyOf = (row: PracticeKgMailIndexRow): O.Option<string> =>
         Str.toLowerCase(O.getOrElse(outlookSenderOf(row), () => "")),
         subjectOf(row),
         ...A.sort(
-          A.getSomes(A.map(row.recipients, (recipient) => O.map(nonEmpty(recipient.emailAddress), Str.toLowerCase))),
+          A.getSomes(
+            A.map(row.recipients, (recipient) =>
+              O.map(
+                nonEmpty(recipient.emailAddress),
+                (address) => `${recipientRole(recipient.kind)}:${Str.toLowerCase(address)}`
+              )
+            )
+          ),
           Order.String
         ),
         "rfc",
@@ -379,8 +389,6 @@ type ParsedParticipants = {
 };
 
 const hasAddress = Str.includes("@");
-
-const recipientRole = (kind: string): "cc" | "to" => (kind === "cc" || kind === "bcc" ? "cc" : "to");
 
 // Without RFC 5322 headers, the MAPI sender and the export's recipients stand in;
 // an Exchange legacy address carries no mailbox and is dropped, counted.

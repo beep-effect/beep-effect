@@ -98,8 +98,8 @@ const sentItemKey = mapiKey(
   "Jan 02, 2026 03:04:05.000000000 UTC",
   exchangeLower,
   "11111.23456US",
-  exchangeLower,
-  "client@example.com",
+  `cc:${exchangeLower}`,
+  "to:client@example.com",
   "rfc"
 );
 
@@ -306,7 +306,7 @@ describe("practice KG mail index", () => {
           "Jan 03, 2026 04:05:06.000000000 UTC",
           "rep@example.com",
           "12345US filing receipt",
-          "blind@example.com",
+          "cc:blind@example.com",
           "rfc"
         ),
         "2026-01-03T04:05:06.000Z",
@@ -345,6 +345,29 @@ describe("practice KG mail index", () => {
       ["from:alice@a.test", "to:x@c.test"],
       ["from:bob@b.test", "to:y@c.test"],
     ]);
+  });
+
+  it("keeps two items apart whose only difference is the role of a MAPI recipient", () => {
+    const withRecipient = (messagePath: string, kind: string) =>
+      row(
+        "extract",
+        messagePath,
+        undefined,
+        { clientSubmitTime: "Jan 06, 2026 07:08:09.000000000 UTC", subject: "11111.12345US" },
+        [{ emailAddress: "Client@Example.com", kind }]
+      );
+    const result = attributePracticeKgMailIndexRows(tables)([
+      withRecipient("artifact:aaaa.export/Inbox/Message00030", "to"),
+      withRecipient("artifact:aaaa.export/Inbox/Message00031", "cc"),
+      // A blind copy is a copy: the same item as the one before.
+      withRecipient("artifact:bbbb.export/Inbox/Message00032", "bcc"),
+    ]);
+    expect([result.counts.rows, result.counts.distinctMessages]).toStrictEqual([3, 2]);
+    expect(
+      A.map(result.messages, (message) =>
+        A.map(message.participants, (participant) => `${participant.role}:${participant.address}`)
+      )
+    ).toStrictEqual([["cc:client@example.com"], ["to:client@example.com"]]);
   });
 
   it.layer(Layer.fresh(NodeServices.layer), { timeout: "30 seconds" })((it) => {
