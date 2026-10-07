@@ -533,7 +533,9 @@ fix the LLM passes (`ai/crux.js`, `ai/llm/openai.js`, `ai/synthesize.js`,
 plus hooks in `graph/enrich.js`, `graph/build.js`, `graph/check.js`,
 `graph/fingerprint.js`, `context/build.js`, `cli.js`, and `claude/stats.js`). A
 reinstall or upgrade removes them, and a new Graft
-version needs them ported into a new version directory first. After the
+version needs them ported into a new version directory first. The additional
+`ai-symbol-batches` patch bounds dense-file crux requests and selects source
+excerpts for their targets, as described below. After the
 install, apply and verify them, then run the two focused checks above:
 
 ```sh
@@ -572,3 +574,62 @@ A clean deep build prints no `meaning coverage:` line (Graft prints it only
 when the pass degraded), so the refresh reads the always-printed `meaning: N
 computed, N cached, N stale, N pending` tally instead: covered is computed plus
 cached, total adds stale and pending, and excluded symbols count in neither.
+
+### Dense files exhausting the symbol response budget
+
+The OpenCode v2 reference exposed ten files with 90–646 target symbols each.
+Graft requested every symbol in one response with a fixed 8,192-token budget.
+A bounded probe of a failing 90-symbol file consumed exactly 8,192 output
+tokens and returned an empty tool payload, while the proxy reported
+`finish_reason=tool_calls`. Graft classified that as `unparseable` and retried
+the same oversized request. A 20-symbol probe returned all 20 entries in valid
+JSON using 2,150 output tokens on the same model and provider.
+
+The `ai-symbol-batches` dist patch limits each request to 20 targets. It keeps
+their original ids and file line numbers, combines the batch results, and leaves
+missing entries retryable through Graft's existing cache and enrichment logic.
+For large files, it supplies bounded excerpts from the target definitions so a
+batch near the end of a file does not receive only the first 18 KB. These are
+excerpts, explicitly labelled as such; use source queries to read full definitions.
+The model, output-token limit and existing empty-response retries stay configured
+as before. If a later batch throws a transport error, completed summaries survive
+and the collector retries only missing ids. An unrecovered transport error remains
+visible in the final failure tally; a fully recovered retry clears it. Cancellation
+and failures before any usable summary still propagate.
+
+Apply the patch kit, then run its transport-free regression checks:
+
+```sh
+scripts/graft/apply-dist-patches.sh
+scripts/graft/apply-dist-patches.sh --check
+node --test scripts/graft/crux-batches.test.js
+```
+
+The checks use the installed module with a fake model; they make no network or
+paid model calls. `GRAFT_CRUX_MODULE` can point to `dist/ai/crux.js` in a
+disposable patched package while porting to a new Graft version. The collector
+checks also import that package's adjacent `dist/graph/enrich.js`; apply the full
+patch kit to the fixture first.
+
+Once the prior build has exited, rerun the strict deep build. Ready summaries
+remain cached; only pending symbols require model work. Preserve the failed
+attempt's log separately. Verify the final meaning tally has zero pending and
+stale symbols: `graft check` can exit successfully for a structurally current
+graph while warning that its meaning tier is incomplete.
+
+### Zero-token empty results and provider refusals
+
+For an empty result with zero output tokens, inspect the upstream stop reason
+before changing batch sizes. A two-target native C file returned an empty
+`record_symbols` object through the local OpenAI-compatible proxy. A bounded
+request with the same model, source, target ids, schema and tool choice through
+the proxy's native Anthropic protocol exposed `stop_reason=refusal`. The
+converter had reported `finish_reason=tool_calls` because an empty tool block
+was present. No non-empty argument payload had been lost.
+
+Keep probe receipts limited to stop reasons, token counts and tool-input shape;
+never log authorization headers or secret configuration. A confirmed refusal
+remains an incomplete meaning tier: retain the pending targets and strict
+failure receipt, and report the exact coverage. Do not fabricate summaries or
+exclude the file to claim complete ingestion. Repeated identical requests do
+not provide additional diagnostic evidence.
