@@ -4,7 +4,7 @@
 
 Status: `in-progress`. Graduated 2026-10-01; P0 complete 2026-10-05 (W1 landed, W2 declined; P0 Rulings 1–7 in
 [`research/decisions.md`](./research/decisions.md)); P1 complete 2026-10-06 (W3 `run4-fleet` and W4 `run4-ledger`
-pinned under P1 Rulings 1–8); P2 complete 2026-10-06 (W6 seam, `planEpisode` body and W5 live replay, one projection PR; P2 Rulings 1–10); P3 opened 2026-10-06 (auditor run 4, W7; launch sitting Rulings 1–17 and calls a–r); run 4 ratified 2026-10-06 (gate PASSED at the pin before and after the scribe; `rat-071..078`, eight flagged accepts; six withdrawals; sittings W1–W3 and 1–3, Rulings 18–32), and P3 complete 2026-10-06 with the lab's CQ-009 lift (P3 close Rulings 33–35); P4 is next. Workstreams W1–W9 come from the
+pinned under P1 Rulings 1–8); P2 complete 2026-10-06 (W6 seam, `planEpisode` body and W5 live replay, one projection PR; P2 Rulings 1–10); P3 opened 2026-10-06 (auditor run 4, W7; launch sitting Rulings 1–17 and calls a–r); run 4 ratified 2026-10-06 (gate PASSED at the pin before and after the scribe; `rat-071..078`, eight flagged accepts; six withdrawals; sittings W1–W3 and 1–3, Rulings 18–32), and P3 complete 2026-10-06 with the lab's CQ-009 lift (P3 close Rulings 33–35); P4 opened 2026-10-06 (KPI reading and verdict; launch sitting Rulings 1–12). Workstreams W1–W9 come from the
 exploration's [`MAP.md`](../../explorations/beep-ci-operational-ontology/MAP.md), and each
 row's capability cites are in its Capability Check. "Graduation Ruling n" is Ruling n of the
 exploration's 2026-10-01 graduation sitting.
@@ -17,7 +17,7 @@ exploration's 2026-10-01 graduation sitting.
 | P1 Stage C capture and proof-ledger capture (W3-W4) | complete | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
 | P2 Projection on live data and planEpisode body (W5-W6) | complete | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | complete | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
-| P4 KPI reading and verdict (W8-W9) | pending | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
+| P4 KPI reading and verdict (W8-W9) | in-progress | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
 | P5 Yeet: PR to mergeable | pending | Drive each slice PR, and the final PR, to Yeet merge-ready. | Required checks green; zero unresolved review threads. |
 | P6 Close | pending | Closeout reflection and status flip on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
 
@@ -125,11 +125,17 @@ exploration's 2026-10-01 graduation sitting.
 
 ### P4 — KPI reading and verdict
 
-- [ ] **W8 KPI ETL.** Lab-side only: a module in `apps/labs/ciops` once S7 §6 is amended by
+- [x] **W8 KPI ETL.** Lab-side only: a module in `apps/labs/ciops` once S7 §6 is amended by
       ruling, or its own lab. Seat-request clock from v3 `admission-enqueued`; tier
       partitions with merged preview as a sub-partition of `TierLocalFullProof`; cut and
       uncut reports with censored counts; starvation beside percentiles; change-event
       partitions.
+      Landed 2026-10-06 (PR-A; P4 Rulings 13–16): `apps/labs/ciops/src/kpi/` behind `CiOpsKpi`
+      under S7 §9, the change-event constant table asserted against the ledger's sha256, the
+      committed adoption table (`research/kpi-adoption-table.json`) with its local generator, and
+      the check-by-default reading `research/kpi-reading.{json,md}` (`ciops-kpi-reading/v1`). On
+      the pins the seat-request clock opens no episode (Ruling 13), TierCiMergeGreen is unmeasured,
+      and the normative starvation count is nonzero: a lawful failing report.
 - [ ] **W9 verdict.** Fleet P50/P95 for a ratified post-baseline window beside
       `economics-close.json` M1 with the episode-definition mapping; improvement reported,
       not required (graduation Ruling 3); the S9 statement of projected versus deployed route.
@@ -139,8 +145,9 @@ exploration's 2026-10-01 graduation sitting.
 W1 precedes any KPI reading. W3 + W4 ship as one capture PR and are the first irreversible
 step. W5 + W6 ship as one projection PR and may land before run 4, with CQ-009 out of their
 certainty gate over post-#929 rows until W7's re-scope. W7 needs W3, W4 (and W2
-if chosen) and the graduation Ruling 1 gate. W8 → W9 is the verdict PR, which carries the
-status flip and the closeout reflection.
+if chosen) and the graduation Ruling 1 gate. W8 and W9 ship as two PRs (P4 launch sitting Ruling 11): PR-A carries W8 (the S7 §9 and
+KPI law v1.2 amendments first, then the KPI ETL and the generated reading) and PR-B carries W9 (the
+verdict, the status flips and the closeout reflection); P5 and P6 are the states PR-B reaches.
 
 ## Closeout Checklist
 

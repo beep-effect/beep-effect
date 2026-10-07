@@ -202,11 +202,11 @@
       }
     },
     "@beep/ciops": {
-      "reviewer": "Claude Fable 5.1 (cache baseline merge-friendly lane, fix/cache-baseline-merge-friendly)",
-      "reason": "Re-encode the reviewed baseline as cache-qualification-baseline/v2 (pretty-printed, nodes sorted by computation, one review record per subject) so independent per-package re-records merge without conflict; the projection is re-observed from the current census with no command text, input, output, environment key, dependency edge or cache flag accepted beyond the prior v1 record, and no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (ciops-ontology-pipeline P4 PR-A, feat/ciops-p4-kpi-etl)",
+      "reason": "Refresh the six @beep/ciops computations (build, check, lint, lint:deprecated-apis, lint:laws, test) after the lab added the evidence:kpi, evidence:kpi:write, evidence:kpi-adoption and evidence:kpi-adoption:write package scripts for the W8 KPI reading; the new scripts are not cached tasks, no existing computation changes its command text, output, environment key, dependency edge or cache flag beyond the package manifest input, and no qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
-        "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+        "path": "apps/labs/ciops/package.json",
+        "sha256": "491d1f85969a271b7fcd4894c55858dade6e53dcbfcb477c2d511024a2edcd37"
       }
     },
     "@beep/codegen-kit": {
@@ -18772,7 +18772,7 @@
       {
         "computation": "@beep/ciops#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -18836,7 +18836,7 @@
       {
         "computation": "@beep/ciops#build",
         "command": "bun run beep:build",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -18874,7 +18874,7 @@
       {
         "computation": "@beep/ciops#check",
         "command": "bun run beep:check",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -18912,7 +18912,7 @@
       {
         "computation": "@beep/ciops#dev",
         "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -18944,7 +18944,7 @@
       {
         "computation": "@beep/ciops#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -18979,7 +18979,7 @@
       {
         "computation": "@beep/ciops#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "//#lint:policy-fingerprint",
           "@beep/identity#transit",
@@ -19051,7 +19051,7 @@
       {
         "computation": "@beep/ciops#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -19080,7 +19080,7 @@
       {
         "computation": "@beep/ciops#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "//#lint:policy-fingerprint"
         ],
@@ -19134,7 +19134,7 @@
       {
         "computation": "@beep/ciops#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -19178,7 +19178,7 @@
       {
         "computation": "@beep/ciops#test",
         "command": "bun run beep:test",
-        "commandDigest": "ce43b64036225973883eb34fc17c0d85c8fce4cdc97645b5c953736c5d6c3fd4",
+        "commandDigest": "837cd60714767627b8894c0aa7bbc261ae597eb7fb889d620c3ee049982f0e25",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",

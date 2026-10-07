@@ -257,8 +257,12 @@
     {
       // Qualification evidence references exact file bytes. Format changes would
       // invalidate accepted historical receipts without changing their meaning.
+      // The ciops KPI reading and adoption table are rendered by the lab, pinned by
+      // sha256 and compared byte-for-byte by its check-by-default scripts and tests.
       "includes": [
         "goals/turborepo-task-qualification/research/**/*.json",
+        "goals/ciops-ontology-pipeline/research/kpi-reading.json",
+        "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",
         "standards/cache-qualification-baseline.json"
       ],
