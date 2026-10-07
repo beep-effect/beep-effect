@@ -42,7 +42,7 @@ const phone = (s: string): O.Option<PhoneNumber> => {
 
 /**
  * Deduplicates cards transitively by non-role email, then normalised name and organisation.
- * Stable ids hash sorted emails, or the normalised name and organisation when email is absent.
+ * Stable ids hash the sorted non-role emails, or the normalised name and organisation when none exist.
  *
  * **Example** (Normalise no cards)
  *
@@ -85,10 +85,13 @@ export const normaliseContacts = (cards: ReadonlyArray<RawContactCard>): Readonl
           email
         )
       );
+      // Role mailboxes are shared, so they never carry identity: two people who share only
+      // info@ keep distinct ids.
+      const personal = A.filter(emails, (e) => !e.role);
       const identity =
-        emails.length > 0
+        personal.length > 0
           ? A.join(
-              A.map(emails, (e) => e.address),
+              A.map(personal, (e) => e.address),
               "|"
             )
           : `${nameKey(displayName)}|${nameKey(O.getOrElse(organization, () => ""))}`;

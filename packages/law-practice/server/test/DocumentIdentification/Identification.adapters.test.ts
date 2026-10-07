@@ -118,6 +118,9 @@ describe("recorded contacts", () => {
   it.effect("handles CSV quotes, multiline fields and vCard 3 structured names and addresses", () =>
     Effect.gen(function* () {
       const cards = yield* parseOutlookCsv('First Name,Company\n"Alex\nExample","Acme ""Widgets"" LLC"\n');
+      const trailing = yield* parseOutlookCsv("First Name,Last Name,Company\nAlex,Example,");
+      expect(trailing).toHaveLength(1);
+      assertNone(O.flatMap(A.head(trailing), (c) => c.organization));
       assertSome(
         O.flatMap(A.head(cards), (c) => c.organization),
         'Acme "Widgets" LLC'

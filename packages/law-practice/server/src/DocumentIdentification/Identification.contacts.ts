@@ -40,15 +40,19 @@ const parseCsv = (input: string): Array<Array<string>> => {
   const rows: Array<Array<string>> = [];
   let row: Array<string> = [];
   let at = 0;
+  let last = "";
   while (at < text.length) {
     const match = nextCell(text, at);
     row.push(unquote(match[1] ?? ""));
     at += match[0].length;
-    if (match[2] !== ",") {
+    last = match[2] ?? "";
+    if (last !== ",") {
       pushRow(rows, row);
       row = [];
     }
   }
+  // A file that ends with a comma and no final newline still owes its last, empty cell.
+  if (last === ",") row.push("");
   if (row.length > 0) rows.push(row);
   return rows;
 };

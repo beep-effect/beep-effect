@@ -108,6 +108,7 @@ describe("contacts and indexes", () => {
     ];
     const contacts = I.normaliseContacts(cards);
     expect(contacts).toHaveLength(3);
+    expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(3);
     assertSome(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources)), [
       "outlook-csv",
       "vcard",
