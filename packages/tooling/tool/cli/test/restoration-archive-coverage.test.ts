@@ -15,6 +15,7 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { ByteSize, Context, Effect, FileSystem, HashMap, Layer, Path } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -1135,4 +1136,33 @@ describe("restoration archive boundary helpers", () => {
       })
     );
   });
+});
+
+describe("streaming hasher", () => {
+  it.effect("uses Bun's native CryptoHasher when the runtime exposes one", () =>
+    Effect.sync(() => {
+      const bun = Reflect.get(globalThis, "Bun");
+      // Under a real Bun runtime the native path is already live; the Node shim has no hasher.
+      if (!P.isObject(bun) || P.isFunction(Reflect.get(bun, "CryptoHasher"))) return;
+      const seen: Array<number> = [];
+      class FakeCryptoHasher {
+        update(chunk: Uint8Array): FakeCryptoHasher {
+          seen.push(chunk.length);
+          return this;
+        }
+        digest(_encoding: "hex"): string {
+          return "ab".repeat(32);
+        }
+      }
+      Reflect.set(bun, "CryptoHasher", FakeCryptoHasher);
+      try {
+        const hasher = RA.createStreamingSha256();
+        hasher.update(Uint8Array.of(1, 2, 3));
+        expect(hasher.digestHex()).toBe("ab".repeat(32));
+        expect(seen).toEqual([3]);
+      } finally {
+        Reflect.deleteProperty(bun, "CryptoHasher");
+      }
+    })
+  );
 });
