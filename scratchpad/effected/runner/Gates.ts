@@ -24,6 +24,7 @@ import { foreignSpecifierLines, readExportFacets, scanUnsafeAssertions, type Uns
 import { isModuleTarget, labPaths, type RunnerConfig, upstreamPaths } from "./Paths.ts";
 import { captureExit, heavy, runInherited } from "./Process.ts";
 import { jsdocLawFindings } from "./JsdocLaw.ts";
+import { canonFindings, coverageGaps } from "./Canon.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Gates");
 
@@ -493,7 +494,9 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
 /**
  * The test gate: Node vitest through the shared effected config, with the
  * module's behaviour tests only when measuring coverage (so documentation
- * examples do not inflate covered paths, the proven jsonl recipe).
+ * examples do not inflate covered paths, the proven jsonl recipe). With
+ * coverage it also reads the coverage summary back (every source file present
+ * at 100 percent) and runs the effect-vitest canon detectors over the tests.
  *
  * **Example** (Run the test gate)
  *
@@ -525,7 +528,22 @@ export const test = Effect.fn("Gates.test")(function* (config: RunnerConfig, tar
       env: { EFFECTED_MODULE: target },
     })
   );
-  yield* gateExit(target, "test", exitCode);
+  if (exitCode !== 0 || !coverage) {
+    return yield* gateExit(target, "test", exitCode);
+  }
+  const gaps = yield* coverageGaps(config, target);
+  const canon = yield* canonFindings(config, target);
+  if (A.isReadonlyArrayNonEmpty(gaps) || A.isReadonlyArrayNonEmpty(canon)) {
+    yield* verdict(target, { gate: "test", exitCode: 1 });
+    return yield* GateFailed.make({
+      target,
+      gate: "test",
+      exitCode: 1,
+      problems: [...A.map(gaps, (gap) => `coverage ${gap}`), ...A.map(canon, (finding) => `canon ${finding}`)],
+    });
+  }
+  yield* Console.log(`[effected] ${target} test: coverage summary complete at 100 percent; canon detectors clean`);
+  yield* gateExit(target, "test", 0);
 });
 
 const TEMPLATE_PATH = "scratchpad/docgen.effected.template.json";

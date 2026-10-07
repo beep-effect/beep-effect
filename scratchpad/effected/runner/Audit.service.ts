@@ -22,7 +22,9 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
+import type { EffectVitestLintError } from "@beep/repo-cli/commands/Lint";
 import type * as Config from "effect/Config";
+import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process";
 import type { AuditError } from "./Audit.errors.ts";
@@ -63,7 +65,11 @@ const $I = $ScratchpadId.create("effected/runner/Audit.service");
  * @category type-level
  * @since 0.0.0
  */
-export type AuditRequirements = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
+export type AuditRequirements =
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Crypto.Crypto;
 
 /**
  * Every failure a runner method can raise: its own tagged errors and
@@ -72,7 +78,7 @@ export type AuditRequirements = FileSystem.FileSystem | Path.Path | ChildProcess
  * @category type-level
  * @since 0.0.0
  */
-export type RunnerError = AuditError | PlatformError.PlatformError;
+export type RunnerError = AuditError | PlatformError.PlatformError | EffectVitestLintError;
 
 /**
  * The verdict of `audit`: the gates that ran green.

@@ -71,6 +71,7 @@
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
     "@beep/pglite": "workspace:^",
+    "@beep/repo-cli": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/doctest": "catalog:",
     "@effect/platform-node": "catalog:",
