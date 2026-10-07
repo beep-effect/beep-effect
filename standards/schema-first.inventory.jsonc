@@ -26,6 +26,16 @@
       "reason": "Atom view model whose actions record carries runtime-bound closures (get.set dispatchers), which cannot be schema data; the data half (DocumentIntakeState) is already an annotated S.Class."
     },
     {
+      "file": "apps/practice-identify/test/PracticeIdentify.runtime.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 19,
+      "owner": "@beep/practice-identify",
+      "reason": "Stage runtime test decodes the files each stage wrote to prove the private output contract (0600, explicit paths, no overwrite); schema-derived round-trip property coverage for IdentificationIndex, EvaluationReport and Resolution lives with the use-case schemas in packages/law-practice/use-cases/test/DocumentIdentification/Identification.test.ts."
+    },
+    {
       "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

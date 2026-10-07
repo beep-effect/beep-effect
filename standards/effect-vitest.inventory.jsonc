@@ -15810,6 +15810,174 @@
       "reason": "The short scope closes the first graph before the second scenario starts. Preserve missing-renderer then watermark and left-edge then cleanup/bottom-edge lifetimes. Probes confirm previous graph disposal before the second construction; flattening changes ownership timing."
     },
     {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:90:scoped@27#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 90,
+      "endLine": 111,
+      "symbol": "scoped",
+      "occurrence": "v2:36a20260f8dcb7fbb29570664be73903d0cdd1087b0f9c83fe048923575a0c93",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const source = yield* withService( ContactCardSource, ContactCardSourceFile.pipe( Layer.provide( Layer.succeed( ContactFilesLocation, ContactFilesConfig.make({",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:294:scoped@29#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 294,
+      "endLine": 294,
+      "symbol": "scoped",
+      "occurrence": "v2:f2ceaa4014ba161616250885bed42265e8e2bca65f1c073e8a5de57e29ccc2ca",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped(Effect.flip(Layer.build(batches(extract!, critic!))))",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:263:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 263,
+      "endLine": 268,
+      "symbol": "scoped",
+      "occurrence": "v2:a6379102a3a4ca89307196f6cd7e9aa5a00fcb4d973067477cea46d12552642a",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const s = yield* withService(DocumentExtractionSource, layer); return [yield* s.extraction(\"doc-1\"), yield* s.extraction(\"doc-2\")]; }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:211:scoped@26#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 211,
+      "endLine": 219,
+      "symbol": "scoped",
+      "occurrence": "v2:94910ed9c07906a7f402c86024844bfd1c72f68add052052ec02957f4ab681e9",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const source = yield* withService( DomainRegistrantLookup, DomainRegistrantLookupLive.pipe(Layer.provide(response(rdap, 200, urls))) ); return yield* source.re",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:196:scoped@30#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 196,
+      "endLine": 201,
+      "symbol": "scoped",
+      "occurrence": "v2:9fc6ad2cd58190de02112298f771786717ead1d3f307f8b901172cbaaadee336",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const s = yield* withService(UsptoRecordLookup, usptoLayer(ambiguous, 200, [])); return yield* Effect.flip(s.byPatent(\"99000001\")); }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:185:scoped@27#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 185,
+      "endLine": 190,
+      "symbol": "scoped",
+      "occurrence": "v2:37a8f57d4ec288cc843a4d3d750b2dce936d93c94ab1383e6569ff526fc658b5",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const s = yield* withService(UsptoRecordLookup, usptoLayer({}, 429, [])); return yield* Effect.flip(s.byApplication(\"18900001\")); }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:173:scoped@28#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 173,
+      "endLine": 178,
+      "symbol": "scoped",
+      "occurrence": "v2:6709dafe10916a1c948da502997dfc192d3ef1a7d5be1cf01c846fd4dde5cdae",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const s = yield* withService(UsptoRecordLookup, usptoLayer({}, 404, urls)); return [yield* s.byApplication(\"18900001\"), yield* Effect.flip(s.byPatent('99000001",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts:158:scoped@27#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/DocumentIdentification/Identification.adapters.test.ts",
+      "line": 158,
+      "endLine": 163,
+      "symbol": "scoped",
+      "occurrence": "v2:5cae42212096de30b41b2645c6b01b0ce23d477604bc6dec90bdafb4e103eb87",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const s = yield* withService(UsptoRecordLookup, usptoLayer(record, 200, urls)); return [yield* s.byApplication(\"18900001\"), yield* s.byPatent(\"99000001\")]; })",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:202:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -23705,6 +23873,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native Bun/EYE child processes, bounded stdout/stderr, cancellation and post-close PGlite recovery are subjects; a fake spawner or MemoryFS cannot prove them."
+    },
+    {
+      "id": "EV010:apps/practice-identify/test/PracticeIdentify.runtime.test.ts:2:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/practice-identify",
+      "file": "apps/practice-identify/test/PracticeIdentify.runtime.test.ts",
+      "line": 2,
+      "endLine": 2,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:apps/practice-identify/test/PracticeIdentify.command.test.ts:1:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/practice-identify",
+      "file": "apps/practice-identify/test/PracticeIdentify.command.test.ts",
+      "line": 1,
+      "endLine": 1,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:apps/practice-kg-mcp/test/Host.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",

@@ -21,47 +21,35 @@ const $I = $LawPracticeServerId.create("DocumentIdentification/Identification.co
 const invalid = () => IdentificationError.make({ operation: "contact-parse", reason: "invalid-input" });
 const opt = (s: string) => (Str.isNonEmpty(Str.trim(s)) ? O.some(Str.trim(s)) : O.none());
 const nonempty = (xs: ReadonlyArray<string>) => A.filter(A.map(xs, Str.trim), Str.isNonEmpty);
+// One cell and its terminator: a quoted cell (doubled quotes escape, trailing blanks tolerated) or a bare cell.
+const csvCell = /("(?:[^"]|"")*"[ \t]*|[^",\r\n]*)(,|\r\n|\n|\r|$)/uy;
+const unquote = (cell: string) =>
+  Str.startsWith('"')(cell) ? Str.replace(/""/gu, '"')(Str.slice(1, -1)(Str.trimEnd(cell))) : cell;
+// The next cell must start exactly at `at`; a stray quote or an unterminated quoted cell matches nothing.
+const nextCell = (text: string, at: number): RegExpExecArray => {
+  csvCell.lastIndex = at;
+  const match = csvCell.exec(text);
+  if (match === null || match.index !== at) throw invalid();
+  return match;
+};
+// Rows made only of empty cells (blank lines) are dropped.
+const pushRow = (rows: Array<Array<string>>, row: Array<string>) =>
+  A.some(row, Str.isNonEmpty) ? rows.push(row) : rows.length;
 const parseCsv = (input: string): Array<Array<string>> => {
+  const text = Str.replace(/^\uFEFF/u, "")(input);
   const rows: Array<Array<string>> = [];
   let row: Array<string> = [];
-  let cell = "";
-  let quoted = false;
-  let closed = false;
-  const text = Str.replace(/^\uFEFF/u, "")(input);
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (quoted) {
-      if (ch === '"' && text[i + 1] === '"') {
-        cell += '"';
-        i++;
-      } else if (ch === '"') {
-        quoted = false;
-        closed = true;
-      } else cell += ch;
-    } else if (ch === '"') {
-      if (cell.length > 0 || closed) throw invalid();
-      quoted = true;
-    } else if (ch === ",") {
-      row.push(cell);
-      cell = "";
-      closed = false;
-    } else if (ch === "\r" || ch === "\n") {
-      row.push(cell);
-      if (A.some(row, Str.isNonEmpty)) rows.push(row);
+  let at = 0;
+  while (at < text.length) {
+    const match = nextCell(text, at);
+    row.push(unquote(match[1] ?? ""));
+    at += match[0].length;
+    if (match[2] !== ",") {
+      pushRow(rows, row);
       row = [];
-      cell = "";
-      closed = false;
-      if (ch === "\r" && text[i + 1] === "\n") i++;
-    } else {
-      if (closed && ch !== " " && ch !== "\t") throw invalid();
-      if (!closed) cell += ch;
     }
   }
-  if (quoted) throw invalid();
-  if (cell.length > 0 || row.length > 0 || closed) {
-    row.push(cell);
-    rows.push(row);
-  }
+  if (row.length > 0) rows.push(row);
   return rows;
 };
 
@@ -125,6 +113,35 @@ const unescape = (s: string) =>
   Str.replace(/\\\\/gu, "\\")(Str.replace(/\\([,;:])/gu, "$1")(Str.replace(/\\[nN]/gu, "\n")(s)));
 const components = (s: string) => A.map(Str.split(s, /(?<!\\);/u), unescape);
 
+type CardFields = M.MutableHashMap<string, Array<string>>;
+const fieldValues = (values: CardFields, key: string) => O.getOrElse(M.get(values, key), () => []);
+const firstValue = (values: CardFields, key: string) => O.getOrElse(A.head(fieldValues(values, key)), () => "");
+const cardFrom = (values: CardFields): RawContactCard => {
+  if (!A.contains(["3.0", "4.0"], firstValue(values, "VERSION"))) throw invalid();
+  const n = components(firstValue(values, "N"));
+  const get = (key: string) => fieldValues(values, key);
+  return RawContactCard.make({
+    displayName:
+      unescape(firstValue(values, "FN")) ||
+      A.join(nonempty([n[3] ?? "", n[1] ?? "", n[2] ?? "", n[0] ?? "", n[4] ?? ""]), " "),
+    organization: opt(A.join(nonempty(components(firstValue(values, "ORG"))), " ")),
+    titles: A.map(get("TITLE"), unescape),
+    emails: A.map(get("EMAIL"), unescape),
+    phones: A.map(get("TEL"), (s) => unescape(Str.replace(/^tel:/iu, "")(s))),
+    addresses: A.map(get("ADR"), (s) => A.join(nonempty(components(s)), ", ")),
+    source: "vcard",
+  });
+};
+const addProperty = (values: CardFields, line: string) => {
+  const colon = line.indexOf(":");
+  if (colon < 0) throw invalid();
+  const prop = Str.slice(0, colon)(line);
+  if (/ENCODING=QUOTED-PRINTABLE/iu.test(prop)) throw invalid();
+  // Inline binary (PHOTO, LOGO, KEY, SOUND) never carries contact text; skip it.
+  if (/ENCODING=(?:B|BASE64)(?:;|$)/iu.test(prop)) return;
+  const key = Str.toUpperCase(Str.replace(/^[^.]+\./u, "")(Str.split(prop, ";")[0] ?? ""));
+  M.set(values, key, [...fieldValues(values, key), Str.slice(colon + 1)(line)]);
+};
 /**
  * Parses vCard 3.0 and 4.0, unfolding lines and preserving grouped property values.
  * Skips inline binary properties such as photos; rejects incomplete cards and quoted-printable text
@@ -154,36 +171,12 @@ export const parseVcards = (text: string): Effect.Effect<ReadonlyArray<RawContac
           return;
         }
         if (O.isNone(fields)) throw invalid();
-        const values = fields.value;
-        const get = (key: string) => O.getOrElse(M.get(values, key), () => []);
-        const first = (key: string) => O.getOrElse(A.head(get(key)), () => "");
         if (Str.toUpperCase(line) === "END:VCARD") {
-          if (!A.contains(["3.0", "4.0"], first("VERSION"))) throw invalid();
-          const n = components(first("N"));
-          result.push(
-            RawContactCard.make({
-              displayName:
-                unescape(first("FN")) ||
-                A.join(nonempty([n[3] ?? "", n[1] ?? "", n[2] ?? "", n[0] ?? "", n[4] ?? ""]), " "),
-              organization: opt(A.join(nonempty(components(first("ORG"))), " ")),
-              titles: A.map(get("TITLE"), unescape),
-              emails: A.map(get("EMAIL"), unescape),
-              phones: A.map(get("TEL"), (s) => unescape(Str.replace(/^tel:/iu, "")(s))),
-              addresses: A.map(get("ADR"), (s) => A.join(nonempty(components(s)), ", ")),
-              source: "vcard",
-            })
-          );
+          result.push(cardFrom(fields.value));
           fields = O.none();
           return;
         }
-        const colon = line.indexOf(":");
-        if (colon < 0) throw invalid();
-        const prop = Str.slice(0, colon)(line);
-        if (/ENCODING=QUOTED-PRINTABLE/iu.test(prop)) throw invalid();
-        // Inline binary (PHOTO, LOGO, KEY, SOUND) never carries contact text; skip it.
-        if (/ENCODING=(?:B|BASE64)(?:;|$)/iu.test(prop)) return;
-        const key = Str.toUpperCase(Str.replace(/^[^.]+\./u, "")(Str.split(prop, ";")[0] ?? ""));
-        M.set(values, key, [...get(key), Str.slice(colon + 1)(line)]);
+        addProperty(fields.value, line);
       });
       if (O.isSome(fields)) throw invalid();
       return result;
@@ -236,7 +229,7 @@ const makeContactCardSourceFile = Effect.fn("DocumentIdentification.Identificati
     return [...(yield* parseOutlookCsv(csv)), ...(yield* parseVcards(vcf))];
   });
   return ContactCardSourceShape.make({
-    cards: () => Stream.fromEffect(read()).pipe(Stream.flatMap(Stream.fromIterable)),
+    cards: Stream.fromEffect(read()).pipe(Stream.flatMap(Stream.fromIterable)),
   });
 });
 

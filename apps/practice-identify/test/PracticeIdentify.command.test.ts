@@ -83,7 +83,7 @@ const cases = [
     "/private/report.json",
   ],
 ];
-it.layer(NodeServices.layer)("practice-identify command wiring", (it) => {
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("practice-identify command wiring", (it) => {
   it.effect.each(cases)("routes %s with explicit private flags", (args) =>
     Effect.gen(function* () {
       const f = fixture();

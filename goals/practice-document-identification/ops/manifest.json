@@ -46,17 +46,17 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P3",

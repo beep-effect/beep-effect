@@ -45,7 +45,7 @@ export class IdentificationError extends S.TaggedError<IdentificationError>($I`I
  * ```ts
  * import { ContactCardSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
  * import { Effect, Stream } from "effect"
- * const service = ContactCardSourceShape.make({ cards: () => Stream.empty })
+ * const service = ContactCardSourceShape.make({ cards: Stream.empty })
  * console.log(typeof service.cards) // "function"
  * ```
  *
@@ -54,9 +54,7 @@ export class IdentificationError extends S.TaggedError<IdentificationError>($I`I
  */
 export class ContactCardSourceShape extends S.Class<ContactCardSourceShape>($I`ContactCardSourceShape`)(
   {
-    cards: Fn({
-      output: S.declare((u): u is Stream.Stream<RawContactCard, IdentificationError> => Stream.isStream(u)),
-    }),
+    cards: S.declare((u): u is Stream.Stream<RawContactCard, IdentificationError> => Stream.isStream(u)),
   },
   $I.annote("ContactCardSourceShape", { description: "ContactCardSource operations." })
 ) {}
@@ -68,14 +66,13 @@ export class ContactCardSourceShape extends S.Class<ContactCardSourceShape>($I`C
  * ```ts
  * import { ContactCardSource, ContactCardSourceShape } from "@beep/law-practice-use-cases/DocumentIdentification"
  * import { Effect, Stream, Layer } from "effect"
- * console.log(Layer.isLayer(Layer.succeed(ContactCardSource, ContactCardSourceShape.make({ cards: () => Stream.empty })))) // true
+ * console.log(Layer.isLayer(Layer.succeed(ContactCardSource, ContactCardSourceShape.make({ cards: Stream.empty })))) // true
  * ```
  *
  * @category ports
  * @since 0.0.0
  */
-// SPEC requires cards(): Stream so each adapter invocation starts an independent read.
-// @effect-diagnostics-next-line lazyEffect:off
+// A Stream is lazy: every run of `cards` starts an independent read, as the SPEC requires.
 export class ContactCardSource extends Context.Service<ContactCardSource, ContactCardSourceShape>()(
   $I`ContactCardSource`
 ) {}

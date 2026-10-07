@@ -1,9 +1,14 @@
 import * as I from "@beep/law-practice-use-cases/DocumentIdentification";
-import { Effect } from "effect";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { Effect, pipe, Result } from "effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const client = I.ClientNumber.make("90001");
 const other = I.ClientNumber.make("90002");
@@ -103,9 +108,10 @@ describe("contacts and indexes", () => {
     ];
     const contacts = I.normaliseContacts(cards);
     expect(contacts).toHaveLength(3);
-    expect(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources))).toEqual(
-      O.some(["outlook-csv", "vcard"])
-    );
+    assertSome(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources)), [
+      "outlook-csv",
+      "vcard",
+    ]);
     expect(contacts[0]?.phones[0]?.e164).toBe("+12125550100");
     expect(I.normaliseContacts([...cards].reverse())).toEqual(contacts);
     expect(I.projectContacts(contacts)[0]).not.toHaveProperty("phones");
@@ -144,22 +150,21 @@ describe("contacts and indexes", () => {
       }),
     ];
     const linked = I.linkContacts(contacts, rows, []);
-    expect(
-      A.findFirst(linked, (c) => c.displayName === "Alex Example").pipe(O.map((c) => c.links[0]?.familyKey))
-    ).toEqual(O.some(O.some("90001.10001")));
-    expect(A.findFirst(linked, (c) => c.displayName === "Shared Office").pipe(O.map((c) => c.links.length))).toEqual(
-      O.some(0)
+    assertSome(
+      A.findFirst(linked, (c) => c.displayName === "Alex Example").pipe(O.map((c) => c.links[0]?.familyKey)),
+      O.some("90001.10001")
     );
+    assertSome(A.findFirst(linked, (c) => c.displayName === "Shared Office").pipe(O.map((c) => c.links.length)), 0);
   });
 });
 
 describe("resolver", () => {
   it("uses full references and rejects conflicting strong clients", () => {
-    expect(resolve(document("Docket 90001.10001US01")).clientNumber).toEqual(O.some(client));
+    assertSome(resolve(document("Docket 90001.10001US01")).clientNumber, client);
     expect(resolve(document("90001.10001US01 and 90002.10001US01")).tier).toBe("ambiguous");
     const r = resolve(document("90001.10001US01 and 90001.10002US01"));
     expect(r.tier).toBe("identified");
-    expect(r.docket).toEqual(O.none());
+    assertNone(r.docket);
   });
   it("uses identical copies only when their content hash matches", () => {
     const copies = [I.IdenticalCopy.make({ contentHash: hash, clientNumber: client, docket: O.some(docket) })];
@@ -218,7 +223,7 @@ describe("resolver", () => {
     const c = context({ pairs: I.buildClientDocketPairs([row(client, ["10001US01"]), row(other, ["10001US01"])]) });
     const r = resolve(document("10001US01"), c);
     expect(r.tier).toBe("ambiguous");
-    expect(r.clientNumber).toEqual(O.none());
+    assertNone(r.clientNumber);
   });
   it("validates critic quotes and supports input aliases and pseudo-clients", () => {
     const c = context({ aliases: [I.ClientAlias.make({ from: other, to: client })] });
@@ -245,7 +250,7 @@ describe("resolver", () => {
       pseudoContext
     );
     expect(result.tier).toBe("identified-content");
-    expect(result.clientNumber).toEqual(O.some("new:acme"));
+    assertSome(result.clientNumber, "new:acme");
   });
   it("requires a threefold content margin and a twofold candidate margin", () => {
     const contact = (suffix: string, owner: I.ClientNumber) =>
@@ -284,7 +289,7 @@ describe("resolver", () => {
       context({ clients: [clientEntry] })
     );
     expect(r.tier).toBe("candidate");
-    expect(r.clientNumber).toEqual(O.some(client));
+    assertSome(r.clientNumber, client);
   });
   it("organises blank forms and explicit firm folders without attributing clients", () => {
     const rules = I.OrganisationRules.make({ firmFolders: ["Firm"], formFolders: ["Forms"] });
@@ -330,8 +335,14 @@ describe("evaluation and codecs", () => {
     ];
     const report = I.evaluate(cases, 8);
     const tier = report.tiers.find((t) => t.tier === "candidate")!;
-    expect(tier).toMatchObject({ resolved: 2, right: 1, wrong: 1, precision: O.some(0.5), coverage: 1 });
-    expect(report.tiers.find((t) => t.tier === "identified")?.precision).toEqual(O.none());
+    expect({ resolved: tier.resolved, right: tier.right, wrong: tier.wrong, coverage: tier.coverage }).toEqual({
+      resolved: 2,
+      right: 1,
+      wrong: 1,
+      coverage: 1,
+    });
+    assertSome(tier.precision, 0.5);
+    assertNone(A.findFirst(report.tiers, (t) => t.tier === "identified").pipe(O.flatMap((t) => t.precision)));
     expect(I.evaluate([], 0).tiers[0]?.coverage).toBe(0);
   });
   it("turns identical-copy ground truth off during evaluation", () => {
@@ -350,11 +361,31 @@ describe("evaluation and codecs", () => {
     expect(report.testSize).toBe(1);
     expect(report.tiers.find((t) => t.tier === "identified")?.resolved).toBe(0);
   });
-  it("roundtrips the private document and resolution codecs", () => {
-    const codec = S.fromJsonString(I.IdentificationDocument);
-    const encoded = Effect.runSync(S.encodeEffect(codec)(document()));
-    expect(Effect.runSync(S.decodeEffect(codec)(encoded))).toEqual(document());
-    expect(S.is(I.ClientNumber)("short")).toBe(false);
-    expect(S.is(I.DocketId)("10001XX01")).toBe(false);
-  });
+  it.effect("roundtrips the private document and resolution codecs", () =>
+    Effect.gen(function* () {
+      const codec = S.fromJsonString(I.IdentificationDocument);
+      const encoded = yield* S.encodeEffect(codec)(document());
+      expect(yield* S.decodeEffect(codec)(encoded)).toEqual(document());
+      expect(S.is(I.ClientNumber)("short")).toBe(false);
+      expect(S.is(I.DocketId)("10001XX01")).toBe(false);
+    })
+  );
+});
+
+describe("private codecs", () => {
+  const roundTrip = <T extends S.Top & S.ConstraintCodec<unknown, unknown, never, never>>(name: string, schema: T) =>
+    it.prop(
+      `round-trips ${name} through its JSON codec from schema-derived arbitraries`,
+      [Arbitrary.schema(schema)],
+      ([value]) => {
+        const codec = S.fromJsonString(schema);
+        const encoded = Result.getOrThrow(S.encodeResult(codec)(value));
+        const decoded = Result.getOrThrow(S.decodeResult(codec)(encoded));
+        pipe(Eq.equals(decoded, value), assertTrue);
+      },
+      { arbitrary: fcRuns(25) }
+    );
+  roundTrip("IdentificationIndex", I.IdentificationIndex);
+  roundTrip("EvaluationReport", I.EvaluationReport);
+  roundTrip("Resolution", I.Resolution);
 });

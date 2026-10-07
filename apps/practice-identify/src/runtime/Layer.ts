@@ -95,20 +95,28 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
           )
       );
     });
+    const ancestors = (dir: string): ReadonlyArray<string> => {
+      const out: Array<string> = [dir];
+      let current = dir;
+      for (;;) {
+        const next = path.dirname(current);
+        if (next === current) return out;
+        out.push(next);
+        current = next;
+      }
+    };
+    // A `.git` directory with a HEAD, or a `.git` file (linked worktree), marks a repository checkout.
+    const repositoryMarker = Effect.fnUntraced(function* (dir: string) {
+      const marker = path.join(dir, ".git");
+      if (!(yield* sanitise(fs.exists(marker), "output-check"))) return false;
+      const info = yield* sanitise(fs.stat(marker), "output-check");
+      return info.type !== "Directory" || (yield* sanitise(fs.exists(path.join(marker, "HEAD")), "output-check"));
+    });
     const privatePath = Effect.fnUntraced(function* (file: string) {
       if (!path.isAbsolute(file)) return yield* failure("output-path", "unsafe-output");
       const parent = yield* sanitise(fs.realPath(path.dirname(file)), "output-parent");
-      let ancestor = parent;
-      while (true) {
-        const marker = path.join(ancestor, ".git");
-        if (yield* sanitise(fs.exists(marker), "output-check")) {
-          const info = yield* sanitise(fs.stat(marker), "output-check");
-          if (info.type !== "Directory" || (yield* sanitise(fs.exists(path.join(marker, "HEAD")), "output-check")))
-            return yield* failure("output-path", "unsafe-output");
-        }
-        const next = path.dirname(ancestor);
-        if (next === ancestor) break;
-        ancestor = next;
+      for (const dir of ancestors(parent)) {
+        if (yield* repositoryMarker(dir)) return yield* failure("output-path", "unsafe-output");
       }
       return path.join(parent, path.basename(file));
     });
@@ -146,7 +154,7 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
               Layer.provide(platform)
             )
           );
-          return yield* Stream.runCollect(Context.get(services, ContactCardSource).cards());
+          return yield* Stream.runCollect(Context.get(services, ContactCardSource).cards);
         })
       );
       const contacts = normaliseContacts(raw);

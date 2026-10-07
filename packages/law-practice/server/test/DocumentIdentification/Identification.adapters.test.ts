@@ -20,7 +20,9 @@ import {
 } from "@beep/law-practice-use-cases/DocumentIdentification";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import { Context, Effect, FileSystem, Layer, Path, Redacted, Stream } from "effect";
+import * as A from "effect/Array";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import * as M from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -105,7 +107,7 @@ describe("recorded contacts", () => {
               )
             )
           );
-          return yield* Stream.runCollect(source.cards());
+          return yield* Stream.runCollect(source.cards);
         })
       );
       const contacts = normaliseContacts(cards);
@@ -116,7 +118,10 @@ describe("recorded contacts", () => {
   it.effect("handles CSV quotes, multiline fields and vCard 3 structured names and addresses", () =>
     Effect.gen(function* () {
       const cards = yield* parseOutlookCsv('First Name,Company\n"Alex\nExample","Acme ""Widgets"" LLC"\n');
-      expect(cards[0]?.organization).toEqual(O.some('Acme "Widgets" LLC'));
+      assertSome(
+        O.flatMap(A.head(cards), (c) => c.organization),
+        'Acme "Widgets" LLC'
+      );
       const v3 = yield* parseVcards(
         "BEGIN:VCARD\nVERSION:3.0\nN:Example;Alex;;;\nADR:;;1 Test Street;Example City;NY;10001;US\nEMAIL:info@acme.example\nEND:VCARD"
       );
@@ -161,7 +166,7 @@ describe("recorded public responses", () => {
         })
       );
       expect(facts[0]).toEqual(facts[1]);
-      expect(O.getOrThrow(facts[0]!).docketNumber).toEqual(O.some("90001.10001US01"));
+      assertSome(O.getOrThrow(facts[0]!).docketNumber, "90001.10001US01");
       expect(urls[0]).toContain("18900001");
       expect(urls.join(" ")).not.toContain("Acme");
     })
@@ -169,13 +174,13 @@ describe("recorded public responses", () => {
   it.effect("treats not-found as None and rejects content-bearing queries before any request", () =>
     Effect.gen(function* () {
       const urls: Array<string> = [];
-      const values = yield* Effect.scoped(
+      const [found] = yield* Effect.scoped(
         Effect.gen(function* () {
           const s = yield* withService(UsptoRecordLookup, usptoLayer({}, 404, urls));
-          return [yield* s.byApplication("18900001"), yield* Effect.flip(s.byPatent('99000001" OR client'))];
+          return [yield* s.byApplication("18900001"), yield* Effect.flip(s.byPatent('99000001" OR client'))] as const;
         })
       );
-      expect(values[0]).toEqual(O.none());
+      assertNone(found);
       expect(urls).toHaveLength(1);
     })
   );
@@ -216,19 +221,19 @@ describe("recorded public responses", () => {
           return yield* source.registrant("acme.example");
         })
       );
-      expect(name).toEqual(O.some("Acme Widgets LLC"));
+      assertSome(name, "Acme Widgets LLC");
       expect(urls).toEqual(["https://rdap.org/domain/acme.example"]);
-      expect(yield* registrantFromRdap({ ...rdap, redacted: [{}] })).toEqual(O.none());
-      expect(
+      assertNone(yield* registrantFromRdap({ ...rdap, redacted: [{}] }));
+      assertNone(
         yield* registrantFromRdap({
           entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["fn", {}, "text", "Alex Example"]]] }],
         })
-      ).toEqual(O.none());
-      expect(
+      );
+      assertNone(
         yield* registrantFromRdap({
           entities: [{ roles: ["registrant"], vcardArray: ["vcard", [["org", {}, "text", "REDACTED FOR PRIVACY"]]] }],
         })
-      ).toEqual(O.none());
+      );
     })
   );
 });
@@ -259,14 +264,14 @@ describe("extraction batch pairing", () => {
     Effect.gen(function* () {
       const lines = `${yield* encodeJson({ id: "doc-1", extraction })}\n${yield* encodeJson({ id: "doc-2", extraction })}`;
       const layer = batches(lines, yield* encodeJson({ id: "doc-1", verdict }));
-      const result = yield* Effect.scoped(
+      const [first, second] = yield* Effect.scoped(
         Effect.gen(function* () {
           const s = yield* withService(DocumentExtractionSource, layer);
-          return [yield* s.extraction("doc-1"), yield* s.extraction("doc-2")];
+          return [yield* s.extraction("doc-1"), yield* s.extraction("doc-2")] as const;
         })
       );
-      expect(O.isSome(result[0]!)).toBe(true);
-      expect(result[1]).toEqual(O.none());
+      first.pipe(O.isSome, assertTrue);
+      assertNone(second);
     })
   );
   it.effect("rejects malformed lines, invalid indexes, and conflicting duplicate ids", () =>

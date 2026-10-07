@@ -12,6 +12,7 @@ import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import { HttpClient } from "effect/http";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -25,31 +26,27 @@ const RdapEntity = S.Struct({
   vcardArray: S.optionalKey(S.Tuple([S.String, S.Array(S.Tuple([S.String, S.Unknown, S.String, S.Unknown]))])),
 });
 const invalid = () => IdentificationError.make({ operation: "rdap-decode", reason: "invalid-input" });
+const redactedName = /redact|privacy|withheld|not disclosed|data protected/iu;
+const registrantNames = (entity: typeof RdapEntity.Type): ReadonlyArray<string> => {
+  if (!A.contains(entity.roles ?? [], "registrant")) return [];
+  const rows = entity.vcardArray?.[1] ?? [];
+  const values = (key: string) =>
+    A.getSomes(
+      A.map(
+        A.filter(rows, (r) => r[0] === key),
+        (r) => (P.isString(r[3]) ? O.some(r[3]) : O.none())
+      )
+    );
+  const corporateName = A.contains(values("kind"), "org") ? values("fn") : [];
+  return A.filter(A.map([...values("org"), ...corporateName], Str.trim), (s) => s.length > 0 && !redactedName.test(s));
+};
 const orgs = Effect.fn("Identification.rdapEntities")(function* (
   entities: ReadonlyArray<unknown>
 ): Effect.fn.Return<ReadonlyArray<string>, IdentificationError> {
   const results: Array<string> = [];
   for (const value of entities) {
     const entity = yield* S.decodeUnknownEffect(RdapEntity)(value).pipe(Effect.mapError(invalid));
-    if (A.contains(entity.roles ?? [], "registrant")) {
-      const rows = entity.vcardArray?.[1] ?? [];
-      const values = (key: string) =>
-        A.getSomes(
-          A.map(
-            A.filter(rows, (r) => r[0] === key),
-            (r) => (typeof r[3] === "string" ? O.some(r[3]) : O.none())
-          )
-        );
-      const organisations = values("org");
-      const corporateName = A.contains(values("kind"), "org") ? values("fn") : [];
-      results.push(
-        ...A.filter(
-          A.map([...organisations, ...corporateName], Str.trim),
-          (s) => s.length > 0 && !/redact|privacy|withheld|not disclosed|data protected/iu.test(s)
-        )
-      );
-    }
-    results.push(...(yield* orgs(entity.entities ?? [])));
+    results.push(...registrantNames(entity), ...(yield* orgs(entity.entities ?? [])));
   }
   return results;
 });

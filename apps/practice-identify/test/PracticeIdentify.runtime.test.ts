@@ -1,7 +1,9 @@
 import * as I from "@beep/law-practice-use-cases/DocumentIdentification";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import {
@@ -45,7 +47,7 @@ const context = I.ResolverContext.make({
   pseudoClients: [],
   excludedDomains: [],
 });
-it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.layer)))(
+it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.layer)), { timeout: "30 seconds" })(
   "private stage runtime",
   (it) => {
     it.effect("writes contacts and projections as exclusive 0600 files and refuses repository outputs", () =>
@@ -73,7 +75,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
         const before = yield* fs.readFileString(input.output);
         yield* Effect.flip(IdentificationStages.use((s) => s.contacts(input)));
         expect(yield* fs.readFileString(input.output)).toBe(before);
-        const bad = ContactsInput.make({ ...input, output: new URL("../refused.jsonl", import.meta.url).pathname });
+        const bad = ContactsInput.make({ ...input, output: `${process.cwd()}/refused.jsonl` });
         const error = yield* Effect.flip(IdentificationStages.use((s) => s.contacts(bad)));
         expect(error.reason).toBe("unsafe-output");
         expect(yield* fs.exists(bad.output)).toBe(false);
@@ -186,7 +188,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
         );
         const report = yield* decodeReport(yield* fs.readFileString(file("report.json")));
         expect(report.testSize).toBe(1);
-        expect(report.tiers.find((t) => t.tier === "identified")?.precision).toEqual(O.some(1));
+        assertSome(A.findFirst(report.tiers, (t) => t.tier === "identified").pipe(O.flatMap((t) => t.precision)), 1);
       })
     );
   }

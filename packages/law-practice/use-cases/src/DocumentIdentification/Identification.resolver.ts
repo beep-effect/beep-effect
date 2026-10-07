@@ -35,13 +35,14 @@ import type {
 const normal = (s: string) => Str.toLowerCase(Str.trim(Str.replace(/\s+/gu, " ")(s)));
 const digits = (s: string) => Str.replace(/\D/gu, "")(s);
 const corporateWords = HashSet.fromIterable(["llc", "inc", "ltd", "corp", "corporation", "company"]);
-const nameWords = (name: string) =>
+const wordsExcluding = (stopWords: HashSet.HashSet<string>) => (name: string) =>
   HashSet.fromIterable(
     A.filter(
       Str.split(Str.replace(/[^a-z0-9]+/gu, " ")(normal(name)), " "),
-      (word) => word.length > 1 && !HashSet.has(corporateWords, word)
+      (word) => word.length > 1 && !HashSet.has(stopWords, word)
     )
   );
+const nameWords = wordsExcluding(corporateWords);
 const nameMatches = (a: string, b: string) => {
   const left = nameWords(a);
   const right = nameWords(b);
@@ -73,13 +74,7 @@ const partyStopWords = HashSet.fromIterable([
   "of",
   "and",
 ]);
-const partyWords = (name: string) =>
-  HashSet.fromIterable(
-    A.filter(
-      Str.split(Str.replace(/[^a-z0-9]+/gu, " ")(normal(name)), " "),
-      (word) => word.length > 1 && !HashSet.has(partyStopWords, word)
-    )
-  );
+const partyWords = wordsExcluding(partyStopWords);
 // A client name matches a party when its words all appear in the party name, or the party's two or more words all
 // appear in the client name; a shared word of four or more characters is required either way.
 const partyNamesClient = (clientName: string, partyName: string) => {
@@ -155,6 +150,45 @@ const documentTokens = (document: IdentificationDocument, context: ResolverConte
     ),
   ]);
 
+// Alias chains are followed to their end; a cycle returns the original key.
+const resolveAlias =
+  (aliases: ResolverContext["aliases"]) =>
+  (key: ClientKey): ClientKey => {
+    let current = key;
+    let visited = HashSet.empty<ClientKey>();
+    while (!HashSet.has(visited, current)) {
+      visited = HashSet.add(visited, current);
+      const next = A.findFirst(aliases, (a) => a.from === current);
+      if (O.isNone(next)) return current;
+      current = next.value.to;
+    }
+    return key;
+  };
+type Decision = { readonly client: O.Option<ClientKey>; readonly tier: Resolution["tier"] };
+const undecided: Decision = { client: O.none(), tier: "unknown" };
+// Content tier: score at least five, two independent sources, three times the runner-up (runner floor one).
+// Candidate: score at least three and twice the runner-up. Otherwise ambiguous when anyone else scored.
+const scoredDecision = (key: ClientKey, score: number, runner: number, independentSources: number): Decision => {
+  const floor = Math.max(runner, 1);
+  if (score >= 5 && independentSources >= 2 && score >= 3 * floor)
+    return { client: O.some(key), tier: "identified-content" };
+  if (score >= 3 && score >= 2 * floor) return { client: O.some(key), tier: "candidate" };
+  return { client: O.none(), tier: runner > 0 ? "ambiguous" : "unknown" };
+};
+const decide = (
+  strong: HashSet.HashSet<ClientKey>,
+  top: O.Option<readonly [ClientKey, number]>,
+  runner: number,
+  independent: (key: ClientKey) => number
+): Decision => {
+  if (HashSet.size(strong) > 1) return { client: O.none(), tier: "ambiguous" };
+  if (HashSet.size(strong) === 1) return { client: strong.pipe(A.fromIterable, A.head), tier: "identified" };
+  return O.match(top, {
+    onNone: () => undecided,
+    onSome: ([key, score]) => scoredDecision(key, score, runner, independent(key)),
+  });
+};
+
 /**
  * Fits ownership exclusively on supplied training documents; multi-client tokens carry no signal.
  * The caller must pass the training partition returned by holdOutSplit.
@@ -226,17 +260,7 @@ export const resolve: {
   (document: IdentificationDocument, context: ResolverContext, filter: TokenFilter): Resolution;
 } = dual(3, (document: IdentificationDocument, context: ResolverContext, filter: TokenFilter): Resolution => {
   const normalText = normal(document.text);
-  const alias = (key: ClientKey): ClientKey => {
-    let current = key;
-    let visited = HashSet.empty<ClientKey>();
-    while (!HashSet.has(visited, current)) {
-      visited = HashSet.add(visited, current);
-      const next = A.findFirst(context.aliases, (a) => a.from === current);
-      if (O.isNone(next)) return current;
-      current = next.value.to;
-    }
-    return key;
-  };
+  const alias = resolveAlias(context.aliases);
   let strong = HashSet.empty<ClientKey>();
   const dockets = M.empty<ClientKey, HashSet.HashSet<DocketId>>();
   const votes = M.empty<ClientKey, number>();
@@ -415,22 +439,7 @@ export const resolve: {
     O.map(A.get(ranked, 1), ([, score]) => score),
     () => 0
   );
-  let client: O.Option<ClientKey> = O.none();
-  let tier: Resolution["tier"] = "unknown";
-  if (HashSet.size(strong) > 1) tier = "ambiguous";
-  else if (HashSet.size(strong) === 1) {
-    client = strong.pipe(A.fromIterable, A.head);
-    tier = "identified";
-  } else if (O.isSome(top)) {
-    const [key, score] = top.value;
-    if (score >= 5 && independent(key) >= 2 && score >= 3 * Math.max(runner, 1)) {
-      client = O.some(key);
-      tier = "identified-content";
-    } else if (score >= 3 && score >= 2 * Math.max(runner, 1)) {
-      client = O.some(key);
-      tier = "candidate";
-    } else if (runner > 0) tier = "ambiguous";
-  }
+  const { client, tier } = decide(strong, top, runner, independent);
   const candidates = O.flatMap(client, (key) => M.get(dockets, key));
   const docket = O.flatMap(candidates, (ds) => (HashSet.size(ds) === 1 ? ds.pipe(A.fromIterable, A.head) : O.none()));
   return Resolution.make({
