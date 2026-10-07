@@ -52,6 +52,7 @@ describe("practiceMailTaggingConfig", () => {
       expect(DateTime.formatIso(config.since)).toBe("2026-07-01T00:00:00.000Z");
       expect(Duration.toMinutes(config.pollInterval)).toBe(5);
       expect(Duration.toHours(config.maxBackoff)).toBe(1);
+      expect(config.contactEvidence).toBe("off");
     })
   );
 
@@ -66,6 +67,7 @@ describe("practiceMailTaggingConfig", () => {
         PRACTICE_MAIL_TAGGING_SINCE: "2026-08-01T00:00:00Z",
         PRACTICE_MAIL_TAGGING_POLL_INTERVAL: "10 seconds",
         PRACTICE_MAIL_TAGGING_MAX_BACKOFF: "30 minutes",
+        PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE: "kg",
       });
 
       expect(config.stateDirectory).toBe(settingsEnvironment.PRACTICE_MAIL_TAGGING_STATE_DIRECTORY);
@@ -76,6 +78,7 @@ describe("practiceMailTaggingConfig", () => {
       expect(DateTime.formatIso(config.since)).toBe("2026-08-01T00:00:00.000Z");
       expect(Duration.toMinutes(config.pollInterval)).toBe(1);
       expect(Duration.toMinutes(config.maxBackoff)).toBe(30);
+      expect(config.contactEvidence).toBe("kg");
     })
   );
 

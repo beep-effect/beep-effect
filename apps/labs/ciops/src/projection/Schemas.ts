@@ -1226,8 +1226,29 @@ const LaneId = S.NonEmptyString.check(
   })
 );
 
-// Normalized repo-relative path: no absolute root, no `./`, no empty and no `..` segment (P2 Ruling 5).
-const RepoRelativePath = S.NonEmptyString.check(
+/**
+ * Normalized repo-relative path: no absolute root, no `./`, no empty and no
+ * `..` segment (P2 Ruling 5).
+ *
+ * **Details**
+ *
+ * Shared by the lane planner's handoff reference and the KPI module's pinned
+ * inputs, so neither can resolve a path outside the caller-supplied repo root.
+ *
+ * **Example** (Accept a repo-relative path)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RepoRelativePath } from "@/projection/Schemas"
+ *
+ * console.log(S.is(RepoRelativePath)("goals/time-to-certainty/research/gate-order-handoff.json")) // true
+ * console.log(S.is(RepoRelativePath)("../outside.json")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RepoRelativePath = S.NonEmptyString.check(
   S.isPattern(/^(?:[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)(?:\/[.@]?[A-Za-z0-9_-][A-Za-z0-9._-]*)*$/, {
     message: "Handoff paths must be normalized repo-relative paths (no leading '/', './', empty or '..' segments)",
   })
@@ -1236,6 +1257,15 @@ const RepoRelativePath = S.NonEmptyString.check(
     description: "Repo-relative file path that cannot escape the caller-supplied repo root.",
   })
 );
+
+/**
+ * Decoded repo-relative path accepted by {@link RepoRelativePath}.
+ *
+ * @see {@link RepoRelativePath} for runtime decoding.
+ * @category models
+ * @since 0.0.0
+ */
+export type RepoRelativePath = typeof RepoRelativePath.Type;
 
 /**
  * Location and pinned SHA-256 of a `gate-order-handoff/v1` document.
