@@ -11,7 +11,7 @@
 // Message fields initialize after schema fields: Bun may inspect Error.message
 // during base construction, before a derived getter can safely read those fields.
 
-import { $ScratchpadId } from "@beep/identity";
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -19,7 +19,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ByteCount, LineSlice } from "./LineSlice.ts";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 
 const $I = $ScratchpadId.create("effected/jsonl/JsonlError");
 const encodeString = S.encodeResult(S.fromJsonString(S.String));

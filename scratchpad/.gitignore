@@ -3,4 +3,4 @@
 docgen.*.json
 !docgen.effected.template.json
 !docgen.effect-ontology.json
-!docgen.jsonl.json
+.tsgo-lanes/

@@ -60,28 +60,27 @@ failure. Omitted capacity and shutdown timeout keep their documented defaults.
 
 ## Focused validation
 
-Run these from the repository root:
+The port runner (`scratchpad/effected/audit.ts`) owns every gate. Run from the
+repository root:
 
 ```sh
-bun run --cwd scratchpad audit:jsonl
+bun run --cwd scratchpad audit:effected -- audit jsonl
 ```
 
-The manifest also exposes each check independently:
+Each gate also runs on its own:
 
 ```sh
-bun run --cwd scratchpad check:jsonl
-bun run --cwd scratchpad lint:jsonl
-bun run --cwd scratchpad test:jsonl
-bun run --cwd scratchpad coverage:jsonl
-bun run --cwd scratchpad docgen:jsonl
+bun run --cwd scratchpad audit:effected -- parity jsonl --strict
+bun run --cwd scratchpad audit:effected -- check jsonl
+bun run --cwd scratchpad audit:effected -- lint jsonl
+bun run --cwd scratchpad audit:effected -- test jsonl --coverage
+bun run --cwd scratchpad audit:effected -- docgen jsonl
 ```
 
-Dedicated module documentation uses `scratchpad/docgen.jsonl.json`. Its paths
-are relative to the scratchpad package directory.
-Generated Markdown and compiled examples stay under the ignored
-`.jsdoc-loop/generated-docs/jsonl/` directory. The source glob only includes the
-JSONL module. No unrelated ontology aliases or generated manifest scripts are
-needed.
+The docgen gate writes `scratchpad/docgen.jsonl.json` from
+`scratchpad/docgen.effected.template.json` (git-ignored). Generated Markdown and
+compiled examples stay under the ignored `.jsdoc-loop/generated-docs/jsonl/`
+directory. Coverage reports land in `coverage/scratchpad-effected/jsonl/`.
 
 The scratchpad Vitest configuration runs marked pure JSDoc fences with the
 standard `@effect/doctest` plugin. Filesystem/layer examples remain compile-only.
@@ -130,7 +129,7 @@ tests. Its coverage command enforces 100% statements, branches, functions, and l
 for every TypeScript module, including `internal/`. The coverage run selects behavior
 tests so documentation examples do not inflate the covered paths. The unfiltered
 command separately runs the documentation examples. Reports are written under
-`coverage/scratchpad-jsonl/`. Error messages initialize after schema fields, because Bun
+`coverage/scratchpad-effected/jsonl/`. Error messages initialize after schema fields, because Bun
 can inspect `Error.message` during base construction, before a derived getter's
 dependencies exist. The error-message and malformed-input cases cover this path.
 

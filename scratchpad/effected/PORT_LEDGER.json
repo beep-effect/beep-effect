@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "jsonc",
+    "module": "jsonl",
     "stage": 1,
     "commit": null,
-    "at": "2026-10-07T06:56:49.701Z"
+    "at": "2026-10-07T06:59:18.969Z"
   },
   "rows": [
     {
@@ -14,7 +14,7 @@
       "module": "jsonl",
       "wave": 0,
       "position": 1,
-      "stage": 0,
+      "stage": 1,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -174,9 +174,17 @@
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
-      "commits": [],
+      "commits": [
+        {
+          "stage": 0,
+          "sha": null
+        }
+      ],
       "blocked": null,
-      "notes": [],
+      "notes": [
+        "2026-10-07T06:59:18.660Z Deferred to memfs S1 (goal 9.3): upstream __test__/helpers/memfs.ts and MemFsHelper.test.ts import @effected/memfs; restore both into scratchpad/test/jsonl right after memfs reaches S1. Lab-only behaviours (5 added error tags, paging, EOF clamp) get section 14 deviation entries with upstream probes at S2.",
+        "2026-10-07T06:59:18.969Z S1: S1 green: restored upstream EnvelopeTypes, LineProperty and integration/Journal.int suites (no upstream assertion failed), jsonl moved onto the generic runner, root imports rewritten, 332 tests."
+      ],
       "closedAt": null
     },
     {

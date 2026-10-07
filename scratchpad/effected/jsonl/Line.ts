@@ -3,8 +3,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
-import { pipe, flow } from "effect";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { pipe, flow } from "effect/Function";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as O from "effect/Option";
