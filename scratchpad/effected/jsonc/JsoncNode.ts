@@ -248,14 +248,8 @@ Match.when("object", (): unknown => { {
 			return obj;
 		}
 }),
-Match.when("array", (): unknown => {
-			return (node.children ?? []).map((child) => evaluateNode(child, depth + 1));
-}),
-Match.when("property", (): unknown => {
-			return node.children?.[1] !== undefined ? evaluateNode(node.children[1], depth + 1) : undefined;
-}),
-Match.orElse((): unknown => {
-			return node.value;
-})
+Match.when("array", (): unknown =>((node.children ?? []).map((child) => evaluateNode(child, depth + 1)))),
+Match.when("property", (): unknown =>(node.children?.[1] !== undefined ? evaluateNode(node.children[1], depth + 1) : undefined)),
+Match.orElse((): unknown =>(node.value))
 );
 }

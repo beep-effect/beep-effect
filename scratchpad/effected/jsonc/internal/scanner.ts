@@ -133,7 +133,7 @@ export const createScanner: {
     };
 
     const scanString = (): string => {
-      const chunks = A.empty<string>()
+      const chunks = A.empty<string>();
       const finish = (end: number): string => {
         const tail = text.substring(start, end);
         if (chunks.length === 0) {
@@ -168,54 +168,55 @@ export const createScanner: {
           const escaped = text.charCodeAt(pos);
           pos++;
           Match.value(escaped).pipe(
-Match.when(0x22, (): void => { // "
+            Match.when(0x22, (): void => { // "
               chunks.push("\"");
               return;
-}),
-Match.when(0x5c, (): void => { // \
+            }),
+            Match.when(0x5c, (): void => { // \
               chunks.push("\\");
               return;
-}),
-Match.when(0x2f, (): void => { // /
+            }),
+            Match.when(0x2f, (): void => { // /
               chunks.push("/");
               return;
-}),
-Match.when(0x62, (): void => { // b
+            }),
+            Match.when(0x62, (): void => { // b
               chunks.push("\b");
               return;
-}),
-Match.when(0x66, (): void => { // f
+            }),
+            Match.when(0x66, (): void => { // f
               chunks.push("\f");
               return;
-}),
-Match.when(0x6e, (): void => { // n
+            }),
+            Match.when(0x6e, (): void => { // n
               chunks.push("\n");
               return;
-}),
-Match.when(0x72, (): void => { // r
+            }),
+            Match.when(0x72, (): void => { // r
               chunks.push("\r");
               return;
-}),
-Match.when(0x74, (): void => { // t
+            }),
+            Match.when(0x74, (): void => { // t
               chunks.push("\t");
               return;
-}),
-Match.when(0x75, (): void => { {
-              // u
-              const value = scanHexDigits(4);
-              if (value >= 0) {
-                chunks.push(String.fromCharCode(value));
-              } else {
-                tokenError = "InvalidUnicode";
+            }),
+            Match.when(0x75, (): void => {
+              {
+                // u
+                const value = scanHexDigits(4);
+                if (value >= 0) {
+                  chunks.push(String.fromCharCode(value));
+                } else {
+                  tokenError = "InvalidUnicode";
+                }
+                return;
               }
-              return;
-            }
-}),
-Match.orElse((): void => {
+            }),
+            Match.orElse((): void => {
               tokenError = "InvalidEscapeCharacter";
               return;
-})
-);
+            }),
+          );
           start = pos;
         } else if (isLineBreak(ch)) {
           tokenError = "UnexpectedEndOfString";
@@ -324,97 +325,98 @@ Match.orElse((): void => {
       tokenOffset = pos;
 
       return Match.value(ch).pipe(
-Match.when(0x7b, (): SyntaxKind => { // {
+        Match.when(0x7b, (): SyntaxKind => { // {
           pos++;
           tokenValue = "{";
           token = "OpenBrace";
           return token;
-}),
-Match.when(0x7d, (): SyntaxKind => { // }
+        }),
+        Match.when(0x7d, (): SyntaxKind => { // }
           pos++;
           tokenValue = "}";
           token = "CloseBrace";
           return token;
-}),
-Match.when(0x5b, (): SyntaxKind => { // [
+        }),
+        Match.when(0x5b, (): SyntaxKind => { // [
           pos++;
           tokenValue = "[";
           token = "OpenBracket";
           return token;
-}),
-Match.when(0x5d, (): SyntaxKind => { // ]
+        }),
+        Match.when(0x5d, (): SyntaxKind => { // ]
           pos++;
           tokenValue = "]";
           token = "CloseBracket";
           return token;
-}),
-Match.when(0x3a, (): SyntaxKind => { // :
+        }),
+        Match.when(0x3a, (): SyntaxKind => { // :
           pos++;
           tokenValue = ":";
           token = "Colon";
           return token;
-}),
-Match.when(0x2c, (): SyntaxKind => { // ,
+        }),
+        Match.when(0x2c, (): SyntaxKind => { // ,
           pos++;
           tokenValue = ",";
           token = "Comma";
           return token;
-}),
-Match.when(0x22, (): SyntaxKind => { // "
+        }),
+        Match.when(0x22, (): SyntaxKind => { // "
           tokenValue = scanString();
           token = "String";
           return token;
-}),
-Match.when(0x2f, (): SyntaxKind => { {
-          // /
-          const nextCh = pos + 1 < len ? text.charCodeAt(pos + 1) : 0;
-          if (nextCh === 0x2f) {
-            // line comment
-            pos += 2;
-            while (pos < len && !isLineBreak(text.charCodeAt(pos))) {
-              pos++;
-            }
-            tokenValue = text.substring(tokenOffset, pos);
-            token = "LineComment";
-            return token;
-          }
-          if (nextCh === 0x2a) {
-            // block comment
-            pos += 2;
-            const safeLen = len - 1;
-            let commentClosed = false;
-            while (pos < safeLen) {
-              const cch = text.charCodeAt(pos);
-              if (isLineBreak(cch)) {
-                if (cch === 0x0d && pos + 1 < len && text.charCodeAt(pos + 1) === 0x0a) {
-                  pos++;
-                }
-                pos++;
-              } else if (cch === 0x2a && text.charCodeAt(pos + 1) === 0x2f) {
-                pos += 2;
-                commentClosed = true;
-                break;
-              } else {
+        }),
+        Match.when(0x2f, (): SyntaxKind => {
+          {
+            // /
+            const nextCh = pos + 1 < len ? text.charCodeAt(pos + 1) : 0;
+            if (nextCh === 0x2f) {
+              // line comment
+              pos += 2;
+              while (pos < len && !isLineBreak(text.charCodeAt(pos))) {
                 pos++;
               }
+              tokenValue = text.substring(tokenOffset, pos);
+              token = "LineComment";
+              return token;
             }
-            if (!commentClosed) {
-              pos = len;
-              tokenError = "UnexpectedEndOfComment";
+            if (nextCh === 0x2a) {
+              // block comment
+              pos += 2;
+              const safeLen = len - 1;
+              let commentClosed = false;
+              while (pos < safeLen) {
+                const cch = text.charCodeAt(pos);
+                if (isLineBreak(cch)) {
+                  if (cch === 0x0d && pos + 1 < len && text.charCodeAt(pos + 1) === 0x0a) {
+                    pos++;
+                  }
+                  pos++;
+                } else if (cch === 0x2a && text.charCodeAt(pos + 1) === 0x2f) {
+                  pos += 2;
+                  commentClosed = true;
+                  break;
+                } else {
+                  pos++;
+                }
+              }
+              if (!commentClosed) {
+                pos = len;
+                tokenError = "UnexpectedEndOfComment";
+              }
+              tokenValue = text.substring(tokenOffset, pos);
+              token = "BlockComment";
+              return token;
             }
+            // single slash is unknown
+            pos++;
             tokenValue = text.substring(tokenOffset, pos);
-            token = "BlockComment";
+            token = "Unknown";
+            tokenError = "InvalidCharacter";
             return token;
           }
-          // single slash is unknown
-          pos++;
-          tokenValue = text.substring(tokenOffset, pos);
-          token = "Unknown";
-          tokenError = "InvalidCharacter";
-          return token;
-        }
-}),
-Match.when(0x2d, (): SyntaxKind => { // -
+        }),
+        Match.when(0x2d, (): SyntaxKind => { // -
           if (pos + 1 < len && isDigit(text.charCodeAt(pos + 1))) {
             tokenValue = scanNumber();
             token = "Number";
@@ -425,8 +427,8 @@ Match.when(0x2d, (): SyntaxKind => { // -
           token = "Unknown";
           tokenError = "InvalidSymbol";
           return token;
-}),
-Match.orElse((): SyntaxKind => {
+        }),
+        Match.orElse((): SyntaxKind => {
           // numbers
           if (isDigit(ch)) {
             tokenValue = scanNumber();
@@ -448,32 +450,32 @@ Match.orElse((): SyntaxKind => {
             }
             tokenValue = text.substring(start, pos);
             return Match.value(tokenValue).pipe(
-Match.when("true", (): SyntaxKind => {
+              Match.when("true", (): SyntaxKind => {
                 token = "True";
                 return token;
-}),
-Match.when("false", (): SyntaxKind => {
+              }),
+              Match.when("false", (): SyntaxKind => {
                 token = "False";
                 return token;
-}),
-Match.when("null", (): SyntaxKind => {
+              }),
+              Match.when("null", (): SyntaxKind => {
                 token = "Null";
                 return token;
-}),
-Match.orElse((): SyntaxKind => {
+              }),
+              Match.orElse((): SyntaxKind => {
                 token = "Unknown";
                 tokenError = "InvalidSymbol";
                 return token;
-})
-);
+              }),
+            );
           }
           pos++;
           tokenValue = text.substring(tokenOffset, pos);
           token = "Unknown";
           tokenError = "InvalidCharacter";
           return token;
-})
-);
+        }),
+      );
     };
 
     const scan = (): SyntaxKind => {

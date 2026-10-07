@@ -40,11 +40,25 @@ import { JsoncPath, type JsoncSegment } from "./JsoncNode.ts";
 export const JsoncVisitorEvent = S.TaggedUnion({
   ObjectBegin: { offset: S.Int, length: S.Int, path: JsoncPath },
   ObjectEnd: { offset: S.Int, length: S.Int },
-  ObjectProperty: { property: S.String, offset: S.Int, length: S.Int, path: JsoncPath },
+  ObjectProperty: {
+    property: S.String,
+    offset: S.Int,
+    length: S.Int,
+    path: JsoncPath,
+  },
   ArrayBegin: { offset: S.Int, length: S.Int, path: JsoncPath },
   ArrayEnd: { offset: S.Int, length: S.Int },
-  LiteralValue: { value: S.Unknown, offset: S.Int, length: S.Int, path: JsoncPath },
-  Separator: { character: S.Literals([",", ":"]), offset: S.Int, length: S.Int },
+  LiteralValue: {
+    value: S.Unknown,
+    offset: S.Int,
+    length: S.Int,
+    path: JsoncPath,
+  },
+  Separator: {
+    character: S.Literals([",", ":"]),
+    offset: S.Int,
+    length: S.Int,
+  },
   Comment: { offset: S.Int, length: S.Int },
   Error: { code: JsoncParseErrorCode, offset: S.Int, length: S.Int },
 });
@@ -131,9 +145,15 @@ function* visitGen(text: string, disallowComments: boolean): Generator<JsoncVisi
       }
 
       if (t === "LineComment" || t === "BlockComment") {
-        const span = { offset: scanner.getTokenOffset(), length: scanner.getTokenLength() };
+        const span = {
+          offset: scanner.getTokenOffset(),
+          length: scanner.getTokenLength(),
+        };
         yield disallowComments
-          ? JsoncVisitorEvent.cases.Error.make({ ...span, code: "InvalidCommentToken" })
+          ? JsoncVisitorEvent.cases.Error.make({
+            ...span,
+            code: "InvalidCommentToken",
+          })
           : JsoncVisitorEvent.cases.Comment.make(span);
         continue;
       }
@@ -143,67 +163,57 @@ function* visitGen(text: string, disallowComments: boolean): Generator<JsoncVisi
 
   function literalValue(kind: SyntaxKind, tokenValue: string): unknown {
     return Match.value(kind).pipe(
-Match.when("String", (): unknown => {
-        return tokenValue;
-}),
-Match.when("Number", (): unknown => {
-        return Number.parseFloat(tokenValue);
-}),
-Match.when("True", (): unknown => {
-        return true;
-}),
-Match.when("False", (): unknown => {
-        return false;
-}),
-Match.when("Null", (): unknown => {
-        return null;
-}),
-Match.orElse((): unknown => {
-        return undefined;
-})
-);
+      Match.when("String", (): unknown => (tokenValue)),
+      Match.when("Number", (): unknown => (Number.parseFloat(tokenValue))),
+      Match.when("True", (): unknown => true),
+      Match.when("False", (): unknown => false),
+      Match.when("Null", (): unknown => null),
+      Match.orElse((): unknown => undefined),
+    );
   }
 
   function* visitValue(): Generator<JsoncVisitorEvent, boolean> {
     const t = scanner.getToken();
     return yield* Match.value(t).pipe(
-Match.when("OpenBrace", function* (): Generator<JsoncVisitorEvent, boolean> { {
-        if (depth >= MAX_NESTING_DEPTH) {
-          yield JsoncVisitorEvent.cases.Error.make({
-            code: "NestingDepthExceeded",
-            offset: scanner.getTokenOffset(),
-            length: scanner.getTokenLength(),
-          });
-          skipDeepContainer();
-          return false;
+      Match.when("OpenBrace", function* (): Generator<JsoncVisitorEvent, boolean> {
+        {
+          if (depth >= MAX_NESTING_DEPTH) {
+            yield JsoncVisitorEvent.cases.Error.make({
+              code: "NestingDepthExceeded",
+              offset: scanner.getTokenOffset(),
+              length: scanner.getTokenLength(),
+            });
+            skipDeepContainer();
+            return false;
+          }
+          depth++;
+          try {
+            return yield* visitObject();
+          } finally {
+            depth--;
+          }
         }
-        depth++;
-        try {
-          return yield* visitObject();
-        } finally {
-          depth--;
+      }),
+      Match.when("OpenBracket", function* (): Generator<JsoncVisitorEvent, boolean> {
+        {
+          if (depth >= MAX_NESTING_DEPTH) {
+            yield JsoncVisitorEvent.cases.Error.make({
+              code: "NestingDepthExceeded",
+              offset: scanner.getTokenOffset(),
+              length: scanner.getTokenLength(),
+            });
+            skipDeepContainer();
+            return false;
+          }
+          depth++;
+          try {
+            return yield* visitArray();
+          } finally {
+            depth--;
+          }
         }
-      }
-}),
-Match.when("OpenBracket", function* (): Generator<JsoncVisitorEvent, boolean> { {
-        if (depth >= MAX_NESTING_DEPTH) {
-          yield JsoncVisitorEvent.cases.Error.make({
-            code: "NestingDepthExceeded",
-            offset: scanner.getTokenOffset(),
-            length: scanner.getTokenLength(),
-          });
-          skipDeepContainer();
-          return false;
-        }
-        depth++;
-        try {
-          return yield* visitArray();
-        } finally {
-          depth--;
-        }
-      }
-}),
-Match.whenOr("String", "Number", "True", "False", "Null", function* (): Generator<JsoncVisitorEvent, boolean> {
+      }),
+      Match.whenOr("String", "Number", "True", "False", "Null", function* (): Generator<JsoncVisitorEvent, boolean> {
         yield JsoncVisitorEvent.cases.LiteralValue.make({
           value: literalValue(t, scanner.getTokenValue()),
           offset: scanner.getTokenOffset(),
@@ -212,23 +222,24 @@ Match.whenOr("String", "Number", "True", "False", "Null", function* (): Generato
         });
         yield* scanNext();
         return true;
-}),
-Match.orElse(function* (): Generator<JsoncVisitorEvent, boolean> { {
-        yield JsoncVisitorEvent.cases.Error.make({
-          code: "ValueExpected",
-          offset: scanner.getTokenOffset(),
-          length: scanner.getTokenLength(),
-        });
-        // Consume the offending token so recovery always makes progress —
-        // leaving it in place loops forever on inputs like `[bad]`. Container
-        // closers stay put so the enclosing visit can close normally.
-        if (t !== "CloseBrace" && t !== "CloseBracket" && t !== "EOF") {
-          yield* scanNext();
+      }),
+      Match.orElse(function* (): Generator<JsoncVisitorEvent, boolean> {
+        {
+          yield JsoncVisitorEvent.cases.Error.make({
+            code: "ValueExpected",
+            offset: scanner.getTokenOffset(),
+            length: scanner.getTokenLength(),
+          });
+          // Consume the offending token so recovery always makes progress —
+          // leaving it in place loops forever on inputs like `[bad]`. Container
+          // closers stay put so the enclosing visit can close normally.
+          if (t !== "CloseBrace" && t !== "CloseBracket" && t !== "EOF") {
+            yield* scanNext();
+          }
+          return false;
         }
-        return false;
-      }
-})
-);
+      }),
+    );
   }
 
   function* visitObject(): Generator<JsoncVisitorEvent, boolean> {

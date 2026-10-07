@@ -19,7 +19,7 @@ import { JsoncNode } from "../JsoncNode.ts";
 import { makeNodeUnsafe } from "../JsoncNode.ts";
 import { MAX_NESTING_DEPTH } from "./limits.ts";
 import { dual } from "effect/Function";
-import  { ScanError, type SyntaxKind } from "./scanner.ts";
+import { ScanError, type SyntaxKind } from "./scanner.ts";
 import { createScanner } from "./scanner.ts";
 import type { SkipCursor } from "./skip.ts";
 import { skipBalancedValue } from "./skip.ts";
@@ -114,45 +114,33 @@ export const ParseFlags = S.Struct({
 export type ParseFlags = typeof ParseFlags.Type;
 
 /** Value-mode recovery result before the facade adds source positions. */
-export const ParseValueResult = S.Struct({ value: S.Unknown, errors: S.Array(RawParseError) });
+export const ParseValueResult = S.Struct({
+  value: S.Unknown,
+  errors: S.Array(RawParseError),
+});
 export type ParseValueResult = typeof ParseValueResult.Type;
 
 /** Tree-mode recovery result; empty input has no root. */
-export const ParseTreeResult = S.Struct({ root: S.UndefinedOr(JsoncNode), errors: S.Array(RawParseError) });
+export const ParseTreeResult = S.Struct({
+  root: S.UndefinedOr(JsoncNode),
+  errors: S.Array(RawParseError),
+});
 export type ParseTreeResult = typeof ParseTreeResult.Type;
 
 /**
  * The single scan-error to parse-code translation, shared by the parser and the
  * visitor. Returns `undefined` for `"None"` (no error).
  */
-export const scanErrorToCode = (error: ScanError): ParseCode | undefined => {
-	return Match.value(error).pipe(
-Match.when("InvalidUnicode", (): ParseCode | undefined => {
-			return "InvalidUnicode";
-}),
-Match.when("InvalidEscapeCharacter", (): ParseCode | undefined => {
-			return "InvalidEscapeCharacter";
-}),
-Match.when("UnexpectedEndOfNumber", (): ParseCode | undefined => {
-			return "InvalidNumberFormat";
-}),
-Match.when("UnexpectedEndOfComment", (): ParseCode | undefined => {
-			return "UnexpectedEndOfComment";
-}),
-Match.when("UnexpectedEndOfString", (): ParseCode | undefined => {
-			return "UnexpectedEndOfString";
-}),
-Match.when("InvalidCharacter", (): ParseCode | undefined => {
-			return "InvalidCharacter";
-}),
-Match.when("InvalidSymbol", (): ParseCode | undefined => {
-			return "InvalidSymbol";
-}),
-Match.orElse((): ParseCode | undefined => {
-			return undefined;
-})
-);
-};
+export const scanErrorToCode = (error: ScanError): ParseCode | undefined => (Match.value(error).pipe(
+  Match.when("InvalidUnicode", (): ParseCode | undefined => ("InvalidUnicode")),
+  Match.when("InvalidEscapeCharacter", (): ParseCode | undefined => ("InvalidEscapeCharacter")),
+  Match.when("UnexpectedEndOfNumber", (): ParseCode | undefined => ("InvalidNumberFormat")),
+  Match.when("UnexpectedEndOfComment", (): ParseCode | undefined => ("UnexpectedEndOfComment")),
+  Match.when("UnexpectedEndOfString", (): ParseCode | undefined => ("UnexpectedEndOfString")),
+  Match.when("InvalidCharacter", (): ParseCode | undefined => ("InvalidCharacter")),
+  Match.when("InvalidSymbol", (): ParseCode | undefined => ("InvalidSymbol")),
+  Match.orElse((): ParseCode | undefined => undefined),
+));
 
 interface Internal {
   value: unknown;
@@ -255,34 +243,24 @@ function run(text: string, flags: ParseFlags, buildTree: boolean): Internal {
 
   function parseValue(): unknown {
     return Match.value(token()).pipe(
-Match.when("OpenBracket", (): unknown => {
-        return parseArray();
-}),
-Match.when("OpenBrace", (): unknown => {
-        return parseObject();
-}),
-Match.when("String", (): unknown => {
-        return parseString();
-}),
-Match.when("Number", (): unknown => {
-        return parseNumber();
-}),
-Match.when("True", (): unknown => {
+      Match.when("OpenBracket", (): unknown => (parseArray())),
+      Match.when("OpenBrace", (): unknown => (parseObject())),
+      Match.when("String", (): unknown => (parseString())),
+      Match.when("Number", (): unknown => (parseNumber())),
+      Match.when("True", (): unknown => {
         scanNext();
         return true;
-}),
-Match.when("False", (): unknown => {
+      }),
+      Match.when("False", (): unknown => {
         scanNext();
         return false;
-}),
-Match.when("Null", (): unknown => {
+      }),
+      Match.when("Null", (): unknown => {
         scanNext();
         return null;
-}),
-Match.orElse((): unknown => {
-        return undefined;
-})
-);
+      }),
+      Match.orElse((): unknown => undefined),
+    );
   }
 
   function parseString(): string {
@@ -415,31 +393,15 @@ Match.orElse((): unknown => {
 
   function parseValueTree(): JsoncNode | undefined {
     return Match.value(token()).pipe(
-Match.when("OpenBracket", (): JsoncNode | undefined => {
-        return parseArrayTree();
-}),
-Match.when("OpenBrace", (): JsoncNode | undefined => {
-        return parseObjectTree();
-}),
-Match.when("String", (): JsoncNode | undefined => {
-        return leafTree("string", scanner.getTokenValue());
-}),
-Match.when("Number", (): JsoncNode | undefined => {
-        return leafTree("number", Number.parseFloat(scanner.getTokenValue()));
-}),
-Match.when("True", (): JsoncNode | undefined => {
-        return leafTree("boolean", true);
-}),
-Match.when("False", (): JsoncNode | undefined => {
-        return leafTree("boolean", false);
-}),
-Match.when("Null", (): JsoncNode | undefined => {
-        return leafTree("null", null);
-}),
-Match.orElse((): JsoncNode | undefined => {
-        return undefined;
-})
-);
+      Match.when("OpenBracket", (): JsoncNode | undefined => (parseArrayTree())),
+      Match.when("OpenBrace", (): JsoncNode | undefined => (parseObjectTree())),
+      Match.when("String", (): JsoncNode | undefined => (leafTree("string", scanner.getTokenValue()))),
+      Match.when("Number", (): JsoncNode | undefined => (leafTree("number", Number.parseFloat(scanner.getTokenValue())))),
+      Match.when("True", (): JsoncNode | undefined => (leafTree("boolean", true))),
+      Match.when("False", (): JsoncNode | undefined => (leafTree("boolean", false))),
+      Match.when("Null", (): JsoncNode | undefined => (leafTree("null", null))),
+      Match.orElse((): JsoncNode | undefined => (undefined)),
+    );
   }
 
   function leafTree(type: "string" | "number" | "boolean" | "null", value: unknown): JsoncNode {

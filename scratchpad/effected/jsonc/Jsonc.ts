@@ -1,7 +1,3 @@
-import * as A from "effect/Array";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import { LiteralKit } from "@beep/schema/LiteralKit";
 // The `Jsonc` facade: parsing, comment stripping, semantic equality and the
 // flagship schema factories, plus the parse-error vocabulary they raise.
 //
@@ -18,6 +14,9 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as P from "effect/Predicate";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";

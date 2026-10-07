@@ -130,7 +130,7 @@ Match.tag("Mismatch", function* (result) {
 					depth: result.depth,
 				});
 }),
-Match.tag("NoOp", function* (result) {
+Match.tag("NoOp", function* (_result) {
 				return [] as ReadonlyArray<JsoncEdit>;
 }),
 Match.tag("Located", function* (result) { {
