@@ -8,7 +8,7 @@
 import { $DocketIntakeId } from "@beep/identity/packages";
 import { DocketReviewConfig, ReviewMaxRounds } from "@beep/law-practice-use-cases/DocketIntake";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Config } from "effect";
+import { Config, Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $DocketIntakeId.create("Config");
@@ -41,6 +41,12 @@ export class DocketIntakeAppConfig extends S.Class<DocketIntakeAppConfig>($I`Doc
       description: "Hex SHA-256 thumbprint of the registered certificate.",
     }),
     clientId: S.NonEmptyString.annotateKey({ description: "Entra application id." }),
+    docketSheetCsv: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "CSV export of the attorney's docket sheet to cross-check against; no cross-check when absent.",
+    }),
+    kgBundleDirectory: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)).annotateKey({
+      description: "Practice knowledge-graph bundle directory for the matter lookup; no lookup when absent.",
+    }),
     mailbox: S.NonEmptyString.annotateKey({ description: "Watched mailbox user id or address; never logged." }),
     maxConsecutiveFailures: PositiveCount.annotateKey({
       description: "Poll cycles that may fail in a row before the service exits non-zero.",
@@ -96,6 +102,8 @@ export const DocketIntakeAppConfigFromEnv: Config.Config<DocketIntakeAppConfig> 
   certPrivateKey: Config.Redacted("DOCKET_INTAKE_CERT_PRIVATE_KEY"),
   certThumbprintSha256: Config.NonEmptyString("DOCKET_INTAKE_CERT_THUMBPRINT_SHA256"),
   clientId: Config.NonEmptyString("DOCKET_INTAKE_CLIENT_ID"),
+  docketSheetCsv: Config.option(Config.NonEmptyString("DOCKET_INTAKE_DOCKET_SHEET_CSV")),
+  kgBundleDirectory: Config.option(Config.NonEmptyString("DOCKET_INTAKE_KG_BUNDLE_DIR")),
   mailbox: Config.NonEmptyString("DOCKET_INTAKE_MAILBOX"),
   maxConsecutiveFailures: Config.schema(PositiveCountFromString, "DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES").pipe(
     Config.withDefault(DEFAULT_MAX_CONSECUTIVE_FAILURES)

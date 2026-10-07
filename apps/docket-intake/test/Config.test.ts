@@ -31,6 +31,8 @@ describe("@beep/docket-intake configuration", () => {
       expect([config.reviewMaxRounds, config.reviewAcceptThreshold]).toStrictEqual([3, 0.85]);
       expect(config.maxConsecutiveFailures).toBe(6);
       assertNone(config.startAt);
+      assertNone(config.kgBundleDirectory);
+      assertNone(config.docketSheetCsv);
       expect(config.stateDirectory).toBe("/home/fixture/.local/state/beep/docket-intake");
       expect(DateTime.zoneToString(config.timeZone)).toBe("America/Chicago");
       expect(Redacted.value(config.certPrivateKey)).toBe("fixture-private-key");
@@ -44,6 +46,8 @@ describe("@beep/docket-intake configuration", () => {
       const xdg = yield* load({ ...required, XDG_STATE_HOME: "/var/fixture/state" });
       const explicit = yield* load({
         ...required,
+        DOCKET_INTAKE_DOCKET_SHEET_CSV: "/srv/fixture/docket-sheet.csv",
+        DOCKET_INTAKE_KG_BUNDLE_DIR: "/srv/fixture/practice-kg-bundle",
         DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2",
         DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "0.9",
         DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "5",
@@ -59,6 +63,8 @@ describe("@beep/docket-intake configuration", () => {
       expect([explicit.reviewMaxRounds, explicit.reviewAcceptThreshold]).toStrictEqual([5, 0.9]);
       expect(explicit.maxConsecutiveFailures).toBe(2);
       assertSome(O.map(explicit.startAt, DateTime.formatIso), "2030-01-01T06:00:00.000Z");
+      assertSome(explicit.kgBundleDirectory, "/srv/fixture/practice-kg-bundle");
+      assertSome(explicit.docketSheetCsv, "/srv/fixture/docket-sheet.csv");
     })
   );
 

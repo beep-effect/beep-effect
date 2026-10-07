@@ -39,12 +39,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement and P2 Verify. Slices 0 to 3b are merged (#1455, #1456, #1458,
-#1475, #1502, plus driver follow-ups #1473 and #1501). The first-run safety
-net (slice 3c) is in review as #1517; slice 4 (the live practice-KG matter
-lookup and the docket-sheet cross-check) is being built. The Entra and
-Exchange registration is complete and the live read and write smoke tests
-passed on 2026-10-06; the operator-attended first run waits for its slot.
+P2 Verify, continuing. Slices 0 to 3c are merged (#1455, #1456, #1458,
+#1475, #1502, #1517, plus driver follow-ups #1473 and #1501); slice 4 (the
+live practice-KG matter lookup and the docket-sheet cross-check, SPEC D-44 to
+D-46) is in review. The Entra and Exchange registration is complete and the
+live read and write smoke tests passed on 2026-10-06. First live runs: the IT
+mailbox run processed 10 messages and found no docket item; the attorney
+mailbox run of 2026-10-06 processed 10 messages, entered 1, sent 2 to needs
+review, failed 0, and wrote 3 tentative events.
 
 ## Latest Evidence
 
