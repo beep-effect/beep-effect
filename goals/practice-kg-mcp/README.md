@@ -63,7 +63,9 @@ person by `practice-kg-mcp --self-check`. Bundle `2026-10-07-01` with
 extension 0.4.0 is on his PC (self-check ok, 2026-10-06). What remains needs
 people: one session with him, scripted in `research/attorney-session.md`
 (in-chat `kg_provenance`, G-1..G-5 verdicts, his own questions for AC-6). P11
-widens correspondents from the mail archives; its rebuild is diffed against
+widens correspondents from the mail archives: lane E's message index is read
+with `--mail-index` and each message is placed on a matter by the docket
+reference in its subject line (D-26); its rebuild is diffed against
 `2026-10-07-01` with `verify.ts --compare-to` (D-25), which fails on any lost
 matter, docket, or number.
 

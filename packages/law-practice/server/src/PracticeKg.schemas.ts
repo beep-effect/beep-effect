@@ -171,6 +171,10 @@ export class PracticeKgOptions extends S.Class<PracticeKgOptions>($I`PracticeKgO
       S.withConstructorDefault(emptyStringList),
       S.withDecodingDefaultTypeKey(emptyStringList)
     ),
+    mailIndexPaths: S.Array(S.String).pipe(
+      S.withConstructorDefault(emptyStringList),
+      S.withDecodingDefaultTypeKey(emptyStringList)
+    ),
     maxTextBytes: PosInt.pipe(
       S.withConstructorDefault(Effect.succeed(practiceKgOptionsMaxTextBytesDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(practiceKgOptionsMaxTextBytesDefault))

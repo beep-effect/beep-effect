@@ -45,6 +45,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.verify");
  *   claims: 0,
  *   claimsWithSourceDocument: 0,
  *   contactLinksWithoutMatter: 0,
+ *   correspondentMatters: 0,
  *   correspondents: 0,
  *   correspondentsWithoutMatter: 0,
  *   danglingEdges: 0,
@@ -70,6 +71,7 @@ export class PracticeKgVerifySummary extends S.Class<PracticeKgVerifySummary>($I
     claims: S.Finite,
     claimsWithSourceDocument: S.Finite,
     contactLinksWithoutMatter: S.Finite,
+    correspondentMatters: S.Finite,
     correspondents: S.Finite,
     correspondentsWithoutMatter: S.Finite,
     danglingEdges: S.Finite,
@@ -189,6 +191,9 @@ export const verifyPracticeKgBundle: Effect.Effect<
   const matters = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matters");
   const matterDockets = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_dockets");
   const correspondents = yield* duckCount("SELECT CAST(COUNT(*) AS DOUBLE) AS count FROM matter_correspondents");
+  const correspondentMatters = yield* duckCount(
+    "SELECT CAST(COUNT(DISTINCT family_key) AS DOUBLE) AS count FROM matter_correspondents"
+  );
   const correspondentsWithoutMatter = yield* duckCount(correspondentsWithoutMatterSql);
   const contactLinksWithoutMatter = yield* duckCount(contactLinksWithoutMatterSql);
   const claimTables = yield* sql.unsafe(PracticeKgQueries.claimsTableProbe).pipe(Effect.flatMap(decodeTableRows));
@@ -206,6 +211,7 @@ export const verifyPracticeKgBundle: Effect.Effect<
     claims,
     claimsWithSourceDocument,
     contactLinksWithoutMatter,
+    correspondentMatters,
     correspondents,
     correspondentsWithoutMatter,
     danglingEdges,

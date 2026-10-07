@@ -185,9 +185,11 @@ live in `@beep/law-practice-use-cases/server`
 
 **Evidence ladder.** The attorney's own links for a contact
 (`attorney-answer`, `attorney-pc-folder`, `attorney-docket-sheet`,
-`attorney-filed-email`) outrank everything. Message counts from filed email,
-and the inferred links `org-name-match` and `email-subject-ref`, rank
-candidates for a person and never decide.
+`attorney-filed-email`) outrank everything. Message counts from filed email
+and from archive mail placed by its subject line (D-26, `subject-reference`:
+the subject names exactly one of the bundle's matters), and the inferred
+links `org-name-match` and `email-subject-ref`, rank candidates for a person
+and never decide.
 
 **Resolution.**
 

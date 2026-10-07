@@ -36,6 +36,9 @@ const $I = $LawPracticeDomainId.create("values/KgAttributionSource");
  * - `mention-dominance` — a USPTO anchor's membership because one client-keyed
  *   family holds a dominant share of the documents that mention its number,
  *   though some documents elsewhere cite it too.
+ * - `subject-reference` — an archive mail message attributed to a matter because
+ *   its subject line cites one of the matter's dockets, applications, or patents;
+ *   correspondent evidence only, never a graph node.
  * - `mention` — the only link is a number mentioned in family documents; never a
  *   membership claim.
  *
@@ -65,6 +68,7 @@ export const KgAttributionSource = LiteralKit([
   "client-map",
   "official-record",
   "mention-dominance",
+  "subject-reference",
   "mention",
 ]).pipe(
   $I.annoteSchema("KgAttributionSource", {

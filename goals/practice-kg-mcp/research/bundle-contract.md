@@ -189,6 +189,7 @@ bun run apps/practice-kg-mcp/src/build.ts
   --docket-register <file>     # the attorney's docket register as JSONL
   --contacts <file>            # the contacts table as JSONL (D-24)
   --practice-domain <domain>   # the practice's own mail domain; repeatable
+  --mail-index <file>          # corpus provenance message index as JSONL; repeatable (D-26)
   --skip-emails                # spine+text only (fast iteration)
   --max-text-bytes <n>         # per-document inline cap, default 2097152
   --overwrite                  # replace an existing bundle dir (mirrors organize --overwrite)
@@ -233,6 +234,25 @@ headers come from the Tika metadata beside their text
 document without readable metadata is skipped with a warning. The contacts
 table is client material, produced by the Box workstream and kept outside the
 repo.
+
+**Archive mail (D-26).** `--mail-index` reads the corpus provenance message
+index, one `MailMessageIndexRecord` per line as the corpus tooling writes it
+(`beep corpus provenance messages`); the build decodes only `tree`,
+`messagePath`, `internet` (`messageId`, `from`, `to`, `cc`, `date`,
+`subject`), `outlook` (`subject`, `conversationTopic`, `senderEmailAddress`,
+`sentRepresentingEmailAddress`, `clientSubmitTime`, `deliveryTime`) and
+`recipients` (`kind`, `emailAddress`). A line that does not decode stops the
+build with its file and line number. A message is one `Message-ID`, else its
+tree and path; the first file given wins a duplicate. A message joins
+`matter_correspondents` only when the references in its subject line (RFC
+5322 subject, else the MAPI subject, else the conversation topic) name
+exactly one of the bundle's matters, resolved with
+`matchPracticeKgMatterReferences` (docket key, family key, bare docket code,
+application and patent numbers; never a client number or bare family on its
+own). Participants come from From/To/Cc, else the MAPI sender and the
+recipients list, dropping Exchange legacy addresses. The rows carry the
+attribution source `subject-reference` into the same tallies as filed mail;
+the table shape and store format do not change.
 
 Determinism rules (binding): every INSERT batch ordered by full natural key;
 no wall-clock values in any row (build time lives only in `kg_build` /
