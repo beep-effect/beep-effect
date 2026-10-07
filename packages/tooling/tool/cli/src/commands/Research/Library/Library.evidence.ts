@@ -1,4 +1,6 @@
-/** Resume admission evidence checks.
+/**
+ * Resume admission evidence checks.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -11,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { XMLParser } from "fast-xml-parser";
+import { SyntaxValidator } from "fast-xml-validator";
 import { decodeLibraryJson, encodeLibraryJson, runLibraryCommand } from "./Library.adapter.ts";
 import { LibraryError } from "./Library.errors.ts";
 import { readLibraryProviderEvents } from "./Library.events.ts";
@@ -24,7 +27,8 @@ import { validateLibraryScrape } from "./Library.web.ts";
 import type { LibraryCatalog, LibraryQualification, LibrarySource } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.evidence");
-/** Source-bound probe evidence.
+/**
+ * Source-bound probe evidence.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { LibraryProbeEvidence } from "@beep/repo-cli/commands/Research"
@@ -32,7 +36,8 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.evidence");
  * ```
  *
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryProbeEvidence extends S.Class<LibraryProbeEvidence>($I`LibraryProbeEvidence`)(
   {
     adapter: S.String,
@@ -48,7 +53,8 @@ export class LibraryProbeEvidence extends S.Class<LibraryProbeEvidence>($I`Libra
   })
 ) {}
 
-/** Check hashed evidence and reject path or symlink escapes before resume.
+/**
+ * Check hashed evidence and reject path or symlink escapes before resume.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { libraryArtifactsValid } from "@beep/repo-cli/test/ResearchLibrary"
@@ -58,7 +64,8 @@ export class LibraryProbeEvidence extends S.Class<LibraryProbeEvidence>($I`Libra
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const libraryArtifactsValid = Effect.fn("Library.artifactsValid")(function* (
   root: string,
   artifacts: ReadonlyArray<LibraryArtifact>
@@ -121,7 +128,8 @@ const validateQualificationProbe = Effect.fn("Library.validateQualificationProbe
   if (!(yield* libraryArtifactsValid(root, probe.artifacts))) return false;
   return yield* librarySourceEvidenceValid(root, source.value, capture.value);
 });
-/** Revalidate operational qualification before it admits another acquisition.
+/**
+ * Revalidate operational qualification before it admits another acquisition.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { libraryQualificationValid } from "@beep/repo-cli/test/ResearchLibrary"
@@ -134,7 +142,8 @@ const validateQualificationProbe = Effect.fn("Library.validateQualificationProbe
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const libraryQualificationValid = Effect.fn("Library.qualificationValid")(function* (
   root: string,
   catalog: LibraryCatalog,
@@ -293,11 +302,19 @@ const captionXmlParser = new XMLParser({
   trimValues: false,
   htmlEntities: true,
 });
-const parseCaptionXml = (text: string) =>
-  Effect.try({
-    try: () => captionXmlParser.parse(text, true),
+const parseCaptionXml = Effect.fn("Library.parseCaptionXml")(function* (text: string) {
+  const validation = yield* Effect.try({
+    try: () => SyntaxValidator.validate(text),
     catch: (cause) => LibraryError.make({ message: "Malformed retained caption XML.", cause }),
   });
+  if (validation !== true) {
+    return yield* LibraryError.make({ message: "Malformed retained caption XML.", cause: validation.err });
+  }
+  return yield* Effect.try({
+    try: () => captionXmlParser.parse(text),
+    catch: (cause) => LibraryError.make({ message: "Malformed retained caption XML.", cause }),
+  });
+});
 const TranscriptProvenance = S.Array(
   S.Struct({
     language: S.String,
@@ -1244,7 +1261,8 @@ const sourceCapturedRevisionValid = (source: LibrarySource, capture: LibraryCapt
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity)) return arxivCapturedRevisionValid(capture);
   return capture.capturedRevision === capture.requestedRevision;
 };
-/** Revalidate source-specific target and content provenance.
+/**
+ * Revalidate source-specific target and content provenance.
  * **Example** (Checking a retained source)
  * ```ts
  * import { librarySourceEvidenceValid } from "@beep/repo-cli/test/ResearchLibrary"
@@ -1302,12 +1320,14 @@ const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
     .pipe(Effect.flatMap(decodeLibraryJson(LibraryDispositionImportPayload)));
   return O.some(LibraryEffectiveCapture.make({ revision, capture, category: review.disposition }));
 });
-/** Validated current claim for one requested revision.
+/**
+ * Validated current claim for one requested revision.
  * **Example** (Inspect the selection shape)
  * ```ts
  * import { LibraryEffectiveCapture } from "@beep/repo-cli/test/ResearchLibrary"
  * console.log(LibraryEffectiveCapture.fields.revision)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1323,7 +1343,8 @@ export class LibraryEffectiveCapture extends S.Class<LibraryEffectiveCapture>($I
   })
 ) {}
 
-/** Select the latest validated claim in immutable catalog append order for each required revision.
+/**
+ * Select the latest validated claim in immutable catalog append order for each required revision.
  * **Details**
  * Failed attempts do not erase a valid claim. A hash-bound review supersedes an earlier readable claim;
  * a later valid readable capture restores it. Callers still verify every historical artifact independently.
@@ -1334,6 +1355,7 @@ export class LibraryEffectiveCapture extends S.Class<LibraryEffectiveCapture>($I
  * const current = (catalog: import("@beep/repo-cli/commands/Research").LibraryCatalog) =>
  *   libraryEffectiveCaptures("/library", catalog, catalog.sources[0])
  * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1343,8 +1365,9 @@ export const libraryEffectiveCaptures = Effect.fn("Library.effectiveCaptures")(f
   source: LibrarySource
 ) {
   const revisions = libraryCitedRevisions(catalog, source);
-  return yield* Effect.forEach(revisions, (revision) =>
-    Effect.gen(function* () {
+  return yield* Effect.forEach(
+    revisions,
+    Effect.fnUntraced(function* (revision) {
       let selected = LibraryEffectiveCapture.make({ revision, capture: null, category: "missing" });
       for (const capture of catalog.captures) {
         if (capture.sourceId !== source.id || capture.requestedRevision !== revision) continue;
@@ -1356,12 +1379,16 @@ export const libraryEffectiveCaptures = Effect.fn("Library.effectiveCaptures")(f
   );
 });
 
-/** Classify a source by its least complete required version.
+/**
+ * Classify a source by its least complete required version.
  * **Example** (Prefer an unread version over a readable version)
  * ```ts
  * import { libraryEffectiveCategory } from "@beep/repo-cli/test/ResearchLibrary"
  * console.log(libraryEffectiveCategory(["readable", "incomplete"]))
  * ```
+ *
+ * @param categories - Coverage categories for every required version of a source.
+ * @returns The least complete category, or missing when no category is present.
  * @category utilities
  * @since 0.0.0
  */

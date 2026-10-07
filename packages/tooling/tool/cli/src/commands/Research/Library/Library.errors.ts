@@ -1,13 +1,15 @@
-/** Typed research library failures.
- * @packageDocumentation
+/**
+ * Typed research library failures.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.errors");
-/** Failure at a library I/O or validation boundary.
+/**
+ * Failure at a library I/O or validation boundary.
  * **Example** (Make a failure)
  * ```ts
  * import { LibraryError } from "@beep/repo-cli/commands/Research"
@@ -15,7 +17,6 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.errors");
  * ```
  *
  * @category errors
- *
  * @since 0.0.0
  */
 export class LibraryError extends S.TaggedError<LibraryError>($I`LibraryError`)(

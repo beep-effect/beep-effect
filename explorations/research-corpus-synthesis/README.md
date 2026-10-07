@@ -14,7 +14,7 @@ separately from local acquisition, reading and admission evidence.
 
 A reusable external reference library plus an evidence-bound exploration of all
 18 nightly packets and 18 downloaded reports. Originals, full texts, cloned repos,
-transcripts and operational receipts stay in `~/YeeBois/research/beep-effect/`.
+transcripts and operational receipts stay in `$HOME/YeeBois/research/beep-effect/`.
 Open its `index.html` directly from disk or use `index.md`; the maintained
 [CLI runbook](../../docs/runbooks/research-library.md) explains reproducible intake,
 qualification, acquisition, import, verification, rendering and status.

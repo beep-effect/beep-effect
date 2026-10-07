@@ -1,6 +1,9 @@
-/** Identity-bound import of external acquisition results.
+/**
+ * Identity-bound import of external acquisition results.
+ *
  * @packageDocumentation
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 import { $RepoCliId } from "@beep/identity/packages";
 import { DateTime, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
@@ -25,7 +28,8 @@ import { hashBytes, loadCatalog, mergeLibraryVersions, saveImmutable, withCatalo
 import type { LibraryDocument } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.import");
-/** Import envelope; artifact paths identify original local files and their expected hashes.
+/**
+ * Import envelope; artifact paths identify original local files and their expected hashes.
  * **Example** (Inspect the required provenance boundary)
  * ```ts
  * import { LibraryImportPayload } from "@beep/repo-cli/commands/Research"
@@ -33,7 +37,8 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.import");
  * ```
  *
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryImportPayload extends S.Class<LibraryImportPayload>($I`LibraryImportPayload`)(
   {
     sourceId: S.String,
@@ -50,7 +55,8 @@ export class LibraryImportPayload extends S.Class<LibraryImportPayload>($I`Libra
     description: "Hash-bound external evidence with target identity and explicit tool provenance.",
   })
 ) {}
-/** Qualification import derives status from preserved authentic provider events.
+/**
+ * Qualification import derives status from preserved authentic provider events.
  * **Example** (Inspect the required provenance boundary)
  * ```ts
  * import { LibraryQualificationImportPayload } from "@beep/repo-cli/commands/Research"
@@ -58,7 +64,8 @@ export class LibraryImportPayload extends S.Class<LibraryImportPayload>($I`Libra
  * ```
  *
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryQualificationImportPayload extends S.Class<LibraryQualificationImportPayload>(
   $I`LibraryQualificationImportPayload`
 )(
@@ -72,7 +79,8 @@ export class LibraryQualificationImportPayload extends S.Class<LibraryQualificat
     description: "Raw provider evidence import whose qualification is computed from real events.",
   })
 ) {}
-/** Explicit reviewed source disposition with preserved evidence.
+/**
+ * Explicit reviewed source disposition with preserved evidence.
  * **Example** (Inspect the required provenance boundary)
  * ```ts
  * import { LibraryDispositionImportPayload } from "@beep/repo-cli/commands/Research"
@@ -80,7 +88,8 @@ export class LibraryQualificationImportPayload extends S.Class<LibraryQualificat
  * ```
  *
  * @category models
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export class LibraryDispositionImportPayload extends S.Class<LibraryDispositionImportPayload>(
   $I`LibraryDispositionImportPayload`
 )(
@@ -455,7 +464,8 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
   });
   return yield* finishCaptureImport();
 });
-/** Import originals and provenance; AI interpretation never substitutes for source text.
+/**
+ * Import originals and provenance; AI interpretation never substitutes for source text.
  * **Example** (Build an import effect)
  * ```ts
  * import { importLibraryResult } from "@beep/repo-cli/commands/Research"
@@ -463,7 +473,6 @@ const importCapture = Effect.fn("Library.importCapture")(function* (
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const importLibraryResult = Effect.fn("Library.importResult")(function* (root: string, resultPath: string) {
@@ -497,12 +506,14 @@ const ReviewedContext = S.Struct({
   requestedRevision: S.String,
   occurrences: S.Array(CitationContext),
 });
-/** Reviewed GitHub shorthand resolution with immutable API and citation evidence.
+/**
+ * Reviewed GitHub shorthand resolution with immutable API and citation evidence.
  * **Example** (Inspect the resolution boundary)
  * ```ts
  * import { LibraryReferenceResolutionPayload } from "@beep/repo-cli/commands/Research"
  * console.log(LibraryReferenceResolutionPayload.fields.context !== undefined)
  * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -664,8 +675,9 @@ const importReferenceResolution = Effect.fn("Library.importReferenceResolution")
   raw: string,
   payload: LibraryReferenceResolutionPayload
 ) {
-  return yield* withCatalog(root, (catalog) =>
-    Effect.gen(function* () {
+  return yield* withCatalog(
+    root,
+    Effect.fnUntraced(function* (catalog) {
       const source = A.findFirst(
         catalog.sources,
         (s) => s.id === payload.sourceId || A.contains(s.aliasIds, payload.sourceId)
@@ -833,7 +845,8 @@ const nonReferenceOccurrenceValid = Effect.fn("Library.nonReferenceOccurrenceVal
   }
   return yield* nonReferenceReportMatches(root, document.value, occurrence);
 });
-/** Validate a reviewed non-reference against preserved report lines and every source occurrence.
+/**
+ * Validate a reviewed non-reference against preserved report lines and every source occurrence.
  * **Example** (Checking contextual evidence)
  * ```ts
  * import { libraryNonReferenceContextValid } from "@beep/repo-cli/commands/Research"
@@ -906,7 +919,8 @@ const readReviewedDisposition = Effect.fn("Library.readReviewedDisposition")(fun
   return payload;
 });
 
-/** Revalidate an explicit reviewed disposition before acquisition preserves it.
+/**
+ * Revalidate an explicit reviewed disposition before acquisition preserves it.
  * **Example** (Respecting an existing source review)
  * ```ts
  * import { libraryDispositionValid } from "@beep/repo-cli/test/ResearchLibrary"
@@ -915,6 +929,7 @@ const readReviewedDisposition = Effect.fn("Library.readReviewedDisposition")(fun
  *   capture: import("@beep/repo-cli/commands/Research").LibraryCapture
  * ) => libraryDispositionValid("/library", catalog, catalog.sources[0], capture)
  * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0

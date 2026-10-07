@@ -140,6 +140,7 @@ jobs:
           cache-turbo: ${{ matrix.uses_turbo }}
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.id }}
+          native-pdf-tools: ${{ matrix.id == 'coverage' }}
           free-disk: "true"
           turbo-remote-cache: "true"
           app-secrets: "true"

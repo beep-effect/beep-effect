@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-10-06",
+  "generatedOn": "2026-10-07",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -18,14 +18,6 @@
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
     {
-      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-      "symbol": "DocumentIntakeSurface",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/professional-desktop",
-      "reason": "Atom view model whose actions record carries runtime-bound closures (get.set dispatchers), which cannot be schema data; the data half (DocumentIntakeState) is already an annotated S.Class."
-    },
-    {
       "file": "apps/practice-identify/test/PracticeIdentify.runtime.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -34,6 +26,14 @@
       "line": 19,
       "owner": "@beep/practice-identify",
       "reason": "Stage runtime test decodes the files each stage wrote to prove the private output contract (0600, explicit paths, no overwrite); schema-derived round-trip property coverage for IdentificationIndex, EvaluationReport and Resolution lives with the use-case schemas in packages/law-practice/use-cases/test/DocumentIdentification/Identification.test.ts."
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "DocumentIntakeSurface",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/professional-desktop",
+      "reason": "Atom view model whose actions record carries runtime-bound closures (get.set dispatchers), which cannot be schema data; the data half (DocumentIntakeState) is already an annotated S.Class."
     },
     {
       "file": "apps/professional-desktop/test/contradiction-sidecar-registration.test.ts",
@@ -989,7 +989,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 80,
+      "line": 85,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },
@@ -999,7 +999,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 264,
+      "line": 269,
       "owner": "@beep/repo-cli",
       "reason": "Golden/adversarial provenance regression suite uses fixed hash-bound originals, deliberately corrupted receipts, provider envelopes and exact native filesystem/Git/PDF relationships. Codec calls decode fixed receipts to prove the integrity boundary; random schema-generated values would not preserve the independently authored evidence relationships. This suite is intentionally golden/regression-only rather than broad domain-schema law coverage."
     },

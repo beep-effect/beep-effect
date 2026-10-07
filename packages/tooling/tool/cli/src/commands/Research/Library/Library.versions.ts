@@ -1,4 +1,6 @@
-/** Source-bound cited revision selection.
+/**
+ * Source-bound cited revision selection.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -8,7 +10,8 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { LibraryCatalog, LibrarySource } from "./Library.schemas.ts";
 
-/** Select current citation revisions, retaining historical fallback for uncited sources.
+/**
+ * Select current citation revisions, retaining historical fallback for uncited sources.
  * **Example** (Inspect required revisions)
  * ```ts
  * import { libraryCitedRevisions } from "@beep/repo-cli/test/ResearchLibrary"
@@ -16,6 +19,7 @@ import type { LibraryCatalog, LibrarySource } from "./Library.schemas.ts";
  * const required = (catalog: LibraryCatalog, source: LibrarySource) => libraryCitedRevisions(catalog, source)
  * console.log(typeof required) // function
  * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0

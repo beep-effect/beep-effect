@@ -1,4 +1,6 @@
-/** Web and scholarly evidence adapters.
+/**
+ * Web and scholarly evidence adapters.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -120,7 +122,8 @@ const ScrapedDocument = S.Struct({
   $I.annote("ScrapedDocument", { description: "Full web content with target HTTP metadata required before admission." })
 );
 
-/** Validate the scraped target and HTTP status before admitting extracted text.
+/**
+ * Validate the scraped target and HTTP status before admitting extracted text.
  * **Example** (Require a successful matching scrape)
  * ```ts
  * import { validateLibraryScrape } from "@beep/repo-cli/commands/Research"
@@ -130,7 +133,8 @@ const ScrapedDocument = S.Struct({
  *
  * @internal
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const validateLibraryScrape = Effect.fn("Library.validateScrape")(function* (requested: string, input: unknown) {
   const doc = yield* S.decodeUnknownEffect(ScrapedDocument)(input).pipe(
     Effect.mapError(() =>
@@ -155,7 +159,8 @@ export const validateLibraryScrape = Effect.fn("Library.validateScrape")(functio
   return doc;
 });
 
-/** Capture web text and preserved raw response.
+/**
+ * Capture web text and preserved raw response.
  * **Example** (Prepare a source-bound acquisition)
  * ```ts
  * import { acquireLibraryWeb } from "@beep/repo-cli/test/ResearchLibrary"
@@ -167,7 +172,8 @@ export const validateLibraryScrape = Effect.fn("Library.validateScrape")(functio
  *
  * @internal
  * @category use-cases
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
   root: string,
   source: LibrarySource,
@@ -263,7 +269,8 @@ export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
   );
 });
 
-/** Capture a scholarly PDF and retain publisher landing pages as partial evidence.
+/**
+ * Capture a scholarly PDF and retain publisher landing pages as partial evidence.
  * **Example** (Prepare a source-bound acquisition)
  * ```ts
  * import { acquireLibraryPaper } from "@beep/repo-cli/test/ResearchLibrary"
@@ -275,7 +282,8 @@ export const acquireLibraryWeb = Effect.fn("Library.acquireWeb")(function* (
  *
  * @internal
  * @category use-cases
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibraryPaper = Effect.fn("Library.acquirePaper")(function* (
   root: string,
   source: LibrarySource,

@@ -499,6 +499,7 @@ jobs:
           cache-turbo: "true"
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.partition }}
+          native-pdf-tools: ${{ startsWith(matrix.partition, 'repo-cli') }}
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"

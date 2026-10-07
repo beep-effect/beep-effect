@@ -1,4 +1,6 @@
-/** Immutable correction receipts for invalidated reading claims.
+/**
+ * Immutable correction receipts for invalidated reading claims.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -22,6 +24,7 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.corrections");
  * import * as S from "effect/Schema"
  * const decode = S.decodeEffect(S.fromJsonString(LibraryCaptureCorrection))
  * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -59,6 +62,7 @@ export class LibraryCaptureCorrection extends S.Class<LibraryCaptureCorrection>(
  * const correction = withCatalog("/library", (catalog) => correctLibraryCaptures("/library", catalog))
  * console.log(Effect.isEffect(correction))
  * ```
+ *
  * @internal
  * @category use-cases
  * @since 0.0.0

@@ -35,6 +35,11 @@ import { Cause, Config, Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
+const LibraryProbeEvidenceJson = S.fromJsonString(LibraryProbeEvidence);
+const UnknownJson = S.fromJsonString(S.Unknown);
+const LibraryDispositionImportPayloadJson = S.fromJsonString(LibraryDispositionImportPayload);
+const LibraryIntakeJson = S.fromJsonString(LibraryIntake);
+
 const webSourceKinds: ReadonlyArray<LibrarySource["kind"]> = ["web", "docs", "endpoint"];
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
@@ -261,7 +266,7 @@ const fixture = Effect.gen(function* () {
         complete: true,
         artifacts: [evidence, rawHtml, response],
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryProbeEvidence))(probe);
+      const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
       const providerEvents = [
         {
           direction: "sent",
@@ -286,10 +291,8 @@ const fixture = Effect.gen(function* () {
           },
         },
       ];
-      const providerEncoded = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(A.getUnsafe(providerEvents, 0));
-      const completionEncoded = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(
-        A.getUnsafe(providerEvents, 1)
-      );
+      const providerEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 0));
+      const completionEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 1));
       const providerArtifact = LibraryArtifact.make({
         ...(yield* saveImmutable(
           root,
@@ -667,7 +670,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         reviewedAt: "2026-10-06",
         artifacts: [evidence],
       });
-      const encoded = yield* S.encodeEffect(S.fromJsonString(LibraryDispositionImportPayload))(payload);
+      const encoded = yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(payload);
       const receipt = LibraryArtifact.make({
         ...(yield* saveImmutable(root, "unavailable/review.json", new TextEncoder().encode(encoded))),
         role: "reviewed-disposition",
@@ -775,7 +778,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ...(yield* saveImmutable(
           root,
           "reviewed/v1.json",
-          new TextEncoder().encode(yield* S.encodeEffect(S.fromJsonString(LibraryDispositionImportPayload))(payload))
+          new TextEncoder().encode(yield* S.encodeEffect(LibraryDispositionImportPayloadJson)(payload))
         )),
         role: "reviewed-disposition",
         mediaType: "application/json",
@@ -863,7 +866,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
         ...(yield* saveImmutable(
           root,
           intake.manifestPath,
-          new TextEncoder().encode(yield* S.encodeEffect(S.fromJsonString(LibraryIntake))(intake))
+          new TextEncoder().encode(yield* S.encodeEffect(LibraryIntakeJson)(intake))
         )),
         role: "intake-manifest",
         mediaType: "application/json",
@@ -945,7 +948,7 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
       });
       const proof = yield* artifact(
         "probe.json",
-        yield* S.encodeEffect(S.fromJsonString(LibraryProbeEvidence))(probe),
+        yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe),
         "qualification-probe",
         "application/json"
       );

@@ -221,6 +221,7 @@
     "@openai/codex-sdk": "catalog:",
     "effect": "catalog:",
     "fast-xml-parser": "catalog:",
+    "fast-xml-validator": "catalog:",
     "handlebars": "catalog:",
     "image-size": "catalog:",
     "jsonc-parser": "catalog:",
