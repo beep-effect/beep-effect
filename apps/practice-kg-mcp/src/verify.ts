@@ -87,7 +87,7 @@ const verifyCommand = Command.make(
     );
     yield* Effect.succeed(diff).pipe(
       Effect.filterOrFail(
-        (comparison) => O.isNone(comparison) || !comparison.value.diff.lost,
+        (comparison) => !O.exists(comparison, (result) => result.diff.lost),
         () =>
           PracticeKgProjectionError.make({
             message:

@@ -141,6 +141,29 @@ describe("practice KG bundle compare", () => {
     ]);
   });
 
+  it("lists renumbered dockets in key order however the rebuilt bundle lists them", () => {
+    const shuffled = PracticeKgMatterTables.make({
+      dockets: [
+        docket("11111.23456US", "23456US", "11111.23456", ["16/000,002"], ["10,000,002"]),
+        docket("11111.12345US", "12345US", "11111.12345", ["16/000,001"], ["10,000,001"]),
+        docket("11111.12345EP", "12345EP", "11111.12345", ["EP20000001", "EP20000009"]),
+      ],
+      matters: base.matters,
+    });
+    const renumbered = diff(base, shuffled);
+    expect(renumbered.numbersChanged.map((change) => change.docketKey)).toStrictEqual([
+      "11111.12345EP",
+      "11111.23456US",
+    ]);
+    expect(
+      renumbered.numbersChanged.map((change) => [change.applicationNumbersAdded, change.patentNumbersAdded])
+    ).toStrictEqual([
+      [["EP20000009"], []],
+      [[], ["10,000,002"]],
+    ]);
+    assertFalse(renumbered.lost);
+  });
+
   it.layer(Layer.fresh(NodeServices.layer), { timeout: "30 seconds" })((it) => {
     it.effect(
       "reads back the tables the writer stored, so a bundle diffed against itself is empty",
