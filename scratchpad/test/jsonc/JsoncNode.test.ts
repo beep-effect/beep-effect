@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -9,7 +9,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Jsonc, JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "../../effected/jsonc/index.ts";
-import { makeNodeUnsafe } from "@beep/scratchpad/effected/jsonc/JsoncNode";
+import { makeNodeUnsafe } from "../../effected/jsonc/JsoncNode.ts";
 
 const tree = (text: string): JsoncNode => Jsonc.parseTreeResult(text).pipe(Result.getOrThrow, O.getOrThrow);
 
@@ -65,7 +65,7 @@ describe("JsoncNode", () => {
       const encoded = Result.getOrThrow(S.encodeResult(JsoncNode)(node));
       const decoded = Result.getOrThrow(S.decodeResult(JsoncNode)(encoded));
       assert.isTrue(Equal.equals(node, decoded));
-      assert.isTrue(Result.isFailure(S.decodeResult(JsoncNode)({ type: "array", offset: -1, length: 0 })));
+      S.decodeResult(JsoncNode)({ type: "array", offset: -1, length: 0 }).pipe(Result.isFailure, assertTrue);
     });
   });
 

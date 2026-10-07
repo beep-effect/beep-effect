@@ -177,6 +177,11 @@ export const navigate: {
       if (!isFirst && currentToken === "Comma") {
         lastComma = O.some(scanner.getTokenOffset());
         currentToken = scanner.scan();
+        // A trailing comma before the closer ends the members; an insertion
+        // belongs after the last value, inside the object (upstream-bug fix).
+        if (currentToken === "CloseBrace") {
+          break;
+        }
       }
       if (currentToken === "String") {
         const keyStart = scanner.getTokenOffset();
@@ -209,6 +214,10 @@ export const navigate: {
       if (index > 0 && currentToken === "Comma") {
         lastComma = O.some(scanner.getTokenOffset());
         currentToken = scanner.scan();
+        // Same trailing-comma rule as objects: the closer ends the elements.
+        if (currentToken === "CloseBracket") {
+          break;
+        }
       }
       if (index === segment) {
         return { found: true, lastEnd, index, lastComma };

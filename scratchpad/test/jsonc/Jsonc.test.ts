@@ -1,7 +1,10 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertNone, assertSuccess } from "@effect/vitest/utils";
+import { assertDefined, assertExitFailure, assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -404,7 +407,14 @@ describe("Jsonc", () => {
       Effect.gen(function* () {
         assert.deepStrictEqual(codes(yield* failureOf(Jsonc.parse(deeplyNested))), ["NestingDepthExceeded"]);
         assert.deepStrictEqual(codes(yield* failureOf(Jsonc.parseTree(deeplyNested))), ["NestingDepthExceeded"]);
-        assert.isTrue(Result.isFailure(yield* Effect.result(Jsonc.parse(deeplyNested))));
+        // The whole cause is one typed failure: no defect rides along with it.
+        const exit = yield* Effect.exit(Jsonc.parse(deeplyNested));
+        const error = exit.pipe(Exit.findErrorOption, O.getOrThrow);
+        assert.deepStrictEqual(codes(error), ["NestingDepthExceeded"]);
+        assertExitFailure(
+          exit,
+          Cause.annotate(Cause.fail(error), Exit.match(exit, { onFailure: Cause.annotations, onSuccess: Context.empty }))
+        );
       })
     );
 
@@ -436,7 +446,7 @@ describe("Jsonc", () => {
         const config = yield* S.decodeEffect(Jsonc.schema(Config))('{ "name": "app", "version": 1 /* v1 */ }');
         assert.deepStrictEqual(config, { name: "app", version: 1 });
         const strict = Jsonc.schema(Config, JsoncParseOptions.make({ allowTrailingComma: false }));
-        assert.isTrue(Result.isFailure(S.decodeResult(strict)('{ "name": "app", "version": 1, }')));
+        S.decodeResult(strict)('{ "name": "app", "version": 1, }').pipe(Result.isFailure, assertTrue);
       })
     );
 

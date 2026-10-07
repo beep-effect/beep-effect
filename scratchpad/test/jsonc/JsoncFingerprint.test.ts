@@ -68,6 +68,13 @@ describe("JsoncFingerprint", () => {
       );
     });
 
+    // Regression: the port built array indices with A.makeBy, which yields at
+    // least one index, so every empty array failed (upstream handles []).
+    it("canonicalizes empty arrays at the top level and nested", () => {
+      assertSuccess(JsoncFingerprint.canonicalizeResult([]), "[]");
+      assertSuccess(JsoncFingerprint.canonicalizeResult({ a: [], b: [[], {}] }), '{"a":[],"b":[[],{}]}');
+    });
+
     it("sorts object keys by UTF-16 code units per the RFC 8785 ordering vector", () => {
       const c80 = String.fromCharCode(0x80);
       const input = {

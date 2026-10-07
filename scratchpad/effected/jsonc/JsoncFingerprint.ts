@@ -247,7 +247,7 @@ const emitMembers = (
 const emitArray = (value: ReadonlyArray<unknown>, path: string, depth: number): Emit =>
   // Indexed reads, never `map`: `map` skips holes, which must instead read as
   // `undefined` and fail typed at the hole's index.
-  emitMembers(value, A.makeBy(value.length, (index) => index), path, depth, (_, item) => item).pipe(
+  emitMembers(value, A.fromIterable(value.keys()), path, depth, (_, item) => item).pipe(
     Result.map((items) => `[${A.join(items, ",")}]`)
   );
 

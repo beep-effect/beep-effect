@@ -4,9 +4,9 @@
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
     "module": "jsonc",
-    "stage": 2,
+    "stage": 3,
     "commit": null,
-    "at": "2026-10-07T07:04:12.067Z"
+    "at": "2026-10-07T07:33:22.979Z"
   },
   "rows": [
     {
@@ -192,7 +192,7 @@
       "module": "jsonc",
       "wave": 0,
       "position": 2,
-      "stage": 2,
+      "stage": 3,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -352,22 +352,28 @@
       "fixturesBytes": 0,
       "deviations": [
         {
-          "test": "scratchpad/test/jsonc/Jsonc.test.ts:318 (adjusts upstream __test__/Jsonc.test.ts:389)",
+          "test": "scratchpad/test/jsonc/Jsonc.test.ts:323 (adjusts upstream __test__/Jsonc.test.ts:389)",
           "upstreamBehaviour": "a throwing toJSON escapes Jsonc.stringifyResult as the thrown RangeError and Jsonc.stringify as a Cause.Die defect",
           "labBehaviour": "Jsonc.stringifyResult fails with JsoncStringifyError code SerializationFailed; Jsonc.stringify fails typed with it",
           "reason": "law:7 (typed errors via S.TaggedError) + law:13 (schema transformation over ad-hoc serialization); upstream CLAUDE.md hardening invariant requires hostile input to fail through the typed channel"
         },
         {
-          "test": "scratchpad/test/jsonc/JsoncModifier.test.ts:161 and :165 (tighten upstream __test__/JsoncModifier.test.ts:162 and :171)",
+          "test": "scratchpad/test/jsonc/JsoncModifier.test.ts:177 and :184 (tighten upstream __test__/JsoncModifier.test.ts:162 and :171)",
           "upstreamBehaviour": "multi-line inserted values keep column-0 layout after the first line, so nested members sit one level too shallow",
           "labBehaviour": "every line after the first is prefixed with the insertion indent, aligning the nested value with its siblings",
           "reason": "upstream-bug: modify('{\\n  \"a\": 1\\n}', ['b'], {c:{d:1}}) applies upstream with the nested object mis-indented; upstream tests only assert include('\\t\"b\"')"
         },
         {
-          "test": "scratchpad/test/jsonc/JsoncEdit.test.ts:87 and :51 (adjust upstream __test__/JsoncEdit.test.ts:47)",
+          "test": "scratchpad/test/jsonc/JsoncEdit.test.ts:87 and :41 (adjust upstream __test__/JsoncEdit.test.ts:47)",
           "upstreamBehaviour": "JsoncEdit.applyAll throws a native Error ending 'overlapping edits are a programmer error'",
           "labBehaviour": "JsoncEdit.applyAll throws the tagged JsoncEditOverlapError {lower, upper}; JsoncEdit.applyAllResult returns it as a Result failure",
           "reason": "law:7 (no native Error in production source; extend S.TaggedError)"
+        },
+        {
+          "test": "scratchpad/test/jsonc/JsoncModifier.test.ts:55 and scratchpad/test/jsonc/Properties.test.ts (JsoncModifier insert property)",
+          "upstreamBehaviour": "with a trailing comma before the closer, navigate scans past the closer and inserts outside the container: modify('{ \"a\": 1, }', ['delta'], []) yields '{ \"a\": 1, },\\n  \"delta\": []' (unparseable); '{ \"a\": { \"b\": 1, } }' at ['a','c'] writes c into the parent; '[1, ]' at [1] yields '[1, ,\\n  2]'",
+          "labBehaviour": "a comma followed by the closer ends the scan, so the insertion lands after the last member inside the container and the result parses to the expected value",
+          "reason": "upstream-bug: the default JSONC options accept trailing commas, and the property 'JsoncModifier insert' (result parses to {...doc, delta: next}) fails upstream on '{ \"a\": 1, }'; upstream tests never insert into a trailing-comma container"
         }
       ],
       "backlog": [],
@@ -379,13 +385,18 @@
         },
         {
           "stage": 1,
+          "sha": "9a47f165dc142f1e1a9f68ff946b05233160f5e9"
+        },
+        {
+          "stage": 2,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-07T06:56:49.701Z S1: S1 green: strict parity, tsgo+canary, oxlint+4 laws (effect-imports via mirror), 210 tests. Fixed crispening regression (object insert dropped keys), restored upstream NoOp for passed array indices, D15 test casts removed, terse helper-refs, @beep/utils subpath import.",
-        "2026-10-07T07:04:12.067Z S2: S2 green: docgen with all enforcement flags, JSDoc law clean over 13 files, README adapted to section 10.3 (badges/install/pre-1.0 removed, examples on lab imports and probed, four Port notes subsections, deviation 5 recorded as not a deviation), KNOWLEDGE.md carried."
+        "2026-10-07T07:04:12.067Z S2: S2 green: docgen with all enforcement flags, JSDoc law clean over 13 files, README adapted to section 10.3 (badges/install/pre-1.0 removed, examples on lab imports and probed, four Port notes subsections, deviation 5 recorded as not a deviation), KNOWLEDGE.md carried.",
+        "2026-10-07T07:33:22.979Z S3: S3 green: 252 tests, every source file at 100 percent (coverage summary verified), canon detectors clean (4 EV005/EV006 fixed), property floor 40 properties over every exported schema/codec plus parser/formatter fidelity. Properties found F1 (port bug: empty arrays failed canonicalize, fixed) and F2 (upstream bug: trailing-comma insertion outside container, fixed, deviation recorded)."
       ],
       "closedAt": null
     },

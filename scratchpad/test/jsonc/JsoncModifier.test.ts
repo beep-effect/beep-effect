@@ -50,6 +50,25 @@ describe("JsoncModifier", () => {
   describe("insert", () => {
     // Upstream parity (internal/navigate.ts NoOp): an index the scan passes
     // without reaching it, negative or fractional, yields no edits.
+    // Port deviation (upstream-bug): upstream inserts after a trailing comma's
+    // closer, producing text outside the container or unparseable output.
+    it.effect("inserts inside a container that ends with a trailing comma", () =>
+      Effect.gen(function* () {
+        const object = '{ "a": 1, }';
+        assert.deepStrictEqual(
+          yield* Jsonc.parse(apply(object, yield* JsoncModifier.modify(object, ["delta"], []))),
+          { a: 1, delta: [] }
+        );
+        const nested = '{ "a": { "b": 1, } }';
+        assert.deepStrictEqual(
+          yield* Jsonc.parse(apply(nested, yield* JsoncModifier.modify(nested, ["a", "c"], 2))),
+          { a: { b: 1, c: 2 } }
+        );
+        const array = "[1, ]";
+        assert.deepStrictEqual(yield* Jsonc.parse(apply(array, yield* JsoncModifier.modify(array, [1], 2))), [1, 2]);
+      })
+    );
+
     it.effect("leaves the text alone for a negative or fractional final index", () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(yield* JsoncModifier.modify("[1]", [-1], 2), []);
