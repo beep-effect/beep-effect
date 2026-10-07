@@ -178,7 +178,7 @@ const oneLinkEach = (rows: ReadonlyArray<AddressLinkRow>): ReadonlyArray<Address
       left.evidence === right.evidence
   );
 
-const domainOf = (address: EmailString): string => O.getOrElse(A.last(Str.split("@")(address)), () => "");
+const domainOf = (address: EmailString): string => A.lastNonEmpty(Str.split("@")(address));
 
 // The builder marks an address as the practice's own by its domain, after trimming and lowercasing only, so
 // a quoted spelling of a practice address can reach the bundle unflagged. The guard therefore also holds the

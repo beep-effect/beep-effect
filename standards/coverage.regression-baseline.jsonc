@@ -19886,6 +19886,117 @@
         }
       }
     },
+    "@beep/practice-mail-tagging": {
+      "path": "apps/practice-mail-tagging",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "apps/practice-mail-tagging/src/PracticeMailTagging.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.lock.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.passes.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.report.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/bin.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/entrypoint.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/runtime/Layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/pretext": {
       "path": "packages/drivers/pretext",
       "lines": 81.81,
