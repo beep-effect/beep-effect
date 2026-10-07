@@ -533,14 +533,17 @@ export const test = Effect.fn("Gates.test")(function* (config: RunnerConfig, tar
   }
   const gaps = yield* coverageGaps(config, target);
   const canon = yield* canonFindings(config, target);
-  if (A.isReadonlyArrayNonEmpty(gaps) || A.isReadonlyArrayNonEmpty(canon)) {
+  for (const line of canon.excepted) {
+    yield* Console.log(`[effected] ${target} test: canon exception ${line}`);
+  }
+  const problems = [
+    ...A.map(gaps, (gap) => `coverage ${gap}`),
+    ...A.map(canon.open, (finding) => `canon ${finding}`),
+    ...A.map(canon.stale, (row) => `canon stale exception ${row}`),
+  ];
+  if (A.isReadonlyArrayNonEmpty(problems)) {
     yield* verdict(target, { gate: "test", exitCode: 1 });
-    return yield* GateFailed.make({
-      target,
-      gate: "test",
-      exitCode: 1,
-      problems: [...A.map(gaps, (gap) => `coverage ${gap}`), ...A.map(canon, (finding) => `canon ${finding}`)],
-    });
+    return yield* GateFailed.make({ target, gate: "test", exitCode: 1, problems });
   }
   yield* Console.log(`[effected] ${target} test: coverage summary complete at 100 percent; canon detectors clean`);
   yield* gateExit(target, "test", 0);
