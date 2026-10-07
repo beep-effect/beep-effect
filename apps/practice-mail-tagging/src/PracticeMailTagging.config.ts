@@ -7,6 +7,7 @@
 
 import { BoxCcgConfig, BoxDeveloperTokenConfig } from "@beep/box";
 import { $PracticeMailTaggingId } from "@beep/identity/packages";
+import { MatterContactEvidence } from "@beep/law-practice-server/MailTagging";
 import { M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import { Config } from "effect";
 import * as DateTime from "effect/DateTime";
@@ -109,6 +110,9 @@ export class PracticeMailTaggingConfig extends S.Class<PracticeMailTaggingConfig
     maxBackoff: S.Duration.annotateKey({
       description: "Longest pause after consecutive failed watch passes; never shorter than pollInterval.",
     }),
+    contactEvidence: MatterContactEvidence.annotateKey({
+      description: "Whether contact addresses tie mail to matters: off, or from the practice knowledge graph.",
+    }),
   },
   $I.annote("PracticeMailTaggingConfig", {
     description: "Every setting of the mail-tagging job that this app owns.",
@@ -202,6 +206,9 @@ export const practiceMailTaggingConfig: Config.Config<PracticeMailTaggingConfig>
     Config.map(Duration.max(minimumPollInterval))
   ),
   maxBackoff: Config.Duration("PRACTICE_MAIL_TAGGING_MAX_BACKOFF").pipe(Config.withDefault(defaultMaxBackoff)),
+  contactEvidence: Config.schema(MatterContactEvidence, "PRACTICE_MAIL_TAGGING_CONTACT_EVIDENCE").pipe(
+    Config.withDefault(MatterContactEvidence.Enum.off)
+  ),
 }).pipe(
   Config.map((settings) =>
     PracticeMailTaggingConfig.make({

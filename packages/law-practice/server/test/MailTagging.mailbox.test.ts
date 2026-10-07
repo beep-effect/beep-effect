@@ -138,6 +138,38 @@ const portError = (error: unknown) => {
 
 describe("MailTagging M365 mailbox", () => {
   it.effect(
+    "reads quoted and Name <address> entries as their lowercased address",
+    Effect.fnUntraced(function* () {
+      const mailbox = yield* mailboxOver({
+        listMessages: () =>
+          Effect.succeed(
+            M365MessageCollection.make({
+              value: [
+                GraphMessage.make({
+                  ...received("msg-quoted", 1),
+                  from: O.some(recipient("'Pat@Acme.Example.Test'")),
+                  toRecipients: O.some([
+                    recipient("Pat Example <pat@acme.example.test>"),
+                    recipient(`"Quinn" <'Quinn@Acme.Example.Test'>`),
+                    recipient("<>"),
+                  ]),
+                }),
+              ],
+            })
+          ),
+      });
+      const page = yield* mailbox.listMessagesSince(ListMessagesSinceRequest.make({ since }));
+
+      expect(A.map(page.envelopes, summaryOf)).toMatchObject([
+        {
+          senderAddress: "pat@acme.example.test",
+          recipientAddresses: ["pat@acme.example.test", "quinn@acme.example.test"],
+        },
+      ]);
+    })
+  );
+
+  it.effect(
     "resolves Deleted Items and Junk once when it is built, for the configured mailbox",
     Effect.fnUntraced(function* () {
       const lookups = yield* Ref.make<ReadonlyArray<readonly [string, string | null]>>([]);

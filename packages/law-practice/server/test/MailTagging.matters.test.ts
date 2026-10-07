@@ -1,19 +1,25 @@
 /**
  * The practice-KG matter directory over a real DuckDB file seeded through the
- * bundle's own matter-table writer. Every matter, docket, and address is
- * synthetic.
+ * bundle's own matter-table and correspondent-table writers (store format 4).
+ * Every matter, docket, contact, and address is synthetic.
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
+  PracticeKgContactAddressRow,
+  PracticeKgContactClientLinkRow,
+  PracticeKgCorrespondentRow,
+  PracticeKgCorrespondentTables,
   PracticeKgMatterDocketRow,
   PracticeKgMatterRow,
   PracticeKgMatterTables,
   writeMatterTables,
+  writePracticeKgCorrespondentTables,
 } from "@beep/law-practice-server";
 import {
   MailTaggingStateConfig,
   MailTaggingStateLocation,
+  MatterContactEvidenceSetting,
   MatterDirectoryPracticeKg,
 } from "@beep/law-practice-server/MailTagging";
 import { MailTaggingPortError, MailTaggingStateError, MatterDirectory } from "@beep/law-practice-use-cases/MailTagging";
@@ -26,6 +32,8 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { oneRun, Platform, serviceOf, temporaryDirectory, writeText } from "./MailTagging.adapters.fixture.ts";
 import type { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
+import type { MatterContactEvidence } from "@beep/law-practice-server/MailTagging";
+import type { PracticeKgContactLinkSource } from "@beep/law-practice-use-cases/server";
 
 type MatterSeed = {
   readonly familyKey: string;
@@ -87,15 +95,113 @@ const tables = PracticeKgMatterTables.make({
   ],
 });
 
-const directoryOver = (databasePath: string, stateDirectory: string) =>
+type ContactSeed = {
+  readonly address: string;
+  readonly contactId: string;
+  readonly roleAddress?: boolean;
+  readonly isPracticeAddress?: boolean;
+};
+
+const contact = (seed: ContactSeed) =>
+  PracticeKgContactAddressRow.make({
+    address: seed.address,
+    contactId: seed.contactId,
+    displayName: "Example Contact",
+    isPracticeAddress: seed.isPracticeAddress ?? false,
+    organization: null,
+    roleAddress: seed.roleAddress ?? false,
+  });
+
+const link = (contactId: string, familyKey: string | null, source: PracticeKgContactLinkSource = "attorney-answer") =>
+  PracticeKgContactClientLinkRow.make({ clientNumber: "1234", contactId, evidence: "fixture", familyKey, source });
+
+const filed = (address: string, isPracticeAddress: boolean) =>
+  PracticeKgCorrespondentRow.make({
+    address,
+    ccCount: 0,
+    contactId: null,
+    displayName: null,
+    epistemicStatus: "mention-derived",
+    familyKey: "1234.10001",
+    firstAt: null,
+    fromCount: 5,
+    isPracticeAddress,
+    lastAt: null,
+    messageCount: 5,
+    roleAddress: false,
+    toCount: 0,
+  });
+
+// Store format 4 correspondents. Only counsel@ and the quoted address resolve `unique`; every other one is a trap.
+const correspondents = PracticeKgCorrespondentTables.make({
+  addresses: [
+    contact({ address: "counsel@acme.example.test", contactId: "c-counsel" }),
+    contact({ address: "'quoted@acme.example.test'", contactId: "c-quoted" }),
+    contact({ address: "docketing@acme.example.test", contactId: "c-role", roleAddress: true }),
+    contact({ address: "attorney@practice.example.test", contactId: "c-practice", isPracticeAddress: true }),
+    contact({ address: "relay@practice.example.test", contactId: "c-relay" }),
+    contact({ address: "inferred@acme.example.test", contactId: "c-inferred" }),
+    contact({ address: "shared@acme.example.test", contactId: "c-shared-1" }),
+    contact({ address: "shared@acme.example.test", contactId: "c-shared-2" }),
+    contact({ address: "split@acme.example.test", contactId: "c-split" }),
+    contact({ address: "numbered@acme.example.test", contactId: "c-numbered" }),
+    contact({ address: "not an address", contactId: "c-broken" }),
+    contact({ address: "unlinked@acme.example.test", contactId: "c-unlinked" }),
+    // Spelling traps: the practice flag is filed under the lowercase spelling, and one address owned by two
+    // contacts under two spellings is shared.
+    contact({ address: "Cased@Firm.example.test", contactId: "c-cased" }),
+    contact({ address: "Twin@acme.example.test", contactId: "c-twin-1" }),
+    contact({ address: "'twin@acme.example.test'", contactId: "c-twin-2" }),
+    // One contact under two spellings is still one owner; a quoted practice address that filed mail never
+    // flagged is still the practice's own, by its domain.
+    contact({ address: "'Counsel@acme.example.test'", contactId: "c-counsel" }),
+    contact({ address: "'paralegal@practice.example.test'", contactId: "c-quoted-practice" }),
+  ],
+  links: [
+    link("c-counsel", "1234.10001"),
+    link("c-quoted", "1234.10001", "attorney-pc-folder"),
+    link("c-role", "1234.10001"),
+    link("c-practice", "1234.10001"),
+    link("c-relay", "1234.10001"),
+    link("c-inferred", "1234.10001", "org-name-match"),
+    link("c-shared-1", "1234.10001"),
+    link("c-shared-2", "1234.10001"),
+    link("c-split", "1234.10001"),
+    link("c-split", "1234.20002"),
+    link("c-numbered", "1234.00053"),
+    link("c-broken", "1234.10001"),
+    link("c-cased", "1234.10001"),
+    link("c-twin-1", "1234.10001"),
+    link("c-twin-2", "1234.10001"),
+    link("c-quoted-practice", "1234.10001"),
+  ],
+  // A candidate by message count, and practice addresses that only filed email marks as such.
+  correspondents: [
+    filed("inferred@acme.example.test", false),
+    filed("relay@practice.example.test", true),
+    filed("cased@firm.example.test", true),
+  ],
+});
+
+type Seeded = {
+  readonly directory: string;
+  readonly databasePath: string;
+  readonly evidence?: MatterContactEvidence;
+};
+
+const directoryOver = (bundle: Seeded) =>
   serviceOf(MatterDirectory)(
     MatterDirectoryPracticeKg.pipe(
       Layer.provide(
-        Layer.merge(
+        Layer.mergeAll(
           DuckDb.makeNodeLayer(
-            DuckDbConnectionOptions.make({ databaseOptions: { access_mode: "READ_ONLY" }, databasePath })
+            DuckDbConnectionOptions.make({
+              databaseOptions: { access_mode: "READ_ONLY" },
+              databasePath: bundle.databasePath,
+            })
           ),
-          Layer.succeed(MailTaggingStateLocation, MailTaggingStateConfig.make({ stateDirectory }))
+          Layer.succeed(MailTaggingStateLocation, MailTaggingStateConfig.make({ stateDirectory: bundle.directory })),
+          Layer.succeed(MatterContactEvidenceSetting, bundle.evidence ?? "kg")
         )
       )
     )
@@ -106,11 +212,16 @@ const seeded = Effect.gen(function* () {
   const directory = yield* temporaryDirectory;
   const databasePath = path.join(directory, "practice.duckdb");
   yield* writeMatterTables(databasePath)(tables);
+  yield* writePracticeKgCorrespondentTables(databasePath)(correspondents);
   return { directory, databasePath };
 });
 
-const snapshotOf = (bundle: { readonly directory: string; readonly databasePath: string }) =>
-  oneRun(Effect.flatMap(directoryOver(bundle.databasePath, bundle.directory), (directory) => directory.snapshot));
+const snapshotOf = (bundle: Seeded) => oneRun(Effect.flatMap(directoryOver(bundle), (directory) => directory.snapshot));
+
+const contactsOf = (bundle: Seeded) =>
+  Effect.map(snapshotOf(bundle), (index) =>
+    A.map(index.entries, (entry) => [entry.matterKey, entry.contactAddresses, entry.contactDomains])
+  );
 
 const overlay = `[
   { "familyKey": "1234.10001", "addresses": ["Counsel@Acme.Example.Test"], "domains": ["acme.example.test"] },
@@ -124,7 +235,7 @@ describe("MailTagging practice-KG matter directory", () => {
     it.effect(
       "indexes matters with a client number and a verified family, and leaves the rest unattributed",
       Effect.fnUntraced(function* () {
-        const index = yield* snapshotOf(yield* seeded);
+        const index = yield* snapshotOf({ ...(yield* seeded), evidence: "off" });
 
         expect(
           A.map(index.entries, (entry) => [
@@ -163,7 +274,7 @@ describe("MailTagging practice-KG matter directory", () => {
     );
 
     it.effect(
-      "merges the contact overlay by family key and loads an address listed under two matters as written",
+      "adds the overlay after the graph's addresses and loads an address listed under two matters as written",
       Effect.fnUntraced(function* () {
         const bundle = yield* seeded;
         yield* writeText(bundle.directory, "matter-contacts.json", overlay);
@@ -172,7 +283,11 @@ describe("MailTagging practice-KG matter directory", () => {
         expect(
           A.map(index.entries, (entry) => [entry.matterKey, entry.contactAddresses, entry.contactDomains])
         ).toStrictEqual([
-          ["1234.10001", ["counsel@acme.example.test", "shared@acme.example.test"], ["acme.example.test"]],
+          [
+            "1234.10001",
+            ["counsel@acme.example.test", "quoted@acme.example.test", "shared@acme.example.test"],
+            ["acme.example.test"],
+          ],
           ["1234.20002", ["shared@acme.example.test"], []],
         ]);
       })
@@ -217,7 +332,7 @@ describe("MailTagging practice-KG matter directory", () => {
               ])
           )
         );
-        const index = yield* snapshotOf({ directory, databasePath });
+        const index = yield* snapshotOf({ directory, databasePath, evidence: "off" });
 
         expect(A.map(index.entries, (entry) => [entry.matterKey, entry.applicationNumbers])).toStrictEqual([
           ["1234.10001", ["16123456"]],
@@ -258,6 +373,47 @@ describe("MailTagging practice-KG matter directory", () => {
         expect(
           A.map(index.unattributed, (unattributed) => [unattributed.familyKeys, unattributed.applicationNumbers])
         ).toStrictEqual([[["30003"], ["15000001"]]]);
+      })
+    );
+
+    it.effect(
+      "attaches only the addresses the graph resolves unique to a matter, normalized, and no domain",
+      Effect.fnUntraced(function* () {
+        expect(yield* contactsOf(yield* seeded)).toStrictEqual([
+          ["1234.10001", ["counsel@acme.example.test", "quoted@acme.example.test"], []],
+          ["1234.20002", [], []],
+        ]);
+      })
+    );
+
+    it.effect(
+      "attaches no contact at all and never reads the overlay when contact evidence is off",
+      Effect.fnUntraced(function* () {
+        const bundle = yield* seeded;
+        yield* writeText(bundle.directory, "matter-contacts.json", "not json");
+
+        expect(yield* contactsOf({ ...bundle, evidence: "off" })).toStrictEqual([
+          ["1234.10001", [], []],
+          ["1234.20002", [], []],
+        ]);
+      })
+    );
+
+    it.effect(
+      "reports a format 3 bundle without correspondent tables as a typed port failure when contact evidence is on",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const directory = yield* temporaryDirectory;
+        const databasePath = path.join(directory, "format-3.duckdb");
+        yield* writeMatterTables(databasePath)(tables);
+        const error = yield* Effect.flip(snapshotOf({ directory, databasePath }));
+
+        assertInstanceOf(error, MailTaggingPortError);
+        expect([error.port, error.operation, error.reason]).toStrictEqual([
+          "MatterDirectory",
+          "snapshot",
+          "correspondent tables unreadable",
+        ]);
       })
     );
 
