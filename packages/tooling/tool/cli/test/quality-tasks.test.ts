@@ -8561,6 +8561,14 @@ describe("root ESLint cache key", () => {
         const edited = yield* rootEslintCacheKey(root);
         expect(edited).toMatch(/^[0-9a-f]{16}$/);
         expect(edited).not.toBe(initial);
+        // So does an edit to a helper the rule imports from `src/internal/eslint`.
+        const helper = path.join(root, "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleHelpers.ts");
+        yield* fs.makeDirectory(path.dirname(helper), { recursive: true });
+        yield* fs.writeFileString(helper, "export const optionToReadonlyArray = 1\n");
+        const withHelper = yield* rootEslintCacheKey(root);
+        expect(withHelper).not.toBe(edited);
+        yield* fs.writeFileString(helper, "export const optionToReadonlyArray = 2\n");
+        expect(yield* rootEslintCacheKey(root)).not.toBe(withHelper);
         // A repository without the sources falls back to the shared unkeyed directory.
         expect(yield* rootEslintCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
       })

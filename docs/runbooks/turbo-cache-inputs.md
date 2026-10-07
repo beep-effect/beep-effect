@@ -139,9 +139,10 @@ zero seconds. Three decisions follow:
   (`package-test-typecheck`) is uncached by tripwire ruling. The root ESLint
   program (`lint:jsdoc`) has no Turbo task and keeps a content-keyed ESLint cache
   under `node_modules/.cache/eslint-root/<key>/` instead, where `<key>` digests
-  `eslint.config.mjs`, `tsdoc.json` and the policy-pack ESLint sources: ESLint
-  keys its own cache on the serialized config, which cannot see an edit inside an
-  in-repo rule module, so the directory moves instead.
+  `eslint.config.mjs`, `tsdoc.json` and the whole policy-pack configs package
+  source (rule modules import helpers from `src/internal/eslint`): ESLint keys
+  its own cache on the serialized config, which cannot see an edit inside an
+  in-repo rule module or its helpers, so the directory moves instead.
 
 ## Workspace overrides
 

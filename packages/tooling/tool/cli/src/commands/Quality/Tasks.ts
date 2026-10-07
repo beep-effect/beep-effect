@@ -2976,9 +2976,9 @@ const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
   hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
 // The root ESLint program has no Turbo task; a content-keyed ESLint cache keeps a
 // warm repeat near zero without changing what a cold run checks. ESLint keys that cache
-// on the serialized config, and an in-repo plugin serializes as its bare namespace, so the
-// cache directory itself is keyed by a digest of the ESLint configuration sources: a rule
-// edit starts an empty cache instead of replaying stale results.
+// on the serialized config, which cannot see an edit inside an in-repo rule module or the
+// helpers it imports, so the cache directory itself is keyed by a digest of the ESLint
+// configuration sources: such an edit starts an empty cache instead of replaying stale results.
 const rootEslintArgs = (cacheKey: string): ReadonlyArray<string> => [
   "eslint",
   ".",
@@ -2990,12 +2990,10 @@ const rootEslintArgs = (cacheKey: string): ReadonlyArray<string> => [
   "content",
 ];
 // The configuration sources the root ESLint cache key digests: the flat config, the TSDoc
-// tag definitions it loads, and every in-repo ESLint rule or config module.
-const rootEslintCacheKeySources = [
-  "eslint.config.mjs",
-  "tsdoc.json",
-  "packages/tooling/policy-pack/repo-configs/src/eslint",
-];
+// tag definitions it loads, and the whole policy-pack configs package source (the ESLint
+// rule modules import helpers from `src/internal/eslint`, so the rule directory alone is
+// not the import closure).
+const rootEslintCacheKeySources = ["eslint.config.mjs", "tsdoc.json", "packages/tooling/policy-pack/repo-configs/src"];
 // The key a pure plan carries when no repository is read (tests and static plan inspection).
 const UNKEYED_ROOT_ESLINT_CACHE = "unkeyed";
 
@@ -3008,11 +3006,15 @@ const listRootEslintCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: strin
     return [source];
   }
   const entries = yield* fs.readDirectory(absolute, { recursive: true });
-  return pipe(
+  const candidates = A.filter(
     entries,
-    A.filter((entry) => Str.endsWith(".ts")(entry) || Str.endsWith(".mjs")(entry) || Str.endsWith(".json")(entry)),
-    A.map((entry) => `${source}/${entry}`)
+    (entry) => Str.endsWith(".ts")(entry) || Str.endsWith(".mjs")(entry) || Str.endsWith(".json")(entry)
   );
+  // A recursive listing may name directories; only files are read into the digest.
+  const files = yield* Effect.filter(candidates, (entry) =>
+    fs.stat(path.join(absolute, entry)).pipe(Effect.map((entryInfo) => entryInfo.type === "File"))
+  );
+  return A.map(files, (entry) => `${source}/${entry}`);
 });
 
 /**
@@ -3028,9 +3030,10 @@ const listRootEslintCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: strin
  * **Details**
  *
  * The key is the first sixteen hex characters of a SHA-256 over every file under the
- * configuration sources (`eslint.config.mjs`, `tsdoc.json`, the policy-pack ESLint
- * directory), each prefixed by its path. A source that cannot be read yields the
- * `unkeyed` directory so a missing file never blocks lint; the cache is then shared.
+ * configuration sources (`eslint.config.mjs`, `tsdoc.json`, the policy-pack configs package
+ * source including `src/internal/eslint`), each prefixed by its path. A source that cannot be
+ * read yields the `unkeyed` directory so a missing file never blocks lint; the cache is then
+ * shared.
  *
  * @param repoRoot - Repository root directory.
  * @returns The cache directory key.
