@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 
-import { $EcfrId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
-import { Effect } from "effect";
+import { $EcfrId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as O from "@beep/utils/Option";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.errors");

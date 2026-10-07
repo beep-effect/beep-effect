@@ -8,8 +8,10 @@
 import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
-import { A, O } from "@beep/utils";
-import { Effect, Match } from "effect";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as Str from "effect/String";
 import mammoth from "mammoth";
 import { extractText, getDocumentProxy } from "unpdf";

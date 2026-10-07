@@ -20,14 +20,20 @@ import {
 import { $EcfrId } from "@beep/identity";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { O } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
-import { Context, Effect, Layer, Match, pipe, Ref, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as RateLimiter from "effect/persistence/RateLimiter";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -91,7 +97,14 @@ const titlesBody = {
 const responseFor = (url: string): Response =>
   Match.value(url).pipe(
     Match.when(Str.includes("/api/admin/v1/agencies.json"), () =>
-      Response.json({ agencies: [{ name: "Example Agency", slug: "example-agency" }] })
+      Response.json({
+        agencies: [
+          {
+            name: "Example Agency",
+            slug: "example-agency",
+          },
+        ],
+      })
     ),
     Match.when(Str.includes("/api/admin/v1/corrections"), () =>
       Response.json({ ecfr_corrections: [{ id: 1, title: 1 }] })
@@ -99,7 +112,11 @@ const responseFor = (url: string): Response =>
     Match.when(Str.includes("/api/search/v1/results"), () => {
       const secondPage = Str.includes("page=2")(url);
       return Response.json({
-        meta: { current_page: secondPage ? 2 : 1, total_count: 2, total_pages: 2 },
+        meta: {
+          current_page: secondPage ? 2 : 1,
+          total_count: 2,
+          total_pages: 2,
+        },
         results: [{ full_text_excerpt: secondPage ? "second" : "first" }],
       });
     }),
@@ -120,7 +137,12 @@ const responseFor = (url: string): Response =>
       Response.json({ identifier: "1", label: "Title 1", type: "title" })
     ),
     Match.when(Str.includes("/api/versioner/v1/titles.json"), () => Response.json(titlesBody)),
-    Match.when(Str.includes("/api/versioner/v1/versions"), () => Response.json({ content_versions: [], meta: {} })),
+    Match.when(Str.includes("/api/versioner/v1/versions"), () =>
+      Response.json({
+        content_versions: [],
+        meta: {},
+      })
+    ),
     Match.orElse(() => Response.json({}, { status: 404 }))
   );
 
@@ -136,7 +158,13 @@ const EcfrTestHttpLayer = Layer.effect(
           O.map((value) => value.toString()),
           O.getOrElse(() => request.url)
         );
-        yield* Ref.update(capturesRef, (xs) => [...xs, { method: request.method, url }]);
+        yield* Ref.update(capturesRef, (xs) => [
+          ...xs,
+          {
+            method: request.method,
+            url,
+          },
+        ]);
         return responseFor(url);
       }),
     });
@@ -319,7 +347,12 @@ describe("@beep/ecfr", () => {
         });
         yield* ecfr.getAncestry(versioner);
         const xml = yield* ecfr.getFullTitleXml(versioner);
-        yield* ecfr.getStructure(EcfrDatedTitleParams.make({ date: "2026-07-01", title: "1" }));
+        yield* ecfr.getStructure(
+          EcfrDatedTitleParams.make({
+            date: "2026-07-01",
+            title: "1",
+          })
+        );
         yield* ecfr.listTitles;
         yield* ecfr.listVersions(
           EcfrVersionsParams.make({
@@ -355,7 +388,12 @@ describe("@beep/ecfr", () => {
         const ecfr = yield* Ecfr;
 
         const results = yield* ecfr
-          .searchResultsAll(EcfrSearchParams.make({ query: O.some("water"), perPage: O.some(S.Natural.make(1)) }))
+          .searchResultsAll(
+            EcfrSearchParams.make({
+              query: O.some("water"),
+              perPage: O.some(S.Natural.make(1)),
+            })
+          )
           .pipe(Stream.runCollect);
         const captures = yield* testHttp.captures;
 

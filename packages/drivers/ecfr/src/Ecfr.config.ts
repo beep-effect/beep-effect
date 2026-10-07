@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { $EcfrId } from "@beep/identity";
-import { Effect } from "effect";
+import { $EcfrId } from "@beep/identity/packages";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.config");
