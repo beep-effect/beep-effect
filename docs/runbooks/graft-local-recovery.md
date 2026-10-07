@@ -535,7 +535,9 @@ plus hooks in `graph/enrich.js`, `graph/build.js`, `graph/check.js`,
 reinstall or upgrade removes them, and a new Graft
 version needs them ported into a new version directory first. The additional
 `ai-symbol-batches` patch bounds dense-file crux requests and selects source
-excerpts for their targets, as described below. After the
+excerpts for their targets. `graph-deep-ast` keeps generated, deeply nested
+syntax trees from overflowing the extractor's JavaScript call stack. Both are
+described below. After the
 install, apply and verify them, then run the two focused checks above:
 
 ```sh
@@ -616,6 +618,42 @@ remain cached; only pending symbols require model work. Preserve the failed
 attempt's log separately. Verify the final meaning tally has zero pending and
 stale symbols: `graft check` can exit successfully for a structurally current
 graph while warning that its meaning tier is incomplete.
+
+### Stack overflows on deeply nested syntax trees
+
+Alchemy's generated `AWS/IAM/actions.generated.ts` contains a union of more
+than 18,000 members. Tree-sitter parses it successfully, but the resulting
+left-associated tree exceeds the JavaScript call stack in Graft's recursive
+alias, binding, imported-symbol, and definition traversals. The build reports
+`parse failed — Maximum call stack size exceeded` and omits the file and its
+type from the wiring graph.
+
+The `graph-deep-ast` patch replaces those four recursive traversals with
+explicit stacks while preserving document order, lexical ownership, bindings,
+and PHP enum grouping. It changes extraction only; it does not change source
+files, model routing, or the meaning cache. Apply it only after active Graft
+processes have finished, then run the structural regression tests:
+
+```sh
+scripts/graft/apply-dist-patches.sh
+scripts/graft/apply-dist-patches.sh --check
+node --test scripts/graft/deep-ast.test.js
+```
+
+The tests include a 20,000-member generated union and smaller TypeScript,
+Python, and PHP fixtures that check ordering, aliases, scopes, and enum
+handling. They make no model calls or graph writes. `GRAFT_EXTRACT_MODULE`
+can point to `dist/graph/extract.js` in a full disposable patched package
+when testing a patch port.
+
+Preserve the failed build log and rerun the strict deep build after the
+repair. Recovered files introduce new symbol targets that still need meaning
+summaries. Check both the parser diagnostics and the exact pending count:
+the meaning percentage covers only indexed symbols and can round up to 100%
+while targets remain pending. A successful `graft check` establishes freshness;
+it does not establish that every source file parsed or every symbol was
+summarized. The current `graft/.cache/extract.*.json` extraction receipt records
+failed files in their `error` fields; include those failures in the final audit.
 
 ### Zero-token empty results and provider refusals
 
