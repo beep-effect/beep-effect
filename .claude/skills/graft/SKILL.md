@@ -154,7 +154,9 @@ available; the guidance is identical.
 - Route Effect API questions to `graft ask "<q>" .repos/effect-workspace` to
   federate across every member in `scripts/references.json`, or
   `graft ask "<q>" .repos/effect` to narrow to Effect. The workspace includes
-  `effect`, `effect-tsgo`, and the Spencer Beggs Effect ecosystem repositories.
+  `effect`, `effect-tsgo`, the Spencer Beggs Effect ecosystem repositories,
+  `t3code` (`main`), `opencode` (`v2`), and `alchemy` (`main`). Application
+  references show applied patterns; check APIs against Effect itself.
   Each `.repos/<member>` points to its child clone; `.repos/effect-workspace`
   points to their parent at
   `$HOME/YeeBois/references/effect`. `scripts/setup-effect-ref.sh` provisions these
