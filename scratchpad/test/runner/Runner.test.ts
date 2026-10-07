@@ -37,6 +37,8 @@ import { isModuleTarget, labPaths, upstreamPaths } from "../../effected/runner/P
 import { heavy, renderLaunch } from "../../effected/runner/Process.ts";
 import { LAW_SURFACES, outOfScopeChanges, reviewBrief, roundDir, seatLaunches } from "../../effected/runner/Review.ts";
 import { AppendField } from "../../effected/runner/LedgerStore.ts";
+import { rewriteRootImports } from "../../effected/runner/Codemod.ts";
+import { Project } from "ts-morph";
 
 const emptyLedger = (rows: ReadonlyArray<LedgerRow>): Ledger =>
   Ledger.make({
@@ -310,5 +312,47 @@ describe("review loop", () => {
   });
   it("names the accumulating ledger fields", () => {
     assert.deepStrictEqual(AppendField.literals, ["deviations", "backlog", "reviewRounds", "exportsAdded"]);
+  });
+});
+
+describe("root import codemod", () => {
+  const rewrite = (text: string) => {
+    const file = new Project({ useInMemoryFileSystem: true }).createSourceFile("a.ts", text);
+    return { result: rewriteRootImports(file), text: file.getFullText() };
+  };
+  it("aliases data modules, keeps other namespaces and routes combinators to effect/Function", () => {
+    const { result, text } = rewrite(
+      'import { Effect, Option, Schema, pipe } from "effect";\nexport const x = pipe(Option.some(1), Option.map((n) => n));\nexport const y: Schema.Schema<string> = Schema.String;\nexport const z = Effect.void;\n'
+    );
+    assert.deepStrictEqual(result.aliased, ["Option->O", "Schema->S"]);
+    assert.include(text, 'import * as Effect from "effect/Effect";');
+    assert.include(text, 'import * as O from "effect/Option";');
+    assert.include(text, 'import * as S from "effect/Schema";');
+    assert.include(text, 'import { pipe } from "effect/Function";');
+    assert.include(text, "pipe(O.some(1), O.map((n) => n))");
+    assert.include(text, "const y: S.Schema<string> = S.String;");
+    assert.notInclude(text, 'from "effect";');
+  });
+  it("keeps the long name when the alias would collide", () => {
+    const { result, text } = rewrite(
+      'import { Schema } from "effect";\nexport const f = <S extends Schema.Top>(schema: S): S => schema;\n'
+    );
+    assert.deepStrictEqual(result.collisions, ["Schema->S"]);
+    assert.include(text, 'import * as Schema from "effect/Schema";');
+    assert.include(text, "<S extends Schema.Top>");
+  });
+  it("preserves type-only imports and explicit aliases", () => {
+    const { text } = rewrite(
+      'import type { DateTime, Schema as SchemaNs } from "effect";\nimport { type Option, Effect } from "effect";\nexport type T = DateTime.Utc | SchemaNs.Top | Option.Option<number>;\nexport const e = Effect.void;\n'
+    );
+    assert.include(text, 'import type * as DateTime from "effect/DateTime";');
+    assert.include(text, 'import type * as SchemaNs from "effect/Schema";');
+    assert.include(text, 'import type * as O from "effect/Option";');
+    assert.include(text, "Option.Option<number>".replace("Option.", "O."));
+  });
+  it("leaves files without root imports untouched", () => {
+    const { result, text } = rewrite('import * as S from "effect/Schema";\nexport const s = S.String;\n');
+    assert.strictEqual(result.rewritten, 0);
+    assert.include(text, 'import * as S from "effect/Schema";');
   });
 });

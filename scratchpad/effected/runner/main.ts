@@ -163,6 +163,23 @@ const review = Command.make(
   })
 ).pipe(Command.withDescription("Write the round's reviewer brief; with --seats also run the Grok and Sol seats"));
 
+const codemod = Command.make(
+  "codemod-imports",
+  { target: targetArgument },
+  Effect.fnUntraced(function* ({ target }) {
+    const service = yield* Audit;
+    const rewrites = yield* service.codemodImports(target);
+    for (const rewrite of rewrites) {
+      const notes = [
+        ...(A.isReadonlyArrayNonEmpty(rewrite.collisions) ? [`collisions ${A.join(rewrite.collisions, ",")}`] : []),
+        ...(A.isReadonlyArrayNonEmpty(rewrite.unknown) ? [`left ${A.join(rewrite.unknown, " | ")}`] : []),
+      ];
+      yield* Console.log(`  ${rewrite.file}: ${rewrite.rewritten} import(s)${A.isReadonlyArrayNonEmpty(notes) ? `; ${A.join(notes, "; ")}` : ""}`);
+    }
+    yield* Console.log(`[effected] ${target} codemod-imports: ${rewrites.length} file(s) rewritten`);
+  })
+).pipe(Command.withDescription("S1: rewrite root effect imports to per-module imports with the A/O/P/R/S aliases"));
+
 const append = Command.make(
   "append",
   {
@@ -181,7 +198,7 @@ const append = Command.make(
 
 const root = Command.make("audit:effected").pipe(
   Command.withDescription("Gates and ledger of the @effected/* port lab (scratchpad/EFFECTED_PORT_GOAL.md)"),
-  Command.withSubcommands([copy, carry, parity, check, lint, test, docgen, audit, ledger, review, append])
+  Command.withSubcommands([copy, carry, codemod, parity, check, lint, test, docgen, audit, ledger, review, append])
 );
 
 const RunnerLayers = AuditLive.pipe(Layer.provideMerge(BunServices.layer));

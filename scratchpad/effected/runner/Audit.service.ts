@@ -53,6 +53,7 @@ import {
 import { isModuleTarget, labPaths, type RunnerConfig, resolveRunnerConfig } from "./Paths.ts";
 import { capture } from "./Process.ts";
 import { runCliSeats, writeBrief } from "./Review.ts";
+import { codemodImports, type ImportRewrite } from "./Codemod.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Audit.service");
 
@@ -150,6 +151,8 @@ export interface AuditShape {
     module: ModuleName,
     payload: { readonly field: AppendField; readonly json: string }
   ) => Effect.Effect<LedgerRow, RunnerError>;
+  /** Rewrite root effect imports to per-module imports with the A/O/P/R/S aliases. @since 0.0.0 */
+  readonly codemodImports: (target: AuditTarget) => Effect.Effect<ReadonlyArray<ImportRewrite>, RunnerError>;
   /** Write the reviewer brief for a round on HEAD. @since 0.0.0 */
   readonly reviewBrief: (
     module: ModuleName,
@@ -354,6 +357,9 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
       payload: { readonly field: AppendField; readonly json: string }
     ) {
       return yield* appendToRow(config, module, payload);
+    }, provide),
+    codemodImports: Effect.fn("Audit.codemodImports")(function* (target: AuditTarget) {
+      return yield* codemodImports(config, target);
     }, provide),
     reviewBrief: Effect.fn("Audit.reviewBrief")(function* (module: ModuleName, round: number) {
       return yield* writeBrief(config, module, round);
