@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: PR to mergeable — the `DocumentIdentification` slice, adapters, and `apps/practice-identify` are implemented and verified; the draft PR is being driven to mergeable. P4 Close follows.
+P4 Close — complete. PR #1536 merged as 5329c31d58 (slice, app, packet) with the baseline-only PR #1540 (9c909f339a) for the use-cases branches floor; this follow-up carries the closeout reflection, D17 and the coverage lift.
 
 ## Latest Evidence
 
+- [`history/reflections/2026-10-07-claude.md`](./history/reflections/2026-10-07-claude.md) — closeout reflection.
 - [`history/2026-10-06-held-out-evaluation.md`](./history/2026-10-06-held-out-evaluation.md) — held-out precision per tier on the private data, counts only.
+- PR #1536 merged 2026-10-07 (5329c31d58): seven review threads resolved, two round-3 P2s tracked here (D17).
 - Package verify green for `@beep/law-practice-use-cases`, `@beep/law-practice-server`, `@beep/practice-identify` (2026-10-06).
 
 ## Notes

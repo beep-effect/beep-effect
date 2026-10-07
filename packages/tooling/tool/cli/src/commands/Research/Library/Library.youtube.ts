@@ -1,6 +1,7 @@
-/** Caption-first YouTube acquisition.
- * @internal
+/**
+ * Caption-first YouTube acquisition.
  *
+ * @internal
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -57,9 +58,7 @@ class CaptionProvenance extends S.Class<CaptionProvenance>($I`CaptionProvenance`
  * ```
  *
  * @internal
- *
  * @category utilities
- *
  * @since 0.0.0
  */
 export const libraryCaptionProvenance: {
@@ -89,7 +88,8 @@ export const libraryCaptionProvenance: {
   )
 );
 
-/** Capture captions and context without downloading video or audio.
+/**
+ * Capture captions and context without downloading video or audio.
  * **Example** (Prepare source-bound verification)
  * ```ts
  * import { acquireLibraryYoutube } from "@beep/repo-cli/test/ResearchLibrary"
@@ -100,10 +100,9 @@ export const libraryCaptionProvenance: {
  * ```
  *
  * @internal
- *
  * @category use-cases
- *
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibraryYoutube = Effect.fn("Library.acquireYoutube")(function* (
   root: string,
   source: LibrarySource,

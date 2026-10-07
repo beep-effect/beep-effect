@@ -1,6 +1,9 @@
-/** Resumable typed evidence acquisition.
+/**
+ * Resumable typed evidence acquisition.
+ *
  * @packageDocumentation
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 
 import { FirecrawlError } from "@beep/firecrawl";
 import { DateTime, Effect, FileSystem, Match, Path } from "effect";
@@ -23,7 +26,8 @@ import { acquireLibraryPaper, acquireLibraryWeb } from "./Library.web.ts";
 import { acquireLibraryYoutube } from "./Library.youtube.ts";
 import type { LibraryAcquireOptions } from "./Library.schemas.ts";
 
-/** Identify the actual acquisition route.
+/**
+ * Identify the actual acquisition route.
  * **Example** (Select the paper route)
  * ```ts
  * import { libraryAdapterFor, classifyLibraryReference } from "@beep/repo-cli/commands/Research"
@@ -32,8 +36,11 @@ import type { LibraryAcquireOptions } from "./Library.schemas.ts";
  * console.log(Effect.isEffect(route))
  * ```
  *
+ * @param source - Classified reference whose kind determines its acquisition route.
+ * @returns The adapter identifier required to acquire this reference.
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const libraryAdapterFor = (source: LibrarySource): string =>
   Match.value(source.kind).pipe(
     Match.when("paper", () => "paper"),
@@ -50,7 +57,8 @@ export const libraryAdapterFor = (source: LibrarySource): string =>
     Match.orElse(() => "firecrawl")
   );
 
-/** Required operational routes for a catalog.
+/**
+ * Required operational routes for a catalog.
  * **Example** (Keep deep research required for an empty catalog)
  * ```ts
  * import { requiredLibraryAdapters, LibraryCatalog } from "@beep/repo-cli/commands/Research"
@@ -58,8 +66,11 @@ export const libraryAdapterFor = (source: LibrarySource): string =>
  * console.log(requiredLibraryAdapters(catalog)) // ["grok-deep-research"]
  * ```
  *
+ * @param catalog - Catalog whose required qualifications and source routes are combined.
+ * @returns Unique adapter identifiers, with deep research always required.
  * @category utilities
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const requiredLibraryAdapters = (catalog: LibraryCatalog) =>
   A.dedupe([
     "grok-deep-research",
@@ -108,7 +119,8 @@ const adapter = (root: string, source: LibrarySource, prefix: string) => {
   );
 };
 
-/** Capture one source with a durable start receipt and terminal receipt.
+/**
+ * Capture one source with a durable start receipt and terminal receipt.
  * **Example** (Prepare a source-bound acquisition)
  * ```ts
  * import { acquireLibrarySource } from "@beep/repo-cli/test/ResearchLibrary"
@@ -120,7 +132,8 @@ const adapter = (root: string, source: LibrarySource, prefix: string) => {
  *
  * @internal
  * @category use-cases
- * @since 0.0.0 */
+ * @since 0.0.0
+ */
 export const acquireLibrarySource = Effect.fn("Library.acquireSource")(function* (
   root: string,
   source: LibrarySource,
@@ -192,7 +205,8 @@ export const acquireLibrarySource = Effect.fn("Library.acquireSource")(function*
   return completed;
 });
 
-/** Acquire sources after route qualification, retaining failures for explicit retries.
+/**
+ * Acquire sources after route qualification, retaining failures for explicit retries.
  * **Details**
  * Valid reviewed dispositions remain intact during blanket retries. Explicit source selection permits
  * retrying reviewed network sources; internal, non-reference, operational, and X import-only routes
@@ -205,7 +219,6 @@ export const acquireLibrarySource = Effect.fn("Library.acquireSource")(function*
  * ```
  *
  * @category use-cases
- *
  * @since 0.0.0
  */
 export const acquireLibrary = Effect.fn("Library.acquire")(function* (root: string, options: LibraryAcquireOptions) {
@@ -229,150 +242,147 @@ export const acquireLibrary = Effect.fn("Library.acquire")(function* (root: stri
         })
       )
     ),
-    () =>
-      Effect.gen(function* () {
-        const catalog = yield* withCatalog(root, (original) =>
-          correctLibraryCaptures(root, original).pipe(
-            Effect.map((current) =>
-              LibraryCatalog.make({
-                ...current,
-                captures: A.map(current.captures, (capture) =>
-                  capture.status === "running"
-                    ? LibraryCapture.make({
-                        ...capture,
-                        status: "interrupted",
-                        reason: "Previous acquisition stopped before a terminal receipt.",
-                      })
-                    : capture
-                ),
-              })
-            )
-          )
-        );
-        const versions = A.flatMap(catalog.sources, (source) =>
-          A.match(source.versions, {
-            onEmpty: () => [source],
-            onNonEmpty: (entries) =>
-              A.map(entries, (version) =>
-                LibrarySource.make({
-                  ...source,
-                  revision: version.revision,
-                  canonicalUrl: version.canonicalUrl,
-                  locators: version.locators,
-                })
+    Effect.fnUntraced(function* () {
+      const catalog = yield* withCatalog(root, (original) =>
+        correctLibraryCaptures(root, original).pipe(
+          Effect.map((current) =>
+            LibraryCatalog.make({
+              ...current,
+              captures: A.map(current.captures, (capture) =>
+                capture.status === "running"
+                  ? LibraryCapture.make({
+                      ...capture,
+                      status: "interrupted",
+                      reason: "Previous acquisition stopped before a terminal receipt.",
+                    })
+                  : capture
               ),
-          })
-        );
-        const targets: Array<LibrarySource> = [];
-        const preserveReviewedTarget = Effect.fn("Library.acquire.preserveReviewedTarget")(function* (
-          source: LibrarySource
-        ) {
-          const effective = yield* libraryEffectiveCaptures(root, catalog, source);
-          const current = A.findFirst(effective, (item) => item.revision === source.revision);
-          const reviewed = current.pipe(
-            O.flatMap((item) =>
-              item.category !== "readable" && item.capture !== null ? O.some(item.capture) : O.none()
-            )
-          );
-          const forceReviewedRetry =
-            A.isReadonlyArrayNonEmpty(options.sourceIds) &&
-            !A.contains(["disposition", "grok-x-import"], libraryAdapterFor(source));
-          if (
-            O.isSome(reviewed) &&
-            !forceReviewedRetry &&
-            (yield* libraryDispositionValid(root, catalog, source, reviewed.value))
+            })
           )
-            return true;
-          return false;
-        });
-        const reusableCapture = Effect.fn("Library.acquire.reusableCapture")(function* (
-          source: LibrarySource,
-          latest: O.Option<LibraryCapture>
-        ) {
-          const reusable =
-            O.isSome(latest) &&
-            latest.value.status === "readable" &&
-            latest.value.complete &&
-            (yield* librarySourceEvidenceValid(root, source, latest.value));
-          return reusable;
-        });
-        const selectTarget = Effect.fn("Library.acquire.selectTarget")(function* (source: LibrarySource) {
-          const selected = A.match(options.sourceIds, {
-            onEmpty: () => true,
-            onNonEmpty: (ids) => A.contains(ids, source.id),
-          });
-          const latest = A.findLast(
-            catalog.captures,
-            (capture) => capture.sourceId === source.id && capture.requestedRevision === source.revision
-          );
-          if (!selected) return;
-          if (yield* preserveReviewedTarget(source)) return;
-          const reusable = yield* reusableCapture(source, latest);
-          if (O.isNone(latest) || latest.value.status === "interrupted" || (options.retryFailed && !reusable))
-            targets.push(source);
-        });
-        for (const source of versions) yield* selectTarget(source);
-        const admitted: Array<LibrarySource> = [];
-        let qualificationValidity = Record.empty<string, boolean>();
-        for (const method of A.dedupe(A.map(targets, libraryAdapterFor))) {
-          const qualification = A.findLast(catalog.qualifications, (q) => q.adapter === method && q.required);
-          const valid =
-            O.isSome(qualification) &&
-            (yield* libraryQualificationValid(root, catalog, qualification.value).pipe(
-              Effect.orElseSucceed(() => false)
-            ));
-          qualificationValidity = Record.set(qualificationValidity, method, valid);
-        }
-        const admitTarget = Effect.fn("Library.acquire.admitTarget")(function* (source: LibrarySource) {
-          const method = libraryAdapterFor(source);
-          if (method === "disposition" || O.getOrElse(Record.get(qualificationValidity, method), () => false)) {
-            admitted.push(source);
-          } else {
-            const recordedAt = DateTime.formatIso(yield* DateTime.now);
-            const id = yield* hashBytes(
-              new TextEncoder().encode(`${source.id}\n${source.revision}\nblocked\n${recordedAt}`)
-            );
-            const blocked = LibraryCapture.make({
-              id,
-              sourceId: source.id,
-              status: "blocked",
-              method,
-              recordedAt,
-              capturedRevision: "",
-              requestedRevision: source.revision,
-              complete: false,
-              artifacts: [],
-              reason: `Adapter ${method} lacks operational qualification; acquisition was not attempted.`,
-            });
-            yield* withCatalog(root, (current) =>
-              Effect.succeed(LibraryCatalog.make({ ...current, captures: [...current.captures, blocked] }))
-            );
-          }
-        });
-        for (const source of targets) yield* admitTarget(source);
-        // GitHub sources sharing a clone are serialized; other adapters honor the bounded fan-out.
-        const github = A.filter(admitted, (source) => libraryAdapterFor(source) === "github");
-        const other = A.filter(admitted, (source) => libraryAdapterFor(source) !== "github");
-        const groups = Record.values(
-          A.groupBy(github, (source) =>
-            Str.toLowerCase(
-              Str.isEmpty(source.repository)
-                ? A.join(A.take(Str.split(source.canonicalUrl, "/"), 5), "/")
-                : source.repository
-            )
-          )
-        );
-        yield* Effect.all(
-          [
-            ...A.map(groups, (group) =>
-              Effect.forEach(group, (source) => acquireLibrarySource(root, source, writer), { concurrency: 1 })
+        )
+      );
+      const versions = A.flatMap(catalog.sources, (source) =>
+        A.match(source.versions, {
+          onEmpty: () => [source],
+          onNonEmpty: (entries) =>
+            A.map(entries, (version) =>
+              LibrarySource.make({
+                ...source,
+                revision: version.revision,
+                canonicalUrl: version.canonicalUrl,
+                locators: version.locators,
+              })
             ),
-            ...A.map(other, (source) => acquireLibrarySource(root, source, writer)),
-          ],
-          { concurrency: options.concurrency, discard: true }
+        })
+      );
+      const targets: Array<LibrarySource> = [];
+      const preserveReviewedTarget = Effect.fn("Library.acquire.preserveReviewedTarget")(function* (
+        source: LibrarySource
+      ) {
+        const effective = yield* libraryEffectiveCaptures(root, catalog, source);
+        const current = A.findFirst(effective, (item) => item.revision === source.revision);
+        const reviewed = current.pipe(
+          O.flatMap((item) => (item.category !== "readable" && item.capture !== null ? O.some(item.capture) : O.none()))
         );
-        return yield* loadCatalog(root);
-      }),
+        const forceReviewedRetry =
+          A.isReadonlyArrayNonEmpty(options.sourceIds) &&
+          !A.contains(["disposition", "grok-x-import"], libraryAdapterFor(source));
+        if (
+          O.isSome(reviewed) &&
+          !forceReviewedRetry &&
+          (yield* libraryDispositionValid(root, catalog, source, reviewed.value))
+        )
+          return true;
+        return false;
+      });
+      const reusableCapture = Effect.fn("Library.acquire.reusableCapture")(function* (
+        source: LibrarySource,
+        latest: O.Option<LibraryCapture>
+      ) {
+        const reusable =
+          O.isSome(latest) &&
+          latest.value.status === "readable" &&
+          latest.value.complete &&
+          (yield* librarySourceEvidenceValid(root, source, latest.value));
+        return reusable;
+      });
+      const selectTarget = Effect.fn("Library.acquire.selectTarget")(function* (source: LibrarySource) {
+        const selected = A.match(options.sourceIds, {
+          onEmpty: () => true,
+          onNonEmpty: (ids) => A.contains(ids, source.id),
+        });
+        const latest = A.findLast(
+          catalog.captures,
+          (capture) => capture.sourceId === source.id && capture.requestedRevision === source.revision
+        );
+        if (!selected) return;
+        if (yield* preserveReviewedTarget(source)) return;
+        const reusable = yield* reusableCapture(source, latest);
+        if (O.isNone(latest) || latest.value.status === "interrupted" || (options.retryFailed && !reusable))
+          targets.push(source);
+      });
+      for (const source of versions) yield* selectTarget(source);
+      const admitted: Array<LibrarySource> = [];
+      let qualificationValidity = Record.empty<string, boolean>();
+      for (const method of A.dedupe(A.map(targets, libraryAdapterFor))) {
+        const qualification = A.findLast(catalog.qualifications, (q) => q.adapter === method && q.required);
+        const valid =
+          O.isSome(qualification) &&
+          (yield* libraryQualificationValid(root, catalog, qualification.value).pipe(
+            Effect.orElseSucceed(() => false)
+          ));
+        qualificationValidity = Record.set(qualificationValidity, method, valid);
+      }
+      const admitTarget = Effect.fn("Library.acquire.admitTarget")(function* (source: LibrarySource) {
+        const method = libraryAdapterFor(source);
+        if (method === "disposition" || O.getOrElse(Record.get(qualificationValidity, method), () => false)) {
+          admitted.push(source);
+        } else {
+          const recordedAt = DateTime.formatIso(yield* DateTime.now);
+          const id = yield* hashBytes(
+            new TextEncoder().encode(`${source.id}\n${source.revision}\nblocked\n${recordedAt}`)
+          );
+          const blocked = LibraryCapture.make({
+            id,
+            sourceId: source.id,
+            status: "blocked",
+            method,
+            recordedAt,
+            capturedRevision: "",
+            requestedRevision: source.revision,
+            complete: false,
+            artifacts: [],
+            reason: `Adapter ${method} lacks operational qualification; acquisition was not attempted.`,
+          });
+          yield* withCatalog(root, (current) =>
+            Effect.succeed(LibraryCatalog.make({ ...current, captures: [...current.captures, blocked] }))
+          );
+        }
+      });
+      for (const source of targets) yield* admitTarget(source);
+      // GitHub sources sharing a clone are serialized; other adapters honor the bounded fan-out.
+      const github = A.filter(admitted, (source) => libraryAdapterFor(source) === "github");
+      const other = A.filter(admitted, (source) => libraryAdapterFor(source) !== "github");
+      const groups = Record.values(
+        A.groupBy(github, (source) =>
+          Str.toLowerCase(
+            Str.isEmpty(source.repository)
+              ? A.join(A.take(Str.split(source.canonicalUrl, "/"), 5), "/")
+              : source.repository
+          )
+        )
+      );
+      yield* Effect.all(
+        [
+          ...A.map(groups, (group) =>
+            Effect.forEach(group, (source) => acquireLibrarySource(root, source, writer), { concurrency: 1 })
+          ),
+          ...A.map(other, (source) => acquireLibrarySource(root, source, writer)),
+        ],
+        { concurrency: options.concurrency, discard: true }
+      );
+      return yield* loadCatalog(root);
+    }),
     () => fs.remove(lock, { recursive: true }).pipe(Effect.orDie)
   );
 });

@@ -2,7 +2,7 @@
 
 ## Outcome
 
-Build the reusable external library at `~/YeeBois/research/beep-effect/` and
+Build the reusable external library at `$HOME/YeeBois/research/beep-effect/` and
 complete this exploration by routing evidence-backed findings into appropriate
 existing or new packets. Phase 1 must pass before substantive synthesis begins.
 

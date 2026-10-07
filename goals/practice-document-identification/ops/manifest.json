@@ -4,13 +4,13 @@
     "id": "practice-document-identification",
     "packetId": "goal-packet/v1:3f8a3ab0aedafbcaf7a47f6949b01dc23ef9e3e5fd090fa9e378775e10f978ee",
     "title": "Practice Document Identification",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-06",
-    "updated": "2026-10-06",
+    "updated": "2026-10-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/practice-document-identification",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Identify the client and docket of unplaced practice documents from the attorney own filing, contacts, public USPTO records and extracted content, with measured precision per evidence tier and no guessing",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -61,12 +61,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -1,4 +1,6 @@
-/** Retained provider event decoding without altering original bytes.
+/**
+ * Retained provider event decoding without altering original bytes.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -10,13 +12,15 @@ import * as Path from "effect/Path";
 import { decodeProviderEvents } from "./Library.provenance.ts";
 import type { LibraryArtifact } from "./Library.schemas.ts";
 
-/** Decode retained JSON or NDJSON provider events sequentially, preserving an original BOM for the decoder.
+/**
+ * Decode retained JSON or NDJSON provider events sequentially, preserving an original BOM for the decoder.
  * **Example** (Prepare retained event reading)
  * ```ts
  * import { readLibraryProviderEvents } from "@beep/repo-cli/test/ResearchLibrary"
  * import { Effect } from "effect"
  * console.log(Effect.isEffect(readLibraryProviderEvents("/library", []))) // true
  * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
