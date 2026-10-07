@@ -142,3 +142,106 @@ the preflight's install window, and the PR + hosted checks start even while
 a sibling proof runs. Until then the workaround is camp-and-fire: poll the
 lock path and invoke publish the instant it clears, retrying on lost races
 because the coordinator has no queue.
+
+## 2026-10-06 — A stalled preservation writer went unnoticed for six weeks
+
+- **Doing:** resuming the P0 archive (lane E) from the 2026-08-27 run.
+- **Evidence:** `payload/root-archive.zip.partial` stopped growing at 90.25 GB
+  on 2026-08-27 12:15; the writer claim named a pid from a previous boot and
+  nothing alarmed. In the meantime the source lost 1,818 files (operator
+  cleanup), which voided the approved denominators and forced a re-measure.
+- **Prevented by:** a liveness row or heartbeat on long archive runs surfaced
+  by the session ledger / orchestrator gate, so a dead writer appears within
+  hours instead of at the next audit.
+
+## 2026-10-06 — A reconciliation denominator had no flag
+
+- **Doing:** rerunning `restore-preserve` after the source changed.
+- **Evidence:** `Collector present successful row denominator mismatch:
+  expected 21489, observed 19370.` The expected value was a schema
+  constructor default with no CLI flag, so the run could not be re-measured
+  without a code change (`--expected-collector-present-rows` added). The
+  verifier likewise hard-coded "exactly four inherited-loss rows".
+- **Prevented by:** every frozen denominator the run checks gets a flag and
+  the verifier checks the ratified class set, not a row count.
+
+## 2026-10-06 — The archive hasher was pure JavaScript
+
+- **Doing:** watching the resumed P0 run re-hash the promoted 147.7 GB root
+  archive before its PASS row.
+- **Evidence:** the process sat at 97% CPU on one core reading ~25 MB/s with
+  no writes; `hashOpenedRestorationFile` used `@noble/hashes` `sha256.create()`.
+  A 2 GB benchmark on the same file under Bun: noble 187 MB/s, `node:crypto`
+  1,917 MB/s, identical digest. At the observed rate the remaining ~350 GB of
+  hashing would have taken the rest of the day.
+- **Prevented by:** a shared streaming hasher primitive on the platform hash
+  (now `createStreamingSha256` in `Restoration.ts`), and a throughput line in
+  the run log so a slow hasher is visible in minutes.
+
+## 2026-10-06 — Yeet's packet named the wrong red gate
+
+- **Doing:** reading the cheap-gates failure after the first `yeet publish` of
+  the provenance index.
+- **Evidence:** the quality packet reported one `repo-law` issue, "full:cheap-gates
+  failed in tsconfig-sync", and suggested `bun run config-sync`; that command
+  answered "all files already in sync". The real reds were lint:schema-first
+  (two exported interfaces), lint:effect-vitest (six rows in a new test file)
+  and fallow:audit (eleven complexity findings), visible only in the raw log.
+- **Prevented by:** the packet should carry every failed lane's own findings
+  (schema-first symbols, effect-vitest rows, fallow path:line:metric) instead of
+  collapsing the wave to the first lane in its fallback table.
+
+## 2026-10-06 — `typeof Bun` is not a runtime probe under Vitest
+
+- **Doing:** running the corpus command suite after switching the streaming
+  hasher to Bun's native `CryptoHasher` with a pure-JS fallback for Node.
+- **Evidence:** 26 tests failed in 16 seconds with
+  `TypeError: Bun.CryptoHasher is not a constructor`. `vitest.setup.ts`
+  installs a partial Bun shim (spawn, file, serve, sleep) when Vitest runs on
+  Node, so `typeof Bun !== "undefined"` was true while the hasher surface was
+  absent. A Codex lane saw the same suite fail nine tests with a different
+  message under its sandbox and attributed them to the baseline.
+- **Prevented by:** probing the API you call (`typeof Bun.CryptoHasher ===
+  "function"`), which the shim's own header comment prescribes, and a note in
+  the shim's docs that `Bun` is defined under Node tests so feature probes
+  must target members, never the global.
+
+## 2026-10-06 — One backslash aborted the attachment repair apply
+
+- **Doing:** the first `corpus provenance attachments --mode apply` over both
+  mail trees (299,371 proposed renames).
+- **Evidence:** the run stopped after 375 journaled renames with
+  `Unsafe magic extension proposal.`; the row kept a Windows backslash that
+  pffexport preserves inside attachment names, and the guard rejected
+  `/`, `\` and NUL alike. The refresh tree alone holds 793 such proposals.
+  The abort also left `proposals-extract.jsonl` truncated at 377 rows, while
+  the orphaned journal stays valid undo input for the 375 renames it recorded.
+- **Prevented by:** a guard scoped to what is unsafe on the target filesystem
+  (the POSIX separator and NUL), an error that names the row, and a synthetic
+  fixture with a backslash in the name so the rule is pinned by a test.
+
+## 2026-10-07 — The hosted runner's `file(1)` is not the workstation's
+
+- **Doing:** reading the first hosted coverage run of the provenance tests.
+- **Evidence:** `plans, applies, journals ... undoes actual magic repairs`
+  expected 4 proposals and got 2 on the runner; the same test passes locally
+  (file 5.48). The synthetic fixtures are a minimal PDF, a 22-byte JPEG, a
+  text file and random bytes, and the runner's libmagic build read two of
+  them differently.
+- **Prevented by:** driving workflow tests through the service contract (a
+  deterministic `AttachmentMagicSniffer` layer) and keeping exactly one
+  small live-sniffer test on the one fixture every libmagic recognises; the
+  repair workflow is about journals and undo, not libmagic.
+
+## 2026-10-07 — A per-root escape check rejected the corpus's own symlinks
+
+- **Doing:** the first metadata census over `raw/`, `incoming/`,
+  `organized/` and the attachment trees.
+- **Evidence:** the run stopped on the first entry of `organized/` with
+  `Walk path escapes root ... resolves to .../raw/... which escapes the
+  allowed root`: `organized/` holds 28 symlinks into `raw/`, all inside the
+  corpus home, and the walk resolved them against the sub-root it was
+  started from.
+- **Prevented by:** an explicit walk boundary (the corpus home for the
+  census) separate from the directory being walked, and dedupe by canonical
+  path so a symlinked file is censused once under its real location.
