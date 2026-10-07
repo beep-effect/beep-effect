@@ -304,4 +304,8 @@ adding `--include-run <label>` for each later source run and
 `--practice-domain <domain>` for the correspondent tables (see
 `bundle-contract.md` §5).
 Carry claims with `claims.ts --carry-from <old bundle>`, and prove the result
-with `verify.ts --bundle-dir <dir>`.
+with `verify.ts --bundle-dir <dir> --compare-to <old bundle>`: it prints the
+verification summary, then the matter-table diff (matters and dockets added
+and removed, application and patent numbers added and removed per docket),
+and exits non-zero when a row does not resolve or when the old bundle had a
+matter, a docket, or a number the new one lacks (D-25).

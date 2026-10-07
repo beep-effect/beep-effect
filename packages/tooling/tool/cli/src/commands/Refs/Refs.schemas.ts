@@ -6,6 +6,7 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
@@ -14,6 +15,13 @@ import { GraftDeepCoverage } from "../Graft/Graft.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Refs/Refs.schemas");
 const MemberName = S.NonEmptyString.check(S.isPattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/u));
+const MemberBranch = S.NonEmptyString.check(
+  S.isPattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]*(?:\/[a-zA-Z0-9][a-zA-Z0-9_-]*)*$/u)
+).annotate(
+  $I.annote("MemberBranch", {
+    description: "Reference branch with safe slash-separated alphanumeric, dash, and underscore components.",
+  })
+);
 const RelativeDirectory = S.NonEmptyString.check(
   S.isPattern(/^(?!\/)(?!.*(?:^|\/)\.\.(?:\/|$))[^\p{Cc}]+$/u, {
     arbitraryConstraint: { patterns: [{ source: "^[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*$", flags: "" }] },
@@ -44,7 +52,7 @@ export const ReferenceTier = LiteralKit(["deep", "structural"]).pipe(
 export type ReferenceTier = typeof ReferenceTier.Type;
 
 /**
- * One pull-only upstream; unknown keys, including branch, are refused.
+ * One pull-only upstream on its configured branch, defaulting to main.
  *
  * **Example** (Describe a member)
  * ```ts
@@ -60,13 +68,19 @@ export class ReferenceMember extends S.Class<ReferenceMember>($I`ReferenceMember
   {
     name: MemberName,
     url: S.NonEmptyString,
+    branch: MemberBranch.pipe(
+      S.withDecodingDefaultKey(Effect.succeed("main")),
+      S.withConstructorDefault(Effect.succeed("main"))
+    ),
     tier: ReferenceTier,
     onlyDir: RelativeDirectory.pipe(S.Array, S.OptionFromOptionalKey),
   },
-  $I.annote("ReferenceMember", { description: "Manifest member refreshed only on clean main." })
+  $I.annote("ReferenceMember", {
+    description: "Manifest member refreshed only when clean and on its configured branch.",
+  })
 ) {
   /**
-   * Strict boundary decoder; undeclared keys cannot describe unsupported branches.
+   * Strict boundary decoder with a main branch default and unknown-key rejection.
    *
    * **Example** (Decode a member)
    * ```ts

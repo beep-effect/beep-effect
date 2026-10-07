@@ -34,7 +34,6 @@ import {
   M365ListMessagesRequest,
   M365UpdateMessageCategoriesRequest,
 } from "@beep/m365";
-import { EmailString } from "@beep/schema/Email";
 import * as O from "@beep/utils/Option";
 import { Context, Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
@@ -42,6 +41,7 @@ import * as DateTime from "effect/DateTime";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { mailAddressOf } from "../internal/MailAddress.ts";
 import { PosInt } from "../internal/PosInt.ts";
 import type { MasterCategoryIntent } from "@beep/law-practice-domain/values/MailTagging";
 import type {
@@ -50,6 +50,7 @@ import type {
   SetCategoriesRequest,
 } from "@beep/law-practice-use-cases/MailTagging";
 import type { GraphAttachment, GraphMessage, GraphRecipient } from "@beep/m365";
+import type { EmailString } from "@beep/schema/Email";
 
 const $I = $LawPracticeServerId.create("MailTagging/MailTagging.mailbox");
 
@@ -138,7 +139,6 @@ const decodeMessageId = S.decodeUnknownOption(MailMessageId);
 const decodeInternetMessageId = S.decodeUnknownOption(InternetMessageId);
 const decodeConversationId = S.decodeUnknownOption(MailConversationId);
 const decodeAttachmentId = S.decodeUnknownOption(MailAttachmentId);
-const decodeAddress = S.decodeUnknownOption(EmailString);
 const decodeCursor = S.decodeUnknownOption(MailPageCursor);
 
 // A request the driver's own schema rejects never reaches Graph; it fails the way the driver reports it.
@@ -173,7 +173,7 @@ const addressOf = (recipient: GraphRecipient): O.Option<EmailString> =>
   pipe(
     recipient.emailAddress,
     O.flatMap((emailAddress) => emailAddress.address),
-    O.flatMap(decodeAddress)
+    O.flatMap(mailAddressOf)
   );
 
 const recipientsOf = (message: GraphMessage): ReadonlyArray<EmailString> =>
@@ -362,8 +362,9 @@ const makeMailbox = Effect.gen(function* () {
  * and checkpoints by received instant, so it cannot place one.
  *
  * The envelope mapping never fails: the sender is `from`, else `sender`; an
- * address that does not decode becomes no sender or a dropped recipient; a
- * missing subject is empty and missing categories are none. Nothing of a
+ * address is read from a bare, quoted, or `Name <address>` entry and
+ * lowercased; one that still does not decode becomes no sender or a dropped
+ * recipient; a missing subject is empty and missing categories are none. Nothing of a
  * message is logged.
  *
  * `getEnvelope` answers none for a 404. `setCategories` sends the list with

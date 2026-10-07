@@ -21,9 +21,17 @@ for the shared provider environment.
 The manifest is the membership authority. Add a unique `name`, upstream `url`,
 and `tier` to `scripts/references.json`. `deep` joins the existing nightly
 summary/concept pass; `structural` only builds the tree-sitter graph.
+The optional `branch` defaults to `main`. Setup clones that branch; refresh
+requires a clean checkout on that branch and pulls `origin <branch>` with
+`--ff-only`, independently of the checkout's configured tracking branch.
+Existing checkouts on another branch are preserved and reported as
+`skipped-off-branch`; setup never switches an existing checkout.
 The Effect workspace includes `effect`, `effect-tsgo`, and these Spencer Beggs
 repositories: `ai-plugin-marketplace-manager`, `okfit`, `tsdoctor`, `effected`,
-`pluginfinity`, and `vitest-agent`.
+`pluginfinity`, and `vitest-agent`. Application references include
+`pingdotgg/t3code` (`main`), `anomalyco/opencode` (`v2`), and
+`alchemy-run/alchemy` (`main`). Use these for applied Effect patterns; the
+Effect reference remains the authority for the repository's Effect version.
 
 For an existing temporary clone, first check its status, remotes, submodules,
 and registered worktrees. Move the complete clone to the manifest root rather
@@ -50,6 +58,9 @@ initialization of the upstream repositories' reference submodules is needed.
 ```sh
 graft ask "How are YAML codecs implemented?" .repos/effected --source
 graft ask "How are plugins discovered?" .repos/effect-workspace --source
+graft ask "How are Effect services composed?" .repos/t3code --source
+graft ask "How are Effect layers assembled?" .repos/opencode --source
+graft ask "How are resources managed with Effect?" .repos/alchemy --source
 ```
 
 Merge the manifest change and ensure the installed timer's durable owner has
@@ -58,6 +69,10 @@ their existing workspace link already resolves to the shared parent. Structural
 queries work immediately. Deep summaries are separate evidence: verify them
 in the next nightly refresh receipt before claiming the meaning tier is complete.
 Do not start the operator-only deep refresh from an agent merely to add a member.
+When the operator explicitly requests immediate deep ingestion, run the
+authorized deep workflow and retain each source HEAD, branch, exit status,
+coverage, failed-file count, and query evidence. A structural build or a zero
+exit from `--allow-partial` does not prove complete deep coverage.
 
 ## Refresh behavior
 

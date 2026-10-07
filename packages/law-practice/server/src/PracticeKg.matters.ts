@@ -659,3 +659,62 @@ export const PracticeKgMatterLookupLive = Layer.effect(
     });
   })
 );
+
+const allMattersSql = `
+SELECT family_key AS "familyKey", family, client, client_name AS "clientName",
+  attribution_source AS "attributionSource",
+  epistemic_status AS "epistemicStatus", CAST(docket_count AS DOUBLE) AS "docketCount",
+  CAST(document_count AS DOUBLE) AS "documentCount"
+FROM matters
+ORDER BY family_key`;
+
+const allMatterDocketsSql = `
+SELECT docket_key AS "docketKey", docket, family_key AS "familyKey", epistemic_status AS "epistemicStatus",
+  CAST(document_count AS DOUBLE) AS "documentCount",
+  array_to_string(application_numbers, '${listSeparator}') AS "applicationNumbers",
+  array_to_string(patent_numbers, '${listSeparator}') AS "patentNumbers"
+FROM matter_dockets
+ORDER BY docket_key`;
+
+const docketRowOf = (docket: MatterDocketQueryRow): PracticeKgMatterDocketRow =>
+  PracticeKgMatterDocketRow.make({
+    applicationNumbers: splitList(docket.applicationNumbers),
+    docket: docket.docket,
+    docketKey: docket.docketKey,
+    documentCount: docket.documentCount,
+    epistemicStatus: docket.epistemicStatus,
+    familyKey: docket.familyKey,
+    patentNumbers: splitList(docket.patentNumbers),
+  });
+
+/**
+ * Reads every row of the bundle's `matters` and `matter_dockets` tables.
+ *
+ * **Details**
+ *
+ * The rows come back as the writer took them, number lists split again and in
+ * key order, so the tables of two bundles read this way can be compared with
+ * `diffPracticeKgMatterTables`.
+ *
+ * **Example** (Read the matter tables of a bundle)
+ *
+ * ```ts
+ * import { readPracticeKgMatterTables } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(readPracticeKgMatterTables)) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const readPracticeKgMatterTables: Effect.Effect<PracticeKgMatterTables, PracticeKgProjectionError, DuckDb> =
+  Effect.gen(function* () {
+    const db = yield* DuckDb;
+    const matters = yield* db.query(allMattersSql).pipe(Effect.flatMap(decodeMatterRows));
+    const dockets = yield* db.query(allMatterDocketsSql).pipe(Effect.flatMap(decodeMatterDocketRows));
+    return PracticeKgMatterTables.make({
+      dockets: A.map(dockets, docketRowOf),
+      matters: A.map(matters, (matter) => PracticeKgMatterRow.make({ ...matter })),
+    });
+  }).pipe(PracticeKgProjectionError.mapError("Practice KG matter tables could not be read."));

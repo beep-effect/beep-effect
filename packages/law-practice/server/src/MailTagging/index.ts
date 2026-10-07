@@ -7,6 +7,13 @@
  */
 
 /**
+ * Contact evidence from the practice knowledge graph's correspondent tables.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./MailTagging.correspondents.ts";
+/**
  * Box document store adapter.
  *
  * @category layers

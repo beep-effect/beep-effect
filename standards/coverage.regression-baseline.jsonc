@@ -19922,6 +19922,117 @@
         }
       }
     },
+    "@beep/practice-mail-tagging": {
+      "path": "apps/practice-mail-tagging",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "apps/practice-mail-tagging/src/PracticeMailTagging.command.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.lock.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.passes.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/PracticeMailTagging.report.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/bin.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/entrypoint.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "apps/practice-mail-tagging/src/runtime/Layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/pretext": {
       "path": "packages/drivers/pretext",
       "lines": 81.81,
@@ -22018,6 +22129,66 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.command.ts": {
+          "lines": 96.36,
+          "statements": 92.06,
+          "branches": 100,
+          "functions": 84.37,
+          "uncovered": {
+            "lines": 2,
+            "statements": 5,
+            "branches": 0,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.errors.ts": {
+          "lines": 66.66,
+          "statements": 66.66,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.schemas.ts": {
+          "lines": 97.61,
+          "statements": 95.91,
+          "branches": 100,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/Accounts.wire.schemas.ts": {
+          "lines": 99.07,
+          "statements": 98.3,
+          "branches": 77.77,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 8,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Accounts/AccountsUsage.service.ts": {
+          "lines": 91.96,
+          "statements": 92,
+          "branches": 84.09,
+          "functions": 85.96,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 7,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.command.ts": {
@@ -25837,15 +26008,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts": {
-          "lines": 34.75,
-          "statements": 34.96,
+          "lines": 34.54,
+          "statements": 34.69,
           "branches": 9.9,
-          "functions": 17.73,
+          "functions": 17.56,
           "uncovered": {
-            "lines": 353,
-            "statements": 359,
-            "branches": 182,
-            "functions": 167
+            "lines": 360,
+            "statements": 367,
+            "branches": 191,
+            "functions": 169
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts": {
@@ -27348,6 +27519,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/Gh.command.ts": {
+          "lines": 80.95,
+          "statements": 80.95,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts": {
           "lines": 98.7,
           "statements": 97.21,
@@ -27502,6 +27685,18 @@
             "statements": 24,
             "branches": 2,
             "functions": 11
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts": {
+          "lines": 50.24,
+          "statements": 50,
+          "branches": 30.86,
+          "functions": 48.14,
+          "uncovered": {
+            "lines": 100,
+            "statements": 111,
+            "branches": 56,
+            "functions": 56
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts": {
@@ -27865,15 +28060,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProvenanceFooter.ts": {
-          "lines": 97.72,
+          "lines": 97.24,
           "statements": 96.42,
           "branches": 80.39,
-          "functions": 96.96,
+          "functions": 94.73,
           "uncovered": {
-            "lines": 3,
+            "lines": 4,
             "statements": 5,
             "branches": 10,
-            "functions": 1
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts": {
@@ -27910,6 +28105,18 @@
             "statements": 3,
             "branches": 1,
             "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ReadyGate.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 96.96,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Remediation.ts": {
@@ -28006,6 +28213,18 @@
             "statements": 3,
             "branches": 1,
             "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts": {
+          "lines": 97.26,
+          "statements": 97.36,
+          "branches": 100,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts": {
@@ -28654,6 +28873,54 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/github/GithubGraphql.ts": {
+          "lines": 32,
+          "statements": 28.57,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 17,
+            "statements": 20,
+            "branches": 6,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/github/GithubIdentity.ts": {
+          "lines": 64.7,
+          "statements": 64.28,
+          "branches": 59.25,
+          "functions": 44.44,
+          "uncovered": {
+            "lines": 24,
+            "statements": 25,
+            "branches": 11,
+            "functions": 15
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/github/GithubRest.ts": {
+          "lines": 78.2,
+          "statements": 78.2,
+          "branches": 33.33,
+          "functions": 58.53,
+          "uncovered": {
+            "lines": 17,
+            "statements": 17,
+            "branches": 12,
+            "functions": 17
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/github/GraphqlBudget.ts": {
+          "lines": 94.59,
+          "statements": 95,
+          "branches": 92.85,
+          "functions": 90,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/internal/github/JobShape.ts": {

@@ -193,6 +193,11 @@ describe("practice KG correspondents", () => {
         "o'brien@example.com"
       );
       expect(yield* parsePracticeKgCorrespondentAddress('"Example, Pat" <Pat@Example.com>')).toBe("pat@example.com");
+      // A bare address wrapped in single quotes loses the quotes, in a lookup input and inside a header.
+      expect(yield* parsePracticeKgCorrespondentAddress("'pat@example.com'")).toBe("pat@example.com");
+      expect(yield* parsePracticeKgCorrespondentAddress("'pat@example.com', Pat <PAT@example.com>")).toBe(
+        "pat@example.com"
+      );
       expect(yield* parsePracticeKgCorrespondentAddress("pat@example.com, Pat <PAT@example.com>")).toBe(
         "pat@example.com"
       );
