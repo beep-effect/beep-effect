@@ -13,6 +13,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { Effect, FileSystem, Path } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -47,12 +48,33 @@ describe("reference manifest schemas", () => {
         ["effected", "deep"],
         ["pluginfinity", "deep"],
         ["vitest-agent", "deep"],
+        ["t3code", "deep"],
+        ["opencode", "deep"],
+        ["alchemy", "deep"],
       ]);
+      assertSome(
+        A.findFirst(manifest.members, (member) => member.name === "opencode").pipe(O.map((member) => member.branch)),
+        "v2"
+      );
+      expect(manifest.members[0]?.branch).toBe("main");
       assertNone(manifest.members[0]?.onlyDir ?? O.none());
     }, testPlatform)
   );
+  it.effect(
+    "defaults omitted branches to main and retains explicit branches",
+    Effect.fnUntraced(function* () {
+      const member = { name: "opencode", url: "upstream", tier: "deep" };
+      expect((yield* ReferenceMember.decode(member)).branch).toBe("main");
+      expect((yield* ReferenceMember.decode({ ...member, branch: "v2" })).branch).toBe("v2");
+      expect((yield* ReferenceMember.decode({ ...member, branch: "release/v2" })).branch).toBe("release/v2");
+    })
+  );
   const invalidMembers: ReadonlyArray<readonly [label: string, extra: Record<string, unknown>]> = [
-    ["branch", { branch: "main" }],
+    ["branch", { branch: "--upload-pack=evil" }],
+    ["empty branch", { branch: "" }],
+    ["branch traversal", { branch: "../v2" }],
+    ["branch control", { branch: "v2\nmain" }],
+    ["unknown key", { revision: "v2" }],
     ["tier", { tier: "unknown" }],
     ["name", { name: "../escape" }],
     ["onlyDir", { onlyDir: ["../escape"] }],

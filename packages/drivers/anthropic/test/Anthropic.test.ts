@@ -7,13 +7,17 @@ import {
   AnthropicLanguageModelOptions,
   AnthropicTurnPlan,
   makeAnthropicLanguageModelLayer,
+  makeAnthropicLanguageModelLiveLayer,
   RepairError,
 } from "@beep/anthropic";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { Result } from "effect";
+import { Config, ConfigProvider, Effect, Layer, Result } from "effect";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import { AiError } from "effect/ai";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -42,6 +46,8 @@ describe("@beep/anthropic", () => {
   it("builds live layers and the acquisition retry plan", () => {
     expect(AnthropicLanguageModelLive).toBeDefined();
     expect(makeAnthropicLanguageModelLayer()).toBeDefined();
+    expect(makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ temperature: 0 }))).toBeDefined();
+    expect(makeAnthropicLanguageModelLiveLayer({ temperature: 0 })).toBeDefined();
     expect(AnthropicTurnPlan).toBeDefined();
   });
 
@@ -109,4 +115,34 @@ describe("@beep/anthropic", () => {
     },
     { arbitrary: fcRuns(50) }
   );
+});
+
+const fixtureConfig = ConfigProvider.layer(
+  ConfigProvider.fromUnknown({ AI_ANTHROPIC_API_KEY: "fixture-key", AI_ANTHROPIC_MODEL: "claude-fixture" })
+);
+
+describe("@beep/anthropic live model with request settings", () => {
+  it.layer(makeAnthropicLanguageModelLiveLayer({ temperature: 0 }).pipe(Layer.provide(fixtureConfig)), {
+    timeout: "5 seconds",
+  })("acquisition", (it) => {
+    it.effect(
+      "acquires the configured model without calling the provider, and retries only retryable provider errors",
+      Effect.fnUntraced(function* () {
+        const model = yield* LanguageModel.LanguageModel;
+        const configError = yield* Effect.flip(Config.String("FIXTURE_MISSING").parse(ConfigProvider.fromUnknown({})));
+        const providerError = AiError.make({
+          method: "generateText",
+          module: "Anthropic",
+          reason: AiError.UnknownError.make({ description: "fixture failure" }),
+        });
+        const retry = A.headNonEmpty(AnthropicTurnPlan.steps).while;
+        const retried = yield* Effect.forEach([configError, providerError], (error) =>
+          retry === undefined ? Effect.succeed(true) : retry(error)
+        );
+
+        expect(model).toBeDefined();
+        expect(retried).toStrictEqual([false, providerError.isRetryable]);
+      })
+    );
+  });
 });

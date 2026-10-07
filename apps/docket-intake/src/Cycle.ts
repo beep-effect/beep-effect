@@ -10,6 +10,7 @@ import {
   DocketIntakeJournal,
   DocketRunId,
   docketDayInZone,
+  recordDocketRunCompleted,
   writeDigestFile,
 } from "@beep/law-practice-server/DocketIntake";
 import {
@@ -172,6 +173,8 @@ export const pollCycle = Effect.fn("DocketIntakeApp.pollCycle")(function* (
   const today = docketDayInZone(yield* DateTime.now, config.timeZone);
 
   const report = yield* intake.pollOnce(today, options);
+  // Every run gets a line, also one that wrote nothing, so `runs` lists it and `undo` finds it.
+  yield* recordDocketRunCompleted(report);
   yield* Effect.logInfo("docket intake poll finished", {
     entered: report.entered,
     failed: report.failed,

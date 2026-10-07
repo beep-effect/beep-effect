@@ -38,6 +38,11 @@ export * from "./PracticeKg.claims.ts";
  * @category use-cases
  * @since 0.0.0
  */
+export * from "./PracticeKg.compare.ts";
+/**
+ * @category use-cases
+ * @since 0.0.0
+ */
 export * from "./PracticeKg.contacts.ts";
 /**
  * @category use-cases

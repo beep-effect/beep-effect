@@ -10,6 +10,7 @@ import {
   DocketIntake,
   DocketIntakeConfig,
   DocketIntakeError,
+  DocketIntakeOutcome,
   DocketIntakeState,
   DocketIntakeStore,
   DocketLedgerRecord,
@@ -22,10 +23,12 @@ import {
   DocketReviewProgress,
   DocketSecretary,
   DocketSourceDocument,
+  DocketTrackedDates,
   DocketWrittenEntry,
   ExtractorFieldResponse,
   MatterAmbiguous,
   MatterNotFound,
+  MatterSuggested,
   MatterUnique,
   makeDocketIntakeLayer,
   NotDocketItem,
@@ -34,6 +37,7 @@ import {
   ParalegalRevision,
   ReviewFinding,
   SecretaryReview,
+  TrackedDate,
 } from "@beep/law-practice-use-cases/DocketIntake";
 import { addDays, isAfter, LocalDate, equals as sameDate } from "@beep/schema/LocalDate";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -52,12 +56,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type {
   DocketCalendarEntry,
-  DocketIntakeOutcome,
   DocketParalegalShape,
   DocketSecretaryShape,
   DocketSourceFolder,
   MatterLookupResult,
   ParalegalEntry,
+  ReviewRoundTrace,
 } from "@beep/law-practice-use-cases/DocketIntake";
 
 const TODAY = LocalDate.make({ year: 2030, month: 1, day: 10 });
@@ -237,6 +241,9 @@ type Script = {
   readonly reread: (input: RereadInput, asked: number) => Effect.Effect<SecretaryReview, DocketIntakeError>;
   readonly review: (messageId: string) => Effect.Effect<SecretaryReview, DocketIntakeError>;
   readonly revise: (input: ReviseInput) => Effect.Effect<ParalegalRevision, DocketIntakeError>;
+  /** Whether a docket sheet port is wired at all. */
+  readonly sheet: boolean;
+  readonly tracked: (dockets: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<TrackedDate>, DocketIntakeError>;
 };
 
 // The extractor defends everything: the same entry comes back.
@@ -255,6 +262,8 @@ const defaultScript: Script = {
   reread: () => Effect.succeed(agreeingReview),
   review: () => Effect.succeed(agreeingReview),
   revise: defend,
+  sheet: false,
+  tracked: () => Effect.succeed([]),
 };
 
 type HarnessShape = {
@@ -269,6 +278,7 @@ type HarnessShape = {
   readonly saves: Ref.Ref<ReadonlyArray<DocketIntakeState>>;
   readonly script: Ref.Ref<Script>;
   readonly sinceSeen: Ref.Ref<ReadonlyArray<O.Option<string>>>;
+  readonly trackedAsked: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>;
 };
 
 class Harness extends Context.Service<Harness, HarnessShape>()(
@@ -297,6 +307,7 @@ const harnessLayer = (script: Script) =>
         saves: yield* Ref.make<ReadonlyArray<DocketIntakeState>>([]),
         script: yield* Ref.make(script),
         sinceSeen: yield* Ref.make<ReadonlyArray<O.Option<string>>>([]),
+        trackedAsked: yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]),
       });
     })
   );
@@ -417,6 +428,19 @@ const portsLayer = Layer.mergeAll(
   )
 );
 
+const trackedDatesLayer = Layer.effect(
+  DocketTrackedDates,
+  Effect.gen(function* () {
+    const harness = yield* Harness;
+    return DocketTrackedDates.of({
+      forDockets: Effect.fn("FakeTrackedDates.forDockets")(function* (dockets) {
+        yield* Ref.update(harness.trackedAsked, A.append(dockets));
+        return yield* (yield* Ref.get(harness.script)).tracked(dockets);
+      }),
+    });
+  })
+);
+
 const FailingCrypto = Layer.succeed(
   Crypto.Crypto,
   Crypto.make({
@@ -455,7 +479,7 @@ const testLayer = (
   crypto: Layer.Layer<Crypto.Crypto> = TestCrypto
 ) =>
   makeDocketIntakeLayer(DocketIntakeConfig.make({ mailbox: "fixture-mailbox", ...config })).pipe(
-    Layer.provide(portsLayer),
+    Layer.provide(script.sheet === true ? Layer.merge(portsLayer, trackedDatesLayer) : portsLayer),
     Layer.provide(crypto),
     Layer.provideMerge(harnessLayer({ ...defaultScript, ...script }))
   );
@@ -487,6 +511,28 @@ const kinds = (entries: ReadonlyArray<DocketCalendarEntry>, kind: DocketCalendar
   A.filter(entries, (entry) => entry.kind === kind);
 
 const tagOf = (outcome: DocketIntakeOutcome): string => outcome._tag;
+
+const traceOf = (outcome: DocketIntakeOutcome) =>
+  O.getOrElse(
+    O.map(reviewOf(outcome), (review) => review.trace),
+    A.empty
+  );
+
+const traceRow = (round: ReviewRoundTrace) => ({
+  agreed: round.agreedFields,
+  checks: A.map(round.failedChecks, (check) => `${check.side}:${check.check}`),
+  critic: round.criticDocketItem,
+  defended: round.defendedFields,
+  disagreed: round.disagreedFields,
+  extractor: round.extractorDocketItem,
+  findings: A.map(round.findings, (finding) => `${finding.severity}:${finding.field}`),
+  gate: round.gatePassed,
+  index: round.index,
+  revised: round.revisedFields,
+  score: round.score,
+});
+
+const encodeOutcomeJson = S.encodeUnknownEffect(S.fromJsonString(DocketIntakeOutcome));
 
 const DayOffset = S.Int.check(S.isBetween({ maximum: 900, minimum: 40 }));
 
@@ -1194,6 +1240,37 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         // What the critic is shown of the entry did not change, so it was not asked for findings again.
         expect(yield* Ref.get(harness.critiques)).toBe(1);
         expect(kinds(yield* entriesOf, "due")).toHaveLength(1);
+        // Both rounds are kept on the outcome in ids and enums only (D-46).
+        expect(A.map(traceOf(outcome), traceRow)).toStrictEqual([
+          {
+            agreed: ["classification", "mail-date", "matter-references"],
+            checks: ["extractor:values-appear-in-cited-text"],
+            critic: true,
+            defended: [],
+            disagreed: ["response-period", "due-date"],
+            extractor: true,
+            findings: [],
+            gate: false,
+            index: 1,
+            revised: [],
+            score: 0.8,
+          },
+          {
+            agreed: ["classification", "mail-date", "response-period", "due-date", "matter-references"],
+            checks: [],
+            critic: true,
+            defended: [],
+            disagreed: [],
+            extractor: true,
+            findings: [],
+            gate: true,
+            index: 2,
+            revised: ["response-period"],
+            score: 1,
+          },
+        ]);
+        const encoded = yield* encodeOutcomeJson(outcome);
+        assertTrue(!Str.includes(DISTINCT_CITED)(encoded) && !Str.includes("Fixture response due")(encoded));
       })
     );
   });
@@ -1232,6 +1309,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
         expect(tagOf(outcome)).toBe("DocketNeedsReview");
         expect(reasonOf(outcome)).toBe("flagged-low-confidence");
+        expect(A.map(traceOf(outcome), (round) => traceRow(round).findings)).toStrictEqual([["P1:title"], []]);
         // The two candidate dates differ, and the entry says so.
         expect(outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"]).toStrictEqual(["dates-differ"]);
         // Exactly one entry: no due-date entry and no reminder ladder.
@@ -1327,6 +1405,9 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
         const flagged = A.head(entries);
 
         expect(reasonOf(outcome)).toBe("deterministic-failure");
+        expect(A.map(traceOf(outcome), (round) => [round.gatePassed, traceRow(round).checks])).toStrictEqual([
+          [false, ["extractor:cited-span-exists"]],
+        ]);
         assertSome(
           O.map(reviewOf(outcome), (review) => [review.status, review.rounds, review.finalScore, review.maxRounds]),
           ["deterministic-failure", 1, 1, 1]
@@ -1772,6 +1853,296 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
             Str.includes("- failed check (extractor): cited-span-exists for mail-date")(entry.bodyText)
           )
         );
+      })
+    );
+  });
+});
+
+const sheetMatter = MatterUnique.make({
+  client: O.some("0000"),
+  clientName: O.some("Fixture Client"),
+  dockets: ["0000.00001US01", "0000.00001EP02"],
+  familyKey: "0000.00001",
+  verified: true,
+});
+
+const tracked = (date: LocalDate, dateType: TrackedDate["dateType"], name = "Fixture response") =>
+  TrackedDate.make({ date, dateType, docket: "0000.00001US01", name });
+
+const sheetRows =
+  (...rows: ReadonlyArray<TrackedDate>) =>
+  () =>
+    Effect.succeed(rows);
+
+const flagsOf = (outcome: DocketIntakeOutcome): ReadonlyArray<string> =>
+  outcome._tag === "DocketEntered" || outcome._tag === "DocketNeedsReview" ? outcome.flags : ["unexpected"];
+
+const bodyIncludes = (entry: O.Option<DocketCalendarEntry>, fragment: string): boolean =>
+  O.exists(entry, (value) => Str.includes(fragment)(value.bodyText));
+
+const earlierSheetDate = LocalDate.make({ year: 2030, month: 4, day: 1 });
+
+describe("@beep/law-practice-use-cases DocketIntake docket sheet cross-check", () => {
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(sheetMatter),
+      sheet: true,
+      tracked: sheetRows(
+        tracked(addDays(earlierSheetDate, 30), "final-date"),
+        tracked(earlierSheetDate, "due-date"),
+        tracked(addDays(earlierSheetDate, -10), "reminder"),
+        tracked(addDays(earlierSheetDate, -5), "other"),
+        // Dated more than a week before receipt: an earlier step of the matter, not compared.
+        tracked(addDays(RECEIVED, -8), "due-date")
+      ),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "moves the entry to an earlier tracked due date, flags it, and asks about every docket of a family-level match",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const entries = yield* entriesOf;
+        const due = A.head(kinds(entries, "due"));
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs"]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, earlierSheetDate)));
+        expect(outcome._tag === "DocketEntered" ? outcome.dueDate.date.toISOString() : "").toBe("2030-04-01");
+        expect(kinds(entries, "reminder")).toHaveLength(4);
+        for (const fragment of [
+          "Date used: 2030-04-01 (the docket sheet's date, earlier than the email's)",
+          "Docket sheet: 2030-04-01 (Due Date: Fixture response)",
+          "Matter: family 0000.00001 · client 0000 · Fixture Client · dockets 0000.00001US01, 0000.00001EP02",
+        ]) {
+          assertTrue(bodyIncludes(due, fragment));
+        }
+        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001US01", "0000.00001EP02"]]);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(
+        MatterUnique.make({
+          dockets: ["0000.00001US01", "0000.00001EP02"],
+          familyKey: "0000.00001",
+          matchedDockets: ["0000.00001US01"],
+          verified: true,
+        })
+      ),
+      sheet: true,
+      tracked: sheetRows(tracked(LocalDate.make({ year: 2030, month: 4, day: 20 }), "final-date", "Final response")),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "keeps the entry on an earlier email date and only flags a later tracked date, asking about the named docket only",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs"]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
+        assertTrue(bodyIncludes(due, "Docket sheet: 2030-04-20 (Final Date: Final response)"));
+        assertTrue(!bodyIncludes(due, "the docket sheet's date"));
+        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001US01"]]);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(sheetMatter),
+      sheet: true,
+      tracked: sheetRows(tracked(computedDue, "due-date")),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "shows a tracked date that agrees with the email and flags nothing",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(flagsOf(outcome)).toStrictEqual([]);
+        assertTrue(bodyIncludes(due, "Docket sheet: 2030-04-08 (Due Date: Fixture response)"));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(sheetMatter),
+      sheet: true,
+      tracked: sheetRows(tracked(earlierSheetDate, "reminder"), tracked(addDays(RECEIVED, -30), "final-date")),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "changes nothing when the sheet tracks no due or final date for the docket in the window",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(flagsOf(outcome)).toStrictEqual([]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
+        assertTrue(!bodyIncludes(due, "Docket sheet:"));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(sheetMatter),
+      sheet: true,
+      tracked: () => Effect.fail(DocketIntakeError.make({ cause: "docket-sheet-unreadable", stage: "tracked-dates" })),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "flags an entry whose docket sheet cannot be read and still writes it",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(tagOf(outcome)).toBe("DocketEntered");
+        expect(flagsOf(outcome)).toStrictEqual(["tracked-dates-unavailable"]);
+        assertTrue(O.exists(due, (entry) => sameDate(entry.date, computedDue)));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." })),
+      matter: Effect.succeed(sheetMatter),
+      sheet: true,
+      tracked: sheetRows(tracked(earlierSheetDate, "due-date")),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "keeps a flagged item flagged: the sheet only moves it earlier and adds its flag",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const entries = yield* entriesOf;
+        const flagged = A.head(entries);
+
+        expect(reasonOf(outcome)).toBe("flagged-max-rounds");
+        expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs"]);
+        expect(entries).toHaveLength(1);
+        assertSome(
+          O.map(flagged, (entry) => [entry.kind, entry.category]),
+          ["needs-review", "Docket - needs review"]
+        );
+        assertTrue(O.exists(flagged, (entry) => sameDate(entry.date, earlierSheetDate)));
+        assertTrue(bodyIncludes(flagged, "Docket sheet: 2030-04-01 (Due Date: Fixture response)"));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer(
+      {
+        documents: false,
+        enter: () =>
+          Effect.succeed(docketEntry({ matterReferences: ["FA-77 / 0000.00001WO01-CA1", "00/000,001", "FIX-0001"] })),
+        matter: Effect.succeed(MatterNotFound.make({})),
+        review: () => Effect.succeed(undatedReview),
+        sheet: true,
+        tracked: sheetRows(tracked(RECEIVED, "due-date")),
+      },
+      lenient
+    ),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "asks about the dockets the references name when no matter is known, and moves an undated item onto the sheet's date",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const review = A.head(kinds(yield* entriesOf, "needs-review"));
+
+        expect(reasonOf(outcome)).toBe("no-usable-date");
+        expect(flagsOf(outcome)).toStrictEqual([
+          "tracked-date-differs",
+          "matter-not-found",
+          "source-document-missing",
+          "due-date-past",
+        ]);
+        assertTrue(O.exists(review, (entry) => sameDate(entry.date, RECEIVED)));
+        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([["0000.00001WO01-CA1"]]);
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      enter: () => Effect.succeed(ParalegalNotDocketItem.make({ rationale: "Fixture newsletter." })),
+      matter: Effect.succeed(sheetMatter),
+      review: () => Effect.succeed(undatedReview),
+      sheet: true,
+      tracked: sheetRows(tracked(RECEIVED, "due-date")),
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "moves a flagged item no agent dated from the day after receipt onto an earlier tracked date",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const flagged = A.head(yield* entriesOf);
+
+        expect(reasonOf(outcome)).toBe("flagged-max-rounds");
+        expect(flagsOf(outcome)).toStrictEqual(["tracked-date-differs", "source-document-missing", "due-date-past"]);
+        assertTrue(O.exists(flagged, (entry) => sameDate(entry.date, RECEIVED)));
+      })
+    );
+  });
+
+  it.layer(
+    testLayer({
+      matter: Effect.succeed(MatterSuggested.make({ familyKeys: ["0000.00001", "0001.00001"] })),
+      sheet: true,
+    }),
+    { timeout: "5 seconds" }
+  )((it) => {
+    it.effect(
+      "offers the matters whose documents mention a number as candidates, and asks the sheet nothing without a docket",
+      Effect.fnUntraced(function* () {
+        const intake = yield* DocketIntake;
+        const harness = yield* Harness;
+
+        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const due = A.head(kinds(yield* entriesOf, "due"));
+
+        expect(flagsOf(outcome)).toStrictEqual(["matter-suggested"]);
+        assertTrue(
+          bodyIncludes(
+            due,
+            "Matter: not attached in the records; suggested candidates: 0000.00001, 0001.00001; needs attorney"
+          )
+        );
+        expect(yield* Ref.get(harness.trackedAsked)).toStrictEqual([]);
       })
     );
   });

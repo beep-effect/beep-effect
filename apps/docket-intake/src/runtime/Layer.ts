@@ -5,17 +5,21 @@
  * @since 0.0.0
  */
 
-import { AnthropicLanguageModelLive } from "@beep/anthropic";
+import { makeAnthropicLanguageModelLiveLayer } from "@beep/anthropic";
 import {
   DocketFileStoreOptions,
   DocketGraphConfig,
   DocketJournalingPortsLive,
+  DocketKgBundleOptions,
   DocketMatterLookupUnavailableLive,
+  DocketTrackedDatesCsvOptions,
   makeDocketAgentsLayer,
   makeDocketFileJournalLayer,
   makeDocketFileStoreLayer,
   makeDocketGraphLayer,
   makeDocketGraphReadOnlyLayer,
+  makeDocketMatterLookupLayer,
+  makeDocketTrackedDatesCsvLayer,
 } from "@beep/law-practice-server/DocketIntake";
 import {
   DocketIntakeConfig,
@@ -25,6 +29,7 @@ import {
 import { M365, M365AppOnlyConfigInput, M365CertificateCredential } from "@beep/m365";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { Layer } from "effect";
+import * as O from "effect/Option";
 import { DocketDryRunPortsLive } from "../DryRun.ts";
 import type { DocketIntakeAppConfig } from "../Config.ts";
 
@@ -53,9 +58,25 @@ const graphConfig = (options: IntakeOptions) =>
     timeZone: options.config.timeZone,
   });
 
-// The pipeline over the given mailbox and calendar ports, the two Anthropic-backed agents, the
-// store and the matter lookup, with the review loop's round limit and threshold taken from the
-// configuration.
+// The matter lookup over the configured practice-KG bundle, opened read-only; without a bundle,
+// every entry is flagged `matter-lookup-failed`.
+const matterLookupLayer = (config: DocketIntakeAppConfig) =>
+  O.match(config.kgBundleDirectory, {
+    onNone: () => DocketMatterLookupUnavailableLive,
+    onSome: (bundleDir) => makeDocketMatterLookupLayer(DocketKgBundleOptions.make({ bundleDir })),
+  });
+
+// The docket sheet cross-check over the configured CSV export; without one there is no cross-check.
+const trackedDatesLayer = (config: DocketIntakeAppConfig) =>
+  O.match(config.docketSheetCsv, {
+    onNone: () => Layer.empty,
+    onSome: (path) => makeDocketTrackedDatesCsvLayer(DocketTrackedDatesCsvOptions.make({ path })),
+  });
+
+// The pipeline over the given mailbox and calendar ports, the two Anthropic-backed agents at
+// temperature 0 (so a dry run and a live run read a message the same way, D-46), the store, the
+// matter lookup and the docket sheet, with the review loop's round limit and threshold taken from
+// the configuration.
 const pipelineOver = <ROut, E, R>(config: DocketIntakeAppConfig, ports: Layer.Layer<ROut, E, R>) =>
   makeDocketIntakeLayer(
     DocketIntakeConfig.make({
@@ -70,8 +91,9 @@ const pipelineOver = <ROut, E, R>(config: DocketIntakeAppConfig, ports: Layer.La
     Layer.provideMerge(
       Layer.mergeAll(
         ports,
-        makeDocketAgentsLayer().pipe(Layer.provide(AnthropicLanguageModelLive)),
-        DocketMatterLookupUnavailableLive
+        makeDocketAgentsLayer().pipe(Layer.provide(makeAnthropicLanguageModelLiveLayer({ temperature: 0 }))),
+        matterLookupLayer(config),
+        trackedDatesLayer(config)
       )
     ),
     Layer.provide(BunCrypto.layer)

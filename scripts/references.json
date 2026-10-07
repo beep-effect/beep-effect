@@ -43,6 +43,22 @@
       "name": "vitest-agent",
       "url": "git@github.com:spencerbeggs/vitest-agent.git",
       "tier": "deep"
+    },
+    {
+      "name": "t3code",
+      "url": "https://github.com/pingdotgg/t3code.git",
+      "tier": "deep"
+    },
+    {
+      "name": "opencode",
+      "url": "https://github.com/anomalyco/opencode.git",
+      "branch": "v2",
+      "tier": "deep"
+    },
+    {
+      "name": "alchemy",
+      "url": "https://github.com/alchemy-run/alchemy.git",
+      "tier": "deep"
     }
   ]
 }

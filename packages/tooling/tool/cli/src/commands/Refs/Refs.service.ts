@@ -346,8 +346,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           .pipe(Effect.mapError(ioError(memberRoot, "Cannot inspect reference member.")));
         return [
           present
-            ? `keep ${memberRoot}; pull --ff-only only if clean and on main`
-            : `clone ${member.url} -> ${memberRoot}`,
+            ? `keep ${memberRoot}; pull --ff-only origin ${member.branch} only if clean and on ${member.branch}`
+            : `clone ${member.url} --branch ${member.branch} -> ${memberRoot}`,
           `link ${path.join(owner, ".repos", member.name)} -> ${memberRoot}`,
           `build ${memberRoot}: GRAFT_NO_GITIGNORE=1 graft ${A.join(buildArgs(member, 16), " ")}`,
         ];
@@ -458,15 +458,15 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
             });
           return result.stdout;
         });
-        // Bring the member to origin/main without ever rewriting local state (R9): a dirty or
-        // off-main member is skipped, a failing git call fails the member, else it is synced.
+        // Follow the manifest branch without rewriting local state: dirty or off-branch
+        // members are skipped; a failing git call fails the member, otherwise it is synced.
         const syncMember = Effect.fnUntraced(function* () {
           const dirty = yield* gitOutput(["status", "--porcelain", "--untracked-files=all"]);
           if (Str.isNonEmpty(dirty)) return MemberSync.skipped("skipped-dirty");
           const branch = yield* gitOutput(["branch", "--show-current"]);
-          if (branch !== "main") return MemberSync.skipped("skipped-off-branch");
+          if (branch !== member.branch) return MemberSync.skipped("skipped-off-branch");
           const before = yield* gitOutput(["rev-parse", "HEAD"]);
-          yield* gitOutput(["pull", "--ff-only"]);
+          yield* gitOutput(["pull", "--ff-only", "origin", member.branch]);
           const after = yield* gitOutput(["rev-parse", "HEAD"]);
           return MemberSync.synced(before !== after);
         });
@@ -539,7 +539,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
       const temporary = yield* fs.makeTempFile({ directory: stateDir, prefix: ".refresh-" });
       yield* fs.writeFileString(temporary, `${encoded}\n`);
       yield* fs.rename(temporary, statusPath);
-      // Intentional skips (dirty or off-main members are never reset, R9) are recorded in the
+      // Intentional skips (dirty or off-branch members are never reset, R9) are recorded in the
       // status file but do not page: critical notification is reserved for pull/build failures,
       // a failed patch-kit preflight, a model cooldown that skipped a deep pass, a deep member
       // that built without coverage, and a failed workspace build or check.
