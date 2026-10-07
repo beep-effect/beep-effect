@@ -142,7 +142,22 @@ type AddressTables = {
   readonly matterKeys: HashSet.HashSet<string>;
 };
 
-const addressOf = (row: { readonly address: string }): string => row.address;
+// Every table is keyed by the normalized address, as the bundle lookup normalizes a queried address before it
+// reads the rows: a differently cased or quoted copy of one address is one address, and a row whose address
+// is not a mail address is no address at all.
+const keyedRow = <Row extends { readonly address: string }>(row: Row): O.Option<readonly [EmailString, Row]> =>
+  O.map(mailAddressOf(row.address), (address) => [address, row] as const);
+
+const byNormalizedAddress = <Row extends { readonly address: string }>(
+  rows: ReadonlyArray<Row>
+): Record<string, ReadonlyArray<Row>> =>
+  R.map(
+    A.groupBy(A.getSomes(A.map(rows, keyedRow)), ([address]) => address),
+    (group) => A.map(group, ([, row]) => row)
+  );
+
+const normalizedAddresses = (rows: ReadonlyArray<{ readonly address: string }>): ReadonlyArray<EmailString> =>
+  A.getSomes(A.map(rows, (row) => mailAddressOf(row.address)));
 
 const rowsAt = <Row>(byAddress: Record<string, ReadonlyArray<Row>>, address: string): ReadonlyArray<Row> =>
   O.getOrElse(R.get(byAddress, address), (): ReadonlyArray<Row> => []);
@@ -165,11 +180,11 @@ const evidenceAt = (tables: AddressTables, address: string): PracticeKgCorrespon
 
 const uniqueMatterOf =
   (tables: AddressTables) =>
-  (address: string): O.Option<readonly [string, EmailString]> =>
-    O.all([
+  (address: EmailString): O.Option<readonly [string, EmailString]> =>
+    O.map(
       O.fromNullishOr(resolvePracticeKgCorrespondent(evidenceAt(tables, address)).familyKey),
-      mailAddressOf(address),
-    ]);
+      (familyKey) => [familyKey, address] as const
+    );
 
 const groupedByMatter = (
   pairs: ReadonlyArray<readonly [string, EmailString]>
@@ -190,10 +205,12 @@ const unreadable = () => MailTaggingPortError.during("MatterDirectory", "snapsho
  * Every address of `contact_addresses` is resolved with the correspondent
  * lookup's own rule, `resolvePracticeKgCorrespondent`, over the same rows the
  * lookup reads for one address: the contacts that own it, their links, and
- * whether it is a practice address. Only a `unique` answer counts, so a
- * candidate, a role mailbox, a practice address, and an address shared by two
- * contacts are never evidence. An address that is not then a usable mail
- * address is dropped.
+ * whether it is a practice address. Addresses are normalized before the rows
+ * are grouped and looked up, as the lookup itself normalizes a queried
+ * address, so two spellings of one address are one address. Only a `unique`
+ * answer counts, so a candidate, a role mailbox, a practice address, and an
+ * address shared by two contacts are never evidence. A row whose address is
+ * not a mail address is dropped.
  *
  * **Example** (Read the correspondents of a bundle)
  *
@@ -218,10 +235,10 @@ export const uniqueMatterCorrespondents = Effect.fn("MatterDirectoryPracticeKg.u
     db.query(statement).pipe(Effect.flatMap(decode), Effect.mapError(unreadable));
   const contacts = yield* read(contactsSql, decodeContactRows);
   const tables: AddressTables = {
-    contacts: A.groupBy(contacts, addressOf),
-    links: A.groupBy(yield* read(linksSql, decodeLinkRows), addressOf),
-    practiceAddresses: HashSet.fromIterable(A.map(yield* read(practiceAddressesSql, decodePracticeRows), addressOf)),
+    contacts: byNormalizedAddress(contacts),
+    links: byNormalizedAddress(yield* read(linksSql, decodeLinkRows)),
+    practiceAddresses: HashSet.fromIterable(normalizedAddresses(yield* read(practiceAddressesSql, decodePracticeRows))),
     matterKeys: HashSet.fromIterable(matterKeys),
   };
-  return pipe(A.dedupe(A.map(contacts, addressOf)), A.map(uniqueMatterOf(tables)), A.getSomes, groupedByMatter);
+  return pipe(A.dedupe(normalizedAddresses(contacts)), A.map(uniqueMatterOf(tables)), A.getSomes, groupedByMatter);
 });

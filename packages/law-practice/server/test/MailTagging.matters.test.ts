@@ -147,6 +147,11 @@ const correspondents = PracticeKgCorrespondentTables.make({
     contact({ address: "numbered@acme.example.test", contactId: "c-numbered" }),
     contact({ address: "not an address", contactId: "c-broken" }),
     contact({ address: "unlinked@acme.example.test", contactId: "c-unlinked" }),
+    // Spelling traps: the practice flag is filed under the lowercase spelling, and one address owned by two
+    // contacts under two spellings is shared.
+    contact({ address: "Cased@Acme.example.test", contactId: "c-cased" }),
+    contact({ address: "Twin@acme.example.test", contactId: "c-twin-1" }),
+    contact({ address: "'twin@acme.example.test'", contactId: "c-twin-2" }),
   ],
   links: [
     link("c-counsel", "1234.10001"),
@@ -161,9 +166,16 @@ const correspondents = PracticeKgCorrespondentTables.make({
     link("c-split", "1234.20002"),
     link("c-numbered", "1234.00053"),
     link("c-broken", "1234.10001"),
+    link("c-cased", "1234.10001"),
+    link("c-twin-1", "1234.10001"),
+    link("c-twin-2", "1234.10001"),
   ],
-  // A candidate by message count, and a practice address that only filed email marks as one.
-  correspondents: [filed("inferred@acme.example.test", false), filed("relay@practice.example.test", true)],
+  // A candidate by message count, and practice addresses that only filed email marks as such.
+  correspondents: [
+    filed("inferred@acme.example.test", false),
+    filed("relay@practice.example.test", true),
+    filed("cased@acme.example.test", true),
+  ],
 });
 
 type Seeded = {
