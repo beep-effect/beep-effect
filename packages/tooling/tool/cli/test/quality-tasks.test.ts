@@ -118,6 +118,7 @@ import {
   renderCoverageRemediation,
   resolveLaneInputDigestForTesting,
   reviewFixDocgenLocalArgsForTesting,
+  rootEslintCacheKey,
   rootLintPolicyStepsForTesting,
   rootQualityStepsForTesting,
   runBunAudit,
@@ -3832,10 +3833,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "--max-warnings=0",
         "--cache",
         "--cache-location",
-        "node_modules/.cache/eslint-root/.eslintcache",
+        "node_modules/.cache/eslint-root/unkeyed/.eslintcache",
         "--cache-strategy",
         "content",
       ]);
+      expect(rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, true, "abc123")).toContainEqual(
+        expect.objectContaining({
+          label: "lint:jsdoc",
+          args: expect.arrayContaining(["node_modules/.cache/eslint-root/abc123/.eslintcache"]),
+        })
+      );
       expect(policyTurboStep("lint:deprecated-apis").args).toEqual(
         repoCliEntryArgs("lint", "deprecated-apis", "--full")
       );
@@ -8529,5 +8536,34 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         args: ["--concurrency=2"],
       });
     });
+  });
+});
+
+// The root ESLint cache directory is keyed by the ESLint configuration sources, so an edit to
+// an in-repo rule module (which ESLint's own config digest cannot see) starts an empty cache.
+describe("root ESLint cache key", () => {
+  it.layer(FileSystemLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("digests the flat config, tsdoc tags and every policy-pack ESLint source", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped();
+        const rule = path.join(root, "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts");
+        yield* fs.makeDirectory(path.dirname(rule), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "eslint.config.mjs"), "export default []\n");
+        yield* fs.writeFileString(path.join(root, "tsdoc.json"), "{}\n");
+        yield* fs.writeFileString(rule, "const CATEGORY_PATTERN = /@category/\n");
+        const initial = yield* rootEslintCacheKey(root);
+        expect(initial).toMatch(/^[0-9a-f]{16}$/);
+        expect(yield* rootEslintCacheKey(root)).toBe(initial);
+        // A module-level helper edit, invisible to ESLint's serialized config, moves the key.
+        yield* fs.writeFileString(rule, "const CATEGORY_PATTERN = /@categoryX/\n");
+        const edited = yield* rootEslintCacheKey(root);
+        expect(edited).toMatch(/^[0-9a-f]{16}$/);
+        expect(edited).not.toBe(initial);
+        // A repository without the sources falls back to the shared unkeyed directory.
+        expect(yield* rootEslintCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
+      })
+    );
   });
 });
