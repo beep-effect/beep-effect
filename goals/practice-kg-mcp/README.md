@@ -60,7 +60,7 @@ emails and docket register are in the bundle (`2026-10-06-03` on his PC with
 extension 0.3.1; `2026-10-07-01` with extension 0.4.0 adds anchor dominance
 (D-23) and matter correspondents (D-24)). Installs are verified without a
 person by `practice-kg-mcp --self-check`. P11 (2026-10-07) added the mail
-archives: bundle `2026-10-07-03` (`-02` rebuilt with one count per message,
+archives: bundle `2026-10-07-04` (`-02` rebuilt with one count per message,
 D-27) places archive messages on matters by the
 docket reference in their subject lines (D-26), so correspondents cover 169
 of 187 matters instead of 23; it was diffed against `2026-10-07-01` with
@@ -72,11 +72,12 @@ his own questions for AC-6).
 
 ## Latest Evidence
 
-- 2026-10-07: **P11 review fixes** — bundle `2026-10-07-03`: a filed email
+- 2026-10-07: **P11 review fixes** — bundle `2026-10-07-04`: a filed email
   and its archive copy count once, and an archive item without a
   `Message-ID` is one message across export trees (D-27); same 4,524
-  matter-address pairs over 169 matters, 434 rows with a lower, correct
-  count; `verify.ts --compare-to`: nothing lost against `-02` or `-01`.
+  matter-address pairs over 169 matters, 436 rows with a lower, correct
+  count than `-02`; `verify.ts --compare-to`: nothing lost against `-03`,
+  `-02` or `-01`.
 - 2026-10-07: **P11 landed** — bundle `2026-10-07-02`: lane E's message
   index read with `--mail-index`, 16,427 of 238,158 distinct archive messages
   placed on a matter by subject reference; correspondents 605 rows over 23

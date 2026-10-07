@@ -99,7 +99,8 @@ const sentItemKey = mapiKey(
   exchangeLower,
   "11111.23456US",
   exchangeLower,
-  "client@example.com"
+  "client@example.com",
+  "rfc"
 );
 
 const rows = [
@@ -305,16 +306,44 @@ describe("practice KG mail index", () => {
           "Jan 03, 2026 04:05:06.000000000 UTC",
           "rep@example.com",
           "12345US filing receipt",
-          "blind@example.com"
+          "blind@example.com",
+          "rfc"
         ),
         "2026-01-03T04:05:06.000Z",
         ["from:rep@example.com", "cc:blind@example.com"],
       ],
       [
-        mapiKey("Jan 04, 2026 05:06:07.000000000 UTC", "", "11111.23456US"),
+        mapiKey("Jan 04, 2026 05:06:07.000000000 UTC", "", "11111.23456US", "rfc", "to:client@example.com"),
         "2026-01-04T05:06:07.000Z",
         ["to:client@example.com"],
       ],
+    ]);
+  });
+
+  it("keeps two items apart that share a time and subject but differ in their RFC 5322 participants", () => {
+    const sameMoment = (messagePath: string, from: string, to: string) =>
+      row(
+        "extract",
+        messagePath,
+        { cc: [], from, subject: "11111.12345US", to: [to] },
+        { clientSubmitTime: "Jan 05, 2026 06:07:08.000000000 UTC" }
+      );
+    const result = attributePracticeKgMailIndexRows(tables)([
+      sameMoment("artifact:aaaa.export/Inbox/Message00020", "alice@a.test", "x@c.test"),
+      sameMoment("artifact:aaaa.export/Inbox/Message00021", "bob@b.test", "y@c.test"),
+      // The first item again, from the later export: still one message.
+      sameMoment("artifact:bbbb.export/Inbox/Message00099", "Alice <ALICE@a.test>", "x@c.test"),
+    ]);
+    expect([result.counts.rows, result.counts.distinctMessages, result.counts.attributedMessages]).toStrictEqual([
+      3, 2, 2,
+    ]);
+    expect(
+      A.map(result.messages, (message) =>
+        A.map(message.participants, (participant) => `${participant.role}:${participant.address}`)
+      )
+    ).toStrictEqual([
+      ["from:alice@a.test", "to:x@c.test"],
+      ["from:bob@b.test", "to:y@c.test"],
     ]);
   });
 

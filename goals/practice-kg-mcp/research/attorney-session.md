@@ -9,7 +9,7 @@ with counts and his verdicts only; quote no client documents.
 
 1. Confirm the install over SSH with Claude Desktop closed:
    `practice-kg-mcp.exe --self-check --bundle-dir <bundle folder>` prints one
-   line with `"ok":true`, the installed bundle version (`2026-10-07-03` once
+   line with `"ok":true`, the installed bundle version (`2026-10-07-04` once
    the P11 swap has run, `2026-10-07-01` before) and its `nodes` count. Note
    both. Then relaunch Claude Desktop.
 2. Choose the five placeholders with the attorney's own matters, using the

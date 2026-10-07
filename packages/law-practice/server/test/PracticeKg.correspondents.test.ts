@@ -1,3 +1,4 @@
+import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
   buildPracticeKgCorrespondentTables,
   isPracticeKgPracticeAddress,
@@ -12,6 +13,7 @@ import {
   parsePracticeKgCorrespondentAddress,
   readPracticeKgContacts,
   readPracticeKgEmailMessages,
+  withDuckDb,
 } from "@beep/law-practice-server";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -304,6 +306,57 @@ describe("practice KG correspondents", () => {
 
         const missing = yield* Effect.flip(readPracticeKgContacts(path.join(directory, "missing.jsonl")));
         expect(missing.lineNumber).toBeUndefined();
+      })
+    );
+
+    it.effect(
+      "reads the Message-ID of a filed email whatever case its header name is written in",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-mail-headers-" });
+        const databasePath = path.join(directory, "practice.duckdb");
+        const extractRoot = path.join(directory, "extract");
+        yield* fs.makeDirectory(path.join(extractRoot, "metadata"), { recursive: true });
+        // Five filed emails: three spellings of the header name, one unusable value, one message without the header.
+        const metadata: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
+          ["a", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-Id": "<a@example.com>" }],
+          ["b", { "MESSAGE:RAW-HEADER:MESSAGE-ID": [" <b@example.com> "], "Message-From": "pat@example.com" }],
+          ["c", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": "<c@example.com>" }],
+          ["d", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": 7 }],
+          ["e", { "Message-From": "pat@example.com" }],
+        ];
+        yield* Effect.forEach(metadata, ([name, fields]) =>
+          Effect.flatMap(encodeJson(fields), (json) =>
+            fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
+          )
+        );
+        const sourceLines = yield* Effect.forEach(metadata, ([name]) =>
+          encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` })
+        );
+        const sourcesPath = path.join(extractRoot, "sources.jsonl");
+        yield* fs.writeFileString(sourcesPath, `${A.join(sourceLines, "\n")}\n`);
+        yield* Effect.gen(function* () {
+          const db = yield* DuckDb;
+          yield* db.run("CREATE TABLE documents (digest VARCHAR PRIMARY KEY, effective_name VARCHAR NOT NULL)");
+          yield* Effect.forEach(metadata, ([name]) =>
+            db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`])
+          );
+        }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
+
+        const messages = yield* readPracticeKgEmailMessages(
+          PracticeKgEmailMessagesInput.make({
+            databasePath,
+            sourceSpecs: [{ sourcesPath, textGlob: path.join(extractRoot, "text", "*.txt") }],
+          })
+        );
+        expect(A.map(messages, (message) => [message.digest, message.messageId])).toStrictEqual([
+          ["sha256:a", "a@example.com"],
+          ["sha256:b", "b@example.com"],
+          ["sha256:c", "c@example.com"],
+          ["sha256:d", undefined],
+          ["sha256:e", undefined],
+        ]);
       })
     );
 

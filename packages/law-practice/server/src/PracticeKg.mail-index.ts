@@ -313,12 +313,25 @@ const outlookTimeOf = (row: PracticeKgMailIndexRow): O.Option<string> =>
     O.orElse(() => nonEmpty(row.outlook.deliveryTime))
   );
 
+const internetParticipants = (headers: PracticeKgMailIndexInternetHeaders): ReadonlyArray<PracticeKgEmailParticipant> =>
+  A.appendAll(
+    parsePracticeKgHeaderParticipants("from")(headers.from ?? ""),
+    A.appendAll(
+      parsePracticeKgHeaderParticipants("to")(A.join(headers.to, ", ")),
+      parsePracticeKgHeaderParticipants("cc")(A.join(headers.cc, ", "))
+    )
+  );
+
+const rfcParticipantsOf = (row: PracticeKgMailIndexRow): ReadonlyArray<PracticeKgEmailParticipant> =>
+  pipe(O.fromUndefinedOr(row.internet), O.map(internetParticipants), O.getOrElse(A.empty<PracticeKgEmailParticipant>));
+
 const fieldSeparator = "\u0000";
 
 // A message without a Message-ID is its MAPI submit (else delivery) time, sender,
-// subject and recipients: the same item exported twice carries the same values,
-// whatever the export tree and artifact. Only an item with no time at all falls
-// back to its place in one export.
+// subject and recipients, then its RFC 5322 From, To and Cc addresses: the same
+// item exported twice carries the same values, whatever the export tree and
+// artifact, and two items that differ in any participant stay apart. Only an
+// item with no time at all falls back to its place in one export.
 const mapiKeyOf = (row: PracticeKgMailIndexRow): O.Option<string> =>
   O.map(outlookTimeOf(row), (time) =>
     A.join(
@@ -328,6 +341,11 @@ const mapiKeyOf = (row: PracticeKgMailIndexRow): O.Option<string> =>
         subjectOf(row),
         ...A.sort(
           A.getSomes(A.map(row.recipients, (recipient) => O.map(nonEmpty(recipient.emailAddress), Str.toLowerCase))),
+          Order.String
+        ),
+        "rfc",
+        ...A.sort(
+          A.map(rfcParticipantsOf(row), (participant) => `${participant.role}:${participant.address}`),
           Order.String
         ),
       ],
@@ -361,15 +379,6 @@ type ParsedParticipants = {
 };
 
 const hasAddress = Str.includes("@");
-
-const internetParticipants = (headers: PracticeKgMailIndexInternetHeaders): ReadonlyArray<PracticeKgEmailParticipant> =>
-  A.appendAll(
-    parsePracticeKgHeaderParticipants("from")(headers.from ?? ""),
-    A.appendAll(
-      parsePracticeKgHeaderParticipants("to")(A.join(headers.to, ", ")),
-      parsePracticeKgHeaderParticipants("cc")(A.join(headers.cc, ", "))
-    )
-  );
 
 const recipientRole = (kind: string): "cc" | "to" => (kind === "cc" || kind === "bcc" ? "cc" : "to");
 
@@ -451,9 +460,11 @@ const natural = (value: number): number => S.Natural.make(value);
  * **Details**
  *
  * A message is one `Message-ID` (angle brackets removed); without one it is
- * its MAPI submit (else delivery) time, sender, subject and recipients, so an
- * item exported in two trees counts once (the first row wins); an item with
- * neither a `Message-ID` nor a time is its tree and path. The subject
+ * its MAPI submit (else delivery) time, sender, subject and recipients plus
+ * its RFC 5322 From, To and Cc addresses, so an item exported in two trees
+ * counts once (the first row wins) and two items that differ in a participant
+ * stay apart; an item with neither a `Message-ID` nor a time is its tree and
+ * path. The subject
  * (RFC 5322, else the MAPI subject, else the conversation topic) is scanned
  * for docket, application, and patent references and resolved with
  * `matchPracticeKgMatterReferences`; only a subject naming exactly one matter

@@ -1,7 +1,7 @@
-# P11 — correspondents from the mail archives, bundles `2026-10-07-02` and `-03`
+# P11 — correspondents from the mail archives, bundles `2026-10-07-02` to `-04`
 
 Date: 2026-10-07. Decisions: SPEC D-25, D-26, D-27. Counts only; no client data.
-The current bundle is `2026-10-07-03` (last section).
+The current bundle is `2026-10-07-04` (the section on rebuilds).
 
 ## Build
 
@@ -71,30 +71,46 @@ those scripts were read with the available models only.
 ## Attorney's PC
 
 Extension 0.4.0 and store format 4 are unchanged, so the swap is the bundle
-alone. The PC was offline when the bundle was ready (overnight). A watcher
-(`kg-swap-0702`, out of the repo) stages and self-checks the bundle when the PC
-comes online, and switches `bundle_dir` and restarts Claude Desktop only
-between 19:00 and 07:00, leaving `-04` in place if the self-check fails.
+alone. The PC was offline when the first bundle was ready (overnight). A
+watcher (out of the repo) stages the bundle when the PC is online, and switches
+`bundle_dir` and restarts Claude Desktop only between 19:00 and 07:00, after a
+self-check, leaving `2026-10-07-01` in place if the self-check fails.
 
-## Rebuild as `2026-10-07-03` (D-27)
+`2026-10-07-04` is staged on the PC and passes `--self-check` there (ok,
+15,003 nodes, 187 matters, 11 tools), run against the staged folder while
+Claude Desktop kept running on `2026-10-07-01`. The first staged copy failed
+that check: the zip had been written file by file and left out the graph
+store's empty directories, without which it does not open (7 directories on
+the PC against 17). The packaging now writes directory entries, and a zip is
+extracted and self-checked on the workstation before it is sent.
 
-Review of the P11 change found two counting defects, fixed the same day: a
-message the attorney filed that also sits in an archive was tallied twice, and
-an archive item without a `Message-ID` present in both export trees was two
-messages. `2026-10-07-03` is the same build with one identity per message.
+## Rebuilds as `2026-10-07-03` and `2026-10-07-04` (D-27)
 
-| | `2026-10-07-02` | `2026-10-07-03` |
-| --- | --- | --- |
-| Distinct archive messages | 238,158 | 237,475 |
-| Placed on one matter / ambiguous | 16,427 / 728 | 16,370 / 719 |
-| Correspondent rows / matters | 4,524 / 169 | 4,524 / 169 |
-| Sum of message counts over all rows | 70,989 | 67,315 |
+Review of the P11 change found counting defects, fixed the same day in two
+steps. `-03`: a message the attorney filed that also sits in an archive was
+tallied twice, and an archive item without a `Message-ID` present in both
+export trees was two messages. `-04`: the filed mail's `Message-ID` header is
+now found whatever case its name is written in (16 of the 1,886 filed mails
+write `Message-Id`), and the fallback key for an item without a `Message-ID`
+also carries its RFC 5322 addresses, so two items that share a time and
+subject but differ in a participant stay apart (no such pair exists in this
+index; the counts of the pass did not move).
 
-The same matter-address pairs remain; 434 rows on 28 matters carry a lower,
-correct message count. `verify.ts --compare-to`: ok and `lost: false` against
-both `2026-10-07-02` (no difference in the matter tables) and `2026-10-07-01`
-(one docket added). Claims carried (16). `2026-10-07-02` was never installed
-on the PC; the watcher now stages `2026-10-07-03`.
+| | `2026-10-07-02` | `2026-10-07-03` | `2026-10-07-04` |
+| --- | --- | --- | --- |
+| Distinct archive messages | 238,158 | 237,475 | 237,475 |
+| Placed on one matter / ambiguous | 16,427 / 728 | 16,370 / 719 | 16,370 / 719 |
+| Correspondent rows / matters | 4,524 / 169 | 4,524 / 169 | 4,524 / 169 |
+| Sum of message counts over all rows | 70,989 | 67,315 | 67,289 |
+
+The same matter-address pairs remain throughout. Against `-02`, 436 rows on
+28 matters carry a lower, correct message count in `-04`; against `-03`, 10
+rows on 2 matters. `verify.ts --compare-to` on `-04`: ok and `lost: false`
+against `-03` (no difference in the matter tables) and against
+`2026-10-07-01` (one docket added). Claims carried (16). Neither `-02` nor
+`-03` was installed on the PC; the watcher now stages `2026-10-07-04`. A built
+bundle is never rebuilt under its own version, so each correction took a new
+one.
 
 ## Still out
 

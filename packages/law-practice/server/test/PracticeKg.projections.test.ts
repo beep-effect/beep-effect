@@ -1066,7 +1066,7 @@ describe("practice KG projections", () => {
             )
             .pipe(Effect.flatMap(decodeDumpLines));
           expect(A.map(buildLines, (row) => row.line)).toStrictEqual([
-            '{"bundle_version":"2026-10-07-03","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
+            '{"bundle_version":"2026-10-07-04","built_from_runs":"base","corpus_snapshot_at":"2026-01-02T03:04:06.000Z"}',
           ]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
       }),
@@ -1352,7 +1352,7 @@ describe("practice KG projections", () => {
           .readFileString(path.join(bundleOut, "bundle.manifest.json"))
           .pipe(Effect.flatMap(decodeManifestJson));
         expect([manifest.bundleVersion, manifest.schemaVersion.duckdb, manifest.schemaVersion.pglite]).toStrictEqual([
-          "2026-10-07-03",
+          "2026-10-07-04",
           "4",
           "4",
         ]);

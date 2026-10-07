@@ -26,6 +26,7 @@ import { Effect, FileSystem, flow, HashSet, MutableHashMap, Order, Path, pipe } 
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { sqlStringLiteral } from "./internal/Sql.ts";
@@ -476,15 +477,17 @@ class TikaEmailFields extends S.Class<TikaEmailFields>($I`TikaEmailFields`)({
   "Message-From": S.optionalKey(TikaValue),
   "Message-To": S.optionalKey(TikaValue),
   "Message:From-Email": S.optionalKey(TikaValue),
-  "Message:Raw-Header:Message-ID": S.optionalKey(TikaValue),
 }) {}
 
-const isTikaEmailFieldList = S.is(S.NonEmptyArray(TikaEmailFields));
+const TikaRecord = S.Record(S.String, S.Unknown);
+type TikaRecord = typeof TikaRecord.Type;
+
+const isTikaRecordList = S.is(S.NonEmptyArray(TikaRecord));
+const isTikaValue = S.is(TikaValue);
 
 // Tika writes a single object, or with recursive parsing an array whose first object is the container.
-const decodeTikaFields = S.decodeUnknownEffect(
-  S.fromJsonString(S.Union([TikaEmailFields, S.NonEmptyArray(TikaEmailFields)]))
-);
+const decodeTikaRecords = S.decodeUnknownEffect(S.fromJsonString(S.Union([S.NonEmptyArray(TikaRecord), TikaRecord])));
+const decodeTikaEmailFields = S.decodeUnknownEffect(TikaEmailFields);
 
 const asList = (value: typeof TikaValue.Type): ReadonlyArray<string> => (P.isString(value) ? [value] : value);
 
@@ -505,14 +508,25 @@ const senderOf = (fields: TikaEmailFields): ReadonlyArray<PracticeKgEmailPartici
       );
 };
 
-const messageFrom = (digest: string, fields: TikaEmailFields): PracticeKgEmailMessage =>
+const messageIdMetadataKey = "message:raw-header:message-id";
+
+// Tika names a raw header as the message spelled it, and RFC 5322 field names are
+// case-insensitive (`Message-ID`, `Message-Id`, `Message-id`), so the key is matched without regard to case.
+const messageIdOf = (record: TikaRecord): O.Option<string> =>
+  pipe(
+    R.toEntries(record),
+    A.findFirst(([key]) => Str.toLowerCase(key) === messageIdMetadataKey),
+    O.map(([, value]) => value),
+    O.filter(isTikaValue),
+    O.flatMap((value) => O.fromNullishOr(firstValue(value))),
+    O.flatMap(normalizePracticeKgMessageId)
+  );
+
+const messageFrom = (digest: string, fields: TikaEmailFields, messageId: O.Option<string>): PracticeKgEmailMessage =>
   PracticeKgEmailMessage.make({
     createdAt: firstValue(fields["dcterms:created"]),
     digest,
-    ...O.match(
-      O.flatMap(O.fromNullishOr(firstValue(fields["Message:Raw-Header:Message-ID"])), normalizePracticeKgMessageId),
-      { onNone: () => ({}), onSome: (messageId) => ({ messageId }) }
-    ),
+    ...O.match(messageId, { onNone: () => ({}), onSome: (found) => ({ messageId: found }) }),
     participants: [
       ...senderOf(fields),
       ...participantsOf(joined(fields["Message-To"]), "to"),
@@ -549,16 +563,21 @@ WHERE lower(d.effective_name) LIKE '%.eml' OR lower(d.effective_name) LIKE '%.ms
 QUALIFY ROW_NUMBER() OVER (PARTITION BY d.digest ORDER BY s.ordinal, s.operationId) = 1
 ORDER BY d.digest`;
 
-const containerOf = (decoded: TikaEmailFields | A.NonEmptyReadonlyArray<TikaEmailFields>): TikaEmailFields =>
-  isTikaEmailFieldList(decoded) ? A.headNonEmpty(decoded) : decoded;
+const containerOf = (decoded: TikaRecord | A.NonEmptyReadonlyArray<TikaRecord>): TikaRecord =>
+  isTikaRecordList(decoded) ? A.headNonEmpty(decoded) : decoded;
 
 const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: EmailSourceRow) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const metadataPath = path.join(source.metadataDir, `${source.operationId}.json`);
   return yield* fs.readFileString(metadataPath).pipe(
-    Effect.flatMap(decodeTikaFields),
-    Effect.map((decoded) => messageFrom(source.digest, containerOf(decoded))),
+    Effect.flatMap(decodeTikaRecords),
+    Effect.map(containerOf),
+    Effect.flatMap((container) =>
+      Effect.map(decodeTikaEmailFields(container), (fields) =>
+        messageFrom(source.digest, fields, messageIdOf(container))
+      )
+    ),
     Effect.option
   );
 });
@@ -573,7 +592,9 @@ const readMessage = Effect.fn("PracticeKg.readEmailMessage")(function* (source: 
  * Its headers come from the Tika metadata JSON beside the text it was
  * extracted to (`<extract root>/metadata/<operationId>.json`): `Message-From`
  * (with `Message:From-Email` when the name carries no address),
- * `Message-To`, `Message-Cc`, and `dcterms:created`. A document whose
+ * `Message-To`, `Message-Cc`, `dcterms:created`, and the message's
+ * `Message-ID` (`Message:Raw-Header:Message-ID`, the header name matched
+ * without regard to case), which becomes `messageId`. A document whose
  * metadata is missing or unreadable is skipped and counted in a warning.
  * Messages come back ordered by digest.
  *
@@ -756,9 +777,13 @@ const soleContactOf = (contacts: ReadonlyArray<AddressContact>): O.Option<Addres
  *
  * **Details**
  *
- * `matter_correspondents` has one row per matter and address: every email
- * document attributed to a family (recycle stubs excluded) counts once per
- * address, and once per header the address appears in. The contact columns
+ * `matter_correspondents` has one row per matter and address: every message
+ * attributed to a family (recycle stubs excluded) counts once per address,
+ * and once per header the address appears in. A message is its `messageId`
+ * when it has one, else the digest of the copy at hand, so a filed email and
+ * its archive copy, or two filed copies of one message, count once; each
+ * copy is still attributed on its own digest, and copies attributed to
+ * different matters count on each. The contact columns
  * come from the contacts table when exactly one contact owns the address;
  * otherwise the display name is the first name the headers give, in digest
  * order. Every row is `mention-derived`: appearing on a matter's mail is
