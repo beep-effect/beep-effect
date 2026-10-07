@@ -22,10 +22,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
+import type { PracticeKgMatterTables } from "@beep/law-practice-server";
 
 const bundleDir = Flag.Directory("bundle-dir", { mustExist: true });
 const compareTo = Flag.optional(Flag.Directory("compare-to", { mustExist: true }));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const printJson = (value: unknown) => encodeJson(value).pipe(Effect.flatMap(Console.log));
 
 const duckStore = (path: Path.Path, dir: string) =>
   DuckDb.makeNodeLayer(
@@ -36,11 +38,20 @@ const duckStore = (path: Path.Path, dir: string) =>
   );
 
 // The old bundle's DuckDB is read-only and multi-process, so it opens beside the new one.
-const matterTablesAt = (path: Path.Path, dir: string) =>
+// Its failures name the old bundle: the new bundle's own read shares the same message otherwise.
+const comparisonAgainst = (path: Path.Path, dir: string) => (next: PracticeKgMatterTables) =>
   Effect.scoped(
     Layer.build(duckStore(path, dir)).pipe(
       Effect.flatMap((context) => readPracticeKgMatterTables.pipe(Effect.provide(context)))
     )
+  ).pipe(
+    PracticeKgProjectionError.mapError(
+      `Practice KG matter tables of the --compare-to bundle "${dir}" could not be read.`
+    ),
+    Effect.map((base) => ({
+      compareTo: dir,
+      diff: diffPracticeKgMatterTables(PracticeKgMatterTablesComparison.make({ base, next })),
+    }))
   );
 
 const verifyCommand = Command.make(
@@ -55,27 +66,21 @@ const verifyCommand = Command.make(
     const { diff, summary } = yield* Effect.scoped(
       Layer.build(stores).pipe(
         Effect.flatMap((context) =>
-          Effect.all({
-            diff: O.match(flags.compareTo, {
+          Effect.gen(function* () {
+            // The summary is verified and printed before the old bundle is touched,
+            // so a --compare-to failure never hides the new bundle's verification.
+            const summary = yield* verifyPracticeKgBundle;
+            yield* printJson(summary);
+            const diff = yield* O.match(flags.compareTo, {
               onNone: () => Effect.succeedNone,
-              onSome: (dir) =>
-                Effect.map(Effect.all([matterTablesAt(path, dir), readPracticeKgMatterTables]), ([base, next]) =>
-                  O.some({
-                    compareTo: dir,
-                    diff: diffPracticeKgMatterTables(PracticeKgMatterTablesComparison.make({ base, next })),
-                  })
-                ),
-            }),
-            summary: verifyPracticeKgBundle,
+              onSome: (dir) => Effect.asSome(Effect.flatMap(readPracticeKgMatterTables, comparisonAgainst(path, dir))),
+            });
+            return { diff, summary };
           }).pipe(Effect.provide(context))
         )
       )
     );
-    yield* encodeJson(summary).pipe(Effect.flatMap(Console.log));
-    yield* O.match(diff, {
-      onNone: () => Effect.void,
-      onSome: (comparison) => encodeJson(comparison).pipe(Effect.flatMap(Console.log)),
-    });
+    yield* O.match(diff, { onNone: () => Effect.void, onSome: printJson });
     yield* Effect.succeed(summary).pipe(
       Effect.filterOrFail(
         (result) => result.ok,
