@@ -9,7 +9,7 @@
 // subscription can express a query and a projection without translating. It is
 // also what makes the filter-before-decode guarantee expressible — every field
 // here lives on the envelope **frame**, so matching never touches `data`.
-
+import * as P from "effect/Predicate";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -114,20 +114,21 @@ export const matchesFrame: {
   (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string> | undefined): boolean;
   (slice: Slice<JsonlEvent.Registry, string> | undefined): (frame: EnvelopeFrame) => boolean;
 } = dual(2, (frame: EnvelopeFrame, slice: Slice<JsonlEvent.Registry, string> | undefined): boolean => {
-  if (slice === undefined) {
+  if (P.isUndefined(slice)) {
     return true;
   }
-  if (slice.events !== undefined && !A.contains(slice.events, frame.event)) {
+  if (P.isNotUndefined(slice.events) && !A.contains(slice.events, frame.event)) {
     return false;
   }
-  if (slice.scopes !== undefined) {
-    if (frame.scope === undefined || !A.contains(slice.scopes, frame.scope)) {
+  if (P.isNotUndefined(slice.scopes)) {
+    if (P.isUndefined(frame.scope) || !A.contains(slice.scopes, frame.scope)) {
       return false;
     }
   }
   const millis = frame.at.epochMilliseconds;
-  if (slice.from !== undefined && millis < slice.from.epochMilliseconds) {
+  if (
+    P.isNotUndefined(slice.from) && millis < slice.from.epochMilliseconds) {
     return false;
   }
-  return !(slice.to !== undefined && millis >= slice.to.epochMilliseconds);
+  return !(P.isNotUndefined(slice.to) && millis >= slice.to.epochMilliseconds);
 });

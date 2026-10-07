@@ -52,7 +52,7 @@ export type EnvelopeFrame = typeof EnvelopeFrame.Type;
 const input = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) =>
   S.Struct({
     at: S.DateTimeUtcFromString,
-    event: S.Literal(tag),
+    event: S.tag(tag),
     scope: S.optionalKey(S.String),
     data,
   }).annotate(
