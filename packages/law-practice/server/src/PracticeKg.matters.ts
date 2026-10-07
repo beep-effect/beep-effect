@@ -718,3 +718,126 @@ export const readPracticeKgMatterTables: Effect.Effect<PracticeKgMatterTables, P
       matters: A.map(matters, (matter) => PracticeKgMatterRow.make({ ...matter })),
     });
   }).pipe(PracticeKgProjectionError.mapError("Practice KG matter tables could not be read."));
+
+/**
+ * One matter a reference in free text names, and the field it matched.
+ *
+ * **Example** (A hit on a docket key)
+ *
+ * ```ts
+ * import { PracticeKgMatterReferenceHit } from "@beep/law-practice-server"
+ *
+ * const hit = PracticeKgMatterReferenceHit.make({ familyKey: "11111.12345", matchedOn: "docket-key" })
+ * console.log(hit.matchedOn) // "docket-key"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class PracticeKgMatterReferenceHit extends S.Class<PracticeKgMatterReferenceHit>(
+  $I`PracticeKgMatterReferenceHit`
+)(
+  {
+    familyKey: S.NonEmptyString,
+    matchedOn: PracticeKgMatterMatchedOn,
+  },
+  $I.annote("PracticeKgMatterReferenceHit", {
+    description: "A matter named by one reference found in free text, with the matter field it matched.",
+  })
+) {}
+
+const digitsOf = (value: string): string =>
+  Str.toUpperCase(value.replace(whitespacePattern, ""))
+    .replace(usPrefixPattern, "")
+    .replace(kindCodePattern, "")
+    .replace(nonDigitPattern, "");
+
+const familyKeysByValue = (
+  entries: ReadonlyArray<readonly [string, string]>
+): MutableHashMap.MutableHashMap<string, ReadonlyArray<string>> => {
+  const map = MutableHashMap.empty<string, ReadonlyArray<string>>();
+  A.forEach(entries, ([value, familyKey]) => {
+    if (Str.isNonEmpty(value)) {
+      appendTo(map, value, familyKey);
+    }
+  });
+  return map;
+};
+
+const hitsAt = (
+  map: MutableHashMap.MutableHashMap<string, ReadonlyArray<string>>,
+  value: string,
+  matchedOn: PracticeKgMatterMatchedOn
+): ReadonlyArray<PracticeKgMatterReferenceHit> =>
+  A.map(A.dedupe(valuesAt(map, value)), (familyKey) => PracticeKgMatterReferenceHit.make({ familyKey, matchedOn }));
+
+const byHit = Order.mapInput(
+  Order.String,
+  (hit: PracticeKgMatterReferenceHit) => `${hit.familyKey}\u0000${hit.matchedOn}`
+);
+
+/**
+ * Builds a matcher that resolves the docket, application, and patent
+ * references found in free text to the matters of one bundle, in memory.
+ *
+ * **Details**
+ *
+ * This is the free-text subset of the matter lookup, normalised the same way:
+ * a client-keyed docket matches its docket key, else its family key; a bare
+ * docket code matches `matter_dockets.docket`, which may name several matters;
+ * an application or patent number matches the dockets' number lists. A client
+ * number on its own and a bare family number never match, because in a mail
+ * subject they are too weak to place a message. Hits come back sorted and
+ * without duplicates.
+ *
+ * **Example** (Resolve the references of a subject line)
+ *
+ * ```ts
+ * import { matchPracticeKgMatterReferences, PracticeKgMatterTables } from "@beep/law-practice-server"
+ * import { extractPracticeKgReferences } from "@beep/law-practice-use-cases/server"
+ *
+ * const match = matchPracticeKgMatterReferences(PracticeKgMatterTables.make({ dockets: [], matters: [] }))
+ * console.log(match(extractPracticeKgReferences("RE: 11111.12345US office action")).length) // 0
+ * ```
+ *
+ * @param tables - The bundle's matters and dockets.
+ * @returns A function from extracted references to the matters they name.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const matchPracticeKgMatterReferences = (
+  tables: PracticeKgMatterTables
+): ((references: ReadonlyArray<string>) => ReadonlyArray<PracticeKgMatterReferenceHit>) => {
+  const familyKeys = familyKeysByValue(
+    A.map(tables.matters, (matter) => [matter.familyKey, matter.familyKey] as const)
+  );
+  const docketKeys = familyKeysByValue(
+    A.map(tables.dockets, (docket) => [docket.docketKey, docket.familyKey] as const)
+  );
+  const dockets = familyKeysByValue(A.map(tables.dockets, (docket) => [docket.docket, docket.familyKey] as const));
+  const applications = familyKeysByValue(
+    A.flatMap(tables.dockets, (docket) =>
+      A.map(docket.applicationNumbers, (number) => [digitsOf(number), docket.familyKey] as const)
+    )
+  );
+  const patents = familyKeysByValue(
+    A.flatMap(tables.dockets, (docket) =>
+      A.map(docket.patentNumbers, (number) => [digitsOf(number), docket.familyKey] as const)
+    )
+  );
+  const hitsOf = (reference: string): ReadonlyArray<PracticeKgMatterReferenceHit> => {
+    const normalized = normalizeReference(reference);
+    if (Str.isNonEmpty(normalized.familyKey)) {
+      const keyed = hitsAt(docketKeys, normalized.compact, "docket-key");
+      return A.isReadonlyArrayNonEmpty(keyed) ? keyed : hitsAt(familyKeys, normalized.familyKey, "family-key");
+    }
+    if (Str.isNonEmpty(normalized.digits)) {
+      return A.appendAll(
+        hitsAt(applications, normalized.digits, "application"),
+        hitsAt(patents, normalized.digits, "patent")
+      );
+    }
+    return Str.isNonEmpty(normalized.family) ? hitsAt(dockets, normalized.compact, "docket") : A.empty();
+  };
+  return (references) => A.sort(A.dedupe(A.flatMap(references, hitsOf)), byHit);
+};

@@ -60,6 +60,11 @@ export * from "./PracticeKg.families.ts";
  * @since 0.0.0
  */
 export * from "./PracticeKg.host.ts";
+/**
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./PracticeKg.mail-index.ts";
 export * from "./PracticeKg.matters.ts";
 /**
  * @category services

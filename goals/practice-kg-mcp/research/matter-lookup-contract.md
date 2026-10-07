@@ -185,9 +185,11 @@ live in `@beep/law-practice-use-cases/server`
 
 **Evidence ladder.** The attorney's own links for a contact
 (`attorney-answer`, `attorney-pc-folder`, `attorney-docket-sheet`,
-`attorney-filed-email`) outrank everything. Message counts from filed email,
-and the inferred links `org-name-match` and `email-subject-ref`, rank
-candidates for a person and never decide.
+`attorney-filed-email`) outrank everything. Message counts from filed email
+and from archive mail placed by its subject line (D-26, `subject-reference`:
+the subject names exactly one of the bundle's matters), and the inferred
+links `org-name-match` and `email-subject-ref`, rank candidates for a person
+and never decide.
 
 **Resolution.**
 
@@ -291,7 +293,10 @@ contact_addresses(                  -- which contact owns an address
 
 This contract describes store format pglite 4 / duckdb 4, which the build
 writes from bundle version `2026-10-07-01` on; extension `0.4.0` reads it and
-refuses format 3 and older by name. The last format 3 bundle is
+refuses format 3 and older by name. The current bundle is `2026-10-07-02`
+(`<corpus>/staging/practice-kg-bundle-2026-10-07-02`, archive mail in the
+correspondent tables, D-26); `2026-10-07-01` stays on disk beside it. The
+last format 3 bundle is
 `<corpus>/staging/practice-kg-bundle-2026-10-06-03`; `practice-kg-bundle-p9`
 is `2026-10-06-02` (same matters, fewer documents with text, and a wrong
 `run_label` on documents that exist in two runs). The bundle at
@@ -300,8 +305,9 @@ is `2026-10-06-02` (same matters, fewer documents with text, and a wrong
 `--bundle-version <version>`. Rebuild with
 `bun run apps/practice-kg-mcp/src/build.ts --corpus-root <corpus> --bundle-out <dir> --overwrite`,
 adding `--include-run <label>` for each later source run and
-`--docket-register <file>` for the register, `--contacts <file>` and
-`--practice-domain <domain>` for the correspondent tables (see
+`--docket-register <file>` for the register, `--contacts <file>`,
+`--practice-domain <domain>` and `--mail-index <file>` for the correspondent
+tables (see
 `bundle-contract.md` §5).
 Carry claims with `claims.ts --carry-from <old bundle>`, and prove the result
 with `verify.ts --bundle-dir <dir> --compare-to <old bundle>`: it prints the

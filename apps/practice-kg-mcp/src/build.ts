@@ -49,6 +49,12 @@ const contacts = Flag.File("contacts", { mustExist: true }).pipe(
   Flag.withDescription("Contacts table as JSONL, one contact with its emails and client links per line."),
   Flag.optional
 );
+const mailIndex = Flag.File("mail-index", { mustExist: true }).pipe(
+  Flag.withDescription(
+    "Corpus provenance message index as JSONL, one archive message per line; its messages join matter_correspondents by the docket references in their subjects. Repeatable; the first file wins a duplicate."
+  ),
+  Flag.atLeast(0)
+);
 const practiceDomain = Flag.String("practice-domain").pipe(
   Flag.withDescription("One of the practice's own mail domains, so its addresses are marked. Repeatable."),
   Flag.withSchema(S.NonEmptyString),
@@ -68,6 +74,7 @@ const buildCommand = Command.make(
     docketRegister,
     includeRefresh,
     includeRun,
+    mailIndex,
     maxTextBytes,
     overwrite,
     practiceDomain,
@@ -87,6 +94,7 @@ const buildCommand = Command.make(
       corpusRoot: flags.corpusRoot,
       includeRefresh: flags.includeRefresh,
       includeRuns: flags.includeRun,
+      mailIndexPaths: flags.mailIndex,
       overwrite: flags.overwrite,
       practiceDomains: flags.practiceDomain,
       skipEmails: flags.skipEmails,

@@ -50,7 +50,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P8 Handoff + close. P6, P7, P9 and P10 are complete (2026-10-06 to
+P8 Handoff + close. P6, P7, P9, P10 and P11 are complete (2026-10-06 to
 2026-10-07): the graph is keyed by client, every row resolves to provenance
 (AC-2, proved by `verify.ts`), the server needs no network (AC-5, proved under
 enforced isolation), and the bundle exposes a stable matter-lookup contract and
@@ -59,16 +59,23 @@ a correspondent lookup for the docket-intake, email, and Box services
 emails and docket register are in the bundle (`2026-10-06-03` on his PC with
 extension 0.3.1; `2026-10-07-01` with extension 0.4.0 adds anchor dominance
 (D-23) and matter correspondents (D-24)). Installs are verified without a
-person by `practice-kg-mcp --self-check`. Bundle `2026-10-07-01` with
-extension 0.4.0 is on his PC (self-check ok, 2026-10-06). What remains needs
-people: one session with him, scripted in `research/attorney-session.md`
-(in-chat `kg_provenance`, G-1..G-5 verdicts, his own questions for AC-6). P11
-widens correspondents from the mail archives; its rebuild is diffed against
-`2026-10-07-01` with `verify.ts --compare-to` (D-25), which fails on any lost
-matter, docket, or number.
+person by `practice-kg-mcp --self-check`. P11 (2026-10-07) added the mail
+archives: bundle `2026-10-07-02` places archive messages on matters by the
+docket reference in their subject lines (D-26), so correspondents cover 169
+of 187 matters instead of 23; it was diffed against `2026-10-07-01` with
+`verify.ts --compare-to` (D-25) and lost nothing. Extension 0.4.0 reads it
+unchanged; the PC moves from `2026-10-07-01` to it in the next quiet window.
+What remains needs people: one session with him, scripted in
+`research/attorney-session.md` (in-chat `kg_provenance`, G-1..G-5 verdicts,
+his own questions for AC-6).
 
 ## Latest Evidence
 
+- 2026-10-07: **P11 landed** — bundle `2026-10-07-02`: lane E's message
+  index read with `--mail-index`, 16,427 of 238,158 distinct archive messages
+  placed on a matter by subject reference; correspondents 605 rows over 23
+  matters -> 4,524 over 169; `verify.ts --compare-to` against `-04`: ok,
+  nothing lost, one docket added from OCR text (`history/p11/`).
 - 2026-10-07: **P11 prep landed** — `verify.ts --compare-to <old bundle>`
   diffs the matter tables of a rebuilt bundle against the one it replaces and
   fails on any lost matter, docket, or number (D-25); proved on `2026-10-07-01`

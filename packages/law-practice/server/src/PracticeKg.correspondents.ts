@@ -394,6 +394,35 @@ const participantsOf = (
     )
   );
 
+/**
+ * Reads the participants named by one address header value.
+ *
+ * **Details**
+ *
+ * Accepts the header forms the build meets: bare addresses, `Name <address>`
+ * entries, quoted display names, and comma-separated lists of them. Addresses
+ * come back lower-cased and trimmed, a surrounding single quote stripped, and
+ * every participant carries the given role.
+ *
+ * **Example** (Read a To header)
+ *
+ * ```ts
+ * import { parsePracticeKgHeaderParticipants } from "@beep/law-practice-server"
+ *
+ * const participants = parsePracticeKgHeaderParticipants("to")("Pat <Pat@Example.com>, sam@other.test")
+ * console.log(participants.map((participant) => participant.address)) // ["pat@example.com", "sam@other.test"]
+ * ```
+ *
+ * @param role - The role every participant gets.
+ * @returns A parser from one header value, possibly listing several entries, to its participants in order.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const parsePracticeKgHeaderParticipants =
+  (role: PracticeKgEmailParticipantRole) =>
+  (header: string): ReadonlyArray<PracticeKgEmailParticipant> =>
+    participantsOf(header, role);
+
 const TikaValue = S.Union([S.String, S.Array(S.String)]);
 
 class TikaEmailFields extends S.Class<TikaEmailFields>($I`TikaEmailFields`)({

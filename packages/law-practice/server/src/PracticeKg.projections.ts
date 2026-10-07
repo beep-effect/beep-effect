@@ -35,6 +35,7 @@ import {
   resolveAnchors,
 } from "./PracticeKg.families.ts";
 import { buildDuckDb, GraphTextSourceSpec } from "./PracticeKg.fts.ts";
+import { PracticeKgMailIndexInput, readPracticeKgMailIndex } from "./PracticeKg.mail-index.ts";
 import { buildMatterTables, PracticeKgMatterGraph, writeMatterTables } from "./PracticeKg.matters.ts";
 import { readReferenceScans } from "./PracticeKg.references.ts";
 import { practiceKgRegisterClientNames, readPracticeKgDocketRegister } from "./PracticeKg.register.ts";
@@ -946,18 +947,27 @@ export const buildPracticeKgBundleImpl = Effect.fn("PracticeKg.build")(function*
   );
   const scans = yield* readReferenceScans(duckDbPath);
   const graph = projectGraph(catalogRows, enrichmentRows, scans, registerRows);
-  yield* writeMatterTables(duckDbPath)(
-    buildMatterTables(PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows }))
+  const matterTables = buildMatterTables(
+    PracticeKgMatterGraph.make({ edges: graph.edges, nodes: graph.nodes, registerRows })
   );
+  yield* writeMatterTables(duckDbPath)(matterTables);
   const messages = yield* readPracticeKgEmailMessages(
     PracticeKgEmailMessagesInput.make({ databasePath: duckDbPath, sourceSpecs })
+  );
+  // Archive mail joins by the docket references in its subjects (D-26),
+  // resolved against the matter tables just written.
+  const mailIndex = yield* readPracticeKgMailIndex(
+    PracticeKgMailIndexInput.make({ paths: options.mailIndexPaths, tables: matterTables })
+  );
+  yield* Effect.logInfo(
+    `practice-kg build: mail index rows=${mailIndex.counts.rows} distinct=${mailIndex.counts.distinctMessages} attributed=${mailIndex.counts.attributedMessages} ambiguous=${mailIndex.counts.ambiguousMessages} unreferenced=${mailIndex.counts.unreferencedMessages} withoutAddress=${mailIndex.counts.attributedWithoutAddress} exchangeDropped=${mailIndex.counts.exchangeAddressesDropped}`
   );
   yield* writePracticeKgCorrespondentTables(duckDbPath)(
     buildPracticeKgCorrespondentTables(
       PracticeKgCorrespondentTablesInput.make({
-        attributions: graph.attributions,
+        attributions: A.appendAll(graph.attributions, mailIndex.attributions),
         contacts,
-        messages,
+        messages: A.appendAll(messages, mailIndex.messages),
         practiceDomains: options.practiceDomains,
       })
     )
