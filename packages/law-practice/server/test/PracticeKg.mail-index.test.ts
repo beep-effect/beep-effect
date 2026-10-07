@@ -90,6 +90,17 @@ const row = (
   });
 
 const exchangeAddress = "/O=EXCHANGE/OU=FIRST ADMINISTRATIVE GROUP/CN=RECIPIENTS/CN=COUNSEL";
+const exchangeLower = "/o=exchange/ou=first administrative group/cn=recipients/cn=counsel";
+
+// The identity of an item without a Message-ID: MAPI time, sender, subject, sorted recipients.
+const mapiKey = (...parts: ReadonlyArray<string>) => `mail:mapi:${A.join(parts, "\u0000")}`;
+const sentItemKey = mapiKey(
+  "Jan 02, 2026 03:04:05.000000000 UTC",
+  exchangeLower,
+  "11111.23456US",
+  exchangeLower,
+  "client@example.com"
+);
 
 const rows = [
   row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00001", {
@@ -162,6 +173,8 @@ describe("practice KG mail index", () => {
     expect(hits("US 10,000,001 B2")).toStrictEqual([["11111.12345", "patent"]]);
     expect(hits("34567US")).toStrictEqual([["34567", "docket"]]);
     expect(hits("client 11111 and family 12345")).toStrictEqual([]);
+    // Text that is not a reference at all resolves to nothing.
+    expect(match(["not a reference", ""])).toStrictEqual([]);
     expect(hits("12345US and 11111.12345US")).toStrictEqual([
       ["11111.12345", "docket"],
       ["11111.12345", "docket-key"],
@@ -182,10 +195,16 @@ describe("practice KG mail index", () => {
       })
     );
     expect(A.map(result.messages, (message) => message.digest)).toStrictEqual([
-      "mail:<1@example.com>",
+      "mail:1@example.com",
       "mail:extract/artifact:aaaa.export/Top of Outlook data file/Inbox/Message00005",
       "mail:extract/artifact:aaaa.export/Top of Outlook data file/Inbox/Message00006",
-      "mail:extract/artifact:aaaa.export/Top of Outlook data file/Sent Items/Message00003",
+      sentItemKey,
+    ]);
+    expect(A.map(result.messages, (message) => message.messageId)).toStrictEqual([
+      "1@example.com",
+      undefined,
+      undefined,
+      undefined,
     ]);
     expect(
       A.map(result.messages, (message) => [
@@ -211,7 +230,7 @@ describe("practice KG mail index", () => {
         attribution.recycled,
       ])
     ).toStrictEqual([
-      ["mail:<1@example.com>", "11111.12345", "11111", "12345", "subject-reference", false],
+      ["mail:1@example.com", "11111.12345", "11111", "12345", "subject-reference", false],
       [
         "mail:extract/artifact:aaaa.export/Top of Outlook data file/Inbox/Message00005",
         "11111.12345",
@@ -228,13 +247,73 @@ describe("practice KG mail index", () => {
         "subject-reference",
         false,
       ],
+      [sentItemKey, "11111.23456", "11111", "23456", "subject-reference", false],
+    ]);
+  });
+
+  it("counts an item without a Message-ID once across export trees, and reads the rarer header shapes", () => {
+    const filingReceipt = (tree: string, messagePath: string) =>
+      row(
+        tree,
+        messagePath,
+        undefined,
+        {
+          deliveryTime: "Jan 03, 2026 04:05:06.000000000 UTC",
+          sentRepresentingEmailAddress: "Rep@Example.com",
+          subject: "12345US filing receipt",
+        },
+        [{ emailAddress: "Blind@Example.com", kind: "bcc" }]
+      );
+    const result = attributePracticeKgMailIndexRows(tables)([
+      filingReceipt("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00010"),
+      // The same item in the later export: another tree, another artifact, another path.
+      filingReceipt("extract-2026-07-refresh", "artifact:bbbb.export/Inbox/Message00077"),
+      // No subject anywhere: nothing to resolve.
+      row("extract", "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00011", {
+        cc: [],
+        from: "a@b.test",
+        to: [],
+      }),
+      // A time but no sender, and RFC 5322 recipients without a From header.
+      row(
+        "extract",
+        "artifact:aaaa.export/Top of Outlook data file/Inbox/Message00012",
+        { cc: [], subject: "11111.23456US", to: ["Client@Example.com"] },
+        { clientSubmitTime: "Jan 04, 2026 05:06:07.000000000 UTC" }
+      ),
+    ]);
+    expect(result.counts).toStrictEqual(
+      PracticeKgMailIndexCounts.make({
+        ambiguousMessages: 0,
+        attributedMessages: 2,
+        attributedWithoutAddress: 0,
+        distinctMessages: 3,
+        exchangeAddressesDropped: 0,
+        rows: 4,
+        unreferencedMessages: 1,
+      })
+    );
+    expect(
+      A.map(result.messages, (message) => [
+        message.digest,
+        message.createdAt,
+        A.map(message.participants, (participant) => `${participant.role}:${participant.address}`),
+      ])
+    ).toStrictEqual([
       [
-        "mail:extract/artifact:aaaa.export/Top of Outlook data file/Sent Items/Message00003",
-        "11111.23456",
-        "11111",
-        "23456",
-        "subject-reference",
-        false,
+        mapiKey(
+          "Jan 03, 2026 04:05:06.000000000 UTC",
+          "rep@example.com",
+          "12345US filing receipt",
+          "blind@example.com"
+        ),
+        "2026-01-03T04:05:06.000Z",
+        ["from:rep@example.com", "cc:blind@example.com"],
+      ],
+      [
+        mapiKey("Jan 04, 2026 05:06:07.000000000 UTC", "", "11111.23456US"),
+        "2026-01-04T05:06:07.000Z",
+        ["to:client@example.com"],
       ],
     ]);
   });
@@ -290,7 +369,7 @@ describe("practice KG mail index", () => {
         expect([result.counts.rows, result.counts.distinctMessages, result.counts.attributedMessages]).toStrictEqual([
           2, 1, 1,
         ]);
-        expect(A.map(result.messages, (message) => message.digest)).toStrictEqual(["mail:<1@example.com>"]);
+        expect(A.map(result.messages, (message) => message.digest)).toStrictEqual(["mail:1@example.com"]);
 
         yield* fs.writeFileString(first, `${fullLine}\n{"tree":"extract"}\n`);
         const bad = yield* Effect.flip(

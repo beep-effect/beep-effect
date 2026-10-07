@@ -755,12 +755,9 @@ const digitsOf = (value: string): string =>
 const familyKeysByValue = (
   entries: ReadonlyArray<readonly [string, string]>
 ): MutableHashMap.MutableHashMap<string, ReadonlyArray<string>> => {
+  // An empty value (a number with no digits) is stored and never read: every lookup key is non-empty.
   const map = MutableHashMap.empty<string, ReadonlyArray<string>>();
-  A.forEach(entries, ([value, familyKey]) => {
-    if (Str.isNonEmpty(value)) {
-      appendTo(map, value, familyKey);
-    }
-  });
+  A.forEach(entries, ([value, familyKey]) => appendTo(map, value, familyKey));
   return map;
 };
 

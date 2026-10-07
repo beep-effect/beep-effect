@@ -111,6 +111,13 @@ export class PracticeKgEmailParticipant extends S.Class<PracticeKgEmailParticipa
  * console.log(message.participants.length) // 0
  * ```
  *
+ * **Details**
+ *
+ * `digest` ties the message to its attribution. `messageId` is the RFC 5322
+ * `Message-ID` when the source carried one: two copies of one message (a file
+ * the attorney saved and the same message in a mail archive) have different
+ * digests and the same `messageId`, and are counted once per matter.
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -118,10 +125,48 @@ export class PracticeKgEmailMessage extends S.Class<PracticeKgEmailMessage>($I`P
   {
     createdAt: S.NullOr(S.String),
     digest: S.NonEmptyString,
+    messageId: S.optionalKey(S.NonEmptyString),
     participants: S.Array(PracticeKgEmailParticipant),
   },
-  $I.annote("PracticeKgEmailMessage", { description: "Digest, creation time, and participants of one email." })
+  $I.annote("PracticeKgEmailMessage", {
+    description: "Digest, creation time, participants, and, when known, the Message-ID of one email.",
+  })
 ) {}
+
+const messageIdBracketsPattern = /^<|>$/gu;
+
+/**
+ * Normalises an RFC 5322 `Message-ID` so copies of one message compare equal.
+ *
+ * **Details**
+ *
+ * Surrounding whitespace and the angle brackets are removed; the rest is kept
+ * as written, because the left part of a `Message-ID` is case-sensitive. A
+ * value that is then empty is none.
+ *
+ * **Example** (Normalise a bracketed id)
+ *
+ * ```ts
+ * import { normalizePracticeKgMessageId } from "@beep/law-practice-server"
+ *
+ * console.log(normalizePracticeKgMessageId(" <1@example.com> ")) // Option.some("1@example.com")
+ * ```
+ *
+ * @param raw - The header value as a source wrote it.
+ * @returns The normalised id, when the value holds one.
+ * @category parsers
+ * @since 0.0.0
+ */
+export const normalizePracticeKgMessageId = (raw: string): O.Option<string> =>
+  pipe(Str.trim(raw), Str.replace(messageIdBracketsPattern, ""), Str.trim, O.liftPredicate(Str.isNonEmpty));
+
+// One message is its Message-ID when it has one, else the digest of the copy at hand.
+const identityOf = (message: PracticeKgEmailMessage): string =>
+  pipe(
+    O.fromUndefinedOr(message.messageId),
+    O.flatMap(normalizePracticeKgMessageId),
+    O.match({ onNone: () => message.digest, onSome: (messageId) => `mail:${messageId}` })
+  );
 
 /**
  * One row of the bundle's `matter_correspondents` table.
@@ -431,6 +476,7 @@ class TikaEmailFields extends S.Class<TikaEmailFields>($I`TikaEmailFields`)({
   "Message-From": S.optionalKey(TikaValue),
   "Message-To": S.optionalKey(TikaValue),
   "Message:From-Email": S.optionalKey(TikaValue),
+  "Message:Raw-Header:Message-ID": S.optionalKey(TikaValue),
 }) {}
 
 const isTikaEmailFieldList = S.is(S.NonEmptyArray(TikaEmailFields));
@@ -463,6 +509,10 @@ const messageFrom = (digest: string, fields: TikaEmailFields): PracticeKgEmailMe
   PracticeKgEmailMessage.make({
     createdAt: firstValue(fields["dcterms:created"]),
     digest,
+    ...O.match(
+      O.flatMap(O.fromNullishOr(firstValue(fields["Message:Raw-Header:Message-ID"])), normalizePracticeKgMessageId),
+      { onNone: () => ({}), onSome: (messageId) => ({ messageId }) }
+    ),
     participants: [
       ...senderOf(fields),
       ...participantsOf(joined(fields["Message-To"]), "to"),
@@ -610,14 +660,14 @@ const latest = extremeOf((values) => A.max(values, Order.String));
 const tallied = (tally: Tally, message: PracticeKgEmailMessage, participant: PracticeKgEmailParticipant): Tally => ({
   ...tally,
   ...PracticeKgEmailParticipantRole.$match(participant.role, {
-    cc: () => ({ cc: HashSet.add(tally.cc, message.digest) }),
-    from: () => ({ from: HashSet.add(tally.from, message.digest) }),
-    to: () => ({ to: HashSet.add(tally.to, message.digest) }),
+    cc: () => ({ cc: HashSet.add(tally.cc, identityOf(message)) }),
+    from: () => ({ from: HashSet.add(tally.from, identityOf(message)) }),
+    to: () => ({ to: HashSet.add(tally.to, identityOf(message)) }),
   }),
   firstAt: earliest(tally.firstAt, message.createdAt),
   headerName: O.orElse(tally.headerName, () => O.fromNullishOr(participant.name)),
   lastAt: latest(tally.lastAt, message.createdAt),
-  messages: HashSet.add(tally.messages, message.digest),
+  messages: HashSet.add(tally.messages, identityOf(message)),
 });
 
 const tallyKey = (familyKey: string, address: string): string => `${familyKey}\u0000${address}`;

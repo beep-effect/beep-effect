@@ -1,6 +1,7 @@
-# P11 — correspondents from the mail archives, bundle `2026-10-07-02`
+# P11 — correspondents from the mail archives, bundles `2026-10-07-02` and `-03`
 
-Date: 2026-10-07. Decisions: SPEC D-25, D-26. Counts only; no client data.
+Date: 2026-10-07. Decisions: SPEC D-25, D-26, D-27. Counts only; no client data.
+The current bundle is `2026-10-07-03` (last section).
 
 ## Build
 
@@ -74,6 +75,26 @@ alone. The PC was offline when the bundle was ready (overnight). A watcher
 (`kg-swap-0702`, out of the repo) stages and self-checks the bundle when the PC
 comes online, and switches `bundle_dir` and restarts Claude Desktop only
 between 19:00 and 07:00, leaving `-04` in place if the self-check fails.
+
+## Rebuild as `2026-10-07-03` (D-27)
+
+Review of the P11 change found two counting defects, fixed the same day: a
+message the attorney filed that also sits in an archive was tallied twice, and
+an archive item without a `Message-ID` present in both export trees was two
+messages. `2026-10-07-03` is the same build with one identity per message.
+
+| | `2026-10-07-02` | `2026-10-07-03` |
+| --- | --- | --- |
+| Distinct archive messages | 238,158 | 237,475 |
+| Placed on one matter / ambiguous | 16,427 / 728 | 16,370 / 719 |
+| Correspondent rows / matters | 4,524 / 169 | 4,524 / 169 |
+| Sum of message counts over all rows | 70,989 | 67,315 |
+
+The same matter-address pairs remain; 434 rows on 28 matters carry a lower,
+correct message count. `verify.ts --compare-to`: ok and `lost: false` against
+both `2026-10-07-02` (no difference in the matter tables) and `2026-10-07-01`
+(one docket added). Claims carried (16). `2026-10-07-02` was never installed
+on the PC; the watcher now stages `2026-10-07-03`.
 
 ## Still out
 

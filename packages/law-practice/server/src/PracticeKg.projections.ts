@@ -68,7 +68,7 @@ import type {
 
 const $I = $LawPracticeServerId.create("PracticeKg.projections");
 const graphIdentity = $BeepId.create("practice-kg");
-const graphBundleVersion = "2026-10-07-01";
+const graphBundleVersion = "2026-10-07-03";
 const runListSeparator = " | ";
 const graphReadme = `Practice Knowledge Graph Bundle
 

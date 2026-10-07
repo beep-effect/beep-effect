@@ -1,6 +1,7 @@
 import {
   buildPracticeKgCorrespondentTables,
   isPracticeKgPracticeAddress,
+  normalizePracticeKgMessageId,
   PracticeKgContact,
   PracticeKgContactsError,
   PracticeKgCorrespondentTablesInput,
@@ -15,9 +16,10 @@ import {
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertTrue } from "@effect/vitest/utils";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -135,6 +137,47 @@ describe("practice KG correspondents", () => {
       ["shared@example.com", "c_aaaaaaaaaaaa", true],
       ["shared@example.com", "c_bbbbbbbbbbbb", false],
     ]);
+  });
+
+  it("counts a filed message and its archive copy once, by Message-ID", () => {
+    const filed = PracticeKgEmailMessage.make({
+      createdAt: "2026-02-01T10:00:00Z",
+      digest: "sha256:f1",
+      messageId: "1@example.com",
+      participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
+    });
+    // The archive copy of the same message, and one more message that has no Message-ID.
+    const archived = PracticeKgEmailMessage.make({
+      createdAt: "2026-02-01T10:00:00.000Z",
+      digest: "mail:1@example.com",
+      messageId: " <1@example.com> ",
+      participants: [participant("pat@example.com", "from"), participant("sam@other.test", "to")],
+    });
+    const other = PracticeKgEmailMessage.make({
+      createdAt: null,
+      digest: "sha256:f2",
+      participants: [participant("pat@example.com", "to")],
+    });
+    const tables = buildPracticeKgCorrespondentTables(
+      PracticeKgCorrespondentTablesInput.make({
+        attributions: [
+          attribution("sha256:f1", "11111.20001"),
+          attribution("mail:1@example.com", "11111.20001"),
+          attribution("sha256:f2", "11111.20001"),
+        ],
+        contacts: [],
+        messages: [filed, archived, other],
+        practiceDomains: [],
+      })
+    );
+    expect(
+      A.map(tables.correspondents, (row) => [row.address, row.messageCount, row.fromCount, row.toCount])
+    ).toStrictEqual([
+      ["pat@example.com", 2, 1, 1],
+      ["sam@other.test", 1, 0, 1],
+    ]);
+    expect(O.getOrNull(normalizePracticeKgMessageId(" <1@example.com> "))).toBe("1@example.com");
+    assertNone(normalizePracticeKgMessageId(" <> "));
   });
 
   it("treats one contact listing an address twice as one owner, a role mailbox if either listing says so", () => {
