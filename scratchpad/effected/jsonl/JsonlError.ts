@@ -38,6 +38,9 @@ const quote = (value: string): string => Result.getOrThrow(encodeString(value));
  * and expected types — instead of flattening it to a string at the boundary.
  */
 const SchemaErrorFromSelf = S.declare(S.isSchemaError).pipe(
+  // An issue tree has no structural equality; two failures are the same
+  // failure only when they are the same object, so equivalence is identity.
+  S.overrideToEquivalence(() => (self, that) => self === that),
   $I.annoteSchema("SchemaErrorFromSelf", {
     description: "`S.SchemaError` as a schema of itself.",
     documentation:

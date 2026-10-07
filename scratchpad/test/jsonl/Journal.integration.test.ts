@@ -21,7 +21,7 @@ const temporary = Effect.gen(function* () {
   const directory = yield* fs.makeTempDirectoryScoped();
   return { fs, path: directory + "/journal.jsonl" };
 });
-it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
+it.layer(NodeFileSystem.layer, { excludeTestServices: true, timeout: "10 seconds" })((it) => {
   it.effect("real concurrent writes remain complete and decode to exactly the written rounds", () =>
     Effect.gen(function* () {
       const { fs, path } = yield* temporary;
@@ -96,7 +96,7 @@ it.layer(NodeFileSystem.layer, { excludeTestServices: true })((it) => {
           A.map(yield* Fiber.join(observing), (row) => row.data),
           [{ round: 1, label: "writer" }]
         );
-      }).pipe(Effect.scoped, Effect.timeout(Duration.seconds(10))),
+      }).pipe(Effect.timeout(Duration.seconds(10))),
     15000
   );
 });

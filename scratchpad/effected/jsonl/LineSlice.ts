@@ -23,7 +23,6 @@ const $I = $ScratchpadId.create("effected/jsonl/LineSlice");
  * ```ts import.meta.vitest name="Validate byte accounting"
  * import { ByteCount } from "@beep/scratchpad/effected/jsonl/LineSlice";
  * import * as S from "effect/Schema";
-import { dual } from "effect/Function";
  * S.is(ByteCount)(0) // => true
  * S.is(ByteCount)(1.5) // => false
  * ```
@@ -149,7 +148,7 @@ export class LineSlice extends S.Class<LineSlice>($I`LineSlice`)(
    * rebased.text // => "42"
    * ```
    * @param offset - Additive UTF-8 byte shift from the containing window's origin.
-   * @category transformations
+   * @category combinators
    * @since 0.0.0
    */
   static readonly rebase: {

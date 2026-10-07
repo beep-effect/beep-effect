@@ -342,7 +342,7 @@ it.effect("a partial failed write leaves a recoverable tail that refuses later l
                   fail = false;
                   yield* handle.writeAll(bytes.subarray(0, 20));
                   // A real missing-resource failure supplies the injected platform error.
-                  yield* Effect.scoped(fs.open("/journal/missing", { flag: "r" }));
+                  yield* fs.readFile("/journal/missing");
                 }
                 yield* handle.writeAll(bytes);
               }),
@@ -591,12 +591,7 @@ it.effect("an unfinished multibyte code point is held until its original writer 
     const reader = yield* journal
       .changes({ events: ["noted"], cursor: first.length })
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
-    yield* Effect.scoped(
-      Effect.gen(function* () {
-        const handle = yield* fs.open(path, { flag: "a" });
-        yield* handle.writeAll(second.subarray(cut));
-      })
-    );
+    yield* fs.writeFile(path, second.subarray(cut), { flag: "a" });
     const completed = yield* Fiber.join(reader);
     assert.deepStrictEqual(
       A.map(completed, (row) => row.data),

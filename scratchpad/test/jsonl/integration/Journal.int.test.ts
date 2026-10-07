@@ -140,12 +140,9 @@ describe("Journal integration", () => {
         event: "started",
         data: { round: 2, phase: "theirs" },
       })}\n`;
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* fs.open(file, { flag: "a" });
-          yield* handle.writeAll(new TextEncoder().encode(foreign));
-        })
-      );
+      // Port note (EV004): `writeFile` with flag "a" is that one O_APPEND open,
+      // complete write and close, with no hand-held handle scope.
+      yield* fs.writeFile(file, new TextEncoder().encode(foreign), { flag: "a" });
 
       const third = yield* journal.append("started", { round: 3, phase: "ours" });
 
@@ -167,7 +164,7 @@ describe("Journal integration", () => {
         assert.strictEqual(all[index]?.line.end, all[index + 1]?.line.offset, "no gap and no overlap");
       }
       yield* Scope.close(scope, Exit.void);
-    }).pipe(Effect.scoped, provideLayer(platform))
+    }).pipe(provideLayer(platform))
   );
 
   it.effect("latest survives a process-style reopen — a second layer reads the first's writes", () =>
@@ -195,7 +192,7 @@ describe("Journal integration", () => {
       const envelope = O.getOrThrow(seen);
       assert.strictEqual(envelope.event, "started");
       assert.deepStrictEqual(envelope.data, { round: 11, phase: "written-by-first" });
-    }).pipe(Effect.scoped, provideLayer(platform))
+    }).pipe(provideLayer(platform))
   );
 
   it.effect("a real BOM'd journal reads cleanly with post-BOM offsets", () =>
@@ -220,7 +217,7 @@ describe("Journal integration", () => {
       const envelope = O.getOrThrow(seen);
       assert.strictEqual(envelope.line.offset, 0, "offsets are post-BOM relative");
       assert.deepStrictEqual(envelope.data, { round: 1, phase: "p" });
-    }).pipe(Effect.scoped, provideLayer(platform))
+    }).pipe(provideLayer(platform))
   );
 
   // THE FLAGSHIP — acceptance criterion 3.
@@ -233,6 +230,7 @@ describe("Journal integration", () => {
   // At vitest's 5s default the guard below is unreachable — the runner kills
   // the test first, and the careful "fails rather than hangs" wiring never
   // runs.
+  // it.live: Effect.timeout must fire on the live clock while a real watcher event is awaited.
   it.live(
     "TWO journal layers over ONE file observe each other's appends",
     () =>
@@ -268,7 +266,7 @@ describe("Journal integration", () => {
 
         yield* Scope.close(readerScope, Exit.void);
         yield* Scope.close(writerScope, Exit.void);
-      }).pipe(Effect.scoped, provideLayer(platform), Effect.timeout(Duration.seconds(20))),
+      }).pipe(provideLayer(platform), Effect.timeout(Duration.seconds(20))),
     30_000
   );
 });

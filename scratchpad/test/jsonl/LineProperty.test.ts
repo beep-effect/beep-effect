@@ -1,5 +1,6 @@
 // Restored from upstream jsonl/__test__/LineProperty.test.ts (MIT).
 import { assert, describe, it } from "@effect/vitest";
+import { assertDefined, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Arbitrary from "effect/Arbitrary";
 import * as O from "effect/Option";
@@ -176,13 +177,10 @@ describe("Line properties", () => {
       const successes = Line.parseAll(text).filter(Result.isSuccess);
       const last = Line.lastValid(text);
       if (successes.length === 0) {
-        assert.isTrue(O.isNone(last));
+        assertNone(last);
         return;
       }
-      assert.isTrue(O.isSome(last));
-      if (O.isSome(last)) {
-        assert.strictEqual(last.value.line.offset, successes.at(-1)?.success.line.offset);
-      }
+      assertSome(O.map(last, (row) => row.line.offset), successes.at(-1)?.success.line.offset);
     })
   );
 
@@ -194,11 +192,7 @@ describe("Line properties", () => {
         // A torn prefix is superseded by the next complete append, exactly as
         // the dogfood journal's correction-by-append rule requires.
         const source = `${prefix}${prefix === "" || prefix.endsWith("\n") ? "" : "\n"}${line}\n`;
-        const last = Line.lastValid(source);
-        assert.isTrue(O.isSome(last));
-        if (O.isSome(last)) {
-          assert.deepStrictEqual(last.value.value, parseJson(line));
-        }
+        assertSome(O.map(Line.lastValid(source), (row) => row.value), parseJson(line));
       })
   );
 
@@ -219,12 +213,9 @@ describe("Line properties", () => {
         const tail = payloads.at(-1) ?? "{}";
         const keep = 1 + (cut % (tail.length - 1));
         const torn = `${head}${tail.slice(0, keep)}`;
-        const last = Line.lastValid(torn);
         const expected = payloads.at(-2);
-        assert.isTrue(O.isSome(last));
-        if (O.isSome(last) && expected !== undefined) {
-          assert.deepStrictEqual(last.value.value, parseJson(expected));
-        }
+        assertDefined(expected);
+        assertSome(O.map(Line.lastValid(torn), (row) => row.value), parseJson(expected));
       })
   );
 
