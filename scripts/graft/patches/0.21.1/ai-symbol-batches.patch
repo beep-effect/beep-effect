@@ -1,0 +1,59 @@
+--- a/ai/crux.js
++++ b/ai/crux.js
+@@ -56,7 +56,27 @@
+ };
+ /** Cap the file text sent per request so one huge file can't blow the context. */
+ const MAX_CODE_CHARS = 18_000;
+-function numberLines(source) {
++function numberLines(source, nodes) {
++    // A batch near the end of a large file needs that source, not its first 18 KB.
++    if (source.length > MAX_CODE_CHARS && nodes.length > 0) {
++        const lines = source.split("\n");
++        const targets = nodes.filter((node) => node.kind !== "file");
++        const selected = new Map();
++        const excerpts = targets.length > 0 ? targets : nodes;
++        const budget = Math.floor(MAX_CODE_CHARS / excerpts.length);
++        for (const node of excerpts) {
++            let remaining = budget;
++            for (let i = Math.max(0, node.startLine - 1); i < Math.min(lines.length, node.endLine); i++) {
++                const line = lines[i];
++                if (remaining <= 0)
++                    break;
++                selected.set(i + 1, line.slice(0, remaining));
++                remaining -= line.length + 1;
++            }
++        }
++        return [...selected].sort(([a], [b]) => a - b)
++            .map(([line, text]) => `${line}\t${text}`).join("\n") + "\n… (target excerpts; omitted lines are not shown)";
++    }
+     const clipped = source.length > MAX_CODE_CHARS ? `${source.slice(0, MAX_CODE_CHARS)}\n… (truncated)` : source;
+     return clipped
+         .split("\n")
+@@ -69,7 +89,7 @@
+         (n.signature ? ` | ${n.signature}` : ""))
+         .join("\n");
+     const n = input.nodes.length;
+-    return `FILE: ${input.path}\n\n${numberLines(input.source)}\n\nTARGETS (${n} — return all ${n}, one entry per id):\n${targets}`;
++    return `FILE: ${input.path}\n\n${numberLines(input.source, input.nodes)}\n\nTARGETS (${n} — return all ${n}, one entry per id):\n${targets}`;
+ }
+ /** Normalize the tool's parsed argument object into a {@link NodeCrux} list. */
+ function parseResults(obj) {
+@@ -116,6 +136,18 @@
+         this.model = model;
+     }
+     async describeFile(input) {
++        // Dense generated/API files cannot return hundreds of entries in 8192 tokens.
++        // Bound the output per call without changing the model or losing cache identity.
++        const results = [];
++        let miss = null;
++        for (let start = 0; start < input.nodes.length; start += 20) {
++            results.push(...await this.describeBatch({ ...input, nodes: input.nodes.slice(start, start + 20) }));
++            miss ??= this.lastMiss;
++        }
++        this.lastMiss = miss;
++        return results;
++    }
++    async describeBatch(input) {
+         this.lastMiss = null;
+         if (input.nodes.length === 0)
+             return [];
