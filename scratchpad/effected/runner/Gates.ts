@@ -23,6 +23,7 @@ import { type ExportEntry, exportKindCovers, type ModuleName, type AuditTarget }
 import { foreignSpecifierLines, readExportFacets, scanUnsafeAssertions, type UnsafeAssertion } from "./Exports.ts";
 import { isModuleTarget, labPaths, type RunnerConfig, upstreamPaths } from "./Paths.ts";
 import { captureExit, heavy, runInherited } from "./Process.ts";
+import { jsdocLawFindings } from "./JsdocLaw.ts";
 
 const $I = $ScratchpadId.create("effected/runner/Gates");
 
@@ -136,7 +137,7 @@ const describe = (entry: ExportEntry): string => `${entry.entry} ${entry.name} (
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const parity = Effect.fn("Gates.parity")(function* (config: RunnerConfig, module: ModuleName, strict: boolean) {
@@ -281,7 +282,7 @@ const canary = Effect.fn("Gates.canary")(function* (config: RunnerConfig, target
  * console.log(Effect.isEffect(check(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
  * ```
  *
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const check = Effect.fn("Gates.check")(function* (config: RunnerConfig, target: AuditTarget) {
@@ -449,7 +450,7 @@ const mirrorForImports = Effect.fn("Gates.mirrorForImports")(function* (
  * console.log(Effect.isEffect(lint(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
  * ```
  *
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, target: AuditTarget) {
@@ -504,7 +505,7 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
  * console.log(Effect.isEffect(test(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc", false))) // true
  * ```
  *
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const test = Effect.fn("Gates.test")(function* (config: RunnerConfig, target: AuditTarget, coverage: boolean) {
@@ -605,6 +606,24 @@ const docgenCanary = Effect.fn("Gates.docgenCanary")(function* (config: RunnerCo
 
 const DOCTEST_FILES = /doctest: (\d+) file\(s\)/;
 
+const jsdocLaw = Effect.fn("Gates.jsdocLaw")(function* (config: RunnerConfig, target: AuditTarget) {
+  const path = yield* Path.Path;
+  const lab = labPaths(target);
+  const sources = [...(yield* listTsFiles(config.repoRoot, lab.sourceDir)), ...lab.extraSources];
+  const entries = isModuleTarget(target)
+    ? A.map(yield* upstreamEntries(config.upstreamRoot, target), ([, srcRelative]) => `${lab.sourceDir}/${srcRelative}`)
+    : [];
+  const findings = jsdocLawFindings({
+    files: A.map(sources, (file) => [path.join(config.repoRoot, file), file] as const),
+    entries,
+  });
+  if (A.isReadonlyArrayNonEmpty(findings)) {
+    yield* verdict(target, { gate: "docgen", exitCode: 1 });
+    return yield* GateFailed.make({ target, gate: "docgen", exitCode: 1, problems: findings });
+  }
+  yield* Console.log(`[effected] ${target} docgen: JSDoc law clean over ${sources.length} file(s)`);
+});
+
 /**
  * The docgen gate: proves example typechecking is live with the canary, runs
  * docgen with every enforcement flag on, then the repo doctest verifier.
@@ -626,11 +645,12 @@ const DOCTEST_FILES = /doctest: (\d+) file\(s\)/;
  * console.log(Effect.isEffect(docgen(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
  * ```
  *
- * @category gates
+ * @category validation
  * @since 0.0.0
  */
 export const docgen = Effect.fn("Gates.docgen")(function* (config: RunnerConfig, target: AuditTarget) {
   yield* docgenCanary(config, target);
+  yield* jsdocLaw(config, target);
   const configFile = `docgen.${target}.json`;
   yield* writeDocgenConfig(config, { srcDir: labPaths(target).docgenSrcDir, configFile });
   const generated = yield* runDocgen(config, configFile);

@@ -38,6 +38,7 @@ import { heavy, renderLaunch } from "../../effected/runner/Process.ts";
 import { LAW_SURFACES, outOfScopeChanges, reviewBrief, roundDir, seatLaunches } from "../../effected/runner/Review.ts";
 import { AppendField } from "../../effected/runner/LedgerStore.ts";
 import { rewriteRootImports } from "../../effected/runner/Codemod.ts";
+import { blockFindings } from "../../effected/runner/JsdocLaw.ts";
 import { Project } from "ts-morph";
 
 const emptyLedger = (rows: ReadonlyArray<LedgerRow>): Ledger =>
@@ -354,5 +355,52 @@ describe("root import codemod", () => {
     const { result, text } = rewrite('import * as S from "effect/Schema";\nexport const s = S.String;\n');
     assert.strictEqual(result.rewritten, 0);
     assert.include(text, 'import * as S from "effect/Schema";');
+  });
+});
+
+describe("jsdoc law", () => {
+  const block = (...lines: ReadonlyArray<string>) => ["/**", ...lines.map((line) => ` * ${line}`), " */"].join("\n");
+  it("accepts a canonical block", () => {
+    const text = block("Lead.", "", "**Details**", "", "More.", "", "**Example** (Use it)", "", "```ts", "x", "```", "", "@see {@link X} for the schema.", "@category utilities", "@since 0.0.0");
+    assert.deepStrictEqual(blockFindings(text), []);
+  });
+  it("flags legacy carriers, bare see, bad category and since, hyphens and braces", () => {
+    const text = block("Lead.", "", "@remarks old", "@example", "@param {string} x - the x", "@returns - y", "@see {@link X}", "@category stuff", "@since 1.0.0");
+    const rules = A.map(blockFindings(text), (finding) => finding.split(":")[0]);
+    for (const rule of ["legacy-tag", "tag-type-braces", "tag-hyphen", "see-purpose", "category", "since"]) {
+      assert.include(rules, rule);
+    }
+  });
+  it("flags untitled, duplicate-titled, fenceless and loose examples, and section order", () => {
+    const text = block(
+      "Lead.",
+      "",
+      "```ts",
+      "loose",
+      "```",
+      "",
+      "**Example**",
+      "",
+      "**Example** (Same)",
+      "",
+      "```ts",
+      "a",
+      "```",
+      "",
+      "**Example** (Same)",
+      "",
+      "```ts",
+      "b",
+      "```",
+      "",
+      "**Details**",
+      "",
+      "late",
+      "@since 0.0.0"
+    );
+    const rules = A.map(blockFindings(text), (finding) => finding.split(":")[0]);
+    for (const rule of ["loose-fence", "example-title", "example-fences", "section-order"]) {
+      assert.include(rules, rule);
+    }
   });
 });

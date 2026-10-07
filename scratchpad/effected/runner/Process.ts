@@ -56,7 +56,7 @@ export const renderLaunch = (launch: Launch): string => A.join([launch.command, 
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const runInherited = Effect.fn("Runner.runInherited")(function* (launch: Launch) {
@@ -89,7 +89,7 @@ export const runInherited = Effect.fn("Runner.runInherited")(function* (launch: 
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const capture = Effect.fn("Runner.capture")(function* (launch: Launch) {
@@ -127,7 +127,7 @@ export const capture = Effect.fn("Runner.capture")(function* (launch: Launch) {
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category execution
+ * @category processes
  * @since 0.0.0
  */
 export const captureExit = Effect.fn("Runner.captureExit")(function* (launch: Launch) {
