@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,18 +31,22 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 auditor run 4 (W7) — complete 2026-10-06: run 4 ratified eight flagged accepts (`rat-071..078`) with
-the gate PASSED at the pin before and after the scribe (#1490), and the lab's CQ-009 lift reports a typed
-verdict (the same-checkout arm holds with 0 pairs; the legacy-origin-drain arm is unobservable in the
-journal) under P3 close Rulings 33–35. P0–P2 complete. P4, the KPI reading and verdict (W8–W9), opened
-2026-10-06 under its launch sitting (Rulings 1–12, from `research/p4-survey.md`): the KPI ETL lands in
-`apps/labs/ciops/src/kpi/` (PR-A), then the verdict beside time-to-certainty's M1 (PR-B). W8 landed
-2026-10-06 (PR-A, Rulings 13–16): `research/kpi-reading.md` is the generated reading; its normative
-starvation count is nonzero (a lawful failing report), the seat-request clock opens no episode on the
-pins, and TierCiMergeGreen is unmeasured.
+Closed 2026-10-06 (`completed-retained`). P0–P3 complete (run 4 ratified with the gate PASSED before and
+after the scribe, #1490; the lab's typed CQ-009 verdict, #1524). P4 complete: W8's KPI ETL and generated
+reading landed in PR-A (#1532; P4 Rulings 1–16), and W9's hand-written verdict
+(`research/kpi-verdict.md`) landed in PR-B with the P4 closing entry (Ruling 17, the completion gate read
+clause by clause), the status flips and the closeout reflection
+(`history/reflections/2026-10-06-claude.md`). The verdict: a lawful failing report (165 of 473 admission
+requests in W wait beyond the declared 120000 ms bound), TierCiMergeGreen unmeasured, the M1-replica equal
+to M1's post-P0 P50 and P95 to the millisecond, and the S9 statement (admission route 197 of 200; CQ-009
+same-checkout arm holds, legacy arm unobservable; no route claim). P5 and P6 are the states PR-B reached.
 
 ## Latest Evidence
 
+- 2026-10-06, W9 (PR-B): `research/kpi-verdict.md` states the verdict beside time-to-certainty's M1 with
+  the episode-definition mapping, the M1-replica, the change-event table, the #1427 paragraph, the S9
+  statement, what the pins cannot show, and the completion gate read clause by clause (Ruling 17); the
+  closeout reflection is `history/reflections/2026-10-06-claude.md`.
 - 2026-10-06, W8: `apps/labs/ciops/src/kpi/` folds the `run4-fleet` pin, the two admission sources, the
   change-event ledger and the committed adoption table (each by path and sha256) into
   `research/kpi-reading.{json,md}` (`ciops-kpi-reading/v1`): nearest-rank P50/P95 cut and uncut per
