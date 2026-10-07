@@ -27,3 +27,12 @@ Refresh the baseline through the canonical writer with the exact prior baseline
 digest. Preserve the existing scope, profile `local-linux-x64-bun1.4.2` and
 epoch `qualification-v2`. No qualification tuple is granted or changed; the new
 computations are reviewed configuration, not cache-qualification evidence.
+
+## Wave 2 (review round 1)
+
+Review found three input gaps and this re-record attributes the resulting
+configuration changes: `//#lint:effect-vitest` inputs are now exactly the D9
+scanner globs plus the inventory and primitives graph; `//#jsdoc:ratchet:check`
+no longer excludes `test/fixtures` sources the zero-legacy gate reads; and
+`//#jsdoc:inventory:check` adds the `scratchpad` and `tools` workspace sources.
+No command, output, environment key, dependency edge or cache flag changes.

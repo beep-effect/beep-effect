@@ -1,14 +1,19 @@
 {
-  "previous": "b477c7b6eee5e37617aeea19c779fa0bb7c04fd943276dd2b90d4b50e8c8733b",
+  "previous": "114a10f4b0e95a78c69c0552143e138a84d33aaf92b99b856ccd9fbda757548d",
   "review": {
     "reviewer": "Claude Fable 5.1 (perf/lint-turbo-cache)",
-    "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+    "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted. Wave 2: effect-vitest, jsdoc:ratchet:check and jsdoc:inventory:check inputs now follow their scanners exactly (review round 1).",
     "basis": {
       "path": "goals/turborepo-task-qualification/research/lint-root-plan-baseline-review.md",
-      "sha256": "4a2747df022198e351b5de16a5c65945292a284023204730e8d75b3bb9559a2b"
+      "sha256": "67711858d2c620d3cd4fee15a45812395ca2d9370c2354b8c44d328d3b0131db"
     }
   },
-  "scope": ["@beep/identity#lint", "@beep/types#lint", "@beep/fc-runs#lint", "@beep/test-runner#lint"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
   "profile": "local-linux-x64-bun1.4.2",
   "epoch": "qualification-v2"
 }

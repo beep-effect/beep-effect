@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Fable 5.1 (perf/lint-turbo-cache)",
-      "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted.",
+      "reason": "Record the cached //#jsdoc:inventory:check posture and the four new cached root computations (lint:tsconfig-overlay, lint:package-test-typecheck, lint:effect-vitest, jsdoc:ratchet:check), and attribute the shared root scripts-digest change to their four added root scripts; no other command, input, output, env, dependency edge or cache flag changes, and no qualification is granted. Wave 2: effect-vitest, jsdoc:ratchet:check and jsdoc:inventory:check inputs now follow their scanners exactly (review round 1).",
       "basis": {
         "path": "goals/turborepo-task-qualification/research/lint-root-plan-baseline-review.md",
-        "sha256": "4a2747df022198e351b5de16a5c65945292a284023204730e8d75b3bb9559a2b"
+        "sha256": "67711858d2c620d3cd4fee15a45812395ca2d9370c2354b8c44d328d3b0131db"
       }
     },
     "@beep/acp": {
@@ -1832,6 +1832,8 @@
             "!**/node_modules/**",
             "!**/storybook-static/**",
             "!**/test/fixtures/**",
+            "!scratchpad/.jsdoc-loop/**",
+            "!scratchpad/docs/**",
             "**/docgen.json",
             "**/package.json",
             "./.bun-version",
@@ -1840,6 +1842,8 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "scratchpad/**/*.ts",
+            "tools/**/*.{ts,tsx}",
             "tsdoc.json",
             "{packages,apps,infra}/**/*.{ts,tsx}"
           ],
@@ -1876,7 +1880,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -1884,7 +1887,7 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "standards/jsdoc-totals.regression-baseline.jsonc",
-            "{packages,apps}/**/*.{ts,tsx}"
+            "{packages,apps}/**/src/**/*.{ts,tsx}"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -2220,15 +2223,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
-            "!**/node_modules/**",
-            "!**/storybook-static/**",
-            "!**/test/fixtures/**",
+            "!{apps,packages,infra}/**/node_modules/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -2236,6 +2231,7 @@
             "./tsconfig.json",
             "./tsconfig.packages.json",
             "standards/effect-vitest.inventory.jsonc",
+            "standards/effect-vitest.primitives.jsonc",
             "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
             "{apps,packages,infra}/**/test/**/*.ts"
           ],
@@ -103628,7 +103624,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "1fa640b5eb2762f885575513951711aa7212297c6b19f9bc9f5b0f88694a5695"
+        "sha256": "5ad25a9e98a0b47744c24e0701da73cd62b831407083063f8127bbbb76bde1e5"
       }
     ]
   }
