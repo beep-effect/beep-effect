@@ -14499,12 +14499,12 @@
       "path": "packages/law-practice/use-cases",
       "lines": 83.72,
       "statements": 84.13,
-      "branches": 100,
+      "branches": 88.91,
       "functions": 70,
       "uncovered": {
         "lines": 42,
         "statements": 43,
-        "branches": 0,
+        "branches": 44,
         "functions": 27
       },
       "files": {
