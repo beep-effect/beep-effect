@@ -185,13 +185,13 @@ The packet inherits both binding predecessor debt ledgers:
 
 ### P4 provenance index
 
-- [ ] Every pffexport tree has `messages-<tree>.jsonl` plus a counts-only
+- [x] Every pffexport tree has `messages-<tree>.jsonl` plus a counts-only
       summary; every item directory yields exactly one record.
-- [ ] Attachment repair proposals come from byte signatures; `apply` journals
+- [x] Attachment repair proposals come from byte signatures; `apply` journals
       every rename and `undo` restores a synthetic tree byte-for-byte.
-- [ ] The metadata census covers the named roots with per-file status and a
+- [x] The metadata census covers the named roots with per-file status and a
       counts-only summary.
-- [ ] `beep corpus provenance` is covered by package tests on synthetic
+- [x] `beep corpus provenance` is covered by package tests on synthetic
       fixtures only.
 
 ### P2 transformation wave

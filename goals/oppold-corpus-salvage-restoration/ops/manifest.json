@@ -68,7 +68,7 @@
     {
       "id": "P4",
       "name": "Provenance index (mail headers, attachment repair, metadata census)",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -9,9 +9,9 @@ digests while retaining the originals.
 
 ## Next action
 
-P0 is complete. Finish P4 (attachment repair apply, metadata census) and
-hand the summaries to pass-3 identification and the practice-kg bundle; then
-record the P1-P2 ceilings in the decision log before the live mail slice.
+P0 and P4 are complete. Hand the provenance summaries to pass-3
+identification and the practice-kg bundle; then record the P1-P2 ceilings in
+the decision log before the live mail slice.
 
 ## Launcher
 
@@ -53,6 +53,26 @@ landed (`ProvenanceIndex.schemas.ts`, `ProvenanceIndex.contracts.ts`), and the
 header index ran over both mail trees: 118,771 + 122,730 messages, 72,980 +
 101,107 with RFC 5322 headers, 116,951 + 186,180 attachments, 1,539 + 1,582
 embedded items (`staging/provenance/messages-<tree>.jsonl`).
+
+2026-10-07 — P4 attachment repair applied and the census run (lane E). The
+byte-signature repair scanned 299,998 files directly under `Attachments/` in
+both mail trees and renamed 299,371 (exact completion 267,237; fully eaten
+extension 31,228; remnant mismatch 515; inexact 16; 627 left as
+`ambiguous-mime`, 375 already consistent from the interrupted first run);
+zero collisions, missing or size-changed sources. Two append-only journals
+(375 + 298,996 rows) are the undo input. pffexport keeps Windows backslashes
+inside attachment names (793 proposals in the refresh tree alone); the first
+apply stopped on them and the path schema was corrected
+(`CorpusRelativePath`, see the decision log), after which the header index
+was regenerated so its attachment paths match the repaired tree. Metadata
+census (`staging/provenance/metadata.jsonl`, exiftool 13.55, magic-identified):
+346,062 files over `raw/` (25,763), `incoming/` (16,521), `organized/`
+(3,780; its 28 symlinks into `raw/` dedupe to their canonical path) and the
+two attachment trees (115,402 + 184,596); 344,908 read cleanly, 1,154 engine
+errors kept as rows, 60,643 with an author, 102,883 with a creation date, 67
+file types (PDF 88,648; JPEG 80,115; GIF 64,599; PNG 48,679; ZIP 19,637; DOC
+13,090). P4 is complete; the hand-off to workstreams C and D goes through the
+orchestrator with file names, counts and digests only.
 
 
 2026-08-27 — P0 in progress. Bar-v2 preservation schemas landed in the repo

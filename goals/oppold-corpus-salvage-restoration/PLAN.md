@@ -131,6 +131,13 @@ document metadata census. Schema → service → implementation order applies
 and its undo proven on a synthetic tree, the census complete over the named
 roots, and `beep corpus provenance` covered by package tests.
 
+**Progress 2026-10-07:** steps 1-3 ran on the live trees: 118,771 + 122,730
+messages indexed (regenerated after the repair so attachment paths are
+post-rename), 299,371 attachment extensions repaired from 299,998 scanned
+with two undo journals and zero skips,
+census 346,062 files (344,908 ok, 1,154 engine errors kept as rows) over the
+five named roots. Step 4 is the orchestrator hand-off to workstreams C and D.
+
 ## P3 — Close
 
 1. Reconcile preservation plus mail, recycle, DOC, warning, failure, mapping,
