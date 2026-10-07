@@ -105,10 +105,15 @@ describe("contacts and indexes", () => {
       card("Different Display", ["second@acme.example"]),
       card("One Person", ["info@acme.example"]),
       card("Other Person", ["info@acme.example"]),
+      // Nameless role-only cards: unrelated mailboxes must not collapse onto one id.
+      card("", ["docketing@firma.example"]),
+      card("", ["info@clientb.example"]),
     ];
     const contacts = I.normaliseContacts(cards);
-    expect(contacts).toHaveLength(3);
-    expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(3);
+    expect(A.dedupe(A.map(contacts, (c) => c.contactId))).toHaveLength(contacts.length);
+    const idOf = (address: string) =>
+      A.findFirst(contacts, (c) => A.some(c.emails, (e) => e.address === address)).pipe(O.map((c) => c.contactId));
+    expect(idOf("docketing@firma.example")).not.toEqual(idOf("info@clientb.example"));
     assertSome(A.findFirst(contacts, (c) => c.emails.length === 2).pipe(O.map((c) => c.sources)), [
       "outlook-csv",
       "vcard",

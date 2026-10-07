@@ -42,7 +42,8 @@ const phone = (s: string): O.Option<PhoneNumber> => {
 
 /**
  * Deduplicates cards transitively by non-role email, then normalised name and organisation.
- * Stable ids hash the sorted non-role emails, or the normalised name and organisation when none exist.
+ * Stable ids hash the sorted non-role emails, then the normalised name and organisation, then the role
+ * emails themselves for a nameless card, whatever its organisation.
  *
  * **Example** (Normalise no cards)
  *
@@ -85,16 +86,18 @@ export const normaliseContacts = (cards: ReadonlyArray<RawContactCard>): Readonl
           email
         )
       );
-      // Role mailboxes are shared, so they never carry identity: two people who share only
-      // info@ keep distinct ids.
+      // Role mailboxes are shared, so they never carry identity while a person or company is known:
+      // two people who share only info@ keep distinct ids. A nameless, role-only card falls back to
+      // its own mailboxes so that two such cards never collide on an empty key.
       const personal = A.filter(emails, (e) => !e.role);
-      const identity =
-        personal.length > 0
-          ? A.join(
-              A.map(personal, (e) => e.address),
-              "|"
-            )
-          : `${nameKey(displayName)}|${nameKey(O.getOrElse(organization, () => ""))}`;
+      const named = `${nameKey(displayName)}|${nameKey(O.getOrElse(organization, () => ""))}`;
+      const addresses = (xs: ReadonlyArray<{ readonly address: string }>) =>
+        A.join(
+          A.map(xs, (e) => e.address),
+          "|"
+        );
+      const nameless = Str.isEmpty(nameKey(displayName)) && emails.length > 0;
+      const identity = personal.length > 0 ? addresses(personal) : nameless ? addresses(emails) : named;
       const phones = A.dedupeWith(
         A.getSomes(A.flatMap(group, (c) => A.map(c.phones, phone))),
         (a, b) => a.e164 === b.e164
