@@ -1586,3 +1586,44 @@ likely cause is the later capture and the retired lanes' lost journals, and the 
 #1427 post-period holds 8 episodes, 1 post-unadopted; the hosted series stays unmeasured. The normative
 starvation count (165 of 473 requests in W beyond 120000 ms) makes the reading a failing report, which is
 a lawful verdict (Ruling 9).
+
+## 2026-10-06 — P4 closing entry (orchestrator under the autonomy charter)
+
+P4 closes with PR-A (#1532, W8: the KPI ETL and its generated reading) and PR-B (W9: the verdict, the
+status flips and the closeout reflection). P5 (Yeet to mergeable) and P6 (close) are the states PR-B
+reaches (Ruling 11); their phase rows flip with it. The verdict is `research/kpi-verdict.md`: the reading
+is a lawful failing report (165 of 473 admission requests in W wait beyond the declared 120000 ms bound),
+TierCiMergeGreen is unmeasured, and the M1-replica agrees with M1's post-P0 row to the millisecond on P50
+and P95.
+
+**Ruling 17 — the completion gate, read clause by clause.** The gate statement
+(`ops/manifest.json`, `completionGate.statement`) is left as written: it is the gate the packet was
+admitted under, and this entry is its reading. (1) "under `research/kpi-measurement-rules.md` v1.1": the
+reading is computed under v1.2, a dated amendment that extends v1.1 without retracting it (Ruling 2).
+"Seat-request clock": implemented, and an honest zero on these pins (Ruling 13). "Fleet-aggregated
+P50/P95": aggregated across the fleet's checkouts and partitioned by tier, as the gate's own parenthesis
+names; the unpartitioned headline the survey asked for is the M1-replica (no tiers, W-a), and a W-wide
+unpartitioned row is a tracked follow-up, since tiering changes episode boundaries and no such row can be
+derived from the tier rows. "Operator-ratified post-baseline window": charter-ratified by the launch
+sitting (Ruling 5), listed below for the operator's asynchronous review, and reversed by a later entry
+if the operator rules otherwise. "Every OperationalChangeEvent in that window is tagged under
+adoption-qualified membership": 38 in-window rows, each carrying its adoption classes from the committed
+table (Ruling 8). "The verdict is stated beside M1 with the episode-definition mapping":
+`research/kpi-verdict.md` §2–§3, improvement reported, not required. (2) The CQ suite and the validators
+were green on the tree #1524 left (CQ suite `3eed0c3f73de`); PR-B's own checks prove the final tree.
+(3) S7 byte determinism and the differential replay stand at #1490 and #1524
+(`research/s7-live-replay-evidence.md`: 197 of 200 live, 41 of 41 golden; `planEpisode` consumes
+`gate-order-handoff/v1` by path and sha256). (4) Run 4 is ratified with the gate PASSED before and after
+the scribe (#1490). (5) PR-B is the final PR and carries the flips and the reflection; the clause is met
+when it is merged.
+
+**Every charter-ratified call of P4, for the operator's asynchronous review.** Launch sitting Rulings
+1–12 (the module home; law v1.2 first; tier assignment by stage; TierCiMergeGreen unmeasured; the window
+W with slices W-a and W-b; the clock; censoring; change events and #1427; the starvation bound 120000 ms
+declared before computing; the outputs and the verdict; two PRs with P5 and P6 as states; four contract
+clarifications). W8 implementation sitting Rulings 13–16 (the seat-request clock opens no episode and
+Ruling 5's premise restated; the CQ-012 decomposition rule; survivorship as one count; the additive
+contract changes the data forced). This entry's Ruling 17. Each names its reversal: a later entry, then a
+follow-up PR. Tracked follow-ups: survivorship by reason once a pin carries compaction receipts; a W-wide
+unpartitioned headline row; a compact encoding for the adoption table; the run-4 follow-ups in the
+exploration's `research/run4-lanes/p3-run4-report.md`.

@@ -660,7 +660,8 @@ export class AdoptionProbe extends S.Class<AdoptionProbe>($I`AdoptionProbe`)(
 export class WindowBounds extends S.Class<WindowBounds>($I`WindowBounds`)(
   { slice: WindowSlice, start: S.DateTimeUtcFromString, end: S.DateTimeUtcFromString },
   $I.annote("WindowBounds", {
-    description: "Half-open instant range of one named window slice; episodes belong by their opening instant.",
+    description:
+      "Instant range of one named window slice (W half-open, W-a and W-b closed); episodes belong by their opening instant.",
   })
 ) {}
 

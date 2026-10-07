@@ -4,14 +4,14 @@
     "id": "ciops-ontology-pipeline",
     "packetId": "goal-packet/v1:b4601e724c8cf9670c4466d85ce3191bb5bc4417e0678cbea48434a1857f698e",
     "title": "CI-Ops Ontology Pipeline",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-01",
     "updated": "2026-10-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ciops-ontology-pipeline",
-  "lifecycle": "active",
-  "statusNote": "Graduated 2026-10-01 from explorations/beep-ci-operational-ontology (graduation sitting Rulings 1-11). Five slices: inheritance and change events, Stage C capture with proof-ledger capture, projection on live data, auditor run 4, KPI verdict. Run 4 gate per graduation Ruling 1 as amended by P1 Rulings 1-2 (2026-10-05): time-to-certainty C4.1 checked and post-#1321 pre-push facts in the fleet's owning-clone ledgers; the merged-preview legs stay flagged on the first post-#1321 merged-preview fact, and realization and copy legs name time-to-certainty C4.2 (its ruling 80). Seats run on Opus 5.5 (Ruling 4); the v16 seat launcher (W2) is optional. The done bar is a stated verdict under KPI law v1.1; improvement is reported, not required (Ruling 3). apps/labs/ciops stays an active lab owned by this goal (Ruling 5), and the ontology working tree stays under the exploration packet (Ruling 7). Rulings from 2026-10-01 on land in research/decisions.md.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Graduated 2026-10-01 from explorations/beep-ci-operational-ontology (graduation sitting Rulings 1-11). Five slices: inheritance and change events, Stage C capture with proof-ledger capture, projection on live data, auditor run 4, KPI verdict. Run 4 gate per graduation Ruling 1 as amended by P1 Rulings 1-2 (2026-10-05): time-to-certainty C4.1 checked and post-#1321 pre-push facts in the fleet's owning-clone ledgers; the merged-preview legs stay flagged on the first post-#1321 merged-preview fact, and realization and copy legs name time-to-certainty C4.2 (its ruling 80). Seats run on Opus 5.5 (Ruling 4); the v16 seat launcher (W2) is optional. The done bar is a stated verdict under KPI law v1.1; improvement is reported, not required (Ruling 3). apps/labs/ciops stays an active lab owned by this goal (Ruling 5), and the ontology working tree stays under the exploration packet (Ruling 7). Rulings from 2026-10-01 on land in research/decisions.md. Closed 2026-10-06: W8 (PR-A #1532, P4 Rulings 1-16) and W9 (PR-B: research/kpi-verdict.md, the P4 closing entry with Ruling 17 reading the completion gate clause by clause, the status flips and the closeout reflection). The verdict is a lawful failing report under KPI law v1.2 (which extends v1.1); TierCiMergeGreen is unmeasured; the M1-replica equals M1 post-P0 P50 and P95 to the millisecond.",
   "mission": "Operate the ratified CI operational ontology as a pipeline: project live admission and wave-order data through the S7 engine, hold CQ regression green, ratify auditor run 4, and state the fleet time-to-certainty verdict.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -96,17 +96,17 @@
     {
       "id": "P4",
       "name": "KPI reading and verdict (W8-W9)",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
