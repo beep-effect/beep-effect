@@ -12,6 +12,7 @@ import {
   MetadataCensusOptions,
   MetadataCensusRecordJson,
   ProvenanceMessagesOptions,
+  runMetadataCensus as runMetadataCensusThroughService,
 } from "@beep/repo-cli/commands/Corpus";
 import {
   fallbackMagicExtensions,
@@ -29,8 +30,11 @@ import { describe, expect } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import { Command } from "effect/cli";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+
+const encodeFixtureJson = S.encodeSync(S.Unknown.pipe(S.fromJsonString));
 
 const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer;
 const Services = Layer.mergeAll(
@@ -320,6 +324,62 @@ const exiftoolPresent = Effect.fn("test.provenance.exiftoolPresent")(function* (
 });
 
 it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
+  it.effect("the metadata facade uses its configured executable and persists normalized provenance", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const documents = path.join(root, "documents");
+      yield* fs.makeDirectory(documents);
+      const document = path.join(documents, "report.pdf");
+      yield* fs.writeFileString(document, pdf);
+      const executable = path.join(root, "fixture-exiftool");
+      const payload = encodeFixtureJson([
+        {
+          SourceFile: document,
+          "File:FileType": "PDF",
+          "PDF:Author": "Fixture author",
+          "PDF:Title": "Fixture title",
+          "PDF:PageCount": 1,
+        },
+      ]);
+      // Exercise the live process/JSON boundary without depending on a host exiftool installation.
+      yield* fs.writeFileString(
+        executable,
+        `#!/usr/bin/env node\nprocess.stdout.write(process.argv[2] === "-ver" ? "fixture13\\n" : ${encodeFixtureJson(payload)});\n`
+      );
+      yield* fs.chmod(executable, 0o755);
+      const census = yield* runMetadataCensusThroughService(
+        MetadataCensusOptions.make({
+          corpusRoot: root,
+          roots: ["documents"],
+          exiftoolCommand: executable,
+          batchSize: 1,
+          concurrency: 1,
+        })
+      );
+      expect(census).toMatchObject({
+        engineVersion: "fixture13",
+        fileCount: 1,
+        okCount: 1,
+        errorCount: 0,
+        withAuthor: 1,
+      });
+      const rows = yield* Effect.forEach(
+        lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
+        MetadataCensusRecordJson.decode
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({
+        engineVersion: "fixture13",
+        relativePath: "documents/report.pdf",
+        root: "documents",
+        status: "ok",
+        fields: { fileType: "PDF", author: "Fixture author", title: "Fixture title", pageCount: 1 },
+      });
+    })
+  );
+
   it.effect("the command service wires each provenance program with its live services", (ctx) =>
     Effect.gen(function* () {
       const { root } = yield* fixture();
