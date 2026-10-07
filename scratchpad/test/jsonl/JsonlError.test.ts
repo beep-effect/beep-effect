@@ -19,7 +19,7 @@ import {
   JournalWriteConflict,
   JournalResyncReason,
   JsonlError,
-} from "@beep/scratchpad/effected/jsonl/JsonlError";
+} from "../../effected/jsonl/JsonlError.ts";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as O from "effect/Option";

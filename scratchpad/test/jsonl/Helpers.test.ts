@@ -1,9 +1,9 @@
-import { InvalidUtf8 } from "@beep/scratchpad/effected/jsonl/JsonlError";
-import { ByteCount, LineSlice } from "@beep/scratchpad/effected/jsonl/LineSlice";
-import { TailWindow } from "@beep/scratchpad/effected/jsonl/internal/tail";
-import { CursoredSlice, Slice, matchesFrame } from "@beep/scratchpad/effected/jsonl/Slice";
-import { probeBomBytes, readRangeWindow, readTail } from "@beep/scratchpad/effected/jsonl/internal/tail";
-import { utf8Length } from "@beep/scratchpad/effected/jsonl/internal/utf8";
+import { InvalidUtf8 } from "../../effected/jsonl/JsonlError.ts";
+import { ByteCount, LineSlice } from "../../effected/jsonl/LineSlice.ts";
+import { TailWindow } from "../../effected/jsonl/internal/tail.ts";
+import { CursoredSlice, Slice, matchesFrame } from "../../effected/jsonl/Slice.ts";
+import { probeBomBytes, readRangeWindow, readTail } from "../../effected/jsonl/internal/tail.ts";
+import { utf8Length } from "../../effected/jsonl/internal/utf8.ts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";

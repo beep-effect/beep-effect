@@ -1,4 +1,4 @@
-import { Envelope } from "@beep/scratchpad/effected/jsonl/index";
+import { Envelope } from "../../effected/jsonl/index.ts";
 import { assert, it } from "@effect/vitest";
 import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -602,18 +602,29 @@ it.effect("an unfinished multibyte code point is held until its original writer 
   })
 );
 
-it.effect("future replay cursor clamps to EOF and receives the next live append", () =>
+// Upstream semantics (D13 reverted): a cursor compares at-or-after against a
+// line's start offset on the live half too, so a future cursor delivers nothing
+// that starts below it, even a line that straddles it.
+it.effect("future replay cursor delivers nothing that starts below the cursor", () =>
   Effect.gen(function* () {
     const fs = yield* memory();
     yield* fs.writeFileString(path, line(1));
     const journal = yield* open({ ...fs, watch: () => Stream.never });
+    const cursor = 100000;
     const reader = yield* journal
-      .changes({ cursor: 100000 })
+      .changes({ cursor })
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     for (let turn = 0; turn < 8; turn++) yield* Effect.yieldNow;
-    const appended = yield* journal.append("noted", { round: 2, label: "live" });
-    assert.deepStrictEqual(yield* Fiber.join(reader), [appended]);
-    assert.deepStrictEqual(yield* journal.query({ cursor: 100000 }).pipe(Stream.runCollect), []);
+    assert.deepStrictEqual(yield* journal.query({ cursor }).pipe(Stream.runCollect), []);
+    const straddling = yield* journal.append("noted", { round: 2, label: Str.repeat(cursor)("x") });
+    assert.isBelow(straddling.line.offset, cursor);
+    assert.isAbove(straddling.line.end, cursor);
+    const after = yield* journal.append("noted", { round: 3, label: "live" });
+    assert.deepStrictEqual(yield* Fiber.join(reader), [after]);
+    assert.deepStrictEqual(
+      A.map(yield* journal.query({ events: ["noted"], cursor }).pipe(Stream.runCollect), (row) => row.data.round),
+      [3]
+    );
   })
 );
 

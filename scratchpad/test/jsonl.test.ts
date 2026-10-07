@@ -14,8 +14,8 @@ import {
   Line,
   LineSlice,
 } from "../effected/jsonl/index.ts";
-import { canMerge, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
-import { probeBomBytes, readTailUntil } from "@beep/scratchpad/effected/jsonl/internal/tail";
+import { canMerge, shallowMerge } from "../effected/jsonl/internal/merge.ts";
+import { probeBomBytes, readTailUntil } from "../effected/jsonl/internal/tail.ts";
 import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -369,12 +369,6 @@ const rejectsInvalidCalls = (
   const invalid9 = Envelope.encode(events)({ at, event: "foreign", data: null });
   // @ts-expect-error Omission is accepted, explicit undefined is not.
   const invalid10: AppendOptions = { scope: undefined };
-  // @ts-expect-error Optional configuration keys are exact.
-  const invalid11: JournalConfig = { path, capacity: undefined };
-  // @ts-expect-error Slice keys are exact optional properties.
-  const invalid12: CursoredSlice<Registry, "updated"> = { events: undefined };
-  // @ts-expect-error A cursor must be omitted rather than explicitly undefined.
-  const invalid13: CursoredSlice<Registry, "updated"> = { cursor: undefined };
   return [
     invalid0,
     invalid1,
@@ -387,9 +381,15 @@ const rejectsInvalidCalls = (
     invalid8,
     invalid9,
     invalid10,
-    invalid11,
-    invalid12,
-    invalid13,
   ];
 };
 void rejectsInvalidCalls;
+
+// Upstream parity (D15 restored to upstream): an explicitly undefined optional
+// configuration or slice key is accepted and behaves as omission.
+const acceptsExplicitUndefined: ReadonlyArray<unknown> = [
+  { path, capacity: undefined } satisfies JournalConfig,
+  { events: undefined } satisfies CursoredSlice<Registry, "updated">,
+  { cursor: undefined } satisfies CursoredSlice<Registry, "updated">,
+];
+void acceptsExplicitUndefined;

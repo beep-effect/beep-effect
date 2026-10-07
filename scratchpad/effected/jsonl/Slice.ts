@@ -22,11 +22,13 @@ const $I = $ScratchpadId.create("effected/jsonl/Slice");
 
 // Selection options are plain boundary inputs. Their schemas retain literal tags
 // while preserving ordinary object-literal calls to query, changes and projection.
+// Every key is optional with upstream omission semantics: an explicitly
+// undefined key selects exactly what an omitted one does.
 const fields = <T extends string>(event: S.Codec<T>) => ({
-  events: event.pipe(S.Array, S.optionalKey),
-  scopes: S.String.pipe(S.Array, S.optionalKey),
-  from: S.optionalKey(S.DateTimeUtc),
-  to: S.optionalKey(S.DateTimeUtc),
+  events: event.pipe(S.Array, S.optional),
+  scopes: S.String.pipe(S.Array, S.optional),
+  from: S.optional(S.DateTimeUtc),
+  to: S.optional(S.DateTimeUtc),
 });
 /**
  * Build selection options whose event filter retains the supplied tag domain.
@@ -63,15 +65,15 @@ export const Slice = <T extends string>(event: S.Codec<T>) =>
 export const CursoredSlice = <T extends string>(event: S.Codec<T>) =>
   S.Struct({
     ...fields(event),
-    cursor: S.optionalKey(ByteCount),
+    cursor: S.optional(ByteCount),
   }).annotate(
     $I.annote("CursoredSlice", { description: "Frame selection resumed at a logical post-BOM byte offset." })
   );
 
 /**
  * Frame selection shared by queries, subscriptions and projections. Fields
- * combine with AND; omitted fields do not filter, while empty arrays match
- * nothing. Time bounds are inclusive at from and exclusive at to.
+ * combine with AND; omitted or undefined fields do not filter, while empty
+ * arrays match nothing. Time bounds are inclusive at from and exclusive at to.
  *
  * @category type-level
  * @since 0.0.0
@@ -81,6 +83,7 @@ export type Slice<R extends JsonlEvent.Registry, T extends JsonlEvent.Tag<R>> = 
 /**
  * A slice with an inclusive resume cursor in logical bytes, excluding a BOM.
  * Persist an envelope's line.end to resume without redelivering that envelope.
+ * An undefined cursor is an omitted cursor: no replay.
  *
  * @category type-level
  * @since 0.0.0

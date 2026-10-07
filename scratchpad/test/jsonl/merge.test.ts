@@ -1,6 +1,6 @@
 // Adapted from effected/packages/jsonl/__test__/merge.test.ts (MIT).
 
-import { canMerge, isRecordLike, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
+import { canMerge, isRecordLike, shallowMerge } from "../../effected/jsonl/internal/merge.ts";
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as P from "effect/Predicate";

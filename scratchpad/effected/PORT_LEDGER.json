@@ -3,10 +3,10 @@
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
-    "module": "jsonc",
-    "stage": 3,
+    "module": "jsonl",
+    "stage": 2,
     "commit": null,
-    "at": "2026-10-07T07:33:22.979Z"
+    "at": "2026-10-07T08:44:45.052Z"
   },
   "rows": [
     {
@@ -14,7 +14,7 @@
       "module": "jsonl",
       "wave": 0,
       "position": 1,
-      "stage": 1,
+      "stage": 2,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -168,22 +168,207 @@
           "entry": "."
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "ByteCount",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "EnvelopeInput",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidJournalConfig",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidSlice",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "InvalidUtf8",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalResyncReason",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalUnterminated",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalWriteConflict",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [],
       "fixturesBytes": 2287,
-      "deviations": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:81 (tails '{', '4', complete record minus LF), :321 (own partial failed write), :558 (split multibyte suffix; pins logical {offset,end}); extends upstream __test__/Watcher.test.ts:224 (no upstream test appends over a torn tail)",
+          "upstreamBehaviour": "append writes after the unterminated fragment, fusing both into one physical line starting at 84; the returned offset points inside it (85 for the one-byte tails, 167 for the LF-less envelope) and every later query() fails MalformedLine at 84, so the appended record is unreadable",
+          "labBehaviour": "append fails JournalUnterminated {offset, end} (logical span of the suffix) and leaves the file byte-identical; query() still returns the completed history",
+          "reason": "upstream-bug: probe 01 reproduces the fused line and in-line cursor; violates upstream CLAUDE.md (one writeAll of a complete LF-terminated line per append) and okf/interfaces/jsonl-journal.md ('A torn tail is tolerated')"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Watcher.test.ts:69 (query during a torn external tail returns completed history), scratchpad/test/jsonl/Journal.regressions.test.ts:237 (seeded LF-less terminal leaves quiescent false until LF), :631 (invalid UTF-8 suffix withheld until LF); extends upstream __test__/Journal.test.ts:351",
+          "upstreamBehaviour": "a torn prefix makes query() fail MalformedLine 'unterminated final line at byte offset 84' and ends a cursor replay; an LF-less complete envelope is emitted by query(), seeds latest (terminated:false) and, if terminal, makes quiescent true. This is upstream's stated design: MalformedLine TSDoc (src/JsonlError.ts:23) calls an unterminated tail the expected steady state reported typed, and Line.lastValid accepts a parseable unterminated final line (__test__/Line.test.ts:327)",
+          "labBehaviour": "on the journal read and seed paths an unterminated suffix is never a committed record: query and replay return only LF-terminated records, latest/quiescent follow the last terminated record, and the changes() stream delivers the record from its live tail once the LF lands; the pure Line layer is unchanged (Line.test.ts:327 still holds)",
+          "reason": "upstream-bug: (a) probe 04: a cursor replay dies on bytes upstream's own ingest (decodeRange) tolerates, so subscriber survival depends on timing; (b) probe 05 + probe 01 third tail: a record query()/latest report as present ([84,167,false]) becomes a MalformedLine hole once the next append fuses it; (c) okf jsonl-journal.md 'A torn tail is tolerated' and upstream CLAUDE.md 'the offset holds until the line completes'"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:280 (growth after the seed read reaches latest), :237 (completed seeded torn record reaches a cursor reader; in the Unicode case the reader, not latest, distinguishes record 1 from 2); extends upstream __test__/Watcher.test.ts:224",
+          "upstreamBehaviour": "layer construction sets consumed from stat EOF after the seed read (src/Journal.ts:930), inside a half-written foreign record; once completed, the remainder decodes as a malformed fragment and is skipped: latest stays at record 1 and subscribers never receive record 2",
+          "labBehaviour": "consumed starts at the end of the last complete seeded record, so the completed record is ingested, published and becomes latest",
+          "reason": "upstream-bug: probe 04 (local append after completion publishes [3] upstream vs [2,3] lab) and probe 28 (the :280 scenario: upstream latest stays at round 1 permanently); upstream CLAUDE.md 'the offset holds until the line completes'"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:413 (replacement during the seed read, stricter than the probe's post-build window; live reader fails JournalResync replaced, later appends land on the current file); extends upstream __test__/Watcher.test.ts:271",
+          "upstreamBehaviour": "identity (dev:ino) is recorded at watcher activation; a larger replacement between layer build and first catch-up is ingested as growth: subscriber receives only record 8 (offset 91, or 88 with a BOM), record 7 is dropped, no JournalResync",
+          "labBehaviour": "identity capture deliberately moved to construction, before the seed read; the same replacement fails live subscribers with JournalResync {reason:'replaced', expected:84, actual:182}",
+          "reason": "upstream-bug: probe 03b shows record 7 dropped silently; okf jsonl-journal.md requires a shrink or replacement to raise a typed resync 'rather than silently reconciling'"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:17 (patch derives from foreign snapshot), :35 (append after foreign terminal fails TerminalViolation, no bytes, terminal published, quiescent), :58 (invalid patch still publishes the foreign record; latest=10 shown only by probe 02); extends upstream __test__/Journal.test.ts:235 and :276",
+          "upstreamBehaviour": "append/appendPatch read the in-memory latest, which lags a completed foreign record: appendPatch merges onto the stale base ({round:11,label:'old'}), an append after a foreign terminal succeeds (file ends ended,noted; quiescent false), a failing append publishes nothing",
+          "labBehaviour": "under the write permit the append first ingests completed foreign records, then derives/checks: patch inherits label 'foreign', append after a terminal fails TerminalViolation with no bytes written, foreign records publish even when the append fails. Ingestion now runs under the write permit (no separate ingest permit): latency only per probes 02/06/16, but it reverses the okf rationale that a slow catch-up read must not block appends",
+          "reason": "upstream-bug: probe 02; okf jsonl-journal.md: appendPatch's read-merge-validate-append is atomic under the append permit, and appending after a terminal event fails typed"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:396 (append after BOM'd file replaced by empty fails JournalResync {replaced, actual 0}; next append at offset 0), scratchpad/test/jsonl/Journal.edges.test.ts:293 (append after remove-and-recreate fails JournalResync), scratchpad/test/jsonl/JournalDeviations.test.ts:209 (watcher stopped; append after truncation fails JournalResync, logged reason truncated); extends upstream __test__/Watcher.test.ts:250",
+          "upstreamBehaviour": "when a local append is the next operation after a truncation it succeeds at offset 0 and no JournalResync is ever raised; after a BOM'd journal is replaced by an empty file the append returns offset -3",
+          "labBehaviour": "the append reconciles first and fails JournalResync (probe 03: truncated 168/0), publishes the same failure to subscribers (probe-only: 03, 03b) and resets to the current file; the next append succeeds at offset 0. When the watcher sees the change first both sides match",
+          "reason": "upstream-bug: probes 03 and 03b; upstream CLAUDE.md says truncation or replacement beneath a reader fails typed as JournalResync; -3 is not a valid byte cursor"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:396 (actual 0), scratchpad/test/jsonl/Helpers.test.ts:263 (ByteCount/LineSlice/TailWindow byte fields reject -1, 1.5, NaN, Infinity), :280 (stale BOM probe on shrunken file gives zero-size window), scratchpad/test/jsonl/ErrorDeviations.test.ts:198 (JournalResync.expected/actual reject -3 and 1.5; control :202 accepts 0); extends upstream __test__/JsonlError.test.ts:84",
+          "upstreamBehaviour": "a BOM'd journal truncated to zero reports JournalResync {expected:84, actual:-3}; LineSlice and JournalResync construct with negative or fractional numbers",
+          "labBehaviour": "BOM re-probed after shrink or replacement (actual 0); offsets, lengths and sizes are ByteCount (non-negative Int), so negative/fractional values fail at construction; watcher-driven truncation-to-zero is probe-only (03)",
+          "reason": "upstream-bug: probes 03 (actual -3), 03b (append offset -3), 14 (constructors accept -3) + law:17 (constraint modeled as the named ByteCount schema)"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:181; no upstream test (race named only in okf jsonl-journal.md)",
+          "upstreamBehaviour": "a foreign record landing between writeAll and fstat: append reports offset 87 for a line at 0, publishes our line twice ([0,84] and [87,171]) and never publishes the foreign record",
+          "labBehaviour": "fails JournalWriteConflict {expected:84, actual:171}; bytes may be on disk and consumed stays at the known boundary; next append publishes rounds 1,2,3 in file order with contiguous offsets. The check reuses the fstat upstream already performs (actual !== state.size + bytes.length), adding no read",
+          "reason": "upstream-bug: probe 06 reproduces all three consequences okf jsonl-journal.md lists under 'A residual TOCTOU'; upstream declined detection only on the cost of a read-back, which the lab check does not incur"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:486 (layer construction), :495 (query and append), :514 (live subscriber), scratchpad/test/jsonl/Helpers.test.ts:189 (range and tail reads); no upstream test",
+          "upstreamBehaviour": "invalid bytes decode to U+FFFD: payload silently altered and later offsets inflated (record 3 reported at 167, physically 165); query({cursor:167}) skips record 3",
+          "labBehaviour": "fatal UTF-8 decoding: layer construction, query, append and live subscribers fail InvalidUtf8 {path, offset}; file unmodified; offset is the physical start of the decoded range, not the bad byte",
+          "reason": "upstream-bug: probe 08; offsets are persisted UTF-8 byte cursors (upstream LineSlice TSDoc) and lossy decoding breaks the byte/cursor correspondence"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:171; extends upstream __test__/Journal.test.ts:732",
+          "upstreamBehaviour": "BOM probed only at construction: when a missing journal later appears with a BOM, append returns 87 for a record query() reports at 84, and query({cursor:87}) reports it at 87; query() says 84 only because the default TextDecoder strips the BOM while the recorded BOM width is still 0",
+          "labBehaviour": "BOM re-probed for each read and reconciliation; append and query both report 84",
+          "reason": "upstream-bug: probe 07; okf jsonl-journal.md 'Offsets are logical post-BOM on every path'"
+        },
+        {
+          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:43 (query() and query({cursor}) at a U+FEFF-led line both fail MalformedLine at its offset), :58 (ingestion skips a foreign U+FEFF-led record; next local append keeps physical offset), scratchpad/test/jsonl/Helpers.test.ts:155 (window and range text keep a leading U+FEFF); extends upstream __test__/Journal.test.ts:379",
+          "upstreamBehaviour": "default TextDecoder strips U+FEFF at the start of every decoded window/range: query({cursor:84}) at a U+FEFF-led line decodes it and reports record 3 at 168 (physically 171) while query() fails MalformedLine at 84; a foreign U+FEFF-led record is published with end 171 although the next starts at 174",
+          "labBehaviour": "decoding uses ignoreBOM: the line is MalformedLine on every read path, ingestion skips it, offsets tile",
+          "reason": "upstream-bug: probe 17; okf jsonl-journal.md 'a BOM code point anywhere else in the file is content'"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:133 (append injected between sampling and reading moves neither end of query or replay, BOM and no BOM); extends upstream __test__/ReadSurfaces.test.ts:110",
+          "upstreamBehaviour": "readFrom stats, then readTail stats again and reads the last N bytes of the new size; an append between them shifts the window: query({cursor:0}) returns [2,3] instead of [1,2], query({cursor:84}) [3] instead of [2]",
+          "labBehaviour": "one sampled [cursor, EOF) byte interval per read: [1,2] and [2]; fixed against appends (replacement/truncation during the read: next row)",
+          "reason": "upstream-bug: probe 09; okf jsonl-slice.md promises a resumed consumer exactly the unprocessed remainder with no gap"
+        },
+        {
+          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:242 (query truncated mid-read emits a contiguous prefix then fails JournalResync {truncated, sampled size, 0}), :267 (replay half of changes({cursor}) fails the same way), :284 (rename-over mid-read returns all 300 sampled records, as upstream), :304 (replacement between sampling and opening fails JournalResync replaced); no upstream test changes a file beneath a read",
+          "upstreamBehaviour": "readFrom reads the whole sampled region in one allocation and buffers matches: truncation or replacement after sampling still returns every sampled record (probe 26: 2000 old records), and an unsliced query() holds the whole journal in memory",
+          "labBehaviour": "samples the range, opens the file once, checks the handle's dev:ino against the sample, reads every page through that handle (internal/tail.ts readSampledWindow); memory follows page/record size; replacement cannot reach the pinned handle (sampled history returned); a page shorter than the sample fails JournalResync truncated (actual = handle size minus sampled BOM) after earlier pages were emitted (probe 26 rerun: 97 records then JournalResync)",
+          "reason": "upstream-bug: upstream names the whole-region read an open defect (packages/jsonl/CLAUDE.md:94 and the query TSDoc at src/Journal.ts:141, spencerbeggs/effected#233); paging fixes the memory bound but cannot return truncated bytes, so the lab fails typed instead of ending early or splicing files (probe 26 before pinning: 97 records with no error; 97 old + 1903 new after rename-over)"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:102 (0, -1, 1.5, NaN, Infinity each fail with tag InvalidJournalConfig); no upstream test",
+          "upstreamBehaviour": "capacity 0 or -1 dies during layer build with an untyped defect ('Cannot construct PubSub with capacity of 0') although the layer error channel is PlatformError; 1.5, NaN and Infinity are accepted",
+          "labBehaviour": "all five fail InvalidJournalConfig before any resource is allocated (config decoded before the engine is built; the test pins the tag, not the carried issue tree)",
+          "reason": "law:7 (typed errors) + law:EF-3 (decode input at the boundary) + law:17 (capacity is the named JournalCapacity schema); upstream-bug: probe 11 shows capacity 0 escaping as a defect"
+        },
+        {
+          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:151 ('1e3 seconds', [1e300,0], {seconds:1e300,nanoseconds:1} each fail InvalidJournalConfig), :163 (property: a generated Duration.Input builds a journal exactly when Duration.fromInput converts it); convertible inputs accepted as upstream at :120; no upstream test",
+          "upstreamBehaviour": "accepts these values (its Duration.Input type admits them), builds the journal and appends, then dies at scope close when the shutdown finalizer throws 'Invalid Input: 1e3 seconds' or 'RangeError: Not an integer'",
+          "labBehaviour": "shutdownPublishTimeout is decoded into a Duration with the configuration, so an unconvertible input fails InvalidJournalConfig at construction before resources are allocated; every convertible Duration.Input (100, '100 millis', a Duration) is accepted",
+          "reason": "upstream-bug: probe 29 (29-unconvertible-timeout): a value the config type admits escapes as a defect from a scope finalizer after the journal was used, instead of failing the typed layer channel; decode via S.decodeTo + SchemaTransformation (law:13)"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.regressions.test.ts:113 (cursor -1, 1.5, NaN, Infinity fail InvalidSlice on query, changes, projection), scratchpad/test/jsonl/JournalDeviations.test.ts:192 (untyped from: '2026-01-01' fails InvalidSlice on all three), scratchpad/test/jsonl/Helpers.test.ts:56 (slice schemas reject -1 and 1.5); no upstream test",
+          "upstreamBehaviour": "cursor -1 replays everything; 1.5 and NaN die with RangeError 'Not an integer'; Infinity returns nothing; an untyped from string matches every record",
+          "labBehaviour": "query, changes and projection fail InvalidSlice with the schema issue before a subscription or file read; explicit undefined keys select what omitted keys select, as upstream",
+          "reason": "law:7 + law:EF-3; upstream-bug: probe 12 shows RangeError defects escaping the typed channel"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.edges.test.ts:120 (lossy S.Uint8Array payload fails InvalidData, no bytes written, latest none), scratchpad/test/jsonl/Envelope.test.ts:258 (Envelope.encodeResult rejects untyped scope 42 with InvalidData for its event); extends upstream __test__/Envelope.test.ts:328",
+          "upstreamBehaviour": "append writes the encoded line and only then decodes it (src/Journal.ts:519-566): on decode failure (S.Uint8Array payload, or scope 42 from an untyped caller) append fails InvalidData but the line stays on disk and every later query() fails at it; Envelope.encodeResult emits \"scope\":42, which its own decodeResult rejects",
+          "labBehaviour": "append encodes and decodes before opening the file: InvalidData with zero bytes written; Envelope.encodeResult checks scope after the payload and timestamp (upstream's order for those) and rejects scope 42",
+          "reason": "upstream-bug: probes 13 and 19 — upstream corrupts its own journal (later query() fails InvalidData at offset 81) and encodes frames its own decoder rejects"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Envelope.test.ts:206 (bigint and circular: cause is a SchemaError with message 'Expected a JSON-serializable value'; full message pinned); adjusts upstream __test__/Envelope.test.ts:379 and :387 (cause instanceOf TypeError)",
+          "upstreamBehaviour": "cause is the TypeError thrown by JSON.stringify; message detail names BigInt, the cycle, or the throwing getter's message",
+          "labBehaviour": "cause is the SchemaError from S.fromJsonString(S.Unknown); message detail 'Expected a JSON-serializable value' (the only JsonlError message text that differs from upstream for the same input)",
+          "reason": "law:EF-19 (JSON via schema codecs, never JSON.stringify) + law:EF-3"
+        },
+        {
+          "test": "scratchpad/test/jsonl/EnvelopeDeviations.test.ts:151 (payload mutated after Envelope.encode is built, direct and piped forms, emitted with run-time value), :163 (S.Struct payload with a throwing getter: building does not throw, running dies); upstream __test__/Envelope.test.ts:454 still holds",
+          "upstreamBehaviour": "Envelope.encode/decode evaluate their Result at Effect construction: a later payload mutation is ignored and an S.Struct throwing getter throws at construction, outside any fiber",
+          "labBehaviour": "Effect.fn evaluates when run: the run-time value is emitted and the same getter dies inside the fiber",
+          "reason": "law:22 + law:EF-14 (Effect-returning functions use Effect.fn); upstream-bug: probe 23 reproduces the construction-time throw upstream's own test calls a trap (__test__/Envelope.test.ts:398, merely building the Effect must be safe)"
+        },
+        {
+          "test": "scratchpad/test/jsonl/Journal.edges.test.ts:227; no upstream test",
+          "upstreamBehaviour": "when the file vanishes after the existence check, the seed read's JournalNotFound is caught but the following stat is not (src/Journal.ts:929-930): layer construction fails PlatformError (NotFound, method stat)",
+          "labBehaviour": "constructs a missing journal: latest none, append fails JournalNotFound, after create an append lands at offset 0",
+          "reason": "upstream-bug: probe 21; okf jsonl-journal.md 'layer construction never fails on a missing journal file' and upstream's own comment allowing the file to vanish between check and read"
+        },
+        {
+          "test": "scratchpad/test/jsonl/ErrorDeviations.test.ts:82",
+          "upstreamBehaviour": "name, String(error) and the first line of Cause.pretty use the tag: 'MalformedLine: JSONL malformed line at byte offset 12'",
+          "labBehaviour": "they use the $ScratchpadId identity: '@beep/scratchpad/effected/jsonl/JsonlError/MalformedLine: JSONL malformed line at byte offset 12'; _tag and message text unchanged",
+          "reason": "law:D5 ($ScratchpadId identity on every exported error, EFFECTED_PORT_GOAL.md) + law:EF-12; the identifier-keyed error declaration of .patterns/error-handling.md makes the identifier the error name"
+        },
+        {
+          "test": "scratchpad/test/jsonl/ErrorDeviations.test.ts:186 (all 13 members incl. both MalformedLine and both InvalidData branches: message is an own field, no prototype message accessor, exact text), :177 (table covers every JsonlError case)",
+          "upstreamBehaviour": "message is a prototype getter: Object.keys(error) is ['_tag'] and JSON.stringify(error) has no message key",
+          "labBehaviour": "message is an own enumerable field initialized after the schema fields; appears in Object.keys and JSON.stringify; text matches upstream for the same fields (UnserializableData detail aside)",
+          "reason": "upstream-bug: probes 25b, 25c, 29 (29-d25-bun-prepare-stack-members): under Bun 1.4.2 with an Error.prepareStackTrace hook that reads message, Bun runs the hook during base construction and upstream's getter-based MalformedLine, UnknownEvent and InvalidData throw at construction ('this.line.terminated', 'this.line.offset', 'fa._tag'); all 13 lab members construct. Matches the hazard named in the upstream __test__/JsonlError.test.ts header. Node 24 runs the hook lazily (25c), so the Bun evidence is advisory under D16 and the Node test pins the shape; cosmetic residue: under the hook the lab's three line-carrying members show an empty message in the stack head. Departs from the getter pattern in .patterns/error-handling.md"
+        },
+        {
+          "test": "scratchpad/test/jsonl/JournalDeviations.test.ts:209 (capturing logger records exactly two WARN lines in order with annotations)",
+          "upstreamBehaviour": "silent: JournalResync is only published to the hub, and the watcher supervisor stops re-arming without a signal",
+          "labBehaviour": "Effect.logWarning 'Journal watcher stopped after immediate completions' {path, rearms} and 'Journal source requires resynchronization' {path, reason, expected, actual}",
+          "reason": "law:EF-15 (effects observable through logs and annotations on key workflows)"
+        }
+      ],
       "backlog": [],
       "reviewRounds": [],
       "commits": [
         {
           "stage": 0,
+          "sha": "a39e465a534880b7c3bc2c89174a5b44b8ff2070"
+        },
+        {
+          "stage": 1,
           "sha": null
         }
       ],
       "blocked": null,
       "notes": [
         "2026-10-07T06:59:18.660Z Deferred to memfs S1 (goal 9.3): upstream __test__/helpers/memfs.ts and MemFsHelper.test.ts import @effected/memfs; restore both into scratchpad/test/jsonl right after memfs reaches S1. Lab-only behaviours (5 added error tags, paging, EOF clamp) get section 14 deviation entries with upstream probes at S2.",
-        "2026-10-07T06:59:18.969Z S1: S1 green: restored upstream EnvelopeTypes, LineProperty and integration/Journal.int suites (no upstream assertion failed), jsonl moved onto the generic runner, root imports rewritten, 332 tests."
+        "2026-10-07T06:59:18.969Z S1: S1 green: restored upstream EnvelopeTypes, LineProperty and integration/Journal.int suites (no upstream assertion failed), jsonl moved onto the generic runner, root imports rewritten, 332 tests.",
+        "2026-10-07T08:44:45.052Z S2: S2 green: docgen with every enforcement flag and the JSDoc law; README Port notes rewritten from an executed upstream-vs-lab probe review (26 candidates, adversarially verified): 23 deviations with law or upstream-bug causes and pinning tests, D13/D15/D16(input)/D19/D23 restored to upstream."
       ],
       "closedAt": null
     },

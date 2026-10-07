@@ -18,6 +18,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import {
   AppendOptions,
@@ -48,6 +49,8 @@ import {
   UnknownEvent,
   UnserializableData,
 } from "../../effected/jsonl/index.ts";
+import { SampledRange } from "../../effected/jsonl/internal/tail.ts";
+import { matchesFrame } from "../../effected/jsonl/Slice.ts";
 import { Ended, Noted, Reopened } from "./fixtures.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -213,6 +216,7 @@ const laws = {
   registryCursoredSlice: roundTrip(CursoredSlice(RegisteredTag)),
   openCursoredSlice: roundTrip(CursoredSlice(S.String)),
   journalResyncReason: roundTrip(JournalResyncReason),
+  sampledRange: roundTrip(SampledRange),
   malformedLine: errorRoundTrip(MalformedLine),
   unknownEvent: errorRoundTrip(UnknownEvent),
   unserializableData: errorRoundTrip(UnserializableData),
@@ -285,6 +289,8 @@ describe("jsonl schema round trips", () => {
 
   it.effect.prop("AppendOptions round-trips", [AppendOptions], ([options]) => laws.appendOptions(options), runs);
 
+  it.effect.prop("SampledRange round-trips", [SampledRange], ([page]) => laws.sampledRange(page), runs);
+
   it.effect.prop(
     "Slice round-trips over a registry tag domain",
     [Slice(RegisteredTag)],
@@ -308,20 +314,30 @@ describe("jsonl schema round trips", () => {
     runs
   );
 
+  // Upstream omission semantics (D15 reverted): an explicitly undefined optional
+  // key decodes, reads as undefined, and selects exactly what omitting it does.
   it.effect.prop(
-    "optional configuration and slice keys accept omission, not an explicit undefined",
-    [JournalConfig, CursoredSlice(RegisteredTag)],
-    ([config, slice]) =>
+    "optional configuration and slice keys treat an explicit undefined as omission",
+    [JournalConfig, CursoredSlice(RegisteredTag), EnvelopeFrame],
+    ([config, slice, frame]) =>
       Effect.gen(function* () {
         const encodedConfig = yield* encodeConfig(config);
-        for (const key of ["directory", "capacity", "shutdownPublishTimeout"]) {
-          const error = yield* Effect.flip(decodeConfig({ ...encodedConfig, [key]: undefined }));
-          assert.strictEqual(error._tag, "SchemaError", `JournalConfig.${key}: undefined is rejected`);
+        for (const key of ["directory", "capacity", "shutdownPublishTimeout"] as const) {
+          const explicit = yield* decodeConfig({ ...encodedConfig, [key]: undefined });
+          const omitted = yield* decodeConfig(Struct.omit(encodedConfig, [key]));
+          assert.isUndefined(explicit[key], `JournalConfig.${key}: undefined decodes as absent`);
+          assert.isUndefined(omitted[key], `JournalConfig.${key}: omission decodes as absent`);
         }
         const encodedSlice = yield* encodeCursoredSlice(slice);
-        for (const key of ["events", "scopes", "from", "to", "cursor"]) {
-          const error = yield* Effect.flip(decodeCursoredSlice({ ...encodedSlice, [key]: undefined }));
-          assert.strictEqual(error._tag, "SchemaError", `CursoredSlice.${key}: undefined is rejected`);
+        for (const key of ["events", "scopes", "from", "to", "cursor"] as const) {
+          const explicit = yield* decodeCursoredSlice({ ...encodedSlice, [key]: undefined });
+          const omitted = yield* decodeCursoredSlice(Struct.omit(encodedSlice, [key]));
+          assert.isUndefined(explicit[key], `CursoredSlice.${key}: undefined decodes as absent`);
+          assert.strictEqual(
+            matchesFrame(frame, explicit),
+            matchesFrame(frame, omitted),
+            `CursoredSlice.${key}: undefined selects what omission selects`
+          );
         }
       }),
     runs

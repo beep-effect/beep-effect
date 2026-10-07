@@ -8,13 +8,13 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
-import { dual, pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
-import type { JsonlEvent } from "./JsonlEvent.ts";
+import type { DataSchema, JsonlEvent } from "./JsonlEvent.ts";
 import { Line } from "./Line.ts";
 import { LineSlice } from "./LineSlice.ts";
 
@@ -104,7 +104,10 @@ export type EnvelopeWithTag<R extends JsonlEvent.Registry, T extends string> = E
 
 type DecodeError = MalformedLine | InvalidData | UnknownEvent;
 type EncodeError = UnknownEvent | InvalidData | UnserializableData;
-type InputOf<E extends JsonlEvent.Any> = E extends JsonlEvent.Any ? Omit<EnvelopeOf<E>, "line"> : never;
+// As upstream's encoder signature: an explicitly undefined scope is accepted and omitted.
+type InputOf<E extends JsonlEvent.Any> = E extends JsonlEvent.Any
+  ? Omit<EnvelopeOf<E>, "line" | "scope"> & { readonly scope?: string | undefined }
+  : never;
 type Encoding<R extends JsonlEvent.Registry> = InputOf<R[number]>;
 
 // A weak-key cache releases an index when its registry is no longer used.
@@ -122,8 +125,20 @@ const indexRegistry = (events: JsonlEvent.Registry): HashMap.HashMap<string, num
 const definition = <R extends JsonlEvent.Registry>(events: R, tag: string): O.Option<R[number]> =>
   HashMap.get(indexRegistry(events), tag).pipe(O.flatMap((position) => A.get(events, position)));
 const decodeFrame = S.decodeUnknownResult(EnvelopeFrame);
+const encodeAt = S.encodeUnknownResult(S.DateTimeUtcFromString);
+const encodeScope = S.encodeUnknownResult(
+  S.Struct({ scope: S.optionalKey(S.String) }).annotate(
+    $I.annote("EnvelopeScope", { description: "The optional scope key an encoder input writes." })
+  )
+);
 const encodeJson = S.encodeResult(S.fromJsonString(S.Unknown));
 const emptyLine = LineSlice.make({ offset: 0, end: 0, length: 0, text: "", terminated: false });
+
+// The envelope codec only runs on a frame that passed EnvelopeFrame and whose tag
+// selected it, so its failure is the payload's. Report it as the payload codec
+// does, with issue paths relative to data; the envelope error is kept otherwise.
+const payloadError = (data: DataSchema, value: unknown, error: S.SchemaError): S.SchemaError =>
+  pipe(S.decodeUnknownResult(data)(value), Result.flip, Result.getOrElse(constant(error)));
 
 const completeResult = <R extends JsonlEvent.Registry>(
   events: R,
@@ -136,7 +151,9 @@ const completeResult = <R extends JsonlEvent.Registry>(
   }
   const codec: R[number]["envelope"] = found.value.envelope;
   return S.decodeResult(codec)({ ...frame, line }).pipe(
-    Result.mapError((error) => InvalidData.make({ line, event: O.some(frame.event), error }))
+    Result.mapError((error) =>
+      InvalidData.make({ line, event: O.some(frame.event), error: payloadError(found.value.data, frame.data, error) })
+    )
   );
 };
 
@@ -229,13 +246,17 @@ const encodeResult: {
         UnknownEvent.make({ line: emptyLine, event: envelope.event, known: A.map(events, (event) => event.tag) })
       );
     }
-    const encoded = S.encodeUnknownResult(found.value.input)(envelope);
+    // Upstream's order and roots: the payload codec, then the timestamp codec,
+    // each on its own value, then the scope check that keeps the frame readable.
+    const encoded = Result.all({
+      data: S.encodeUnknownResult(found.value.data)(envelope.data),
+      at: encodeAt(envelope.at),
+      scope: encodeScope(O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) })),
+    });
     if (Result.isFailure(encoded))
       return Result.fail(InvalidData.make({ line: emptyLine, event: O.some(envelope.event), error: encoded.failure }));
-    return encodeJson({
-      ...encoded.success,
-      data: encoded.success.data === undefined ? null : encoded.success.data,
-    }).pipe(
+    const { at, scope, data } = encoded.success;
+    return encodeJson({ at, event: envelope.event, ...scope, data: data === undefined ? null : data }).pipe(
       Result.map((text) => `${text}\n`),
       Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause }))
     );
@@ -341,7 +362,7 @@ export const Envelope = {
    */
   frameResult,
   /**
-   * Validates one line with its registered payload codec. Supply the registry last, or curry the registry and pipe the line into the result. The registry is frozen on its first lookup.
+   * Validates one line with its registered payload codec; a payload failure's issue path is relative to data. Supply the registry last, or curry the registry and pipe the line into the result. The registry is frozen on its first lookup.
    *
    * **Example** (Pipe a line through its registry)
    *
@@ -420,7 +441,7 @@ export const Envelope = {
    */
   lastValidResult,
   /**
-   * Validates a correlated tag and payload, then returns one JSON line including its newline. Void payloads encode as null and absent scope keys stay omitted. Unserializable values fail in the Result channel.
+   * Validates the payload with its registered codec, then the timestamp and the scope, and returns one JSON line including its newline. A payload failure's issue path is relative to data, and a timestamp failure carries no path. Void payloads encode as null, and an absent or undefined scope is omitted. Unserializable values fail in the Result channel.
    *
    * **Example** (Encode a correlated payload with a terminator)
    *

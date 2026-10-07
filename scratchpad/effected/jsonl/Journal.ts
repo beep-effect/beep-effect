@@ -22,9 +22,12 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import type * as PlatformError from "effect/PlatformError";
+import * as P from "effect/Predicate";
 import * as PubSub from "effect/PubSub";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 import type * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
@@ -37,7 +40,7 @@ import type { EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
 import { Envelope } from "./Envelope.ts";
 import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
 import type { TailWindow } from "./internal/tail.ts";
-import { DEFAULT_WINDOW, probeBomBytes, readRangeWindow, readTailUntil } from "./internal/tail.ts";
+import { DEFAULT_WINDOW, probeBomBytes, readRangeWindow, readSampledWindow, readTailUntil } from "./internal/tail.ts";
 import type { InvalidData, JsonlError, MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import {
   InvalidJournalConfig,
@@ -204,11 +207,21 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    *
    * Invalid slices fail with `InvalidSlice`. Unterminated suffixes remain
    * pending until their writer completes them; terminated corruption fails
-   * the read. One end-of-file boundary is captured, then complete records are
-   * emitted in bounded pages. A record larger than the default window widens
-   * its page until that record fits; memory is bounded by a page or the largest
-   * record, rather than the full journal. Invalid committed UTF-8 fails with
+   * the read. One end-of-file boundary is captured and the file is opened
+   * once; complete records are then emitted in bounded pages read through
+   * that one handle. A record larger than the default window widens its page
+   * until that record fits; memory is bounded by a page or the largest record,
+   * rather than the full journal. Invalid committed UTF-8 fails with
    * `InvalidUtf8` without altering source bytes.
+   *
+   * **Gotchas**
+   *
+   * Paging makes a change beneath an in-flight read observable, where a single
+   * whole-region read would not be. A file renamed over the path after the
+   * range was sampled cannot reach the pinned handle, so the read keeps
+   * returning the sampled history. A file truncated beneath the read fails
+   * with `JournalResync` (truncated) once a page finds fewer bytes than were
+   * sampled, after the records of the earlier pages have been emitted.
    */
   readonly query: {
     <T extends JsonlEvent.Tag<R>>(
@@ -225,9 +238,11 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * **Details**
    *
    * With a `cursor`, replay-from-cursor and the live tail are **one seam**: the
-   * A future cursor is clamped to the captured file end so subsequent appends remain live.
-   * The replayed history and the live tail are the same stream, filtered the same
-   * way, so a consumer cannot observe a gap or a duplicate at the join.
+   * replayed history and the live tail are the same stream, filtered the same
+   * way, so a consumer cannot observe a gap or a duplicate at the join. Both
+   * halves compare the cursor at-or-after against a line's start offset, so a
+   * cursor beyond the current end delivers nothing until a line starts at or
+   * after it.
    *
    * The stream **ends** — it never hangs — when the journal becomes quiescent
    * (a `terminal` event reaches the tail) or its scope closes. Subscribing to
@@ -299,7 +314,109 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
 }
 
 /**
+ * The duration strings `Duration.fromInput` parses: a signed decimal, whitespace
+ * and a unit, or a signed `Infinity`. The grammar mirrors Effect's own parser,
+ * so every string admitted here decodes into a `Duration`.
+ */
+const DURATION_STRING =
+  /^(?:-?Infinity|-?\d+(?:\.\d+)?\s+(?:nanos?|micros?|millis?|seconds?|minutes?|hours?|days?|weeks?))$/;
+
+/** Text in the duration-string grammar; also the generation source for its arbitrary. */
+const DurationText = S.String.check(S.isPattern(DURATION_STRING));
+const isDurationText = S.is(DurationText);
+
+/** The string members of `Duration.Input`. */
+type DurationString = Extract<Duration.Input, string>;
+
+const DurationString = S.declare((input: unknown): input is DurationString => isDurationText(input))
+  .annotate({
+    toCodecArbitrary: () => S.link<DurationString>()(DurationText, SchemaTransformation.passthroughSupertype()),
+  })
+  .pipe(
+    $I.annoteSchema("DurationString", {
+      description: "A duration string accepted by Duration.fromInput, including signed decimals and infinities.",
+    })
+  );
+
+/**
+ * Any JavaScript number. `Duration.Input` deliberately admits `NaN` and the
+ * infinities (`Infinity` milliseconds is an unbounded wait), so this is not a
+ * finite domain number; generation draws from finite numbers.
+ */
+const DurationNumber = S.declare(P.isNumber)
+  .annotate({ toCodecArbitrary: () => S.link<number>()(S.Finite, SchemaTransformation.passthrough()) })
+  .pipe(
+    $I.annoteSchema("DurationNumber", {
+      description: "A JavaScript number, including the special values Duration.fromInput accepts.",
+    })
+  );
+
+/** The object member of `Duration.Input`; every component is optional and additive. */
+const DurationObject = S.Struct({
+  weeks: S.optional(DurationNumber),
+  days: S.optional(DurationNumber),
+  hours: S.optional(DurationNumber),
+  minutes: S.optional(DurationNumber),
+  seconds: S.optional(DurationNumber),
+  milliseconds: S.optional(DurationNumber),
+  microseconds: S.optional(DurationNumber),
+  nanoseconds: S.optional(DurationNumber),
+}).annotate(
+  $I.annote("DurationObject", { description: "Additive duration components accepted by Duration.fromInput." })
+);
+
+/**
+ * Every `Duration.Input` shape: a `Duration`, milliseconds, bigint nanoseconds,
+ * a `[seconds, nanos]` tuple, a duration string or a duration object.
+ */
+const DurationInput = S.Union([
+  S.Duration,
+  DurationNumber,
+  S.BigInt,
+  S.Tuple([DurationNumber, DurationNumber]),
+  DurationString,
+  DurationObject,
+]).annotate($I.annote("DurationInput", { description: "Every input shape Duration.fromInput accepts." }));
+
+/**
+ * A `Duration.Input` decoded into a `Duration`.
+ *
+ * **Details**
+ *
+ * The union admits every input shape, but `Duration.fromInput` still refuses
+ * some well-shaped values: a tuple or object whose nanosecond total overflows
+ * to a non-finite number cannot become a bigint. Those fail the decode with an
+ * issue rather than escaping as a `RangeError` defect.
+ */
+const DurationFromInput = DurationInput.pipe(
+  S.decodeTo(
+    S.Duration,
+    SchemaTransformation.transformEffect<Duration.Duration, typeof DurationInput.Type>({
+      decode: (input, options) =>
+        Effect.fromOption(
+          Duration.fromInput(input),
+          () => new SchemaIssue.InvalidValue({ expected: "a Duration.Input that converts" }, input, options)
+        ),
+      encode: Effect.succeed,
+    })
+  )
+);
+
+/** Subscriber hub capacity: a positive integer. */
+const Capacity = S.Int.check(S.isGreaterThan(0)).annotate(
+  $I.annote("JournalCapacity", { description: "A positive integer subscriber hub capacity." })
+);
+
+/**
  * Configuration for one journal layer.
+ *
+ * **Details**
+ *
+ * Optional keys follow upstream omission semantics: an explicitly `undefined`
+ * key behaves exactly like an omitted one. `shutdownPublishTimeout` accepts any
+ * `Duration.Input` (a `Duration`, milliseconds or a string such as
+ * `"100 millis"`); the layer decodes it into a `Duration`, and an input
+ * Effect cannot convert fails construction with `InvalidJournalConfig`.
  *
  * **Example** (Bound journal shutdown)
  * ```ts import.meta.vitest name="Bound journal shutdown"
@@ -307,6 +424,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
  * import * as Duration from "effect/Duration";
  * const config = JournalConfig.make({ path: "events.jsonl", shutdownPublishTimeout: Duration.seconds(2) });
  * config.path // => "events.jsonl"
+ * const input = JournalConfig.make({ path: "events.jsonl", shutdownPublishTimeout: "2 seconds" });
+ * input.shutdownPublishTimeout // => "2 seconds"
  * ```
  *
  * @public
@@ -317,11 +436,11 @@ export const JournalConfig = S.Struct({
   /** Journal path; construction permits a missing file. */
   path: S.String,
   /** Directory to watch until creation; defaults to the parent of path. */
-  directory: S.optionalKey(S.String),
+  directory: S.optional(S.String),
   /** Backpressured subscriber capacity; defaults to 64. */
-  capacity: S.optionalKey(S.Int.check(S.isGreaterThan(0))),
-  /** Bound on graceful shutdown publication; defaults to five seconds. */
-  shutdownPublishTimeout: S.optionalKey(S.Duration),
+  capacity: S.optional(Capacity),
+  /** Bound on graceful shutdown publication, as any Duration.Input; defaults to five seconds. */
+  shutdownPublishTimeout: S.optional(DurationInput),
 }).annotate($I.annote("JournalConfig", { description: "File and subscription settings for one journal layer." }));
 
 /**
@@ -342,13 +461,12 @@ export type JournalConfig = typeof JournalConfig.Type;
  */
 const SHUTDOWN_PUBLISH_TIMEOUT = Duration.seconds(5);
 
+// Decoding a JournalConfig: a missing or undefined optional key takes its
+// default, and the shutdown bound becomes a Duration.
 const JournalSettings = S.Struct({
   ...JournalConfig.fields,
-  capacity: JournalConfig.fields.capacity.pipe(S.requiredKey, S.withDecodingDefaultKey(Effect.succeed(64))),
-  shutdownPublishTimeout: JournalConfig.fields.shutdownPublishTimeout.pipe(
-    S.requiredKey,
-    S.withDecodingDefaultKey(Effect.succeed(SHUTDOWN_PUBLISH_TIMEOUT))
-  ),
+  capacity: Capacity.pipe(S.withDecodingDefault(Effect.succeed(64))),
+  shutdownPublishTimeout: DurationFromInput.pipe(S.withDecodingDefaultType(Effect.succeed(SHUTDOWN_PUBLISH_TIMEOUT))),
 }).annotate(
   $I.annote("JournalSettings", { description: "Validated journal settings with buffering and shutdown defaults." })
 );
@@ -741,10 +859,17 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    *
    * **Details**
    *
-   * Captures one file end, then reads bounded complete-record pages. A page
-   * widens only when no complete record fits, including a cursor fragment.
-   * Frame filtering still precedes payload decoding; a failed record follows
-   * all earlier selected records in the stream.
+   * Captures one file end and opens the file once, then reads bounded
+   * complete-record pages through that handle. A page widens only when no
+   * complete record fits, including a cursor fragment. Frame filtering still
+   * precedes payload decoding; a failed record follows all earlier selected
+   * records in the stream.
+   *
+   * Upstream reads the whole sampled region in one allocation, which is a
+   * snapshot by construction and holds the entire history in memory
+   * (spencerbeggs/effected#233). Paging keeps memory bounded, so the snapshot
+   * has to be kept explicitly: the handle pins the sampled file against a
+   * replacement, and a page shorter than the sample fails `JournalResync`.
    */
   const decodeSelection = S.decodeUnknownEffect(S.UndefinedOr(CursoredSlice(S.String)));
   const validateSelection = Effect.fn("Journal.validateSelection")((slice: unknown) =>
@@ -765,32 +890,47 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         if (from >= logicalSize) {
           return Stream.empty;
         }
+        // Pin the sampled file. Every page is read through this one handle, so
+        // a file renamed over the path later cannot leak into the range, and
+        // a truncation surfaces as a short page instead of an early end. A
+        // replacement between the stat above and this open is caught here.
+        const file = yield* fs.open(config.path, { flag: "r" });
+        const pinned = yield* file.stat;
+        const sampledIdentity = identityOf(info);
+        const pinnedIdentity = identityOf(pinned);
+        if (
+          O.isSome(sampledIdentity) &&
+          O.isSome(pinnedIdentity) &&
+          sampledIdentity.value !== pinnedIdentity.value
+        ) {
+          return yield* JournalResync.make({
+            path: config.path,
+            reason: JournalResyncReason.Enum.replaced,
+            expected: logicalSize,
+            actual: Math.max(0, ByteSize.toNumberUnsafe(pinned.size) - bom),
+          });
+        }
         // Capture one absolute range. Growth after this snapshot must not
         // move its start or extend its end. The preceding byte establishes
         // whether the cursor is at a boundary or inside a partial line.
         const start = Math.max(0, from - 1);
+        const readPage = (position: number, length: number) =>
+          readSampledWindow(file, {
+            path: config.path,
+            from: position + bom,
+            length,
+            bomBytes: bom,
+            sampledEnd: logicalSize,
+            skipPartialLine: position === start && start > 0,
+          });
         return Stream.paginate(
           start,
           Effect.fn("Journal.readPage")(function* (position) {
             let length = Math.min(DEFAULT_WINDOW, logicalSize - position);
-            let window = yield* readRangeWindow(
-              fs,
-              config.path,
-              position + bom,
-              length,
-              bom,
-              position === start && start > 0
-            );
+            let window = yield* readPage(position, length);
             while (Str.isEmpty(window.text) && position + length < logicalSize) {
               length = Math.min(length * 2, logicalSize - position);
-              window = yield* readRangeWindow(
-                fs,
-                config.path,
-                position + bom,
-                length,
-                bom,
-                position === start && start > 0
-              );
+              window = yield* readPage(position, length);
             }
             const advanced = window.start + utf8Length(window.text);
             const next = advanced > position && advanced < logicalSize ? O.some(advanced) : O.none<number>();
@@ -870,17 +1010,11 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         // join still cannot duplicate: a line can be on disk when the replay
         // reads it AND still in flight to the hub, so it arrives twice.
         // Offsets are monotonic in file order, so the last replayed `end` is
-        // exactly the boundary between "already delivered" and "new".
-        let effectiveCursor = 0;
-        if (slice?.cursor !== undefined) {
-          yield* requireFile;
-          const bom = yield* probeBomBytes(fs, config.path);
-          const info = yield* fs.stat(config.path);
-          effectiveCursor = Math.min(slice.cursor, ByteSize.toNumberUnsafe(info.size) - bom);
-        }
-        const historySlice = slice?.cursor === undefined ? slice : { ...slice, cursor: effectiveCursor };
-        let replayedThrough = effectiveCursor;
-        const history = (slice?.cursor === undefined ? Stream.empty : readFrom(historySlice)).pipe(
+        // exactly the boundary between "already delivered" and "new". The
+        // requested cursor is the starting boundary, so a live line starting
+        // below it is filtered exactly as the replay filters it.
+        let replayedThrough = slice?.cursor ?? 0;
+        const history = replay.pipe(
           Stream.tap((envelope) =>
             Effect.sync(() => {
               replayedThrough = Math.max(replayedThrough, envelope.line.end);

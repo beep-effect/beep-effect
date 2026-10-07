@@ -1,6 +1,14 @@
 // Adapted from upstream Envelope.test.ts (MIT), using value-first dual codecs.
-import { Envelope, InvalidData, JsonlEvent, Line, MalformedLine, UnknownEvent } from "../../effected/jsonl/index.ts";
-import type { EnvelopeInput } from "@beep/scratchpad/effected/jsonl/Envelope";
+import {
+  Envelope,
+  InvalidData,
+  JsonlEvent,
+  Line,
+  MalformedLine,
+  UnknownEvent,
+  UnserializableData,
+} from "../../effected/jsonl/index.ts";
+import type { EnvelopeInput } from "../../effected/jsonl/Envelope.ts";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertNone, assertSome, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -214,6 +222,14 @@ describe("Envelope boundaries", () => {
         assert.strictEqual(error._tag, "UnserializableData");
         assert.include(error.message, "unknown");
         assert.notInclude(error.message, "loop");
+        // Adjusts upstream's `cause instanceOf TypeError`: the JSON codec's SchemaError is the cause (D20).
+        if (!S.is(UnserializableData)(error)) return assert.fail("expected UnserializableData");
+        if (!S.isSchemaError(error.cause)) return assert.fail("expected the JSON codec's SchemaError as the cause");
+        assert.strictEqual(error.cause.message, "Expected a JSON-serializable value");
+        assert.strictEqual(
+          error.message,
+          'cannot serialize payload for event "unknown": Expected a JSON-serializable value'
+        );
       })
     );
   }
@@ -251,15 +267,18 @@ describe("encoder validation boundaries", () => {
     assert.strictEqual(result.failure.line.offset, 0);
     assert.isDefined(result.failure.error.issue);
   });
-  it("rejects an explicitly undefined scope at the exact optional input boundary", () => {
-    const result: unknown = Reflect.apply(Envelope.encodeResult, undefined, [
+  it("treats an explicitly undefined scope as an omitted one, as upstream does", () => {
+    const encoded = Envelope.encodeResult(
       { at, event: "mail", scope: undefined, data: { round: 7, from: "silk" } },
-      events,
-    ]);
-    if (!Result.isResult(result)) return assert.fail("expected an encoding Result");
-    if (!Result.isFailure(result) || !S.is(InvalidData)(result.failure))
-      return assert.fail("explicit undefined is outside the exact optional contract");
-    assertSome(result.failure.event, "mail");
+      events
+    );
+    assertSuccess(encoded, text(7) + "\n");
+    assertSuccess(
+      Envelope.encodeResult({ at, event: "end", scope: undefined, data: undefined }, events),
+      '{"at":"2026-08-03T17:04:11.912Z","event":"end","data":null}\n'
+    );
+    const decoded = encoded.pipe(Result.getOrThrow, line, Envelope.decodeResult(events), Result.getOrThrow);
+    assert.isFalse(P.hasProperty(decoded, "scope"));
   });
   it("rejects invalid timestamps introduced by an untyped caller", () => {
     const input: EnvelopeInput<"mail", typeof Payload.Type> = { at, event: "mail", data: { round: 7, from: "silk" } };

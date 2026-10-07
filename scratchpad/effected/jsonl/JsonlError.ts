@@ -12,8 +12,6 @@
 // during base construction, before a derived getter can safely read those fields.
 
 import { $ScratchpadId } from "@beep/identity/packages";
-import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -147,8 +145,6 @@ export class UnknownEvent extends S.TaggedError<UnknownEvent>($I`UnknownEvent`)(
     /** The tags this journal's registry does define. */
     known: S.String.pipe(
       S.Array,
-      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
-      S.withDecodingDefault(Effect.succeed(A.empty<string>())),
       $I.annoteKey("UnknownEvent.known", {
         description: "The tags this journal's registry does define.",
       })
@@ -224,8 +220,6 @@ export class InvalidData extends S.TaggedError<InvalidData>($I`InvalidData`)(
      */
     event: S.String.pipe(
       S.Option,
-      S.withConstructorDefault(Effect.succeedNone),
-      S.withDecodingDefault(Effect.succeedNone),
       $I.annoteKey("InvalidData.event", {
         description:
           "The event tag whose payload schema rejected the data, or `none` when it was the envelope frame itself that failed.",

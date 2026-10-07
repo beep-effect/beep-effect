@@ -10,10 +10,11 @@
 // the cost of answering "what is the current state" grow with the age of the
 // journal, which is the thing this package exists to avoid.
 //
-// Historical reads capture an absolute range and decode it through
-// `readRangeWindow`, retaining their sampled start/end if another writer appends.
-// Each requested range is materialized as text. Journal historical reads call
-// this helper in bounded pages and emit complete envelopes between reads.
+// Historical reads capture an absolute range, open the journal once, and read
+// every bounded page of that range through `readSampledWindow` on the one
+// handle. Growth past the sampled end is never read, a replacement after the
+// sample cannot reach the pinned handle, and a page shorter than the sampled
+// range fails `JournalResync` instead of ending the read early.
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
@@ -27,7 +28,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
-import { InvalidUtf8 } from "../JsonlError.ts";
+import { InvalidUtf8, JournalResync, JournalResyncReason } from "../JsonlError.ts";
 import { ByteCount } from "../LineSlice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/internal/tail");
@@ -100,18 +101,16 @@ const readBytes = Effect.fn("Jsonl.readBytes")(function* (file: FileSystem.File,
   return bytes.subarray(0, offset);
 });
 
-const readWindow = Effect.fn("Jsonl.readWindow")(function* (
-  fs: FileSystem.FileSystem,
+/** Decode the bytes read at `from` into a window with logical offsets. */
+const windowOf = Effect.fn("Jsonl.windowOf")(function* (
   path: string,
+  bytes: Uint8Array,
   from: number,
   length: number,
   bomBytes: number,
   skipPartialLine: boolean,
   completeOnly: boolean,
-): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
-  const file = yield* fs.open(path, { flag: "r" });
-  yield* file.seek(BigInt(from), "start");
-  const bytes = yield* readBytes(file, length);
+): Effect.fn.Return<TailWindow, InvalidUtf8> {
   const cursor = skipPartialLine
     ? A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
       O.map((newline) => newline + 1),
@@ -139,6 +138,21 @@ const readWindow = Effect.fn("Jsonl.readWindow")(function* (
     size: from + length - bomBytes,
     atFileStart: from === bomBytes,
   });
+});
+
+const readWindow = Effect.fn("Jsonl.readWindow")(function* (
+  fs: FileSystem.FileSystem,
+  path: string,
+  from: number,
+  length: number,
+  bomBytes: number,
+  skipPartialLine: boolean,
+  completeOnly: boolean,
+): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
+  const file = yield* fs.open(path, { flag: "r" });
+  yield* file.seek(BigInt(from), "start");
+  const bytes = yield* readBytes(file, length);
+  return yield* windowOf(path, bytes, from, length, bomBytes, skipPartialLine, completeOnly);
 }, Effect.scoped);
 
 /**
@@ -197,6 +211,119 @@ export const readRangeWindow: {
       skipPartialLine = false,
     ) => readWindow(fs, path, from, length, bomBytes, skipPartialLine, true),
   ),
+);
+
+/**
+ * One bounded page of a historical range, read through the handle a reader
+ * opened when it sampled the range.
+ *
+ * **Details**
+ *
+ * `from` is the page's physical offset and `length` the bytes it must cover;
+ * both stay inside the sampled range. `sampledEnd` is that range's logical
+ * end, reported as `JournalResync.expected` when the file no longer holds the
+ * page. `skipPartialLine` discards a leading cursor fragment, as for
+ * {@link readRangeWindow}.
+ *
+ * **Example** (Describe the first page of a sampled range)
+ * ```ts import.meta.vitest name="Describe the first page of a sampled range"
+ * import { SampledRange } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * const page = SampledRange.make({
+ *   path: "events.jsonl", from: 0, length: 4, bomBytes: 0, sampledEnd: 4, skipPartialLine: false,
+ * });
+ * page.sampledEnd // => 4
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const SampledRange = S.Struct({
+  path: S.String,
+  from: ByteCount,
+  length: ByteCount,
+  bomBytes: ByteCount,
+  sampledEnd: ByteCount,
+  skipPartialLine: S.Boolean,
+}).annotate(
+  $I.annote("SampledRange", {
+    description: "One bounded page of a sampled historical range, read through the reader's pinned handle.",
+  }),
+);
+
+/**
+ * One bounded page of a sampled historical range.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SampledRange = typeof SampledRange.Type;
+
+/**
+ * Decode one page of a sampled range through an already open handle.
+ *
+ * **Details**
+ *
+ * The handle is the one the reader opened when it sampled the range, so a file
+ * renamed over the path afterwards cannot leak into the read: the handle still
+ * names the sampled file. Every byte of the page lies inside that sample, so a
+ * read that reaches end of file first means the file shrank beneath the reader;
+ * it fails `JournalResync` (truncated) with the sampled logical end as
+ * `expected` and the handle's current logical size as `actual`, rather than
+ * ending the read early as if the history were complete. Like
+ * {@link readRangeWindow}, bytes after the final newline are withheld.
+ *
+ * **Example** (Fail a page the file no longer holds)
+ * ```ts
+ * import { readSampledWindow } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import * as Effect from "effect/Effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFileString("/events.jsonl", "1\n2\n");
+ *   const file = yield* fs.open("/events.jsonl", { flag: "r" });
+ *   const page = { path: "/events.jsonl", from: 0, length: 4, bomBytes: 0, sampledEnd: 4, skipPartialLine: false };
+ *   const window = yield* readSampledWindow(file, page);
+ *   window.text // => "1\n2\n"
+ *   yield* fs.writeFileString("/events.jsonl", "");
+ *   const error = yield* Effect.flip(readSampledWindow(file, page));
+ *   error._tag // => "JournalResync"
+ * });
+ * await Effect.runPromise(Effect.scoped(program));
+ * ```
+ *
+ * @internal
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const readSampledWindow: {
+  (
+    file: FileSystem.File,
+    page: SampledRange,
+  ): Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8 | JournalResync>;
+  (
+    page: SampledRange,
+  ): (file: FileSystem.File) => Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8 | JournalResync>;
+} = dual(
+  2,
+  Effect.fn("Jsonl.readSampledWindow")(function* (
+    file: FileSystem.File,
+    page: SampledRange,
+  ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8 | JournalResync> {
+    yield* file.seek(BigInt(page.from), "start");
+    const bytes = yield* readBytes(file, page.length);
+    if (bytes.length < page.length) {
+      const info = yield* file.stat;
+      return yield* JournalResync.make({
+        path: page.path,
+        reason: JournalResyncReason.Enum.truncated,
+        expected: page.sampledEnd,
+        actual: Math.max(0, ByteSize.toNumberUnsafe(info.size) - page.bomBytes),
+      });
+    }
+    return yield* windowOf(page.path, bytes, page.from, page.length, page.bomBytes, page.skipPartialLine, true);
+  }),
 );
 
 /**
