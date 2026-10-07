@@ -17,9 +17,9 @@ exploration's 2026-10-01 graduation sitting.
 | P1 Stage C capture and proof-ledger capture (W3-W4) | complete | Pin `run4-fleet` and the owning-clone ledger through two new sibling generators. | Both pins committed with tree-pinned citation replay passing and residue scans zero; or the ledger census recorded and the pin lane stopped (graduation Ruling 1). |
 | P2 Projection on live data and planEpisode body (W5-W6) | complete | Replay the pin's admission chains and give the planner seam a body. | S7 §3.2/§6 amended first; agreement report printed beside 41-of-41; lab tests and `package-verify @beep/ciops` green; CQ-009 excluded from the live-projection certainty gate over post-#929 rows until P3's re-scope (graduation Ruling 9). |
 | P3 Auditor run 4 (W7) | complete | One frozen run on the run-3 choreography. | Gate PASSED and sittings scribed, or a steward ruling closing the run with its reason. |
-| P4 KPI reading and verdict (W8-W9) | in-progress | Lab-side ETL to the v1.1 law, then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
-| P5 Yeet: PR to mergeable | pending | Drive each slice PR, and the final PR, to Yeet merge-ready. | Required checks green; zero unresolved review threads. |
-| P6 Close | pending | Closeout reflection and status flip on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
+| P4 KPI reading and verdict (W8-W9) | complete | Lab-side ETL to the KPI law (v1.2, extending v1.1), then the stated verdict and the S9 statement. | Verdict document beside `economics-close.json` M1 with the episode-definition mapping. |
+| P5 Yeet: PR to mergeable | complete | Drive each slice PR, and the final PR, to Yeet merge-ready. | Required checks green; zero unresolved review threads. |
+| P6 Close | complete | Closeout reflection and status flip on the final PR. | Reflection lints green; manifest, README and PLAN agree. |
 
 ## Workstreams
 
@@ -136,9 +136,13 @@ exploration's 2026-10-01 graduation sitting.
       the check-by-default reading `research/kpi-reading.{json,md}` (`ciops-kpi-reading/v1`). On
       the pins the seat-request clock opens no episode (Ruling 13), TierCiMergeGreen is unmeasured,
       and the normative starvation count is nonzero: a lawful failing report.
-- [ ] **W9 verdict.** Fleet P50/P95 for a ratified post-baseline window beside
+- [x] **W9 verdict.** Fleet P50/P95 for a ratified post-baseline window beside
       `economics-close.json` M1 with the episode-definition mapping; improvement reported,
       not required (graduation Ruling 3); the S9 statement of projected versus deployed route.
+      Landed 2026-10-06 (PR-B; P4 Ruling 17): `research/kpi-verdict.md`, hand-written beside M1 in
+      content only, with the episode-definition mapping, the M1-replica, the change-event table, the
+      #1427 paragraph, the S9 statement, what the pins cannot show, and the completion gate read clause
+      by clause. The status flips and the closeout reflection ride the same PR (P5 and P6 states).
 
 ## Sequencing
 
