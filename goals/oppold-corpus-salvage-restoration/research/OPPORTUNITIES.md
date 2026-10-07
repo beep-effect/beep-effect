@@ -219,3 +219,29 @@ because the coordinator has no queue.
 - **Prevented by:** a guard scoped to what is unsafe on the target filesystem
   (the POSIX separator and NUL), an error that names the row, and a synthetic
   fixture with a backslash in the name so the rule is pinned by a test.
+
+## 2026-10-07 — The hosted runner's `file(1)` is not the workstation's
+
+- **Doing:** reading the first hosted coverage run of the provenance tests.
+- **Evidence:** `plans, applies, journals ... undoes actual magic repairs`
+  expected 4 proposals and got 2 on the runner; the same test passes locally
+  (file 5.48). The synthetic fixtures are a minimal PDF, a 22-byte JPEG, a
+  text file and random bytes, and the runner's libmagic build read two of
+  them differently.
+- **Prevented by:** driving workflow tests through the service contract (a
+  deterministic `AttachmentMagicSniffer` layer) and keeping exactly one
+  small live-sniffer test on the one fixture every libmagic recognises; the
+  repair workflow is about journals and undo, not libmagic.
+
+## 2026-10-07 — A per-root escape check rejected the corpus's own symlinks
+
+- **Doing:** the first metadata census over `raw/`, `incoming/`,
+  `organized/` and the attachment trees.
+- **Evidence:** the run stopped on the first entry of `organized/` with
+  `Walk path escapes root ... resolves to .../raw/... which escapes the
+  allowed root`: `organized/` holds 28 symlinks into `raw/`, all inside the
+  corpus home, and the walk resolved them against the sub-root it was
+  started from.
+- **Prevented by:** an explicit walk boundary (the corpus home for the
+  census) separate from the directory being walked, and dedupe by canonical
+  path so a symlinked file is censused once under its real location.
