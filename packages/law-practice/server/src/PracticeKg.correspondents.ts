@@ -102,6 +102,13 @@ export class PracticeKgEmailParticipant extends S.Class<PracticeKgEmailParticipa
 /**
  * The headers of one email document the bundle holds.
  *
+ * **Details**
+ *
+ * `digest` ties the message to its attribution. `messageId` is the RFC 5322
+ * `Message-ID` when the source carried one: two copies of one message (a file
+ * the attorney saved and the same message in a mail archive) have different
+ * digests and the same `messageId`, and are counted once per matter.
+ *
  * **Example** (Make an email message)
  *
  * ```ts
@@ -110,13 +117,6 @@ export class PracticeKgEmailParticipant extends S.Class<PracticeKgEmailParticipa
  * const message = PracticeKgEmailMessage.make({ createdAt: null, digest: "sha256:9f2c", participants: [] })
  * console.log(message.participants.length) // 0
  * ```
- *
- * **Details**
- *
- * `digest` ties the message to its attribution. `messageId` is the RFC 5322
- * `Message-ID` when the source carried one: two copies of one message (a file
- * the attorney saved and the same message in a mail archive) have different
- * digests and the same `messageId`, and are counted once per matter.
  *
  * @category schemas
  * @since 0.0.0
