@@ -4,9 +4,9 @@
   "startedAt": "2026-10-07T06:36:54.420Z",
   "lastCheckpoint": {
     "module": "jsonl",
-    "stage": 2,
+    "stage": 3,
     "commit": null,
-    "at": "2026-10-07T08:44:45.052Z"
+    "at": "2026-10-07T08:45:02.033Z"
   },
   "rows": [
     {
@@ -14,7 +14,7 @@
       "module": "jsonl",
       "wave": 0,
       "position": 1,
-      "stage": 2,
+      "stage": 3,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -361,6 +361,10 @@
         },
         {
           "stage": 1,
+          "sha": "4c40c613ca93b74e0d12b1c43014aeceea6207fe"
+        },
+        {
+          "stage": 2,
           "sha": null
         }
       ],
@@ -368,7 +372,8 @@
       "notes": [
         "2026-10-07T06:59:18.660Z Deferred to memfs S1 (goal 9.3): upstream __test__/helpers/memfs.ts and MemFsHelper.test.ts import @effected/memfs; restore both into scratchpad/test/jsonl right after memfs reaches S1. Lab-only behaviours (5 added error tags, paging, EOF clamp) get section 14 deviation entries with upstream probes at S2.",
         "2026-10-07T06:59:18.969Z S1: S1 green: restored upstream EnvelopeTypes, LineProperty and integration/Journal.int suites (no upstream assertion failed), jsonl moved onto the generic runner, root imports rewritten, 332 tests.",
-        "2026-10-07T08:44:45.052Z S2: S2 green: docgen with every enforcement flag and the JSDoc law; README Port notes rewritten from an executed upstream-vs-lab probe review (26 candidates, adversarially verified): 23 deviations with law or upstream-bug causes and pinning tests, D13/D15/D16(input)/D19/D23 restored to upstream."
+        "2026-10-07T08:44:45.052Z S2: S2 green: docgen with every enforcement flag and the JSDoc law; README Port notes rewritten from an executed upstream-vs-lab probe review (26 candidates, adversarially verified): 23 deviations with law or upstream-bug causes and pinning tests, D13/D15/D16(input)/D19/D23 restored to upstream.",
+        "2026-10-07T08:45:02.033Z S3: S3 green on 74d94768ac: 364 tests, every file at 100 percent (coverage summary verified), canon clean with 3 ledgered exceptions (real-platform integration suites, live-clock watcher), property floor 41 properties (checkpoint 106d282f2b) plus deviation pins."
       ],
       "closedAt": null
     },
