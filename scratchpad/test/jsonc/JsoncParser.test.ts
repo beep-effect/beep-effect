@@ -12,7 +12,7 @@ import {
   parseValue,
   RawParseError,
   scanErrorToCode,
-} from "@beep/scratchpad/effected/jsonc/internal/parser";
+} from "../../effected/jsonc/internal/parser.ts";
 
 const flags = ParseFlags.make({});
 const codes = (text: string, options = flags): ReadonlyArray<string> => parseValue(text, options).errors.map((e) => e.code);

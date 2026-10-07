@@ -62,6 +62,32 @@ describe("JsoncVisitor", () => {
       })
     );
 
+    // Port deviation (upstream-bug): upstream wraps one generator object, so a
+    // second run of the same stream resumes the exhausted generator and yields
+    // nothing; the lab creates a fresh generator per run.
+    it.effect("one visit stream can be run more than once with the same events", () =>
+      Effect.gen(function* () {
+        const stream = JsoncVisitor.visit('{ "a": [1, 2] } // c');
+        const first = yield* Stream.runCollect(stream);
+        const second = yield* Stream.runCollect(stream);
+        assert.deepStrictEqual(first.map((e) => e._tag), [
+          "ObjectBegin",
+          "ObjectProperty",
+          "Separator",
+          "ArrayBegin",
+          "LiteralValue",
+          "Separator",
+          "LiteralValue",
+          "ArrayEnd",
+          "ObjectEnd",
+          "Comment",
+        ]);
+        assert.deepStrictEqual(second, first);
+        const literals = yield* stream.pipe(Stream.filter(JsoncVisitorEvent.guards.LiteralValue), Stream.runCollect);
+        assert.deepStrictEqual(literals.map((e) => e.value), [1, 2]);
+      })
+    );
+
     it.effect("emits nothing for an empty document", () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(yield* tags(""), []);

@@ -258,7 +258,9 @@ interface Internal {
 
 const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
   const scanner = createScanner(text, false);
-  let errors = A.empty<RawParseError>();
+  // Local accumulators below grow in place: an immutable append copies the
+  // whole array per element and makes wide containers quadratic.
+  const errors: Array<RawParseError> = [];
   let currentToken: SyntaxKind = "Unknown";
   // Current collection-nesting depth. Guards every recursive-descent surface
   // (parseArray/parseObject and their tree-mode twins) against stack overflow
@@ -274,7 +276,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
   const tokenEnd = (): number => scanner.getTokenOffset() + scanner.getTokenLength();
 
   const record = (code: ParseCode): void => {
-    errors = A.append(errors, {
+    errors.push({
       code,
       offset: scanner.getTokenOffset(),
       length: scanner.getTokenLength(),
@@ -389,7 +391,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
       A.empty<unknown>,
       () => {
         scanNext(); // skip [
-        let items = A.empty<unknown>();
+        const items: Array<unknown> = [];
         let needsComma = false;
         while (token() !== "CloseBracket" && token() !== "EOF") {
           if (!separator("CloseBracket", "ValueExpected", needsComma)) {
@@ -397,7 +399,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
           }
           const value = parseValue();
           if (O.isSome(value)) {
-            items = A.append(items, value.value);
+            items.push(value.value);
           } else {
             pushError("ValueExpected", ["CloseBracket", "Comma"]);
           }
@@ -497,7 +499,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
       () => makeNodeUnsafe({ type: "array", offset, length: scanner.getTokenOffset() - offset, children: [] }),
       () => {
         scanNext(); // skip [
-        let children = A.empty<JsoncNode>();
+        const children: Array<JsoncNode> = [];
         let needsComma = false;
         while (token() !== "CloseBracket" && token() !== "EOF") {
           if (!separator("CloseBracket", "ValueExpected", needsComma)) {
@@ -505,7 +507,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
           }
           const child = parseValueTree();
           if (O.isSome(child)) {
-            children = A.append(children, child.value);
+            children.push(child.value);
           } else {
             pushError("ValueExpected", ["CloseBracket", "Comma"]);
           }
@@ -523,7 +525,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
       () => makeNodeUnsafe({ type: "object", offset, length: scanner.getTokenOffset() - offset, children: [] }),
       () => {
         scanNext(); // skip {
-        let children = A.empty<JsoncNode>();
+        const children: Array<JsoncNode> = [];
         let needsComma = false;
         while (token() !== "CloseBrace" && token() !== "EOF") {
           if (!separator("CloseBrace", "PropertyNameExpected", needsComma)) {
@@ -537,8 +539,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
           const keyNode = leafTree("string", scanner.getTokenValue());
           if (token() !== "Colon") {
             pushError("ColonExpected", ["CloseBrace", "Comma"]);
-            children = A.append(
-              children,
+            children.push(
               makeNodeUnsafe({
                 type: "property",
                 offset: propOffset,
@@ -552,8 +553,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
           scanNext();
           const valueNode = parseValueTree();
           if (O.isSome(valueNode)) {
-            children = A.append(
-              children,
+            children.push(
               makeNodeUnsafe({
                 type: "property",
                 offset: propOffset,
@@ -564,8 +564,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
             );
           } else {
             pushError("ValueExpected", ["CloseBrace", "Comma"]);
-            children = A.append(
-              children,
+            children.push(
               makeNodeUnsafe({
                 type: "property",
                 offset: propOffset,

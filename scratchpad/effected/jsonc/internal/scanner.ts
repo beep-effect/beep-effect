@@ -250,10 +250,15 @@ export const createScanner: {
     };
 
     const scanString = (): string => {
-      let chunks = A.empty<string>();
+      // Decoded pieces grow in place: an immutable append copies every earlier
+      // chunk per escape and makes escape-heavy strings quadratic.
+      const chunks: Array<string> = [];
       pos++; // skip opening quote
       let start = pos;
-      const finish = (end: number): string => A.join(A.append(chunks, text.substring(start, end)), "");
+      const finish = (end: number): string => {
+        chunks.push(text.substring(start, end));
+        return A.join(chunks, "");
+      };
       while (pos < len) {
         const ch = text.charCodeAt(pos);
         if (ch === 0x22) {
@@ -262,7 +267,7 @@ export const createScanner: {
           return value;
         }
         if (ch === 0x5c) {
-          chunks = A.append(chunks, text.substring(start, pos));
+          chunks.push(text.substring(start, pos));
           pos++;
           if (pos >= len) {
             tokenError = "UnexpectedEndOfString";
@@ -273,11 +278,11 @@ export const createScanner: {
           pos++;
           const simple = simpleEscape(escaped);
           if (O.isSome(simple)) {
-            chunks = A.append(chunks, simple.value);
+            chunks.push(simple.value);
           } else if (escaped === 0x75) {
             const code = scanHexDigits(4);
             if (O.isSome(code)) {
-              chunks = A.append(chunks, String.fromCharCode(code.value));
+              chunks.push(String.fromCharCode(code.value));
             } else {
               tokenError = "InvalidUnicode";
             }

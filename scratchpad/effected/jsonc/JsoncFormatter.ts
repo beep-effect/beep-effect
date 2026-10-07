@@ -5,7 +5,6 @@
 // so the format surface stays symmetric with sibling document codecs. Both
 // statics are pure and total: computing edits never fails.
 
-import * as A from "effect/Array";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -100,6 +99,9 @@ interface Gap {
 
 const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFormattingOptions): ReadonlyArray<JsoncEdit> => {
   const indentUnit = options.insertSpaces ? Str.repeat(options.tabSize)(" ") : "\t";
+  // A surplus closer drives `depth` below zero. `Str.repeat` clamps that to no
+  // indent, so formatting stays total where upstream's `String.prototype.repeat`
+  // throws a `RangeError` (a recorded port deviation).
   const newline = (depth: number): string => options.eol + Str.repeat(depth)(indentUnit);
   const breakOrSpace = (gap: string, depth: number): string => (Str.includes("\n")(gap) ? newline(depth) : " ");
 
@@ -127,10 +129,12 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
     onSome: (r) => r.offset + r.length,
   });
 
-  let edits = A.empty<JsoncEdit>();
+  // Edits grow in place: an immutable append copies every earlier edit per
+  // token gap and makes reflowing a compact document quadratic.
+  const edits: Array<JsoncEdit> = [];
   const addEdit = (offset: number, length: number, content: string): void => {
     if (offset >= rangeStart && offset + length <= rangeEnd && text.substring(offset, offset + length) !== content) {
-      edits = A.append(edits, JsoncEdit.make({ offset, length, content }));
+      edits.push(JsoncEdit.make({ offset, length, content }));
     }
   };
 
@@ -143,10 +147,12 @@ const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFor
       continue;
     }
     const tokenOffset = scanner.getTokenOffset();
-    if (isCloser(kind)) {
-      depth--;
-    }
     if (O.isSome(previous)) {
+      // Only a closer with a predecessor closes a level: a leading closer has
+      // nothing to close and leaves the depth alone, as upstream does.
+      if (isCloser(kind)) {
+        depth--;
+      }
       const gap = text.substring(previous.value.end, tokenOffset);
       const content =
         options.keepLines && Str.includes("\n")(gap)

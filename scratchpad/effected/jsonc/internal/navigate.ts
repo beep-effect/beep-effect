@@ -41,8 +41,6 @@ export const NavigateContainer = LiteralKit(["object", "array"]).pipe(
   $I.annoteSchema("NavigateContainer", { description: "The JSONC container kind a path segment addresses." })
 );
 
-const Container = NavigateContainer;
-
 /**
  * Structural outcomes of locating a path in the original JSONC text.
  *
@@ -82,15 +80,15 @@ const Container = NavigateContainer;
  */
 export const NavigateResult = S.TaggedUnion({
   Located: {
-    container: Container,
+    container: NavigateContainer,
     keyStart: S.Natural,
     valueStart: S.Natural,
     valueEnd: S.Natural,
     commaBefore: S.Option(S.Natural),
     commaAfter: S.Option(S.Natural),
   },
-  Insert: { container: Container, at: S.Natural, isFirst: S.Boolean, depth: S.Natural },
-  Mismatch: { depth: S.Natural, expected: Container },
+  Insert: { container: NavigateContainer, at: S.Natural, isFirst: S.Boolean, depth: S.Natural },
+  Mismatch: { depth: S.Natural, expected: NavigateContainer },
   NoOp: {},
 }).pipe(
   $I.annoteSchema("NavigateResult", {

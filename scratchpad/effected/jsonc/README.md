@@ -240,38 +240,62 @@ New members on existing exports (not index exports): the static `JsoncEdit.apply
 Each entry gives the lab test that pins it, upstream behaviour, lab behaviour and the reason (section 14 of the port goal: `law:<id>` from `standards/effect-laws-v1.md`, or `upstream-bug:<evidence>`). Upstream behaviour was reproduced against upstream source at the commit above.
 
 1. **A throwing `toJSON` fails typed instead of escaping as a defect.**
-   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:323` ("a throwing toJSON fails typed with SerializationFailed"), adjusting upstream `__test__/Jsonc.test.ts:389` ("a throwing toJSON rethrows as a defect, never a typed error").
+   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:362` ("a throwing toJSON fails typed with SerializationFailed"), adjusting upstream `__test__/Jsonc.test.ts:389` ("a throwing toJSON rethrows as a defect, never a typed error").
    - Upstream: `Jsonc.stringifyResult` rethrows the `RangeError` thrown by `toJSON`; inside `Jsonc.stringify` it surfaces as a `Cause.Die` defect.
    - Lab: `Jsonc.stringifyResult` returns a `JsoncStringifyError` with code `SerializationFailed`, and `Jsonc.stringify` fails with it. Serialization runs through the `S.fromJsonString` codec, which reports any throw as a schema error; `SerializationFailed` is the code left when the replacer has classified neither a `bigint` nor a cycle.
    - Reason: `law:7` (typed errors via `S.TaggedError`, not escaping native exceptions) and `law:13` (schema transformations over ad-hoc serialization). It also matches upstream's own hardening invariant in `CLAUDE.md` ("Malformed or hostile input must fail through the typed `E` channel"), which upstream's test contradicts.
 
 2. **`JsoncModifier.modify` re-indents multi-line inserted values to the insertion depth.**
-   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:177` and `:184` (exact inserted content for a nested object with tabs and an array with `tabSize: 4`), tightening upstream `__test__/JsoncModifier.test.ts:162` and `:171`, which assert only that the content includes `\t"b"`.
+   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:232` (exact inserted content for a nested object with tabs and an array with `tabSize: 4`), tightening upstream `__test__/JsoncModifier.test.ts:162` and `:171`, which assert only that the content includes `\t"b"`.
    - Upstream: lines after the first keep `Jsonc.stringify`'s column-0 layout. `modify('{\n  "a": 1\n}', ["b"], { c: { d: 1 } })` applies as `{\n  "a": 1,\n  "b": {\n  "c": {\n    "d": 1\n  }\n}\n}`: the nested members sit one level too shallow and the inserted value's closing brace lands at column 0, beside the document's own.
    - Lab: every line after the first is prefixed with the insertion indent, so the same call yields `"b": {\n    "c": {\n      "d": 1\n    }\n  }` and the nested value lines up with its siblings.
    - Reason: `upstream-bug:` the mis-indented output above; upstream's tests check only `include('\t"b"')`, which both layouts satisfy.
 
 3. **Overlapping edits raise a typed `JsoncEditOverlapError`; `applyAllResult` is the value form.**
-   - Test: `scratchpad/test/jsonc/JsoncEdit.test.ts:87` ("overlapping edits throw the typed overlap error"), adjusting upstream `__test__/JsoncEdit.test.ts:47` (`assert.throws(..., /overlap/)`), plus `scratchpad/test/jsonc/JsoncEdit.test.ts:41` for `applyAllResult`.
+   - Test: `scratchpad/test/jsonc/JsoncEdit.test.ts:87` ("overlapping edits throw the typed overlap error"), adjusting upstream `__test__/JsoncEdit.test.ts:47` (`assert.throws(..., /overlap/)`), plus `scratchpad/test/jsonc/JsoncEdit.test.ts:42` for `applyAllResult`.
    - Upstream: `JsoncEdit.applyAll` throws a native `Error` whose message ends "overlapping edits are a programmer error"; a caller can catch it only untyped, and inside an Effect it is a defect.
    - Lab: `JsoncEdit.applyAll` still throws, but what it throws is the tagged `JsoncEditOverlapError` carrying `lower` and `upper` offsets, with the message "JsoncEdit.applyAll received overlapping edits at offsets <lower> and <upper>" (upstream's trailing clause dropped). `JsoncEdit.applyAllResult` returns the same error as a `Result` failure.
    - Reason: `law:7` (no native `Error` in production source; extend `S.TaggedError`).
 
 4. **`navigate` takes a non-empty path: internal shape only, not a deviation.**
-   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:137` (upstream `__test__/JsoncModifier.test.ts:79`, same meaning: the empty path replaces or clears the whole document) and `scratchpad/test/jsonc/JsoncModifier.test.ts:72` (negative and fractional final indices yield no edits).
+   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:173` (upstream `__test__/JsoncModifier.test.ts:79`, same meaning: the empty path replaces or clears the whole document) and `scratchpad/test/jsonc/JsoncModifier.test.ts:108` (negative and fractional final indices yield no edits).
    - Upstream: `internal/navigate.ts` returns `{ _tag: "NoOp" }` for an empty path and when its segment loop falls through on a final array index the scan passed (`-1`, `0.5`); `JsoncModifier.modify` maps `NoOp` to no edits.
    - Lab: `navigate` takes `A.NonEmptyReadonlyArray<JsoncSegment>` and returns an `S.TaggedUnion` of `Located | Insert | Mismatch | NoOp`, matched exhaustively; `JsoncModifier.modify` handles `[]` itself before navigating, and `NoOp` keeps upstream's no-edit answer for a passed index. Observable behaviour of `modify` matches upstream for both inputs.
-   - History: the first port dropped the index `NoOp` and appended instead; the wave-0 retrofit (2026-10-07) restored upstream's answer and pinned it with the `:72` test.
+   - History: the first port dropped the index `NoOp` and appended instead; the wave-0 retrofit (2026-10-07) restored upstream's answer and pinned it with the `:108` test.
    - Reason: none required (no observable difference). The internal shape follows `law:20` (finite variants as discriminated unions) and `law:11` (schema `.match` instead of a native `switch`).
 
 5. **Insertion into a container that ends with a trailing comma lands inside it.**
-   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:55` and the `JsoncModifier insert` property in `scratchpad/test/jsonc/Properties.test.ts`.
+   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:91` and the `JsoncModifier insert` property in `scratchpad/test/jsonc/Properties.test.ts`.
    - Upstream: `internal/navigate.ts` scans past the closer after a trailing comma, so `modify('{ "a": 1, }', ["delta"], [])` yields `{ "a": 1, },` followed by the new member (unparseable), a nested object's new key lands in the parent, and `[1, ]` at index `1` yields `[1, ,` plus the element.
    - Lab: a comma followed by the closer ends the scan, so the insertion goes after the last member inside the container and the result parses to the expected value.
    - Reason: `upstream-bug:` the default parse options accept trailing commas, the insertion property fails upstream on `{ "a": 1, }`, and no upstream test inserts into a trailing-comma container.
 
-6. **`"{ bad }"` reports `InvalidSymbol` before `PropertyNameExpected`: checked, not a deviation.**
-   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:132` and `:238` (exact code lists for `parseResult` and `parseTreeResult`) and `:77` (character `2`), tightening upstream `__test__/Jsonc.test.ts:37`, `:97` and `:253`, which assert only `errors.length > 0`, line `0` and character `>= 0`.
+6. **The formatter is total on unbalanced closers.**
+   - Test: `scratchpad/test/jsonc/JsoncFormatter.test.ts:56` and the totality property at `scratchpad/test/jsonc/Properties.test.ts:395`.
+   - Upstream: `format` and `formatToString` throw `RangeError` (`indentUnit.repeat(-1)`) on a surplus closer such as `]]` or `{"a":1}}`.
+   - Lab: a surplus closer formats with no indent; every edit still rewrites whitespace only.
+   - Reason: `upstream-bug:` a defect escapes a formatter on hostile input, against upstream's own hardening invariant and the format-package convention's C1.
+
+7. **A visit stream can run more than once.**
+   - Test: `scratchpad/test/jsonc/JsoncVisitor.test.ts:68`.
+   - Upstream: `JsoncVisitor.visit` wraps one generator object, so a second run of the same stream yields no events.
+   - Lab: each run creates a fresh generator and yields the same events.
+   - Reason: `upstream-bug:` a generator object's iterator is itself, so re-running resumes an exhausted generator; a `Stream` is re-runnable everywhere else in Effect.
+
+8. **`JsoncModifier.modify` fails typed on unserializable values.**
+   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:254`.
+   - Upstream: `modify` uses `JSON.stringify`, so a bigint, a cycle or a throwing `toJSON` escapes as a defect.
+   - Lab: `modify` fails with `JsoncStringifyError` (`BigIntValue`, `CircularReference` or `SerializationFailed`).
+   - Reason: `law:7`, the same cause as deviation 1.
+
+9. **`JsoncModificationError.offset` is finite.**
+   - Test: `scratchpad/test/jsonc/JsoncModifier.test.ts:58`.
+   - Upstream: `offset` is `Schema.optionalKey(Schema.Number)`, so `NaN` or `Infinity` decode.
+   - Lab: `offset` is `S.optionalKey(S.Finite)`; `modify` never sets it.
+   - Reason: `law:` the `schemaNumber` Effect rule is an error in `tsconfig.base.json` (`S.Number` admits non-finite values).
+
+10. **`"{ bad }"` reports `InvalidSymbol` before `PropertyNameExpected`: checked, not a deviation.**
+   - Test: `scratchpad/test/jsonc/Jsonc.test.ts:160` and `:269` (exact code lists for `parseResult` and `parseTreeResult`) and `:109` (character `2`), tightening upstream `__test__/Jsonc.test.ts:37`, `:97` and `:253`, which assert only `errors.length > 0`, line `0` and character `>= 0`.
    - Upstream: `Jsonc.parseResult("{ bad }")` reports `InvalidSymbol` then `PropertyNameExpected`, both at offset 2, length 3, line 0, character 2; `parseTreeResult` and `JsoncVisitor.visit` report the same order.
    - Lab: identical.
    - Reason: none required. The lab tests pin upstream's existing order where upstream's assertions were looser; the entry stays so a reviewer does not reopen it.

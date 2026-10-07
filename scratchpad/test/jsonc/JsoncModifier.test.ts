@@ -1,6 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertInstanceOf } from "@effect/vitest/utils";
+import { assertDefined, assertFailure, assertInstanceOf, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   Jsonc,
@@ -11,6 +12,7 @@ import {
   JsoncModifyOptions,
   JsoncStringifyError,
 } from "../../effected/jsonc/index.ts";
+import { NavigateContainer } from "../../effected/jsonc/internal/navigate.ts";
 
 const apply = (text: string, edits: ReadonlyArray<JsoncEdit>): string => JsoncEdit.applyAll(text, edits);
 
@@ -25,6 +27,40 @@ describe("JsoncModifier", () => {
     it("JsoncModificationError renders its path, kind and depth", () => {
       const error = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2 });
       assert.strictEqual(error.message, "Modification failed at path [a, 0]: expected array at depth 2");
+      assert.isFalse("offset" in error);
+    });
+
+    it("JsoncModificationError.expected is the named NavigateContainer kit", () => {
+      assert.strictEqual(JsoncModificationError.fields.expected, NavigateContainer);
+    });
+
+    // Upstream parity: `offset` is an optional key, named in the message only
+    // when present (byte-identical to upstream's rendering, offset 0 included).
+    it("JsoncModificationError carries an optional offset into its message", () => {
+      const error = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2, offset: 7 });
+      assert.strictEqual(error.offset, 7);
+      assert.strictEqual(error.message, "Modification failed at path [a, 0] (offset 7): expected array at depth 2");
+      assert.strictEqual(
+        JsoncModificationError.make({ path: [], expected: "object", depth: 1, offset: 0 }).message,
+        "Modification failed at path [] (offset 0): expected object at depth 1"
+      );
+      const decode = S.decodeUnknownResult(JsoncModificationError);
+      const decoded = Result.map(
+        decode({ _tag: "JsoncModificationError", path: ["a"], expected: "object", depth: 1, offset: 3 }),
+        (value) => value.offset
+      );
+      assertSuccess(decoded, 3);
+    });
+
+    // Port deviation (law:schema-first-precision): upstream types `offset` as
+    // `Schema.Number`; the lab narrows it to `S.Finite`, so a non-finite offset
+    // is rejected at decode instead of rendering "(offset Infinity)".
+    it("JsoncModificationError rejects a non-finite offset", () => {
+      const decode = S.decodeUnknownResult(JsoncModificationError);
+      for (const offset of [Number.POSITIVE_INFINITY, Number.NaN]) {
+        const decoded = decode({ _tag: "JsoncModificationError", path: ["a"], expected: "object", depth: 1, offset });
+        assertFailure(Result.mapError(decoded, (error) => error._tag), "SchemaError");
+      }
     });
   });
 
@@ -171,6 +207,28 @@ describe("JsoncModifier", () => {
       })
     );
 
+    // Upstream parity: a multi-line value keeps JSON.stringify's "\n" bytes;
+    // `eol` applies only to the wrapper around the inserted entry. The deeper
+    // columns are README deviation 2 (re-indentation to the insertion depth).
+    it.effect("keeps LF inside a re-indented multi-line value when eol is CRLF", () =>
+      Effect.gen(function* () {
+        const text = '{\r\n  "a": 1\r\n}';
+        const crlf = { formattingOptions: { eol: "\r\n" } };
+        const edits = yield* JsoncModifier.modify(text, ["b"], { c: { d: 1 } }, crlf);
+        assertDefined(edits[0]);
+        assert.strictEqual(edits[0].content, ',\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }');
+        assert.strictEqual(apply(text, edits), '{\r\n  "a": 1,\r\n  "b": {\n    "c": {\n      "d": 1\n    }\n  }\r\n}');
+        const first = yield* JsoncModifier.modify("[]", [0], [1], { formattingOptions: { eol: "\r\n", tabSize: 4 } });
+        assertDefined(first[0]);
+        assert.strictEqual(first[0].content, "\r\n    [\n        1\n    ]\r\n");
+        const tabs = yield* JsoncModifier.modify('{ "x": { "y": 1 } }', ["x", "z"], { q: 1 }, {
+          formattingOptions: { eol: "\r\n", insertSpaces: false },
+        });
+        assertDefined(tabs[0]);
+        assert.strictEqual(tabs[0].content, ',\r\n\t\t"z": {\n\t\t\t"q": 1\n\t\t}');
+      })
+    );
+
     it.effect("honors insertSpaces, tabSize and eol from an instance or a plain literal", () =>
       Effect.gen(function* () {
         const viaInstance = yield* JsoncModifier.modify("{}", ["a"], { b: 1 }, { formattingOptions: JsoncFormattingOptions.make({ insertSpaces: false }) });
@@ -189,10 +247,19 @@ describe("JsoncModifier", () => {
   });
 
   describe("errors", () => {
+    // Port deviation (law:7): upstream `modify` serializes with JSON.stringify,
+    // so a bigint, a cycle or a throwing toJSON escapes as a defect; the lab
+    // fails typed with JsoncStringifyError on every path (whole document,
+    // replace and insert).
     it.effect("reports serialization failures when replacing or inserting values", () =>
       Effect.gen(function* () {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
+        const throwing = {
+          toJSON: (): never => {
+            throw new RangeError("toJSON refused");
+          },
+        };
         for (const path of [[], ["a"], ["b"]]) {
           for (const text of ["{}", '{"a":0}']) {
             const bigint = yield* Effect.flip(JsoncModifier.modify(text, path, 1n));
@@ -201,6 +268,9 @@ describe("JsoncModifier", () => {
             const cycle = yield* Effect.flip(JsoncModifier.modify(text, path, circular));
             assertInstanceOf(cycle, JsoncStringifyError);
             assert.strictEqual(cycle.code, "CircularReference");
+            const refused = yield* Effect.flip(JsoncModifier.modify(text, path, throwing));
+            assertInstanceOf(refused, JsoncStringifyError);
+            assert.strictEqual(refused.code, "SerializationFailed");
           }
         }
       })

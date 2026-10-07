@@ -401,6 +401,8 @@ const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
 
 const isUnrepresentable = (value: unknown): boolean => P.isUndefined(value) || P.isFunction(value) || P.isSymbol(value);
 
+const topLevelUnrepresentableDetail = "the top-level value (undefined, a function or a symbol) has no JSON representation";
+
 // ── Bound codec ─────────────────────────────────────────────────────────────
 
 /**
@@ -446,9 +448,9 @@ export abstract class Jsonc {
    *
    * **When to use**
    *
-   * Use at synchronous boundaries such as a plain config loader or a build
-   * script. Inside Effect code reach for {@link Jsonc.parse}, which carries a
-   * tracing span and is defined in terms of this function.
+   * Use when a synchronous boundary, such as a plain config loader or a build
+   * script, needs the value. Inside Effect code reach for {@link Jsonc.parse},
+   * which carries a tracing span and is defined in terms of this function.
    *
    * **Details**
    *
@@ -604,38 +606,50 @@ export abstract class Jsonc {
    * @returns The JSON text, or a {@link JsoncStringifyError}.
    */
   static stringifyResult(value: unknown, options?: JsoncStringifyOptions): Result.Result<string, JsoncStringifyError> {
-    if (isUnrepresentable(value)) {
-      return Result.fail(
-        JsoncStringifyError.make({
-          code: "TopLevelUnrepresentable",
-          detail: "the top-level value (undefined, a function or a symbol) has no JSON representation",
-          value,
-        })
-      );
-    }
     const resolved = options ?? JsoncStringifyOptions.make({});
     const space = resolved.insertSpaces ? resolved.tabSize : "\t";
     // The replacer runs ahead of serialization and classifies the failure the
     // codec is about to report: the codec itself only knows "not JSON".
     let code: JsoncStringifyErrorCode = JsoncStringifyErrorCode.Enum.SerializationFailed;
-    let ancestors = A.empty<object>();
+    // The replacer's first call receives the root after any `toJSON`, so it
+    // alone decides whether the output is absent (upstream classifies the
+    // same post-`toJSON` value).
+    let root = true;
+    // The open containers from the root down to the current holder, popped in
+    // place: each visit costs the cycle scan the engine also makes, not a copy
+    // of the whole stack.
+    const ancestors: Array<object> = [];
     const codec = S.fromJsonString(S.Unknown, {
       space,
       replacer: function (this: unknown, _key: string, current: unknown): unknown {
+        if (root) {
+          root = false;
+          if (isUnrepresentable(current)) {
+            code = JsoncStringifyErrorCode.Enum.TopLevelUnrepresentable;
+          }
+        }
         if (P.isBigInt(current)) {
           code = JsoncStringifyErrorCode.Enum.BigIntValue;
         } else if (P.isObjectKeyword(current)) {
-          ancestors = A.reverse(A.dropWhile(A.reverse(ancestors), (ancestor) => ancestor !== this));
+          while (A.isArrayNonEmpty(ancestors) && A.lastNonEmpty(ancestors) !== this) {
+            ancestors.pop();
+          }
           if (A.some(ancestors, (ancestor) => ancestor === current)) {
             code = JsoncStringifyErrorCode.Enum.CircularReference;
           }
-          ancestors = A.append(ancestors, current);
+          ancestors.push(current);
         }
         return current;
       },
     });
     return S.encodeResult(codec)(value).pipe(
-      Result.mapError((error) => JsoncStringifyError.make({ code, detail: error.message, value }))
+      Result.mapError((error) =>
+        JsoncStringifyError.make({
+          code,
+          detail: JsoncStringifyErrorCode.is.TopLevelUnrepresentable(code) ? topLevelUnrepresentableDetail : error.message,
+          value,
+        })
+      )
     );
   }
 
@@ -689,23 +703,26 @@ export abstract class Jsonc {
    */
   static stripComments(text: string, replaceCh?: string): string {
     const scanner = createScanner(text);
-    let parts = A.empty<string>();
+    // Pieces grow in place: an immutable append copies every earlier piece per
+    // comment and makes comment-heavy documents quadratic.
+    const parts: Array<string> = [];
     let lastOffset = 0;
     let kind = scanner.scan();
     while (kind !== "EOF") {
       if (isComment(kind)) {
         const offset = scanner.getTokenOffset();
         const length = scanner.getTokenLength();
-        parts = A.append(parts, text.substring(lastOffset, offset));
+        parts.push(text.substring(lastOffset, offset));
         if (P.isString(replaceCh)) {
           const comment = text.substring(offset, offset + length);
-          parts = A.append(parts, Str.replace(/[^\n\r]/g, replaceCh)(comment));
+          parts.push(Str.replace(/[^\n\r]/g, replaceCh)(comment));
         }
         lastOffset = offset + length;
       }
       kind = scanner.scan();
     }
-    return A.join(A.append(parts, text.substring(lastOffset)), Str.empty);
+    parts.push(text.substring(lastOffset));
+    return A.join(parts, Str.empty);
   }
 
   /**

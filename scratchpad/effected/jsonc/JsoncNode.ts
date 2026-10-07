@@ -181,7 +181,9 @@ export class JsoncNode extends S.Class<JsoncNode>($I`JsoncNode`)(
    * **Details**
    *
    * String segments navigate object properties; number segments navigate
-   * array indices. Returns `O.none()` when any segment cannot be resolved.
+   * array indices. Returns `O.none()` when any segment cannot be resolved,
+   * including a number segment that is not a non-negative integer (`0.5`,
+   * `-1`), which never addresses an element.
    *
    * **Example** (Resolve a nested array element)
    *
@@ -350,6 +352,11 @@ const propertyKey = (prop: JsoncNode): O.Option<string> =>
 const covers = (node: JsoncNode, offset: number): boolean =>
   offset >= node.offset && offset < node.offset + node.length;
 
+// An array index addresses an element only when it is a non-negative integer:
+// upstream reads `children[segment]`, which is `undefined` for `0.5` or `-1`,
+// while `A.get` floors a fractional index onto a real element.
+const isArrayIndex = S.is(S.Natural);
+
 const childAt = (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode> => {
   const children = O.fromUndefinedOr(node.children);
   if (P.isString(segment)) {
@@ -360,7 +367,7 @@ const childAt = (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode> =>
       )
       : O.none();
   }
-  return JsoncNodeType.is.array(node.type) ? O.flatMap(children, A.get(segment)) : O.none();
+  return JsoncNodeType.is.array(node.type) && isArrayIndex(segment) ? O.flatMap(children, A.get(segment)) : O.none();
 };
 
 // Recursive walkers below cap their descent at MAX_NESTING_DEPTH. A tree built

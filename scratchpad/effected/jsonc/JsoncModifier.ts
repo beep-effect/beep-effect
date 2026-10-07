@@ -4,7 +4,6 @@
 // Navigation goes through the scanner-based `internal/navigate.ts`; this
 // module owns only edit synthesis and the `JsoncModificationError` it raises
 // on a navigation miss.
-import { LiteralKit } from "@beep/schema/LiteralKit";
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as R from "effect/Record";
 import * as A from "effect/Array";
@@ -37,6 +36,8 @@ const $I = $ScratchpadId.create("effected/jsonc/JsoncModifier");
  * - `path`: the full path passed to `JsoncModifier.modify`.
  * - `expected`: the container kind the segment at `depth` required.
  * - `depth`: the 1-based index into `path` where navigation failed.
+ * - `offset`: reserved for a source-position annotation. `modify` reports the
+ *   mismatch structurally and never sets it; when present, the message names it.
  *
  * The mismatch is carried as typed fields rather than a prose reason.
  *
@@ -59,15 +60,17 @@ export class JsoncModificationError extends S.TaggedError<JsoncModificationError
   "JsoncModificationError",
   {
     path: JsoncPath,
-    expected: LiteralKit(["object", "array"]),
+    expected: NavigateContainer,
     depth: S.Natural,
+    offset: S.optionalKey(S.Finite),
   },
   $I.annoteError<JsoncModificationError>("JsoncModificationError", {
     description: "A path could not be navigated because a value was not the required container kind.",
   }),
 ) {
   /**
-   * Render the path, the expected container kind and the failing depth.
+   * Render the path, the optional source offset, the expected container kind
+   * and the failing depth.
    *
    * **Example** (Read the rendered message)
    *
@@ -75,12 +78,18 @@ export class JsoncModificationError extends S.TaggedError<JsoncModificationError
    * import { JsoncModificationError } from "@beep/scratchpad/effected/jsonc/index"
    *
    * const error = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2 })
+   * const located = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2, offset: 7 })
    *
    * console.log(error.message) // "Modification failed at path [a, 0]: expected array at depth 2"
+   * console.log(located.message) // "Modification failed at path [a, 0] (offset 7): expected array at depth 2"
    * ```
    */
   override get message(): string {
-    return `Modification failed at path [${A.join(A.map(this.path, String), ", ")}]: expected ${this.expected} at depth ${this.depth}`;
+    const at = O.match(O.fromUndefinedOr(this.offset), {
+      onNone: () => Str.empty,
+      onSome: (offset) => ` (offset ${offset})`,
+    });
+    return `Modification failed at path [${A.join(A.map(this.path, String), ", ")}]${at}: expected ${this.expected} at depth ${this.depth}`;
   }
 }
 
@@ -157,7 +166,10 @@ export abstract class JsoncModifier {
    * Passing `value === undefined` deletes the target property or element,
    * including its surrounding comma. A missing insertion target appends after
    * the last property or element, with multi-line values re-indented to the
-   * insertion depth. The empty path replaces the whole document.
+   * insertion depth. Line breaks inside a generated value stay `\n`, as
+   * `JSON.stringify` writes them; the configured `eol` applies only to the
+   * line breaks around an inserted entry. The empty path replaces the whole
+   * document.
    * Fails with {@link JsoncModificationError} on a structural mismatch and
    * with `JsoncStringifyError` when `value` cannot be serialized.
    *
@@ -229,7 +241,9 @@ export abstract class JsoncModifier {
             const outdent = Str.repeat(insert.depth - 1)(indentUnit);
             // Generated multi-line values are re-indented to the insertion
             // depth so a nested object lands at the same column as its siblings.
-            const serialized = Str.replaceAll("\n", `${fmt.eol}${indent}`)(yield* serialize());
+            // The value keeps JSON.stringify's own "\n" line breaks (upstream);
+            // `eol` belongs to the wrapper around the entry only.
+            const serialized = Str.replaceAll("\n", `\n${indent}`)(yield* serialize());
             const entry =
               NavigateContainer.is.object(insert.container)
                 ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}`

@@ -114,7 +114,8 @@ export abstract class JsoncVisitor {
    * Events are produced on demand, so combining with `Stream.take` allows
    * partial scans of large documents. The stream is infallible at the type
    * level: malformed input surfaces as in-band `Error` events. Only the
-   * `disallowComments` option is consulted.
+   * `disallowComments` option is consulted. Every run walks the text afresh,
+   * so one returned stream can be run more than once with the same events.
    *
    * **Example** (Stop after the first literal)
    *
@@ -137,7 +138,10 @@ export abstract class JsoncVisitor {
    * @returns A lazy stream of visitor events.
    */
   static visit(text: string, options?: JsoncParseOptions): Stream.Stream<JsoncVisitorEvent> {
-    return Stream.fromIterable(visitGen(text, options?.disallowComments ?? false));
+    const disallowComments = options?.disallowComments ?? false;
+    // A generator object iterates once; suspending creates a fresh one per
+    // run so the stream stays a re-runnable description (upstream-bug fix).
+    return Stream.suspend(() => Stream.fromIterable(visitGen(text, disallowComments)));
   }
 }
 

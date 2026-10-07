@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { JsoncEdit, JsoncFormatter, JsoncFormattingOptions, JsoncRange } from "@beep/scratchpad/effected/jsonc/index";
+import { JsoncEdit, JsoncFormatter, JsoncFormattingOptions, JsoncRange } from "../../effected/jsonc/index.ts";
 
 describe("JsoncFormatter", () => {
   describe("format / formatToString", () => {
@@ -45,6 +45,22 @@ describe("JsoncFormatter", () => {
 
     it("leaves gaps between scalar tokens alone", () => {
       assert.strictEqual(JsoncFormatter.formatToString("1  2"), "1  2");
+    });
+
+    it("a leading closer has nothing to close and leaves the depth alone", () => {
+      assert.strictEqual(JsoncFormatter.formatToString("] [1]"), "] [\n  1\n]");
+      assert.strictEqual(JsoncFormatter.formatToString('}{"a":1}'), '}{\n  "a": 1\n}');
+    });
+
+    // Port deviation (upstream-bug: upstream's String.prototype.repeat throws a RangeError on a surplus closer, a defect from a total function): the lab clamps the indent to none.
+    it("a surplus closer formats with no indent instead of throwing", () => {
+      assert.deepStrictEqual(JsoncFormatter.format("]]"), [JsoncEdit.make({ offset: 1, length: 0, content: "\n" })]);
+      assert.strictEqual(JsoncFormatter.formatToString("]]"), "]\n]");
+      assert.deepStrictEqual(
+        JsoncFormatter.format('{"a":1}}').map((edit) => [edit.offset, edit.length, edit.content]),
+        [[1, 0, "\n  "], [5, 0, " "], [6, 0, "\n"], [7, 0, "\n"]]
+      );
+      assert.strictEqual(JsoncFormatter.formatToString('{"a":1}}'), '{\n  "a": 1\n}\n}');
     });
 
     it("appends a final newline only when requested and missing", () => {

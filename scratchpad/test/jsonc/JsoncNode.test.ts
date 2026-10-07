@@ -107,6 +107,17 @@ describe("JsoncNode", () => {
       const found = tree('{ "a\\"b": 1 }').find(['a"b']);
       assertSome(O.map(found, (node) => node.toValue()), 1);
     });
+
+    // Upstream parity: upstream reads `children[segment]`, so an index that is
+    // not a non-negative integer finds nothing instead of a floored element.
+    it("returns none for a fractional or negative array index", () => {
+      const root = tree("[10,20]");
+      assertNone(root.find([0.5]));
+      assertNone(root.find([1.5]));
+      assertNone(root.find([-1]));
+      assertNone(tree('{ "xs": [10, 20] }').find(["xs", 0.5]));
+      assertSome(O.map(root.find([1]), (node) => node.toValue()), 20);
+    });
   });
 
   describe("findAtOffset / pathAt", () => {

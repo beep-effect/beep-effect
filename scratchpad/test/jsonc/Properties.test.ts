@@ -15,7 +15,7 @@
 import { createHash } from "node:crypto";
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { assert, describe, it } from "@effect/vitest";
-import { assertDefined, assertFalse, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { assertDefined, assertFailure, assertFalse, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Crypto from "effect/Crypto";
@@ -299,12 +299,11 @@ describe("jsonc property floor", () => {
       [hostileText],
       ([text]) =>
         Effect.gen(function* () {
-          const value = Jsonc.parseResult(text);
           const tree = Jsonc.parseTreeResult(text);
-          assert.deepStrictEqual(
-            Result.map(tree, O.map((root) => root.toValue())),
-            Result.map(value, O.some)
-          );
+          Result.match(Jsonc.parseResult(text), {
+            onFailure: (error) => assertFailure(tree, error),
+            onSuccess: (value) => assertSuccess(Result.map(tree, O.map((root) => root.toValue())), O.some(value)),
+          });
         }),
       runs
     );
@@ -388,6 +387,22 @@ describe("jsonc property floor", () => {
           assert.strictEqual(JsoncFormatter.formatToString(once, undefined, formatting), once);
           assert.deepStrictEqual(JsoncFormatter.format(once, undefined, formatting), []);
           assertTrue(jsonEquivalent(yield* parseJson(once), value));
+        }),
+      runs
+    );
+
+    // Port deviation (upstream-bug: upstream's String.prototype.repeat throws a RangeError on a surplus closer, a defect from a total function): the lab clamps the indent to none.
+    it.effect.prop(
+      "formatting is total on hostile text and rewrites only whitespace",
+      [hostileText, Arbitrary.schema(FormattingSample)],
+      ([text, formatting]) =>
+        Effect.gen(function* () {
+          const edits = JsoncFormatter.format(text, undefined, formatting);
+          for (const edit of edits) {
+            assert.strictEqual(Str.trim(Str.substring(edit.offset, edit.offset + edit.length)(text)), "");
+            assert.strictEqual(Str.trim(edit.content), "");
+          }
+          assert.strictEqual(JsoncFormatter.formatToString(text, undefined, formatting), JsoncEdit.applyAll(text, edits));
         }),
       runs
     );

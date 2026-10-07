@@ -1,6 +1,6 @@
 import { assert, describe, it } from "@effect/vitest";
 import { pipe } from "effect/Function";
-import { createScanner, ScanError, type Scanner, SyntaxKind } from "@beep/scratchpad/effected/jsonc/internal/scanner";
+import { createScanner, ScanError, type Scanner, SyntaxKind } from "../../effected/jsonc/internal/scanner.ts";
 
 // Scan every token of `text`, pairing each kind with its decoded value and error.
 const tokens = (scanner: Scanner): ReadonlyArray<readonly [SyntaxKind, string, ScanError]> => {

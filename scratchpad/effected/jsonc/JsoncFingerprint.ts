@@ -18,7 +18,7 @@ import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { flow, identity } from "effect/Function";
-import * as O from "effect/Option";
+import * as I from "effect/Iterable";
 import * as Order from "effect/Order";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
@@ -227,27 +227,22 @@ const isPlainObject = (value: object): boolean => {
   return prototype === Object.prototype || prototype === null;
 };
 
-const emitMembers = (
-  container: object,
-  keys: ReadonlyArray<string | number>,
-  path: string,
-  depth: number,
-  render: (key: string | number, item: string) => string
-): Result.Result<ReadonlyArray<string>, JsoncCanonicalizeError> =>
-  Result.all(
-    A.map(keys, (key) => {
-      const memberPath = `${path}/${P.isString(key) ? escapePointerSegment(key) : key}`;
-      return readProperty(container, key, memberPath).pipe(
-        Result.flatMap((member) => emit(member, memberPath, depth + 1)),
-        Result.map((item) => render(key, item))
-      );
-    })
-  );
+// One member: read it through the getter guard, then canonicalize the value
+// it produced one level deeper.
+const emitMember = (container: object, key: string | number, memberPath: string, depth: number): Emit =>
+  readProperty(container, key, memberPath).pipe(Result.flatMap((member) => emit(member, memberPath, depth + 1)));
+
+// Members are produced lazily and `Result.all` stops pulling at the first
+// failure, as upstream's throw carrier stops its walk: after a member fails no
+// later getter runs, and no later exception can replace the typed failure.
+const emitMembers = <K>(keys: Iterable<K>, member: (key: K) => Emit): Result.Result<Array<string>, JsoncCanonicalizeError> =>
+  Result.all(I.map(keys, member));
 
 const emitArray = (value: ReadonlyArray<unknown>, path: string, depth: number): Emit =>
   // Indexed reads, never `map`: `map` skips holes, which must instead read as
-  // `undefined` and fail typed at the hole's index.
-  emitMembers(value, A.fromIterable(value.keys()), path, depth, (_, item) => item).pipe(
+  // `undefined` and fail typed at the hole's index. The index iterator
+  // re-reads `length` before every step, as upstream's indexed loop does.
+  emitMembers(value.keys(), (index) => emitMember(value, index, `${path}/${index}`, depth)).pipe(
     Result.map((items) => `[${A.join(items, ",")}]`)
   );
 
@@ -255,31 +250,29 @@ const emitRecord = (value: { readonly [x: PropertyKey]: unknown }, path: string,
   if (!isPlainObject(value)) {
     return fail("NonPlainObject", path, "only arrays and plain objects canonicalize; encode domain values to plain JSON first");
   }
-  // Member keys are strings too: an unpaired surrogate in a key is the same
-  // RFC 8785 I-JSON violation as one in a value. Sorting by `<` compares
-  // UTF-16 code units, the order RFC 8785 mandates.
-  const keys = A.sort(R.keys(value), Order.String);
-  const badKey = A.findFirst(keys, (key) => !key.isWellFormed());
-  if (O.isSome(badKey)) {
-    return fail(
-      "LoneSurrogate",
-      `${path}/${escapePointerSegment(badKey.value)}`,
-      "object member key contains an unpaired surrogate; RFC 8785 requires well-formed Unicode"
-    );
-  }
-  return emitMembers(value, keys, path, depth, (key, item) => `${emitScalar(String(key))}:${item}`).pipe(
-    Result.map((members) => `{${A.join(members, ",")}}`)
-  );
+  // Sorting by `<` compares UTF-16 code units, the order RFC 8785 mandates.
+  return emitMembers(A.sort(R.keys(value), Order.String), (key) => {
+    const memberPath = `${path}/${escapePointerSegment(key)}`;
+    // Member keys are strings too: an unpaired surrogate in a key is the same
+    // RFC 8785 I-JSON violation as one in a value. The key is checked just
+    // before its own member is read (upstream order), so an earlier member's
+    // failure wins over a later ill-formed key.
+    return key.isWellFormed()
+      ? emitMember(value, key, memberPath, depth).pipe(Result.map((item) => `${emitScalar(key)}:${item}`))
+      : fail("LoneSurrogate", memberPath, "object member key contains an unpaired surrogate; RFC 8785 requires well-formed Unicode");
+  }).pipe(Result.map((members) => `{${A.join(members, ",")}}`));
 };
+
+const isFiniteNumber = S.is(S.Finite);
 
 const emit = (value: unknown, path: string, depth: number): Emit => {
   if (P.isNull(value) || P.isBoolean(value)) {
     return Result.succeed(emitScalar(value));
   }
   if (P.isNumber(value)) {
-    return S.is(S.Finite)(value)
+    return isFiniteNumber(value)
       ? Result.succeed(emitScalar(value))
-      : fail("NonFiniteNumber", path, "non-finite numbers have no canonical JSON representation");
+      : fail("NonFiniteNumber", path, `${String(value)} has no canonical JSON representation`);
   }
   if (P.isString(value)) {
     return value.isWellFormed()
@@ -290,7 +283,7 @@ const emit = (value: unknown, path: string, depth: number): Emit => {
     return fail("BigIntValue", path, "bigint values cannot be represented in JSON");
   }
   if (!A.isArray(value) && !P.isObject(value)) {
-    return fail("UnrepresentableValue", path, "undefined, function and symbol values have no JSON representation");
+    return fail("UnrepresentableValue", path, `${typeof value} values have no JSON representation`);
   }
   if (depth >= MAX_NESTING_DEPTH) {
     return fail("NestingDepthExceeded", path, `nesting exceeds ${MAX_NESTING_DEPTH} levels (a cyclic value also fails here)`);

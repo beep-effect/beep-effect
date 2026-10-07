@@ -70,6 +70,17 @@ describe("JsoncFingerprint", () => {
 
     // Regression: the port built array indices with A.makeBy, which yields at
     // least one index, so every empty array failed (upstream handles []).
+    // Upstream parity: the detail text names the offending value or its type.
+    it("renders upstream's detail for non-finite numbers and unrepresentable values", () => {
+      const nonFinite = failure({ a: Infinity });
+      assert.strictEqual(nonFinite.code, "NonFiniteNumber");
+      assert.strictEqual(nonFinite.detail, "Infinity has no canonical JSON representation");
+      const missing = failure({ a: undefined });
+      assert.strictEqual(missing.code, "UnrepresentableValue");
+      assert.strictEqual(missing.detail, "undefined values have no JSON representation");
+      assert.strictEqual(failure([() => 1]).detail, "function values have no JSON representation");
+    });
+
     it("canonicalizes empty arrays at the top level and nested", () => {
       assertSuccess(JsoncFingerprint.canonicalizeResult([]), "[]");
       assertSuccess(JsoncFingerprint.canonicalizeResult({ a: [], b: [[], {}] }), '{"a":[],"b":[[],{}]}');
@@ -194,6 +205,127 @@ describe("JsoncFingerprint", () => {
       const benign: Record<string, unknown> = { a: 1 };
       Object.defineProperty(benign, "b", { enumerable: true, get: () => 2 });
       assertSuccess(JsoncFingerprint.canonicalizeResult(benign), '{"a":1,"b":2}');
+    });
+
+    // Regression (review R1): every member was evaluated before `Result.all`
+    // could short-circuit, so later getters ran after an earlier failure.
+    it("stops at the first failing member and never reads a later one", () => {
+      let reads = 0;
+      const counted = (): number => {
+        reads++;
+        return 1;
+      };
+      const record: Record<string, unknown> = { a: undefined };
+      Object.defineProperty(record, "b", { enumerable: true, get: counted });
+      const nested: Record<string, unknown> = { a: { x: undefined } };
+      Object.defineProperty(nested, "b", { enumerable: true, get: counted });
+      const items: Array<unknown> = [undefined, 0];
+      Object.defineProperty(items, 1, { get: counted });
+      const recordError = failure(record);
+      const nestedError = failure(nested);
+      const itemsError = failure(items);
+      assert.deepStrictEqual(
+        [
+          [recordError.code, recordError.path],
+          [nestedError.code, nestedError.path],
+          [itemsError.code, itemsError.path],
+        ],
+        [
+          ["UnrepresentableValue", "/a"],
+          ["UnrepresentableValue", "/a/x"],
+          ["UnrepresentableValue", "/0"],
+        ]
+      );
+      assert.strictEqual(reads, 0);
+    });
+
+    // Regression (review R1): a later member's exception escaped and replaced
+    // the earlier typed failure; upstream fails at "/a" and never inspects "b".
+    it("returns the earlier typed failure when a later member would throw", () => {
+      const later = new Proxy(
+        {},
+        {
+          getPrototypeOf() {
+            throw new Error("later member observed");
+          },
+        }
+      );
+      const error = failure({ a: undefined, b: later });
+      assert.deepStrictEqual([error.code, error.path], ["UnrepresentableValue", "/a"]);
+    });
+
+    // Regression (review R1): a shared subgraph reached through two getters
+    // per level was walked down both branches (8,190 reads for 12 levels);
+    // upstream stops after the first failing branch, reading 12.
+    it("reads a shared failing subgraph once per level, not once per path", () => {
+      let reads = 0;
+      let node: Record<string, unknown> = { leaf: undefined };
+      for (let level = 0; level < 12; level++) {
+        const child = node;
+        const parent: Record<string, unknown> = {};
+        const read = (): Record<string, unknown> => {
+          reads++;
+          return child;
+        };
+        Object.defineProperty(parent, "a", { enumerable: true, get: read });
+        Object.defineProperty(parent, "b", { enumerable: true, get: read });
+        node = parent;
+      }
+      assert.strictEqual(failure(node).path, "/a/a/a/a/a/a/a/a/a/a/a/a/leaf");
+      assert.strictEqual(reads, 12);
+    });
+
+    // Regression (review R1): the index list was materialized before any read;
+    // upstream's indexed loop re-reads `length`, so an element appended by an
+    // earlier getter is emitted too.
+    it("re-reads the array length after every element, as upstream's indexed loop does", () => {
+      const grows: Array<number> = [0];
+      Object.defineProperty(grows, 0, {
+        get: () => {
+          if (grows.length === 1) {
+            grows.push(2);
+          }
+          return 1;
+        },
+      });
+      assertSuccess(JsoncFingerprint.canonicalizeResult(grows), "[1,2]");
+    });
+
+    // Regression (review R3): all keys were checked for unpaired surrogates
+    // before any member was read; upstream checks each key just before
+    // reading its member, so an earlier member's failure wins.
+    it("checks each member key just before reading that member, in sorted order", () => {
+      const loneHigh = String.fromCharCode(0xd800);
+      const undefinedFirst = failure({ a: undefined, [loneHigh]: 1 });
+      assert.deepStrictEqual([undefinedFirst.code, undefinedFirst.path], ["UnrepresentableValue", "/a"]);
+      const throwingFirst: Record<string, unknown> = { [loneHigh]: 1 };
+      Object.defineProperty(throwingFirst, "a", {
+        enumerable: true,
+        get() {
+          throw new Error("hostile getter");
+        },
+      });
+      const getterError = failure(throwingFirst);
+      assert.deepStrictEqual([getterError.code, getterError.path], ["UnrepresentableValue", "/a"]);
+      const order: Array<string> = [];
+      const logged: Record<string, unknown> = {};
+      Object.defineProperty(logged, "a", {
+        enumerable: true,
+        get: () => {
+          order.push("a");
+          return 1;
+        },
+      });
+      Object.defineProperty(logged, loneHigh, {
+        enumerable: true,
+        get: () => {
+          order.push("lone");
+          return 1;
+        },
+      });
+      const keyError = failure(logged);
+      assert.deepStrictEqual([keyError.code, keyError.path], ["LoneSurrogate", `/${loneHigh}`]);
+      assert.deepStrictEqual(order, ["a"]);
     });
 
     it("fails typed on cyclic and deeply nested values via the depth cap", () => {

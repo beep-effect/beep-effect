@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import { navigate, NavigateResult } from "@beep/scratchpad/effected/jsonc/internal/navigate";
+import { navigate, NavigateResult } from "../../effected/jsonc/internal/navigate.ts";
 
 describe("internal/navigate", () => {
   it("is dual", () => {

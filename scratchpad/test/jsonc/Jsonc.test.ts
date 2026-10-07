@@ -1,6 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertExitFailure, assertNone, assertSuccess, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -11,6 +13,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   Jsonc,
+  JsoncFormatter,
   JsoncNode,
   JsoncParseError,
   JsoncParseErrorCode,
@@ -20,6 +23,7 @@ import {
   JsoncStringifyErrorCode,
   JsoncStringifyOptions,
 } from "../../effected/jsonc/index.ts";
+import { ParseFlags, parseTree as parseTreeRaw, parseValue as parseValueRaw } from "../../effected/jsonc/internal/parser.ts";
 
 const deeplyNested = `${"[".repeat(20000)}1${"]".repeat(20000)}`;
 
@@ -30,6 +34,30 @@ const failureOf = <E>(self: Effect.Effect<unknown, E>) => self.pipe(Effect.asVoi
 const failure = <E>(result: Result.Result<unknown, E>): E => result.pipe(Result.flip, Result.getOrThrow);
 
 const codes = (error: JsoncParseError): ReadonlyArray<string> => error.errors.map((e) => e.code);
+
+// The best of three wall-clock runs of `run(input)` in nanoseconds, after one
+// warm-up call; taking the minimum filters out collection pauses and load.
+const bestNanos = Effect.fnUntraced(function* (run: (input: string) => unknown, input: string) {
+  run(input);
+  let best = Number.POSITIVE_INFINITY;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const start = yield* Clock.currentTimeNanos;
+    run(input);
+    best = Math.min(best, Number((yield* Clock.currentTimeNanos) - start));
+  }
+  return best;
+});
+
+// Growing the input 16-fold must grow the time less than 48-fold. Linear
+// accumulation measures 5 to 20 here; the copy-per-append accumulators this
+// guards against measured 80 to 220.
+const scalesLinearly = Effect.fnUntraced(function* (run: (input: string) => unknown, make: (size: number) => string) {
+  const small = yield* bestNanos(run, make(2_000));
+  const large = yield* bestNanos(run, make(32_000));
+  assert.isBelow(large, small * 48);
+});
+
+const flatArray = (size: number): string => `[${"0,".repeat(size)}0]`;
 
 // The parse-error codes a malformed document reports, in either parse mode.
 const parseCodes = (text: string): ReadonlyArray<string> => Jsonc.parseResult(text).pipe(failure, codes);
@@ -308,6 +336,16 @@ describe("Jsonc", () => {
       }
     });
 
+    it("classifies the root after toJSON, as JSON.stringify sees it", () => {
+      assertSuccess(Jsonc.stringifyResult(Object.assign(() => 0, { toJSON: () => 7 })), "7");
+      for (const toJSON of [() => undefined, () => Symbol("x"), () => () => 1]) {
+        const error = failure(Jsonc.stringifyResult({ toJSON }));
+        assert.strictEqual(error.code, "TopLevelUnrepresentable");
+        assert.strictEqual(error.detail, "the top-level value (undefined, a function or a symbol) has no JSON representation");
+      }
+      assert.strictEqual(failure(Jsonc.stringifyResult({ toJSON: () => 1n })).code, "BigIntValue");
+    });
+
     it("nested unrepresentables follow JSON.stringify semantics (dropped in objects, null in arrays)", () => {
       const value = { keep: 1, drop: undefined, fn: () => 1, arr: [undefined, () => 1, 2] };
       assertSuccess(Jsonc.stringifyResult(value, JsoncStringifyOptions.make({ tabSize: 0 })), '{"keep":1,"arr":[null,null,2]}');
@@ -320,6 +358,7 @@ describe("Jsonc", () => {
       assertSuccess(Jsonc.stringifyResult(value, JsoncStringifyOptions.make({ tabSize: 0 })), '{"a":[1]}');
     });
 
+    // Port deviation (law:7): upstream rethrows a throwing toJSON as a defect; the lab fails typed with SerializationFailed.
     it("a throwing toJSON fails typed with SerializationFailed", () => {
       const bomb = {
         toJSON: () => {
@@ -330,6 +369,27 @@ describe("Jsonc", () => {
       assert.strictEqual(error.code, "SerializationFailed");
       assert.include(error.message, "JSONC stringify failed: SerializationFailed");
     });
+  });
+
+  describe("linear scaling", () => {
+    const flags = ParseFlags.make({});
+    const cases: ReadonlyArray<readonly [string, (input: string) => unknown, (size: number) => string]> = [
+      ["parseValue accumulates array items", (text) => parseValueRaw(text, flags), flatArray],
+      ["parseValue accumulates recovered errors", (text) => parseValueRaw(text, flags), (size) => `[${",".repeat(size)}]`],
+      ["parseTree accumulates array children", (text) => parseTreeRaw(text, flags), flatArray],
+      [
+        "parseTree accumulates object members",
+        (text) => parseTreeRaw(text, flags),
+        (size) => `{${A.join(A.makeBy(size, (index) => `"k${index}":0`), ",")}}`,
+      ],
+      ["the scanner decodes escapes", (text) => parseValueRaw(text, flags), (size) => `"${"\\n".repeat(size)}"`],
+      ["JsoncFormatter.format accumulates edits", JsoncFormatter.format, flatArray],
+      ["Jsonc.stripComments accumulates pieces", Jsonc.stripComments, (size) => `[${"/**/0,".repeat(size)}0]`],
+    ];
+    for (const [name, run, make] of cases) {
+      // it.live: the measurement needs real elapsed time, which the TestClock would freeze.
+      it.live(`${name} in linear time`, () => scalesLinearly(run, make));
+    }
   });
 
   describe("stringify delegates to stringifyResult", () => {
