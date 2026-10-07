@@ -17255,17 +17255,17 @@
       "status": "open"
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:1114:scoped@16#1",
+      "id": "EV004:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:1113:scoped@16#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts",
-      "line": 1114,
-      "endLine": 1116,
+      "line": 1113,
+      "endLine": 1115,
       "symbol": "scoped",
-      "occurrence": "v2:82f6c9e410fc458cb33a9a557ce572f62fbe81b9ee792456cd8897c9819ea62b",
+      "occurrence": "v2:3e0e12a689ce4f031d5a31c85d526fb77a0e58669ac4ce98c3550b31571441ca",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, sha256.create()) )",
+      "evidence": "Effect.scoped( RA.hashResumedArchivePrefix(sourcePath, object.expectedSizeBytes + 1, 2, RA.createStreamingSha256()) )",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."

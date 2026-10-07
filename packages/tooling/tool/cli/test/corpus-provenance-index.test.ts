@@ -17,6 +17,8 @@ import {
   repairAttachmentExtensions,
   runMetadataCensus,
 } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex";
+import { AttachmentMagicSniffer } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.contracts";
+import { MagicSniffResult } from "@beep/repo-cli/commands/Corpus/internal/ProvenanceIndex.schemas";
 import { it } from "@beep/test-runner";
 import { BunServices } from "@effect/platform-bun";
 import { NodeServices } from "@effect/platform-node";
@@ -25,12 +27,32 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Str from "effect/String";
 
+const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer;
 const Services = Layer.mergeAll(
   MailExportTreeIndexerLive,
   AttachmentRepairJournalLive,
   AttachmentMagicSnifferLive(),
   FileMetadataCensusReaderLive()
-).pipe(Layer.provideMerge(process.versions.bun === undefined ? NodeServices.layer : BunServices.layer));
+).pipe(Layer.provideMerge(platform));
+// Deterministic verdicts keyed by the ordinal prefix: the repair workflow test must not depend
+// on the host's libmagic build (the hosted runner's file(1) recognised two of the four fixtures).
+type StubVerdict = { readonly mimeType: string; readonly extensions: ReadonlyArray<string> };
+const unknownVerdict: StubVerdict = { mimeType: "application/octet-stream", extensions: [] };
+const stubVerdicts: Record<string, StubVerdict> = {
+  "1_": { mimeType: "application/pdf", extensions: ["pdf"] },
+  "2_": { mimeType: "image/jpeg", extensions: ["jpeg", "jpg", "jpe", "jfif"] },
+  "3_": { mimeType: "text/plain", extensions: [] },
+  "4_": unknownVerdict,
+  "5_": { mimeType: "application/pdf", extensions: ["pdf"] },
+};
+const stubVerdict = (file: string): StubVerdict =>
+  stubVerdicts[file.slice(file.lastIndexOf("/") + 1, file.lastIndexOf("/") + 3)] ?? unknownVerdict;
+const StubSniffer = Layer.succeed(AttachmentMagicSniffer, {
+  sniff: Effect.fn("Test.stubSniff")(function* (paths: ReadonlyArray<string>) {
+    return A.map(paths, (file) => MagicSniffResult.make({ path: file, ...stubVerdict(file) }));
+  }),
+});
+const RepairServices = Layer.mergeAll(AttachmentRepairJournalLive, StubSniffer).pipe(Layer.provideMerge(platform));
 const pdf =
   "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n";
 const jpeg = Uint8Array.from([
@@ -169,6 +191,48 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
     })
   );
 
+  it.effect("sniffs the PDF fixture by magic bytes through the live file(1) sniffer", () =>
+    Effect.gen(function* () {
+      const { attachments } = yield* fixture();
+      const path = yield* Path.Path;
+      const sniffer = yield* AttachmentMagicSniffer;
+      const verdicts = yield* sniffer.sniff([path.join(attachments, "1_report.p")]);
+      expect(verdicts.map((v) => v.mimeType)).toEqual(["application/pdf"]);
+    })
+  );
+
+  it.effect("metadata census reads PDF/JPEG bytes and excludes staging sidecars", (ctx) =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      if (!(yield* fs.exists("/usr/bin/vendor_perl/exiftool")) && !(yield* fs.exists("/usr/bin/exiftool"))) {
+        ctx.skip("exiftool is absent on this host");
+        return;
+      }
+      const { root } = yield* fixture();
+      const summary = yield* runMetadataCensus(
+        MetadataCensusOptions.make({
+          corpusRoot: root,
+          roots: ["staging/extract/children"],
+          batchSize: 2,
+          concurrency: 2,
+        })
+      );
+      expect(summary.fileCount).toBe(5);
+      expect(summary.engineVersion).not.toBe("");
+      const rows = yield* Effect.forEach(
+        lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
+        MetadataCensusRecordJson.decode
+      );
+      expect(rows.find((row) => row.relativePath.endsWith("1_report.p"))?.fields.fileType).toBe("PDF");
+      expect(rows.find((row) => row.relativePath.endsWith("2_photo.j"))?.fields.fileType).toBe("JPEG");
+      expect(rows.find((row) => row.relativePath.endsWith("4_blob"))?.status).toBe("error");
+      for (const row of rows) expect(Object.keys(row.tags).some((key) => /^(System|File):/.test(key))).toBe(false);
+    })
+  );
+});
+
+it.layer(RepairServices, { timeout: "30 seconds" })((it) => {
   it.effect("plans, applies, journals, skips collisions and undoes actual magic repairs", () =>
     Effect.gen(function* () {
       const { root, attachments } = yield* fixture();
@@ -233,36 +297,6 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       const malformed = path.join(root, "staging/provenance/malformed.jsonl");
       yield* fs.writeFileString(malformed, '{"fromPath":"incomplete"}\n');
       expect((yield* journal.readAll(malformed).pipe(Effect.result))._tag).toBe("Failure");
-    })
-  );
-
-  it.effect("metadata census reads PDF/JPEG bytes and excludes staging sidecars", (ctx) =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      if (!(yield* fs.exists("/usr/bin/vendor_perl/exiftool")) && !(yield* fs.exists("/usr/bin/exiftool"))) {
-        ctx.skip("exiftool is absent on this host");
-        return;
-      }
-      const { root } = yield* fixture();
-      const summary = yield* runMetadataCensus(
-        MetadataCensusOptions.make({
-          corpusRoot: root,
-          roots: ["staging/extract/children"],
-          batchSize: 2,
-          concurrency: 2,
-        })
-      );
-      expect(summary.fileCount).toBe(5);
-      expect(summary.engineVersion).not.toBe("");
-      const rows = yield* Effect.forEach(
-        lines(yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"))),
-        MetadataCensusRecordJson.decode
-      );
-      expect(rows.find((row) => row.relativePath.endsWith("1_report.p"))?.fields.fileType).toBe("PDF");
-      expect(rows.find((row) => row.relativePath.endsWith("2_photo.j"))?.fields.fileType).toBe("JPEG");
-      expect(rows.find((row) => row.relativePath.endsWith("4_blob"))?.status).toBe("error");
-      for (const row of rows) expect(Object.keys(row.tags).some((key) => /^(System|File):/.test(key))).toBe(false);
     })
   );
 });

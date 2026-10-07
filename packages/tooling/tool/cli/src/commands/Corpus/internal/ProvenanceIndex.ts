@@ -35,16 +35,20 @@ const bump = (counts: Record<string, number>, key: string) => {
 // names); only `/` separates segments, so no normalization happens here.
 const relative = (path: Path.Path, root: string, file: string) => P.CorpusRelativePath.make(path.relative(root, file));
 
+// `boundary` is the directory a resolved entry may not escape; the census
+// passes the corpus home so symlinks from `organized/` into `raw/` resolve
+// to their canonical path (and dedupe there) instead of failing the walk.
 const walk = Effect.fn("Provenance.walk")(function* (
+  boundary: string,
   root: string,
   visit: (file: string, info: FileSystem.File.Info) => Effect.Effect<void, CorpusCommandError, Io>
 ): Effect.fn.Return<void, CorpusCommandError, Io> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   for (const name of yield* fs.readDirectory(root).pipe(Effect.mapError(fail))) {
-    const file = yield* resolveWithinRoot(root, path.join(root, name), "Walk path escapes root");
+    const file = yield* resolveWithinRoot(boundary, path.join(root, name), "Walk path escapes root");
     const info = yield* fs.stat(file).pipe(Effect.mapError(fail));
-    if (info.type === "Directory") yield* walk(file, visit);
+    if (info.type === "Directory") yield* walk(boundary, file, visit);
     else if (info.type === "File") yield* visit(file, info);
   }
 });
@@ -149,6 +153,7 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
   if (info.type === "Directory" && /^Attachment\d+$/.test(name)) {
     let embeddedMessagePath: P.CorpusRelativePath | undefined;
     yield* walk(
+      root,
       attachmentPath,
       Effect.fn(function* (nested) {
         if (embeddedMessagePath === undefined && path.basename(nested) === "OutlookHeaders.txt")
@@ -215,6 +220,7 @@ const indexTree = Effect.fn("Provenance.indexTree")(function* (
     attachmentBytes: 0,
   };
   yield* walk(
+    children,
     children,
     Effect.fn(function* (file) {
       if (path.basename(file) !== "OutlookHeaders.txt") return;
@@ -785,6 +791,7 @@ const attachmentFiles = Effect.fn("Provenance.attachmentFiles")(function* (root:
   const files: Array<string> = [];
   yield* walk(
     root,
+    root,
     Effect.fn(function* (file) {
       if (path.basename(path.dirname(file)) === "Attachments") files.push(file);
     })
@@ -1043,6 +1050,7 @@ export const runMetadataCensus = Effect.fn("Provenance.runMetadataCensus")(funct
     const staging = rootRelative === "staging" || Str.startsWith("staging/")(rootRelative);
     const files: Array<string> = [];
     yield* walk(
+      options.corpusRoot,
       root,
       Effect.fn(function* (candidate) {
         if (staging && path.basename(path.dirname(candidate)) !== "Attachments") return;
