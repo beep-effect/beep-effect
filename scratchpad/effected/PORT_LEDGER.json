@@ -10,16 +10,162 @@
       "wave": 0,
       "position": 1,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/jsonl/src",
         "test": "packages/jsonl/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AppendOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CursoredSlice",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "DataSchema",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "Envelope",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "EnvelopeFrame",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "EnvelopeOf",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "EnvelopeUnion",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "EnvelopeWithTag",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "InvalidData",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Journal",
+          "kind": "value",
+          "entry": "."
+        },
+        {
+          "name": "JournalClass",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JournalClosed",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalConfig",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JournalNotFound",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalReadError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JournalResync",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JournalShape",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JournalWriteError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsonlError",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsonlEvent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsonlEventTypeId",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Line",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "LineSlice",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "MalformedLine",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "ParsedLine",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "Slice",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "TerminalViolation",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnknownEvent",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "UnserializableData",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
-      "fixturesBytes": 0,
+      "fixturesBytes": 2287,
       "deviations": [],
       "backlog": [],
       "reviewRounds": [],
@@ -34,13 +180,154 @@
       "wave": 0,
       "position": 2,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/jsonc/src",
         "test": "packages/jsonc/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "Jsonc",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncBoundCodec",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncCanonicalizeError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncCanonicalizeErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncDigest",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncEdit",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncFingerprint",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncFormatter",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncFormattingOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncFormattingOptionsLike",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncModificationError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncModifier",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncModifyOptions",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncNode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncNodeType",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncParseError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncParseErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncParseErrorDetail",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncParseOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncPath",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncRange",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncSegment",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "JsoncStringifyError",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncStringifyErrorCode",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncStringifyOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncTextHashOptions",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncVisitor",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "JsoncVisitorEvent",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,

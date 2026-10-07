@@ -333,3 +333,19 @@ export const Line = {
     ),
   ),
 };
+
+/**
+ * The shape of the {@link Line} namespace: its pure, synchronous line
+ * operations.
+ *
+ * **Details**
+ *
+ * Upstream declares `Line` as a class of static methods, which exports both a
+ * value and a type under the name. The port keeps `Line` a plain object and
+ * names its shape here so the export keeps both facets (D2).
+ *
+ * @see {@link Line} for the operations themselves.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Line = typeof Line;
