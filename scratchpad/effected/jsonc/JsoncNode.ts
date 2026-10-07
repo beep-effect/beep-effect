@@ -5,7 +5,7 @@
 // structural equality, serialization and Schema encode/decode). Navigation
 // methods walk `children` locally and return `Option`, never a `NotFound`
 // error. Value extraction (`toValue`) is a pure total function.
-
+import * as R from "effect/Record";
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
@@ -13,6 +13,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
+import { thunkNull } from "@beep/utils";
+import { dual } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/jsonc/JsoncNode");
 
@@ -36,7 +38,7 @@ const $I = $ScratchpadId.create("effected/jsonc/JsoncNode");
 export const JsoncSegment = S.Union([S.String, S.Natural]).pipe(
   $I.annoteSchema("JsoncSegment", {
     description: "One step of a JSONC path: an object key or a non-negative array index.",
-  })
+  }),
 );
 
 /**
@@ -68,7 +70,7 @@ export type JsoncSegment = typeof JsoncSegment.Type;
 export const JsoncPath = S.Array(JsoncSegment).pipe(
   $I.annoteSchema("JsoncPath", {
     description: "An ordered list of segments locating a value inside a JSONC document.",
-  })
+  }),
 );
 
 /**
@@ -108,7 +110,7 @@ export type JsoncPath = typeof JsoncPath.Type;
 export const JsoncNodeType = LiteralKit(["object", "array", "property", "string", "number", "boolean", "null"]).annotate(
   $I.annote("JsoncNodeType", {
     description: "The kind of a JSONC AST node.",
-  })
+  }),
 );
 
 /**
@@ -171,7 +173,7 @@ export class JsoncNode extends S.Class<JsoncNode>($I`JsoncNode`)(
   },
   $I.annote("JsoncNode", {
     description: "An immutable JSONC AST node with a tight source span and optional children.",
-  })
+  }),
 ) {
   /**
    * Find a descendant node by path.
@@ -339,10 +341,10 @@ export const makeNodeUnsafe = (props: JsoncNode.Encoded): JsoncNode =>
 const propertyKey = (prop: JsoncNode): O.Option<string> =>
   prop.type === "property"
     ? O.fromUndefinedOr(prop.children).pipe(
-        O.flatMap(A.head),
-        O.map((keyNode) => keyNode.value),
-        O.filter(P.isString)
-      )
+      O.flatMap(A.head),
+      O.map((keyNode) => keyNode.value),
+      O.filter(P.isString),
+    )
     : O.none();
 
 const covers = (node: JsoncNode, offset: number): boolean =>
@@ -353,9 +355,9 @@ const childAt = (node: JsoncNode, segment: JsoncSegment): O.Option<JsoncNode> =>
   if (P.isString(segment)) {
     return node.type === "object"
       ? children.pipe(
-          O.flatMap(A.findFirst((child) => O.contains(propertyKey(child), segment))),
-          O.flatMap((prop) => O.flatMap(O.fromUndefinedOr(prop.children), A.get(1)))
-        )
+        O.flatMap(A.findFirst((child) => O.contains(propertyKey(child), segment))),
+        O.flatMap((prop) => O.flatMap(O.fromUndefinedOr(prop.children), A.get(1))),
+      )
       : O.none();
   }
   return node.type === "array" ? O.flatMap(children, A.get(segment)) : O.none();
@@ -376,7 +378,7 @@ const findAtOffsetImpl = (node: JsoncNode, offset: number, depth: number): O.Opt
   }
   return A.findFirst(node.children, (child) => covers(child, offset)).pipe(
     O.flatMap((child) => findAtOffsetImpl(child, offset, depth + 1)),
-    O.orElseSome(() => node)
+    O.orElseSome(() => node),
   );
 };
 
@@ -384,7 +386,7 @@ const buildPath = (
   node: JsoncNode,
   offset: number,
   currentPath: ReadonlyArray<JsoncSegment>,
-  depth: number
+  depth: number,
 ): O.Option<JsoncPath> => {
   if (!covers(node, offset)) {
     return O.none();
@@ -401,7 +403,7 @@ const buildPath = (
           O.flatMap(A.get(1)),
           O.filter((valueChild) => covers(valueChild, offset)),
           O.flatMap((valueChild) => buildPath(valueChild, offset, valuePath, depth + 1)),
-          O.orElseSome(() => valuePath)
+          O.orElseSome(() => valuePath),
         );
       }
     }
@@ -419,24 +421,28 @@ const buildPath = (
   return O.some(currentPath);
 };
 
-const evaluateNode = (node: JsoncNode, depth: number): unknown => {
+const evaluateNode: {
+  (node: JsoncNode, depth: number): unknown,
+  (depth: number): (node: JsoncNode) => unknown
+} = dual(2, (node: JsoncNode, depth: number): unknown => {
   // Over-deep subtree (only reachable on a hand-built tree): stop descending
   // and yield a bounded placeholder rather than overflowing the stack.
   if (depth >= MAX_NESTING_DEPTH) {
     return JsoncNodeType.$match(node.type, {
-      object: () => ({}),
-      array: () => A.empty<unknown>(),
-      property: () => null,
-      string: () => null,
-      number: () => null,
-      boolean: () => null,
-      null: () => null,
+      object: R.empty,
+      array: A.empty<unknown>,
+      property: thunkNull,
+      string: thunkNull,
+      number: thunkNull,
+      boolean: thunkNull,
+      null: thunkNull,
     });
   }
   const children = node.children ?? A.empty<JsoncNode>();
+  const thunkNodeValue = () => node.value;
   return JsoncNodeType.$match(node.type, {
     object: () => {
-      const obj: Record<string, unknown> = {};
+      const obj = R.empty<string, unknown>();
       for (const prop of children) {
         const key = propertyKey(prop);
         const valueNode = O.flatMap(O.fromUndefinedOr(prop.children), A.get(1));
@@ -453,11 +459,11 @@ const evaluateNode = (node: JsoncNode, depth: number): unknown => {
       }
       return obj;
     },
-    array: () => A.map(children, (child) => evaluateNode(child, depth + 1)),
-    property: () => O.getOrUndefined(O.map(A.get(children, 1), (valueNode) => evaluateNode(valueNode, depth + 1))),
-    string: () => node.value,
-    number: () => node.value,
-    boolean: () => node.value,
-    null: () => node.value,
+    array: () => A.map(children, evaluateNode(depth + 1)),
+    property: () => O.getOrUndefined(O.map(A.get(children, 1), evaluateNode(depth + 1))),
+    string: thunkNodeValue,
+    number: thunkNodeValue,
+    boolean: thunkNodeValue,
+    null: thunkNodeValue,
   });
-};
+});
