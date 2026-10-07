@@ -12,7 +12,7 @@ Rules: KPI law v1.2 §7 (`explorations/beep-ci-operational-ontology/research/kpi
 | fleet-admission-journal | `explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/admission/canonical/journal.ndjson` | `b691253cee4b7859dea4b3b40f339dfd7c68c6cbdfc0326e594230a6aac5df6d` |
 | admission-snapshot | `explorations/beep-ci-operational-ontology/research/evidence/journal-snapshot-2026-10-01/journal.redacted.ndjson` | `8cceaf17163669f5ec031624ebcffeeb8ea0c56281f2f1a29180ea7c04134762` |
 | change-event-ledger | `explorations/beep-ci-operational-ontology/research/control-interventions.yaml` | `f520b302424f871804c050d9698dcb8e10f19c081fd3dc48a9a19932308d724d` |
-| adoption-table | `goals/ciops-ontology-pipeline/research/kpi-adoption-table.json` | `c57f8a33501e6064c943e48a94f2a077d12f49908092c2482b6310e0d7acdee6` |
+| adoption-table | `goals/ciops-ontology-pipeline/research/kpi-adoption-table.json` | `c61b29d4bae157405336f041d8c071bb14adb7cb0b00cd6ef3486c6f2887e9e4` |
 
 ## Windows
 

@@ -97,7 +97,7 @@ export const kpiSourcePins: A.NonEmptyReadonlyArray<PinnedKpiInput> = [
  * @since 0.0.0
  */
 export const adoptionTableSha256: Sha256Hex = Sha256Hex.make(
-  "c57f8a33501e6064c943e48a94f2a077d12f49908092c2482b6310e0d7acdee6"
+  "c61b29d4bae157405336f041d8c071bb14adb7cb0b00cd6ef3486c6f2887e9e4"
 );
 
 /**
