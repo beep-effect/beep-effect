@@ -11,6 +11,15 @@ import {
   UnknownEvent,
   UnserializableData,
 } from "../../effected/jsonl/index.ts";
+import {
+  InvalidJournalConfig,
+  InvalidSlice,
+  InvalidUtf8,
+  JournalUnterminated,
+  JournalWriteConflict,
+  JournalResyncReason,
+  JsonlError,
+} from "@beep/scratchpad/effected/jsonl/JsonlError";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as O from "effect/Option";
@@ -89,7 +98,12 @@ describe("error messages render", () => {
   });
 
   it("JournalResync", () => {
-    const error = JournalResync.make({ path: "/tmp/j.jsonl", reason: "truncated", expected: 90, actual: 10 });
+    const error = JournalResync.make({
+      path: "/tmp/j.jsonl",
+      reason: JournalResyncReason.Enum.truncated,
+      expected: 90,
+      actual: 10,
+    });
     assert.include(error.message, "truncated");
   });
 });
@@ -123,4 +137,51 @@ describe("UnserializableData renders a CIRCULAR cause safely", () => {
     assert.notInclude(error.message, "loop", "the cyclic cause is not rendered into the message");
     assert.include(error.message, "noted", "but the event tag still is");
   });
+});
+
+describe("boundary and write-conflict failures", () => {
+  it("preserves schema issue trees on configuration and selection failures", () => {
+    const configuration = InvalidJournalConfig.make({ error: schemaError });
+    const selection = InvalidSlice.make({ error: schemaError });
+    assert.strictEqual(configuration.error, schemaError);
+    assert.strictEqual(selection.error, schemaError);
+    assert.strictEqual(configuration.message, "invalid journal configuration");
+    assert.strictEqual(selection.message, "invalid journal selection");
+    assert.isTrue(JsonlError.guards.InvalidJournalConfig(configuration));
+    assert.isTrue(JsonlError.guards.InvalidSlice(selection));
+  });
+  it("describes persisted-byte ambiguity without recommending automatic retry", () => {
+    const conflict = JournalWriteConflict.make({ path: "/journal", expected: 80, actual: 160 });
+    assert.strictEqual(
+      conflict.message,
+      "journal write placement conflict at /journal: expected 80 bytes, found 160; reconcile before retrying"
+    );
+    assert.isTrue(JsonlError.guards.JournalWriteConflict(conflict));
+    assert.strictEqual(conflict.expected, 80);
+    assert.strictEqual(conflict.actual, 160);
+    assert.isTrue(S.is(JournalWriteConflict.fields.expected)(0));
+    assert.isTrue(S.is(JournalWriteConflict.fields.actual)(0));
+  });
+});
+
+it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])("rejects invalid write-conflict byte counts %s", (size) => {
+  assert.isFalse(S.is(JournalWriteConflict.fields.expected)(size));
+  assert.isFalse(S.is(JournalWriteConflict.fields.actual)(size));
+});
+
+it("retains strict decoder failures and raw unfinished spans structurally", () => {
+  const cause = new TypeError("invalid UTF-8");
+  const encoding = InvalidUtf8.make({ path: "/journal", offset: 3, cause });
+  assert.strictEqual(encoding.cause, cause);
+  assert.strictEqual(
+    encoding.message,
+    "invalid UTF-8 in journal /journal at decoded range starting at physical byte 3"
+  );
+  assert.isTrue(JsonlError.guards.InvalidUtf8(encoding));
+  const unfinished = JournalUnterminated.make({ path: "/journal", offset: 80, end: 83 });
+  assert.strictEqual(
+    unfinished.message,
+    "unterminated journal suffix at /journal: logical bytes 80 to 83; complete or repair before appending"
+  );
+  assert.isTrue(JsonlError.guards.JournalUnterminated(unfinished));
 });

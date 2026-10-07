@@ -135,7 +135,7 @@ const gateRead = Effect.fn("JsonlTest.gateRead")(function* (fs: FileSystem.FileS
             writeAll: (buffer) => handle.writeAll(buffer),
             truncate: (length) => handle.truncate(length),
             readAlloc: Effect.fn("JsonlTest.readAlloc")(function* (size: number) {
-              if (armed) {
+              if (armed && size > 3) {
                 armed = false;
                 yield* Deferred.succeed(entered, undefined);
                 yield* Deferred.await(release);

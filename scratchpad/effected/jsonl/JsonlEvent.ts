@@ -90,6 +90,8 @@ export interface JsonlEvent<
   readonly tag: Tag;
   /** The schema the envelope's `data` is validated against. */
   readonly data: Data;
+  /** The input codec validates every field before encoding a wire frame. */
+  readonly input: ReturnType<typeof Envelope.input<Tag, Data["Type"]>>;
   /** The selected event's envelope codec, applied after frame filtering. */
   readonly envelope: S.Codec<Envelope<Tag, Data["Type"]>, unknown>;
   /**
@@ -130,6 +132,7 @@ export declare namespace JsonlEvent {
     readonly [JsonlEventTypeId]: JsonlEventTypeId;
     readonly tag: string;
     readonly data: DataSchema;
+    readonly input: ReturnType<typeof Envelope.input<string, unknown>>;
     readonly envelope: S.Codec<Envelope<string, unknown>, unknown>;
     readonly terminal: boolean;
     readonly reopen: boolean;
@@ -249,6 +252,7 @@ function make<Tag extends string, Data extends DataSchema>(
     [JsonlEventTypeId]: JsonlEventTypeId,
     tag,
     data: options.data,
+    input: Envelope.input(tag, data),
     envelope: Envelope.schema(tag, data),
     terminal: options.terminal ?? false,
     reopen: options.reopen ?? false,

@@ -12,7 +12,6 @@ import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { InvalidData, type MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
 import type { JsonlEvent } from "./JsonlEvent.ts";
@@ -50,17 +49,18 @@ export const EnvelopeFrame = S.Struct({
  */
 export type EnvelopeFrame = typeof EnvelopeFrame.Type;
 
-const inputFields = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) => ({
-  at: S.DateTimeUtc,
-  event: S.Literal(tag),
-  scope: S.optionalKey(S.String),
-  data,
-});
-
-const input = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) => S.Struct(inputFields(tag, data));
+const input = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) =>
+  S.Struct({
+    at: S.DateTimeUtcFromString,
+    event: S.Literal(tag),
+    scope: S.optionalKey(S.String),
+    data,
+  }).annotate(
+    $I.annote("EnvelopeInput", { description: "An event input with its wire timestamp and payload codecs." })
+  );
 
 const schema = <Tag extends string, Data>(tag: Tag, data: S.Codec<Data, unknown>) =>
-  S.Struct({ ...input(tag, data).fields, line: LineSlice }).annotate(
+  S.Struct({ ...input(tag, data).fields, at: S.DateTimeUtc, line: LineSlice }).annotate(
     $I.annote("Envelope", { description: "A selected event with its decoded payload and source line." })
   );
 
@@ -122,9 +122,8 @@ const indexRegistry = (events: JsonlEvent.Registry): HashMap.HashMap<string, num
 const definition = <R extends JsonlEvent.Registry>(events: R, tag: string): O.Option<R[number]> =>
   HashMap.get(indexRegistry(events), tag).pipe(O.flatMap((position) => A.get(events, position)));
 const decodeFrame = S.decodeUnknownResult(EnvelopeFrame);
-const encodeAt = S.encodeResult(S.DateTimeUtcFromString);
 const encodeJson = S.encodeResult(S.fromJsonString(S.Unknown));
-const isBlank = (line: LineSlice): boolean => Str.isEmpty(Str.trim(line.text));
+const emptyLine = LineSlice.make({ offset: 0, end: 0, length: 0, text: "", terminated: false });
 
 const completeResult = <R extends JsonlEvent.Registry>(
   events: R,
@@ -199,7 +198,7 @@ const decodeAllResult: {
   ): ReadonlyArray<Result.Result<EnvelopeUnion<R>, DecodeError>> =>
     pipe(
       Line.split(text),
-      A.filter((line) => !isBlank(line)),
+      A.filter((line) => !Line.isBlank(line)),
       A.map(decodeResult(events))
     )
 );
@@ -212,7 +211,7 @@ const lastValidResult: {
   <R extends JsonlEvent.Registry>(text: string, events: R): O.Option<EnvelopeUnion<R>> =>
     pipe(
       Line.split(text),
-      A.findLast((line) => (isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, events))))
+      A.findLast((line) => (Line.isBlank(line) ? O.none() : Result.getSuccess(decodeResult(line, events))))
     )
 );
 
@@ -224,24 +223,18 @@ const encodeResult: {
 } = dual(
   2,
   <R extends JsonlEvent.Registry>(envelope: Encoding<NoInfer<R>>, events: R): Result.Result<string, EncodeError> => {
-    const empty = LineSlice.make({ offset: 0, end: 0, length: 0, text: "", terminated: false });
     const found = definition(events, envelope.event);
     if (O.isNone(found)) {
       return Result.fail(
-        UnknownEvent.make({ line: empty, event: envelope.event, known: A.map(events, (event) => event.tag) })
+        UnknownEvent.make({ line: emptyLine, event: envelope.event, known: A.map(events, (event) => event.tag) })
       );
     }
-    const data = S.encodeUnknownResult(found.value.data)(envelope.data);
-    if (Result.isFailure(data))
-      return Result.fail(InvalidData.make({ line: empty, event: O.some(envelope.event), error: data.failure }));
-    const at = encodeAt(envelope.at);
-    if (Result.isFailure(at))
-      return Result.fail(InvalidData.make({ line: empty, event: O.some(envelope.event), error: at.failure }));
+    const encoded = S.encodeUnknownResult(found.value.input)(envelope);
+    if (Result.isFailure(encoded))
+      return Result.fail(InvalidData.make({ line: emptyLine, event: O.some(envelope.event), error: encoded.failure }));
     return encodeJson({
-      at: at.success,
-      event: envelope.event,
-      ...O.getSomesStruct({ scope: O.fromUndefinedOr(envelope.scope) }),
-      data: data.success === undefined ? null : data.success,
+      ...encoded.success,
+      data: encoded.success.data === undefined ? null : encoded.success.data,
     }).pipe(
       Result.map((text) => `${text}\n`),
       Result.mapError((cause) => UnserializableData.make({ event: envelope.event, cause }))
@@ -291,6 +284,22 @@ const encode: {
  * @since 0.0.0
  */
 export const Envelope = {
+  /**
+   * Builds the registered event's input codec, validating its tag, scope and payload while encoding its timestamp.
+   *
+   * **Example** (Encode a validated input)
+   * ```ts import.meta.vitest name="Encode a validated input"
+   * import { Envelope } from "@beep/scratchpad/effected/jsonl/Envelope";
+   * import * as DateTime from "effect/DateTime";
+   * import * as Result from "effect/Result";
+   * import * as S from "effect/Schema";
+   * const codec = Envelope.input("started", S.String);
+   * Result.map(S.encodeResult(codec)({ at: DateTime.makeUnsafe(0), event: "started", data: "ready" }), (frame) => frame.at) // => Result.succeed("1970-01-01T00:00:00.000Z")
+   * ```
+   * @category schemas
+   * @since 0.0.0
+   */
+  input,
   /**
    * Constructs the runtime schema for one decoded envelope, including its source line. The data codec is applied to decoded input; wire frames are decoded separately.
    *

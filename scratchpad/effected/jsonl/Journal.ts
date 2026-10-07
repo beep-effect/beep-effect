@@ -30,19 +30,31 @@ import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SubscriptionRef from "effect/SubscriptionRef";
+import * as Tuple from "effect/Tuple";
 import type * as Take from "effect/Take";
+import { utf8Length } from "./internal/utf8.ts";
 import type { EnvelopeUnion, EnvelopeWithTag } from "./Envelope.ts";
 import { Envelope } from "./Envelope.ts";
 import { canMerge, isRecordLike, shallowMerge } from "./internal/merge.ts";
 import type { TailWindow } from "./internal/tail.ts";
-import { DEFAULT_WINDOW, probeBomBytes, readRangeText, readTail, readTailUntil } from "./internal/tail.ts";
+import { DEFAULT_WINDOW, probeBomBytes, readRangeWindow, readTailUntil } from "./internal/tail.ts";
 import type { InvalidData, JsonlError, MalformedLine, UnknownEvent, UnserializableData } from "./JsonlError.ts";
-import { JournalClosed, JournalNotFound, JournalResync, TerminalViolation } from "./JsonlError.ts";
+import {
+  InvalidJournalConfig,
+  InvalidUtf8,
+  JournalUnterminated,
+  InvalidSlice,
+  JournalClosed,
+  JournalNotFound,
+  JournalResync,
+  JournalResyncReason,
+  JournalWriteConflict,
+  TerminalViolation,
+} from "./JsonlError.ts";
 import type { JsonlEvent } from "./JsonlEvent.ts";
 import { Line } from "./Line.ts";
 import { LineSlice } from "./LineSlice.ts";
-import type { CursoredSlice } from "./Slice.ts";
-import { matchesFrame } from "./Slice.ts";
+import { CursoredSlice, matchesFrame } from "./Slice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/Journal");
 
@@ -62,6 +74,10 @@ const $I = $ScratchpadId.create("effected/jsonl/Journal");
  */
 export type JournalWriteError =
   | JournalClosed
+  | JournalResync
+  | JournalWriteConflict
+  | JournalUnterminated
+  | InvalidUtf8
   | JournalNotFound
   | TerminalViolation
   | UnknownEvent
@@ -77,7 +93,7 @@ export type JournalWriteError =
  * @category type-level
  * @since 0.0.0
  */
-export type JournalReadError = JournalNotFound | PlatformError.PlatformError;
+export type JournalReadError = JournalNotFound | InvalidSlice | InvalidUtf8 | PlatformError.PlatformError;
 
 /**
  * Options for one append.
@@ -120,6 +136,11 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * `at` is stamped here from the Effect `Clock` — never by the caller — so
    * ordering does not depend on two writers agreeing about the time, and
    * `TestClock` controls it exactly in tests.
+   * Completed foreign records are reconciled before terminal validation.
+   * An unterminated physical tail fails with `JournalUnterminated` without repairing bytes.
+   * Committed invalid UTF-8 fails with `InvalidUtf8` without replacing source bytes.
+   * Unexpected post-write growth fails with `JournalWriteConflict`: bytes may
+   * already be present, so reconcile the file before deciding whether to retry.
    */
   readonly append: <T extends JsonlEvent.Tag<R>>(
     event: T,
@@ -135,7 +156,10 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    *
    * This is the snapshot-journal primitive — each line is a complete state and
    * most transitions change one field. The merge is **shallow** by decision: a
-   * nested object in the patch replaces the one beneath it.
+   * nested object in the patch replaces the one beneath it. The base includes
+   * completed foreign records observed before this local critical section.
+   * Independent writers do not share this semaphore; their read-modify-write
+   * transactions require a separate coordination mechanism.
    */
   readonly appendPatch: <T extends JsonlEvent.Tag<R>>(
     event: T,
@@ -144,13 +168,14 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
   ) => Effect.Effect<EnvelopeWithTag<R, T>, JournalWriteError>;
 
   /**
-   * The current last valid **envelope**, as an observable `Option`.
+   * The current last valid **terminated envelope**, as an observable `Option`.
    *
    * **Details**
    *
    * "Last valid" always means the last valid envelope, never merely the last
    * valid JSON — a torn scalar tail parses as a different value and only the
-   * envelope contract detects it.
+   * envelope contract detects it. Unterminated envelopes remain pending until
+   * their writer supplies a line terminator, including terminal events.
    */
   readonly latest: SubscriptionRef.SubscriptionRef<O.Option<EnvelopeUnion<R>>>;
 
@@ -176,15 +201,13 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * Filtering happens on the envelope **frame**, strictly before the payload
    * schema runs, so a non-matching line's `data` is never decoded.
    *
-   * **Cost, stated rather than implied.** As built, the requested region —
-   * `cursor` to the end of the file — is read in ONE allocation bounded by the
-   * file's size, and the matching envelopes are buffered before the first is
-   * emitted. An unsliced `query()` over a large journal therefore does hold
-   * that journal in memory; a `cursor` is what bounds the read, which is
-   * precisely what a resuming consumer already persists. The window-bounded
-   * reads are `latest` and the `lastValid`-backed paths. Emitting per window,
-   * so an unsliced query costs a window rather than a file, is tracked as
-   * spencerbeggs/effected#233.
+   * Invalid slices fail with `InvalidSlice`. Unterminated suffixes remain
+   * pending until their writer completes them; terminated corruption fails
+   * the read. One end-of-file boundary is captured, then complete records are
+   * emitted in bounded pages. A record larger than the default window widens
+   * its page until that record fits; memory is bounded by a page or the largest
+   * record, rather than the full journal. Invalid committed UTF-8 fails with
+   * `InvalidUtf8` without altering source bytes.
    */
   readonly query: {
     <T extends JsonlEvent.Tag<R>>(
@@ -201,7 +224,8 @@ export interface JournalShape<R extends JsonlEvent.Registry> {
    * **Details**
    *
    * With a `cursor`, replay-from-cursor and the live tail are **one seam**: the
-   * replayed history and the live tail are the same stream, filtered the same
+   * A future cursor is clamped to the captured file end so subsequent appends remain live.
+   * The replayed history and the live tail are the same stream, filtered the same
    * way, so a consumer cannot observe a gap or a duplicate at the join.
    *
    * The stream **ends** — it never hangs — when the journal becomes quiescent
@@ -317,6 +341,18 @@ export type JournalConfig = typeof JournalConfig.Type;
  */
 const SHUTDOWN_PUBLISH_TIMEOUT = Duration.seconds(5);
 
+const JournalSettings = S.Struct({
+  ...JournalConfig.fields,
+  capacity: JournalConfig.fields.capacity.pipe(S.requiredKey, S.withDecodingDefaultKey(Effect.succeed(64))),
+  shutdownPublishTimeout: JournalConfig.fields.shutdownPublishTimeout.pipe(
+    S.requiredKey,
+    S.withDecodingDefaultKey(Effect.succeed(SHUTDOWN_PUBLISH_TIMEOUT))
+  ),
+}).annotate(
+  $I.annote("JournalSettings", { description: "Validated journal settings with buffering and shutdown defaults." })
+);
+const decodeSettings = S.decodeEffect(JournalSettings);
+
 /**
  * How many times the watcher re-arms a watch that ends without observing
  * anything before it gives up.
@@ -402,23 +438,19 @@ const parentOf = (path: string): string => {
  * adds is the one thing the pure core cannot know: the window's text begins at
  * `window.start`, so every offset inside it is relative to that.
  */
+const textEncoder = new TextEncoder();
+
 const decodeWindow = <R extends JsonlEvent.Registry>(events: R, window: TailWindow): O.Option<EnvelopeUnion<R>> =>
   O.map(Envelope.lastValidResult(window.text, events), (envelope) => ({
     ...envelope,
-    line: LineSlice.make({
-      offset: envelope.line.offset + window.start,
-      end: envelope.line.end + window.start,
-      length: envelope.line.length,
-      text: envelope.line.text,
-      terminated: envelope.line.terminated,
-    }),
+    line: LineSlice.rebase(envelope.line, window.start),
   }));
 
 const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEvent.Registry>(
   events: R,
-  config: JournalConfig,
+  config: typeof JournalSettings.Type,
   fs: FileSystem.FileSystem
-): Effect.fn.Return<JournalShape<R>, PlatformError.PlatformError, Scope.Scope> {
+): Effect.fn.Return<JournalShape<R>, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
   const terminalTags = HashSet.fromIterable(
     A.map(
       A.filter(events, (event) => event.terminal),
@@ -461,20 +493,17 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    * pretended away.
    */
   let identity: O.Option<string> = O.none();
-  const hub = yield* PubSub.bounded<Take.Take<EnvelopeUnion<R>, JsonlError>>(config.capacity ?? 64);
+  const hub = yield* PubSub.bounded<Take.Take<EnvelopeUnion<R>, JsonlError>>(config.capacity);
   const latest = yield* SubscriptionRef.make(O.none<EnvelopeUnion<R>>());
   /** Refusal state. Read before the permit so a late append fails fast. */
   let closed = false;
   /** Logical bytes decoded so far — the resume cursor the watcher advances. */
   let consumed = 0;
 
-  // Called per use rather than hoisted into a const: a hoisted Effect would
-  // be correct only if every backend built a lazy one, and that is not a
-  // property this service should depend on.
-  const exists = () => fs.exists(config.path);
+  const exists = fs.exists(config.path);
 
   const requireFile = Effect.gen(function* () {
-    const present = yield* exists();
+    const present = yield* exists;
     if (!present) {
       return yield* JournalNotFound.make({ path: config.path });
     }
@@ -482,7 +511,14 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
 
   const readLatest = Effect.gen(function* () {
     yield* requireFile;
-    return yield* readTailUntil(fs, config.path, bomBytes, (window) => decodeWindow(events, window), DEFAULT_WINDOW);
+    return yield* readTailUntil(
+      fs,
+      config.path,
+      bomBytes,
+      (window) => decodeWindow(events, window),
+      DEFAULT_WINDOW,
+      true
+    );
   });
 
   const refresh = Effect.gen(function* () {
@@ -513,200 +549,190 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    * a foreign writer's unknown tag must not blind this reader to the lines
    * after it.
    */
-  const decodeRange = Effect.fn("Journal.decodeRange")(function* (
-    from: number,
-    to: number
-  ): Effect.fn.Return<
-    { readonly decoded: ReadonlyArray<EnvelopeUnion<R>>; readonly advanced: number },
-    PlatformError.PlatformError
-  > {
-    const text = yield* readRangeText(fs, config.path, from + bomBytes, to - from);
-    const lines = Line.split(text);
+  const decodeRange = Effect.fn("Journal.decodeRange")(function* (from: number, to: number) {
+    const window = yield* readRangeWindow(fs, config.path, from + bomBytes, to - from, bomBytes);
+    const advanced = window.start + utf8Length(window.text);
     let decoded = Chunk.empty<EnvelopeUnion<R>>();
-    let advanced = from;
-    for (const line of lines) {
-      if (!line.terminated) {
-        break;
-      }
-      advanced = line.end + from;
-      if (Str.trim(line.text) === "") {
-        continue;
-      }
-      const rebased = LineSlice.make({
-        offset: line.offset + from,
-        end: line.end + from,
-        length: line.length,
-        text: line.text,
-        terminated: true,
-      });
+    for (const line of Line.split(window.text)) {
+      if (Line.isBlank(line)) continue;
+      const rebased = LineSlice.rebase(line, window.start);
       const envelope = Envelope.decodeResult(rebased, events);
-      if (Result.isSuccess(envelope)) {
-        decoded = Chunk.append(decoded, envelope.success);
-      }
+      if (Result.isSuccess(envelope)) decoded = Chunk.append(decoded, envelope.success);
     }
-    return { decoded: A.fromIterable(decoded), advanced };
+    return {
+      decoded: A.fromIterable(decoded),
+      advanced,
+      torn:
+        advanced < window.size
+          ? O.some(JournalUnterminated.make({ path: config.path, offset: advanced, end: window.size }))
+          : O.none<JournalUnterminated>(),
+    };
   });
 
-  /**
-   * The one write path.
-   *
-   * **Details**
-   *
-   * `build` runs **inside the write permit**, so an inherit-and-patch reads
-   * the current state under the same lock that serializes the write. Reading
-   * outside it was a lost-update race: two concurrent patches to different
-   * fields both read the same base and the second silently reverted the
-   * first.
-   */
+  const identityOf = (info: FileSystem.File.Info): O.Option<string> => O.map(info.ino, (ino) => `${info.dev}:${ino}`);
+
+  // Caller owns writePermit. This stage changes state but never waits on a
+  // subscriber. Both local writes and watch pokes reconcile through it.
+  const reconcile = Effect.fn("Journal.reconcile")(function* (
+    restore: <AX, EX, RX>(effect: Effect.Effect<AX, EX, RX>) => Effect.Effect<AX, EX, RX>
+  ) {
+    yield* restore(requireFile);
+    const info = yield* restore(fs.stat(config.path));
+    const currentIdentity = identityOf(info);
+    const size = ByteSize.toNumberUnsafe(info.size);
+    const replaced = O.isSome(identity) && O.isSome(currentIdentity) && identity.value !== currentIdentity.value;
+    const shrank = size < consumed + bomBytes;
+    const bom = replaced || shrank || O.isNone(identity) ? yield* restore(probeBomBytes(fs, config.path)) : bomBytes;
+    const logicalSize = size - bom;
+    if (replaced || shrank) {
+      const failure = JournalResync.make({
+        path: config.path,
+        reason: replaced ? JournalResyncReason.Enum.replaced : JournalResyncReason.Enum.truncated,
+        expected: consumed,
+        actual: logicalSize,
+      });
+      yield* Effect.logWarning("Journal source requires resynchronization").pipe(
+        Effect.annotateLogs({
+          path: config.path,
+          reason: failure.reason,
+          expected: failure.expected,
+          actual: failure.actual,
+        })
+      );
+      identity = currentIdentity;
+      bomBytes = bom;
+      consumed = 0;
+      yield* SubscriptionRef.set(latest, O.none());
+      const entries: ReadonlyArray<Take.Take<EnvelopeUnion<R>, JsonlError>> = [Exit.fail(failure)];
+      return {
+        entries,
+        failure: O.some<JournalResync | InvalidUtf8>(failure),
+        torn: O.none<JournalUnterminated>(),
+        size,
+      };
+    }
+    bomBytes = bom;
+    const reading = yield* restore(decodeRange(consumed, logicalSize)).pipe(
+      Effect.map(Result.succeed),
+      Effect.catchTag("InvalidUtf8", (failure) => Effect.succeed(Result.fail(failure)))
+    );
+    if (Result.isFailure(reading)) {
+      const failure = reading.failure;
+      const entries: ReadonlyArray<Take.Take<EnvelopeUnion<R>, JsonlError>> = [Exit.fail(failure)];
+      return {
+        entries,
+        failure: O.some<JournalResync | InvalidUtf8>(failure),
+        torn: O.none<JournalUnterminated>(),
+        size,
+      };
+    }
+    const range = reading.success;
+    identity = currentIdentity;
+    consumed = range.advanced;
+    const last = A.last(range.decoded);
+    if (O.isSome(last)) yield* SubscriptionRef.set(latest, last);
+    const entries: ReadonlyArray<Take.Take<EnvelopeUnion<R>, JsonlError>> = A.map(range.decoded, (row) => [row]);
+    return {
+      entries,
+      failure: O.none<JournalResync | InvalidUtf8>(),
+      torn: range.torn,
+      size,
+    };
+  });
+
+  const publish = Effect.fn("Journal.publish")(function* (
+    entries: ReadonlyArray<Take.Take<EnvelopeUnion<R>, JsonlError>>,
+    predecessor: Deferred.Deferred<void>
+  ) {
+    yield* Deferred.await(predecessor);
+    for (const entry of entries) yield* PubSub.publish(hub, entry);
+  });
+
+  /** Reconcile the actual tail before deriving or validating a local write. */
   const appendWith = Effect.fn("Journal.appendWith")(function* (
     event: string,
     build: (current: O.Option<EnvelopeUnion<R>>) => unknown,
     scope: string | undefined
   ): Effect.fn.Return<EnvelopeUnion<R>, JournalWriteError> {
-    // Refusal is checked BEFORE the permit: a late append must not queue
-    // behind a draining flush only to be refused after waiting.
-    if (closed) {
-      return yield* JournalClosed.make({ event });
-    }
-
-    const { envelope, external, predecessor, baton } = yield* writePermit.withPermits(1)(
-      Effect.gen(function* () {
-        if (closed) {
-          return yield* JournalClosed.make({ event });
-        }
-        yield* requireFile;
-
-        const current = yield* SubscriptionRef.get(latest);
-        if (O.isSome(current) && HashSet.has(terminalTags, current.value.event) && !HashSet.has(reopenTags, event)) {
-          return yield* TerminalViolation.make({ event, terminal: current.value.event });
-        }
-
-        // Read-and-derive happens HERE, under the lock.
-        const data = build(current);
-
-        const at = yield* DateTime.now;
-        const encoded = Envelope.encodeResult<JsonlEvent.Registry>(
-          {
-            event,
-            data,
-            at,
-            ...O.getSomesStruct({ scope: O.fromUndefinedOr(scope) }),
-          },
-          events
-        );
-        if (Result.isFailure(encoded)) {
-          return yield* encoded.failure;
-        }
-        const bytes = new TextEncoder().encode(encoded.success);
-        // JSON encoding can be lossy for a payload codec (for example a typed
-        // array). Validate the serialized envelope before mutating the file.
-        const decoded = Envelope.decodeResult(
-          LineSlice.make({
-            offset: 0,
-            end: bytes.length,
-            length: bytes.length - 1,
-            text: Str.slice(0, -1)(encoded.success),
-            terminated: true,
-          }),
-          events
-        );
-        if (Result.isFailure(decoded)) {
-          return yield* decoded.failure;
-        }
-
-        // ONE `writeAll` of the complete line to an O_APPEND handle. This
-        // is a write LOOP, not a single syscall — atomicity is an OS
-        // property of O_APPEND at reasonable line sizes, not an API
-        // guarantee, and a short write can still tear a large line. There
-        // is no byte count to inspect: `writeAll` either wrote everything
-        // or failed, and any failure here means POSSIBLY TORN, never
-        // "nothing was written".
-        const end = yield* Effect.scoped(
-          Effect.gen(function* () {
-            const file = yield* fs.open(config.path, { flag: "a" });
-            yield* file.writeAll(bytes);
-            // The offsets come from the FILE, never from `consumed`.
-            // O_APPEND lands at the real end, which is past `consumed`
-            // whenever a cooperating writer's bytes have not been
-            // ingested yet — and stamping `consumed` on the line then
-            // describes a position the line is not at, re-publishes this
-            // line on the next ingest, and skips the external bytes in
-            // between. An `fstat` on our own handle right after the write
-            // is the cheapest true answer.
-            const info = yield* file.stat;
-            return ByteSize.toNumberUnsafe(info.size) - bomBytes;
+    if (closed) return yield* JournalClosed.make({ event });
+    const mine = Deferred.makeUnsafe<void>();
+    // Install cleanup BEFORE the permit can link this deferred. This covers
+    // interruption during permit release as well as suspended publication.
+    return yield* Effect.gen(function* () {
+      const staged = yield* writePermit.withPermits(1)(
+        Effect.uninterruptibleMask(
+          Effect.fn("Journal.stageAppend")(function* (restore) {
+            if (closed) return yield* JournalClosed.make({ event });
+            const state = yield* reconcile(restore);
+            const outcome: Exit.Exit<EnvelopeUnion<R>, JournalWriteError> = O.isSome(state.failure)
+              ? Exit.fail(state.failure.value)
+              : yield* Effect.exit(
+                  Effect.gen(function* () {
+                    const current = yield* SubscriptionRef.get(latest);
+                    if (
+                      O.isSome(current) &&
+                      HashSet.has(terminalTags, current.value.event) &&
+                      !HashSet.has(reopenTags, event)
+                    ) {
+                      return yield* TerminalViolation.make({ event, terminal: current.value.event });
+                    }
+                    if (O.isSome(state.torn)) return yield* state.torn.value;
+                    const at = yield* DateTime.now;
+                    const encoded = Envelope.encodeResult<JsonlEvent.Registry>(
+                      { event, data: build(current), at, ...O.getSomesStruct({ scope: O.fromUndefinedOr(scope) }) },
+                      events
+                    );
+                    if (Result.isFailure(encoded)) return yield* encoded.failure;
+                    const bytes = textEncoder.encode(encoded.success);
+                    const decoded = Envelope.decodeResult(
+                      LineSlice.make({
+                        offset: 0,
+                        end: bytes.length,
+                        length: bytes.length - 1,
+                        text: Str.slice(0, -1)(encoded.success),
+                        terminated: true,
+                      }),
+                      events
+                    );
+                    if (Result.isFailure(decoded)) return yield* decoded.failure;
+                    const actual = yield* restore(
+                      Effect.scoped(
+                        Effect.gen(function* () {
+                          const file = yield* fs.open(config.path, { flag: "a" });
+                          yield* file.writeAll(bytes);
+                          return ByteSize.toNumberUnsafe((yield* file.stat).size);
+                        })
+                      )
+                    );
+                    const expected = state.size + bytes.length;
+                    // EOF is shared by cooperating writers. Unexpected growth cannot
+                    // prove our line's position; leave consumed at the known boundary
+                    // so the next reconciliation reads the real file in its own order.
+                    if (actual !== expected)
+                      return yield* JournalWriteConflict.make({ path: config.path, expected, actual });
+                    const line = LineSlice.make({
+                      ...decoded.success.line,
+                      offset: state.size - bomBytes,
+                      end: actual - bomBytes,
+                    });
+                    const envelope = { ...decoded.success, line };
+                    consumed = line.end;
+                    yield* SubscriptionRef.set(latest, O.some(envelope));
+                    return envelope;
+                  })
+                );
+            const entries = Exit.isSuccess(outcome)
+              ? A.append(state.entries, [outcome.value] satisfies Take.Take<EnvelopeUnion<R>, JsonlError>)
+              : state.entries;
+            const predecessor = publishBaton;
+            publishBaton = mine;
+            return { entries, predecessor, outcome };
           })
-        );
-        const offset = end - bytes.length;
-
-        // Whatever sits between our last ingest and where this line
-        // actually landed belongs to another writer and PRECEDES ours in
-        // the file, so it is decoded here and published first: the hub
-        // carries one file-ordered sequence either way. A torn fragment at
-        // the end of that gap is skipped rather than held, because our own
-        // line has already been written after it and the offset cannot
-        // wait for a writer that lost the race.
-        //
-        // Reading inside the write permit is legal under pin 1 and a hub
-        // publish is not: the prohibition is on SUSPENDING ON A SUBSCRIBER
-        // while holding the lock. A read completes on its own. It also
-        // costs nothing in the common case, where the gap is empty and no
-        // read is issued at all.
-        const external = offset > consumed ? (yield* decodeRange(consumed, offset)).decoded : [];
-        // Trust the file: on the (contract-breaching) shrink case this
-        // moves backwards rather than pretending the line is somewhere it
-        // is not. The watcher's own resync check is what names the breach.
-        consumed = end;
-
-        const line = LineSlice.make({
-          offset,
-          end,
-          length: bytes.length - 1,
-          text: Str.slice(0, -1)(encoded.success),
-          terminated: true,
-        });
-        const envelope = { ...decoded.success, line };
-        yield* SubscriptionRef.set(latest, O.some(envelope));
-
-        // Link onto the publish chain while still holding the write
-        // permit: that — and only that — is what fixes publish order to
-        // write order. Nothing here suspends on the hub.
-        const previous = publishBaton;
-        const mine = Deferred.makeUnsafe<void>();
-        publishBaton = mine;
-        return { envelope, external, predecessor: previous, baton: mine };
-      })
-    );
-
-    // OUTSIDE the write permit. A full hub suspends here, which blocks this
-    // appender (backpressure, by design) and every later publisher — but
-    // not other writers, and not scope close.
-    //
-    // `uninterruptibleMask` closes the strand window: the `ensuring` is
-    // installed before any interrupt can land, while `restore` keeps the
-    // await-and-publish itself interruptible. Without it, an interrupt
-    // arriving between the baton link and the handler's installation
-    // would leave every later append waiting on a baton nobody passes.
-    yield* Effect.uninterruptibleMask((restore) =>
-      restore(
-        Effect.gen(function* () {
-          yield* Deferred.await(predecessor);
-          // Anything that landed in the file ahead of this line goes into
-          // the hub ahead of it too, so the sequence a subscriber sees is
-          // the file's order however the bytes got there.
-          for (const preceding of external) {
-            yield* PubSub.publish(hub, [preceding]);
-          }
-          yield* PubSub.publish(hub, [envelope]);
-        })
-      ).pipe(
-        // The baton MUST be passed even on failure or interruption, or
-        // every later append waits forever on a predecessor that will
-        // never finish.
-        Effect.ensuring(Deferred.done(baton, Exit.void))
-      )
-    );
-    return envelope;
+        )
+      );
+      yield* publish(staged.entries, staged.predecessor);
+      return yield* staged.outcome;
+    }).pipe(Effect.ensuring(Deferred.done(mine, Exit.void)));
   });
 
   /**
@@ -714,65 +740,73 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
    *
    * **Details**
    *
-   * **What this actually does, as built**: ONE read of the requested region
-   * — `cursor` to the end of the file, bounded by the file's size — whose
-   * matching envelopes are buffered and then emitted. It is bounded by the
-   * cursor, not by a window, so an unsliced read over a large journal holds
-   * that journal in memory. The frame filter still runs per line before any
-   * payload schema, so the filter-before-decode guarantee is untouched;
-   * what is not true here is the "never held in memory" half.
-   *
-   * Paging this — read one window, emit its envelopes, carry the
-   * unterminated tail into the next read — is spencerbeggs/effected#233,
-   * rather than something attempted alongside the correctness fixes around
-   * it.
+   * Captures one file end, then reads bounded complete-record pages. A page
+   * widens only when no complete record fits, including a cursor fragment.
+   * Frame filtering still precedes payload decoding; a failed record follows
+   * all earlier selected records in the stream.
    */
+  const decodeSelection = S.decodeUnknownEffect(S.UndefinedOr(CursoredSlice(S.String)));
+  const validateSelection = Effect.fn("Journal.validateSelection")((slice: unknown) =>
+    decodeSelection(slice).pipe(Effect.mapError((error) => InvalidSlice.make({ error })))
+  );
+
   const readFrom = (
-    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
+    input: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
     Stream.unwrap(
       Effect.gen(function* () {
+        const slice = yield* validateSelection(input);
         yield* requireFile;
         const from = slice?.cursor ?? 0;
+        const bom = yield* probeBomBytes(fs, config.path);
         const info = yield* fs.stat(config.path);
-        const logicalSize = ByteSize.toNumberUnsafe(info.size) - bomBytes;
+        const logicalSize = ByteSize.toNumberUnsafe(info.size) - bom;
         if (from >= logicalSize) {
           return Stream.empty;
         }
-        // One bounded read of the requested region, starting ONE BYTE
-        // EARLIER than the cursor. That off-by-one is deliberate and
-        // load-bearing: `readTail` discards through the first newline to
-        // land on a line boundary, so a window beginning exactly AT a line
-        // start would discard that whole line. Beginning one byte earlier
-        // hands the discard rule the previous line's terminator instead, so
-        // it consumes exactly that byte and lands on the cursor. A cursor
-        // that is not at a line boundary degrades sanely: the partial line
-        // it points into is skipped rather than half-decoded.
-        const window = yield* readTail(fs, config.path, logicalSize - from + 1, bomBytes);
-        const lines = Line.split(window.text);
-        let selected = Chunk.empty<EnvelopeUnion<R>>();
-        for (const line of lines) {
-          if (Str.isEmpty(Str.trim(line.text))) continue;
-          const rebased = LineSlice.make({
-            offset: line.offset + window.start,
-            end: line.end + window.start,
-            length: line.length,
-            text: line.text,
-            terminated: line.terminated,
-          });
-          if (rebased.offset < from) continue;
-          // FILTER BEFORE DECODE: `decodeSelectedResult` returns none
-          // without ever reaching the payload schema when the frame does
-          // not match.
-          const decoded = Envelope.decodeSelectedResult(rebased, events, (frame) => matchesFrame(frame, slice));
-          if (O.isNone(decoded)) continue;
-          if (Result.isFailure(decoded.value)) {
-            // A hole in the history is reported, never silently skipped.
-            return Stream.concat(Stream.fromIterable(selected), Stream.fail(decoded.value.failure));
-          }
-          selected = Chunk.append(selected, decoded.value.success);
-        }
-        return Stream.fromIterable(selected);
+        // Capture one absolute range. Growth after this snapshot must not
+        // move its start or extend its end. The preceding byte establishes
+        // whether the cursor is at a boundary or inside a partial line.
+        const start = Math.max(0, from - 1);
+        return Stream.paginate(
+          start,
+          Effect.fn("Journal.readPage")(function* (position) {
+            let length = Math.min(DEFAULT_WINDOW, logicalSize - position);
+            let window = yield* readRangeWindow(
+              fs,
+              config.path,
+              position + bom,
+              length,
+              bom,
+              position === start && start > 0
+            );
+            while (Str.isEmpty(window.text) && position + length < logicalSize) {
+              length = Math.min(length * 2, logicalSize - position);
+              window = yield* readRangeWindow(
+                fs,
+                config.path,
+                position + bom,
+                length,
+                bom,
+                position === start && start > 0
+              );
+            }
+            const advanced = window.start + utf8Length(window.text);
+            const next = advanced > position && advanced < logicalSize ? O.some(advanced) : O.none<number>();
+            let selected = Chunk.empty<Result.Result<EnvelopeUnion<R>, JsonlError>>();
+            for (const line of Line.split(window.text)) {
+              if (Line.isBlank(line)) continue;
+              const rebased = LineSlice.rebase(line, window.start);
+              if (rebased.offset < from) continue;
+              // Frame filtering precedes payload decoding on every page.
+              const decoded = Envelope.decodeSelectedResult(rebased, events, (frame) => matchesFrame(frame, slice));
+              if (O.isNone(decoded)) continue;
+              selected = Chunk.append(selected, decoded.value);
+              if (Result.isFailure(decoded.value)) return Tuple.make(Chunk.toReadonlyArray(selected), O.none<number>());
+            }
+            return Tuple.make(Chunk.toReadonlyArray(selected), next);
+          })
+        ).pipe(Stream.mapEffect(Effect.fromResult));
       })
     );
 
@@ -805,10 +839,13 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   const isTerminalEnvelope = (envelope: EnvelopeUnion<R>): boolean => HashSet.has(terminalTags, envelope.event);
 
   const changesStream = (
-    slice: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
+    input: CursoredSlice<R, JsonlEvent.Tag<R>> | undefined
   ): Stream.Stream<EnvelopeUnion<R>, JournalReadError | JsonlError> =>
     Stream.unwrap(
       Effect.gen(function* () {
+        yield* validateSelection(input);
+        const slice = input;
+        // Validation precedes subscription acquisition, including no-replay reads.
         // Quiescent already? A terminal Exit published before this
         // subscriber attached is invisible to it — a hub has no replay — so
         // without this check the stream would wait for an event that has
@@ -833,8 +870,16 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         // reads it AND still in flight to the hub, so it arrives twice.
         // Offsets are monotonic in file order, so the last replayed `end` is
         // exactly the boundary between "already delivered" and "new".
-        let replayedThrough = slice?.cursor ?? 0;
-        const history = replay.pipe(
+        let effectiveCursor = 0;
+        if (slice?.cursor !== undefined) {
+          yield* requireFile;
+          const bom = yield* probeBomBytes(fs, config.path);
+          const info = yield* fs.stat(config.path);
+          effectiveCursor = Math.min(slice.cursor, ByteSize.toNumberUnsafe(info.size) - bom);
+        }
+        const historySlice = slice?.cursor === undefined ? slice : { ...slice, cursor: effectiveCursor };
+        let replayedThrough = effectiveCursor;
+        const history = (slice?.cursor === undefined ? Stream.empty : readFrom(historySlice)).pipe(
           Stream.tap((envelope) =>
             Effect.sync(() => {
               replayedThrough = Math.max(replayedThrough, envelope.line.end);
@@ -863,101 +908,23 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
       })
     );
 
-  const identityOf = (info: FileSystem.File.Info): O.Option<string> => O.map(info.ino, (ino) => `${info.dev}:${ino}`);
-
-  /**
-   * Ingest whatever has been appended since `consumed`, publishing it into
-   * the SAME hub, `latest` and projections as a local append.
-   *
-   * **Details**
-   *
-   * Runs under the write permit and links the publish baton exactly as
-   * `appendWith` does, so external and local envelopes enter the hub in FILE
-   * order as one interleaved sequence — a subscriber cannot tell them apart,
-   * including by ordering.
-   */
-  /**
-   * Serializes ingests against each other.
-   *
-   * **Details**
-   *
-   * Once the catch-up read stopped being the only ingest, a catch-up can run
-   * concurrently with an event-driven one — and `ingest` reads `consumed`,
-   * then writes it only after publishing, so two overlapping runs can read
-   * the same offset and publish the same lines twice. Its own lock rather
-   * than the write permit: an append must not be blocked behind a slow
-   * catch-up read of a large file.
-   */
-  const ingestPermit = Semaphore.makeUnsafe(1);
-
-  const ingest = ingestPermit.withPermits(1)(
-    Effect.gen(function* () {
-      const present = yield* exists();
-      if (!present) {
-        return;
-      }
-      const info = yield* fs.stat(config.path);
-      const currentIdentity = identityOf(info);
-      const logicalSize = ByteSize.toNumberUnsafe(info.size) - bomBytes;
-
-      // Contract breach: the file shrank below what we read, or the path now
-      // names a different file. Surfaced, never silently reconciled.
-      const replaced = O.isSome(identity) && O.isSome(currentIdentity) && identity.value !== currentIdentity.value;
-      if (replaced || logicalSize < consumed) {
-        const failure = JournalResync.make({
-          path: config.path,
-          reason: replaced ? "replaced" : "truncated",
-          expected: consumed,
-          actual: logicalSize,
-        });
-        // Re-arm against the NEW file before surfacing: a node watcher follows
-        // the inode, so after a replace the old watch is attached to a file
-        // nobody writes to and is silently dead. Raising the error without
-        // this leaves the journal permanently blind.
-        identity = currentIdentity;
-        bomBytes = yield* probeBomBytes(fs, config.path);
-        consumed = 0;
-        yield* SubscriptionRef.set(latest, O.none());
-        yield* PubSub.publish(hub, Exit.fail(failure));
-        return;
-      }
-      identity = currentIdentity;
-      if (logicalSize <= consumed) {
-        return;
-      }
-
-      const { envelopes, predecessor, baton } = yield* writePermit.withPermits(1)(
-        Effect.gen(function* () {
-          // Re-read under the permit: a local append may have advanced
-          // `consumed` while we were waiting for it, and may have taken the
-          // pending bytes with it.
-          // An empty range decodes to nothing rather than needing a guard.
-          const from = consumed;
-          const { decoded, advanced } = yield* decodeRange(from, logicalSize);
-          consumed = advanced;
-          const last = A.last(decoded);
-          if (O.isSome(last)) {
-            yield* SubscriptionRef.set(latest, last);
-          }
-          const previous = publishBaton;
-          const mine = Deferred.makeUnsafe<void>();
-          publishBaton = mine;
-          return { envelopes: decoded, predecessor: previous, baton: mine };
-        })
-      );
-
-      yield* Effect.uninterruptibleMask((restore) =>
-        restore(
-          Effect.gen(function* () {
-            yield* Deferred.await(predecessor);
-            for (const envelope of envelopes) {
-              yield* PubSub.publish(hub, [envelope]);
-            }
+  const ingest = Effect.suspend(() => {
+    const mine = Deferred.makeUnsafe<void>();
+    return Effect.gen(function* () {
+      const staged = yield* writePermit.withPermits(1)(
+        Effect.uninterruptibleMask(
+          Effect.fn("Journal.stageIngest")(function* (restore) {
+            if (!(yield* restore(exists))) return O.none();
+            const state = yield* reconcile(restore);
+            const predecessor = publishBaton;
+            publishBaton = mine;
+            return O.some({ entries: state.entries, predecessor });
           })
-        ).pipe(Effect.ensuring(Deferred.done(baton, Exit.void)))
+        )
       );
-    })
-  );
+      if (O.isSome(staged)) yield* publish(staged.value.entries, staged.value.predecessor);
+    }).pipe(Effect.ensuring(Deferred.done(mine, Exit.void)));
+  });
 
   function append<T extends JsonlEvent.Tag<R>>(
     event: T,
@@ -1048,7 +1015,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     changes,
     projection,
     create: Effect.gen(function* () {
-      const present = yield* exists();
+      const present = yield* exists;
       if (!present) {
         // Opening with `O_APPEND` creates the file; nothing is written.
         // Do NOT `writeAll(new Uint8Array(0))` to "touch" it — a zero-byte
@@ -1065,19 +1032,23 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   // Seed `latest` from whatever is already on disk, and set the append
   // cursor past it. A missing file is legal here: layer construction must
   // never fail on one.
-  const present = yield* exists();
+  const present = yield* exists;
   if (present) {
     yield* Effect.gen(function* () {
       bomBytes = yield* probeBomBytes(fs, config.path);
       // Narrowed to JournalNotFound only: a permissions error or a bad handle
       // must NOT present as an empty journal. Anything other than "the file
       // vanished between the check and the read" is a real failure.
-      yield* refresh;
+      // Sample identity before the seed read: a replacement during that
+      // read must not attach its old cursor to the replacement's inode.
       const info = yield* fs.stat(config.path);
-      // LOGICAL, post-BOM — the same space every offset this package emits
-      // lives in. Seeding it physically put every subsequent append's offset
-      // three bytes out on a BOM'd journal.
-      consumed = ByteSize.toNumberUnsafe(info.size) - bomBytes;
+      const seed = yield* refresh;
+      // Resume at the same completed seed record, never at a later stat EOF:
+      // a torn suffix or unread growth must remain pending for reconciliation.
+      consumed = O.getOrElse(
+        O.map(seed, (row) => row.line.end),
+        () => 0
+      );
       // Detect replacement even before the supervisor's first catch-up read.
       identity = identityOf(info);
     }).pipe(
@@ -1138,7 +1109,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     // watch. `takeUntilEffect` runs before the ingest below, and the element
     // that satisfies it is still emitted, so the creation event that ends
     // this watch is also the one that catches the journal up.
-    Stream.takeUntilEffect(() => exists()),
+    Stream.takeUntilEffect(() => exists),
     Stream.runForEach(() => ingest),
     Effect.ignore
   );
@@ -1157,7 +1128,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
     let immediateCompletions = 0;
     for (;;) {
       const startedAt = consumed;
-      const present = yield* exists();
+      const present = yield* exists;
       if (present) {
         // ARM FIRST, THEN CATCH UP. The reverse order — catch up, then arm —
         // leaves a window in which the file can grow while nothing is
@@ -1192,8 +1163,8 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
         for (let turn = 0; turn < ARM_YIELDS; turn++) {
           yield* Effect.yieldNow;
         }
-        // Redundant when nothing changed: `ingest` early-returns on
-        // `logicalSize <= consumed`, so paying for it here is free.
+        // Reconcile after arming to include any growth during registration.
+        // A stable file contributes no envelopes to the publication batch.
         yield* ingest;
         yield* Fiber.join(armed);
         // The journal watch ended — the file was replaced or removed. Loop
@@ -1205,6 +1176,9 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
       }
       immediateCompletions = consumed === startedAt ? immediateCompletions + 1 : 0;
       if (immediateCompletions > MAX_IMMEDIATE_REARMS) {
+        yield* Effect.logWarning("Journal watcher stopped after immediate completions").pipe(
+          Effect.annotateLogs({ path: config.path, rearms: immediateCompletions })
+        );
         return;
       }
     }
@@ -1214,7 +1188,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
   // established the journal keeps working for local appends and simply stops
   // observing external ones. Failing the layer instead would violate the
   // missing-journal contract, which requires construction to succeed.
-  yield* Effect.forkScoped(supervise.pipe(Effect.ignore));
+  yield* Effect.forkScoped(supervise.pipe(Effect.annotateLogs({ path: config.path }), Effect.ignore));
 
   // Graceful shutdown, as TWO mechanisms. Refusal is the flag above, checked
   // before the permit and failing typed. Drain is here: taking the permit
@@ -1248,7 +1222,7 @@ const makeEngine = Effect.fn("Journal.makeEngine")(function* <R extends JsonlEve
           yield* Deferred.await(pending);
           yield* PubSub.publish(hub, Exit.void);
         })
-      ).pipe(Effect.timeout(config.shutdownPublishTimeout ?? SHUTDOWN_PUBLISH_TIMEOUT), Effect.ignore);
+      ).pipe(Effect.timeout(config.shutdownPublishTimeout), Effect.ignore);
     })
   );
 
@@ -1275,11 +1249,14 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
    * handle) is a real failure, and typing this channel `never` would have made
    * it arrive as an untypeable defect that no caller could catch.
    *
-   * **Bind the result to a const and provide that const.** Layers are memoized
+   * **Bind the result to a const and provide that const.**
+   *
    * **Details**
    *
-   * by reference, so calling this twice mints **two independent journals over
-   * one file** — two semaphores, two hubs, two `latest` refs — and their
+   * Configuration is decoded before acquisition; invalid input fails with
+   * `InvalidJournalConfig`, preserving its schema issue tree.
+   * Layers are memoized by reference, so calling this twice mints
+   * **two independent journals over one file** — two semaphores, two hubs, two `latest` refs — and their
    * appends are not serialized against each other. That is the in-process form
    * of exactly the interleaving the cooperative-writer rules exist to prevent,
    * and it typechecks perfectly.
@@ -1310,7 +1287,9 @@ export interface JournalClass<Self, Id extends string, R extends JsonlEvent.Regi
    * @category layers
    * @since 0.0.0
    */
-  readonly layer: (config: JournalConfig) => Layer.Layer<Self, PlatformError.PlatformError, FileSystem.FileSystem>;
+  readonly layer: (
+    config: JournalConfig
+  ) => Layer.Layer<Self, PlatformError.PlatformError | InvalidJournalConfig | InvalidUtf8, FileSystem.FileSystem>;
 }
 
 /**
@@ -1358,10 +1337,18 @@ export const Journal = {
       // introduce a different Self from the caller's class.
       return Object.assign(key, {
         events: options.events,
-        layer: (config: JournalConfig): Layer.Layer<Self, PlatformError.PlatformError, FileSystem.FileSystem> =>
+        layer: (
+          config: JournalConfig
+        ): Layer.Layer<Self, PlatformError.PlatformError | InvalidJournalConfig | InvalidUtf8, FileSystem.FileSystem> =>
           Layer.effect(
             key,
-            Effect.flatMap(FileSystem.FileSystem, (fs) => makeEngine(options.events, config, fs))
+            Effect.gen(function* () {
+              const settings = yield* decodeSettings(config).pipe(
+                Effect.mapError((error) => InvalidJournalConfig.make({ error }))
+              );
+              const fs = yield* FileSystem.FileSystem;
+              return yield* makeEngine(options.events, settings, fs);
+            })
           ),
       });
     },

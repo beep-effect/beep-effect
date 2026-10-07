@@ -5,6 +5,8 @@ import {
   Envelope,
   type EnvelopeUnion,
   type EnvelopeWithTag,
+  type InvalidJournalConfig,
+  type InvalidUtf8,
   Journal,
   type JournalConfig,
   type JournalShape,
@@ -154,7 +156,7 @@ describe("JSONL schema and facade types", () => {
     expectTypeOf<JsonlEvent.TerminalTags<Registry>>().toEqualTypeOf<"closed">();
     expectTypeOf<JsonlEvent.ReopenTags<Registry>>().toEqualTypeOf<"reopened">();
     expectTypeOf(TestJournal.layer({ path })).toEqualTypeOf<
-      Layer.Layer<TestJournal, PlatformError.PlatformError, FileSystem.FileSystem>
+      Layer.Layer<TestJournal, PlatformError.PlatformError | InvalidJournalConfig | InvalidUtf8, FileSystem.FileSystem>
     >();
     expect(TestJournal.events).toBe(events);
     expect(TestJournal.key).toBe($I`TestJournal`);

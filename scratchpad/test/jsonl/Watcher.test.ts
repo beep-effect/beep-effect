@@ -74,12 +74,8 @@ it.effect("a torn external tail is consumed only after completion", () =>
       .pipe(Stream.take(1), Stream.runCollect, Effect.forkChild({ startImmediately: true }));
     const whole = line(2);
     yield* externalAppend(fs, Str.slice(0, 20)(whole));
-    // A local finite query proves that the partial tail is still invalid; completion
-    // is synchronized by the subscriber instead of guessing scheduler turns.
-    assertFailure(
-      (yield* journal.query().pipe(Stream.runCollect, Effect.result)).pipe(Result.mapError((error) => error._tag)),
-      "MalformedLine"
-    );
+    // Complete history remains readable while the original writer finishes.
+    assert.strictEqual((yield* journal.query().pipe(Stream.runCollect)).length, 1);
     yield* externalAppend(fs, Str.slice(20)(whole));
     assert.deepStrictEqual(
       A.map(yield* Fiber.join(reader), (row) => row.data.round),

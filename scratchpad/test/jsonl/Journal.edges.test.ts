@@ -297,6 +297,12 @@ it.effect("a watch ending after removal can rearm over the missing journal", () 
     const journal = yield* endingWatch(fs, fs.remove(path), "/journal");
     assertNone(yield* SubscriptionRef.get(journal.latest));
     yield* journal.create;
+    assertFailure(
+      (yield* Effect.result(journal.append("noted", { round: 1, label: "recreated" }))).pipe(
+        Result.mapError((error) => error._tag)
+      ),
+      "JournalResync"
+    );
     yield* journal.append("noted", { round: 1, label: "recreated" });
   })
 );

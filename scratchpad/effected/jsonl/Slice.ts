@@ -16,6 +16,7 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { EnvelopeFrame } from "./Envelope.ts";
 import type { JsonlEvent } from "./JsonlEvent.ts";
+import { ByteCount } from "./LineSlice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/Slice");
 
@@ -62,7 +63,7 @@ export const Slice = <T extends string>(event: S.Codec<T>) =>
 export const CursoredSlice = <T extends string>(event: S.Codec<T>) =>
   S.Struct({
     ...fields(event),
-    cursor: S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))),
+    cursor: S.optionalKey(ByteCount),
   }).annotate(
     $I.annote("CursoredSlice", { description: "Frame selection resumed at a logical post-BOM byte offset." })
   );

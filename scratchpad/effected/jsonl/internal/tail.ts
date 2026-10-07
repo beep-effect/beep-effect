@@ -10,13 +10,10 @@
 // the cost of answering "what is the current state" grow with the age of the
 // journal, which is the thing this package exists to avoid.
 //
-// **The scope of that, honestly**: it binds the tail reads. The historical read
-// (`Journal`'s `readFrom`, behind `query` and the replay half of `changes`)
-// currently reads its whole requested region in one allocation bounded by the
-// file's size, and is bounded by the caller's `cursor` rather than by a window.
-// Paging it through `readRangeText` is spencerbeggs/effected#233; until
-// that lands, this module's discipline is a property of the tail reads, not of
-// every read in the service.
+// Historical reads capture an absolute range and decode it through
+// `readRangeWindow`, retaining their sampled start/end if another writer appends.
+// Each requested range is materialized as text. Journal historical reads call
+// this helper in bounded pages and emit complete envelopes between reads.
 
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as A from "effect/Array";
@@ -30,6 +27,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
+import { InvalidUtf8 } from "../JsonlError.ts";
+import { ByteCount } from "../LineSlice.ts";
 
 const $I = $ScratchpadId.create("effected/jsonl/internal/tail");
 
@@ -77,7 +76,7 @@ export const DEFAULT_WINDOW = 8192;
  * @since 0.0.0
  */
 export class TailWindow extends S.Class<TailWindow>($I`TailWindow`)(
-  { text: S.String, start: S.Finite, atFileStart: S.Boolean, size: S.Finite },
+  { text: S.String, start: ByteCount, atFileStart: S.Boolean, size: ByteCount },
   $I.annote("TailWindow", {
     description: "A tail read beginning at a line boundary, with post-BOM offsets.",
   })
@@ -86,6 +85,115 @@ export class TailWindow extends S.Class<TailWindow>($I`TailWindow`)(
 /** Does the buffer begin with a UTF-8 BOM? */
 const hasBom = (bytes: Uint8Array): boolean =>
   bytes.length >= 3 && bytes[0] === BOM[0] && bytes[1] === BOM[1] && bytes[2] === BOM[2];
+
+/** Read up to the bounded byte count, tolerating successful short reads. */
+const readBytes = Effect.fn("Jsonl.readBytes")(function* (file: FileSystem.File, length: number) {
+  const bytes = new Uint8Array(length);
+  let offset = 0;
+  while (offset < length) {
+    const chunk = yield* file.readAlloc(Math.min(length - offset, CHUNK));
+    if (O.isNone(chunk) || chunk.value.length === 0) break;
+    bytes.set(chunk.value, offset);
+    offset += chunk.value.length;
+  }
+  return bytes.subarray(0, offset);
+});
+
+const readWindow = Effect.fn("Jsonl.readWindow")(function* (
+  fs: FileSystem.FileSystem,
+  path: string,
+  from: number,
+  length: number,
+  bomBytes: number,
+  skipPartialLine: boolean,
+  completeOnly: boolean
+): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8, Scope.Scope> {
+  const file = yield* fs.open(path, { flag: "r" });
+  yield* file.seek(BigInt(from), "start");
+  const bytes = yield* readBytes(file, length);
+  const cursor = skipPartialLine
+    ? A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
+        O.map((newline) => newline + 1),
+        O.getOrElse(() => bytes.length)
+      )
+    : 0;
+  const end = completeOnly
+    ? A.findLastIndex(bytes, (byte) => byte === LF).pipe(
+        O.map((newline) => newline + 1),
+        O.getOrElse(() => 0)
+      )
+    : bytes.length;
+  // Discard byte fragments before decoding. A cursor can point into a UTF-8
+  // sequence, and an unfinished suffix can contain a pending multi-byte code point.
+  const text = yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes.subarray(cursor, end)),
+    catch: (cause) => InvalidUtf8.make({ path, offset: from + cursor, cause }),
+  });
+  return TailWindow.make({
+    text,
+    start: from + cursor - bomBytes,
+    size: from + length - bomBytes,
+    atFileStart: from === bomBytes,
+  });
+}, Effect.scoped);
+
+/**
+ * Decode complete records in a captured absolute byte range.
+ *
+ * **Details**
+ *
+ * A leading cursor fragment is discarded in bytes when requested, before strict
+ * UTF-8 decoding. Every byte after the final newline is withheld without decoding
+ * so a live writer can finish its suffix. The window start and size are logical
+ * post-BOM offsets; size records the sampled range end, including withheld bytes.
+ *
+ * **Example** (Hold an unfinished multi-byte suffix)
+ * ```ts
+ * import { readRangeWindow } from "@beep/scratchpad/effected/jsonl/internal/tail";
+ * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
+ * import { Effect } from "effect";
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* MemoryFileSystem.make;
+ *   yield* fs.writeFile("/events.jsonl", new Uint8Array([0x34, 0x32, 0x0a, 0xe2]));
+ *   const window = yield* readRangeWindow(fs, "/events.jsonl", 0, 4, 0);
+ *   window.text // => "42\n"
+ *   window.size // => 4
+ * });
+ * await Effect.runPromise(program);
+ * ```
+ * @internal
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const readRangeWindow: {
+  (
+    fs: FileSystem.FileSystem,
+    path: string,
+    from: number,
+    length: number,
+    bomBytes: number,
+    skipPartialLine?: boolean
+  ): Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
+  (
+    path: string,
+    from: number,
+    length: number,
+    bomBytes: number,
+    skipPartialLine?: boolean
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
+} = dual(
+  (args) => P.isObject(args[0]),
+  Effect.fn("Jsonl.readRangeWindow")(
+    (
+      fs: FileSystem.FileSystem,
+      path: string,
+      from: number,
+      length: number,
+      bomBytes: number,
+      skipPartialLine = false
+    ) => readWindow(fs, path, from, length, bomBytes, skipPartialLine, true)
+  )
+);
 
 /**
  * Probe the first three bytes of a file for a BOM.
@@ -127,8 +235,7 @@ export const probeBomBytes: {
     path: string
   ): Effect.fn.Return<number, PlatformError.PlatformError, Scope.Scope> {
     const file = yield* fs.open(path, { flag: "r" });
-    const head = yield* file.readAlloc(BOM.length);
-    const bytes = O.getOrElse(head, () => new Uint8Array(0));
+    const bytes = yield* readBytes(file, BOM.length);
     return hasBom(bytes) ? BOM.length : 0;
   }, Effect.scoped)
 );
@@ -153,12 +260,14 @@ export const probeBomBytes: {
  *    A `U+FEFF` anywhere else is content and is left alone.
  * 3. **Never read the whole file** unless the file is smaller than the window.
  *
- * **`window` is not clamped**, deliberately. `Journal`'s historical read sizes
- * its window to the region it has to return, so a clamp here would silently
- * truncate that read rather than bound it. The clamp belongs with the paged
- * rewrite of that read — one that emits per window and can therefore honour a
- * maximum — and is carried on spencerbeggs/effected#233, not added underneath
- * it.
+ * `completeOnly` withholds every suffix beyond the last newline before strict
+ * UTF-8 decoding; Journal seed reads enable it. The default raw window retains
+ * valid unterminated text and fails typed when its bytes are not complete UTF-8.
+ *
+ * **`window` is not clamped**: a last-valid search widens when its initial
+ * window does not contain a complete record. Successful short reads are
+ * aggregated up to the sampled byte count or EOF before decoding. File BOM
+ * bytes are skipped explicitly; a content U+FEFF at a window boundary survives.
  *
  * **Example** (Read a complete tail window)
  *
@@ -184,53 +293,32 @@ export const readTail: {
     fs: FileSystem.FileSystem,
     path: string,
     window: number,
-    bomBytes: number
-  ): Effect.Effect<TailWindow, PlatformError.PlatformError>;
+    bomBytes: number,
+    completeOnly?: boolean
+  ): Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
   (
     path: string,
     window: number,
-    bomBytes: number
-  ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError>;
+    bomBytes: number,
+    completeOnly?: boolean
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<TailWindow, PlatformError.PlatformError | InvalidUtf8>;
 } = dual(
-  4,
+  (args) => P.isObject(args[0]),
   Effect.fn("Jsonl.readTail")(function* (
     fs: FileSystem.FileSystem,
     path: string,
     window: number,
-    bomBytes: number
-  ): Effect.fn.Return<TailWindow, PlatformError.PlatformError, Scope.Scope> {
+    bomBytes: number,
+    completeOnly = false
+  ): Effect.fn.Return<TailWindow, PlatformError.PlatformError | InvalidUtf8> {
     const info = yield* fs.stat(path);
     const physicalSize = ByteSize.toNumberUnsafe(info.size);
     // Every offset below is LOGICAL — post-BOM — on every path, whether or not
     // this particular window happens to reach the start of the file.
-    const logicalSize = physicalSize - bomBytes;
-    const from = Math.max(bomBytes, physicalSize - window);
-    const file = yield* fs.open(path, { flag: "r" });
-    yield* file.seek(BigInt(from), "start");
-    const read = yield* file.readAlloc(physicalSize - from);
-    const bytes = O.getOrElse(read, () => new Uint8Array(0));
-
-    // "At file start" means at the start of the CONTENT, i.e. past the BOM.
-    const windowAtFileStart = from === bomBytes;
-    let cursor = 0;
-    if (!windowAtFileStart) {
-      // Discard the partial first line. If there is no newline in the window
-      // at all, the whole window is one partial line and there is nothing
-      // usable here — the caller widens.
-      cursor = A.findFirstIndex(bytes, (byte) => byte === LF).pipe(
-        O.map((newline) => newline + 1),
-        O.getOrElse(() => bytes.length)
-      );
-    }
-
-    const text = new TextDecoder().decode(bytes.subarray(cursor));
-    return TailWindow.make({
-      text,
-      start: from + cursor - bomBytes,
-      atFileStart: windowAtFileStart,
-      size: logicalSize,
-    });
-  }, Effect.scoped)
+    const contentStart = Math.min(bomBytes, physicalSize);
+    const from = Math.min(physicalSize, Math.max(contentStart, physicalSize - window));
+    return yield* readWindow(fs, path, from, physicalSize - from, contentStart, from !== contentStart, completeOnly);
+  })
 );
 
 /**
@@ -270,14 +358,16 @@ export const readTailUntil: {
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow?: number
-  ): Effect.Effect<O.Option<A>, PlatformError.PlatformError>;
+    initialWindow?: number,
+    completeOnly?: boolean
+  ): Effect.Effect<O.Option<A>, PlatformError.PlatformError | InvalidUtf8>;
   <A>(
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow?: number
-  ): (fs: FileSystem.FileSystem) => Effect.Effect<O.Option<A>, PlatformError.PlatformError>;
+    initialWindow?: number,
+    completeOnly?: boolean
+  ): (fs: FileSystem.FileSystem) => Effect.Effect<O.Option<A>, PlatformError.PlatformError | InvalidUtf8>;
 } = dual(
   (args) => P.isObject(args[0]),
   Effect.fn("Jsonl.readTailUntil")(function* <A>(
@@ -285,11 +375,12 @@ export const readTailUntil: {
     path: string,
     bomBytes: number,
     decode: (window: TailWindow) => O.Option<A>,
-    initialWindow = DEFAULT_WINDOW
-  ): Effect.fn.Return<O.Option<A>, PlatformError.PlatformError> {
+    initialWindow = DEFAULT_WINDOW,
+    completeOnly = false
+  ): Effect.fn.Return<O.Option<A>, PlatformError.PlatformError | InvalidUtf8> {
     let window = initialWindow;
     for (;;) {
-      const tail = yield* readTail(fs, path, window, bomBytes);
+      const tail = yield* readTail(fs, path, window, bomBytes, completeOnly);
       const found = decode(tail);
       if (O.isSome(found)) {
         return found;
@@ -301,82 +392,6 @@ export const readTailUntil: {
       window *= 4;
     }
   })
-);
-
-/**
- * Read a byte range and decode it as text, safely across chunk boundaries.
- *
- * **Details**
- *
- * The byte→string seam lives here, in the service layer, because `Line.split`
- * is string-in by design and the pure core must never learn about buffers.
- *
- * `TextDecoder` is used in **streaming mode** (`{ stream: true }`) so a
- * multi-byte character split across two reads is reassembled rather than
- * mangled. A naive per-chunk `decode` corrupts any such character — a bug that
- * appears only with non-ASCII payloads at specific sizes, which is exactly the
- * kind that reaches production. The final `decode()` with no argument flushes
- * any trailing partial sequence.
- *
- * **Example** (Read a physical byte range)
- *
- * ```ts
- * import { readRangeText } from "@beep/scratchpad/effected/jsonl/internal/tail";
- * import * as MemoryFileSystem from "@beep/test-utils/MemoryFileSystem";
- * import { Effect } from "effect";
- * const program = Effect.gen(function* () {
- *   const fs = yield* MemoryFileSystem.make;
- *   yield* fs.writeFileString("/events.jsonl", "\ufeff42\n");
- *   const text = yield* readRangeText(fs,"/events.jsonl",3,3);
- *   text // => "42\n"
- * });
- * await Effect.runPromise(program);
- * ```
- *
- * @internal
- * @category resource-management
- * @since 0.0.0
- */
-export const readRangeText: {
-  (
-    fs: FileSystem.FileSystem,
-    path: string,
-    from: number,
-    length: number
-  ): Effect.Effect<string, PlatformError.PlatformError>;
-  (
-    path: string,
-    from: number,
-    length: number
-  ): (fs: FileSystem.FileSystem) => Effect.Effect<string, PlatformError.PlatformError>;
-} = dual(
-  4,
-  Effect.fn("Jsonl.readRangeText")(function* (
-    fs: FileSystem.FileSystem,
-    path: string,
-    from: number,
-    length: number
-  ): Effect.fn.Return<string, PlatformError.PlatformError, Scope.Scope> {
-    if (length <= 0) {
-      return "";
-    }
-    const file = yield* fs.open(path, { flag: "r" });
-    yield* file.seek(BigInt(from), "start");
-    const decoder = new TextDecoder();
-    let text = "";
-    let remaining = length;
-    while (remaining > 0) {
-      const chunk = yield* file.readAlloc(Math.min(remaining, CHUNK));
-      if (O.isNone(chunk) || chunk.value.length === 0) {
-        break;
-      }
-      // `stream: true` carries an incomplete trailing sequence into the next
-      // call instead of emitting U+FFFD for it.
-      text += decoder.decode(chunk.value, { stream: true });
-      remaining -= chunk.value.length;
-    }
-    return text + decoder.decode();
-  }, Effect.scoped)
 );
 
 /** Read granularity for incremental tail reads. */

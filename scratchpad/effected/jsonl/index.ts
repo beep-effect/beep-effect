@@ -38,9 +38,15 @@ export type {
 export { AppendOptions, Journal, JournalConfig } from "./Journal.ts";
 export {
   InvalidData,
+  InvalidJournalConfig,
+  InvalidSlice,
+  InvalidUtf8,
   JournalClosed,
   JournalNotFound,
   JournalResync,
+  JournalResyncReason,
+  JournalUnterminated,
+  JournalWriteConflict,
   JsonlError,
   MalformedLine,
   TerminalViolation,
@@ -50,5 +56,5 @@ export {
 export type { DataSchema } from "./JsonlEvent.ts";
 export { JsonlEvent, JsonlEventTypeId } from "./JsonlEvent.ts";
 export { Line, ParsedLine } from "./Line.ts";
-export { LineSlice } from "./LineSlice.ts";
+export { ByteCount, LineSlice } from "./LineSlice.ts";
 export { CursoredSlice, Slice } from "./Slice.ts";

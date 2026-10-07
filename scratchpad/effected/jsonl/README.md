@@ -14,25 +14,70 @@ pipe(envelope, Envelope.encode(events))
 Optional configuration and slice keys accept omission, not explicit `undefined`.
 `shutdownPublishTimeout` accepts an Effect `Duration` value.
 
+## Writing, recovery and concurrent readers
+
+Each journal instance serializes its own writes. Before checking terminal state or
+deriving an `appendPatch`, it reads completed foreign records that have already
+reached the file. Those records enter the same ordered publication stream as local
+appends. Patches therefore inherit the current completed snapshot even when the
+filesystem watcher has not run yet.
+
+An incomplete physical tail prevents a local append. The operation fails with
+`JournalUnterminated` and leaves the bytes unchanged, including when the tail is valid
+JSON that lacks its terminating newline. The original writer must complete its
+record, or the application must explicitly repair the file while preserving any
+bytes it needs for recovery. A failed filesystem write may already have persisted
+a prefix; retrying without inspecting that state is unsafe.
+
+Historical reads use a fixed byte interval sampled for that read. They retain
+completed history while another process appends, and a cursor inside a line skips
+that partial line. Records are emitted in pages; a page widens only when needed
+to fit a complete record. Memory use follows page and record size rather than the
+entire requested history. An incomplete final record is held for later completion so a
+replayed subscription can continue into live changes. A terminated corrupt record
+still fails through the typed error channel. Cursors count UTF-8 bytes after one
+file-leading BOM, including when the file appears after layer construction.
+Completed records must also contain valid UTF-8. Invalid source bytes fail with
+`InvalidUtf8`; they are never replaced with characters that would change byte
+offsets. An unfinished trailing record remains withheld, including when its final
+Unicode character spans separate writes.
+
+A live read whose cursor is beyond the sampled EOF starts from that EOF and
+receives later appends. A finite query beyond EOF returns an empty stream.
+
+Independent writers do not share an instance's semaphore. If the file size after
+a write cannot establish the expected position, the operation fails with
+`JournalWriteConflict` instead of returning a guessed cursor. Its bytes may already
+be on disk. Reconcile the file before deciding whether another write is needed;
+do not automatically retry that failure. Subsequent ingestion reads from the last
+known boundary. Applications requiring atomic patch transactions across processes
+must supply their own shared writer coordination.
+
+Layer configuration is validated before resources are allocated. Invalid capacity
+values fail with `InvalidJournalConfig`; invalid read selections, including negative
+or fractional cursors, fail with `InvalidSlice`. Both retain the structured schema
+failure. Omitted capacity and shutdown timeout keep their documented defaults.
+
 ## Focused validation
 
 Run these from the repository root:
 
 ```sh
-bunx --no-install tsgo -p scratchpad/effected/jsonl/tsconfig.json --noEmit
-bunx --no-install vitest run --config scratchpad/vitest.jsonl.config.ts
-bunx --no-install vitest run --config scratchpad/vitest.jsonl.config.ts scratchpad/test/jsonl --coverage
-bun run docgen:local -- --package @beep/scratchpad
-bun run beep quality package-verify @beep/scratchpad
+bun run --cwd scratchpad audit:jsonl
 ```
 
-Dedicated module documentation has its own configuration. Run from `scratchpad`:
+The manifest also exposes each check independently:
 
 ```sh
-bunx --no-install docgen --config-file docgen.jsonl.json
+bun run --cwd scratchpad check:jsonl
+bun run --cwd scratchpad lint:jsonl
+bun run --cwd scratchpad test:jsonl
+bun run --cwd scratchpad coverage:jsonl
+bun run --cwd scratchpad docgen:jsonl
 ```
 
-Paths in this configuration are relative to the scratchpad package directory.
+Dedicated module documentation uses `scratchpad/docgen.jsonl.json`. Its paths
+are relative to the scratchpad package directory.
 Generated Markdown and compiled examples stay under the ignored
 `.jsdoc-loop/generated-docs/jsonl/` directory. The source glob only includes the
 JSONL module. No unrelated ontology aliases or generated manifest scripts are
@@ -101,8 +146,10 @@ package documentation proof; scratchpad has no registered package audit. Neither
 that command nor the focused check establishes that unrelated scratchpad labs
 pass a full package typecheck.
 
-The bounded `docgen:local` preflight currently has an inherited metadata-parser
-limitation: `JsDocAnalysis.ts` requires literal `@example` tags even though the
+The bounded `docgen:local` preflight has an inherited metadata-parser limitation,
+verified with `bun run docgen:local -- --package @beep/scratchpad`:
+it exits before generation with errors such as `JournalReadError missing @example`.
+`JsDocAnalysis.ts` requires literal `@example` tags even though the
 canonical documentation law and generator use titled Example sections and exempt
 pure type declarations. This limitation also exists on the current base. Dedicated
 docgen, runtime examples, and package docgen remain the independent proof; do not

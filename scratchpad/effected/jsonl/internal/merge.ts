@@ -72,28 +72,6 @@ export const isRecordLike = (value: unknown): value is Record<string, unknown> =
   P.and(P.isObjectKeyword, P.isNotNull)(value) && Object.prototype.toString.call(value) === "[object Object]";
 
 /**
- * Whether a plain record, not a class instance, `Date`, array or `null`.
- *
- * **Example** (Recognize a plain patch)
- *
- * ```ts import.meta.vitest name="Recognize a plain patch"
- * import { isPlainRecord } from "@beep/scratchpad/effected/jsonl/internal/merge";
- * isPlainRecord({count:1}) // => true
- * ```
- *
- * @internal
- * @category predicates
- * @since 0.0.0
- */
-export const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
-  if (!isRecordLike(value)) {
-    return false;
-  }
-  const proto = Object.getPrototypeOf(value);
-  return proto === Object.prototype || P.isNull(proto);
-};
-
-/**
  * Whether `patch` may be merged into `base`.
  *
  * **Details**

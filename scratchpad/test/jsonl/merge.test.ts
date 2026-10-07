@@ -1,6 +1,6 @@
 // Adapted from effected/packages/jsonl/__test__/merge.test.ts (MIT).
 
-import { canMerge, isPlainRecord, isRecordLike, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
+import { canMerge, isRecordLike, shallowMerge } from "@beep/scratchpad/effected/jsonl/internal/merge";
 import { assert, describe, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as P from "effect/Predicate";
@@ -101,21 +101,6 @@ describe("shallowMerge", () => {
   });
 });
 
-describe("isPlainRecord", () => {
-  it("accepts plain objects and null-prototype objects", () => {
-    assert.isTrue(isPlainRecord({}));
-    assert.isTrue(isPlainRecord(Object.create(null)));
-  });
-
-  it("rejects arrays, null, scalars and class instances", () => {
-    assert.isFalse(isPlainRecord([]));
-    assert.isFalse(isPlainRecord(null));
-    assert.isFalse(isPlainRecord(42));
-    assert.isFalse(isPlainRecord("text"));
-    assert.isFalse(isPlainRecord(DateTime.makeUnsafe(0).pipe(DateTime.toDateUtc)));
-  });
-});
-
 describe("canMerge", () => {
   class Payload {
     readonly a: number;
@@ -156,10 +141,9 @@ describe("canMerge", () => {
 });
 
 describe("isRecordLike", () => {
-  it("accepts class instances, unlike isPlainRecord", () => {
+  it("accepts class instances", () => {
     class Thing {}
     assert.isTrue(isRecordLike(new Thing()));
-    assert.isFalse(isPlainRecord(new Thing()));
   });
 
   it("rejects arrays and Dates, which a bare typeof check would admit", () => {

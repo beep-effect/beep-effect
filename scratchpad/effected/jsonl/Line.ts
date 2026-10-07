@@ -20,7 +20,7 @@ import { utf8Length } from "./internal/utf8.ts";
 import { MalformedLine } from "./JsonlError.ts";
 import { LineSlice } from "./LineSlice.ts";
 
-const $I = $ScratchpadId.create("Line");
+const $I = $ScratchpadId.create("effected/jsonl/Line");
 
 /**
  * A line that parsed as JSON, paired with the slice it came from.
@@ -98,6 +98,20 @@ const decodeJson = S.decodeResult(S.fromJsonString(S.Unknown));
  */
 export const Line = {
   /**
+   * Tests whether a source line contains only whitespace, shared by JSON and envelope readers.
+   *
+   * **Example** (Recognize a blank candidate)
+   * ```ts import.meta.vitest name="Recognize a blank candidate"
+   * import { Line } from "@beep/scratchpad/effected/jsonl/Line";
+   * import * as A from "effect/Array";
+   * import * as O from "effect/Option";
+   * Line.isBlank(O.getOrThrow(A.head(Line.split(" \t\n")))) // => true
+   * ```
+   * @category predicates
+   * @since 0.0.0
+   */
+  isBlank,
+  /**
    * The UTF-8 byte length of a string.
    *
    * **Details**
@@ -115,13 +129,13 @@ export const Line = {
    * ```ts import.meta.vitest name="Measure encoded bytes"
    * import { Line } from "@beep/scratchpad/effected/jsonl/index";
    *
-   * Line.byteLength("\u{1F600}"); // 4
-   * "\u{1F600}".length;           // 2 — the trap
+   * Line.byteLength("\u{1F600}") // => 4
    * ```
+   *
+   * @category getters
+   * @since 0.0.0
    */
-  byteLength(text: string): number {
-    return utf8Length(text);
-  },
+  byteLength: utf8Length,
 
   /**
    * Split text into candidate lines with byte-exact offsets.
@@ -147,7 +161,6 @@ export const Line = {
    * slices[1]?.offset // => 4
    * ```
    *
-   * @param text - JSONL source text.
    * @returns One {@link LineSlice} per candidate line, in source order.
    * @category parsing
    * @since 0.0.0
@@ -184,7 +197,6 @@ export const Line = {
    * Line.consumedOffset("42\n{") // => 3
    * ```
    *
-   * @param text - JSONL source text.
    * @returns The resume cursor, in UTF-8 bytes.
    * @category getters
    * @since 0.0.0
@@ -255,7 +267,6 @@ export const Line = {
    * A.map(Line.parseAll("42\nbad\ntrue\n"), Result.isSuccess) // => [true, false, true]
    * ```
    *
-   * @param text - JSONL source text.
    * @returns One `Result` per non-blank line, in source order.
    * @category parsing
    * @since 0.0.0
@@ -299,7 +310,6 @@ export const Line = {
    * Line.lastValid("42\n{").pipe(O.map((parsed) => parsed.value)) // => O.some(42)
    * ```
    *
-   * @param text - JSONL source text.
    * @returns The last parseable line, or `O.none()` if none parses.
    * @category parsing
    * @since 0.0.0

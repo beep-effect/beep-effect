@@ -239,6 +239,28 @@ describe("encoder validation boundaries", () => {
       "InvalidData"
     );
   });
+  it("rejects an untyped scope before emitting an unreadable wire frame", () => {
+    const result: unknown = Reflect.apply(Envelope.encodeResult, undefined, [
+      { at, event: "mail", scope: 42, data: { round: 7, from: "silk" } },
+      events,
+    ]);
+    if (!Result.isResult(result) || !Result.isFailure(result) || !S.is(InvalidData)(result.failure))
+      return assert.fail("expected the input codec to report InvalidData");
+    assertSome(result.failure.event, "mail");
+    assert.strictEqual(result.failure.line.text, "");
+    assert.strictEqual(result.failure.line.offset, 0);
+    assert.isDefined(result.failure.error.issue);
+  });
+  it("rejects an explicitly undefined scope at the exact optional input boundary", () => {
+    const result: unknown = Reflect.apply(Envelope.encodeResult, undefined, [
+      { at, event: "mail", scope: undefined, data: { round: 7, from: "silk" } },
+      events,
+    ]);
+    if (!Result.isResult(result)) return assert.fail("expected an encoding Result");
+    if (!Result.isFailure(result) || !S.is(InvalidData)(result.failure))
+      return assert.fail("explicit undefined is outside the exact optional contract");
+    assertSome(result.failure.event, "mail");
+  });
   it("rejects invalid timestamps introduced by an untyped caller", () => {
     const input: EnvelopeInput<"mail", typeof Payload.Type> = { at, event: "mail", data: { round: 7, from: "silk" } };
     Reflect.set(input, "at", "invalid");
