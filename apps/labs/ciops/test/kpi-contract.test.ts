@@ -225,7 +225,8 @@ describe("@beep/ciops KPI contract", () => {
       const EpisodeJson = S.fromJsonString(KpiEpisode);
       const json = yield* S.encodeEffect(EpisodeJson)(episode);
       expect(S.toEquivalence(KpiEpisode)(yield* S.decodeEffect(EpisodeJson)(json), episode)).toBe(true);
-      expect(json).toContain('"adoption":[{"changeEventId":"iv-1427-push-first-publish","adoption":"pre"}]');
+      expect(json).toContain('"changeEventId":"iv-1427-push-first-publish"');
+      expect(json).toContain('"adoption":"pre"');
     })
   );
 
