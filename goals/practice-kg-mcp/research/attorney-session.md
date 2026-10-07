@@ -9,8 +9,8 @@ with counts and his verdicts only; quote no client documents.
 
 1. Confirm the install over SSH with Claude Desktop closed:
    `practice-kg-mcp.exe --self-check --bundle-dir <bundle folder>` prints one
-   line with `"ok":true` and the current bundle version (`2026-10-07-01` at the
-   time of writing). Then relaunch Claude Desktop.
+   line with `"ok":true` and the current bundle version (`2026-10-07-02` once
+   the P11 swap has run, `2026-10-07-01` before). Then relaunch Claude Desktop.
 2. Choose the five placeholders with the attorney's own matters, using the
    selection guidance in `research/acceptance-gauntlet.md` (bottom section).
    Write them on paper, not in the repo.
