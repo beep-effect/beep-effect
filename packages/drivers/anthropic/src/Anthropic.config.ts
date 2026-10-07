@@ -269,6 +269,9 @@ export class AnthropicLanguageModelOptions extends S.Class<AnthropicLanguageMode
     ).annotateKey({
       description: "Anthropic model identifier used by the language-model layer.",
     }),
+    temperature: S.optionalKey(S.Finite.check(S.isBetween({ maximum: 1, minimum: 0 }))).annotateKey({
+      description: "Sampling temperature from 0 to 1 forwarded as `temperature`; the provider default when absent.",
+    }),
   },
   $I.annote("AnthropicLanguageModelOptions", {
     description: "Options accepted by Anthropic language-model layer helpers.",

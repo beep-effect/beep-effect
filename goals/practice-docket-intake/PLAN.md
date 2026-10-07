@@ -25,8 +25,8 @@ One PR per slice. Slices 2 and 3 depend on slice 1 being merged.
 | 2 | Docket intake values and pure policy, ports, the classify, enter and review pipeline with typed outcomes, the digest; property tests. **Merged (#1458).** | `packages/law-practice/domain`, `packages/law-practice/use-cases` |
 | 3 | Adapters (Graph, language model, state store, matter lookup), the service app, its systemd user unit, the live smoke. **Merged (#1475).** | `packages/law-practice/server`, the `docket-intake` service app |
 | 3b | The adversarial review loop: review round and verdict schemas, the typed review configuration, the confidence score behind the deterministic gate, per-round persistence and resume, and the flagged outcomes and entries. Starts when slice 3 lands. **Merged (#1502).** | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app |
-| 3c | First-run safety net: bounded `poll`, `dry-run`, write journal, `undo --run`, `runs`, and the operator runbook (D-41 to D-43). **Built; in review (#1517).** | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app, `docs/runbooks` |
-| 4 | Cross-check against the attorney's docket sheet: a read-only tracked-dates port, the three-way earliest-date rule and a `tracked-date-differs` flag; wire the live practice-KG matter lookup. Starts after slices 1-3 land. | `packages/law-practice/{domain,use-cases,server}`, the `docket-intake` service app |
+| 3c | First-run safety net: bounded `poll`, `dry-run`, write journal, `undo --run`, `runs`, and the operator runbook (D-41 to D-43). **Merged (#1517).** | `packages/law-practice/{use-cases,server}`, the `docket-intake` service app, `docs/runbooks` |
+| 4 | Cross-check against the attorney's docket sheet: a read-only tracked-dates port, the three-way earliest-date rule and a `tracked-date-differs` flag; wire the live practice-KG matter lookup. **Built; in review.** | `packages/law-practice/{domain,use-cases,server}`, the `docket-intake` service app |
 
 ## Operator-Attended Steps
 
