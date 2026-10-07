@@ -1,9 +1,11 @@
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Jsonc, JsoncNode, JsoncNodeType, JsoncPath, JsoncSegment } from "../../effected/jsonc/index.ts";
@@ -177,7 +179,8 @@ describe("JsoncNode", () => {
     it("defines __proto__ as an own data property", () => {
       const value = tree('{ "__proto__": { "polluted": true } }').toValue();
       assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
-      assert.isTrue(Object.hasOwn(value as object, "__proto__"));
+      assert(P.isObject(value), "toValue yields a plain object");
+      assert.isTrue(Object.hasOwn(value, "__proto__"));
     });
   });
 
@@ -194,7 +197,8 @@ describe("JsoncNode", () => {
       assert.strictEqual(depth, 256);
       let object: unknown = deepObject(300).toValue();
       for (let i = 0; i < 256; i++) {
-        object = (object as Record<string, unknown>)["k"];
+        assert(P.isObject(object), `object level ${i} is a plain object`);
+        object = object["k"];
       }
       assert.deepStrictEqual(object, {});
       const leaf = makeNodeUnsafe({ type: "array", offset: 0, length: 3, children: [makeNodeUnsafe({ type: "number", offset: 1, length: 1, value: 1 })] });
@@ -213,7 +217,8 @@ describe("JsoncNode", () => {
       const innermost = (value: unknown): unknown => {
         let cursor = value;
         for (let i = 0; i < 256; i++) {
-          cursor = (cursor as ReadonlyArray<unknown>)[0];
+          assert(A.isArray(cursor), `array level ${i} is an array`);
+          cursor = cursor[0];
         }
         return cursor;
       };

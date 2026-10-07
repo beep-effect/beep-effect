@@ -48,6 +48,16 @@ describe("JsoncModifier", () => {
   });
 
   describe("insert", () => {
+    // Upstream parity (internal/navigate.ts NoOp): an index the scan passes
+    // without reaching it, negative or fractional, yields no edits.
+    it.effect("leaves the text alone for a negative or fractional final index", () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(yield* JsoncModifier.modify("[1]", [-1], 2), []);
+        assert.deepStrictEqual(yield* JsoncModifier.modify("[1, 2]", [0.5], 3), []);
+        assert.deepStrictEqual(yield* JsoncModifier.modify('{ "a": [1] }', ["a", -1], 2), []);
+      })
+    );
+
     it.effect("appends a property after the last one or into an empty object", () =>
       Effect.gen(function* () {
         assert.strictEqual(apply('{ "a": 1 }', yield* JsoncModifier.modify('{ "a": 1 }', ["b"], 2)), '{ "a": 1,\n  "b": 2 }');

@@ -3,6 +3,7 @@ import { assertDefined, assertNone, assertSuccess } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
@@ -287,8 +288,9 @@ describe("Jsonc", () => {
       assert.strictEqual(error.value, value);
       const shared = { leaf: 1 };
       assertSuccess(Jsonc.stringifyResult({ a: shared, b: shared }, JsoncStringifyOptions.make({ tabSize: 0 })), '{"a":{"leaf":1},"b":{"leaf":1}}');
-      const nested: Record<string, unknown> = { a: { b: {} } };
-      (nested["a"] as Record<string, unknown>)["b"] = { back: nested };
+      const inner: Record<string, unknown> = { b: {} };
+      const nested: Record<string, unknown> = { a: inner };
+      inner["b"] = { back: nested };
       assert.strictEqual(failure(Jsonc.stringifyResult(nested)).code, "CircularReference");
     });
 
@@ -375,11 +377,13 @@ describe("Jsonc", () => {
         const text = '{ "__proto__": { "polluted": true } }';
         const value = yield* Jsonc.parse(text);
         assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
-        assert.isTrue(Object.hasOwn(value as object, "__proto__"));
+        assert(P.isObject(value), "parse yields a plain object");
+        assert.isTrue(Object.hasOwn(value, "__proto__"));
         assert.isFalse("polluted" in {});
         const fromTree = O.getOrThrow(yield* Jsonc.parseTree(text)).toValue();
         assert.strictEqual(Object.getPrototypeOf(fromTree), Object.prototype);
-        assert.isTrue(Object.hasOwn(fromTree as object, "__proto__"));
+        assert(P.isObject(fromTree), "toValue yields a plain object");
+        assert.isTrue(Object.hasOwn(fromTree, "__proto__"));
       })
     );
 

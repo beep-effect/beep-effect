@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { navigate, NavigateResult } from "./internal/navigate.ts";
+import { navigate, NavigateContainer, NavigateResult } from "./internal/navigate.ts";
 import {
   Jsonc,
   type JsoncStringifyError,
@@ -197,6 +197,7 @@ export abstract class JsoncModifier {
         expected,
         depth,
       })),
+      NoOp: (): Modify => Effect.succeed(edits()),
       Located: (located): Modify => {
         if (!deleting) {
           return Effect.map(serialize(), (content) =>
@@ -230,7 +231,9 @@ export abstract class JsoncModifier {
             // depth so a nested object lands at the same column as its siblings.
             const serialized = Str.replaceAll("\n", `${fmt.eol}${indent}`)(yield* serialize());
             const entry =
-              P.isObjectKeyword(insert.container) ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}` : serialized;
+              NavigateContainer.is.object(insert.container)
+                ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}`
+                : serialized;
             const content = insert.isFirst ? `${fmt.eol}${indent}${entry}${fmt.eol}${outdent}` : `,${fmt.eol}${indent}${entry}`;
             return edits(JsoncEdit.make({
               offset: insert.at,

@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
-import { thunkNull } from "@beep/utils";
+import { thunkNull } from "@beep/utils/thunk";
 import { dual } from "effect/Function";
 
 const $I = $ScratchpadId.create("effected/jsonc/JsoncNode");

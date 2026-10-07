@@ -2,6 +2,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import {
   ParseCode,
   ParseFlags,
@@ -133,7 +134,8 @@ describe("internal/parser", () => {
     it("defines __proto__ as an own data property", () => {
       const value = parseValue('{"__proto__": {"polluted": true}}', flags).value;
       assert.strictEqual(Object.getPrototypeOf(value), Object.prototype);
-      assert.isTrue(Object.hasOwn(value as object, "__proto__"));
+      assert(P.isObject(value), "parseValue yields a plain object");
+      assert.isTrue(Object.hasOwn(value, "__proto__"));
     });
   });
 

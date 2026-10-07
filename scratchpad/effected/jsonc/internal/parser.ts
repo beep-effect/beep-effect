@@ -244,7 +244,7 @@ export type ParseTreeResult = typeof ParseTreeResult.Type;
 export const scanErrorToCode: (error: ScanError) => O.Option<ParseCode> = Match.type<ScanError>().pipe(
   Match.when("None", () => O.none()),
   Match.when("UnexpectedEndOfNumber", () => O.some<ParseCode>("InvalidNumberFormat")),
-  Match.orElse((code) => O.some<ParseCode>(code))
+  Match.orElse(O.some<ParseCode>)
 );
 
 const isStructuralTrivia = S.is(SyntaxKind.pick(["LineComment", "BlockComment", "Trivia", "LineBreak"]));
@@ -381,12 +381,12 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
       Match.when("True", () => O.some<unknown>(parseLiteral(true))),
       Match.when("False", () => O.some<unknown>(parseLiteral(false))),
       Match.when("Null", () => O.some<unknown>(parseLiteral(null))),
-      Match.orElse(() => O.none<unknown>())
+      Match.orElse(O.none<unknown>)
     );
 
   const parseArray = (): ReadonlyArray<unknown> =>
     guardDepth(
-      () => A.empty<unknown>(),
+      A.empty<unknown>,
       () => {
         scanNext(); // skip [
         let items = A.empty<unknown>();
@@ -476,7 +476,7 @@ const run = (text: string, flags: ParseFlags, buildTree: boolean): Internal => {
       Match.when("True", () => O.some(leafTree("boolean", true))),
       Match.when("False", () => O.some(leafTree("boolean", false))),
       Match.when("Null", () => O.some(leafTree("null", null))),
-      Match.orElse(() => O.none<JsoncNode>())
+      Match.orElse(O.none<JsoncNode>)
     );
 
   // The container end offset: the closer's tight end when present, otherwise

@@ -2,7 +2,12 @@
   "version": 1,
   "effectedCommit": "af7566a9da2eff169cb74955efcc5ede1e5de9f8",
   "startedAt": "2026-10-07T06:36:54.420Z",
-  "lastCheckpoint": null,
+  "lastCheckpoint": {
+    "module": "jsonc",
+    "stage": 1,
+    "commit": null,
+    "at": "2026-10-07T06:56:49.701Z"
+  },
   "rows": [
     {
       "id": "w0-jsonl",
@@ -179,7 +184,7 @@
       "module": "jsonc",
       "wave": 0,
       "position": 2,
-      "stage": 0,
+      "stage": 1,
       "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
@@ -328,15 +333,47 @@
           "entry": "."
         }
       ],
-      "exportsAdded": [],
+      "exportsAdded": [
+        {
+          "name": "JsoncEditOverlapError",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "newDeps": [],
       "fixturesBytes": 0,
-      "deviations": [],
+      "deviations": [
+        {
+          "test": "scratchpad/test/jsonc/Jsonc.test.ts:318 (adjusts upstream __test__/Jsonc.test.ts:389)",
+          "upstreamBehaviour": "a throwing toJSON escapes Jsonc.stringifyResult as the thrown RangeError and Jsonc.stringify as a Cause.Die defect",
+          "labBehaviour": "Jsonc.stringifyResult fails with JsoncStringifyError code SerializationFailed; Jsonc.stringify fails typed with it",
+          "reason": "law:7 (typed errors via S.TaggedError) + law:13 (schema transformation over ad-hoc serialization); upstream CLAUDE.md hardening invariant requires hostile input to fail through the typed channel"
+        },
+        {
+          "test": "scratchpad/test/jsonc/JsoncModifier.test.ts:161 and :165 (tighten upstream __test__/JsoncModifier.test.ts:162 and :171)",
+          "upstreamBehaviour": "multi-line inserted values keep column-0 layout after the first line, so nested members sit one level too shallow",
+          "labBehaviour": "every line after the first is prefixed with the insertion indent, aligning the nested value with its siblings",
+          "reason": "upstream-bug: modify('{\\n  \"a\": 1\\n}', ['b'], {c:{d:1}}) applies upstream with the nested object mis-indented; upstream tests only assert include('\\t\"b\"')"
+        },
+        {
+          "test": "scratchpad/test/jsonc/JsoncEdit.test.ts:87 and :51 (adjust upstream __test__/JsoncEdit.test.ts:47)",
+          "upstreamBehaviour": "JsoncEdit.applyAll throws a native Error ending 'overlapping edits are a programmer error'",
+          "labBehaviour": "JsoncEdit.applyAll throws the tagged JsoncEditOverlapError {lower, upper}; JsoncEdit.applyAllResult returns it as a Result failure",
+          "reason": "law:7 (no native Error in production source; extend S.TaggedError)"
+        }
+      ],
       "backlog": [],
       "reviewRounds": [],
-      "commits": [],
+      "commits": [
+        {
+          "stage": 0,
+          "sha": null
+        }
+      ],
       "blocked": null,
-      "notes": [],
+      "notes": [
+        "2026-10-07T06:56:49.701Z S1: S1 green: strict parity, tsgo+canary, oxlint+4 laws (effect-imports via mirror), 210 tests. Fixed crispening regression (object insert dropped keys), restored upstream NoOp for passed array indices, D15 test casts removed, terse helper-refs, @beep/utils subpath import."
+      ],
       "closedAt": null
     },
     {

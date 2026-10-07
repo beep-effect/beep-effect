@@ -8,6 +8,7 @@
 // from it, so this module never imports the facade or the edit vocabulary.
 
 import { $ScratchpadId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -20,7 +21,27 @@ import { skipBalancedValue } from "./skip.ts";
 
 const $I = $ScratchpadId.create("effected/jsonc/internal/navigate");
 
-const Container = S.Literals(["object", "array"]);
+/**
+ * The container kind a path segment addresses: a string key enters an object,
+ * a number enters an array.
+ *
+ * **Example** (Guard a container kind)
+ *
+ * ```ts
+ * import { NavigateContainer } from "@beep/scratchpad/effected/jsonc/internal/navigate"
+ *
+ * console.log(NavigateContainer.is.object("object")) // true
+ * console.log(NavigateContainer.is.object("array")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NavigateContainer = LiteralKit(["object", "array"]).pipe(
+  $I.annoteSchema("NavigateContainer", { description: "The JSONC container kind a path segment addresses." })
+);
+
+const Container = NavigateContainer;
 
 /**
  * Structural outcomes of locating a path in the original JSONC text.
@@ -36,6 +57,9 @@ const Container = S.Literals(["object", "array"]);
  *   indentation.
  * - `Mismatch`: the value at `depth` is not the container kind the segment
  *   requires. An intermediate miss surfaces as a mismatch at the next segment.
+ * - `NoOp`: the final array index can never address an element or the end of
+ *   the array (a negative or fractional index the scan passed), so nothing is
+ *   edited; this keeps upstream's no-edit answer for such indices.
  *
  * **Example** (Locate a property)
  *
@@ -49,6 +73,7 @@ const Container = S.Literals(["object", "array"]);
  *   Located: (r) => r.valueStart,
  *   Insert: (r) => r.at,
  *   Mismatch: (r) => r.depth,
+ *   NoOp: () => -1,
  * })) // 15
  * ```
  *
@@ -66,9 +91,11 @@ export const NavigateResult = S.TaggedUnion({
   },
   Insert: { container: Container, at: S.Natural, isFirst: S.Boolean, depth: S.Natural },
   Mismatch: { depth: S.Natural, expected: Container },
+  NoOp: {},
 }).pipe(
   $I.annoteSchema("NavigateResult", {
-    description: "Where a JSONC path resolves in the source text: a located value, an insertion point or a structural mismatch.",
+    description:
+      "Where a JSONC path resolves in the source text: a located value, an insertion point, a structural mismatch or no edit.",
   })
 );
 
@@ -225,7 +252,12 @@ export const navigate: {
     });
   }
   const { found, lastEnd, index, lastComma } = scanArray(last);
-  return found
-    ? located("array", scanner.getTokenOffset(), lastComma)
-    : NavigateResult.cases.Insert.make({ container: "array", at: lastEnd, isFirst: index === 0, depth });
+  if (found) {
+    return located("array", scanner.getTokenOffset(), lastComma);
+  }
+  // Upstream inserts only while the scanned length has not passed the index;
+  // a negative or fractional index the scan passed resolves to no edit.
+  return index <= last
+    ? NavigateResult.cases.Insert.make({ container: "array", at: lastEnd, isFirst: index === 0, depth })
+    : NavigateResult.cases.NoOp.make({});
 });
