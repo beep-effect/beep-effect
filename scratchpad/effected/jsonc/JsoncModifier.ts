@@ -1,184 +1,211 @@
-import * as Match from "effect/Match";
 // Structural JSONC modification: compute the edits needed to set, replace or
 // delete a value at a path, without mutating the source.
 //
 // Navigation goes through the scanner-based `internal/navigate.ts`; this
-// module owns only edit synthesis and the `JsoncModificationError` it raises on a navigation miss.
+// module owns only edit synthesis and the `JsoncModificationError` it raises
+// on a navigation miss.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as S from "effect/Schema";
 import * as O from "effect/Option";
-import { navigate } from "./internal/navigate.ts";
-import { Jsonc, JsoncStringifyOptions } from "./Jsonc.ts";
-import { JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
-import { JsoncEdit } from "./JsoncEdit.ts";
-import type { JsoncPath } from "./JsoncNode.ts";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { navigate, NavigateResult } from "./internal/navigate.ts";
+import { Jsonc, type JsoncStringifyError, JsoncStringifyOptions } from "./Jsonc.ts";
+import { JsoncEdit, JsoncFormattingOptions, JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
+import { JsoncPath } from "./JsoncNode.ts";
+
+const $I = $ScratchpadId.create("effected/jsonc/JsoncModifier");
 
 /**
  * Raised when `JsoncModifier.modify` cannot navigate the requested path: the
- * value at `depth` is not the container kind (`expected`) the next path segment
- * requires.
+ * value at `depth` is not the container kind the next segment requires.
  *
- * - `path` — the full path that was passed to `JsoncModifier.modify`.
- * - `expected` — the container kind (`"object"` or `"array"`) the segment at
- *   `depth` required.
- * - `depth` — the 1-based index into `path` where navigation failed.
- * - `offset` — reserved for a source-position annotation; currently always
- *   omitted (navigation reports the mismatch structurally, without a text
- *   offset).
+ * **Details**
  *
- * @remarks
- * Follows the structure-preserving-errors house rule — the mismatch's
- * discriminating data is carried as typed fields (`path`, `expected`, `depth`,
- * optional `offset`), not collapsed into a `reason: string`. This mirrors
- * `YamlModificationError`'s posture (its fields differ because the underlying
- * failures differ; the cross-package parity convention binds
- * `Edit`/`Range`/`Path`, not this error).
+ * - `path`: the full path passed to `JsoncModifier.modify`.
+ * - `expected`: the container kind the segment at `depth` required.
+ * - `depth`: the 1-based index into `path` where navigation failed.
  *
- * @public
+ * The mismatch is carried as typed fields rather than a prose reason.
+ *
+ * **Example** (Inspect a structural mismatch)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { JsoncModifier } from "@beep/scratchpad/effected/jsonc/index"
+ *
+ * const error = Effect.runSync(Effect.flip(JsoncModifier.modify('{ "a": 1 }', ["a", "b"], 2)))
+ *
+ * console.log(error._tag) // "JsoncModificationError"
+ * console.log(error.message) // "Modification failed at path [a, b]: expected object at depth 2"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class JsoncModificationError extends S.TaggedError<JsoncModificationError>()("JsoncModificationError", {
-	path: S.Array(S.Union([S.String, S.Finite])),
-	expected: S.Literals(["object", "array"]),
-	depth: S.Finite,
-	offset: S.optionalKey(S.Finite),
-}) {
-	override get message(): string {
-		const at = this.offset !== undefined ? ` (offset ${this.offset})` : "";
-		return `Modification failed at path [${this.path.join(", ")}]${at}: expected ${this.expected} at depth ${this.depth}`;
-	}
+export class JsoncModificationError extends S.TaggedError<JsoncModificationError>($I.make("JsoncModificationError"))(
+  "JsoncModificationError",
+  {
+    path: JsoncPath,
+    expected: S.Literals(["object", "array"]),
+    depth: S.Natural,
+  },
+  $I.annoteError<JsoncModificationError>("JsoncModificationError", {
+    description: "A path could not be navigated because a value was not the required container kind.",
+  })
+) {
+  /**
+   * Render the path, the expected container kind and the failing depth.
+   *
+   * **Example** (Read the rendered message)
+   *
+   * ```ts
+   * import { JsoncModificationError } from "@beep/scratchpad/effected/jsonc/index"
+   *
+   * const error = JsoncModificationError.make({ path: ["a", 0], expected: "array", depth: 2 })
+   *
+   * console.log(error.message) // "Modification failed at path [a, 0]: expected array at depth 2"
+   * ```
+   */
+  override get message(): string {
+    return `Modification failed at path [${A.join(A.map(this.path, String), ", ")}]: expected ${this.expected} at depth ${this.depth}`;
+  }
 }
 
 /**
  * Options for `JsoncModifier.modify`: formatting controls for generated text.
  *
- * @public
+ * **Details**
+ *
+ * `formattingOptions` accepts a {@link JsoncFormattingOptions} instance or a
+ * plain literal; only `tabSize`, `insertSpaces` and `eol` affect generated
+ * content. Modelled as a struct so callers pass a literal at the boundary.
+ *
+ * **Example** (Insert with tabs)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { JsoncEdit, JsoncModifier } from "@beep/scratchpad/effected/jsonc/index"
+ *
+ * const edits = Effect.runSync(JsoncModifier.modify("{}", ["a"], { b: 1 }, { formattingOptions: { insertSpaces: false } }))
+ *
+ * console.log(JsoncEdit.applyAll("{}", edits)) // '{\n\t"a": {\n\t\t"b": 1\n\t}\n}'
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const JsoncModifyOptions = S.Struct({
   formattingOptions: S.optionalKey(JsoncFormattingOptionsLike),
-});
+}).pipe(
+  $I.annoteSchema("JsoncModifyOptions", {
+    description: "Formatting controls for content generated by JsoncModifier.modify.",
+  })
+);
+
+/**
+ * The decoded shape of {@link JsoncModifyOptions}.
+ *
+ * @see {@link JsoncModifyOptions} for the runtime schema.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type JsoncModifyOptions = typeof JsoncModifyOptions.Type;
+
+const edits = (...items: ReadonlyArray<JsoncEdit>): ReadonlyArray<JsoncEdit> => items;
+
+type Modify = Effect.Effect<ReadonlyArray<JsoncEdit>, JsoncStringifyError | JsoncModificationError>;
 
 /**
  * Sets, replaces or deletes a value at a path in JSONC text, as byte-minimal
  * edits that leave comments and formatting elsewhere untouched. Not
  * instantiable.
  *
- * @example
+ * **Example** (Change one value and keep the comment)
+ *
  * ```ts
- * import { JsoncEdit, JsoncModifier } from "@effected/jsonc";
- * import { Effect } from "effect";
+ * import * as Effect from "effect/Effect"
+ * import { JsoncEdit, JsoncModifier } from "@beep/scratchpad/effected/jsonc/index"
  *
- * const text = '{\n  // dev port\n  "port": 3000\n}';
+ * const text = '{\n  // dev port\n  "port": 3000\n}'
+ * const edits = Effect.runSync(JsoncModifier.modify(text, ["port"], 8080))
  *
- * const program = Effect.gen(function* (result) {
- *   const edits = yield* JsoncModifier.modify(text, ["port"], 8080);
- *   return JsoncEdit.applyAll(text, edits);
- *   // => '{\n  // dev port\n  "port": 8080\n}'
- * });
+ * console.log(JsoncEdit.applyAll(text, edits)) // '{\n  // dev port\n  "port": 8080\n}'
  * ```
  *
- * @public
+ * @category services
+ * @since 0.0.0
  */
 export abstract class JsoncModifier {
+  /**
+   * Compute the edits that set, replace or delete `value` at `path` in `text`.
+   *
+   * **Details**
+   *
+   * Passing `value === undefined` deletes the target property or element,
+   * including its surrounding comma. A missing insertion target appends after
+   * the last property or element, with multi-line values re-indented to the
+   * insertion depth. The empty path replaces the whole document.
+   * Fails with {@link JsoncModificationError} on a structural mismatch and
+   * with `JsoncStringifyError` when `value` cannot be serialized.
+   *
+   * @param text - The JSONC source to modify.
+   * @param path - The location to set, replace or delete.
+   * @param value - The plain JavaScript value to write; `undefined` deletes.
+   * @param options - Formatting controls for generated content.
+   * @returns The edits to apply with `JsoncEdit.applyAll`.
+   */
+  static readonly modify = Effect.fn("JsoncModifier.modify")(function* (
+    text: string,
+    path: JsoncPath,
+    value: unknown,
+    options?: JsoncModifyOptions
+  ) {
+    const fmt = JsoncFormattingOptions.make(options?.formattingOptions ?? {});
+    const indentUnit = fmt.insertSpaces ? Str.repeat(fmt.tabSize)(" ") : "\t";
+    const stringifyOptions = JsoncStringifyOptions.make({ tabSize: fmt.tabSize, insertSpaces: fmt.insertSpaces });
+    const serialize = (): Effect.Effect<string, JsoncStringifyError> => Jsonc.stringify(value, stringifyOptions);
+    const deleting = P.isUndefined(value);
 
-	/**
-	 * Compute the edits that set, replace or delete `value` at `path` in `text`.
-	 *
-	 * Passing `value === undefined` deletes the target property or element
-	 * (including its surrounding comma). A missing insertion target appends after
-	 * the last property/element. Fails with {@link JsoncModificationError} on a
-	 * structural mismatch.
-	 *
-	 * @param text - The JSONC source to modify.
-	 * @param path - The location to set, replace or delete; `[]` replaces the
-	 *   whole document.
-	 * @param value - The plain JavaScript value to write, serialized with
-	 *   `JSON.stringify`; `undefined` deletes the target instead.
-	 * @param options - Optional {@link JsoncModifyOptions} controlling
-	 *   formatting of generated content.
-	 * @returns An `Effect` that succeeds with the edits to apply (via
-	 *   `JsoncEdit.applyAll`), fails with {@link JsoncModificationError} when
-	 *   `path` cannot be navigated, or carries `Jsonc.stringify`'s typed error
-	 *   when the value cannot be serialized.
-	 */
-	static readonly modify = Effect.fn("JsoncModifier.modify")(function* (
-		text: string,
-		path: JsoncPath,
-		value: unknown,
-		options?: JsoncModifyOptions,
-	) {
-		const fmt = options?.formattingOptions;
-		const tabSize = fmt?.tabSize ?? 2;
-		const insertSpaces = fmt?.insertSpaces ?? true;
-		const eol = fmt?.eol ?? "\n";
-		const indentUnit = insertSpaces ? " ".repeat(tabSize) : "\t";
-		const stringifyOptions = JsoncStringifyOptions.make({ tabSize, insertSpaces });
+    if (!A.isReadonlyArrayNonEmpty(path)) {
+      const content = deleting ? "" : yield* serialize();
+      return edits(JsoncEdit.make({ offset: 0, length: text.length, content }));
+    }
 
-		if (path.length === 0) {
-			const content = value === undefined ? "" : yield* Jsonc.stringify(value, stringifyOptions);
-			return [JsoncEdit.make({ offset: 0, length: text.length, content })] as ReadonlyArray<JsoncEdit>;
-		}
-
-		const result = navigate(text, path);
-
-		return yield* Match.value(result).pipe(
-Match.tag("Mismatch", function* (result) {
-				return yield* JsoncModificationError.make({
-					path,
-					expected: result.expected,
-					depth: result.depth,
-				});
-}),
-Match.tag("NoOp", function* (_result) {
-				return [] as ReadonlyArray<JsoncEdit>;
-}),
-Match.tag("Located", function* (result) { {
-				if (value === undefined) {
-					// Comma positions come from navigate()'s scanner tokens, never from
-					// searching the raw text — commas inside comments are invisible here.
-					let removeStart = result.keyStart;
-					let removeEnd = result.valueEnd;
-					if (O.isSome(result.commaBefore)) {
-						removeStart = result.commaBefore.value;
-					} else if (O.isSome(result.commaAfter)) {
-						removeEnd = result.commaAfter.value + 1;
-					}
-					return [
-						JsoncEdit.make({ offset: removeStart, length: removeEnd - removeStart, content: "" }),
-					] as ReadonlyArray<JsoncEdit>;
-				}
-				const serialized = yield* Jsonc.stringify(value, stringifyOptions);
-				return [
-					JsoncEdit.make({
-						offset: result.valueStart,
-						length: result.valueEnd - result.valueStart,
-						content: serialized,
-					}),
-				] as ReadonlyArray<JsoncEdit>;
-			}
-}),
-Match.tag("Insert", function* (result) { {
-				if (value === undefined) {
-					return [] as ReadonlyArray<JsoncEdit>;
-				}
-				const serialized = yield* Jsonc.stringify(value, stringifyOptions);
-				const indent = indentUnit.repeat(result.depth);
-				const outdent = indentUnit.repeat(result.depth - 1);
-				if (result.container === "object") {
-					const key = yield* Jsonc.stringify(String(path[path.length - 1]));
-					const insertText = result.isFirst
-						? `${eol}${indent}${key}: ${serialized}${eol}${outdent}`
-						: `,${eol}${indent}${key}: ${serialized}`;
-					return [JsoncEdit.make({ offset: result.at, length: 0, content: insertText })] as ReadonlyArray<JsoncEdit>;
-				}
-				const insertText = result.isFirst
-					? `${eol}${indent}${serialized}${eol}${outdent}`
-					: `,${eol}${indent}${serialized}`;
-				return [JsoncEdit.make({ offset: result.at, length: 0, content: insertText })] as ReadonlyArray<JsoncEdit>;
-			}
-}),
-Match.exhaustive
-);
-	});
+    return yield* NavigateResult.match(navigate(text, path), {
+      Mismatch: ({ depth, expected }): Modify => Effect.fail(JsoncModificationError.make({ path, expected, depth })),
+      Located: (located): Modify => {
+        if (!deleting) {
+          return Effect.map(serialize(), (content) =>
+            edits(JsoncEdit.make({ offset: located.valueStart, length: located.valueEnd - located.valueStart, content }))
+          );
+        }
+        // Comma positions come from scanner tokens, never from searching the
+        // raw text, so commas inside comments are invisible here. The entry
+        // takes its preceding comma with it, or its following comma when it
+        // is the first entry.
+        const removeStart = O.getOrElse(located.commaBefore, () => located.keyStart);
+        const removeEnd =
+          O.isNone(located.commaBefore) && O.isSome(located.commaAfter) ? located.commaAfter.value + 1 : located.valueEnd;
+        return Effect.succeed(edits(JsoncEdit.make({ offset: removeStart, length: removeEnd - removeStart, content: "" })));
+      },
+      Insert: (insert): Modify =>
+        deleting
+          ? Effect.succeed(edits())
+          : Effect.gen(function* () {
+              const indent = Str.repeat(insert.depth)(indentUnit);
+              const outdent = Str.repeat(insert.depth - 1)(indentUnit);
+              // Generated multi-line values are re-indented to the insertion
+              // depth so a nested object lands at the same column as its siblings.
+              const serialized = Str.replaceAll("\n", `${fmt.eol}${indent}`)(yield* serialize());
+              const entry =
+                insert.container === "object" ? `${yield* Jsonc.stringify(String(A.lastNonEmpty(path)))}: ${serialized}` : serialized;
+              const content = insert.isFirst ? `${fmt.eol}${indent}${entry}${fmt.eol}${outdent}` : `,${fmt.eol}${indent}${entry}`;
+              return edits(JsoncEdit.make({ offset: insert.at, length: 0, content }));
+            }),
+    });
+  });
 }

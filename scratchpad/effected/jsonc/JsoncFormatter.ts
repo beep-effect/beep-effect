@@ -2,148 +2,156 @@
 // bring a document to canonical shape, or apply them in one step.
 //
 // Kept as its own concept module (rather than folded into the `Jsonc` facade)
-// so the jsonc, yaml, toml and markdown format surfaces stay structurally
-// symmetric. Both statics are pure and total: computing edits never fails, so
-// there is no `Effect` wrapper.
+// so the format surface stays symmetric with sibling document codecs. Both
+// statics are pure and total: computing edits never fails.
 
-import type { SyntaxKind } from "./internal/scanner.ts";
-import { createScanner } from "./internal/scanner.ts";
-import type { JsoncFormattingOptions, JsoncRange } from "./JsoncEdit.ts";
-import { JsoncEdit } from "./JsoncEdit.ts";
+import * as A from "effect/Array";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { createScanner, SyntaxKind } from "./internal/scanner.ts";
+import type { JsoncRange } from "./JsoncEdit.ts";
+import { JsoncEdit, JsoncFormattingOptions, type JsoncFormattingOptionsLike } from "./JsoncEdit.ts";
+
+const isSkipped = S.is(SyntaxKind.pick(["Trivia", "LineBreak"]));
+const isCloser = S.is(SyntaxKind.pick(["CloseBrace", "CloseBracket"]));
+const isOpener = S.is(SyntaxKind.pick(["OpenBrace", "OpenBracket"]));
+const isComment = S.is(SyntaxKind.pick(["LineComment", "BlockComment"]));
 
 /**
  * Formats JSONC text into canonical whitespace, as minimal edits or as a
  * finished string, preserving comments. Pure and total; not instantiable.
  *
- * @example
- * ```ts
- * import { JsoncFormatter } from "@effected/jsonc";
+ * **Example** (Reflow a compact document)
  *
- * const formatted = JsoncFormatter.formatToString('{"a":1,"b":[1,2]} // keep');
- * // => '{\n  "a": 1,\n  "b": [\n    1,\n    2\n  ]\n} // keep'
+ * ```ts
+ * import { JsoncFormatter } from "@beep/scratchpad/effected/jsonc/index"
+ *
+ * console.log(JsoncFormatter.formatToString('{"a":1,"b":[1,2]} // keep'))
+ * // '{\n  "a": 1,\n  "b": [\n    1,\n    2\n  ]\n} // keep'
  * ```
  *
- * @public
+ * @category services
+ * @since 0.0.0
  */
 export abstract class JsoncFormatter {
+  /**
+   * Compute formatting edits for a JSONC document.
+   *
+   * **Details**
+   *
+   * Non-mutating: apply the result with `JsoncEdit.applyAll`. Only edits
+   * inside `range` are returned when one is given. Omitted option fields take
+   * the {@link JsoncFormattingOptions} defaults.
+   *
+   * **Example** (Compute edits for a compact object)
+   *
+   * ```ts
+   * import { JsoncFormatter } from "@beep/scratchpad/effected/jsonc/index"
+   *
+   * const edits = JsoncFormatter.format('{"a":1}')
+   *
+   * console.log(edits.map((edit) => edit.content)) // ["\n  ", " ", "\n"]
+   * ```
+   *
+   * @param text - The JSONC source to format.
+   * @param range - Optional sub-range restricting which edits are returned.
+   * @param options - Formatting options as an instance or a plain literal.
+   * @returns The edits that bring `text` to canonical shape.
+   */
+  static format(text: string, range?: JsoncRange, options?: JsoncFormattingOptionsLike): ReadonlyArray<JsoncEdit> {
+    return formatImpl(text, O.fromUndefinedOr(range), JsoncFormattingOptions.make(options ?? {}));
+  }
 
-	/**
-	 * Compute formatting edits for a JSONC document. Non-mutating — apply the
-	 * result with `JsoncEdit.applyAll`. Pure and total.
-	 *
-	 * @param text - The JSONC source to format.
-	 * @param range - Optional sub-range; only edits within it are returned.
-	 * @param options - Optional {@link JsoncFormattingOptions}; absent fields use
-	 *   defaults (tabSize 2, spaces, `"\n"`, no final newline, reflow).
-	 * @returns The edits that bring `text` (or `range`) to canonical shape;
-	 *   apply them with `JsoncEdit.applyAll`.
-	 */
-	static format(text: string, range?: JsoncRange, options?: JsoncFormattingOptions): ReadonlyArray<JsoncEdit> {
-		return formatImpl(text, range, options);
-	}
-
-	/**
-	 * Format `text` and apply the resulting edits in one step
-	 * (`applyAll ∘ format`). Pure and total.
-	 *
-	 * @param text - The JSONC source to format.
-	 * @param range - Optional sub-range; only edits within it are applied.
-	 * @param options - Optional {@link JsoncFormattingOptions}; see
-	 *   {@link JsoncFormatter.format} for defaults.
-	 * @returns The formatted text.
-	 */
-	static formatToString(text: string, range?: JsoncRange, options?: JsoncFormattingOptions): string {
-		return JsoncEdit.applyAll(text, formatImpl(text, range, options));
-	}
+  /**
+   * Format `text` and apply the resulting edits in one step.
+   *
+   * **Example** (Format with a final newline)
+   *
+   * ```ts
+   * import { JsoncFormatter } from "@beep/scratchpad/effected/jsonc/index"
+   *
+   * console.log(JsoncFormatter.formatToString('{"a":1}', undefined, { insertFinalNewline: true })) // '{\n  "a": 1\n}\n'
+   * ```
+   *
+   * @param text - The JSONC source to format.
+   * @param range - Optional sub-range restricting which edits are applied.
+   * @param options - Formatting options as an instance or a plain literal.
+   * @returns The formatted text.
+   */
+  static formatToString(text: string, range?: JsoncRange, options?: JsoncFormattingOptionsLike): string {
+    return JsoncEdit.applyAll(text, JsoncFormatter.format(text, range, options));
+  }
 }
 
-function formatImpl(
-	text: string,
-	range: JsoncRange | undefined,
-	options: JsoncFormattingOptions | undefined,
-): ReadonlyArray<JsoncEdit> {
-	const tabSize = options?.tabSize ?? 2;
-	const insertSpaces = options?.insertSpaces ?? true;
-	const eol = options?.eol ?? "\n";
-	const insertFinalNewline = options?.insertFinalNewline ?? false;
-	const keepLines = options?.keepLines ?? false;
-
-	const indentUnit = insertSpaces ? " ".repeat(tabSize) : "\t";
-	const edits: JsoncEdit[] = [];
-	const scanner = createScanner(text, false);
-
-	const rangeStart = range?.offset ?? 0;
-	const rangeEnd = range !== undefined ? range.offset + range.length : text.length;
-
-	let depth = 0;
-	let prevTokenEnd = -1;
-	let prevToken: SyntaxKind = "Unknown";
-	let firstToken = true;
-
-	const makeIndent = (d: number): string => indentUnit.repeat(d);
-
-	const addEdit = (offset: number, length: number, content: string): void => {
-		if (offset >= rangeStart && offset + length <= rangeEnd && text.substring(offset, offset + length) !== content) {
-			edits.push(JsoncEdit.make({ offset, length, content }));
-		}
-	};
-
-	let kind = scanner.scan();
-	while (kind !== "EOF") {
-		const tokenOffset = scanner.getTokenOffset();
-		const tokenLength = scanner.getTokenLength();
-
-		if (kind !== "Trivia" && kind !== "LineBreak") {
-			if (!firstToken && prevTokenEnd >= 0) {
-				const gap = text.substring(prevTokenEnd, tokenOffset);
-				let expectedGap: string;
-
-				if (kind === "CloseBrace" || kind === "CloseBracket") {
-					depth--;
-					expectedGap = eol + makeIndent(depth);
-				} else if (prevToken === "OpenBrace" || prevToken === "OpenBracket") {
-					expectedGap = eol + makeIndent(depth);
-				} else if (prevToken === "Comma") {
-					expectedGap = eol + makeIndent(depth);
-				} else if (prevToken === "Colon") {
-					expectedGap = " ";
-				} else if (kind === "LineComment" || kind === "BlockComment") {
-					expectedGap = gap.includes("\n") ? eol + makeIndent(depth) : " ";
-				} else if (prevToken === "LineComment") {
-					expectedGap = eol + makeIndent(depth);
-				} else if (prevToken === "BlockComment") {
-					expectedGap = gap.includes("\n") ? eol + makeIndent(depth) : " ";
-				} else {
-					expectedGap = gap;
-				}
-
-				if (keepLines && gap.includes("\n")) {
-					expectedGap = gap;
-				}
-
-				addEdit(prevTokenEnd, tokenOffset - prevTokenEnd, expectedGap);
-			}
-
-			if (kind === "OpenBrace" || kind === "OpenBracket") {
-				depth++;
-			}
-
-			prevToken = kind;
-			prevTokenEnd = tokenOffset + tokenLength;
-			firstToken = false;
-		}
-
-		kind = scanner.scan();
-	}
-
-	if (insertFinalNewline && prevTokenEnd >= 0) {
-		const trailing = text.substring(prevTokenEnd);
-		if (!trailing.endsWith(eol)) {
-			// Routed through addEdit so the documented range restriction applies to
-			// this edit like every other.
-			addEdit(prevTokenEnd, trailing.length, eol);
-		}
-	}
-
-	return edits;
+interface Gap {
+  readonly kind: SyntaxKind;
+  readonly prevToken: SyntaxKind;
+  readonly gap: string;
+  readonly depth: number;
 }
+
+const formatImpl = (text: string, range: O.Option<JsoncRange>, options: JsoncFormattingOptions): ReadonlyArray<JsoncEdit> => {
+  const indentUnit = options.insertSpaces ? Str.repeat(options.tabSize)(" ") : "\t";
+  const newline = (depth: number): string => options.eol + Str.repeat(depth)(indentUnit);
+  const breakOrSpace = (gap: string, depth: number): string => (Str.includes("\n")(gap) ? newline(depth) : " ");
+
+  // The canonical gap before a token, given what came before it.
+  const expectedGap: (gap: Gap) => string = Match.type<Gap>().pipe(
+    Match.when({ kind: isCloser }, (g) => newline(g.depth)),
+    Match.when({ prevToken: isOpener }, (g) => newline(g.depth)),
+    Match.when({ prevToken: "Comma" }, (g) => newline(g.depth)),
+    Match.when({ prevToken: "Colon" }, () => " "),
+    Match.when({ kind: isComment }, (g) => breakOrSpace(g.gap, g.depth)),
+    Match.when({ prevToken: "LineComment" }, (g) => newline(g.depth)),
+    Match.when({ prevToken: "BlockComment" }, (g) => breakOrSpace(g.gap, g.depth)),
+    Match.orElse((g) => g.gap)
+  );
+
+  const rangeStart = O.match(range, { onNone: () => 0, onSome: (r) => r.offset });
+  const rangeEnd = O.match(range, { onNone: () => text.length, onSome: (r) => r.offset + r.length });
+
+  let edits = A.empty<JsoncEdit>();
+  const addEdit = (offset: number, length: number, content: string): void => {
+    if (offset >= rangeStart && offset + length <= rangeEnd && text.substring(offset, offset + length) !== content) {
+      edits = A.append(edits, JsoncEdit.make({ offset, length, content }));
+    }
+  };
+
+  const scanner = createScanner(text, false);
+  let depth = 0;
+  let previous = O.none<{ readonly token: SyntaxKind; readonly end: number }>();
+
+  for (let kind = scanner.scan(); kind !== "EOF"; kind = scanner.scan()) {
+    if (isSkipped(kind)) {
+      continue;
+    }
+    const tokenOffset = scanner.getTokenOffset();
+    if (isCloser(kind)) {
+      depth--;
+    }
+    if (O.isSome(previous)) {
+      const gap = text.substring(previous.value.end, tokenOffset);
+      const content =
+        options.keepLines && Str.includes("\n")(gap)
+          ? gap
+          : expectedGap({ kind, prevToken: previous.value.token, gap, depth });
+      addEdit(previous.value.end, tokenOffset - previous.value.end, content);
+    }
+    if (isOpener(kind)) {
+      depth++;
+    }
+    previous = O.some({ token: kind, end: tokenOffset + scanner.getTokenLength() });
+  }
+
+  if (options.insertFinalNewline && O.isSome(previous)) {
+    const trailing = text.substring(previous.value.end);
+    if (!Str.endsWith(options.eol)(trailing)) {
+      // Routed through addEdit so the range restriction applies here too.
+      addEdit(previous.value.end, trailing.length, options.eol);
+    }
+  }
+
+  return edits;
+};

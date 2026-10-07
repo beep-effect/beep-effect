@@ -7,177 +7,225 @@
 // `JsoncModifier` synthesizes edits and constructs `JsoncModificationError`
 // from it, so this module never imports the facade or the edit vocabulary.
 
-import type { JsoncPath } from "../JsoncNode.ts";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import type { JsoncSegment } from "../JsoncNode.ts";
 import { createScanner } from "./scanner.ts";
 import type { SkipCursor } from "./skip.ts";
 import { skipBalancedValue } from "./skip.ts";
-import * as S from "effect/Schema";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import { dual } from "effect/Function";
 
-/** Structural outcomes of locating a value in the original JSONC text. */
+const $I = $ScratchpadId.create("effected/jsonc/internal/navigate");
+
+const Container = S.Literals(["object", "array"]);
+
+/**
+ * Structural outcomes of locating a path in the original JSONC text.
+ *
+ * **Details**
+ *
+ * - `Located`: the target exists. `keyStart` is the property key's offset (or
+ *   the element's value offset in an array), `valueStart`/`valueEnd` bound the
+ *   value tightly, and the comma offsets come from scanner tokens so commas
+ *   inside comments are invisible.
+ * - `Insert`: the target does not exist; `at` is the insertion offset,
+ *   `isFirst` whether the container is empty, `depth` the path length for
+ *   indentation.
+ * - `Mismatch`: the value at `depth` is not the container kind the segment
+ *   requires. An intermediate miss surfaces as a mismatch at the next segment.
+ *
+ * **Example** (Locate a property)
+ *
+ * ```ts
+ * import { navigate, NavigateResult } from "@beep/scratchpad/effected/jsonc/internal/navigate"
+ *
+ * const result = navigate('{ "a": 1, "b": 2 }', ["b"])
+ *
+ * console.log(NavigateResult.guards.Located(result)) // true
+ * console.log(NavigateResult.match(result, {
+ *   Located: (r) => r.valueStart,
+ *   Insert: (r) => r.at,
+ *   Mismatch: (r) => r.depth,
+ * })) // 15
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const NavigateResult = S.TaggedUnion({
   Located: {
-    container: S.Literals(["object", "array"]),
-    keyStart: S.Int, valueStart: S.Int, valueEnd: S.Int,
-    commaBefore: S.Option(S.Int), commaAfter: S.Option(S.Int),
+    container: Container,
+    keyStart: S.Natural,
+    valueStart: S.Natural,
+    valueEnd: S.Natural,
+    commaBefore: S.Option(S.Natural),
+    commaAfter: S.Option(S.Natural),
   },
-  Insert: { container: S.Literals(["object", "array"]), at: S.Int, isFirst: S.Boolean, depth: S.Int },
-  Mismatch: { depth: S.Int, expected: S.Literals(["object", "array"]) },
-  NoOp: {},
-});
+  Insert: { container: Container, at: S.Natural, isFirst: S.Boolean, depth: S.Natural },
+  Mismatch: { depth: S.Natural, expected: Container },
+}).pipe(
+  $I.annoteSchema("NavigateResult", {
+    description: "Where a JSONC path resolves in the source text: a located value, an insertion point or a structural mismatch.",
+  })
+);
+
+/**
+ * The decoded shape of {@link NavigateResult}.
+ *
+ * @see {@link NavigateResult} for the runtime schema and its case helpers.
+ * @category type-level
+ * @since 0.0.0
+ */
 export type NavigateResult = typeof NavigateResult.Type;
 
 /**
- * Resolve `path` against `text`, returning where the target is (or where it
- * would be inserted). `path` must be non-empty — the whole-document case is
- * handled by the caller.
+ * Resolve `path` against `text`, returning where the target is or where it
+ * would be inserted.
+ *
+ * **Details**
+ *
+ * Dual: `navigate(text, path)` or `navigate(path)(text)`. The path is
+ * non-empty by type; the whole-document case is handled by the caller.
+ * Skipping is iterative, so hostile nesting cannot overflow the stack and no
+ * depth cap is needed here.
+ *
+ * **Example** (Resolve an insertion point in an empty object)
+ *
+ * ```ts
+ * import { navigate, NavigateResult } from "@beep/scratchpad/effected/jsonc/internal/navigate"
+ *
+ * const result = navigate("{}", ["port"])
+ *
+ * console.log(NavigateResult.guards.Insert(result) && result.isFirst) // true
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
  */
 export const navigate: {
-  (text: string, path: JsoncPath): NavigateResult;
-  (path: JsoncPath): (text: string) => NavigateResult
-} = dual(2, (text: string, path: JsoncPath): NavigateResult => {
-  if (path.length === 0) {
-    return NavigateResult.cases.NoOp.make({});
-  }
-
+  (text: string, path: A.NonEmptyReadonlyArray<JsoncSegment>): NavigateResult;
+  (path: A.NonEmptyReadonlyArray<JsoncSegment>): (text: string) => NavigateResult;
+} = dual(2, (text: string, path: A.NonEmptyReadonlyArray<JsoncSegment>): NavigateResult => {
   const scanner = createScanner(text, true);
   let currentToken = scanner.scan();
+  let depth = 0;
 
-  // Tight end-of-token offset for the CURRENT token. Because this scanner
-  // ignores trivia, scan() silently skips whitespace when advancing, so
-  // getTokenOffset() after advancing is the start of the NEXT token; capture
-  // this value before advancing.
-  function tokenEnd(): number {
-    return scanner.getTokenOffset() + scanner.getTokenLength();
-  }
-
-  // Cursor adapter for the shared iterative bracket-balance skip (see
-  // internal/skip.ts). Being non-recursive, the skip cannot overflow the
-  // stack on hostile deeply-nested input, so `navigate` (and `JsoncModifier`)
-  // need no separate depth cap. Malformed input can route a non-value token
-  // here (JsoncModifier.modify passes raw text straight to navigate(), so a
-  // value slot may hold a closer, e.g. `{"k":}`) — the helper's guard leaves
-  // the cursor untouched in that case.
+  // Malformed input can route a non-value token here (a value slot may hold a
+  // closer, as in `{"k":}`); the skip helper leaves the cursor untouched then.
   const skipCursor: SkipCursor = {
     getToken: () => currentToken,
     advance: () => {
       currentToken = scanner.scan();
     },
     tokenStart: () => scanner.getTokenOffset(),
-    tokenEnd,
+    tokenLength: () => scanner.getTokenLength(),
   };
 
-  // Skip the value starting at currentToken and return its tight end offset.
-  function skipValue(): number {
-    return skipBalancedValue(skipCursor);
-  }
+  const skipValue = (): number => skipBalancedValue(skipCursor);
 
-  let depth = 0;
-  for (const segment of path) {
+  const located = (container: "object" | "array", keyStart: number, commaBefore: O.Option<number>): NavigateResult => {
+    const valueStart = scanner.getTokenOffset();
+    const valueEnd = skipValue();
+    return NavigateResult.cases.Located.make({
+      container,
+      keyStart,
+      valueStart,
+      valueEnd,
+      commaBefore,
+      commaAfter: currentToken === "Comma" ? O.some(scanner.getTokenOffset()) : O.none(),
+    });
+  };
+
+  // Walk an object's entries until `segment` is found; the cursor is left on
+  // the matching value, or on the closer when the key is absent.
+  const scanObject = (segment: string) => {
+    currentToken = scanner.scan(); // skip {
+    let lastValueEnd = scanner.getTokenOffset();
+    let isFirst = true;
+    let lastComma = O.none<number>();
+    while (currentToken !== "CloseBrace" && currentToken !== "EOF") {
+      if (!isFirst && currentToken === "Comma") {
+        lastComma = O.some(scanner.getTokenOffset());
+        currentToken = scanner.scan();
+      }
+      if (currentToken === "String") {
+        const keyStart = scanner.getTokenOffset();
+        const key = scanner.getTokenValue();
+        currentToken = scanner.scan(); // skip key
+        if (currentToken === "Colon") {
+          currentToken = scanner.scan(); // skip colon
+        }
+        if (key === segment) {
+          return { found: O.some({ keyStart, commaBefore: lastComma }), lastValueEnd, isFirst };
+        }
+        lastValueEnd = skipValue();
+      } else {
+        currentToken = scanner.scan();
+        lastValueEnd = scanner.getTokenOffset();
+      }
+      isFirst = false;
+    }
+    return { found: O.none<{ readonly keyStart: number; readonly commaBefore: O.Option<number> }>(), lastValueEnd, isFirst };
+  };
+
+  // Walk an array's elements until index `segment`; the cursor is left on the
+  // matching value, or on the closer when the array is shorter.
+  const scanArray = (segment: number) => {
+    currentToken = scanner.scan(); // skip [
+    let index = 0;
+    let lastEnd = scanner.getTokenOffset();
+    let lastComma = O.none<number>();
+    while (currentToken !== "CloseBracket" && currentToken !== "EOF") {
+      if (index > 0 && currentToken === "Comma") {
+        lastComma = O.some(scanner.getTokenOffset());
+        currentToken = scanner.scan();
+      }
+      if (index === segment) {
+        return { found: true, lastEnd, index, lastComma };
+      }
+      lastEnd = skipValue();
+      index++;
+    }
+    return { found: false, lastEnd, index, lastComma };
+  };
+
+  const mismatch = (segment: JsoncSegment): NavigateResult =>
+    NavigateResult.cases.Mismatch.make({ depth, expected: P.isString(segment) ? "object" : "array" });
+
+  const canEnter = (segment: JsoncSegment): boolean =>
+    P.isString(segment) ? currentToken === "OpenBrace" : currentToken === "OpenBracket";
+
+  // Intermediate segments only need to position the cursor on the next value.
+  // A miss leaves the cursor on the closer, which the next segment reports.
+  for (const segment of A.initNonEmpty(path)) {
     depth++;
+    if (!canEnter(segment)) {
+      return mismatch(segment);
+    }
     if (P.isString(segment)) {
-      if (currentToken !== "OpenBrace") {
-        return NavigateResult.cases.Mismatch.make({ depth, expected: "object" });
-      }
-      currentToken = scanner.scan();
-      let found = false;
-      let lastValueEnd = scanner.getTokenOffset();
-      let isFirst = true;
-      let lastComma: number | undefined;
-
-      while (currentToken !== "CloseBrace" && currentToken !== "EOF") {
-        if (!isFirst && currentToken === "Comma") {
-          lastComma = scanner.getTokenOffset();
-          currentToken = scanner.scan();
-        }
-        if (currentToken === "String") {
-          const keyStart = scanner.getTokenOffset();
-          const key = scanner.getTokenValue();
-          currentToken = scanner.scan(); // skip key
-          if (currentToken === "Colon") {
-            currentToken = scanner.scan(); // skip colon
-          }
-          if (key === segment) {
-            found = true;
-            if (depth === path.length) {
-              const valueStart = scanner.getTokenOffset();
-              const valueEnd = skipValue();
-              const commaAfter = currentToken === "Comma" ? scanner.getTokenOffset() : undefined;
-              return NavigateResult.cases.Located.make({
-                container: "object",
-                keyStart,
-                valueStart,
-                valueEnd,
-                commaBefore: O.fromUndefinedOr(lastComma),
-                commaAfter: O.fromUndefinedOr(commaAfter),
-              });
-            }
-            break; // descend into this value on the next segment
-          }
-          lastValueEnd = skipValue();
-        } else {
-          currentToken = scanner.scan();
-          lastValueEnd = scanner.getTokenOffset();
-        }
-        isFirst = false;
-      }
-
-      if (!found && depth === path.length) {
-        return NavigateResult.cases.Insert.make({
-          container: "object",
-          at: lastValueEnd,
-          isFirst,
-          depth,
-        });
-      }
-      // Intermediate miss: fall through to the next segment, where the
-      // closing brace token will fail the OpenBrace/OpenBracket check.
+      scanObject(segment);
     } else {
-      if (currentToken !== "OpenBracket") {
-        return NavigateResult.cases.Mismatch.make({ depth, expected: "array" });
-      }
-      currentToken = scanner.scan();
-      let idx = 0;
-      let lastEnd = scanner.getTokenOffset();
-      let lastComma: number | undefined;
-
-      while (currentToken !== "CloseBracket" && currentToken !== "EOF") {
-        if (idx > 0 && currentToken === "Comma") {
-          lastComma = scanner.getTokenOffset();
-          currentToken = scanner.scan();
-        }
-        if (idx === segment) {
-          if (depth === path.length) {
-            const valueStart = scanner.getTokenOffset();
-            const valueEnd = skipValue();
-            const commaAfter = currentToken === "Comma" ? scanner.getTokenOffset() : undefined;
-            return NavigateResult.cases.Located.make({
-              container: "array",
-              keyStart: valueStart,
-              valueStart,
-              valueEnd,
-              commaBefore: O.fromUndefinedOr(lastComma),
-              commaAfter: O.fromUndefinedOr(commaAfter),
-            });
-          }
-          break; // descend into this element on the next segment
-        }
-        lastEnd = skipValue();
-        idx++;
-      }
-
-      if (idx <= segment && depth === path.length) {
-        return NavigateResult.cases.Insert.make({
-          container: "array",
-          at: lastEnd,
-          isFirst: idx === 0,
-          depth,
-        });
-      }
+      scanArray(segment);
     }
   }
 
-  return NavigateResult.cases.NoOp.make({});
+  const last = A.lastNonEmpty(path);
+  depth++;
+  if (!canEnter(last)) {
+    return mismatch(last);
+  }
+  if (P.isString(last)) {
+    const { found, lastValueEnd, isFirst } = scanObject(last);
+    return O.match(found, {
+      onSome: ({ keyStart, commaBefore }) => located("object", keyStart, commaBefore),
+      onNone: () => NavigateResult.cases.Insert.make({ container: "object", at: lastValueEnd, isFirst, depth }),
+    });
+  }
+  const { found, lastEnd, index, lastComma } = scanArray(last);
+  return found
+    ? located("array", scanner.getTokenOffset(), lastComma)
+    : NavigateResult.cases.Insert.make({ container: "array", at: lastEnd, isFirst: index === 0, depth });
 });

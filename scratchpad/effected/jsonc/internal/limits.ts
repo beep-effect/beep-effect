@@ -1,22 +1,32 @@
-// Shared hardening limits. Private implementation, zero dependencies.
-//
-// Lives in its own leaf module so every recursive surface — the parser, the
-// AST value-extractor, the semantic-equality walker and the SAX visitor — can
-// import the same cap without an import cycle (the parser imports
-// `JsoncNode`, so `JsoncNode` must not import the parser).
+// Shared hardening limits. Lives in its own leaf module so every recursive
+// surface (parser, AST evaluator, equality walker, SAX visitor, canonicalizer)
+// imports the same cap without an import cycle.
 
 /**
- * Maximum collection-nesting depth any recursive walk over untrusted input will
- * descend into. Every stage that recurses per node — the recursive-descent
- * parser (value and tree mode), {@link JsoncNode.toValue}'s evaluator, the
- * `Jsonc.equals` structural comparison and the `JsoncVisitor` SAX walk — is a
- * stack-overflow denial-of-service vector on deeply-nested input, so each caps
- * out here and fails through its typed channel (a `NestingDepthExceeded` parse
- * error, an in-band visitor `Error` event, or a bounded placeholder) instead of
- * throwing `RangeError: Maximum call stack size exceeded` as a defect.
+ * Maximum collection-nesting depth any recursive walk over untrusted input
+ * descends into before failing through its typed channel.
  *
- * 256 is far beyond any real document and leaves a wide margin under the
- * observed single-frame overflow point. Mirrors `@effected/yaml`'s composer cap
- * for cross-package parity.
+ * **Details**
+ *
+ * Every stage that recurses per node is a stack-overflow denial-of-service
+ * vector on deeply nested input: the recursive-descent parser (value and tree
+ * mode), `JsoncNode.toValue`, `Jsonc.equals`, the `JsoncVisitor` walk and the
+ * `JsoncFingerprint` canonicalizer. Each one caps out at this depth and reports
+ * a `NestingDepthExceeded` parse error, an in-band visitor `Error` event, a
+ * typed canonicalize error or a bounded placeholder instead of throwing a
+ * `RangeError` as a defect.
+ *
+ * **Example** (Compare a document's depth against the cap)
+ *
+ * ```ts
+ * import { MAX_NESTING_DEPTH } from "@beep/scratchpad/effected/jsonc/internal/limits"
+ *
+ * const depth = 300
+ *
+ * console.log(depth > MAX_NESTING_DEPTH) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const MAX_NESTING_DEPTH = 256;
