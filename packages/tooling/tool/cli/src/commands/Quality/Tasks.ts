@@ -12,6 +12,7 @@ import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
   Console,
+  Crypto,
   DateTime,
   Duration,
   Effect,
@@ -24,6 +25,7 @@ import {
   pipe,
   Ref,
 } from "effect";
+import * as Hex from "effect/encoding/Hex";
 import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as P from "effect/Predicate";
@@ -128,7 +130,7 @@ import {
 } from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
-import type { Crypto, Scope } from "effect";
+import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeOwner } from "./internal/CoverageScope.ts";
@@ -2973,17 +2975,88 @@ const policyStateTasks = [
 const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
   hosted ? policyStateTasks : A.filter(policyStateTasks, (task) => !A.contains(policyGitDeltaTasks, task));
 // The root ESLint program has no Turbo task; a content-keyed ESLint cache keeps a
-// warm repeat near zero without changing what a cold run checks.
-const rootEslintArgs = [
+// warm repeat near zero without changing what a cold run checks. ESLint keys that cache
+// on the serialized config, which cannot see an edit inside an in-repo rule module or the
+// helpers it imports, so the cache directory itself is keyed by a digest of the ESLint
+// configuration sources: such an edit starts an empty cache instead of replaying stale results.
+const rootEslintArgs = (cacheKey: string): ReadonlyArray<string> => [
   "eslint",
   ".",
   "--max-warnings=0",
   "--cache",
   "--cache-location",
-  "node_modules/.cache/eslint-root/.eslintcache",
+  `node_modules/.cache/eslint-root/${cacheKey}/.eslintcache`,
   "--cache-strategy",
   "content",
 ];
+// The configuration sources the root ESLint cache key digests: the flat config, the TSDoc
+// tag definitions it loads, and the whole policy-pack configs package source (the ESLint
+// rule modules import helpers from `src/internal/eslint`, so the rule directory alone is
+// not the import closure).
+const rootEslintCacheKeySources = ["eslint.config.mjs", "tsdoc.json", "packages/tooling/policy-pack/repo-configs/src"];
+// The key a pure plan carries when no repository is read (tests and static plan inspection).
+const UNKEYED_ROOT_ESLINT_CACHE = "unkeyed";
+
+const listRootEslintCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: string, source: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(repoRoot, source);
+  const info = yield* fs.stat(absolute);
+  if (info.type !== "Directory") {
+    return [source];
+  }
+  const entries = yield* fs.readDirectory(absolute, { recursive: true });
+  const candidates = A.filter(
+    entries,
+    (entry) => Str.endsWith(".ts")(entry) || Str.endsWith(".mjs")(entry) || Str.endsWith(".json")(entry)
+  );
+  // A recursive listing may name directories; only files are read into the digest.
+  const files = yield* Effect.filter(candidates, (entry) =>
+    fs.stat(path.join(absolute, entry)).pipe(Effect.map((entryInfo) => entryInfo.type === "File"))
+  );
+  return A.map(files, (entry) => `${source}/${entry}`);
+});
+
+/**
+ * Digest the root ESLint configuration sources into the cache directory key.
+ *
+ * **Example** (Key the root ESLint cache)
+ * ```ts
+ * import { rootEslintCacheKey } from "@beep/repo-cli/commands/Quality"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(rootEslintCacheKey("/repo"))) // true
+ * ```
+ *
+ * **Details**
+ *
+ * The key is the first sixteen hex characters of a SHA-256 over every file under the
+ * configuration sources (`eslint.config.mjs`, `tsdoc.json`, the policy-pack configs package
+ * source including `src/internal/eslint`), each prefixed by its path. A source that cannot be
+ * read yields the `unkeyed` directory so a missing file never blocks lint; the cache is then
+ * shared.
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns The cache directory key.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rootEslintCacheKey = Effect.fn("QualityTasks.rootEslintCacheKey")(
+  function* (repoRoot: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const crypto = yield* Crypto.Crypto;
+    const files = pipe(
+      yield* Effect.forEach(rootEslintCacheKeySources, (source) => listRootEslintCacheKeyFiles(repoRoot, source)),
+      A.flatten,
+      A.sort(Order.String)
+    );
+    const parts = yield* Effect.forEach(files, (file) =>
+      fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
+    );
+    const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(A.join(parts, "")));
+    return Str.slice(0, 16)(Hex.encode(digest));
+  },
+  Effect.orElseSucceed(() => UNKEYED_ROOT_ESLINT_CACHE)
+);
 
 // The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks are root Turbo
 // tasks (cached, fingerprint-closed) inside the medium and state phases; the JSDoc ratchet
@@ -2994,7 +3067,8 @@ const rootRepoLintPolicySteps = (
   _files: ReadonlyArray<string> | undefined,
   base: string | undefined,
   sweeps: LintPolicySweeps,
-  hosted: boolean
+  hosted: boolean,
+  eslintCacheKey: string
 ): ReadonlyArray<QualityTaskStep> => {
   const full = P.isUndefined(base);
   return A.map(
@@ -3009,7 +3083,7 @@ const rootRepoLintPolicySteps = (
       ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks)]),
       // Ruling 31 retains the hosted root ESLint program independently of the
       // deprecated-API sweep switch. It has no Turbo summary of its own.
-      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", rootEslintArgs)] : []),
+      ...(full ? [bunxStep(repoRoot, "lint:jsdoc", rootEslintArgs(eslintCacheKey))] : []),
       full && sweeps.deprecatedApis === "shards"
         ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
         : deprecatedApisTurboStep(repoRoot, base),
@@ -3068,6 +3142,8 @@ const runPolicySteps = Effect.fn("QualityTasks.runPolicySteps")(function* (
  * @param sweeps - Explicit sweep selection; pure test plans default to shards.
  * @param hosted - Whether the plan is a hosted (CI) plan; a local full-scope plan leaves the
  *   git-delta knowledge checks to the hosted run. Defaults to the live CI detection.
+ * @param eslintCacheKey - Root ESLint cache directory key; the runtime digests the ESLint
+ *   configuration sources, a pure plan carries `unkeyed`.
  * @returns Planned subprocess steps for policy-only lint verification.
  * @category utilities
  * @since 0.0.0
@@ -3077,14 +3153,16 @@ export const rootLintPolicyStepsForTesting: {
     files?: ReadonlyArray<string>,
     base?: string,
     sweeps?: LintPolicySweeps,
-    hosted?: boolean
+    hosted?: boolean,
+    eslintCacheKey?: string
   ): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
   (
     repoRoot: string,
     files?: ReadonlyArray<string>,
     base?: string,
     sweeps?: LintPolicySweeps,
-    hosted?: boolean
+    hosted?: boolean,
+    eslintCacheKey?: string
   ): ReadonlyArray<QualityTaskStep>;
 } = dual(
   (args: IArguments) => P.isString(args[0]),
@@ -3093,8 +3171,9 @@ export const rootLintPolicyStepsForTesting: {
     files?: ReadonlyArray<string>,
     base?: string,
     sweeps = shardPolicySweeps,
-    hosted = isCi()
-  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted)
+    hosted = isCi(),
+    eslintCacheKey = UNKEYED_ROOT_ESLINT_CACHE
+  ): ReadonlyArray<QualityTaskStep> => rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted, eslintCacheKey)
 );
 
 /**
@@ -3133,7 +3212,11 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
   );
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
-  yield* runPolicySteps(rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCi()), runFull);
+  const eslintCacheKey = yield* rootEslintCacheKey(repoRoot);
+  yield* runPolicySteps(
+    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCi(), eslintCacheKey),
+    runFull
+  );
 });
 
 /**
@@ -3188,13 +3271,14 @@ export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecat
 const rootLintPolicySteps = (
   repoRoot: string,
   args: ReadonlyArray<string>,
-  fix: boolean
+  fix: boolean,
+  eslintCacheKey: string
 ): ReadonlyArray<QualityTaskStep> => {
   if (fix || !shouldRunLintRepoWideSteps(args)) {
     return A.empty<QualityTaskStep>();
   }
 
-  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, shardPolicySweeps, isCi());
+  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, shardPolicySweeps, isCi(), eslintCacheKey);
 };
 
 // The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by
@@ -3203,12 +3287,13 @@ const rootLintPolicySteps = (
 const rootLintSteps = (
   repoRoot: string,
   args: ReadonlyArray<string>,
-  fix: boolean
+  fix: boolean,
+  eslintCacheKey: string = UNKEYED_ROOT_ESLINT_CACHE
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
   const lintArgs = boundedRootTurboArgs(fix ? stripLintFixAggregateArgs(args) : args);
   return [
     fix ? turboStep(repoRoot, "lint:fix", ["lint:fix"], lintArgs) : turboStep(repoRoot, "lint", ["lint"], lintArgs),
-    ...rootLintPolicySteps(repoRoot, lintArgs, fix),
+    ...rootLintPolicySteps(repoRoot, lintArgs, fix, eslintCacheKey),
   ];
 };
 
@@ -3229,7 +3314,7 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  const steps = rootLintSteps(repoRoot, args, fix);
+  const steps = rootLintSteps(repoRoot, args, fix, yield* rootEslintCacheKey(repoRoot));
   if (A.length(steps) === 1) {
     yield* runStep(A.headNonEmpty(steps));
     return;
