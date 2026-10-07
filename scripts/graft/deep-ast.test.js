@@ -2,15 +2,17 @@
 // GRAFT_EXTRACT_MODULE must refer to a full disposable patched Graft package.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { pathToFileURL } from "node:url";
 
-const binary = process.env.GRAFT_EXTRACT_MODULE
-  ? undefined
-  : execFileSync("which", ["graft"], { encoding: "utf8" }).trim();
-const modulePath = process.env.GRAFT_EXTRACT_MODULE ?? join(dirname(realpathSync(binary)), "graph/extract.js");
+const modulePath =
+  process.env.GRAFT_EXTRACT_MODULE ??
+  join(
+    execFileSync("npm", ["root", "-g", "--prefix", join(homedir(), ".local")], { encoding: "utf8" }).trim(),
+    "@nanonets/graft/dist/graph/extract.js"
+  );
 const { extractFile } = await import(pathToFileURL(modulePath).href);
 
 test("a realistic generated IAM union traverses all extraction passes without overflowing", () => {
