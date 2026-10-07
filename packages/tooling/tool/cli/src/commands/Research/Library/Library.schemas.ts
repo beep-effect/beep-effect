@@ -2,7 +2,6 @@
  * Persisted research library models, separate from the knowledge vault.
  *
  * @packageDocumentation
- *
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
@@ -12,7 +11,8 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
 
-/** SourceKind vocabulary for the research library.
+/**
+ * SourceKind vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibrarySourceKind } from "@beep/repo-cli/commands/Research"
@@ -20,7 +20,6 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
  * ```
  *
  * @category schemas
- *
  * @since 0.0.0
  */
 export const LibrarySourceKind = LiteralKit([
@@ -42,14 +41,16 @@ export const LibrarySourceKind = LiteralKit([
 ]).pipe(
   $I.annoteSchema("LibrarySourceKind", { description: "SourceKind vocabulary for persisted research provenance." })
 );
-/** Runtime type of LibrarySourceKind.
- * @category models
+/**
+ * Runtime type of LibrarySourceKind.
  *
+ * @category models
  * @since 0.0.0
  */
 export type LibrarySourceKind = typeof LibrarySourceKind.Type;
 
-/** Ownership vocabulary for the research library.
+/**
+ * Ownership vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryOwnership } from "@beep/repo-cli/commands/Research"
@@ -57,20 +58,21 @@ export type LibrarySourceKind = typeof LibrarySourceKind.Type;
  * ```
  *
  * @category schemas
- *
  * @since 0.0.0
  */
 export const LibraryOwnership = LiteralKit(["external", "project", "internal", "unresolved"]).pipe(
   $I.annoteSchema("LibraryOwnership", { description: "Ownership vocabulary for persisted research provenance." })
 );
-/** Runtime type of LibraryOwnership.
- * @category models
+/**
+ * Runtime type of LibraryOwnership.
  *
+ * @category models
  * @since 0.0.0
  */
 export type LibraryOwnership = typeof LibraryOwnership.Type;
 
-/** CaptureStatus vocabulary for the research library.
+/**
+ * CaptureStatus vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryCaptureStatus } from "@beep/repo-cli/commands/Research"
@@ -78,7 +80,6 @@ export type LibraryOwnership = typeof LibraryOwnership.Type;
  * ```
  *
  * @category schemas
- *
  * @since 0.0.0
  */
 export const LibraryCaptureStatus = LiteralKit([
@@ -95,14 +96,16 @@ export const LibraryCaptureStatus = LiteralKit([
     description: "CaptureStatus vocabulary for persisted research provenance.",
   })
 );
-/** Runtime type of LibraryCaptureStatus.
- * @category models
+/**
+ * Runtime type of LibraryCaptureStatus.
  *
+ * @category models
  * @since 0.0.0
  */
 export type LibraryCaptureStatus = typeof LibraryCaptureStatus.Type;
 
-/** QualificationStatus vocabulary for the research library.
+/**
+ * QualificationStatus vocabulary for the research library.
  * **Example** (Inspect members)
  * ```ts
  * import { LibraryQualificationStatus } from "@beep/repo-cli/commands/Research"
@@ -110,7 +113,6 @@ export type LibraryCaptureStatus = typeof LibraryCaptureStatus.Type;
  * ```
  *
  * @category schemas
- *
  * @since 0.0.0
  */
 export const LibraryQualificationStatus = LiteralKit(["verified", "failed"]).pipe(
@@ -118,14 +120,16 @@ export const LibraryQualificationStatus = LiteralKit(["verified", "failed"]).pip
     description: "QualificationStatus vocabulary for persisted research provenance.",
   })
 );
-/** Runtime type of LibraryQualificationStatus.
- * @category models
+/**
+ * Runtime type of LibraryQualificationStatus.
  *
+ * @category models
  * @since 0.0.0
  */
 export type LibraryQualificationStatus = typeof LibraryQualificationStatus.Type;
 
-/** Artifact record for persisted research provenance.
+/**
+ * Artifact record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryArtifact } from "@beep/repo-cli/commands/Research"
@@ -134,7 +138,6 @@ export type LibraryQualificationStatus = typeof LibraryQualificationStatus.Type;
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryArtifact extends S.Class<LibraryArtifact>($I`LibraryArtifact`)(
@@ -148,7 +151,8 @@ export class LibraryArtifact extends S.Class<LibraryArtifact>($I`LibraryArtifact
   $I.annote("LibraryArtifact", { description: "Artifact record for persisted research provenance." })
 ) {}
 
-/** Document record for persisted research provenance.
+/**
+ * Document record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryDocument } from "@beep/repo-cli/commands/Research"
@@ -157,7 +161,6 @@ export class LibraryArtifact extends S.Class<LibraryArtifact>($I`LibraryArtifact
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryDocument extends S.Class<LibraryDocument>($I`LibraryDocument`)(
@@ -188,7 +191,8 @@ export class LibraryDocument extends S.Class<LibraryDocument>($I`LibraryDocument
   $I.annote("LibraryDocument", { description: "Document record for persisted research provenance." })
 ) {}
 
-/** Reference record for persisted research provenance.
+/**
+ * Reference record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryReference } from "@beep/repo-cli/commands/Research"
@@ -197,7 +201,6 @@ export class LibraryDocument extends S.Class<LibraryDocument>($I`LibraryDocument
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryReference extends S.Class<LibraryReference>($I`LibraryReference`)(
@@ -238,7 +241,8 @@ export class LibraryReference extends S.Class<LibraryReference>($I`LibraryRefere
   $I.annote("LibraryReference", { description: "Reference record for persisted research provenance." })
 ) {}
 
-/** A cited resource version, separate from stable source identity.
+/**
+ * A cited resource version, separate from stable source identity.
  * **Example** (Inspect version validation)
  * ```ts
  * import { LibraryVersion } from "@beep/repo-cli/commands/Research"
@@ -247,7 +251,6 @@ export class LibraryReference extends S.Class<LibraryReference>($I`LibraryRefere
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryVersion extends S.Class<LibraryVersion>($I`LibraryVersion`)(
@@ -259,7 +262,8 @@ export class LibraryVersion extends S.Class<LibraryVersion>($I`LibraryVersion`)(
   $I.annote("LibraryVersion", { description: "A cited resource version with its exact locators." })
 ) {}
 
-/** Source record for persisted research provenance.
+/**
+ * Source record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibrarySource } from "@beep/repo-cli/commands/Research"
@@ -268,7 +272,6 @@ export class LibraryVersion extends S.Class<LibraryVersion>($I`LibraryVersion`)(
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibrarySource extends S.Class<LibrarySource>($I`LibrarySource`)(
@@ -301,7 +304,8 @@ export class LibrarySource extends S.Class<LibrarySource>($I`LibrarySource`)(
   $I.annote("LibrarySource", { description: "Source record for persisted research provenance." })
 ) {}
 
-/** Occurrence record for persisted research provenance.
+/**
+ * Occurrence record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryOccurrence } from "@beep/repo-cli/commands/Research"
@@ -310,7 +314,6 @@ export class LibrarySource extends S.Class<LibrarySource>($I`LibrarySource`)(
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryOccurrence extends S.Class<LibraryOccurrence>($I`LibraryOccurrence`)(
@@ -358,7 +361,8 @@ export class LibraryOccurrence extends S.Class<LibraryOccurrence>($I`LibraryOccu
   $I.annote("LibraryOccurrence", { description: "Occurrence record for persisted research provenance." })
 ) {}
 
-/** Capture record for persisted research provenance.
+/**
+ * Capture record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryCapture } from "@beep/repo-cli/commands/Research"
@@ -367,7 +371,6 @@ export class LibraryOccurrence extends S.Class<LibraryOccurrence>($I`LibraryOccu
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryCapture extends S.Class<LibraryCapture>($I`LibraryCapture`)(
@@ -390,7 +393,8 @@ export class LibraryCapture extends S.Class<LibraryCapture>($I`LibraryCapture`)(
   $I.annote("LibraryCapture", { description: "Capture record for persisted research provenance." })
 ) {}
 
-/** Qualification record for persisted research provenance.
+/**
+ * Qualification record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryQualification } from "@beep/repo-cli/commands/Research"
@@ -399,7 +403,6 @@ export class LibraryCapture extends S.Class<LibraryCapture>($I`LibraryCapture`)(
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryQualification extends S.Class<LibraryQualification>($I`LibraryQualification`)(
@@ -415,7 +418,8 @@ export class LibraryQualification extends S.Class<LibraryQualification>($I`Libra
   $I.annote("LibraryQualification", { description: "Qualification record for persisted research provenance." })
 ) {}
 
-/** An input file in an immutable dated intake census.
+/**
+ * An input file in an immutable dated intake census.
  * **Example** (Inspect file validation)
  * ```ts
  * import { LibraryIntakeFile } from "@beep/repo-cli/commands/Research"
@@ -424,7 +428,6 @@ export class LibraryQualification extends S.Class<LibraryQualification>($I`Libra
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryIntakeFile extends S.Class<LibraryIntakeFile>($I`LibraryIntakeFile`)(
@@ -437,7 +440,8 @@ export class LibraryIntakeFile extends S.Class<LibraryIntakeFile>($I`LibraryInta
   },
   $I.annote("LibraryIntakeFile", { description: "Input file census entry including nonparseable files." })
 ) {}
-/** Repository provenance for one intake root.
+/**
+ * Repository provenance for one intake root.
  * **Example** (Inspect root validation)
  * ```ts
  * import { LibraryIntakeRoot } from "@beep/repo-cli/commands/Research"
@@ -446,14 +450,14 @@ export class LibraryIntakeFile extends S.Class<LibraryIntakeFile>($I`LibraryInta
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryIntakeRoot extends S.Class<LibraryIntakeRoot>($I`LibraryIntakeRoot`)(
   { path: S.String, repoCommit: S.String },
   $I.annote("LibraryIntakeRoot", { description: "Exact input root and source repository commit if available." })
 ) {}
-/** Immutable dated intake manifest.
+/**
+ * Immutable dated intake manifest.
  * **Example** (Inspect intake validation)
  * ```ts
  * import { LibraryIntake } from "@beep/repo-cli/commands/Research"
@@ -462,7 +466,6 @@ export class LibraryIntakeRoot extends S.Class<LibraryIntakeRoot>($I`LibraryInta
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryIntake extends S.Class<LibraryIntake>($I`LibraryIntake`)(
@@ -480,7 +483,8 @@ export class LibraryIntake extends S.Class<LibraryIntake>($I`LibraryIntake`)(
   })
 ) {}
 
-/** Root metadata for a portable reusable library.
+/**
+ * Root metadata for a portable reusable library.
  * **Example** (Inspect manifest validation)
  * ```ts
  * import { LibraryManifest } from "@beep/repo-cli/commands/Research"
@@ -489,7 +493,6 @@ export class LibraryIntake extends S.Class<LibraryIntake>($I`LibraryIntake`)(
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryManifest extends S.Class<LibraryManifest>($I`LibraryManifest`)(
@@ -503,7 +506,8 @@ export class LibraryManifest extends S.Class<LibraryManifest>($I`LibraryManifest
   $I.annote("LibraryManifest", { description: "Portable library layout and creation provenance." })
 ) {}
 
-/** Catalog record for persisted research provenance.
+/**
+ * Catalog record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryCatalog } from "@beep/repo-cli/commands/Research"
@@ -512,7 +516,6 @@ export class LibraryManifest extends S.Class<LibraryManifest>($I`LibraryManifest
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryCatalog extends S.Class<LibraryCatalog>($I`LibraryCatalog`)(
@@ -535,7 +538,8 @@ export class LibraryCatalog extends S.Class<LibraryCatalog>($I`LibraryCatalog`)(
   $I.annote("LibraryCatalog", { description: "Catalog record for persisted research provenance." })
 ) {}
 
-/** InventoryOptions record for persisted research provenance.
+/**
+ * InventoryOptions record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryInventoryOptions } from "@beep/repo-cli/commands/Research"
@@ -544,7 +548,6 @@ export class LibraryCatalog extends S.Class<LibraryCatalog>($I`LibraryCatalog`)(
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryInventoryOptions extends S.Class<LibraryInventoryOptions>($I`LibraryInventoryOptions`)(
@@ -555,7 +558,8 @@ export class LibraryInventoryOptions extends S.Class<LibraryInventoryOptions>($I
   $I.annote("LibraryInventoryOptions", { description: "InventoryOptions record for persisted research provenance." })
 ) {}
 
-/** AcquireOptions record for persisted research provenance.
+/**
+ * AcquireOptions record for persisted research provenance.
  * **Example** (Inspect model)
  * ```ts
  * import { LibraryAcquireOptions } from "@beep/repo-cli/commands/Research"
@@ -564,7 +568,6 @@ export class LibraryInventoryOptions extends S.Class<LibraryInventoryOptions>($I
  * ```
  *
  * @category models
- *
  * @since 0.0.0
  */
 export class LibraryAcquireOptions extends S.Class<LibraryAcquireOptions>($I`LibraryAcquireOptions`)(

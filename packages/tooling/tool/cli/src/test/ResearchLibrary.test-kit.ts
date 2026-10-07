@@ -1,4 +1,6 @@
-/** Source-only research library test seams.
+/**
+ * Source-only research library test seams.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */

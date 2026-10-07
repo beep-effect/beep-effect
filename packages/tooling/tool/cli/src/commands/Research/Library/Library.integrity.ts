@@ -1,4 +1,6 @@
-/** Immutable artifact integrity and library containment.
+/**
+ * Immutable artifact integrity and library containment.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -43,7 +45,8 @@ const canonicalObjectIntegrity = Effect.fn("Library.canonicalObjectIntegrity")(f
   }
   return O.none<string>();
 });
-/** Return the concrete integrity failure, or None when alias and canonical object both validate.
+/**
+ * Return the concrete integrity failure, or None when alias and canonical object both validate.
  * **Example** (Prepare an integrity check)
  * ```ts
  * import { libraryArtifactIntegrity } from "@beep/repo-cli/test/ResearchLibrary"
@@ -51,6 +54,7 @@ const canonicalObjectIntegrity = Effect.fn("Library.canonicalObjectIntegrity")(f
  * const check = (artifact: LibraryArtifact) => libraryArtifactIntegrity("/library", artifact)
  * console.log(typeof check) // function
  * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0

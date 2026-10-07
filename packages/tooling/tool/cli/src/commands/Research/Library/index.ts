@@ -1,6 +1,7 @@
-/** Maintained research source library public API.
- * @packageDocumentation
+/**
+ * Maintained research source library public API.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

@@ -4,7 +4,7 @@
 
 **Question:** Library lifetime.
 
-**Answer:** Reusable library under ~/YeeBois/research/beep-effect/ with dated intake snapshots.
+**Answer:** Reusable library under $HOME/YeeBois/research/beep-effect/ with dated intake snapshots.
 
 **Rationale:** Chosen over a fixed October-only collection. Preserve unrelated existing research folders.
 

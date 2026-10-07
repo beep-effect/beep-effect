@@ -23,6 +23,8 @@ import { Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
+const LibraryCatalogJson = S.fromJsonString(LibraryCatalog);
+
 const fixtureJson = S.Unknown.pipe(S.fromJsonString, S.encodeEffect);
 
 const resolutionFixture = Effect.fn("test.resolutionFixture")(function* () {
@@ -155,10 +157,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             }),
           ],
         });
-        yield* fs.writeFileString(
-          path.join(root, "catalog.json"),
-          yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(legacy)
-        );
+        yield* fs.writeFileString(path.join(root, "catalog.json"), yield* S.encodeEffect(LibraryCatalogJson)(legacy));
         yield* withCatalog(root, Effect.succeed);
         expect(yield* hashBytes(yield* fs.readFile(path.join(root, "objects/sha256", sha256)))).toBe(sha256);
         expect(yield* hashBytes(yield* fs.readFile(path.join(root, "qualifications/legacy.txt")))).toBe(sha256);
@@ -796,7 +795,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           captures: [capture],
           qualifications: [],
         });
-        const text = yield* S.encodeEffect(S.fromJsonString(LibraryCatalog))(legacy);
+        const text = yield* S.encodeEffect(LibraryCatalogJson)(legacy);
         yield* fs.writeFileString(path.join(root, "catalog.json"), text);
         const migrated = yield* withCatalog(root, Effect.succeed);
         const newId = yield* hashBytes(new TextEncoder().encode(identity));
