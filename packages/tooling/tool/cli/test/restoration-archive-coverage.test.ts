@@ -1165,4 +1165,19 @@ describe("streaming hasher", () => {
       }
     })
   );
+
+  it.effect("falls back to the portable hasher when no Bun global exists at all", () =>
+    Effect.sync(() => {
+      const bun = Reflect.get(globalThis, "Bun");
+      if (P.isObject(bun) && P.isFunction(Reflect.get(bun, "CryptoHasher"))) return;
+      Reflect.deleteProperty(globalThis, "Bun");
+      try {
+        const hasher = RA.createStreamingSha256();
+        hasher.update(new TextEncoder().encode("abc"));
+        expect(hasher.digestHex()).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+      } finally {
+        Reflect.set(globalThis, "Bun", bun);
+      }
+    })
+  );
 });
