@@ -34,7 +34,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const encodeFixtureJson = S.encodeSync(S.Unknown.pipe(S.fromJsonString));
+const encodeFixtureJson = S.encodeEffect(S.Unknown.pipe(S.fromJsonString));
 
 const platform = process.versions.bun === undefined ? NodeServices.layer : BunServices.layer;
 const Services = Layer.mergeAll(
@@ -334,7 +334,7 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
       const document = path.join(documents, "report.pdf");
       yield* fs.writeFileString(document, pdf);
       const executable = path.join(root, "fixture-exiftool");
-      const payload = encodeFixtureJson([
+      const payload = yield* encodeFixtureJson([
         {
           SourceFile: document,
           "File:FileType": "PDF",
@@ -343,10 +343,11 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
           "PDF:PageCount": 1,
         },
       ]);
+      const encodedPayload = yield* encodeFixtureJson(payload);
       // Exercise the live process/JSON boundary without depending on a host exiftool installation.
       yield* fs.writeFileString(
         executable,
-        `#!/usr/bin/env node\nprocess.stdout.write(process.argv[2] === "-ver" ? "fixture13\\n" : ${encodeFixtureJson(payload)});\n`
+        `#!/usr/bin/env node\nprocess.stdout.write(process.argv[2] === "-ver" ? "fixture13\\n" : ${encodedPayload});\n`
       );
       yield* fs.chmod(executable, 0o755);
       const census = yield* runMetadataCensusThroughService(
