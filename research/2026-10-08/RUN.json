@@ -1,0 +1,127 @@
+{
+  "schema": "beep.research.run/v0",
+  "date": "2026-10-08",
+  "status": "partial",
+  "window": {
+    "start": "2026-10-06T08:30:00-05:00",
+    "end": "2026-10-08T08:30:00-05:00",
+    "label": "America/Chicago",
+    "approx_hours": 48,
+    "sunday_weekly": false,
+    "note": "10-07 run skipped (stamp <24h); Thursday, no weekly consolidation"
+  },
+  "prior": {
+    "lastSuccessfulPacket": "research/2026-10-06",
+    "lastSuccessfulPr": 1497,
+    "lastSuccessfulRun": "2026-10-06T08:30:00-05:00",
+    "mergedAt": "2026-10-06T19:03:55Z",
+    "mergeCommit": "f82d29bc"
+  },
+  "counts": {
+    "total": 40,
+    "window_new": 34,
+    "refute": 6,
+    "late_catch": 2,
+    "by_axis": {
+      "law": 12,
+      "effect": 11,
+      "agents": 17
+    }
+  },
+  "novelty": {
+    "unique_claim_urls": 40,
+    "exclusion_url_collisions": 3,
+    "exclusion_collision_pct": 7.5,
+    "collision_urls": [
+      "https://github.com/garden-co/jazz/releases/tag/v2.0.0-alpha.59",
+      "https://github.com/modelcontextprotocol/python-sdk/pull/3485",
+      "https://www.everlaw.com/blog/ai-and-law/harvey-everlaw-integration-massive-scale"
+    ],
+    "tombstone_collisions": [],
+    "window_new": 34,
+    "window_new_collision_pct": 0.0,
+    "exclusion_digest_size": 321,
+    "note": "Canonical gate: distinct claim URLs ∩ exclusion digest (all research/*/claims.jsonl on main through 2026-10-06 + tombstones incl. 2026-10-06 + excluded-packets) / unique claim URLs. 3/40 = 7.5% (all deliberate HOLD refutes). Under ≤40%; no self-reject."
+  },
+  "quotaPools": {
+    "search": "web+arxiv-export+github-html+cursor-github-mcp+npm-registry",
+    "x": "grok-bot-x-connector (search_posts_all/get_news; transient shared 429)",
+    "verify": "none (no blinded local verifier in this harness)",
+    "writer": "grok-bot-blinded",
+    "publisher": "cursor-cloud-agent"
+  },
+  "frictions": [
+    {
+      "source": "x-connector",
+      "tools": ["search_posts_all"],
+      "error": "http-429-shared",
+      "detail": "Two consecutive search_posts_all calls returned HTTP 429 from Grok Bot's shared X access (not the user quota); retried after ~1 min and succeeded."
+    },
+    {
+      "source": "x-connector",
+      "tools": ["search_posts_all"],
+      "error": "invalid-operator",
+      "detail": "min_faves operator not available in this product tier; query rewritten without it."
+    },
+    {
+      "source": "gh-cli-box",
+      "error": "not-used",
+      "detail": "Box gh CLI 401 on recent runs; reads used cursor-github MCP + raw.githubusercontent.com + github.com HTML."
+    },
+    {
+      "source": "github-api-unauth",
+      "error": "rate-limit",
+      "detail": "api.github.com unauthenticated contents listing returned rate-limit 403; used cursor-github get_file_contents instead."
+    },
+    {
+      "source": "github-release-html",
+      "error": "parse-miss",
+      "detail": "TanStack DB 0.12.x release pages did not parse; used registry.npmjs.org timestamps only (no release-note claims)."
+    }
+  ],
+  "capabilities": {
+    "cursor-github": "ok",
+    "raw.githubusercontent.com": "ok",
+    "registry.npmjs.org": "ok",
+    "arxiv-export-api": "ok(https)",
+    "WebSearch": "ok",
+    "WebFetch": "ok",
+    "x-connector": "ok(transient-429)",
+    "user-X": "not-attempted",
+    "gh-cli": "not-used(401 history)",
+    "blinded-verifier": "unavailable"
+  },
+  "resume_cursor": {
+    "arxiv": "2610.10479",
+    "watch": [
+      "effect@4.0.3 / post-4.0.2 train",
+      "python-sdk #3485 merge",
+      "Harvey↔Everlaw fall-2026 GA",
+      "ROSS cert petition filing",
+      "Legora Skills sessions Oct 14–15",
+      "tsc-rs tsgo rule-set catch-up"
+    ],
+    "x": "re-run search_posts_all from window end 2026-10-08T13:30Z"
+  },
+  "headline_deltas": [
+    "Harvey publishes MCP Policy Engine (Tool Pinner + Sanitizer)",
+    "GHSA-6qxp MCP TS SDK OAuth issuer flaw; SEP-2127 Server Cards merged",
+    "effect@4.0.2 shipped (MCP typing fix; OTel GenAI tracing rewrite)",
+    "tsc-rs Rust TS7 port with Effect diagnostics built in",
+    "Google/NBER patent-drafting RCT: juniors gain no unassisted skill",
+    "Legora×BMW; TR next-gen CoCounsel UK; Ivo Sage open model; Teddy $60M"
+  ],
+  "blinding": {
+    "cloned": false,
+    "opened_pr": false,
+    "wrote_explorations_inbox": false,
+    "wrote_goals": false,
+    "stage": "writer"
+  },
+  "publisher": {
+    "agent": "cursor-cloud-agent",
+    "pr": null,
+    "branch": "research/2026-10-08"
+  },
+  "written_at": "2026-10-08T08:43:00-05:00"
+}
