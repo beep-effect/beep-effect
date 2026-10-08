@@ -120,7 +120,7 @@
   },
   "publisher": {
     "agent": "cursor-cloud-agent",
-    "pr": null,
+    "pr": 1551,
     "branch": "research/2026-10-08"
   },
   "written_at": "2026-10-08T08:43:00-05:00"
