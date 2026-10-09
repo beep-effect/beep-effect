@@ -426,7 +426,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     Config.withDefault(path.join(root, "hook-pulse.disarmed")),
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve disarm sentinel."))
   );
-  const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<boolean>));
+  const sentinelPresent = yield* fs.exists(sentinel).pipe(Effect.asSome, Effect.orElseSucceed(O.none<boolean>));
   const openDisarm =
     O.getOrElse(sentinelPresent, () => true) ||
     A.some(A.filter(Str.split(windowsText, "\n"), Str.isNonEmpty), (line) =>
