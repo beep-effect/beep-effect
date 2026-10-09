@@ -6,6 +6,7 @@ import {
   deletePackageCommand,
   inspectTargetAtRoot,
   LabTargetFacts,
+  planForwardForTarget,
   planInverseForTarget,
   RegistrationObservation,
   RegistrationSurface,
@@ -126,6 +127,14 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     it("declares no data resource without a manifest or without a postgres schema", () => {
       dataResourceSurfaceOf(labTargetWithoutManifest).pipe(assertNone);
       dataResourceSurfaceOf(labTargetWithoutSchema).pipe(assertNone);
+    });
+
+    it("describes private exemption in the forward registration plan", () => {
+      const forward = planForwardForTarget(productTarget);
+      const pending = O.getOrThrow(
+        A.findFirst(forward.operations, (operation) => operation.surfaceId === "pending-changesets")
+      );
+      expect(pending.detail).toContain("private packages are changeset-exempt");
     });
 
     it("retains the empty deletion note for a publish-enabled non-labs target", () => {
