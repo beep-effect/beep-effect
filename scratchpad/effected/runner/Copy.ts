@@ -74,7 +74,7 @@ const stringRecord = (value: unknown): Readonly<Record<string, string>> => (isSt
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = readKitExports(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }))
+ * const program = readKitExports(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -145,7 +145,7 @@ const dotRelative = (relative: string): string => (Str.startsWith(".")(relative)
  * import * as HashMap from "effect/HashMap"
  *
  * const program = makeResolver(
- *   RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }),
+ *   RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }),
  *   "/up/packages/walker/src/Walker.ts",
  *   "scratchpad/effected/walker/Walker.ts",
  *   HashMap.empty()
@@ -307,8 +307,8 @@ const resolveSpec = Effect.fn("Copy.resolveSpec")(function* (
   const fromCatalog = HashMap.get(upstreamCatalog, name);
   if (O.isSome(fromCatalog)) return fromCatalog.value;
   for (const candidate of [
-    path.join(config.upstreamRoot, "packages", module, "node_modules", name, "package.json"),
-    path.join(config.upstreamRoot, "node_modules", name, "package.json"),
+    path.join(config.upstreamCheckout, "packages", module, "node_modules", name, "package.json"),
+    path.join(config.upstreamCheckout, "node_modules", name, "package.json"),
   ]) {
     if (yield* fs.exists(candidate)) {
       const manifest = yield* readJsonObject(candidate, candidate);
@@ -512,7 +512,7 @@ export interface CarryReport {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" })
  * console.log(Effect.isEffect(carryDocs(config, "glob", { effectedCommit: "abc", notices: [] }))) // true
  * ```
  *
@@ -616,7 +616,7 @@ export const collectNotices = Effect.fn("Copy.collectNotices")(function* (repoRo
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = copyModule(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "glob", "abc")
+ * const program = copyModule(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "glob", "abc")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -694,7 +694,7 @@ export const copyModule = Effect.fn("Copy.copyModule")(function* (
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = registerExisting(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc")
+ * const program = registerExisting(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *

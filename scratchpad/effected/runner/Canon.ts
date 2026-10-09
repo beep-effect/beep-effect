@@ -76,7 +76,7 @@ export interface CanonVerdict {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(canonFindings(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * console.log(Effect.isEffect(canonFindings(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc"))) // true
  * ```
  *
  * @category diagnostics
@@ -132,7 +132,7 @@ const decodeSummary = S.decodeUnknownEffect(CoverageSummary);
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(coverageGaps(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * console.log(Effect.isEffect(coverageGaps(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc"))) // true
  * ```
  *
  * @category diagnostics

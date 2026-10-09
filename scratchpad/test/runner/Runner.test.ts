@@ -34,7 +34,8 @@ import {
   nextStage,
 } from "../../effected/runner/Ledger.schema.ts";
 import { findRow, pendingRow } from "../../effected/runner/LedgerStore.ts";
-import { isModuleTarget, labPaths, upstreamPaths } from "../../effected/runner/Paths.ts";
+import { chooseOracle, OracleSource, pinnedExportDir } from "../../effected/runner/Oracle.ts";
+import { isModuleTarget, labPaths, RunnerConfig, upstreamPaths } from "../../effected/runner/Paths.ts";
 import { heavy, renderLaunch } from "../../effected/runner/Process.ts";
 import { LAW_SURFACES, outOfScopeChanges, reviewBrief, roundDir, seatLaunches } from "../../effected/runner/Review.ts";
 import { AppendField } from "../../effected/runner/LedgerStore.ts";
@@ -296,14 +297,15 @@ describe("review loop", () => {
     assert.strictEqual(pipe("glob", roundDir(1)), "scratchpad/effected/glob/.review/round-1");
   });
   it("renders the section 12.3 brief with the previous inventory from round 2", () => {
-    const first = reviewBrief("jsonl", { round: 1, commit: "abc" });
+    const first = reviewBrief("jsonl", { round: 1, commit: "abc", oracle: "/up" });
     assert.include(first, "Module: jsonl. Commit: abc. Round: 1.");
     assert.include(first, "Previous rounds: none (first round).");
     assert.include(first, "REQUIRED: <n>");
     for (const surface of LAW_SURFACES) {
       assert.include(first, surface);
     }
-    const second = pipe("jsonl", reviewBrief({ round: 2, commit: "def" }));
+    const second = pipe("jsonl", reviewBrief({ round: 2, commit: "def", oracle: "/pinned/abc" }));
+    assert.include(second, "Upstream oracle: /pinned/abc/packages/jsonl (read-only; upstream at the commit the ledger pins).");
     assert.include(second, "scratchpad/effected/jsonl/.review/round-1/INVENTORY.md");
   });
   it("launches Grok with read-only tools and Sol read-only, writing reports beside the brief", () => {
@@ -341,8 +343,24 @@ describe("review loop", () => {
   it("gives Grok a turn budget that outlasts a full investigation and names extra test files in the brief", () => {
     const grok = A.join(seatLaunches("/repo", "scratchpad/effected/jsonl/.review/round-1")[0]?.launch.args ?? [], " ");
     assert.include(grok, "--max-turns 200");
-    assert.include(reviewBrief("jsonl", { round: 1, commit: "abc" }), "scratchpad/test/jsonl.test.ts (and nothing else)");
-    assert.notInclude(reviewBrief("jsonc", { round: 1, commit: "abc" }), "jsonc.test.ts");
+    assert.include(reviewBrief("jsonl", { round: 1, commit: "abc", oracle: "/up" }), "scratchpad/test/jsonl.test.ts (and nothing else)");
+    assert.notInclude(reviewBrief("jsonc", { round: 1, commit: "abc", oracle: "/up" }), "jsonc.test.ts");
+  });
+  it("reads the live checkout while it stands on the pin and the pinned export once it has moved", () => {
+    const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" });
+    const onPin = chooseOracle(config, { pin: O.some("abc"), checkoutCommit: "abc" });
+    assert.strictEqual(onPin.source, "checkout");
+    assert.strictEqual(onPin.root, "/up");
+    const unpinned = pipe(config, chooseOracle({ pin: O.none(), checkoutCommit: "def" }));
+    assert.strictEqual(unpinned.source, "checkout");
+    assert.strictEqual(unpinned.commit, "def");
+    const moved = chooseOracle(config, { pin: O.some("abc"), checkoutCommit: "def" });
+    assert.strictEqual(moved.source, "pinned-export");
+    assert.strictEqual(moved.commit, "abc");
+    assert.strictEqual(moved.checkoutCommit, "def");
+    assert.strictEqual(moved.root, pinnedExportDir("/home/me", "abc"));
+    assert.strictEqual(pipe("/home/me", pinnedExportDir("abc")), "/home/me/.cache/beep/effected-port/upstream/abc");
+    assert.deepStrictEqual(OracleSource.literals, ["checkout", "pinned-export"]);
   });
   it("names the accumulating ledger fields", () => {
     assert.deepStrictEqual(AppendField.literals, ["deviations", "backlog", "reviewRounds", "exportsAdded"]);

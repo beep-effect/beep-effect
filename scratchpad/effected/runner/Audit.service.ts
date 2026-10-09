@@ -27,7 +27,7 @@ import type * as Config from "effect/Config";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/process";
-import type { AuditError } from "./Audit.errors.ts";
+import type { AuditError, CommandFailed, LedgerInvalid, LedgerMissing } from "./Audit.errors.ts";
 import { type CarryReport, carryDocs, collectNotices, type CopyReport, copyModule, registerExisting, upstreamEntries } from "./Copy.ts";
 import { readExportFacets } from "./Exports.ts";
 import { check, docgen, gatePlan, lint, type ParityReport, parity, test } from "./Gates.ts";
@@ -53,7 +53,7 @@ import {
   setStage,
 } from "./LedgerStore.ts";
 import { isModuleTarget, labPaths, type RunnerConfig, resolveRunnerConfig } from "./Paths.ts";
-import { capture } from "./Process.ts";
+import { resolveOracle } from "./Oracle.ts";
 import { runCliSeats, writeBrief } from "./Review.ts";
 import { codemodImports, type ImportRewrite } from "./Codemod.ts";
 import { type ApplyReport, applyDocBlockData, type DocBlock, extractDocBlocks } from "./DocsMigrate.ts";
@@ -248,12 +248,12 @@ const verifyRow = Effect.fn("Audit.verifyRow")(function* (config: RunnerConfig, 
 });
 
 const makeAudit = Effect.fn("Audit.make")(function* () {
-  const config = yield* resolveRunnerConfig();
+  const { oracle, config } = yield* resolveOracle(yield* resolveRunnerConfig());
   const context = yield* Effect.context<AuditRequirements>();
   const provided = <A, E>(effect: Effect.Effect<A, E, AuditRequirements>): Effect.Effect<A, E> =>
     Effect.provideContext(effect, context);
 
-  const upstreamCommit = provided(capture({ command: "git", args: ["rev-parse", "HEAD"], cwd: config.upstreamRoot }));
+  const upstreamCommit = Effect.succeed(oracle.commit);
 
   const audit = Effect.fn("Audit.audit")(function* (target: AuditTarget) {
     const stage = isModuleTarget(target) ? (yield* findRow(yield* readLedger(config), target)).stage : 0;
@@ -407,6 +407,6 @@ const makeAudit = Effect.fn("Audit.make")(function* () {
  */
 export const AuditLive: Layer.Layer<
   Audit,
-  Config.ConfigError | PlatformError.BadArgument,
+  Config.ConfigError | PlatformError.PlatformError | PlatformError.BadArgument | CommandFailed | LedgerInvalid | LedgerMissing,
   AuditRequirements
 > = Layer.effect(Audit, makeAudit());

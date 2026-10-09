@@ -107,7 +107,7 @@ export const pendingRow = (module: ModuleName): O.Option<LedgerRow> =>
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = readLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }))
+ * const program = readLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -139,7 +139,7 @@ export const readLedger = Effect.fn("Ledger.read")(function* (config: RunnerConf
  * import * as Effect from "effect/Effect"
  *
  * const ledger = Ledger.make({ version: 1, effectedCommit: "abc", startedAt: "now", lastCheckpoint: null, rows: [], notes: [] })
- * const program = writeLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), ledger)
+ * const program = writeLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), ledger)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -166,7 +166,7 @@ export const writeLedger = Effect.fn("Ledger.write")(function* (config: RunnerCo
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = initLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "abc")
+ * const program = initLedger(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "abc")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -238,7 +238,7 @@ const replaceRow = (ledger: Ledger, row: LedgerRow): Ledger =>
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = updateRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "yaml", (row) =>
+ * const program = updateRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "yaml", (row) =>
  *   Effect.succeed(LedgerRow.make({ ...row, notes: [...row.notes, "hello"] }))
  * )
  * console.log(Effect.isEffect(program)) // true
@@ -345,7 +345,7 @@ export const backfillCommits = Effect.fn("Ledger.backfillCommits")(function* (re
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = setStage(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "yaml", 1, "")
+ * const program = setStage(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "yaml", 1, "")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -407,7 +407,7 @@ export const setStage = Effect.fn("Ledger.setStage")(function* (
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = blockRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "yaml", "review-limit", [])
+ * const program = blockRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "yaml", "review-limit", [])
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -441,7 +441,7 @@ export const blockRow = Effect.fn("Ledger.blockRow")(function* (
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = noteRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "yaml", "kept vi.mock in S1")
+ * const program = noteRow(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "yaml", "kept vi.mock in S1")
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -519,7 +519,7 @@ const decodeExports = S.decodeUnknownEffect(S.fromJsonString(S.Array(ExportEntry
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" })
  * console.log(Effect.isEffect(appendToRow(config, "jsonc", { field: "deviations", json: "[]" }))) // true
  * ```
  *

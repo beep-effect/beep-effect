@@ -18,12 +18,18 @@ const $I = $ScratchpadId.create("effected/runner/Paths");
 /**
  * Absolute roots the runner works between.
  *
+ * **Details**
+ *
+ * `upstreamRoot` is the tree every read uses (the oracle); `upstreamCheckout`
+ * is the live git checkout it came from. The two differ once the checkout has
+ * moved past the ledger's pinned commit.
+ *
  * **Example** (Build a config by hand)
  *
  * ```ts
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  *
- * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/upstream" })
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/upstream", upstreamCheckout: "/upstream", home: "/home/me" })
  * console.log(config.repoRoot) // "/repo"
  * ```
  *
@@ -34,14 +40,21 @@ export class RunnerConfig extends S.Class<RunnerConfig>($I`RunnerConfig`)(
   {
     repoRoot: S.NonEmptyString,
     upstreamRoot: S.NonEmptyString,
+    upstreamCheckout: S.NonEmptyString,
+    home: S.NonEmptyString,
   },
-  $I.annote("RunnerConfig", { description: "Absolute repository and upstream checkout roots." })
+  $I.annote("RunnerConfig", { description: "Absolute repository, upstream oracle, upstream checkout and home roots." })
 ) {}
 
 /**
  * The repository root is three directories above this file; the upstream
  * checkout defaults to `~/YeeBois/references/effect/effected` and can be
  * overridden with `EFFECTED_UPSTREAM`.
+ *
+ * **Details**
+ *
+ * The oracle root starts as the checkout itself; `resolveOracle` replaces it
+ * with the pinned export when the checkout has moved past the ledger's pin.
  *
  * **Example** (Resolve the roots)
  *
@@ -65,7 +78,7 @@ export const resolveRunnerConfig = Effect.fn("Runner.resolveRunnerConfig")(funct
   const upstreamRoot = yield* Config.String("EFFECTED_UPSTREAM").pipe(
     Config.withDefault(path.join(home, "YeeBois", "references", "effect", "effected"))
   );
-  return RunnerConfig.make({ repoRoot, upstreamRoot });
+  return RunnerConfig.make({ repoRoot, upstreamRoot, upstreamCheckout: upstreamRoot, home });
 });
 
 /**

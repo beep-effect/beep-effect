@@ -99,3 +99,31 @@ Paths use `~`; no secrets, no machine ids.
   it means "unavailable". The scope guard now matches porcelain status letters instead of slicing
   by column and exempts every module's `.review/` directory; the lint, parity, canon and brief
   surfaces include `scratchpad/test/jsonl.test.ts`; the JSDoc law rejects a second lead paragraph.
+
+## 2026-10-08 — the upstream checkout moved past the ledger's pinned commit
+
+- **What:** the jsonl parity gate went red mid-round ("31 expected, 37 actual") although nothing in
+  the lab had lost an export, and a fix lane had to rebuild the oracle by hand before it could
+  compare behaviour.
+- **Evidence:** the ledger pins upstream `af7566a9`; `git -C ~/YeeBois/references/effect/effected
+  reflog` shows `pull --ff-only origin main` on 2026-10-07 13:51 and 2026-10-08 20:57 (the scheduled
+  references refresh), leaving HEAD at `6893a055`. 171 package files differ, including a redesigned
+  jsonl 0.11.0; jsonc and memfs differ only in `package.json`. Reviews run before the first pull read
+  the pinned code; anything reading the live checkout afterwards did not.
+- **Prevention:** the runner now resolves the oracle on every run: while the checkout stands on the
+  pin it reads the checkout, and once it has moved it reads a `git archive` export of the pinned
+  commit under `~/.cache/beep/effected-port/upstream/<commit>` (built once, with `node_modules` links
+  for `effect`, `@effect` and each `@effected` package so probes can import upstream source). The
+  reviewer brief names that path. Porting newer upstream is a separate refresh, not a drift.
+- **Same run:** `EFFECTED_UPSTREAM` silently switched off the editor-tsgo half of the check gate,
+  because the gate derived the home directory from the upstream path; the config now carries it.
+
+## 2026-10-08 — escapes typed through a tool call arrive as the literal character
+
+- **What:** a fix that wrote U+2028, U+2029 and U+FEFF as backslash-u escapes landed as the raw
+  characters, which is the very defect one finding asked to remove.
+- **Evidence:** fix lanes for jsonc round 2 (fable-2-6) and jsonl round 1; two raw BOM characters
+  that predate the round remain at `scratchpad/test/jsonl/JournalDeviations.test.ts:47` and `:66`.
+- **Prevention:** write such characters from code points (`String.fromCodePoint`) or patch the file
+  with a script, then check the bytes (`od -c`). Related: the repo's biome config excludes
+  `scratchpad/`, so formatting a lab file means piping it through `biome format --stdin-file-path`.

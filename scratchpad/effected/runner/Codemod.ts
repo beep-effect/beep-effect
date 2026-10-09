@@ -219,7 +219,7 @@ export const rewriteRootImports = (sourceFile: SourceFile): ImportRewrite => {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(codemodImports(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "glob"))) // true
+ * console.log(Effect.isEffect(codemodImports(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "glob"))) // true
  * ```
  *
  * @category commands

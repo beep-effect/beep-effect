@@ -154,7 +154,7 @@ const blocksOf = (sourceFile: SourceFile, file: string): ReadonlyArray<DocBlock>
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(extractDocBlocks(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "glob"))) // true
+ * console.log(Effect.isEffect(extractDocBlocks(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "glob"))) // true
  * ```
  *
  * @category queries
@@ -196,7 +196,7 @@ const indentOf = (sourceFile: SourceFile, start: number): string => {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" })
  * console.log(Effect.isEffect(applyDocBlockData(config, "glob", "[]"))) // true
  * ```
  *

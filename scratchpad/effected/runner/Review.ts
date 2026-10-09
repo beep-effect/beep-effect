@@ -92,6 +92,7 @@ export const LAW_SURFACES = [
 export interface RoundSubject {
   readonly round: number;
   readonly commit: string;
+  readonly oracle: string;
 }
 
 /**
@@ -102,7 +103,7 @@ export interface RoundSubject {
  * ```ts
  * import { reviewBrief } from "@beep/scratchpad/effected/runner/Review"
  *
- * const brief = reviewBrief("jsonl", { round: 1, commit: "abc123" })
+ * const brief = reviewBrief("jsonl", { round: 1, commit: "abc123", oracle: "/up" })
  * console.log(brief.includes("Module: jsonl. Commit: abc123. Round: 1.")) // true
  * ```
  *
@@ -121,7 +122,10 @@ export const reviewBrief: {
     [
       `You are a read-only reviewer. Module: ${module}. Commit: ${subject.commit}. Round: ${subject.round}.`,
       `Surface: ${A.join([`scratchpad/effected/${module}/**`, `scratchpad/test/${module}/**`, ...labPaths(module).extraTests], ", ")} (and nothing else).`,
-      `Upstream oracle: ~/YeeBois/references/effect/effected/packages/${module} (read-only).`,
+      `Upstream oracle: ${subject.oracle}/packages/${module} (read-only; upstream at the commit the ledger pins).`,
+      "The live checkout ~/YeeBois/references/effect/effected may have moved past that commit: compare against the",
+      "oracle path only. Its node_modules links effect, @effect and every @effected package, so a read-only probe",
+      "can import upstream source from it.",
       `Law surfaces: ${A.join(LAW_SURFACES, ", ")}.`,
       "Decisions D1-D20 in scratchpad/EFFECTED_PORT_GOAL.md bind you; D9 (behaviour-preserving), D11 (what is",
       "required), D15 (no unsafe assertions) and section 14 (deviation protocol) decide severity.",
@@ -162,7 +166,7 @@ export const reviewBrief: {
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(writeBrief(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonl", 1))) // true
+ * console.log(Effect.isEffect(writeBrief(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonl", 1))) // true
  * ```
  *
  * @category commands
@@ -178,7 +182,10 @@ export const writeBrief = Effect.fn("Review.writeBrief")(function* (
   const commit = yield* capture({ command: "git", args: ["rev-parse", "HEAD"], cwd: config.repoRoot });
   const directory = roundDir(module, round);
   yield* fs.makeDirectory(path.join(config.repoRoot, directory), { recursive: true });
-  yield* fs.writeFileString(path.join(config.repoRoot, directory, "BRIEF.md"), reviewBrief(module, { round, commit }));
+  yield* fs.writeFileString(
+    path.join(config.repoRoot, directory, "BRIEF.md"),
+    reviewBrief(module, { round, commit, oracle: config.upstreamRoot })
+  );
   return { directory, commit, brief: `${directory}/BRIEF.md` };
 });
 
@@ -273,7 +280,7 @@ export const outOfScopeChanges = (porcelain: string): ReadonlyArray<string> =>
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(runCliSeats(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonl", 1))) // true
+ * console.log(Effect.isEffect(runCliSeats(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonl", 1))) // true
  * ```
  *
  * @category commands

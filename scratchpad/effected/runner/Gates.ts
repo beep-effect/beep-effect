@@ -136,7 +136,7 @@ const describe = (entry: ExportEntry): string => `${entry.entry} ${entry.name} (
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const program = parity(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc", true)
+ * const program = parity(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc", true)
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
@@ -319,8 +319,7 @@ export const compareVersions: {
 const stageEditorTsgo = Effect.fn("Gates.stageEditorTsgo")(function* (config: RunnerConfig) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = path.dirname(path.dirname(path.dirname(path.dirname(config.upstreamRoot))));
-  const cacheRoot = path.join(home, ".cache", "JetBrains");
+  const cacheRoot = path.join(config.home, ".cache", "JetBrains");
   if (!(yield* fs.exists(cacheRoot))) return O.none<{ readonly version: string; readonly binary: string }>();
   const products = yield* fs.readDirectory(cacheRoot);
   const candidates = yield* Effect.forEach(products, Effect.fnUntraced(function* (product) {
@@ -356,7 +355,7 @@ const stageEditorTsgo = Effect.fn("Gates.stageEditorTsgo")(function* (config: Ru
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(check(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * console.log(Effect.isEffect(check(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc"))) // true
  * ```
  *
  * @category validation
@@ -542,7 +541,7 @@ const mirrorForImports = Effect.fn("Gates.mirrorForImports")(function* (
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(lint(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * console.log(Effect.isEffect(lint(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc"))) // true
  * ```
  *
  * @category validation
@@ -600,7 +599,7 @@ export const lint = Effect.fn("Gates.lint")(function* (config: RunnerConfig, tar
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(test(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc", false))) // true
+ * console.log(Effect.isEffect(test(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc", false))) // true
  * ```
  *
  * @category validation
@@ -674,7 +673,7 @@ export const DOCGEN_CANARY_SRC = "effected/.canary/docgen";
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" })
+ * const config = RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" })
  * console.log(Effect.isEffect(writeDocgenConfig(config, { srcDir: "effected/jsonc", configFile: "docgen.jsonc.json" }))) // true
  * ```
  *
@@ -758,7 +757,7 @@ const jsdocLaw = Effect.fn("Gates.jsdocLaw")(function* (config: RunnerConfig, ta
  * import { RunnerConfig } from "@beep/scratchpad/effected/runner/Paths"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(docgen(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up" }), "jsonc"))) // true
+ * console.log(Effect.isEffect(docgen(RunnerConfig.make({ repoRoot: "/repo", upstreamRoot: "/up", upstreamCheckout: "/up", home: "/home/me" }), "jsonc"))) // true
  * ```
  *
  * @category validation
