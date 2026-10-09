@@ -721,6 +721,8 @@ without claiming completion.
 
 | 2026-10-09 | C Ci bootstrap patterns | The schema module is the sole pattern source; `ci patterns --write` owns its tracked JSON projection, checked by the CI fixtures. Managed docgen examples require ES2022 + erasable syntax while package builds require NodeNext JSON attributes; a generated declarative view preserves both contracts without global compiler-policy changes. | Revert this wave to restore the previous projection/import arrangement; no workstation setting is changed. |
 
+| 2026-10-09 | C restarts only its unadmitted publish waiter through the current canonical wrapper after the shared slot floor changes. | The wrapper loads slot count once; the old waiter sees three slots while new jobs see four. Read-only process checks prove the C waiter has only its queue sleep child; no publication or other lane is stopped, and C changes no cap. | Resubmit the same reviewed command through beep-heavy; shared configuration remains with its owner. |
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |

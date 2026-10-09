@@ -383,3 +383,10 @@ are available. Cancellation is not a proof failure or a package pass.
   string, whose type already matches the JSON codec's encoded type. The
   fixture now keeps compile-time input checking; the successful docgen result
   is retained because this repair only touches a test decoder.
+
+- C queue provenance: beep-heavy loads the slot floor once. An old C publish
+  waiter still searches three slots after the owner's shared floor expands
+  new jobs to four. Its main process is only the queue wrapper with a sleep
+  child. C stops only that verified unadmitted waiter and resubmits through
+  the current canonical route, without changing a cap or another lane. Live
+  floor refresh or a queue notification would avoid this stale-admission wait.
