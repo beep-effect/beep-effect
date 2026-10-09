@@ -2105,13 +2105,29 @@
       "wave": 1,
       "position": 9,
       "stage": 0,
-      "status": "pending",
+      "status": "in-progress",
       "provisionalHome": "foundation/modeling",
       "upstreamPaths": {
         "src": "packages/github-commands/src",
         "test": "packages/github-commands/__test__"
       },
-      "exportsExpected": [],
+      "exportsExpected": [
+        {
+          "name": "AnnotationProperties",
+          "kind": "type",
+          "entry": "."
+        },
+        {
+          "name": "CommandNeutralizer",
+          "kind": "both",
+          "entry": "."
+        },
+        {
+          "name": "WorkflowCommand",
+          "kind": "both",
+          "entry": "."
+        }
+      ],
       "exportsAdded": [],
       "newDeps": [],
       "fixturesBytes": 0,
