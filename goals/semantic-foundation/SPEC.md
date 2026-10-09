@@ -228,3 +228,10 @@ tests and qualified coverage. The full real-edition proof remains blocked.
   unrelated repairs to the orchestrator for one main PR. Resume by merging
   the main repair and retrying Yeet; no gate waiver or unrelated inventory
   refresh is introduced by this lane.
+
+### Resume 8 XML decisions
+
+| Date | Decision | Reason | How to reverse |
+| --- | --- | --- | --- |
+| 2026-10-09 | Admit singleton or repeated IPC/CPC title containers and Nice headings with ArrayEnsure; join only admitted title content. | Run-8 ruling authorizes cardinality fixes; full CPC editions contain repeated CPC-specific-text siblings. Required fields remain required; the shared XML reader is unchanged. | Revert the consumer/test repair together; M2 runtime admission becomes incomplete. |
+| 2026-10-09 | Normalize CPC section/class/subclass parents and depths by symbol, preserving XML hierarchy for groups/subgroups. | The A21 range container nests A22 in the section master, while the A22B master starts at its subclass; container nesting otherwise creates conflicting parents. | Revert the normalization and range fixture together; retain the fail-closed duplicate-parent check. |

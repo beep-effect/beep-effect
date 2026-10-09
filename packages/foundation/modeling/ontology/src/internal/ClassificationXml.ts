@@ -26,15 +26,15 @@ import type { ClassificationPin } from "../Classification.models.ts";
 
 const TextNode = S.Struct({ "#text": S.OptionFromOptionalKey(S.String) });
 const Text = S.Union([S.String, TextNode]);
-const TitlePart = S.Struct({ text: S.OptionFromOptionalKey(Text) });
+const TitlePart = S.Struct({ text: Text.pipe(S.ArrayEnsure, S.OptionFromOptionalKey) });
 const IpcTitle = S.Struct({
-  title: S.OptionFromOptionalKey(S.Struct({ titlePart: S.ArrayEnsure(TitlePart) })),
+  title: S.Struct({ titlePart: S.ArrayEnsure(TitlePart) }).pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
 });
 
 const IpcEntryFields = S.Struct({
   kind: S.String,
   symbol: S.OptionFromOptionalKey(S.String),
-  textBody: S.OptionFromOptionalKey(IpcTitle),
+  textBody: IpcTitle.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
 });
 
 interface IpcEntryEncoded extends S.Codec.Encoded<typeof IpcEntryFields> {
@@ -51,14 +51,14 @@ class IpcEntry extends S.Class<IpcEntry>("ClassificationXml/IpcEntry")({
 const CpcTitlePart = S.Struct({
   text: Text.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
   "CPC-specific-text": S.OptionFromOptionalKey(
-    S.Struct({ text: S.ArrayEnsure(Text).pipe(S.withDecodingDefaultKey(Effect.succeed([]))) })
+    S.Struct({ text: S.ArrayEnsure(Text).pipe(S.withDecodingDefaultKey(Effect.succeed([]))) }).pipe(S.ArrayEnsure)
   ),
 });
 const CpcTitle = S.Struct({ "title-part": S.ArrayEnsure(CpcTitlePart) });
 
 const CpcEntryFields = S.Struct({
   "classification-symbol": S.String,
-  "class-title": S.OptionFromOptionalKey(CpcTitle),
+  "class-title": CpcTitle.pipe(S.ArrayEnsure, S.OptionFromOptionalKey),
 });
 
 interface CpcEntryEncoded extends S.Codec.Encoded<typeof CpcEntryFields> {
@@ -81,7 +81,7 @@ const NiceClass = S.Struct({
 });
 const NiceClassText = S.Struct({
   idRef: S.String,
-  Heading: S.Struct({ HeadingItem: S.ArrayEnsure(TextNode) }),
+  Heading: S.ArrayEnsure(S.Struct({ HeadingItem: S.ArrayEnsure(TextNode) })),
 });
 const NiceGoodText = S.Struct({
   idRef: S.String,
@@ -164,11 +164,19 @@ const walkIpc = Effect.fnUntraced(function* (
     entries,
     Effect.fnUntraced(function* (entry) {
       const admitted = isIpcConceptEntryKind(entry.kind);
-      const title = O.flatMap(entry.textBody, (body) => body.title);
-      const parts = O.map(title, (value) =>
-        A.map(value.titlePart, (part) => O.match(part.text, { onNone: () => "", onSome: textValue }))
+      const prefLabel = label(
+        A.flatMap(O.toArray(entry.textBody), (bodies) =>
+          A.flatMap(bodies, (body) =>
+            A.flatMap(O.toArray(body.title), (titles) =>
+              A.flatMap(titles, (title) =>
+                A.flatMap(title.titlePart, (part) =>
+                  A.flatMap(O.toArray(part.text), (texts) => A.map(texts, textValue))
+                )
+              )
+            )
+          )
+        )
       );
-      const prefLabel = label(O.getOrElse(parts, () => []));
       const symbol = O.map(entry.symbol, ipcNotation);
       const concept =
         admitted && O.isSome(symbol) && Str.isNonEmpty(prefLabel)
@@ -226,7 +234,9 @@ const cpcLabel = (title: typeof CpcTitle.Type) =>
     A.flatMap(title["title-part"], (part) =>
       A.appendAll(
         A.flatMap(O.toArray(part.text), (texts) => A.map(texts, textValue)),
-        O.match(part["CPC-specific-text"], { onNone: () => [], onSome: (value) => A.map(value.text, textValue) })
+        A.flatMap(O.toArray(part["CPC-specific-text"]), (values) =>
+          A.flatMap(values, (value) => A.map(value.text, textValue))
+        )
       )
     )
   );
@@ -246,7 +256,7 @@ const walkCpc = Effect.fnUntraced(function* (
     entries,
     Effect.fnUntraced(function* (entry) {
       const notation = entry["classification-symbol"];
-      const title = O.match(entry["class-title"], { onNone: () => "", onSome: cpcLabel });
+      const title = label(A.flatMap(O.toArray(entry["class-title"]), (titles) => A.map(titles, cpcLabel)));
       const prefLabel = Str.isNonEmpty(title) ? title : notation;
       const repeated = O.exists(parent, (value) => value.notation === notation);
       const depth = O.match(parent, {
@@ -267,9 +277,11 @@ const walkCpc = Effect.fnUntraced(function* (
             )
           );
       const withRootParent = O.map(concept, (value) =>
-        O.isNone(parent)
+        O.isNone(parent) || Str.length(notation) <= 4
           ? ClassificationConcept.make({
               ...value,
+              depth:
+                Str.length(notation) === 1 ? 0 : Str.length(notation) === 3 ? 1 : Str.length(notation) === 4 ? 2 : 3,
               broader: A.map(O.toArray(prefixParent(notation)), (symbol) => classificationConceptIri(pin, symbol)),
             })
           : value
@@ -366,7 +378,11 @@ export const parseNice = Effect.fnUntraced(function* (
         const classConcept = yield* makeConcept(
           pin,
           entry.classNumber,
-          label(A.map(classText.Heading.HeadingItem, (node) => O.getOrElse(node["#text"], () => ""))),
+          label(
+            A.flatMap(classText.Heading, (heading) =>
+              A.map(heading.HeadingItem, (node) => O.getOrElse(node["#text"], () => ""))
+            )
+          ),
           O.none(),
           0
         ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice class")));

@@ -467,4 +467,109 @@ it.layer(Layer.merge(ClassificationRegistry.layer, BunFileSystem.layer))("classi
       }
     })
   );
+  it.effect(
+    "joins repeated title containers and CPC-specific siblings from synthetic cardinality fixtures",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const fs = yield* FileSystem.FileSystem;
+      const ipcText = "<text>Synthetic IPC section</text>";
+      const ipcPart = `<titlePart>${ipcText}</titlePart>`;
+      const ipcTitle = `<title>${ipcPart}</title>`;
+      const cpcText = "<text>Synthetic CPC section</text>";
+      const cpcPart = `<title-part>${cpcText}<reference><text>Forbidden reference</text></reference></title-part>`;
+      const cases: readonly (readonly [ClassificationPin, string, string, string, string, string])[] = [
+        [ipcPin, "ipc.xml", ipcText, `${ipcText}${ipcText}`, "A", "Synthetic IPC section; Synthetic IPC section"],
+        [ipcPin, "ipc.xml", ipcPart, `${ipcPart}${ipcPart}`, "A", "Synthetic IPC section; Synthetic IPC section"],
+        [ipcPin, "ipc.xml", ipcTitle, `${ipcTitle}${ipcTitle}`, "A", "Synthetic IPC section; Synthetic IPC section"],
+        [
+          ipcPin,
+          "ipc.xml",
+          `<textBody>${ipcTitle}</textBody>`,
+          `<textBody>${ipcTitle}</textBody><textBody>${ipcTitle}</textBody>`,
+          "A",
+          "Synthetic IPC section; Synthetic IPC section",
+        ],
+        [
+          cpcPin,
+          ".xml",
+          cpcText,
+          `<CPC-specific-text>${cpcText}</CPC-specific-text><CPC-specific-text>${cpcText}</CPC-specific-text>`,
+          "A",
+          "Synthetic CPC section; Synthetic CPC section",
+        ],
+        [cpcPin, ".xml", cpcPart, `${cpcPart}${cpcPart}`, "A", "Synthetic CPC section; Synthetic CPC section"],
+        [
+          cpcPin,
+          ".xml",
+          `<class-title>${cpcPart}</class-title>`,
+          `<class-title>${cpcPart}</class-title><class-title>${cpcPart}</class-title>`,
+          "A",
+          "Synthetic CPC section; Synthetic CPC section",
+        ],
+        [
+          nicePin,
+          "nice-texts.xml",
+          '<Heading><HeadingItem id="h1">Synthetic goods class</HeadingItem></Heading>',
+          '<Heading><HeadingItem id="h1">Synthetic goods class</HeadingItem></Heading><Heading><HeadingItem id="h2">Second synthetic heading</HeadingItem></Heading>',
+          "1",
+          "Synthetic goods class; Second synthetic heading",
+        ],
+        [
+          nicePin,
+          "nice-texts.xml",
+          '<HeadingItem id="h1">Synthetic goods class</HeadingItem>',
+          '<HeadingItem id="h1">Synthetic goods class</HeadingItem><HeadingItem id="h2">Second synthetic heading</HeadingItem>',
+          "1",
+          "Synthetic goods class; Second synthetic heading",
+        ],
+        [
+          nicePin,
+          "nice-texts.xml",
+          '<Label id="l1">Synthetic goods term</Label>',
+          '<Label id="l1">Synthetic goods term</Label><Label id="l2">Second synthetic term</Label>',
+          "010001",
+          "Synthetic goods term; Second synthetic term",
+        ],
+        [
+          nicePin,
+          "nice-texts.xml",
+          '<Indication><Label id="l1">Synthetic goods term</Label></Indication>',
+          '<Indication><Label id="l1">Synthetic goods term</Label></Indication><Indication><Label id="l2">Second synthetic term</Label></Indication>',
+          "010001",
+          "Synthetic goods term; Second synthetic term",
+        ],
+      ];
+      yield* Effect.forEach(
+        cases,
+        Effect.fnUntraced(function* ([pin, suffix, before, after, notation, expected]) {
+          const snapshot = yield* registry.load(manifest, vendor, pin).pipe(
+            Effect.provideService(FileSystem.FileSystem, {
+              ...fs,
+              readFileString: (path) =>
+                fs
+                  .readFileString(path)
+                  .pipe(
+                    Effect.map((content) =>
+                      Str.endsWith(suffix)(path) ? Str.replace(before, after)(content) : content
+                    )
+                  ),
+            })
+          );
+          expect((yield* registry.resolve(snapshot, pin, notation)).prefLabel).toBe(expected);
+        })
+      );
+    })
+  );
+  it.effect(
+    "normalizes CPC class-range containers without making one class broader than another",
+    Effect.fnUntraced(function* () {
+      const registry = yield* ClassificationRegistry;
+      const snapshot = yield* registry.load(manifest, vendor, cpcPin);
+      expect(A.map(yield* registry.broader(snapshot, cpcPin, "A22B"), (concept) => concept.notation)).toEqual([
+        "A22",
+        "A",
+      ]);
+      expect(A.map(yield* registry.broader(snapshot, cpcPin, "A22"), (concept) => concept.notation)).toEqual(["A"]);
+    })
+  );
 });

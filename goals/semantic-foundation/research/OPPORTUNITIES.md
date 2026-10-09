@@ -315,3 +315,17 @@ blocker was attributed; its partial full-docgen replay is not a green proof.
 - **Evidence:** after repeated title children and empty admitted child lists were handled, the remaining diagnostic points to `cpc-scheme-A01G.xml`, notation `A01G9/24`: one title part has two `CPC-specific-text` siblings, while the boundary expects one object.
 - **What would have prevented it:** a census of cardinality variants across all official scheme files, turned into synthetic fixtures before runtime admission.
 - **Disposition:** stop under the brief's repeated-blocker rule; keep M2/M3 in progress and publish no incomplete wave. Resume requires the orchestrator's next ruling; preserve the bounded, package-verified candidate.
+
+## 2026-10-09 — CPC class-range containers are not broader class concepts
+
+- **Work:** run-8 full-edition proof after admitting repeated title containers.
+- **Evidence:** XML decoding completed, then snapshot validation failed with
+  `Conflicting parents for A22B`. The section file nests identifiers
+  `A → A21 → A22 → A22B`, while the subclass file starts at `A22B`.
+  The intermediate A21 container groups classes; it is not A22's broader class.
+- **Attribution:** introduced interpretation defect in the lane-owned CPC walker.
+- **Response:** derive section/class/subclass parents and depths from their
+  symbols, retaining the source tree for group and subgroup hierarchy. Add a
+  synthetic range-container fixture with the duplicate subclass root.
+- **Prevention:** include cross-file duplicate identity and class-range wrappers
+  in the fixture census, beyond repeated-element shapes.
