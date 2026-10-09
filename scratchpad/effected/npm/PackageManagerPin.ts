@@ -10,6 +10,7 @@
 // `sha512.abc`, and a malformed tail after a `+` is a typed failure, never a
 // fallback to build-metadata parsing.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { SemVer } from "../semver/index.ts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -18,6 +19,8 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { CorepackIntegrityHash } from "./IntegrityHash.ts";
+
+const $I = $ScratchpadId.create("effected/npm/PackageManagerPin");
 
 /**
  * Indicates that a string could not be parsed as a corepack package-manager
@@ -31,11 +34,11 @@ import { CorepackIntegrityHash } from "./IntegrityHash.ts";
  *
  * @public
  */
-export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageManagerPinError>()(
+export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageManagerPinError>($I`InvalidPackageManagerPinError`)(
 	"InvalidPackageManagerPinError",
 	{
 		/** The raw input string that failed validation. */
-		input: S.String,
+		input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
 		/**
 		 * Which component of the pin failed: `format` (no `@` separator at all),
 		 * `name` (not one of the four supported package managers), `version` (not
@@ -43,8 +46,8 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
 		 * all land here), or `integrity` (the tail after `+` is not a corepack
 		 * `<algo>.<hex>` hash).
 		 */
-		reason: S.Literals(["format", "name", "version", "integrity"]),
-	},
+		reason: S.Literals(["format", "name", "version", "integrity"]).annotateKey({ description: "Which component of the pin failed: `format` (no `@` separator at all), `name` (not one of the four supported package managers), `version` (not an exact SemVer 2.0.0 version — ranges, partial versions and dist-tags all land here), or `integrity` (the tail after `+` is not a corepack `<algo>.<hex>` hash)." }),
+	}, $I.annote("InvalidPackageManagerPinError", { description: "Indicates that a string could not be parsed as a corepack package-manager pin (`<name>@<version>[+<integrity>]`)." }),
 ) {
 	override get message(): string {
 		return this.reason === "format"
@@ -86,7 +89,7 @@ export class InvalidPackageManagerPinError extends S.TaggedError<InvalidPackageM
  *
  * @public
  */
-export const PackageManagerPinName = S.Literals(["npm", "pnpm", "yarn", "bun"]);
+export const PackageManagerPinName = S.Literals(["npm", "pnpm", "yarn", "bun"]).pipe($I.annoteSchema("PackageManagerPinName", { description: "The four package managers a corepack pin can name." }));
 
 /**
  * The decoded type of {@link (PackageManagerPinName:variable)}:
@@ -146,23 +149,23 @@ const pinVersion = SemVer.pipe(
  *
  * @public
  */
-export class PackageManagerPin extends S.Class<PackageManagerPin>("PackageManagerPin")({
+export class PackageManagerPin extends S.Class<PackageManagerPin>($I`PackageManagerPin`)({
 	/** The package-manager name (`npm`, `pnpm`, `yarn` or `bun`). */
-	name: PackageManagerPinName,
+	name: PackageManagerPinName.annotateKey({ description: "The package-manager name (`npm`, `pnpm`, `yarn` or `bun`)." }),
 	/**
 	 * The exact pinned version. Never carries build metadata — the pin grammar
 	 * cannot express it (see the class remarks), and a version constructed with
 	 * build identifiers is rejected at construction.
 	 */
-	version: pinVersion,
+	version: pinVersion.annotateKey({ description: "The exact pinned version. Never carries build metadata — the pin grammar cannot express it (see the class remarks), and a version constructed with build identifiers is rejected at construction." }),
 	/**
 	 * The optional integrity hash (e.g. `sha512.abc…`):
 	 * {@link (CorepackIntegrityHash:variable)}, the shared restriction of the
 	 * `IntegrityHash` brand to the corepack `<algo>.<hex>` form. Absent when the
 	 * pin carries no `+<integrity>` tail — never present-but-`undefined`.
 	 */
-	integrity: S.optionalKey(CorepackIntegrityHash),
-}) {
+	integrity: S.optionalKey(CorepackIntegrityHash).annotateKey({ description: "The optional integrity hash (e.g. `sha512.abc…`): (CorepackIntegrityHash:variable), the shared restriction of the `IntegrityHash` brand to the corepack `<algo>.<hex>` form. Absent when the pin carries no `+<integrity>` tail — never present-but-`undefined`." }),
+}, $I.annote("PackageManagerPin", { description: "A corepack package-manager pin: the `<name>@<version>[+<integrity>]` triple (e.g. `pnpm@11.17.0+sha512.abc…`), independent of any `package.json` field." })) {
 	/**
 	 * Schema transformation between the `<name>@<version>[+<integrity>]` string
 	 * and a {@link PackageManagerPin}. Decoding parses via

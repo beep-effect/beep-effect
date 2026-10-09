@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Run } from "../commands/index.ts";
 import type * as Scope from "effect/Scope";
 import * as Context from "effect/Context";
@@ -13,12 +14,14 @@ import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import type { PublishedVersion } from "./NpmRegistry.ts";
 
+const $I = $ScratchpadId.create("effected/npm/PackageTarball");
+
 /**
  * Raised when a published tarball cannot be fetched, verified or extracted.
  *
  * @public
  */
-export class TarballError extends S.TaggedError<TarballError>()("TarballError", {
+export class TarballError extends S.TaggedError<TarballError>($I`TarballError`)("TarballError", {
 	/**
 	 * `notFound` — the registry recorded no tarball for this version, or the
 	 * tarball URL answered 404. `http` — any other transport or non-2xx
@@ -36,20 +39,20 @@ export class TarballError extends S.TaggedError<TarballError>()("TarballError", 
 	 * `integrityUnverifiable` — the registry vouched for an integrity but no
 	 * digest could be computed to check it, so nothing was compared.
 	 */
-	reason: S.Literals(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"]),
+	reason: S.Literals(["notFound", "http", "integrityMismatch", "integrityUnverifiable", "extractFailed"]).annotateKey({ description: "`notFound` — the registry recorded no tarball for this version, or the tarball URL answered 404. `http` — any other transport or non-2xx failure. `integrityMismatch` — the bytes did not match the integrity the registry vouched for. `extractFailed` — the bytes could not be written or unpacked." }),
 	/** The package being fetched. */
-	package: S.String,
+	package: S.String.annotateKey({ description: "The package being fetched." }),
 	/** The version being fetched. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The version being fetched." }),
 	/** The HTTP status, for `reason: "http"` and a 404 `notFound`. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, for `reason: \"http\"` and a 404 `notFound`." }),
 	/** The integrity the registry vouched for, for `reason: "integrityMismatch"`. */
-	expected: S.optionalKey(S.String),
+	expected: S.optionalKey(S.String).annotateKey({ description: "The integrity the registry vouched for, for `reason: \"integrityMismatch\"`." }),
 	/** The integrity the downloaded bytes actually have. */
-	actual: S.optionalKey(S.String),
+	actual: S.optionalKey(S.String).annotateKey({ description: "The integrity the downloaded bytes actually have." }),
 	/** The underlying failure, preserved structurally. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure, preserved structurally." }),
+}, $I.annote("TarballError", { description: "Raised when a published tarball cannot be fetched, verified or extracted." })) {
 	override get message(): string {
 		const what = `${this.package}@${this.version}`;
 		switch (this.reason) {
@@ -235,7 +238,7 @@ const make = Effect.fnUntraced(function* () {
  * @public
  */
 export class PackageTarball extends Context.Service<PackageTarball, PackageTarballShape>()(
-	"@beep/scratchpad/effected/npm/PackageTarball",
+	$I`PackageTarball`,
 ) {
 	/**
 	 * The live service, over core's `FileSystem`, `Crypto`, `HttpClient` and

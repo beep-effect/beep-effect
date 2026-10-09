@@ -17,6 +17,7 @@
 // Range detection decodes `@effected/semver`'s `Range.FromString` purely via
 // `Schema.decodeUnknownExit` — no `Effect.runSync` inside a getter.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import { Range } from "../semver/index.ts";
 import type * as Brand from "effect/Brand";
 import * as Effect from "effect/Effect";
@@ -26,6 +27,8 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
+const $I = $ScratchpadId.create("effected/npm/DependencySpecifier");
+
 /**
  * Indicates that a string could not be parsed as a valid dependency specifier.
  *
@@ -34,12 +37,12 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
  *
  * @public
  */
-export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDependencySpecifierError>()(
+export class InvalidDependencySpecifierError extends S.TaggedError<InvalidDependencySpecifierError>($I`InvalidDependencySpecifierError`)(
 	"InvalidDependencySpecifierError",
 	{
 		/** The raw input string that failed validation. */
-		input: S.String,
-	},
+		input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
+	}, $I.annote("InvalidDependencySpecifierError", { description: "Indicates that a string could not be parsed as a valid dependency specifier." }),
 ) {
 	override get message(): string {
 		return `Invalid dependency specifier "${this.input}": not a recognized specifier`;
@@ -184,12 +187,12 @@ export const isValidDependencySpecifier = (value: string): boolean =>
  *
  * @public
  */
-export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>()("catalog", {
+export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>($I`CatalogSpecifier`)("catalog", {
 	/** The original specifier string. */
-	raw: S.String,
+	raw: S.String.annotateKey({ description: "The original specifier string." }),
 	/** The catalog name, or `Option.none()` for the default catalog. */
-	name: S.Option(S.String),
-}) {}
+	name: S.Option(S.String).annotateKey({ description: "The catalog name, or `Option.none()` for the default catalog." }),
+}, $I.annote("CatalogSpecifier", { description: "A `catalog:` reference. `name` carries the catalog name, or `Option.none()` for the default catalog (`catalog:`)." })) {}
 
 /**
  * A `workspace:` reference. `range` carries the part after `workspace:` — a
@@ -197,12 +200,12 @@ export class CatalogSpecifier extends S.TaggedClass<CatalogSpecifier>()("catalog
  *
  * @public
  */
-export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>()("workspace", {
+export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>($I`WorkspaceSpecifier`)("workspace", {
 	/** The original specifier string. */
-	raw: S.String,
+	raw: S.String.annotateKey({ description: "The original specifier string." }),
 	/** The part after `workspace:` (e.g. `*`, `^1.2.3`, or an alias form). */
-	range: S.String,
-}) {
+	range: S.String.annotateKey({ description: "The part after `workspace:` (e.g. `*`, `^1.2.3`, or an alias form)." }),
+}, $I.annote("WorkspaceSpecifier", { description: "A `workspace:` reference. `range` carries the part after `workspace:` — a range modifier (`*`, `^`, `~`), a concrete range, or an alias form." })) {
 	/**
 	 * The pnpm publish-time projection of this specifier against a concrete
 	 * workspace version: `*` (or an empty range) becomes `version`, `~` becomes
@@ -230,20 +233,20 @@ export class WorkspaceSpecifier extends S.TaggedClass<WorkspaceSpecifier>()("wor
  *
  * @public
  */
-export class RangeSpecifier extends S.TaggedClass<RangeSpecifier>()("range", {
+export class RangeSpecifier extends S.TaggedClass<RangeSpecifier>($I`RangeSpecifier`)("range", {
 	/** The original specifier string. */
-	raw: S.String,
-}) {}
+	raw: S.String.annotateKey({ description: "The original specifier string." }),
+}, $I.annote("RangeSpecifier", { description: "A plain semver range or exact version (e.g. `^1.2.3`, `1.x`, `>=1 <2`)." })) {}
 
 /**
  * A bare dist-tag (e.g. `latest`, `next`).
  *
  * @public
  */
-export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>()("dist-tag", {
+export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>($I`DistTagSpecifier`)("dist-tag", {
 	/** The original specifier string (also the tag name). */
-	raw: S.String,
-}) {}
+	raw: S.String.annotateKey({ description: "The original specifier string (also the tag name)." }),
+}, $I.annote("DistTagSpecifier", { description: "A bare dist-tag (e.g. `latest`, `next`)." })) {}
 
 /**
  * The honest fallback for `file:` / `link:` / `portal:` / git / URL / `npm:`
@@ -251,10 +254,10 @@ export class DistTagSpecifier extends S.TaggedClass<DistTagSpecifier>()("dist-ta
  *
  * @public
  */
-export class RawSpecifier extends S.TaggedClass<RawSpecifier>()("raw", {
+export class RawSpecifier extends S.TaggedClass<RawSpecifier>($I`RawSpecifier`)("raw", {
 	/** The original specifier string. */
-	raw: S.String,
-}) {}
+	raw: S.String.annotateKey({ description: "The original specifier string." }),
+}, $I.annote("RawSpecifier", { description: "The honest fallback for `file:` / `link:` / `portal:` / git / URL / `npm:` forms this concept does not further interpret." })) {}
 
 /**
  * A dependency specifier classified into one of the five resolver-relevant

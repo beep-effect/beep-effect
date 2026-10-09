@@ -16,7 +16,10 @@
 // replayed `updateConfig` hooks is a consumer concern (config IO), not this
 // pure-tier module's.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/ReleaseAgeGate");
 
 // pnpm's release-age is measured in minutes; the filter converts to ms.
 const MS_PER_MINUTE = 60_000;
@@ -37,10 +40,10 @@ const MS_PER_MINUTE = 60_000;
  */
 export const PartialReleaseAgeGate = S.Struct({
 	/** Minutes a release must age; absent means this source sets no age. */
-	ageMinutes: S.optionalKey(S.Finite),
+	ageMinutes: S.optionalKey(S.Finite).annotateKey({ description: "Minutes a release must age; absent means this source sets no age." }),
 	/** Exempt package-name patterns; absent means this source adds no exemptions. */
-	exclude: S.String.pipe(S.Array, S.optionalKey),
-});
+	exclude: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Exempt package-name patterns; absent means this source adds no exemptions." }),
+}).pipe($I.annoteSchema("PartialReleaseAgeGate", { description: "A source's partial contribution to a ReleaseAgeGate: the effective gate is assembled from more than one place (inline `pnpm-workspace.yaml` keys, replayed `updateConfig` hooks, `pnpm config get` output), and each source may set the age, the exclude list, both, or neither. Absent fields contribute nothing to the combination." }));
 
 /**
  * One source's partial contribution to a release-age gate. All fields optional.
@@ -128,12 +131,12 @@ const matchesExclude = (name: string, patterns: readonly string[]): boolean =>
  *
  * @public
  */
-export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>("ReleaseAgeGate")({
+export class ReleaseAgeGate extends S.Class<ReleaseAgeGate>($I`ReleaseAgeGate`)({
 	/** Minutes a published version must age before it is eligible (non-negative, finite). */
-	ageMinutes: AgeMinutes,
+	ageMinutes: AgeMinutes.annotateKey({ description: "Minutes a published version must age before it is eligible (non-negative, finite)." }),
 	/** Package-name patterns exempt from the gate (exact names or `*`-globs). */
-	exclude: S.Array(S.String),
-}) {
+	exclude: S.Array(S.String).annotateKey({ description: "Package-name patterns exempt from the gate (exact names or `*`-globs)." }),
+}, $I.annote("ReleaseAgeGate", { description: "pnpm's publish-time release-age gate: the number of minutes a published version must age before it is eligible, and the set of package-name patterns exempt from the gate. Mirrors pnpm's `minimumReleaseAge` / `minimumReleaseAgeExclude` config so a resolver can drop too-young candidate versions before picking, avoiding `ERR_PNPM_NO_MATURE_MATCHING_VERSION`." })) {
 	/**
 	 * Combine partial contributions from multiple sources into one effective
 	 * gate: **strictest age wins** (the maximum of the contributed ages,

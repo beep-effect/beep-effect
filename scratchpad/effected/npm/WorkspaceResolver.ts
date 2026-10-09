@@ -8,11 +8,14 @@
 // dependency edge runs `CatalogResolver -> WorkspaceResolver` one way and
 // `noImportCycles` stays satisfied.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/WorkspaceResolver");
 
 /**
  * Raised when a `catalog:` or `workspace:` specifier cannot be resolved
@@ -53,10 +56,10 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class DependencyResolutionError extends S.TaggedError<DependencyResolutionError>()(
+export class DependencyResolutionError extends S.TaggedError<DependencyResolutionError>($I`DependencyResolutionError`)(
 	"DependencyResolutionError",
 	{
-		specifier: S.String,
+		specifier: S.String.annotateKey({ description: "The dependency specifier that could not be resolved" }),
 		/**
 		 * Why the specifier could not be resolved.
 		 *
@@ -72,9 +75,9 @@ export class DependencyResolutionError extends S.TaggedError<DependencyResolutio
 		reason: S.Literals(["mechanism", "no-version"]).pipe(
 			S.withDecodingDefaultKey(Effect.succeed("mechanism" as const)),
 			S.withConstructorDefault(Effect.succeed("mechanism" as const)),
-		),
-		cause: S.Defect(),
-	},
+		).annotateKey({ description: "Why the specifier could not be resolved." }),
+		cause: S.Defect().annotateKey({ description: "The originating resolution failure, preserved structurally; absent when a known workspace member declares no version" }),
+	}, $I.annote("DependencyResolutionError", { description: "Raised when a `catalog:` or `workspace:` specifier cannot be resolved because the resolution mechanism itself failed — not for an ordinary unmatched specifier, which resolves to `Option.none()` instead. Both CatalogResolver and WorkspaceResolver fail with it." }),
 ) {
 	/** Renders `specifier` and `reason` into a one-line failure message. */
 	override get message(): string {
@@ -123,7 +126,7 @@ export class WorkspaceResolver extends Context.Service<
 	{
 		readonly versionOf: (packageName: string) => Effect.Effect<O.Option<string>, DependencyResolutionError>;
 	}
->()("@beep/scratchpad/effected/npm/WorkspaceResolver") {
+>()($I`WorkspaceResolver`) {
 	/**
 	 * No-op default: `versionOf` always succeeds with `Option.none()`, never
 	 * consulting an actual workspace. A pure `Layer.succeed`, bound to a

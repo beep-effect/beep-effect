@@ -1,9 +1,12 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { LocalExec } from "../commands/index.ts";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/process";
 import { PublishError } from "./PublishError.ts";
+
+const $I = $ScratchpadId.create("effected/npm/NpmExecutor");
 
 /**
  * Which `npm` runs a publish command.
@@ -19,22 +22,22 @@ import { PublishError } from "./PublishError.ts";
  *
  * @public
  */
-export class NpmExecutor extends S.Class<NpmExecutor>("NpmExecutor")({
+export class NpmExecutor extends S.Class<NpmExecutor>($I`NpmExecutor`)({
 	/**
 	 * The npm package spec to fetch and run (`"npm@11"`). Absent means the
 	 * ambient `npm` on `PATH`.
 	 */
-	spec: S.optionalKey(S.String),
+	spec: S.optionalKey(S.String).annotateKey({ description: "The npm package spec to fetch and run (`\"npm@11\"`). Absent means the ambient `npm` on `PATH`." }),
 	/**
 	 * The npm cache directory, emitted as `--cache <dir>` on every invocation.
 	 * Absent uses npm's own default (`~/.npm`).
 	 */
-	cacheDir: S.optionalKey(S.String),
+	cacheDir: S.optionalKey(S.String).annotateKey({ description: "The npm cache directory, emitted as `--cache <dir>` on every invocation. Absent uses npm's own default (`~/.npm`)." }),
 	/**
 	 * Extra flags appended to every generated invocation, after `--cache`.
 	 */
-	extraArgs: S.String.pipe(S.Array, S.optionalKey),
-}) {
+	extraArgs: S.String.pipe(S.Array, S.optionalKey).annotateKey({ description: "Extra flags appended to every generated invocation, after `--cache`." }),
+}, $I.annote("NpmExecutor", { description: "Which `npm` runs a publish command." })) {
 	/** The runner's own `npm`. */
 	static readonly ambient: NpmExecutor = NpmExecutor.make({});
 

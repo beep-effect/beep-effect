@@ -27,12 +27,15 @@
 // `ConfigDependencySpec.integrity` (the legacy inline `configDependencies`
 // integrity) is its first consumer.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import type * as Brand from "effect/Brand";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+
+const $I = $ScratchpadId.create("effected/npm/IntegrityHash");
 
 /**
  * A supported integrity hash algorithm.
@@ -91,12 +94,12 @@ const algorithmOf = (value: string): O.Option<IntegrityAlgorithm> => {
  *
  * @public
  */
-export class InvalidIntegrityHashError extends S.TaggedError<InvalidIntegrityHashError>()(
+export class InvalidIntegrityHashError extends S.TaggedError<InvalidIntegrityHashError>($I`InvalidIntegrityHashError`)(
 	"InvalidIntegrityHashError",
 	{
 		/** The raw input string that failed validation. */
-		input: S.String,
-	},
+		input: S.String.annotateKey({ description: "The raw input string that failed validation." }),
+	}, $I.annote("InvalidIntegrityHashError", { description: "Indicates that a string could not be parsed as a valid integrity hash." }),
 ) {
 	override get message(): string {
 		return `Invalid integrity hash "${this.input}": expected an SRI (<algo>-<base64>), corepack (<algo>.<hex>) or yarn (<cachekey>/<hex>) form`;
@@ -388,12 +391,12 @@ const corepackFromSri: S.Codec<IntegrityHashBrand, string> = S.String.pipe(
  *
  * @public
  */
-export class InvalidSriIntegrityHashError extends S.TaggedError<InvalidSriIntegrityHashError>()(
+export class InvalidSriIntegrityHashError extends S.TaggedError<InvalidSriIntegrityHashError>($I`InvalidSriIntegrityHashError`)(
 	"InvalidSriIntegrityHashError",
 	{
 		/** The raw input string that failed conversion. */
-		input: S.String,
-	},
+		input: S.String.annotateKey({ description: "The raw input string that failed conversion." }),
+	}, $I.annote("InvalidSriIntegrityHashError", { description: "Indicates that a string could not be converted from npm's SRI form to the corepack integrity form." }),
 ) {
 	override get message(): string {
 		return `Invalid SRI integrity hash "${this.input}": expected a sha512-<base64> value carrying a 64-byte digest (corepack accepts only sha512)`;

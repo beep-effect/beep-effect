@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -10,6 +11,8 @@ import { HttpClient } from "effect/http";
 import { IntegrityHash } from "./IntegrityHash.ts";
 import type { RegistryCredential } from "./RegistryCredential.ts";
 import { classifyRegistry } from "./RegistryKind.ts";
+
+const $I = $ScratchpadId.create("effected/npm/NpmRegistry");
 
 /**
  * The public npm registry, used when a read names no other.
@@ -64,16 +67,16 @@ export interface RegistryTarget {
  *
  * @public
  */
-export class PublishedVersion extends S.Class<PublishedVersion>("PublishedVersion")({
+export class PublishedVersion extends S.Class<PublishedVersion>($I`PublishedVersion`)({
 	/** The package name as the registry reports it. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "The package name as the registry reports it." }),
 	/** The version as the registry reports it. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The version as the registry reports it." }),
 	/** The published integrity, when the registry recorded one. */
-	integrity: S.optionalKey(IntegrityHash),
+	integrity: S.optionalKey(IntegrityHash).annotateKey({ description: "The published integrity, when the registry recorded one." }),
 	/** The tarball URL, when the registry recorded one. */
-	tarball: S.optionalKey(S.String),
-}) {}
+	tarball: S.optionalKey(S.String).annotateKey({ description: "The tarball URL, when the registry recorded one." }),
+}, $I.annote("PublishedVersion", { description: "One published version of one package, on one registry." })) {}
 
 /**
  * When one version of a package was published.
@@ -86,12 +89,12 @@ export class PublishedVersion extends S.Class<PublishedVersion>("PublishedVersio
  *
  * @public
  */
-export class PublishTime extends S.Class<PublishTime>("PublishTime")({
+export class PublishTime extends S.Class<PublishTime>($I`PublishTime`)({
 	/** The version this timestamp belongs to. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "The version this timestamp belongs to." }),
 	/** When it was published. */
-	publishedAt: S.DateTimeUtc,
-}) {}
+	publishedAt: S.DateTimeUtc.annotateKey({ description: "When it was published." }),
+}, $I.annote("PublishTime", { description: "When one version of a package was published." })) {}
 
 /**
  * A registry read failed.
@@ -106,18 +109,18 @@ export class PublishTime extends S.Class<PublishTime>("PublishTime")({
  *
  * @public
  */
-export class RegistryReadError extends S.TaggedError<RegistryReadError>()("RegistryReadError", {
+export class RegistryReadError extends S.TaggedError<RegistryReadError>($I`RegistryReadError`)("RegistryReadError", {
 	/** Why the read failed. */
-	kind: S.Literals(["transport", "status", "decode"]),
+	kind: S.Literals(["transport", "status", "decode"]).annotateKey({ description: "Why the read failed." }),
 	/** The package that was being read. */
-	package: S.String,
+	package: S.String.annotateKey({ description: "The package that was being read." }),
 	/** The registry that was being read from. */
-	registry: S.String,
+	registry: S.String.annotateKey({ description: "The registry that was being read from." }),
 	/** The HTTP status, for `kind: "status"`. */
-	status: S.optionalKey(S.Finite),
+	status: S.optionalKey(S.Finite).annotateKey({ description: "The HTTP status, for `kind: \"status\"`." }),
 	/** The underlying failure. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
+}, $I.annote("RegistryReadError", { description: "A registry read failed." })) {
 	override get message(): string {
 		const where = `${this.package} on ${this.registry}`;
 		switch (this.kind) {
@@ -445,7 +448,7 @@ export interface RegistrySeed {
  *
  * @public
  */
-export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>()("@beep/scratchpad/effected/npm/NpmRegistry") {
+export class NpmRegistry extends Context.Service<NpmRegistry, NpmRegistryShape>()($I`NpmRegistry`) {
 	/** The live service. Resolves `HttpClient` once at construction, so every method's `R` is `never`. */
 	static readonly layer: Layer.Layer<NpmRegistry, never, HttpClient.HttpClient> = Layer.effect(this, make());
 

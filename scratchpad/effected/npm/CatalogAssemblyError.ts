@@ -8,7 +8,10 @@
 // both resolver modules must be able to reference it without creating an
 // import cycle (`noImportCycles` is an error here).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/CatalogAssemblyError");
 
 /** The message a cause carries, if it carries a non-empty one: an `Error`'s `message`, or a thrown string. */
 const causeMessage = (cause: unknown): string | undefined => {
@@ -37,17 +40,17 @@ const causeMessage = (cause: unknown): string | undefined => {
  *
  * @public
  */
-export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>()("CatalogAssemblyError", {
+export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>($I`CatalogAssemblyError`)("CatalogAssemblyError", {
 	/**
 	 * Which input failed: `manifest` for a file-level or top-level shape problem,
 	 * `catalog` for a malformed catalog block or the double-default duplication,
 	 * `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure.
 	 */
-	source: S.Literals(["manifest", "catalog", "hooks"]),
+	source: S.Literals(["manifest", "catalog", "hooks"]).annotateKey({ description: "Which input failed: `manifest` for a file-level or top-level shape problem, `catalog` for a malformed catalog block or the double-default duplication, `hooks` for a config-dependency `pnpmfile.cjs` load or replay failure." }),
 	/** The file, the catalog name, or the config dependency name. */
-	path: S.String,
+	path: S.String.annotateKey({ description: "The file, the catalog name, or the config dependency name." }),
 	/** The originating failure. */
-	cause: S.Defect(),
+	cause: S.Defect().annotateKey({ description: "The originating failure." }),
 	/**
 	 * Why a `hooks`-source failure could not resolve a config dependency at its
 	 * declared version, when that is what failed. Absent for every other
@@ -71,8 +74,8 @@ export class CatalogAssemblyError extends S.TaggedError<CatalogAssemblyError>()(
 	 */
 	reason: S.optionalKey(
 		S.Literals(["notInstalled", "ambiguous", "fetchFailed", "integrityMismatch", "integrityUnavailable"]),
-	),
-}) {
+	).annotateKey({ description: "Why a `hooks`-source failure could not resolve a config dependency at its declared version, when that is what failed. Absent for every other failure, including a pnpmfile that resolved but failed to load or replay." }),
+}, $I.annote("CatalogAssemblyError", { description: "Raised when a workspace's catalogs cannot be assembled — a `pnpm-workspace.yaml` that is unreadable or not valid YAML, a root `package.json` `workspaces` field whose shape or catalog blocks are malformed in a way pnpm itself rejects (including the default catalog declared twice), or a config dependency whose `pnpmfile.cjs` cannot be loaded or replayed." })) {
 	/**
 	 * Renders the failing source into a one-line summary, followed by the
 	 * cause's own message when the cause carries one.

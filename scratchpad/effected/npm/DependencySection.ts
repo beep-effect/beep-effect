@@ -10,7 +10,10 @@
 // `KIND_TO_FIELD` is the single source of truth; the inverse is derived from it,
 // so the correspondence is written once.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/DependencySection");
 
 /**
  * The short dependency kind: which dependency map an entry came from, named the
@@ -18,7 +21,7 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export const DependencyKind = S.Literals(["prod", "dev", "peer", "optional"]);
+export const DependencyKind = S.Literals(["prod", "dev", "peer", "optional"]).pipe($I.annoteSchema("DependencyKind", { description: "The short dependency kind: which dependency map an entry came from, named the way consumers branch on it." }));
 
 /**
  * The union of short dependency kinds.
@@ -38,7 +41,7 @@ export const DependencyField = S.Literals([
 	"devDependencies",
 	"peerDependencies",
 	"optionalDependencies",
-]);
+]).pipe($I.annoteSchema("DependencyField", { description: "The manifest field name a dependency is declared under, matching the `package.json` / `package-lock.json` key exactly." }));
 
 /**
  * The union of manifest dependency-map field names.

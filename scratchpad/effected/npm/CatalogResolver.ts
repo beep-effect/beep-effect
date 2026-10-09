@@ -6,12 +6,15 @@
 // `CatalogAssemblyError` in its own module), so the only runtime edge runs
 // `CatalogResolver -> WorkspaceResolver`, keeping `noImportCycles` satisfied.
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { CatalogAssemblyError } from "./CatalogAssemblyError.ts";
 import type { DependencyResolutionError } from "./WorkspaceResolver.ts";
+
+const $I = $ScratchpadId.create("effected/npm/CatalogResolver");
 
 /**
  * Contract for resolving pnpm `catalog:` dependency specifiers to concrete
@@ -56,7 +59,7 @@ export class CatalogResolver extends Context.Service<
 			catalog: O.Option<string>,
 		) => Effect.Effect<O.Option<string>, CatalogAssemblyError | DependencyResolutionError>;
 	}
->()("@beep/scratchpad/effected/npm/CatalogResolver") {
+>()($I`CatalogResolver`) {
 	/**
 	 * No-op default: `rangeOf` always succeeds with `Option.none()`, never
 	 * consulting an actual catalog. A pure `Layer.succeed`, bound to a const

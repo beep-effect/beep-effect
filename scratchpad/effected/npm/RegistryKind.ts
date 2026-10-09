@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/RegistryKind");
 
 /**
  * Which well-known registry a URL points at.
@@ -12,7 +15,7 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export const RegistryKind = S.Literals(["npm", "github-packages", "jsr", "custom"]);
+export const RegistryKind = S.Literals(["npm", "github-packages", "jsr", "custom"]).pipe($I.annoteSchema("RegistryKind", { description: "Which well-known registry a URL points at." }));
 
 /**
  * The decoded type of {@link (RegistryKind:variable)}.

@@ -1,4 +1,7 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/PublishError");
 
 /**
  * A publish-workflow step failed.
@@ -19,20 +22,20 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export class PublishError extends S.TaggedError<PublishError>()("PublishError", {
+export class PublishError extends S.TaggedError<PublishError>($I`PublishError`)("PublishError", {
 	/** Which step failed. */
-	kind: S.Literals(["auth", "pack", "publish", "output", "digest", "executor"]),
+	kind: S.Literals(["auth", "pack", "publish", "output", "digest", "executor"]).annotateKey({ description: "Which step failed." }),
 	/** The package directory or tarball the step was working on. */
-	subject: S.optionalKey(S.String),
+	subject: S.optionalKey(S.String).annotateKey({ description: "The package directory or tarball the step was working on." }),
 	/** The registry involved, for `"auth"` and `"publish"`. */
-	registry: S.optionalKey(S.String),
+	registry: S.optionalKey(S.String).annotateKey({ description: "The registry involved, for `\"auth\"` and `\"publish\"`." }),
 	/** npm's exit code, when npm ran and failed. */
-	exitCode: S.optionalKey(S.Finite),
+	exitCode: S.optionalKey(S.Finite).annotateKey({ description: "npm's exit code, when npm ran and failed." }),
 	/** npm's output, already redacted by the runner. */
-	output: S.optionalKey(S.String),
+	output: S.optionalKey(S.String).annotateKey({ description: "npm's output, already redacted by the runner." }),
 	/** The underlying failure. */
-	cause: S.optionalKey(S.Defect()),
-}) {
+	cause: S.optionalKey(S.Defect()).annotateKey({ description: "The underlying failure." }),
+}, $I.annote("PublishError", { description: "A publish-workflow step failed." })) {
 	override get message(): string {
 		const where = this.subject === undefined ? "" : ` for ${this.subject}`;
 		const code = this.exitCode === undefined ? "" : ` (exit ${this.exitCode})`;

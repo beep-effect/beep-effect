@@ -12,7 +12,10 @@
 // member), not lifted from folklore (pnpm's macOS store is NOT the Linux XDG
 // path, and yarn Classic's cache is not `~/.yarn/cache`).
 
+import { $ScratchpadId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+
+const $I = $ScratchpadId.create("effected/npm/PackageManagerCache");
 
 /**
  * The package managers the default-cache table has a row for.
@@ -27,7 +30,7 @@ import * as S from "effect/Schema";
  *
  * @public
  */
-export const CachingPackageManager = S.Literals(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]);
+export const CachingPackageManager = S.Literals(["npm", "pnpm", "yarn-classic", "yarn-berry", "bun"]).pipe($I.annoteSchema("CachingPackageManager", { description: "The package managers the default-cache table has a row for." }));
 
 /**
  * The union of managers the default-cache table covers.

@@ -1,3 +1,4 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { LocalExec, Run } from "../commands/index.ts";
 import * as Context from "effect/Context";
 import * as Crypto from "effect/Crypto";
@@ -13,6 +14,8 @@ import { NpmExecutor } from "./NpmExecutor.ts";
 import { PublishError } from "./PublishError.ts";
 import type { RegistryCredential } from "./RegistryCredential.ts";
 import { classifyRegistry } from "./RegistryKind.ts";
+
+const $I = $ScratchpadId.create("effected/npm/PackagePublish");
 
 /** npm prints its transparency-log URL on this notice line. */
 const PROVENANCE_URL = /https:\/\/search\.sigstore\.dev\/\?logIndex=\d+/;
@@ -62,19 +65,19 @@ const PackJsonString = S.fromJsonString(S.Unknown);
  *
  * @public
  */
-export class PackedTarball extends S.Class<PackedTarball>("PackedTarball")({
+export class PackedTarball extends S.Class<PackedTarball>($I`PackedTarball`)({
 	/** Absolute path to the tarball on disk. */
-	tarballPath: S.String,
+	tarballPath: S.String.annotateKey({ description: "Absolute path to the tarball on disk." }),
 	/** Package name, as npm reported it. */
-	name: S.String,
+	name: S.String.annotateKey({ description: "Package name, as npm reported it." }),
 	/** Package version, as npm reported it. */
-	version: S.String,
+	version: S.String.annotateKey({ description: "Package version, as npm reported it." }),
 	/**
 	 * npm's own integrity for the tarball (`sha512-<base64>`) — the value the
 	 * registry stores as `dist.integrity`, so it compares directly against
 	 * `NpmRegistry.version(...)`'s `integrity`.
 	 */
-	integrity: S.optionalKey(IntegrityHash),
+	integrity: S.optionalKey(IntegrityHash).annotateKey({ description: "npm's own integrity for the tarball (`sha512-<base64>`) — the value the registry stores as `dist.integrity`, so it compares directly against `NpmRegistry.version(...)`'s `integrity`." }),
 	/**
 	 * SHA-256 of the tarball bytes, lowercase hex, no prefix.
 	 *
@@ -83,14 +86,14 @@ export class PackedTarball extends S.Class<PackedTarball>("PackedTarball")({
 	 * algorithm, different encoding. This is the digest format the GitHub
 	 * attestation APIs accept as a subject; comparing the two silently fails.
 	 */
-	sha256Hex: S.String,
+	sha256Hex: S.String.annotateKey({ description: "SHA-256 of the tarball bytes, lowercase hex, no prefix." }),
 	/** Tarball size in bytes. */
-	packedSize: S.optionalKey(S.Finite),
+	packedSize: S.optionalKey(S.Finite).annotateKey({ description: "Tarball size in bytes." }),
 	/** Unpacked size in bytes. */
-	unpackedSize: S.optionalKey(S.Finite),
+	unpackedSize: S.optionalKey(S.Finite).annotateKey({ description: "Unpacked size in bytes." }),
 	/** Number of files in the tarball. */
-	fileCount: S.optionalKey(S.Finite),
-}) {}
+	fileCount: S.optionalKey(S.Finite).annotateKey({ description: "Number of files in the tarball." }),
+}, $I.annote("PackedTarball", { description: "A packed tarball and the two digests that describe it." })) {}
 
 /**
  * What one publish produced.
@@ -487,7 +490,7 @@ const notStubbed = (method: string) => () =>
  * @public
  */
 export class PackagePublish extends Context.Service<PackagePublish, PackagePublishShape>()(
-	"@beep/scratchpad/effected/npm/PackagePublish",
+	$I`PackagePublish`,
 ) {
 	/**
 	 * The live service. Requires `FileSystem`, `Crypto`, `ChildProcessSpawner`
