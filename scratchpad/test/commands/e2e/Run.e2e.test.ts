@@ -18,7 +18,7 @@ const Platform = NodeServices.layer;
 
 /** Runs a program against the real spawner. */
 const live = <A, E>(program: Effect.Effect<A, E, ChildProcessSpawner.ChildProcessSpawner>): Effect.Effect<A, E> =>
-	Effect.provide(program, Platform) as Effect.Effect<A, E>;
+	Effect.provide(program, Platform);
 
 /** `node -e "<script>"` — the one binary guaranteed to exist wherever these tests run. */
 const node = (script: string) => ChildProcess.make(process.execPath, ["-e", script]);

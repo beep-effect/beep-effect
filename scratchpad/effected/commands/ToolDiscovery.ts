@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import type { LocalExecError } from "./LocalExec.ts";
@@ -187,8 +188,8 @@ const extractVersion = (probe: VersionProbe, stdout: string): O.Option<string> =
 	try {
 		let current: unknown = JSON.parse(stdout);
 		for (const key of probe.path.split(".")) {
-			if (current === null || typeof current !== "object") return O.none();
-			current = (current as Record<string, unknown>)[key];
+			if (current === null || typeof current !== "object" || !P.hasProperty(current, key)) return O.none();
+			current = current[key];
 		}
 		return typeof current === "string" ? O.some(current) : O.none();
 	} catch {

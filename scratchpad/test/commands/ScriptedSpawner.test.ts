@@ -134,7 +134,7 @@ describe("ScriptedSpawner.make", () => {
 				assert.isTrue(Cause.hasDies(exit.cause));
 				const defect = exit.cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect)[0];
 				assert.instanceOf(defect, Error);
-				assert.include((defect as Error).message, "piped command");
+				assert.include(defect.message, "piped command");
 			}
 			assert.lengthOf(spawner.spawns, 0, "a refused pipeline must not be recorded as a spawn");
 		}),
