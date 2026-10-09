@@ -319,3 +319,12 @@ repair and fixture. Read-only review did not run tests or mutate files.
 Test-tsgo passed all 334 selected files after the path repair; the first runtime
 fixture invocation selected no tests because its cwd was wrong. That invocation
 is recorded as a command failure, with the corrected package-cwd rerun pending.
+
+### Run 3 draft publication submission
+
+The corrected Cache runtime regression passes all 8 cases (15 seconds), including
+relative-checkout backup and duplicate refusal. The refreshed removed-name census
+has zero live caller matches for all 9 removed script paths, recorded in
+`.beep/rsc-c-run3-removed-callers.txt`. Full package verification is running,
+not yet a pass. Draft publication is submitted through beep-heavy under S12
+so E can review the workflow hunks; C is not declaring content-final or merging.
