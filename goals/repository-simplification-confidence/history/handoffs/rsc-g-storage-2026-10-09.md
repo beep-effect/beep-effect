@@ -2,7 +2,7 @@
 
 ```text
 lane: rsc-g-storage
-head: a1363f237b38bf694429a86e3cdb09b84d303857   pr: none
+head: 77f38a419eb03475e7baea3afc33cecfdd8904fe   pr: none
 package-verify: @beep/repo-cli initial fail, introduced diagnostics repaired; rerun stopped before execution to admit publication
 hosted-parity: test-tsgo pending | docgen local pending | jsdoc-ratchet pending | knowledge refs pending | fallow audit/health pending | coverage (ResidueReap rows) pending
 cache claims: remote-hit 0d8ccf62fa69d324/7d05d61faf1b47a2 unsupported external condition | local-hit 3ca643e559fb1d3a/f8b314d6bfaf4138 LOCAL HIT | cross-checkout fixtures prepared, execution pending | changed-input pending
@@ -11,16 +11,21 @@ handoff: goals/repository-simplification-confidence/history/handoffs/rsc-g-stora
 open items: admitted expanded tests and publication; package/parity/coverage; cross-checkout and changed-input fixtures; real apply acknowledgement and owner notices; remote read reference and deferred home/shared-route work
 ```
 
-Source review is terminal zero at the head above: the seventh separate
-`claude-opus-5-5` medium, read-only session found no actionable High, Medium
-or Low issues. Earlier findings were fixed and their dispositions retained.
-This is source review, not runtime or hosted proof. The first package gate's
-introduced compiler diagnostics were repaired; its inbox rows were acknowledged
-with `4decfe96d3`, which does not claim a passing rerun. The first admitted test
-selection found no tests. The package-relative suite ran 39 tests, 36 passing;
-three fixture errors were corrected and the expanded suite is admitted/queued.
-The package rerun waited almost fifty minutes without starting and was stopped
-to admit publication under the two-owned-job limit. It must rerun before final.
+This is an in-progress handoff, not `final`. No PR has been pushed: the first
+Yeet publish stopped on introduced cheap-gate findings. Its local inbox
+aggregate was acknowledged against `d881c6e2e0` after the API/path/property
+repairs; acknowledgement does not establish green gates. The admitted expanded
+suite ran 48 tests (29 pass, 19 fail), exposing the unsupported comparison API
+and canonical-parent sync bug. Those are fixed. Fallow complexity prompted
+`bc0591bbb1`, and new test-resource policy rows prompted explicit OS layers and
+fresh-resource brackets. Review rounds eight/nine exposed further diagnostics
+and fixture issues, now repaired through `77f38a419e` with new focused cases.
+The corrected suite and test-policy row export remain queued. The earlier
+source-zero verdict at `a1363f237b` is historical; the current source needs a
+new terminal review and admitted runtime proof. The package rerun was stopped
+before execution after almost fifty minutes; it remains required, along with
+all named parity and cache fixtures. No started command will be left running
+at the final handoff.
 
 The implementation includes checkout QA, qualification, generated output,
 terminal jobs, legacy ledgers and stale PID archives, with owner/terminal/
