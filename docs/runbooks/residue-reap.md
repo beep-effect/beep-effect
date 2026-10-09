@@ -73,7 +73,8 @@ scanner checks the fenced inode for writers; a failed rollback retains a
 The immutable `plan.json` is synced before the first source move. `report.json`
 records the initial dry run or completed apply and is preserved. Recovery reads
 the original plan plus intent journals and writes a new `recovery-<uuid>.json`
-for every invocation, including failures. It processes every row and persists
+after row processing begins, including row failures. Missing, malformed or
+owner-mismatched plans are refused before a recovery receipt is created. It processes every row and persists
 errors as warnings before reporting a failure. It reconciles an intent whose inode has already moved, rechecks an
 unmoved row before resuming, and never rearchives a row marked `restored`.
 Restore refuses an occupied source, a changed inode, or an invalid boundary.
@@ -96,3 +97,8 @@ as opaque leaves, checking their root activity rather than interpreting vendored
 lock/PID names as Beep state. It counts symlinks without following them. A bounded
 mutable traversal stack avoids quadratic copies at the configured census cap.
 Nested dirty or linked worktrees remain protected by the candidate's Git gates.
+
+A `fenced-live` intent is preserved on resume and requires explicit restore;
+resume never ratifies new writer output by an attachment scan alone. Opacity
+applies only to sibling trees: a candidate's own descendants are fully checked
+for protected state and PID records under the census cap.

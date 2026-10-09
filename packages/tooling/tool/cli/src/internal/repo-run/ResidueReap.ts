@@ -44,6 +44,7 @@ import * as Str from "effect/String";
 import { ReplyDrafts } from "../../commands/Yeet/internal/Reply.schemas.ts";
 import { withJournalFileLock } from "./AdmissionJournal.ts";
 import {
+  BoundMoveOutcome,
   directoryIdentity,
   openDirectoryHandle,
   removeThroughDirectoryHandle,
@@ -1455,7 +1456,7 @@ const applyCandidate = Effect.fnUntraced(function* (
         const moved = yield* archive
           .move(intent.source, intent.destination, resolved.value.identity)
           .pipe(Effect.scoped);
-        if (!Str.Equivalence(moved, "moved") && !Str.Equivalence(moved, "moved-unsynced"))
+        if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
           return yield* ResidueArchiveError.make({ message: `Archive move refused: ${moved}` });
         // Reuse the Worktree retirement fence's attachment scanner after rename:
         // processes follow the inode, so no live writer can hide behind the old path.
@@ -1467,7 +1468,7 @@ const applyCandidate = Effect.fnUntraced(function* (
           const rolledBack = yield* archive
             .move(intent.destination, intent.source, resolved.value.identity)
             .pipe(Effect.scoped);
-          const restored = Str.Equivalence(rolledBack, "moved") || Str.Equivalence(rolledBack, "moved-unsynced");
+          const restored = BoundMoveOutcome.is.moved(rolledBack) || BoundMoveOutcome.is["moved-unsynced"](rolledBack);
           if (restored) {
             yield* syncDirectory(path.dirname(intent.source));
             yield* syncDirectory(path.dirname(intent.destination));
@@ -1560,6 +1561,9 @@ const CHECKOUT_LIVE_DAYS = 7;
 const BookkeepingDirectory = LiteralKit(["residue-reap", "retention"]);
 const CheckoutContainer = LiteralKit(["qa", "qualification", "ci"]);
 const NonTerminalState = LiteralKit(["active", "paused", "unknown", "unverified"]);
+const isBookkeepingDirectory = S.is(BookkeepingDirectory);
+const isCheckoutContainer = S.is(CheckoutContainer);
+const isNonTerminalState = S.is(NonTerminalState);
 const decodeRuling = S.decodeEffect(S.fromJsonString(ResidueRetentionRuling));
 const rulingEquivalent = S.toEquivalence(ResidueRetentionRuling);
 const decodeDrafts = S.decodeEffect(S.fromJsonString(ReplyDrafts));
@@ -1704,6 +1708,7 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
     "git",
     [
       "ls-files",
+      "-s",
       "-z",
       "--",
       "goals",
@@ -1720,8 +1725,12 @@ const citationSkip = Effect.fnUntraced(function* (checkout: string, candidatePat
   if (O.isNone(listing) || !N.Equivalence(listing.value.exitCode, 0) || listing.value.truncated)
     return O.some<ResidueReapSkipReason>("census-failed");
   const names = A.filter(
-    Str.split("\0")(listing.value.output),
-    (name) => Str.isNonEmpty(name) && !Str.Equivalence(name, authority)
+    A.getSomes(
+      A.map(Str.split("\0")(listing.value.output), (record) =>
+        O.flatMap(Str.match(/^100(?:644|755) [a-f0-9]+ [0-3]\t([\s\S]+)$/u)(record), (match) => A.get(match, 1))
+      )
+    ),
+    (name) => !Str.Equivalence(name, authority)
   );
   const documents = yield* Effect.forEach(
     names,
@@ -1766,7 +1775,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
     const listing = yield* fs.readDirectory(path.join(beep, parent)).pipe(Effect.option);
     if (O.isNone(listing)) return O.some<ResidueReapSkipReason>("census-failed");
     for (const child of listing.value) {
-      if (Str.isEmpty(parent) && S.is(BookkeepingDirectory)(child)) continue;
+      if (Str.isEmpty(parent) && isBookkeepingDirectory(child)) continue;
       const name = path.join(parent, child);
       beneath.push(name);
       if (A.length(beneath) > policy.entryCap) return O.some<ResidueReapSkipReason>("census-overflow");
@@ -1776,7 +1785,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
       if (O.isNone(info)) return O.some<ResidueReapSkipReason>("stat-failed");
       if (Str.Equivalence(info.value.type, "Directory")) {
         const embedded = yield* fs.exists(path.join(absolute, ".git")).pipe(Effect.orElseSucceed(() => true));
-        if (Str.Equivalence(child, "node_modules") || embedded) {
+        if (!cwdWithin(path, realEntry.value, absolute) && (Str.Equivalence(child, "node_modules") || embedded)) {
           opaque.push(name);
           if (embedded) {
             const marker = path.join(name, ".git");
@@ -1892,7 +1901,7 @@ const assessCheckoutResidue = Effect.fnUntraced(function* (entry: ResidueReapCan
     Str.Equivalence(entry.reapClass, "checkout-material")
   )
     return skip("owner-ruling-required");
-  if (S.is(NonTerminalState)(ruling.value.state)) return skip("terminal-state-unverified");
+  if (isNonTerminalState(ruling.value.state)) return skip("terminal-state-unverified");
   const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
   if (
     !pathIsStrictlyWithin(path, checkout, path.resolve(checkout, ruling.value.evidence)) ||
@@ -1961,7 +1970,7 @@ const checkoutResidueCandidates = Effect.fnUntraced(function* (
     Effect.fnUntraced(function* (name) {
       const reapClass = classifyCheckoutName(name);
       const top = path.join(root, name);
-      const scoped = S.is(CheckoutContainer)(name)
+      const scoped = isCheckoutContainer(name)
         ? O.some(top)
         : Str.Equivalence(name, "yeet")
           ? O.some(path.join(top, "jobs"))
@@ -2254,11 +2263,12 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const archive = yield* ResidueArchive;
-  const refuse = (message: string) => ResidueArchiveError.make({ message });
+  const refuse = (message: string, skipReason: ResidueReapSkipReason = "removal-failed") =>
+    ResidueArchiveError.make({ message, skipReason });
   if (!isRunId(runId)) return yield* refuse("Invalid residue archive run id");
   const root = runDirectory(path, settings.repoRoot, runId);
   if (!(yield* fs.exists(path.join(root, "plan.json"))))
-    return yield* refuse("Archive run report does not exist; recovery creates no run");
+    return yield* refuse("Archive plan.json does not exist; recovery creates no run");
   yield* ensureArchiveDirectories(settings.repoRoot, runId);
   const report = yield* decodeReport(yield* fs.readFileString(path.join(root, "plan.json")));
   if (!Str.Equivalence(report.repoRoot, settings.repoRoot) || !Str.Equivalence(optionOr(report.runId, ""), runId))
@@ -2271,7 +2281,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
           return ResidueReapCandidate.make({
             ...entry,
             action: "skip",
-            retentionReason: "legacy action has no archive recovery",
+            retentionReason: "class does not use archive recovery",
           });
         const destination = path.join(root, "archive", `${index}`);
         const journalPath = `${destination}.intent.json`;
@@ -2318,6 +2328,13 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
             action: "skip",
             retentionReason: "already restored; resume never rearchives",
           });
+        if (!restore && Str.Equivalence(intent.phase, "fenced-live"))
+          return ResidueReapCandidate.make({
+            ...entry,
+            action: "skip",
+            skipReason: "lock-held",
+            retentionReason: "fenced-live; restore or start a new run",
+          });
         const identityAt = Effect.fnUntraced(function* (target: string) {
           if (O.isSome(yield* fs.readLink(target).pipe(Effect.option))) return false;
           return O.exists(O.flatMap(yield* fs.stat(target).pipe(Effect.option), directoryIdentity), (identity) =>
@@ -2329,7 +2346,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
         if (restore && archived) {
           if (yield* fs.exists(intent.source)) return yield* refuse("Restore refuses an occupied source");
           const moved = yield* archive.move(intent.destination, intent.source, intent).pipe(Effect.scoped);
-          if (!Str.Equivalence(moved, "moved") && !Str.Equivalence(moved, "moved-unsynced"))
+          if (!BoundMoveOutcome.is.moved(moved) && !BoundMoveOutcome.is["moved-unsynced"](moved))
             return yield* refuse("Restore failed; archive intent retained");
           yield* syncDirectory(path.dirname(intent.source));
           yield* syncDirectory(path.dirname(intent.destination));
@@ -2351,7 +2368,7 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
               yield* encodeIntent(ResidueArchiveIntent.make({ ...intent, phase: "fenced-live" })),
               "live archive preserved"
             );
-            return yield* refuse("Archived inode has live or unknown writers; preserved for restore");
+            return yield* refuse("Archived inode has live or unknown writers; preserved for restore", "lock-held");
           }
           yield* syncDirectory(path.dirname(intent.source));
           yield* syncDirectory(path.dirname(intent.destination));
@@ -2379,7 +2396,13 @@ const recoverArchiveRun = Effect.fnUntraced(function* (settings: ResidueReapSett
       return Result.isSuccess(result)
         ? { candidate: result.success, warnings: A.empty<string>() }
         : {
-            candidate: ResidueReapCandidate.make({ ...entry, action: "skip", skipReason: "path-changed" }),
+            candidate: ResidueReapCandidate.make({
+              ...entry,
+              action: "skip",
+              skipReason: S.is(ResidueArchiveError)(result.failure)
+                ? optionOr(result.failure.skipReason, "removal-failed")
+                : "removal-failed",
+            }),
             warnings: [`${entry.path}: ${result.failure.message}`],
           };
     }),
@@ -2409,8 +2432,8 @@ const withArchiveLocks = Effect.fnUntraced(function* <A, E, R>(
   const path = yield* Path.Path;
   const roots = [settings.repoRoot];
   yield* Effect.forEach(roots, (root) => ensureArchiveDirectories(root), { discard: true });
-  // Sorted acquisition prevents fleet/current-checkout runs from racing the same
-  // source, and uses the repository's PID-reuse-fenced lock generations.
+  // Serialize the invoking owner's archives with PID-reuse-fenced generations;
+  // foreign fleet roots are observed without writing locks or archive directories.
   const initial: Effect.Effect<A, E | QualitySchedulerError, R | DiscoveryRequirements> = effect;
   const locked = A.reduce(A.reverse(roots), initial, (next, root) =>
     withJournalFileLock(path.join(root, ".beep", "residue-reap", "archive.lock"), () => next)
@@ -2511,8 +2534,9 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
  * **Details**
  *
  * Checkout archive classes persist ownership, terminal state, safety decisions and
- * recovery destinations in `.beep/residue-reap/<run-id>/report.json`, including dry
- * runs. `resume` reconciles durable intents; `restore` returns archived inodes.
+ * recovery destinations in immutable `.beep/residue-reap/<run-id>/plan.json` and
+ * the initial `report.json`, including dry runs. `resume` reconciles durable intents;
+ * `restore` returns archived inodes. Each recovery writes `recovery-<uuid>.json`.
  * Fleet discovery observes other owners; checkout archives apply only in the
  * invoking owner checkout. Run reports and archives remain durable until a separate
  * owner retention decision authorizes their retirement.

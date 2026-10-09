@@ -300,3 +300,14 @@ emptiness, ambiguous move outcomes and missing regression coverage. The
 correction preserves immutable plan/outcome reports, writes separate recovery
 receipts, prunes embedded/dependency trees, validates literal canonical evidence,
 and adds nested/fence/sync/PID/symlink/recovery regression fixtures.
+
+### G fourth-review correction
+
+The fourth independent review found that opacity for sibling dependency trees
+could hide protected state inside the candidate itself. Opacity is now limited
+to siblings; candidate descendants receive the full capped safety scan. Resume
+preserves fenced-live intents for explicit restore, citation indexing skips
+non-regular tracked entries, and refusal reports retain typed skip causes.
+Additional fixtures cover embedded proof, fenced-live resume, tracked links and
+explicit foreign-owner classification. Earlier rounds are preserved privately;
+terminal zero-findings is still a required independent result.

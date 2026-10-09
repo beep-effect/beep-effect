@@ -1545,6 +1545,7 @@ describe("checkout retention archives", () => {
         });
         const row = candidateByPath(report, fixture.target);
         expect(row.action).toBe("skip");
+        expect(row.skipReason).toBe("foreign-owner");
         expect(row.retentionReason).toBe("fleet observation only; archive from the owning checkout");
         expect(yield* fs.exists(fixture.target)).toBe(true);
         const unknown = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
@@ -1586,10 +1587,10 @@ describe("checkout retention archives", () => {
         const path = yield* Path.Path;
         const preview = path.join(fixture.repoRoot, ".beep", "yeet", "merged-preview-old");
         yield* makeEmbeddedRepo(preview);
-        const deps = path.join(preview, "node_modules");
+        const deps = path.join(fixture.repoRoot, ".beep", "node_modules");
         yield* fs.makeDirectory(deps, { recursive: true });
         yield* Effect.forEach(A.range(1, 40), (i) => fs.writeFileString(path.join(deps, `${i}.pid`), "vendored"));
-        yield* fs.symlink(path.join(fixture.homeRoot, "absent"), path.join(preview, "dangling"));
+        yield* fs.symlink(path.join(fixture.homeRoot, "absent"), path.join(fixture.repoRoot, ".beep", "dangling"));
         yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
         const report = yield* runResidueReap({ ...fixture, censusEntryCap: 20, apply: true });
         expect(candidateByPath(report, fixture.target).action).toBe("archive-move");
@@ -1640,6 +1641,12 @@ describe("checkout retention archives", () => {
           "preserve these bytes"
         );
         yield* fs.remove(fixture.target, { recursive: true });
+        const resumed = yield* runResidueReap({ ...fixture, resume: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
+        expect(resumed.reapedCount).toBe(0);
+        expect(candidateByPath(resumed, fixture.target).retentionReason).toBe(
+          "fenced-live; restore or start a new run"
+        );
+        expect(yield* fs.readFileString(path.join(runRoot, "archive", "0.intent.json"))).toContain("fenced-live");
         yield* runResidueReap({ ...fixture, restore: O.getOrThrow(O.fromUndefinedOr(applied.runId)) });
         expect(yield* fs.readFileString(path.join(fixture.target, "payload.txt"))).toBe("preserve these bytes");
       })
@@ -1737,6 +1744,38 @@ describe("checkout retention archives", () => {
             }),
           (spy) => Effect.sync(() => spy.mockRestore())
         );
+      })
+    )
+  );
+
+  it.effect("protects proof inside a clean embedded candidate repository", () =>
+    withRetentionFixture((fixture) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const nested = yield* makeEmbeddedRepo(fixture.target);
+        yield* fs.writeFileString(path.join(nested, "proof-ledger.ndjson"), "durable proof");
+        yield* runFixtureCommand(nested, "git", ["add", "."]);
+        yield* runFixtureCommand(nested, "git", ["commit", "--quiet", "-m", "nested proof"]);
+        yield* touchTreeDaysAgo(fixture.repoRoot, path.join(fixture.repoRoot, ".beep"), 45);
+        const report = yield* runResidueReap({ ...fixture, apply: true });
+        expect(candidateByPath(report, fixture.target).skipReason).toBe("protected-name");
+        expect(yield* fs.readFileString(path.join(nested, "proof-ledger.ndjson"))).toBe("durable proof");
+      })
+    )
+  );
+
+  it.effect("indexes regular citation blobs while retaining tracked symbolic links", () =>
+    withRetentionFixture((fixture) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.symlink("absent-document", path.join(fixture.repoRoot, "standards", "dangling-link"));
+        yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+        yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "tracked link"]);
+        const report = yield* runResidueReap({ ...fixture, apply: true });
+        expect(report.reapedCount).toBe(1);
+        expect(yield* fs.readLink(path.join(fixture.repoRoot, "standards", "dangling-link"))).toBe("absent-document");
       })
     )
   );

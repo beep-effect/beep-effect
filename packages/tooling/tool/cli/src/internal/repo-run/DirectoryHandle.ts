@@ -445,7 +445,20 @@ export const unlinkBoundFile = Effect.fnUntraced(function* (
   return yield* finishBoundEntry(path, expected, unlinkFinish);
 });
 
-const BoundMoveOutcome = LiteralKit([
+/**
+ * Outcomes of an inode-bound archive move, including durability and destination refusals.
+ *
+ * **Example** (Recognize a durable move)
+ *
+ * ```ts
+ * import { BoundMoveOutcome } from "@beep/repo-cli/test/RepoRun"
+ * console.log(BoundMoveOutcome.is.moved("moved")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const BoundMoveOutcome = LiteralKit([
   "moved",
   "moved-unsynced",
   "destination-occupied",

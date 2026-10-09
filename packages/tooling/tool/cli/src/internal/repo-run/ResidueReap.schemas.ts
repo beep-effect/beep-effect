@@ -529,7 +529,7 @@ export class ResidueArchiveIntent extends S.Class<ResidueArchiveIntent>($I`Resid
  */
 export class ResidueArchiveError extends S.TaggedError<ResidueArchiveError>($I`ResidueArchiveError`)(
   "ResidueArchiveError",
-  { message: S.String },
+  { message: S.String, skipReason: S.optional(ResidueReapSkipReason) },
   $I.annoteError<ResidueArchiveError>("ResidueArchiveError", {
     description: "Archive recovery refused a changed boundary, inode, or live owner.",
   })
