@@ -4,6 +4,9 @@ import { GlobSet } from "../glob/index.ts";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as R from "effect/Record";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { isIdentifierChar, lex, locate, references, specifierLiterals } from "./internal/sourceText.ts";
@@ -202,7 +205,7 @@ const EXEMPT: ReadonlyArray<string> = ["process.env.__PACKAGE_VERSION__"];
  * (`log`, `info`, `debug`, `dir`, `dirxml`, `table`, `count`, `group`,
  * `time`) writes to stdout.
  */
-const STDERR_METHODS: ReadonlySet<string> = new Set(["error", "warn", "trace", "assert"]);
+const STDERR_METHODS = MutableHashSet.fromIterable(["error", "warn", "trace", "assert"]);
 const STDOUT_WRITE = /stdout\s*(?:\?\.|\.)\s*(write|end)/gu;
 
 /** An `end(` call that passes a final chunk, which `Writable.end` writes before closing. */
@@ -595,11 +598,11 @@ export class SourceBoundary {
 			} else if (rule === "console-stdout") {
 				for (const offset of references(lexed.code, "console")) {
 					const member = memberAfter(lexed.code, offset, "console");
-					if (member !== undefined && STDERR_METHODS.has(member)) continue;
+					if (member !== undefined && MutableHashSet.has(STDERR_METHODS, member)) continue;
 					found.push({ offset, rule, detail: member === undefined ? "console" : `console.${member}` });
 				}
 			} else if ("forbidTokens" in rule) {
-				for (const token of new Set(rule.forbidTokens)) {
+				for (const token of MutableHashSet.fromIterable(rule.forbidTokens)) {
 					for (const offset of tokenOccurrences(lexed.code, token))
 						found.push({ offset, rule: "forbidTokens", detail: token });
 				}
@@ -644,9 +647,9 @@ export class SourceBoundary {
 		const fs = yield* FileSystem.FileSystem;
 		const path = yield* Path.Path;
 		const allow = yield* GlobSet.compile(options.allow ?? []);
-		const allowRules = new Map<string, GlobSet>();
-		for (const [rule, patterns] of Object.entries(options.allowRules ?? {})) {
-			if (patterns !== undefined) allowRules.set(rule, yield* GlobSet.compile(patterns));
+		const allowRules = MutableHashMap.empty<string, GlobSet>();
+		for (const [rule, patterns] of R.toEntries<string, ReadonlyArray<string> | undefined>(options.allowRules ?? {})) {
+			if (patterns !== undefined) MutableHashMap.set(allowRules, rule, yield* GlobSet.compile(patterns));
 		}
 		const extensions = options.extensions ?? DEFAULT_EXTENSIONS;
 		const posix = (relative: string): string => relative.split(path.sep).join("/");
@@ -654,14 +657,14 @@ export class SourceBoundary {
 		const allowed: Array<string> = [];
 		const offences: Array<Offence> = [];
 		const waived: Array<Offence> = [];
-		const visited = new Set<string>();
+		const visited = MutableHashSet.empty<string>();
 		const pending: Array<string> = [options.root];
 		while (pending.length > 0) {
 			const directory = pending.pop();
 			if (directory === undefined) break;
 			const real = yield* fs.realPath(directory);
-			if (visited.has(real)) continue;
-			visited.add(real);
+			if (MutableHashSet.has(visited, real)) continue;
+			MutableHashSet.add(visited, real);
 			for (const name of yield* fs.readDirectory(directory)) {
 				const full = path.join(directory, name);
 				// stat follows links, so a dangling one fails NotFound; it has nothing to scan, so skip it.
@@ -695,7 +698,7 @@ export class SourceBoundary {
 					continue;
 				}
 				for (const offence of SourceBoundary.check(file, yield* fs.readFileString(full), options.rules, options)) {
-					(allowRules.get(offence.rule)?.matches(file) === true ? waived : offences).push(offence);
+					(O.getOrUndefined(MutableHashMap.get(allowRules, offence.rule))?.matches(file) === true ? waived : offences).push(offence);
 				}
 			}
 		}

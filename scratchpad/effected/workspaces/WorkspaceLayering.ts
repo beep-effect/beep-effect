@@ -3,6 +3,8 @@ import { GlobSet } from "../glob/index.ts";
 import { DependencyField } from "../npm/index.ts";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
@@ -109,25 +111,25 @@ const cycleOf = (
 	names: ReadonlyArray<string>,
 	edges: ReadonlyArray<LayerEdge>,
 ): O.Option<ReadonlyArray<string>> => {
-	const sorted = [...new Set([...names, ...edges.flatMap((e) => [e.from, e.to])])].sort();
+	const sorted = [...MutableHashSet.fromIterable([...names, ...edges.flatMap((e) => [e.from, e.to])])].sort();
 	const graph = Graph.directed<string, string>((mutable) => {
-		const index = new Map<string, Graph.NodeIndex>();
-		for (const name of sorted) index.set(name, Graph.addNode(mutable, name));
+		const index = MutableHashMap.empty<string, Graph.NodeIndex>();
+		for (const name of sorted) MutableHashMap.set(index, name, Graph.addNode(mutable, name));
 		for (const e of edges) {
-			const from = index.get(e.from);
-			const to = index.get(e.to);
+			const from = O.getOrUndefined(MutableHashMap.get(index, e.from));
+			const to = O.getOrUndefined(MutableHashMap.get(index, e.to));
 			if (from !== undefined && to !== undefined && from !== to) Graph.addEdge(mutable, from, to, e.field);
 		}
 	});
-	const members = new Set<string>();
+	const members = MutableHashSet.empty<string>();
 	for (const component of Graph.stronglyConnectedComponents(graph)) {
 		if (component.length < 2) continue;
 		for (const index of component) {
 			const name = sorted[index];
-			if (name !== undefined) members.add(name);
+			if (name !== undefined) MutableHashSet.add(members, name);
 		}
 	}
-	return members.size === 0 ? O.none() : O.some([...members].sort());
+	return MutableHashSet.size(members) === 0 ? O.none() : O.some([...members].sort());
 };
 
 /**
@@ -164,26 +166,26 @@ export class WorkspaceLayering {
 
 	/** Check `graph` against `policy`, reading only the policy's fields. Pure. */
 	static readonly check = (graph: LayeringGraph, policy: LayerPolicy): LayeringReport => {
-		const fields = new Set<DependencyField>(policy.effectiveFields);
-		const edges = graph.edges.filter((e) => fields.has(e.field));
+		const fields = MutableHashSet.fromIterable<DependencyField>(policy.effectiveFields);
+		const edges = graph.edges.filter((e) => MutableHashSet.has(fields, e.field));
 		const unconstrained = GlobSet.make({ patterns: policy.unconstrained });
-		const layerOf = new Map<string, number>();
-		const declared = new Map<string, number>();
+		const layerOf = MutableHashMap.empty<string, number>();
+		const declared = MutableHashMap.empty<string, number>();
 		const count = (name: string): void => {
-			declared.set(name, (declared.get(name) ?? 0) + 1);
+			MutableHashMap.set(declared, name, O.getOrElse(MutableHashMap.get(declared, name), () => 0) + 1);
 		};
 		policy.layers.forEach((members, index) => {
 			for (const name of members) {
 				count(name);
-				if (!layerOf.has(name)) layerOf.set(name, index);
+				if (!MutableHashMap.has(layerOf, name)) MutableHashMap.set(layerOf, name, index);
 			}
 		});
 		for (const name of policy.tooling) count(name);
-		const tooling = new Set(policy.tooling);
+		const tooling = MutableHashSet.fromIterable(policy.tooling);
 		const place = (name: string): Place => {
-			const index = layerOf.get(name);
+			const index = O.getOrUndefined(MutableHashMap.get(layerOf, name));
 			if (index !== undefined) return { kind: "layer", index };
-			if (tooling.has(name)) return { kind: "tooling" };
+			if (MutableHashSet.has(tooling, name)) return { kind: "tooling" };
 			return unconstrained.matches(name) ? { kind: "unconstrained" } : { kind: "unclassified" };
 		};
 		const offenders: Array<{ readonly edge: LayerEdge; readonly reason: OffenceReason }> = [];
@@ -191,8 +193,8 @@ export class WorkspaceLayering {
 			const reason = offence(place(e.from), place(e.to));
 			if (reason !== undefined) offenders.push({ edge: e, reason });
 		}
-		const names = new Set(graph.names);
-		const present = new Set(edges.map((e) => `${e.from} -> ${e.to}`));
+		const names = MutableHashSet.fromIterable(graph.names);
+		const present = MutableHashSet.fromIterable(edges.map((e) => `${e.from} -> ${e.to}`));
 		return LayeringReport.make({
 			duplicates: [...declared]
 				.filter(([name, times]) => times > 1 || unconstrained.matches(name))
@@ -201,19 +203,19 @@ export class WorkspaceLayering {
 			unclassified: graph.names.filter((name) => place(name).kind === "unclassified").sort(),
 			offenders,
 			cycle: cycleOf(graph.names, edges),
-			missingDeclared: [...declared.keys()].filter((name) => !names.has(name)).sort(),
-			missingRequiredEdges: (policy.requiredEdges ?? []).filter((required) => !present.has(required)),
+			missingDeclared: [...MutableHashMap.keys(declared)].filter((name) => !MutableHashSet.has(names, name)).sort(),
+			missingRequiredEdges: (policy.requiredEdges ?? []).filter((required) => !MutableHashSet.has(present, required)),
 			edgeCount: edges.length,
 		});
 	};
 
 	/** One edge per declaring field between workspace packages; self-edges dropped. */
 	static readonly edgesOf = (packages: ReadonlyArray<WorkspacePackage>): ReadonlyArray<LayerEdge> => {
-		const names = new Set(packages.map((pkg) => pkg.name));
+		const names = MutableHashSet.fromIterable(packages.map((pkg) => pkg.name));
 		return packages.flatMap((pkg) =>
 			ALL_DEPENDENCY_FIELDS.flatMap((field) =>
 				R.keys(pkg[field])
-					.filter((name) => names.has(name) && name !== pkg.name)
+					.filter((name) => MutableHashSet.has(names, name) && name !== pkg.name)
 					.sort()
 					.map((to) => LayerEdge.make({ from: pkg.name, to, field })),
 			),

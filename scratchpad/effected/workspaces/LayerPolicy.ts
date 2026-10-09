@@ -9,6 +9,8 @@ import { ALL_DEPENDENCY_FIELDS } from "./internal/dependencyFields.ts";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
+import * as P from "effect/Predicate";
+import * as Match from "effect/Match";
 
 const $I = $ScratchpadId.create("effected/workspaces/LayerPolicy");
 
@@ -18,7 +20,7 @@ const REQUIRED_EDGE = /^\S+ -> \S+$/u;
 
 /** `input` without `keys`, when it is a plain object; anything else passes through for the schema to reject. */
 const withoutKeys = (input: unknown, keys: ReadonlyArray<string>): unknown => {
-	if (typeof input !== "object" || input === null || A.isArray(input)) return input;
+	if (!P.isObjectKeyword(input) || P.isFunction(input) || A.isArray(input)) return input;
 	return R.fromEntries(R.toEntries(input).filter(([key]) => !keys.includes(key)));
 };
 
@@ -38,17 +40,16 @@ export class LayerPolicyError extends S.TaggedError<LayerPolicyError>($I`LayerPo
 	/** Renders the failure kind and the file into one line. */
 	override get message(): string {
 		const at = this.path === undefined ? "" : ` at ${this.path}`;
-		switch (this.reason) {
-			case "read":
-				return `Could not read the layer policy${at}`;
-			case "json":
-				return `The layer policy${at} is not valid JSON`;
-			default: {
+		return Match.value(this.reason).pipe(
+			Match.when("read", () => `Could not read the layer policy${at}`),
+			Match.when("json", () => `The layer policy${at} is not valid JSON`),
+			Match.when("decode", () => {
 				// The schema issue names every offending key and field; a bare "wrong shape" sends the reader hunting.
 				const detail = this.cause instanceof Error && this.cause.message !== "" ? `: ${this.cause.message}` : "";
 				return `The layer policy${at} does not match the LayerPolicy shape${detail}`;
-			}
-		}
+			}),
+			Match.exhaustive,
+		);
 	}
 }
 

@@ -51,6 +51,13 @@ import * as O from "@beep/utils/Option";
 
 const $I = $ScratchpadId.create("effected/workspaces/ConfigDependencyHooks");
 
+/** A replay failure reconstructed from the subprocess protocol. */
+class ConfigDependencyReplayError extends S.TaggedError<ConfigDependencyReplayError>($I`ConfigDependencyReplayError`)(
+	"ConfigDependencyReplayError",
+	{ message: S.String },
+	$I.annote("ConfigDependencyReplayError", { description: "A replay failure reconstructed from the subprocess protocol." }),
+) {}
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -460,38 +467,37 @@ const injectionOf = (config: HookConfig, pnpmfiles: ReadonlyArray<ResolvedPnpmfi
  * is called synchronously and its returned data threaded tolerantly
  * (`configOf`); a hook that throws fails typed.
  */
-const replayInProcess = (
+const replayInProcess = Effect.fn("replayInProcess")(function* (
 	pnpmfiles: ReadonlyArray<ResolvedPnpmfile>,
 	seed: Readonly<Record<string, Readonly<Record<string, string>>>>,
 	rules: PeerDependencyRules | undefined,
-): Effect.Effect<HookInjection, CatalogAssemblyError> =>
-	Effect.gen(function* () {
-		let config = seedToConfig(seed, rules);
-		for (const { name, path } of pnpmfiles) {
-			// Resolved but shipping no pnpmfile: recorded in `replays`, nothing to run.
-			if (path === undefined) continue;
-			const url = pathToFileURL(path).href;
-			const loaded = yield* Effect.tryPromise({
-				// `webpackIgnore` keeps webpack-family bundlers from compiling this
-				// computed import into a context module: the target is a runtime
-				// path under the consumer's own node_modules (or store), unresolvable
-				// at bundle time, and every bundled consumer otherwise carries a
-				// Critical-dependency warning it cannot silence — even one composing
-				// `layerSubprocess`, because this module stays in its import graph
-				// either way.
-				try: (): Promise<unknown> => import(/* webpackIgnore: true */ url),
-				catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
-			});
-			const updateConfig = updateConfigOf(loaded);
-			if (updateConfig === undefined) continue;
-			const currentConfig = config;
-			config = yield* Effect.try({
-				try: () => configOf(updateConfig(currentConfig), currentConfig),
-				catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
-			});
-		}
-		return injectionOf(config, pnpmfiles);
-	});
+): Effect.fn.Return<HookInjection, CatalogAssemblyError> {
+	let config = seedToConfig(seed, rules);
+	for (const { name, path } of pnpmfiles) {
+		// Resolved but shipping no pnpmfile: recorded in `replays`, nothing to run.
+		if (path === undefined) continue;
+		const url = pathToFileURL(path).href;
+		const loaded = yield* Effect.tryPromise({
+			// `webpackIgnore` keeps webpack-family bundlers from compiling this
+			// computed import into a context module: the target is a runtime
+			// path under the consumer's own node_modules (or store), unresolvable
+			// at bundle time, and every bundled consumer otherwise carries a
+			// Critical-dependency warning it cannot silence — even one composing
+			// `layerSubprocess`, because this module stays in its import graph
+			// either way.
+			try: (): Promise<unknown> => import(/* webpackIgnore: true */ url),
+			catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
+		});
+		const updateConfig = updateConfigOf(loaded);
+		if (updateConfig === undefined) continue;
+		const currentConfig = config;
+		config = yield* Effect.try({
+			try: () => configOf(updateConfig(currentConfig), currentConfig),
+			catch: (cause) => CatalogAssemblyError.make({ source: "hooks", path: name, cause }),
+		});
+	}
+	return injectionOf(config, pnpmfiles);
+});
 
 /**
  * The subprocess replay program {@link ConfigDependencyHooks.layerSubprocess}
@@ -633,7 +639,7 @@ const ReplayPayload = S.Union([
 
 /** Rebuild the subprocess's serialized failure as an `Error`, preserving the child-side stack when it carried one. */
 const replayFailureCause = (payload: { readonly message?: string; readonly stack?: string }): Error => {
-	const error = new Error(payload.message ?? "config dependency hook replay failed");
+	const error = ConfigDependencyReplayError.make({ message: payload.message ?? "config dependency hook replay failed" });
 	if (payload.stack !== undefined) error.stack = payload.stack;
 	return error;
 };

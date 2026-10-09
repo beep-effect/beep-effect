@@ -13,6 +13,8 @@ import { dual } from "effect/Function";
 // `GlobSet` and walks the same worklist as the Effect enumerator, so
 // `packages/**` means the same thing in both worlds.
 
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as MutableHashMap from "effect/MutableHashMap";
 import { GlobSet } from "../glob/index.ts";
 import { Yaml } from "../yaml/index.ts";
 import * as Effect from "effect/Effect";
@@ -26,6 +28,39 @@ import type { WorkspaceDiscoveryError } from "./WorkspaceDiscovery.ts";
 import { PublishConfig, WorkspacePackage } from "./WorkspacePackage.ts";
 import * as R from "effect/Record";
 import * as O from "@beep/utils/Option";
+
+const $I = $ScratchpadId.create("effected/workspaces/WorkspacesSync");
+
+/** A malformed synchronous workspace manifest, preserving its diagnostic message. */
+class WorkspaceSyncManifestError extends S.TaggedError<WorkspaceSyncManifestError>($I`WorkspaceSyncManifestError`)(
+	"WorkspaceSyncManifestError",
+	{ message: S.String },
+	$I.annote("WorkspaceSyncManifestError", { description: "A malformed synchronous workspace manifest." }),
+) {}
+
+/**
+ * Raised when synchronous workspace enumeration receives an invalid depth bound.
+ *
+ * **Example** (Inspect an invalid depth diagnostic)
+ *
+ * ```ts
+ * import { WorkspaceEnumerationDepthError } from "./WorkspacesSync.ts";
+ *
+ * const error = WorkspaceEnumerationDepthError.make({
+ *   message: "getWorkspacePackagesSync: maxDepth must be a positive integer, got 0",
+ * });
+ * console.log(error._tag); // WorkspaceEnumerationDepthError
+ * console.log(error.message);
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class WorkspaceEnumerationDepthError extends S.TaggedError<WorkspaceEnumerationDepthError>($I`WorkspaceEnumerationDepthError`)(
+	"WorkspaceEnumerationDepthError",
+	{ message: S.String },
+	$I.annote("WorkspaceEnumerationDepthError", { description: "An invalid synchronous workspace enumeration depth bound." }),
+) {}
 
 /**
  * The synchronous file operations the sync entry points need, supplied by the
@@ -246,7 +281,7 @@ const readManifest = (fileSystem: SyncFileSystem, file: string): ManifestRead =>
 	// non-null, non-array object is a manifest.
 	return P.isObject(parsed)
 		? { raw: parsed }
-		: { kind: "invalidShape", cause: new Error("package.json is not a JSON object") };
+		: { kind: "invalidShape", cause: WorkspaceSyncManifestError.make({ message: "package.json is not a JSON object" }) };
 };
 
 /**
@@ -489,7 +524,7 @@ const readPackageSync = (
 			root,
 			path: packageJsonPath,
 			kind: "invalidShape",
-			cause: new Error(`version must be a string, got ${typeof version}`),
+			cause: WorkspaceSyncManifestError.make({ message: `version must be a string, got ${typeof version}` }),
 		};
 	}
 	if (version === "") {
@@ -497,7 +532,7 @@ const readPackageSync = (
 			root,
 			path: packageJsonPath,
 			kind: "invalidShape",
-			cause: new Error("version must be a non-empty string"),
+			cause: WorkspaceSyncManifestError.make({ message: "version must be a non-empty string" }),
 		};
 	}
 
@@ -509,7 +544,7 @@ const readPackageSync = (
 
 	const publishConfig = raw.publishConfig;
 	const config =
-		publishConfig !== null && typeof publishConfig === "object"
+		P.isObjectKeyword(publishConfig) && !P.isFunction(publishConfig)
 			? Effect.runSyncExit(S.decodeEffect(PublishConfig)(publishConfig))
 			: undefined;
 
@@ -631,7 +666,7 @@ export const getWorkspacePackagesSync: {
 	// total over *data*, not over caller mistakes — so it throws here, mirroring
 	// the enumerator's `Effect.die`. Same predicate, same message, one rule.
 	if (!isValidMaxDepth(maxDepth)) {
-		throw new RangeError(`getWorkspacePackagesSync: ${badMaxDepthMessage(maxDepth)}`);
+		throw WorkspaceEnumerationDepthError.make({ message: `getWorkspacePackagesSync: ${badMaxDepthMessage(maxDepth)}` });
 	}
 
 	const patterns = readPatternsSync(options, root);
@@ -647,12 +682,12 @@ export const getWorkspacePackagesSync: {
 			? (_: string): boolean => false
 			: (relative: string): boolean => excludes.some((exclude) => exclude.matches(relative));
 
-	const included = new Map<string, string>();
+	const included = MutableHashMap.empty<string, string>();
 
 	for (const literal of globs.literals) {
 		if (isExcluded(literal)) continue;
 		const absolute = path.join(root, literal);
-		if (isPackage(options, absolute)) included.set(literal, absolute);
+		if (isPackage(options, absolute)) MutableHashMap.set(included, literal, absolute);
 	}
 
 	for (const wildcard of globs.wildcards) {
@@ -690,7 +725,7 @@ export const getWorkspacePackagesSync: {
 				}
 
 				if (wildcard.matches(relative) && !isExcluded(relative) && isPackage(options, absolute)) {
-					included.set(relative, absolute);
+					MutableHashMap.set(included, relative, absolute);
 				}
 				if (!wildcard.crossesSegments) continue;
 
@@ -704,7 +739,7 @@ export const getWorkspacePackagesSync: {
 		if (S.is(WorkspacePackage)(read)) members.push(read);
 		else options.onSkip?.(read);
 	};
-	for (const [relativePath, absolute] of [...included.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+	for (const [relativePath, absolute] of [...included].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
 		if (relativePath === "." || absolute === root) continue;
 		admit(readPackageSync(options, root, absolute, relativePath));
 	}

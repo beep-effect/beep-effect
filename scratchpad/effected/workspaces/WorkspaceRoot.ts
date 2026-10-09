@@ -15,8 +15,16 @@ import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Result from "effect/Result";
+import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceRoot");
+
+/** The defect produced when a root manifest contains JSON null. */
+class WorkspaceRootManifestError extends S.TaggedError<WorkspaceRootManifestError>($I`WorkspaceRootManifestError`)(
+	"WorkspaceRootManifestError",
+	{ message: S.String },
+	$I.annote("WorkspaceRootManifestError", { description: "The defect produced when a root manifest contains JSON null." }),
+) {}
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
@@ -109,34 +117,33 @@ export class WorkspaceRootNotFoundError extends S.TaggedError<WorkspaceRootNotFo
  * A malformed root `package.json` is "not a root", not an error — the ascent
  * continues past it, matching walker's absorption contract.
  */
-const isWorkspaceRoot = (dir: string): Effect.Effect<boolean, never, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
-		const fs = yield* FileSystem.FileSystem;
-		const path = yield* Path.Path;
+const isWorkspaceRoot = Effect.fn("isWorkspaceRoot")(function* (dir: string): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
+	const fs = yield* FileSystem.FileSystem;
+	const path = yield* Path.Path;
 
-		const pnpmWorkspace = yield* fs
-			.exists(path.join(dir, "pnpm-workspace.yaml"))
-			.pipe(Effect.orElseSucceed(() => false));
-		if (pnpmWorkspace) return true;
+	const pnpmWorkspace = yield* fs
+		.exists(path.join(dir, "pnpm-workspace.yaml"))
+		.pipe(Effect.orElseSucceed(() => false));
+	if (pnpmWorkspace) return true;
 
-		const packageJson = path.join(dir, "package.json");
-		const hasManifest = yield* fs.exists(packageJson).pipe(Effect.orElseSucceed(() => false));
-		if (!hasManifest) return false;
+	const packageJson = path.join(dir, "package.json");
+	const hasManifest = yield* fs.exists(packageJson).pipe(Effect.orElseSucceed(() => false));
+	if (!hasManifest) return false;
 
-		const content = yield* fs.readFileString(packageJson).pipe(Effect.orElseSucceed(() => "{}"));
-		// JSON.parse throws; inside a `never`-channelled effect that would be a
-		// defect, so it is wrapped at the point it can throw rather than trusted
-		// to a catch further out.
-		const parsed = yield* Effect.try({
-			try: (): unknown => Result.getOrThrow(S.decodeResult(JsonValue)(content)),
-			catch: () => undefined,
-		}).pipe(Effect.orElseSucceed(() => ({})));
+	const content = yield* fs.readFileString(packageJson).pipe(Effect.orElseSucceed(() => "{}"));
+	// JSON.parse throws; inside a `never`-channelled effect that would be a
+	// defect, so it is wrapped at the point it can throw rather than trusted
+	// to a catch further out.
+	const parsed = yield* Effect.try({
+		try: (): unknown => Result.getOrThrow(S.decodeResult(JsonValue)(content)),
+		catch: () => undefined,
+	}).pipe(Effect.orElseSucceed(() => ({})));
 
-		// A JSON null previously failed on property access; retain that defect.
-		if (parsed === null) throw new TypeError("Cannot read properties of null (reading 'workspaces')");
-		return typeof parsed === "object" && "workspaces" in parsed &&
-			parsed.workspaces !== undefined && parsed.workspaces !== null;
-	});
+	// A JSON null previously failed on property access; retain that defect.
+	if (parsed === null) throw WorkspaceRootManifestError.make({ message: "Cannot read properties of null (reading 'workspaces')" });
+	return P.isObjectKeyword(parsed) && !P.isFunction(parsed) && "workspaces" in parsed &&
+		parsed.workspaces !== undefined && parsed.workspaces !== null;
+});
 
 /**
  * The {@link WorkspaceRoot} service contract.
@@ -219,7 +226,7 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 					// with `?? default`, and an explicit `undefined` is fine there, but
 					// the house rule keeps optional keys absent when unset.
 					...O.getSomesStruct({ stopAt: O.fromUndefinedOr(ceiling) }),
-					...(options?.maxDepth === undefined ? {} : { maxDepth: options.maxDepth }),
+					...O.getSomesStruct({ maxDepth: O.fromUndefinedOr(options?.maxDepth) }),
 				});
 				const found = yield* Walker.findRoot(chain, isWorkspaceRoot);
 				if (O.isNone(found)) {
@@ -275,26 +282,25 @@ export class WorkspaceRoot extends Context.Service<WorkspaceRoot, WorkspaceRootS
 	 *
 	 * @param root - The root every unbounded `find` resolves to.
 	 */
-	static readonly makeTest = (root: string): Effect.Effect<WorkspaceRootShape, never, Path.Path> =>
-		Effect.gen(function* () {
-			const path = yield* Path.Path;
-			return {
-				find: (cwd: string, options?: FindWorkspaceRootOptions) =>
-					// Resolve the ceiling through the injected `Path` exactly as the live
-					// `make` path does before the raw string comparison in `isAtOrBelow` —
-					// an unresolved ceiling (`..` segments) would match differently here
-					// than live, the divergence this double exists to prevent.
-					options?.stopAt !== undefined && !isAtOrBelow(root, path.resolve(options.stopAt))
-						? Effect.fail(
-								WorkspaceRootNotFoundError.make({
-									searchPath: cwd,
-									markers: WORKSPACE_MARKERS,
-									stopAt: options.stopAt,
-								}),
-							)
-						: Effect.succeed(root),
-			};
-		});
+	static readonly makeTest = Effect.fn("WorkspaceRoot.makeTest")(function* (root: string): Effect.fn.Return<WorkspaceRootShape, never, Path.Path> {
+		const path = yield* Path.Path;
+		return {
+			find: (cwd: string, options?: FindWorkspaceRootOptions) =>
+				// Resolve the ceiling through the injected `Path` exactly as the live
+				// `make` path does before the raw string comparison in `isAtOrBelow` —
+				// an unresolved ceiling (`..` segments) would match differently here
+				// than live, the divergence this double exists to prevent.
+				options?.stopAt !== undefined && !isAtOrBelow(root, path.resolve(options.stopAt))
+					? Effect.fail(
+							WorkspaceRootNotFoundError.make({
+								searchPath: cwd,
+								markers: WORKSPACE_MARKERS,
+								stopAt: options.stopAt,
+							}),
+						)
+					: Effect.succeed(root),
+		};
+	});
 
 	/**
 	 * The test layer: {@link WorkspaceRoot.makeTest} with `Path.layer` provided.

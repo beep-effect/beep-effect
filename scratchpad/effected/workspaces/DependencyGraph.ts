@@ -7,6 +7,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PackageNotFoundError } from "./WorkspaceDiscovery.ts";
 import { WorkspacePackage } from "./WorkspacePackage.ts";
@@ -36,10 +39,42 @@ export class CyclicDependencyError extends S.TaggedError<CyclicDependencyError>(
 	}
 }
 
+// Temporary subgraph indexes use Effect collections. The public adjacency
+// retains its native ReadonlyMap / ReadonlySet contract.
+class DependencyNames {
+	readonly #values: MutableHashSet.MutableHashSet<string>;
+	constructor(values: Iterable<string> = []) { this.#values = MutableHashSet.fromIterable(values); }
+	get size(): number { return MutableHashSet.size(this.#values); }
+	add(value: string): void { MutableHashSet.add(this.#values, value); }
+	*[Symbol.iterator](): Generator<string, undefined, unknown> { yield* this.#values; return undefined; }
+}
+
+class DependencyIndex<V> implements ReadonlyMap<string, V> {
+	readonly #entries = MutableHashMap.empty<string, V>();
+	get size(): number { return MutableHashMap.size(this.#entries); }
+	get(key: string): V | undefined { return O.getOrUndefined(MutableHashMap.get(this.#entries, key)); }
+	has(key: string): boolean { return MutableHashMap.has(this.#entries, key); }
+	set(key: string, value: V): void { MutableHashMap.set(this.#entries, key, value); }
+	*keys(): Generator<string, undefined, unknown> { yield* MutableHashMap.keys(this.#entries); return undefined; }
+	*values(): Generator<V, undefined, unknown> { yield* MutableHashMap.values(this.#entries); return undefined; }
+	*entries(): Generator<[string, V], undefined, unknown> { yield* this.#entries; return undefined; }
+	[Symbol.iterator]() { return this.entries(); }
+	forEach(callback: (value: V, key: string, map: ReadonlyMap<string, V>) => void, thisArg?: unknown): void {
+		for (const [key, value] of this.#entries) callback.call(thisArg, value, key, this);
+	}
+}
+
+type DependencyNeighbors = Pick<ReadonlySet<string>, "size" | typeof Symbol.iterator>;
+
 interface Edges {
 	/** name → the workspace packages it depends on. */
-	readonly forward: ReadonlyMap<string, ReadonlySet<string>>;
+	readonly forward: ReadonlyMap<string, DependencyNeighbors>;
 	/** name → the workspace packages that depend on it. */
+	readonly reverse: ReadonlyMap<string, DependencyNeighbors>;
+}
+
+interface WorkspaceEdges extends Edges {
+	readonly forward: ReadonlyMap<string, ReadonlySet<string>>;
 	readonly reverse: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
@@ -100,11 +135,11 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	/** The workspace packages the graph is drawn over. */
 	packages: S.Array(WorkspacePackage).annotateKey({ description: "The workspace packages the graph is drawn over." }),
 }, $I.annote("DependencyGraph", { description: "The directed graph of dependencies **between workspace packages**. External npm dependencies are not nodes." })) {
-	#edges: Edges | undefined;
+	#edges: WorkspaceEdges | undefined;
 
-	#index(): Edges {
+	#index(): WorkspaceEdges {
 		if (this.#edges !== undefined) return this.#edges;
-		const names = new Set(this.packages.map((pkg) => pkg.name));
+		const names = MutableHashSet.fromIterable(this.packages.map((pkg) => pkg.name));
 		const forward = new Map<string, Set<string>>();
 		const reverse = new Map<string, Set<string>>();
 		for (const name of names) {
@@ -113,7 +148,7 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 		}
 		for (const pkg of this.packages) {
 			for (const dependency of R.keys(pkg.allDependencies)) {
-				if (!names.has(dependency) || dependency === pkg.name) continue;
+				if (!MutableHashSet.has(names, dependency) || dependency === pkg.name) continue;
 				forward.get(pkg.name)?.add(dependency);
 				reverse.get(dependency)?.add(pkg.name);
 			}
@@ -141,33 +176,33 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	 */
 	get hasCycle(): boolean {
 		const { forward } = this.#index();
-		const visited = new Set<string>();
-		const onStack = new Set<string>();
+		const visited = MutableHashSet.empty<string>();
+		const onStack = MutableHashSet.empty<string>();
 
 		for (const start of forward.keys()) {
-			if (visited.has(start)) continue;
+			if (MutableHashSet.has(visited, start)) continue;
 			// Each frame is a node plus the iterator position into its dependencies.
 			const stack: Array<{ readonly node: string; readonly deps: Array<string>; cursor: number }> = [
 				{ node: start, deps: [...(forward.get(start) ?? [])], cursor: 0 },
 			];
-			visited.add(start);
-			onStack.add(start);
+			MutableHashSet.add(visited, start);
+			MutableHashSet.add(onStack, start);
 
 			while (stack.length > 0) {
 				const frame = stack[stack.length - 1];
 				if (frame === undefined) break;
 				if (frame.cursor >= frame.deps.length) {
-					onStack.delete(frame.node);
+					MutableHashSet.remove(onStack, frame.node);
 					stack.pop();
 					continue;
 				}
 				const next = frame.deps[frame.cursor];
 				frame.cursor += 1;
 				if (next === undefined) continue;
-				if (onStack.has(next)) return true;
-				if (visited.has(next)) continue;
-				visited.add(next);
-				onStack.add(next);
+				if (MutableHashSet.has(onStack, next)) return true;
+				if (MutableHashSet.has(visited, next)) continue;
+				MutableHashSet.add(visited, next);
+				MutableHashSet.add(onStack, next);
 				stack.push({ node: next, deps: [...(forward.get(next) ?? [])], cursor: 0 });
 			}
 		}
@@ -204,15 +239,15 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 	readonly affectedBy = Effect.fn("DependencyGraph.affectedBy")(
 		(names: ReadonlyArray<string>): Effect.Effect<ReadonlyArray<string>, never> => {
 			const { reverse } = this.#index();
-			const affected = new Set<string>();
+			const affected = MutableHashSet.empty<string>();
 			const queue = [...names];
 			for (let head = 0; head < queue.length; head += 1) {
 				const current = queue[head];
 				if (current === undefined) continue;
-				if (affected.has(current)) continue;
-				affected.add(current);
+				if (MutableHashSet.has(affected, current)) continue;
+				MutableHashSet.add(affected, current);
 				for (const dependent of reverse.get(current) ?? []) {
-					if (!affected.has(dependent)) queue.push(dependent);
+					if (!MutableHashSet.has(affected, dependent)) queue.push(dependent);
 				}
 			}
 			return Effect.succeed([...affected].sort());
@@ -267,23 +302,23 @@ export class DependencyGraph extends S.Class<DependencyGraph>($I`DependencyGraph
 					}
 				}
 
-				const needed = new Set<string>();
+				const needed = MutableHashSet.empty<string>();
 				const queue = [...names];
 				for (let head = 0; head < queue.length; head += 1) {
 					const current = queue[head];
 					if (current === undefined) continue;
-					if (needed.has(current)) continue;
-					needed.add(current);
+					if (MutableHashSet.has(needed, current)) continue;
+					MutableHashSet.add(needed, current);
 					for (const dependency of forward.get(current) ?? []) {
-						if (!needed.has(dependency)) queue.push(dependency);
+						if (!MutableHashSet.has(needed, dependency)) queue.push(dependency);
 					}
 				}
 
-				const subForward = new Map<string, ReadonlySet<string>>();
-				const subReverse = new Map<string, Set<string>>();
-				for (const node of needed) subReverse.set(node, new Set());
+				const subForward = new DependencyIndex<DependencyNeighbors>();
+				const subReverse = new DependencyIndex<DependencyNames>();
+				for (const node of needed) subReverse.set(node, new DependencyNames());
 				for (const node of needed) {
-					const deps = new Set([...(forward.get(node) ?? [])].filter((dep) => needed.has(dep)));
+					const deps = new DependencyNames([...(forward.get(node) ?? [])].filter((dep) => MutableHashSet.has(needed, dep)));
 					subForward.set(node, deps);
 					for (const dep of deps) subReverse.get(dep)?.add(node);
 				}
@@ -323,13 +358,13 @@ const materialize = (
 ): { readonly graph: Graph.DirectedGraph<string, string>; readonly names: ReadonlyArray<string> } => {
 	const names = [...edges.forward.keys()].sort();
 	const graph = Graph.directed<string, string>((mutable) => {
-		const indexOf = new Map<string, Graph.NodeIndex>();
-		for (const name of names) indexOf.set(name, Graph.addNode(mutable, name));
+		const indexOf = MutableHashMap.empty<string, Graph.NodeIndex>();
+		for (const name of names) MutableHashMap.set(indexOf, name, Graph.addNode(mutable, name));
 		for (const name of names) {
-			const source = indexOf.get(name);
+			const source = O.getOrUndefined(MutableHashMap.get(indexOf, name));
 			if (source === undefined) continue;
 			for (const dependency of [...(edges.forward.get(name) ?? [])].sort()) {
-				const target = indexOf.get(dependency);
+				const target = O.getOrUndefined(MutableHashMap.get(indexOf, dependency));
 				if (target !== undefined) Graph.addEdge(mutable, source, target, "");
 			}
 		}
@@ -345,12 +380,12 @@ const materialize = (
  */
 const cycleMembers = (edges: Edges): ReadonlyArray<string> => {
 	const { graph, names } = materialize(edges);
-	const members = new Set<string>();
+	const members = MutableHashSet.empty<string>();
 	for (const component of Graph.stronglyConnectedComponents(graph)) {
 		if (component.length < 2) continue;
 		for (const index of component) {
 			const name = names[index];
-			if (name !== undefined) members.add(name);
+			if (name !== undefined) MutableHashSet.add(members, name);
 		}
 	}
 	return [...members].sort();
@@ -368,23 +403,23 @@ const cycleMembers = (edges: Edges): ReadonlyArray<string> => {
 const kahn = (
 	edges: Edges,
 ): { readonly levels: ReadonlyArray<ReadonlyArray<string>>; readonly stalled: ReadonlyArray<string> } => {
-	const remaining = new Map<string, number>();
-	for (const [node, deps] of edges.forward) remaining.set(node, deps.size);
+	const remaining = MutableHashMap.empty<string, number>();
+	for (const [node, deps] of edges.forward) MutableHashMap.set(remaining, node, deps.size);
 
 	const levels: Array<Array<string>> = [];
-	let current = [...remaining.entries()].filter(([, count]) => count === 0).map(([node]) => node);
+	let current = [...remaining].filter(([, count]) => count === 0).map(([node]) => node);
 	current.sort();
 
 	while (current.length > 0) {
 		levels.push(current);
 		const next: Array<string> = [];
 		for (const done of current) {
-			remaining.delete(done);
+			MutableHashMap.remove(remaining, done);
 			for (const dependent of edges.reverse.get(done) ?? []) {
-				const count = remaining.get(dependent);
+				const count = O.getOrUndefined(MutableHashMap.get(remaining, dependent));
 				if (count === undefined) continue;
 				const decremented = count - 1;
-				remaining.set(dependent, decremented);
+				MutableHashMap.set(remaining, dependent, decremented);
 				if (decremented === 0) next.push(dependent);
 			}
 		}
@@ -392,5 +427,5 @@ const kahn = (
 		current = next;
 	}
 
-	return { levels, stalled: [...remaining.keys()].sort() };
+	return { levels, stalled: [...MutableHashMap.keys(remaining)].sort() };
 };

@@ -1,4 +1,5 @@
 import { dual } from "effect/Function";
+import * as MutableHashSet from "effect/MutableHashSet";
 // The one lexer behind SourceBoundary: a single pass that tells code from
 // comments and literals, so a scanner looking for real references never trips
 // on prose, a string, template text or a regex body — and never lets a "/*"
@@ -42,7 +43,7 @@ const SPACE = /\s/;
 const FLAG = /[a-z]/i;
 
 /** Keywords after which a `/` opens a regex literal rather than a division. */
-const REGEX_AFTER = new Set([
+const REGEX_AFTER = MutableHashSet.fromIterable([
 	"return",
 	"typeof",
 	"instanceof",
@@ -60,13 +61,13 @@ const REGEX_AFTER = new Set([
 ]);
 
 /** Declaration keywords: the word after one is a binding name, so a `for (const of of xs)` binding named `of` is not the keyword. */
-const DECLARATIONS = new Set(["const", "let", "var", "using"]);
+const DECLARATIONS = MutableHashSet.fromIterable(["const", "let", "var", "using"]);
 
 /** Keywords whose parenthesized condition may be followed directly by a statement, so a `/` after its `)` opens a regex. */
-const CONTROL = new Set(["if", "while", "for", "with"]);
+const CONTROL = MutableHashSet.fromIterable(["if", "while", "for", "with"]);
 
 /** Objects a member access on which still reaches a global. */
-const GLOBAL_OBJECTS = new Set(["globalThis", "global", "window", "self"]);
+const GLOBAL_OBJECTS = MutableHashSet.fromIterable(["globalThis", "global", "window", "self"]);
 
 /** Whether `char` can continue an identifier. */
 export const isIdentifierChar = (char: string | undefined): boolean => char !== undefined && IDENTIFIER.test(char);
@@ -81,7 +82,7 @@ export const lex = (text: string): LexedSource => {
 	// One entry per open `(`: the if/while/for/with keyword whose condition it opened, if any.
 	const parens: Array<string | undefined> = [];
 	// Offsets in the code view of every `)` that closed such a condition.
-	const controlCloses = new Set<number>();
+	const controlCloses = MutableHashSet.empty<number>();
 	const length = text.length;
 	let i = 0;
 
@@ -114,13 +115,13 @@ export const lex = (text: string): LexedSource => {
 	const endsBinding = (j: number): boolean => {
 		const char = code[j] ?? "";
 		if (char === "]" || char === "}") return true;
-		return isIdentifierChar(char) && !DECLARATIONS.has(wordAt(j)) && !isRegexKeyword(j);
+		return isIdentifierChar(char) && !MutableHashSet.has(DECLARATIONS, wordAt(j)) && !isRegexKeyword(j);
 	};
 
 	/** Whether the identifier ending at code offset `j` is a keyword after which a `/` opens a regex. */
 	const isRegexKeyword = (j: number): boolean => {
 		const word = wordAt(j);
-		if (!REGEX_AFTER.has(word)) return false;
+		if (!MutableHashSet.has(REGEX_AFTER, word)) return false;
 		const before = lastCode(j - word.length);
 		// A property name (`x.of`, `a?.return`) is never a keyword; a spread (`...new`) still is.
 		if (code[before] === "." && !(code[before - 1] === "." && code[before - 2] === ".")) return false;
@@ -145,7 +146,7 @@ export const lex = (text: string): LexedSource => {
 		if (last === "!") return !endsOperand(j - 1);
 		// `i++` / `i--` is a postfix update: an operand, so `/` divides.
 		if ((last === "+" || last === "-") && code[j - 1] === last) return !endsOperand(lastCode(j - 2));
-		if (last === ")") return controlCloses.has(j);
+		if (last === ")") return MutableHashSet.has(controlCloses, j);
 		return !"]}\"'`".includes(last);
 	};
 
@@ -161,7 +162,7 @@ export const lex = (text: string): LexedSource => {
 			word = end < 0 ? "" : wordAt(end);
 			end -= word.length;
 		}
-		return CONTROL.has(word) && code[lastCode(end)] !== "." ? word : undefined;
+		return MutableHashSet.has(CONTROL, word) && code[lastCode(end)] !== "." ? word : undefined;
 	};
 
 	/** Consume a regex literal at `i` if one closes on this line; `false` leaves `i` untouched. */
@@ -291,7 +292,7 @@ export const lex = (text: string): LexedSource => {
 			emit(char, true, true);
 			i++;
 		} else if (char === ")") {
-			if (parens.pop() !== undefined) controlCloses.add(code.length);
+			if (parens.pop() !== undefined) MutableHashSet.add(controlCloses, code.length);
 			emit(char, true, true);
 			i++;
 		} else if (char === "{") {
@@ -362,7 +363,7 @@ export const references: {
 		while (end >= 0 && SPACE.test(code[end] ?? "")) end--;
 		let start = end;
 		while (start >= 0 && isIdentifierChar(code[start])) start--;
-		if (GLOBAL_OBJECTS.has(code.slice(start + 1, end + 1))) found.push(at);
+		if (MutableHashSet.has(GLOBAL_OBJECTS, code.slice(start + 1, end + 1))) found.push(at);
 	}
 	return found;
 });

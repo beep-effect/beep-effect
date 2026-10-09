@@ -13,6 +13,9 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import { DependencyGraph } from "./DependencyGraph.ts";
 import type { WorkspaceDiscoveryFailure } from "./WorkspaceDiscovery.ts";
 import { WorkspaceDiscovery } from "./WorkspaceDiscovery.ts";
@@ -169,21 +172,20 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 		 * nothing under the workspace root. `Git` owns the `--relative` mechanics;
 		 * this detector only asks for the relative mode.
 		 */
-		const filesOf = (
+		const filesOf = Effect.fnUntraced(function* (
 			root: string,
 			options: ChangeDetectionOptions,
-		): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError> =>
-			Effect.gen(function* () {
-				const committed = yield* git.changedFiles(root, {
-					base: options.base,
-					head: options.head,
-					relative: true,
-				});
-				if (!options.includeUncommitted) return [...committed].sort();
-
-				const working = yield* git.workingChanges(root, { relative: true });
-				return [...new Set([...committed, ...working])].sort();
+		): Effect.fn.Return<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError> {
+			const committed = yield* git.changedFiles(root, {
+				base: options.base,
+				head: options.head,
+				relative: true,
 			});
+			if (!options.includeUncommitted) return [...committed].sort();
+
+			const working = yield* git.workingChanges(root, { relative: true });
+			return [...MutableHashSet.fromIterable([...committed, ...working])].sort();
+		});
 
 		/**
 		 * Every git query above reports paths relative to `cwd` — the workspace
@@ -195,15 +197,14 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 		const rootOf = (): Effect.Effect<string, WorkspaceDiscoveryFailure> =>
 			discovery.info.pipe(Effect.map((info) => info.root));
 
-		const packagesOf = (
+		const packagesOf = Effect.fnUntraced(function* (
 			options: ChangeDetectionOptions,
-		): Effect.Effect<ReadonlyArray<WorkspacePackage>, ChangeDetectionFailure> =>
-			Effect.gen(function* () {
-				const root = yield* rootOf();
-				const files = yield* filesOf(root, options);
-				const absolute = files.map((file) => (file.startsWith("/") ? file : `${root}/${file}`));
-				return yield* discovery.resolveFiles(absolute);
-			});
+		): Effect.fn.Return<ReadonlyArray<WorkspacePackage>, ChangeDetectionFailure> {
+			const root = yield* rootOf();
+			const files = yield* filesOf(root, options);
+			const absolute = files.map((file) => (file.startsWith("/") ? file : `${root}/${file}`));
+			return yield* discovery.resolveFiles(absolute);
+		});
 
 		return {
 			changedFiles: Effect.fn("ChangeDetector.changedFiles")(function* (options?: ChangeDetectionOptions) {
@@ -228,9 +229,9 @@ export class ChangeDetector extends Context.Service<ChangeDetector, ChangeDetect
 				const all = yield* discovery.listPackages;
 				const graph = DependencyGraph.make({ packages: all });
 				const names = yield* graph.affectedBy(changed.map((pkg) => pkg.name));
-				const byName = new Map(all.map((pkg) => [pkg.name, pkg]));
+				const byName = MutableHashMap.fromIterable(all.map((pkg) => [pkg.name, pkg] as const));
 				const affected = names
-					.map((name) => byName.get(name))
+					.map((name) => O.getOrUndefined(MutableHashMap.get(byName, name)))
 					.filter((pkg): pkg is WorkspacePackage => pkg !== undefined);
 				yield* Effect.logDebug("Affected packages detected").pipe(
 					Effect.annotateLogs("workspace.packages.count", affected.length),

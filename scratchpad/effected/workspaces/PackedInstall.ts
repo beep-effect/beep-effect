@@ -2,6 +2,8 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
@@ -307,8 +309,8 @@ const DEFAULT_BIN_TIMEOUT: Duration.Input = "1 minute";
  */
 const isNotALink = (error: PlatformError.PlatformError): boolean =>
 	error.reason._tag === "Unknown" &&
-	typeof error.reason.cause === "object" &&
-	error.reason.cause !== null &&
+	P.isObjectKeyword(error.reason.cause) &&
+	!P.isFunction(error.reason.cause) &&
 	("code" in error.reason.cause ? error.reason.cause.code : undefined) === "EINVAL";
 
 /**
@@ -387,52 +389,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 		const directory = this.directory;
 		const manager = this.manager;
 		const entry = `node_modules/.bin/${name}`;
-		return Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const path = yield* Path.Path;
-			const io = (message: string) => (cause: unknown) => failure("Io", message, { manager, cause });
-			const missing = (why: string) => failure("MissingBin", `${manager}: ${entry} ${why}`, { manager });
-			const linked = yield* fs.readLink(bin).pipe(
-				Effect.as(true),
-				Effect.catch((error) =>
-					isNotALink(error)
-						? Effect.succeed(false)
-						: error.reason._tag === "NotFound"
-							? Effect.fail(missing("does not exist"))
-							: error.pipe(io(`could not read the link ${bin}`), Effect.fail),
-				),
-			);
-			if (!linked) {
-				const present = yield* fs.exists(bin).pipe(Effect.mapError(io(`could not inspect ${bin}`)));
-				if (!present) return yield* missing("does not exist");
-				// A shim, not a link (pnpm writes these): its target is inside a script this does not parse.
-				return undefined;
-			}
-			const target = yield* fs
-				.realPath(bin)
-				.pipe(
-					Effect.catch((error) =>
-						error.reason._tag === "NotFound"
-							? Effect.fail(missing("is a link to nothing"))
-							: error.pipe(io(`could not resolve ${bin}`), Effect.fail),
-					),
-				);
-			const root = yield* fs.realPath(directory).pipe(Effect.mapError(io(`could not resolve ${directory}`)));
-			for (let dir = path.dirname(target); dir.startsWith(`${root}/`); dir = path.dirname(dir)) {
-				const manifest = path.join(dir, "package.json");
-				if (!(yield* fs.exists(manifest).pipe(Effect.mapError(io(`could not inspect ${manifest}`))))) continue;
-				const text = yield* fs.readFileString(manifest).pipe(Effect.mapError(io(`could not read ${manifest}`)));
-				const parsed: unknown = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
-				const named =
-					typeof parsed === "object" && parsed !== null && "name" in parsed ? parsed.name : undefined;
-				if (P.isString(named)) return { package: named, target };
-			}
-			return yield* failure(
-				"UnownedBin",
-				`${manager}: ${entry} links to ${target}, which lies in no named package inside ${root}`,
-				{ manager },
-			);
-		});
+		return binProvenance(bin, directory, manager, entry);
 	}
 
 	/**
@@ -542,43 +499,7 @@ export class InstalledConsumer extends S.Class<InstalledConsumer>($I`InstalledCo
 	): Effect.Effect<ChildProcess.StandardCommand, PackedInstallError, FileSystem.FileSystem | Path.Path> {
 		const consumer = this;
 		const manager = this.manager;
-		return Effect.gen(function* () {
-			const fs = yield* FileSystem.FileSystem;
-			const path = yield* Path.Path;
-			const missing = (why: string) =>
-				failure("MissingBin", `${manager}: the carrier's bin ${name} ${why}`, {
-					manager,
-					...O.getSomesStruct({ package: O.fromUndefinedOr(consumer.carrier) }),
-				});
-			if (consumer.carrier === undefined) return yield* missing("cannot be found: this consumer records no carrier");
-			const root = path.join(consumer.directory, "node_modules", ...consumer.carrier.split("/"));
-			const manifestPath = path.join(root, "package.json");
-			const text = yield* fs
-				.readFileString(manifestPath)
-				.pipe(
-					Effect.catch((error) =>
-						error.reason._tag === "NotFound"
-							? Effect.fail(missing(`cannot be found: ${consumer.carrier} is not installed at ${root}`))
-							: Effect.fail(failure("Io", `could not read ${manifestPath}`, { manager, cause: error })),
-					),
-				);
-			const manifest = readPackedManifest(text);
-			if (Result.isFailure(manifest)) {
-				return yield* failure("Io", `${manifestPath} is not a JSON object`, { manager, cause: manifest.failure });
-			}
-			const target = binTargetOf(text, name);
-			if (target === undefined) return yield* missing(`is not declared by ${consumer.carrier}`);
-			const file = path.join(root, target);
-			const present = yield* fs
-				.exists(file)
-				.pipe(Effect.mapError((cause) => failure("Io", `could not inspect ${file}`, { manager, cause })));
-			if (!present) return yield* missing(`points at ${file}, which does not exist`);
-			return ChildProcess.make("node", [file, ...args], {
-				cwd: options.cwd ?? consumer.directory,
-				env: layeredEnv(consumer, options),
-				extendEnv: false,
-			});
-		});
+		return carrierCommand(consumer, manager, name, args, options);
 	}
 
 	/**
@@ -816,7 +737,7 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 		// The root is read only when something needs it: a double that answers only listPackages still plans.
 		const needsRoot = options.workspaceOverrides === true || requested.some(([, spec]) => !path.isAbsolute(spec));
 		const root = needsRoot ? (yield* discovery.info.pipe(Effect.mapError(discoveryFailed))).root : "/";
-		const wanted = new Map<string, string>();
+		const wanted = MutableHashMap.empty<string, string>();
 		if (options.workspaceOverrides === true) {
 			const file = path.join(root, "pnpm-workspace.yaml");
 			const text = yield* fs
@@ -829,24 +750,24 @@ const planClosure = Effect.fn("planClosure")(function* (carrier: string, options
 			const document = yield* Yaml.parse(text).pipe(
 				Effect.mapError((cause) => failure("InvalidOverride", `${file} is not valid YAML`, { cause })),
 			);
-			for (const [name, spec] of R.toEntries(fileOverridesOf(document))) wanted.set(name, spec);
+			for (const [name, spec] of R.toEntries(fileOverridesOf(document))) MutableHashMap.set(wanted, name, spec);
 		}
-		for (const [name, spec] of requested) wanted.set(name, spec);
+		for (const [name, spec] of requested) MutableHashMap.set(wanted, name, spec);
 
-		const packed = new Set(closure.success.map((pkg) => pkg.name));
+		const packed = MutableHashSet.fromIterable(closure.success.map((pkg) => pkg.name));
 		const replacements: Array<Replacement> = [];
-		for (const name of [...wanted.keys()].sort()) {
+		for (const name of [...MutableHashMap.keys(wanted)].sort()) {
 			const invalid = (message: string, cause?: unknown) =>
 				failure("InvalidOverride", `override ${name}: ${message}`, {
 					package: name,
 					...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }),
 				});
-			if (packed.has(name)) {
+			if (MutableHashSet.has(packed, name)) {
 				return yield* invalid(
 					`${name === carrier ? "the carrier" : "a closure member"} is always packed from the workspace; overrides replace only packages outside it`,
 				);
 			}
-			const spec = wanted.get(name) ?? "";
+			const spec = O.getOrElse(MutableHashMap.get(wanted, name), () => "");
 			const absolute = path.isAbsolute(spec) ? spec : path.resolve(root, spec);
 			const source = yield* fs
 				.realPath(absolute)
@@ -988,7 +909,7 @@ export class PackedInstall {
 		const packages = P.isNumber(budget.packages) ? budget.packages : budget.packages.length;
 		return Duration.sum(
 			Duration.sum(
-				Duration.times(perManager, new Set(budget.managers).size),
+				Duration.times(perManager, MutableHashSet.size(MutableHashSet.fromIterable(budget.managers))),
 				Duration.times(perPackage, Math.max(1, packages)),
 			),
 			Duration.sum(Duration.fromInputUnsafe(UNTIMED_SLACK), Duration.fromInputUnsafe(CLEANUP_ALLOWANCE)),
@@ -1180,8 +1101,7 @@ export class PackedInstall {
 	 *
 	 * @param preflight - What {@link PackedInstall.preflight} answered.
 	 */
-	static readonly gate = (preflight: PackedInstallPreflight): Effect.Effect<PackedInstallGate> =>
-		Effect.gen(function* () {
+	static readonly gate = Effect.fn("gate")(function* (preflight: PackedInstallPreflight): Effect.fn.Return<PackedInstallGate> {
 			if (preflight.ready) return { action: "run", message: "" } satisfies PackedInstallGate;
 			const ci = yield* Config.option(Config.String("CI")).pipe(Effect.orElseSucceed(O.none<string>));
 			const underCi = O.isSome(ci) && !["", "0", "false"].includes(ci.value.toLowerCase());
@@ -1204,7 +1124,7 @@ export class PackedInstall {
 			);
 		}
 		// One consumer directory per manager: a manager listed twice is installed once.
-		const managers = [...new Set(options.managers)];
+		const managers = [...MutableHashSet.fromIterable(options.managers)];
 		if (managers.length === 0) {
 			return yield* failure(
 				"NoManagerAvailable",
@@ -1372,8 +1292,7 @@ export class PackedInstall {
 		}
 		const overrides = R.fromEntries(rest.map(({ name, tarball }) => [name, tarball]));
 
-		const consumers = yield* Effect.forEach(available, ({ manager, version }) =>
-			Effect.gen(function* () {
+		const consumers = yield* Effect.forEach(available, Effect.fnUntraced(function* ({ manager, version }) {
 				const directory = path.join(scratch, `consumer-${manager}`);
 				yield* fs
 					.makeDirectory(directory, { recursive: true })
@@ -1448,3 +1367,88 @@ export class PackedInstall {
 		});
 	});
 }
+
+const binProvenance = Effect.fn("binProvenance")(function* (bin: string, directory: string, manager: PackageManagerName, entry: string): Effect.fn.Return<BinProvenance | undefined, PackedInstallError, FileSystem.FileSystem | Path.Path> {
+	const fs = yield* FileSystem.FileSystem;
+	const path = yield* Path.Path;
+	const io = (message: string) => (cause: unknown) => failure("Io", message, { manager, cause });
+	const missing = (why: string) => failure("MissingBin", `${manager}: ${entry} ${why}`, { manager });
+	const linked = yield* fs.readLink(bin).pipe(
+		Effect.as(true),
+		Effect.catch((error) =>
+			isNotALink(error)
+				? Effect.succeed(false)
+				: error.reason._tag === "NotFound"
+					? Effect.fail(missing("does not exist"))
+					: error.pipe(io(`could not read the link ${bin}`), Effect.fail),
+		),
+	);
+	if (!linked) {
+		const present = yield* fs.exists(bin).pipe(Effect.mapError(io(`could not inspect ${bin}`)));
+		if (!present) return yield* missing("does not exist");
+		// A shim, not a link (pnpm writes these): its target is inside a script this does not parse.
+		return undefined;
+	}
+	const target = yield* fs
+		.realPath(bin)
+		.pipe(
+			Effect.catch((error) =>
+				error.reason._tag === "NotFound"
+					? Effect.fail(missing("is a link to nothing"))
+					: error.pipe(io(`could not resolve ${bin}`), Effect.fail),
+			),
+		);
+	const root = yield* fs.realPath(directory).pipe(Effect.mapError(io(`could not resolve ${directory}`)));
+	for (let dir = path.dirname(target); dir.startsWith(`${root}/`); dir = path.dirname(dir)) {
+		const manifest = path.join(dir, "package.json");
+		if (!(yield* fs.exists(manifest).pipe(Effect.mapError(io(`could not inspect ${manifest}`))))) continue;
+		const text = yield* fs.readFileString(manifest).pipe(Effect.mapError(io(`could not read ${manifest}`)));
+		const parsed: unknown = yield* S.decodeEffect(JsonValue)(text).pipe(Effect.mapError(io(`${manifest} is not JSON`)));
+		const named =
+			P.isObjectKeyword(parsed) && !P.isFunction(parsed) && "name" in parsed ? parsed.name : undefined;
+		if (P.isString(named)) return { package: named, target };
+	}
+	return yield* failure(
+		"UnownedBin",
+		`${manager}: ${entry} links to ${target}, which lies in no named package inside ${root}`,
+		{ manager },
+	);
+});
+
+const carrierCommand = Effect.fn("carrierCommand")(function* (consumer: InstalledConsumer, manager: PackageManagerName, name: string, args: ReadonlyArray<string>, options: BinCommandOptions): Effect.fn.Return<ChildProcess.StandardCommand, PackedInstallError, FileSystem.FileSystem | Path.Path> {
+	const fs = yield* FileSystem.FileSystem;
+	const path = yield* Path.Path;
+	const missing = (why: string) =>
+		failure("MissingBin", `${manager}: the carrier's bin ${name} ${why}`, {
+			manager,
+			...O.getSomesStruct({ package: O.fromUndefinedOr(consumer.carrier) }),
+		});
+	if (consumer.carrier === undefined) return yield* missing("cannot be found: this consumer records no carrier");
+	const root = path.join(consumer.directory, "node_modules", ...consumer.carrier.split("/"));
+	const manifestPath = path.join(root, "package.json");
+	const text = yield* fs
+		.readFileString(manifestPath)
+		.pipe(
+			Effect.catch((error) =>
+				error.reason._tag === "NotFound"
+					? Effect.fail(missing(`cannot be found: ${consumer.carrier} is not installed at ${root}`))
+					: Effect.fail(failure("Io", `could not read ${manifestPath}`, { manager, cause: error })),
+			),
+		);
+	const manifest = readPackedManifest(text);
+	if (Result.isFailure(manifest)) {
+		return yield* failure("Io", `${manifestPath} is not a JSON object`, { manager, cause: manifest.failure });
+	}
+	const target = binTargetOf(text, name);
+	if (target === undefined) return yield* missing(`is not declared by ${consumer.carrier}`);
+	const file = path.join(root, target);
+	const present = yield* fs
+		.exists(file)
+		.pipe(Effect.mapError((cause) => failure("Io", `could not inspect ${file}`, { manager, cause })));
+	if (!present) return yield* missing(`points at ${file}, which does not exist`);
+	return ChildProcess.make("node", [file, ...args], {
+		cwd: options.cwd ?? consumer.directory,
+		env: layeredEnv(consumer, options),
+		extendEnv: false,
+	});
+});

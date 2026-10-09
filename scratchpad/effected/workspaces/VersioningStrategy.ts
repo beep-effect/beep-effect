@@ -11,6 +11,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as Str from "effect/String";
 import { PublishabilityDetector } from "./Publishability.ts";
 import type { TagFormatOptions, TagStyle } from "./ReleaseTag.ts";
 import { ReleaseTag } from "./ReleaseTag.ts";
@@ -142,7 +145,7 @@ export class VersioningStrategy extends S.Class<VersioningStrategy>($I`Versionin
 	 */
 	static classify(options: ClassifyOptions): VersioningStrategy {
 		const fixedGroups = options.fixedGroups ?? [];
-		const packages = [...new Set(options.packages)].sort();
+		const packages = A.sort(A.fromIterable(MutableHashSet.fromIterable(options.packages)), Str.Order);
 
 		const type: VersioningStrategyType =
 			packages.length <= 1

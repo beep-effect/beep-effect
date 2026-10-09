@@ -133,57 +133,56 @@ const FETCH_TIMEOUT = Duration.minutes(2);
  * integrity: the lockfile is the declaring side's own checksum store, and a
  * store that cannot be read cannot be confirmed to agree with the inline pin.
  */
-export const expectedIntegrity = (
+export const expectedIntegrity = Effect.fn("expectedIntegrity")(function* (
 	request: Pick<FetchRequest, "name" | "version" | "spec" | "side" | "locks">,
-): Effect.Effect<string, FetchFailure> =>
-	Effect.gen(function* () {
-		const { name, version, side } = request;
-		const key = `${name}@${version}`;
-		const inline = splitConfigDependencySpec(request.spec).integrity;
-		if (inline !== undefined && !IntegrityHash.isSri(inline)) {
-			return yield* Effect.fail(
-				fetchFailure(
-					"integrityUnavailable",
-					`config dependency ${key} declared by ${sideLabel(side)} carries an inline integrity that is not an SRI hash, ` +
-						"so a fetched copy cannot be verified and nothing was fetched.",
-				),
-			);
-		}
-		const locks = yield* request.locks.pipe(
-			Effect.mapError((cause) =>
-				fetchFailure(
-					"integrityUnavailable",
-					`config dependency ${key} must be fetched, but the pnpm-lock.yaml of ${sideLabel(side)} cannot be read ` +
-						`(${messageOf(cause)}), so its recorded integrity cannot be checked and nothing was fetched.`,
-					cause,
-				),
+): Effect.fn.Return<string, FetchFailure> {
+	const { name, version, side } = request;
+	const key = `${name}@${version}`;
+	const inline = splitConfigDependencySpec(request.spec).integrity;
+	if (inline !== undefined && !IntegrityHash.isSri(inline)) {
+		return yield* Effect.fail(
+			fetchFailure(
+				"integrityUnavailable",
+				`config dependency ${key} declared by ${sideLabel(side)} carries an inline integrity that is not an SRI hash, ` +
+					"so a fetched copy cannot be verified and nothing was fetched.",
 			),
 		);
-		const lock = locks?.get(name);
-		const locked = lock !== undefined && lock.version === version ? lock.integrity : undefined;
-		if (inline !== undefined && locked !== undefined && inline !== locked) {
-			return yield* Effect.fail(
-				fetchFailure(
-					"integrityMismatch",
-					`config dependency ${key} declared by ${sideLabel(side)} has two different recorded integrities: ` +
-						`pnpm-workspace.yaml pins ${inline} and pnpm-lock.yaml records ${locked}. Nothing was fetched; ` +
-						"reconcile the two (a fresh `pnpm install` rewrites the lockfile) before retrying.",
-				),
-			);
-		}
-		const integrity = inline ?? locked;
-		if (integrity === undefined) {
-			return yield* Effect.fail(
-				fetchFailure(
-					"integrityUnavailable",
-					`config dependency ${key} must be fetched, but ${sideLabel(side)} records no integrity for it ` +
-						"(no inline integrity in pnpm-workspace.yaml and no pnpm-lock.yaml entry for that version), " +
-						"so a fetched copy could not be verified and nothing was fetched.",
-				),
-			);
-		}
-		return integrity;
-	});
+	}
+	const locks = yield* request.locks.pipe(
+		Effect.mapError((cause) =>
+			fetchFailure(
+				"integrityUnavailable",
+				`config dependency ${key} must be fetched, but the pnpm-lock.yaml of ${sideLabel(side)} cannot be read ` +
+					`(${messageOf(cause)}), so its recorded integrity cannot be checked and nothing was fetched.`,
+				cause,
+			),
+		),
+	);
+	const lock = locks?.get(name);
+	const locked = lock !== undefined && lock.version === version ? lock.integrity : undefined;
+	if (inline !== undefined && locked !== undefined && inline !== locked) {
+		return yield* Effect.fail(
+			fetchFailure(
+				"integrityMismatch",
+				`config dependency ${key} declared by ${sideLabel(side)} has two different recorded integrities: ` +
+					`pnpm-workspace.yaml pins ${inline} and pnpm-lock.yaml records ${locked}. Nothing was fetched; ` +
+					"reconcile the two (a fresh `pnpm install` rewrites the lockfile) before retrying.",
+			),
+		);
+	}
+	const integrity = inline ?? locked;
+	if (integrity === undefined) {
+		return yield* Effect.fail(
+			fetchFailure(
+				"integrityUnavailable",
+				`config dependency ${key} must be fetched, but ${sideLabel(side)} records no integrity for it ` +
+					"(no inline integrity in pnpm-workspace.yaml and no pnpm-lock.yaml entry for that version), " +
+					"so a fetched copy could not be verified and nothing was fetched.",
+			),
+		);
+	}
+	return integrity;
+});
 
 /**
  * The registry settings pnpm reads from a `pnpm-workspace.yaml`: the default

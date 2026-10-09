@@ -37,7 +37,7 @@ export const manifestPatternsOf = (manifest: unknown): ReadonlyArray<string> => 
 	const workspaces = "workspaces" in manifest ? manifest.workspaces : undefined;
 	const direct = stringsOf(workspaces);
 	if (direct !== undefined) return direct;
-	if (workspaces !== null && typeof workspaces === "object" && "packages" in workspaces) {
+	if (P.isObjectKeyword(workspaces) && !P.isFunction(workspaces) && "packages" in workspaces) {
 		return stringsOf(workspaces.packages) ?? [];
 	}
 	return [];
@@ -48,39 +48,38 @@ export const manifestPatternsOf = (manifest: unknown): ReadonlyArray<string> => 
  * then the root package.json `workspaces` field. An absent config is a
  * standalone package, not an error — it yields an empty list.
  */
-export const readPatterns = (
+export const readPatterns = Effect.fn("readPatterns")(function* (
 	root: string,
-): Effect.Effect<ReadonlyArray<string>, PatternReadFailure, FileSystem.FileSystem | Path.Path> =>
-	Effect.gen(function* () {
-		const fs = yield* FileSystem.FileSystem;
-		const path = yield* Path.Path;
+): Effect.fn.Return<ReadonlyArray<string>, PatternReadFailure, FileSystem.FileSystem | Path.Path> {
+	const fs = yield* FileSystem.FileSystem;
+	const path = yield* Path.Path;
 
-		// A config file that EXISTS but cannot be read is not a config file that
-		// declares no patterns. Substituting "" / "{}" made those two outcomes
-		// literally identical, so the failure was invisible by construction — the
-		// same silent-degradation family as absorbing a `readDirectory` error into
-		// an empty directory listing. An ABSENT file is still fine: that is a real,
-		// distinguishable condition meaning "no config here".
-		const pnpmWorkspacePath = path.join(root, "pnpm-workspace.yaml");
-		const hasPnpmWorkspace = yield* fs.exists(pnpmWorkspacePath).pipe(Effect.orElseSucceed(() => false));
-		if (hasPnpmWorkspace) {
-			const content = yield* fs
-				.readFileString(pnpmWorkspacePath)
-				.pipe(Effect.mapError((cause): PatternReadFailure => ({ path: pnpmWorkspacePath, kind: "read", cause })));
-			const document = yield* Yaml.parse(content).pipe(
-				Effect.mapError((cause): PatternReadFailure => ({ path: pnpmWorkspacePath, kind: "invalidYaml", cause })),
-			);
-			const patterns = pnpmPatternsOf(document);
-			if (patterns.length > 0) return patterns;
-		}
-
-		const manifestPath = path.join(root, "package.json");
-		const hasManifest = yield* fs.exists(manifestPath).pipe(Effect.orElseSucceed(() => false));
-		if (!hasManifest) return [];
-
+	// A config file that EXISTS but cannot be read is not a config file that
+	// declares no patterns. Substituting "" / "{}" made those two outcomes
+	// literally identical, so the failure was invisible by construction — the
+	// same silent-degradation family as absorbing a `readDirectory` error into
+	// an empty directory listing. An ABSENT file is still fine: that is a real,
+	// distinguishable condition meaning "no config here".
+	const pnpmWorkspacePath = path.join(root, "pnpm-workspace.yaml");
+	const hasPnpmWorkspace = yield* fs.exists(pnpmWorkspacePath).pipe(Effect.orElseSucceed(() => false));
+	if (hasPnpmWorkspace) {
 		const content = yield* fs
-			.readFileString(manifestPath)
-			.pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "read", cause })));
-		const manifest = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "invalidJson", cause })));
-		return manifestPatternsOf(manifest);
-	});
+			.readFileString(pnpmWorkspacePath)
+			.pipe(Effect.mapError((cause): PatternReadFailure => ({ path: pnpmWorkspacePath, kind: "read", cause })));
+		const document = yield* Yaml.parse(content).pipe(
+			Effect.mapError((cause): PatternReadFailure => ({ path: pnpmWorkspacePath, kind: "invalidYaml", cause })),
+		);
+		const patterns = pnpmPatternsOf(document);
+		if (patterns.length > 0) return patterns;
+	}
+
+	const manifestPath = path.join(root, "package.json");
+	const hasManifest = yield* fs.exists(manifestPath).pipe(Effect.orElseSucceed(() => false));
+	if (!hasManifest) return [];
+
+	const content = yield* fs
+		.readFileString(manifestPath)
+		.pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "read", cause })));
+	const manifest = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause): PatternReadFailure => ({ path: manifestPath, kind: "invalidJson", cause })));
+	return manifestPatternsOf(manifest);
+});

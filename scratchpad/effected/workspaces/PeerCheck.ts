@@ -17,6 +17,9 @@ import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import { Range, SemVer } from "../semver/index.ts";
 import * as O from "effect/Option";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
@@ -234,10 +237,10 @@ export class UnsatisfiedPeer extends S.Class<UnsatisfiedPeer>($I`UnsatisfiedPeer
  *
  * @internal
  */
-const PEER_RESOLVING_FORMATS: ReadonlySet<Lockfile["format"]> = new Set(["npm", "pnpm", "bun"]);
+const PEER_RESOLVING_FORMATS: MutableHashSet.MutableHashSet<Lockfile["format"]> = MutableHashSet.fromIterable<Lockfile["format"]>(["npm", "pnpm", "bun"]);
 
 /** @internal */
-const supportsPeerResolution = (format: Lockfile["format"]): boolean => PEER_RESOLVING_FORMATS.has(format);
+const supportsPeerResolution = (format: Lockfile["format"]): boolean => MutableHashSet.has(PEER_RESOLVING_FORMATS, format);
 
 /**
  * The protocol pnpm records a workspace-directory resolution under, passed
@@ -362,11 +365,11 @@ const linkTargetsOf = (relativePath: string, pkg: WorkspacePackage): ReadonlyArr
  */
 interface Join {
 	/** Supplied manifests by `relativePath` — the spelling a `link:` target uses. */
-	readonly manifests: ReadonlyMap<string, WorkspacePackage>;
+	readonly manifests: MutableHashMap.MutableHashMap<string, WorkspacePackage>;
 	/** Instance ids of the rows a COVERED `link:` edge lands on: the nodes whose peers are joined. */
-	readonly joinable: ReadonlySet<string>;
+	readonly joinable: MutableHashSet.MutableHashSet<string>;
 	/** The importer's own dependency instances, by name. */
-	readonly context: ReadonlyMap<string, ResolvedPackage>;
+	readonly context: MutableHashMap.MutableHashMap<string, ResolvedPackage>;
 	/** The caller's catalogs, which a joined `catalog:` peer range resolves through. */
 	readonly catalogs: CatalogSet | undefined;
 }
@@ -396,19 +399,19 @@ const providerContext = (
 	roots: ImporterRoots,
 	byId: ReadonlyMap<string, ResolvedPackage>,
 	links: ReadonlyArray<LinkEdge>,
-): ReadonlyMap<string, ResolvedPackage> => {
-	const context = new Map<string, ResolvedPackage>();
+): MutableHashMap.MutableHashMap<string, ResolvedPackage> => {
+	const context = MutableHashMap.empty<string, ResolvedPackage>();
 	if (roots._tag === "dependencies") {
-		for (const instance of roots.instances) context.set(instance.name, instance);
+		for (const instance of roots.instances) MutableHashMap.set(context, instance.name, instance);
 		// A workspace row is named by its DIRECTORY, so a linked provider is
 		// keyed by the name the importer depends on it under, which is the
 		// name a peer asks for.
-		for (const link of links) if (link.row !== undefined) context.set(link.name, link.row);
+		for (const link of links) if (link.row !== undefined) MutableHashMap.set(context, link.name, link.row);
 		return context;
 	}
-	for (const [name, instanceId] of Object.entries(roots.instance.resolved)) {
+	for (const [name, instanceId] of R.toEntries(roots.instance.resolved)) {
 		const provider = byId.get(instanceId);
-		if (provider !== undefined) context.set(name, provider);
+		if (provider !== undefined) MutableHashMap.set(context, name, provider);
 	}
 	return context;
 };
@@ -427,8 +430,8 @@ const providerContext = (
  * @internal
  */
 const joinedManifest = (join: Join, instance: ResolvedPackage): WorkspacePackage | undefined => {
-	if (instance.relativePath === undefined || !join.joinable.has(instance.instanceId)) return undefined;
-	return join.manifests.get(instance.relativePath);
+	if (instance.relativePath === undefined || !MutableHashSet.has(join.joinable, instance.instanceId)) return undefined;
+	return O.getOrUndefined(MutableHashMap.get(join.manifests, instance.relativePath));
 };
 
 /**
@@ -443,13 +446,13 @@ const joinedManifest = (join: Join, instance: ResolvedPackage): WorkspacePackage
  *
  * @internal
  */
-const optionalPeers = (manifest: WorkspacePackage): ReadonlySet<string> => {
-	const optional = new Set<string>();
+const optionalPeers = (manifest: WorkspacePackage): MutableHashSet.MutableHashSet<string> => {
+	const optional = MutableHashSet.empty<string>();
 	const meta: unknown = manifest.manifestRecord.peerDependenciesMeta;
 	if (!P.isObjectOrArray(meta)) return optional;
-	for (const [name, entry] of Object.entries<unknown>(meta)) {
-		if (typeof entry === "object" && entry !== null && ("optional" in entry ? entry.optional : undefined) === true) {
-			optional.add(name);
+	for (const [name, entry] of R.toEntries({ ...meta })) {
+		if (P.isObjectKeyword(entry) && !P.isFunction(entry) && ("optional" in entry ? entry.optional : undefined) === true) {
+			MutableHashSet.add(optional, name);
 		}
 	}
 	return optional;
@@ -606,7 +609,7 @@ const compare = (wanted: string, found: string): Verdict => {
  * @internal
  */
 const judgeJoined = (
-	context: ReadonlyMap<string, ResolvedPackage>,
+	context: MutableHashMap.MutableHashMap<string, ResolvedPackage>,
 	catalogs: CatalogSet | undefined,
 	peer: string,
 	declared: string,
@@ -614,7 +617,7 @@ const judgeJoined = (
 ): JoinedVerdict => {
 	const resolvedRange = resolvePeerRange(catalogs, peer, declared);
 	const wanted = resolvedRange ?? declared;
-	const provider = context.get(peer);
+	const provider = O.getOrUndefined(MutableHashMap.get(context, peer));
 	if (provider === undefined) {
 		if (optional) return SATISFIED;
 		return { _tag: "unsatisfied", found: null, wanted };
@@ -823,16 +826,16 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 		// The caller's manifests, keyed the way a `link:` target is spelled: a
 		// workspace-relative POSIX directory. Empty when the key is omitted,
 		// which is what keeps every `link:` edge on the fail-closed branch.
-		const manifests = new Map<string, WorkspacePackage>();
+		const manifests = MutableHashMap.empty<string, WorkspacePackage>();
 		// The same manifests keyed by every directory a `link:` to them can
 		// name: the package directory, and its publish directory when pnpm
 		// links into it (see {@link linkTargetsOf}).
-		const byLinkTarget = new Map<string, WorkspacePackage>();
+		const byLinkTarget = MutableHashMap.empty<string, WorkspacePackage>();
 		for (const pkg of options?.workspacePackages ?? []) {
 			const relativePath = linkTargetPath(".", pkg.relativePath);
-			if (!manifests.has(relativePath)) manifests.set(relativePath, pkg);
+			if (!MutableHashMap.has(manifests, relativePath)) MutableHashMap.set(manifests, relativePath, pkg);
 			for (const target of linkTargetsOf(relativePath, pkg)) {
-				if (!byLinkTarget.has(target)) byLinkTarget.set(target, pkg);
+				if (!MutableHashMap.has(byLinkTarget, target)) MutableHashMap.set(byLinkTarget, target, pkg);
 			}
 		}
 
@@ -842,8 +845,8 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 		// fail-closed. Both halves need the same normalized path resolution —
 		// a `link:` version is spelled relative to the importer that recorded
 		// it — so they are computed in one pass rather than twice.
-		const joinable = new Set<string>();
-		const linksByImporter = new Map<string, ReadonlyArray<LinkEdge>>();
+		const joinable = MutableHashSet.empty<string>();
+		const linksByImporter = MutableHashMap.empty<string, ReadonlyArray<LinkEdge>>();
 		let unjoinedLink = false;
 		for (const importer of lockfile.importers) {
 			const edges: Array<LinkEdge> = [];
@@ -858,23 +861,23 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 				// A publish-directory target (`packages/a/dist`) stands for the
 				// package directory's row, which is what the lockfile model
 				// resolves the same edge to.
-				const pkg = byLinkTarget.get(target);
+				const pkg = O.getOrUndefined(MutableHashMap.get(byLinkTarget, target));
 				const row = index.workspaceByPath.get(pkg === undefined ? target : linkTargetPath(".", pkg.relativePath));
 				const covered = pkg !== undefined;
 				if (!covered) unjoinedLink = true;
-				if (covered && row !== undefined) joinable.add(row.instanceId);
+				if (covered && row !== undefined) MutableHashSet.add(joinable, row.instanceId);
 				edges.push({ name: dep.name, row, covered });
 			}
-			if (edges.length > 0) linksByImporter.set(importer.path, edges);
+			if (edges.length > 0) MutableHashMap.set(linksByImporter, importer.path, edges);
 		}
 
 		const rows: Array<UnsatisfiedPeer> = [];
 		const unresolved: Array<string> = [];
-		const unjudged = new Set<UnverifiedReason>();
-		const seen = new Set<string>();
+		const unjudged = MutableHashSet.empty<UnverifiedReason>();
+		const seen = MutableHashSet.empty<string>();
 
 		for (const importer of lockfile.importers) {
-			const links = linksByImporter.get(importer.path) ?? [];
+			const links = O.getOrUndefined(MutableHashMap.get(linksByImporter, importer.path)) ?? [];
 			const roots = withLinkRoots(rootInstances(lockfile, importer.path, index), links, importer.dependencies);
 			if (roots === undefined) {
 				unresolved.push(importer.path);
@@ -891,14 +894,14 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 				context: providerContext(roots, byId, links),
 				catalogs: options?.catalogs,
 			};
-			const judged = new Set<string>();
+			const judged = MutableHashSet.empty<string>();
 			collect(importer.path, walksFrom(roots, join), byId, rows, seen, policy, join, judged, unjudged);
 			// A covered edge clears the marker ONLY when the walk actually read
 			// the target's manifest peers for THIS importer. Covering the path
 			// is not judging it: a target with no lockfile row, or one the walk
 			// never reached, is still invisible, and the report says so.
 			for (const edge of links) {
-				if (edge.covered && (edge.row === undefined || !judged.has(edge.row.instanceId))) unjoinedLink = true;
+				if (edge.covered && (edge.row === undefined || !MutableHashSet.has(judged, edge.row.instanceId))) unjoinedLink = true;
 			}
 		}
 
@@ -927,8 +930,8 @@ export class PeerCheck extends S.Class<PeerCheck>($I`PeerCheck`)({
 		// compared: neither satisfied nor unsatisfied, so the report cannot
 		// present its silence as clean. Pushed in a fixed order so the array
 		// does not depend on which importer the walk met first.
-		if (unjudged.has("peerRangeUnresolved")) unverified.push("peerRangeUnresolved");
-		if (unjudged.has("peerVersionUnresolved")) unverified.push("peerVersionUnresolved");
+		if (MutableHashSet.has(unjudged, "peerRangeUnresolved")) unverified.push("peerRangeUnresolved");
+		if (MutableHashSet.has(unjudged, "peerVersionUnresolved")) unverified.push("peerVersionUnresolved");
 
 		return PeerCheck.make({
 			supported: true,
@@ -968,20 +971,20 @@ const collect = (
 	roots: ReadonlyArray<Walk>,
 	byId: ReadonlyMap<string, ResolvedPackage>,
 	rows: Array<UnsatisfiedPeer>,
-	seen: Set<string>,
+	seen: MutableHashSet.MutableHashSet<string>,
 	policy: Policy,
 	join: Join,
-	judged: Set<string>,
-	unjudged: Set<UnverifiedReason>,
+	judged: MutableHashSet.MutableHashSet<string>,
+	unjudged: MutableHashSet.MutableHashSet<UnverifiedReason>,
 ): void => {
-	const visited = new Set<string>();
+	const visited = MutableHashSet.empty<string>();
 	const queue: Array<Walk> = [...roots];
 
 	while (queue.length > 0) {
 		const current = queue.shift();
 		if (current === undefined) break;
-		if (visited.has(current.instance.instanceId)) continue;
-		visited.add(current.instance.instanceId);
+		if (MutableHashSet.has(visited, current.instance.instanceId)) continue;
+		MutableHashSet.add(visited, current.instance.instanceId);
 
 		// A parent the walk reached through a covered `link:` edge contributes
 		// its MANIFEST's peers, which is the whole point of supplying the
@@ -994,19 +997,19 @@ const collect = (
 		const declaring = linked?.name ?? current.instance.name;
 		// Recorded so the caller can tell a covered edge that was JUDGED from
 		// one that was merely covered; see {@link PeerCheck.run}.
-		if (linked !== undefined) judged.add(current.instance.instanceId);
+		if (linked !== undefined) MutableHashSet.add(judged, current.instance.instanceId);
 
-		for (const [peer, wanted] of Object.entries(declared)) {
+		for (const [peer, wanted] of R.toEntries(declared)) {
 			if (peer === "") continue;
 			const optional =
 				optionalNames === undefined
 					? current.instance.peerDependenciesMeta[peer]?.optional === true
-					: optionalNames.has(peer);
+					: MutableHashSet.has(optionalNames, peer);
 			const verdict: JoinedVerdict =
 				linked === undefined
 					? withWanted(judge(current.instance, peer, wanted, optional, byId), wanted)
 					: judgeJoined(join.context, join.catalogs, peer, wanted, optional);
-			if (verdict._tag === "unjudged") for (const reason of verdict.reasons) unjudged.add(reason);
+			if (verdict._tag === "unjudged") for (const reason of verdict.reasons) MutableHashSet.add(unjudged, reason);
 			if (verdict._tag !== "unsatisfied") continue;
 			// pnpm computes the same violation and then SUPPRESSES it when a rule
 			// permits the version that resolved. Replicating that is the whole
@@ -1027,8 +1030,8 @@ const collect = (
 			// per-chain one and this is what still collapses the diamond, which is
 			// mutation-checked in both directions.
 			const key = `${importerPath}\u0000${peer}\u0000${current.instance.instanceId}`;
-			if (seen.has(key)) continue;
-			seen.add(key);
+			if (MutableHashSet.has(seen, key)) continue;
+			MutableHashSet.add(seen, key);
 			rows.push(
 				UnsatisfiedPeer.make({
 					importer: importerPath,
@@ -1051,9 +1054,9 @@ const collect = (
 		// on the consumer (`linkchain-registry/`). Walking on would judge a
 		// deeper package's peers against the wrong importer's dependencies.
 		if (current.path.length > 0 && current.instance.isWorkspace) continue;
-		for (const targetId of Object.values(current.instance.resolved)) {
+		for (const targetId of R.values(current.instance.resolved)) {
 			const next = byId.get(targetId);
-			if (next === undefined || visited.has(targetId)) continue;
+			if (next === undefined || MutableHashSet.has(visited, targetId)) continue;
 			queue.push({
 				instance: next,
 				path: [...current.path, parentLabel(join, next)],
@@ -1119,7 +1122,7 @@ const suppressedByRule = (policy: Policy, parentName: string, peer: string, foun
 	if (policy.allowAny(peer)) return true;
 	const version = SemVer.parseResult(found);
 	if (Result.isFailure(version)) return false;
-	for (const [key, permitted] of Object.entries(policy.allowed)) {
+	for (const [key, permitted] of R.toEntries(policy.allowed)) {
 		const separator = key.indexOf(">");
 		// A key starting with ">" names no parent at all — malformed, and a
 		// malformed rule suppresses nothing.

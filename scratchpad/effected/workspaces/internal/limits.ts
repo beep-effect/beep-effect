@@ -1,4 +1,6 @@
-// The package's bound constants, in a zero-dependency leaf so every surface
+import * as HashSet from "effect/HashSet";
+
+// The package's bound constants, in a shared leaf so every surface
 // imports one number without an import cycle.
 
 /**
@@ -27,4 +29,4 @@ export const MAX_ENUMERATION_ENTRIES = 100_000;
  *
  * @internal
  */
-export const PRUNED_DIRECTORIES: ReadonlySet<string> = new Set([".git", "node_modules"]);
+export const PRUNED_DIRECTORIES: HashSet.HashSet<string> = HashSet.make(".git", "node_modules");

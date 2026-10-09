@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -32,6 +33,12 @@ import * as R from "effect/Record";
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceDiscovery");
 
 const JsonValue = S.fromJsonString(S.Unknown);
+
+class WorkspaceDiscoveryCause extends S.TaggedError<WorkspaceDiscoveryCause>($I`WorkspaceDiscoveryCause`)(
+	"WorkspaceDiscoveryCause",
+	{ message: S.String },
+	$I.annote("WorkspaceDiscoveryCause", { description: "A manifest-shape failure or an unstubbed discovery test-double method." }),
+) {}
 
 /**
  * Raised when a workspace member's `package.json` cannot be read, parsed, or
@@ -310,21 +317,19 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 	 * Builds the service. Root resolution is one explicit concern: `cwd` is an
 	 * option here, never an ambient `process.cwd()` read inside a method.
 	 */
-	static readonly make = (
+	static readonly make = Effect.fn("make")(function* (
 		options?: WorkspaceDiscoveryOptions,
-	): Effect.Effect<WorkspaceDiscoveryShape, never, WorkspaceRoot | FileSystem.FileSystem | Path.Path> =>
-		Effect.gen(function* () {
+	): Effect.fn.Return<WorkspaceDiscoveryShape, never, WorkspaceRoot | FileSystem.FileSystem | Path.Path> {
 			const roots = yield* WorkspaceRoot;
 			const fs = yield* FileSystem.FileSystem;
 			const path = yield* Path.Path;
 
 			/** Read one `package.json` into the tolerant discovery projection. */
-			const readPackage = (
+			const readPackage = Effect.fnUntraced(function* (
 				root: string,
 				directory: string,
 				relativePath: string,
-			): Effect.Effect<WorkspacePackage, WorkspaceDiscoveryError> =>
-				Effect.gen(function* () {
+			): Effect.fn.Return<WorkspacePackage, WorkspaceDiscoveryError> {
 					const packageJsonPath = path.join(directory, "package.json");
 					const content = yield* fs
 						.readFileString(packageJsonPath)
@@ -347,7 +352,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
-								cause: new Error("package.json is not a JSON object"),
+								cause: WorkspaceDiscoveryCause.make({ message: "package.json is not a JSON object" }),
 							});
 					}
 					const raw = parsed;
@@ -374,7 +379,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
-								cause: new Error(`version must be a string, got ${typeof version}`),
+								cause: WorkspaceDiscoveryCause.make({ message: `version must be a string, got ${typeof version}` }),
 							});
 					}
 					if (version === "") {
@@ -382,7 +387,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 								root,
 								path: packageJsonPath,
 								kind: "invalidShape",
-								cause: new Error("version must be a non-empty string"),
+								cause: WorkspaceDiscoveryCause.make({ message: "version must be a non-empty string" }),
 							});
 					}
 					// The tolerant projection: decoded through the schema, so a malformed
@@ -522,7 +527,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			 * long-lived host serving many worktrees, and is why `refresh()` clears
 			 * it wholesale rather than invalidating one cell.
 			 */
-			const rootMemos = new Map<
+			const rootMemos = MutableHashMap.empty<
 				string,
 				{
 					readonly memo: Effect.Effect<
@@ -539,15 +544,15 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				// single memo — keying on the caller's path would discover the same
 				// workspace once per subdirectory it happens to ask from.
 				const root = yield* roots.find(directory);
-				const existing = rootMemos.get(root);
+				const existing = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
 				if (existing !== undefined) return yield* existing.memo;
 				const [resolveOnce, invalidateOne] = yield* Effect.cachedInvalidateWithTTL(discoverAt(root), Duration.infinity);
 				const built = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidateOne));
 				// Re-check under the benign concurrent-miss race: keep whichever cell
 				// landed first so callers dedupe onto one.
-				const raced = rootMemos.get(root);
+				const raced = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
 				if (raced !== undefined) return yield* raced.memo;
-				rootMemos.set(root, { memo: built, invalidate: invalidateOne });
+				MutableHashMap.set(rootMemos, root, { memo: built, invalidate: invalidateOne });
 				return yield* built;
 			});
 
@@ -591,16 +596,16 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				return O.none();
 			};
 
-			const packageIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, ReadonlyMap<string, WorkspacePackage>>();
+			const packageIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, MutableHashMap.MutableHashMap<string, WorkspacePackage>>();
 
-			const packagesByName = (all: ReadonlyArray<WorkspacePackage>): ReadonlyMap<string, WorkspacePackage> => {
+			const packagesByName = (all: ReadonlyArray<WorkspacePackage>): MutableHashMap.MutableHashMap<string, WorkspacePackage> => {
 				const cached = packageIndexes.get(all);
 				if (cached !== undefined) return cached;
 				// First-write-wins, matching the `all.find` this index replaced: discovery does not
 				// reject duplicate names, and a plain `new Map(all.map(...))` would keep the last.
-				const index = new Map<string, WorkspacePackage>();
+				const index = MutableHashMap.empty<string, WorkspacePackage>();
 				for (const pkg of all) {
-					if (!index.has(pkg.name)) index.set(pkg.name, pkg);
+					if (!MutableHashMap.has(index, pkg.name)) MutableHashMap.set(index, pkg.name, pkg);
 				}
 				packageIndexes.set(all, index);
 				return index;
@@ -618,12 +623,12 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
 				importerMap: Effect.suspend(Effect.fn("WorkspaceDiscovery.importerMap")(function* () {
 					const all = yield* packages;
-					return new Map(all.map((pkg) => [pkg.relativePath, pkg]));
+					return MutableHashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const)).backing;
 				})),
 
 				getPackage: Effect.fn("WorkspaceDiscovery.getPackage")(function* (name: string) {
 					const all = yield* packages;
-					const found = packagesByName(all).get(name);
+					const found = O.getOrUndefined(MutableHashMap.get(packagesByName(all), name));
 					if (found !== undefined) return found;
 					return yield* PackageNotFoundError.make({ name, available: all.map((pkg) => pkg.name) });
 				}),
@@ -646,31 +651,31 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 				resolveFiles: Effect.fn("WorkspaceDiscovery.resolveFiles")(function* (filePaths: ReadonlyArray<string>) {
 					const all = yield* packages;
 					const index = owners(all);
-					const seen = new Map<string, WorkspacePackage>();
+					const seen = MutableHashMap.empty<string, WorkspacePackage>();
 					for (const filePath of filePaths) {
 						const owner = ownerOf(filePath, index);
-						if (O.isSome(owner)) seen.set(owner.value.name, owner.value);
+						if (O.isSome(owner)) MutableHashMap.set(seen, owner.value.name, owner.value);
 					}
-					return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+					return [...MutableHashMap.values(seen)].sort((a, b) => a.name.localeCompare(b.name));
 				}),
 
 				refreshIn: Effect.fn("WorkspaceDiscovery.refreshIn")(function* (directory: string) {
 					const root = yield* roots.find(directory);
-					const cell = rootMemos.get(root);
+					const cell = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
 					if (cell === undefined) return;
 					// Invalidate the cell BEFORE dropping the reference: a fiber already
 					// holding this memo keeps its own reference, and leaving the cached
 					// value live would let that fiber replay a discovery this call was
 					// asked to discard.
 					yield* cell.invalidate;
-					rootMemos.delete(root);
+					MutableHashMap.remove(rootMemos, root);
 				}),
 
 				refresh: Effect.suspend(() =>
 					Effect.flatMap(
-						Effect.forEach([...rootMemos.values()], (cell) => cell.invalidate, { discard: true }),
+						Effect.forEach([...MutableHashMap.values(rootMemos)], (cell) => cell.invalidate, { discard: true }),
 						() => {
-							rootMemos.clear();
+							MutableHashMap.clear(rootMemos);
 							return invalidate;
 						},
 					)),
@@ -762,11 +767,9 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			listPackages,
 			info: Effect.suspend(() =>
 				Effect.die(
-					new Error(
-						"WorkspaceDiscovery.makeTest: info() was called but not stubbed — no honest default WorkspaceInfo exists for a test double; pass an `info` override.",
-					),
+					WorkspaceDiscoveryCause.make({ message: "WorkspaceDiscovery.makeTest: info() was called but not stubbed — no honest default WorkspaceInfo exists for a test double; pass an `info` override." }),
 				)),
-			importerMap: Effect.suspend(() => Effect.map(listPackages, (all) => new Map(all.map((pkg) => [pkg.relativePath, pkg])))),
+			importerMap: Effect.suspend(() => Effect.map(listPackages, (all) => MutableHashMap.fromIterable(all.map((pkg) => [pkg.relativePath, pkg] as const)).backing)),
 			getPackage: (name: string) =>
 				Effect.flatMap(listPackages, (all) => {
 					const found = all.find((pkg) => pkg.name === name);
@@ -777,12 +780,12 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			resolveFile: (filePath: string) => Effect.map(listPackages, (all) => ownerOf(filePath, all)),
 			resolveFiles: (filePaths: ReadonlyArray<string>) =>
 				Effect.map(listPackages, (all) => {
-					const seen = new Map<string, WorkspacePackage>();
+					const seen = MutableHashMap.empty<string, WorkspacePackage>();
 					for (const filePath of filePaths) {
 						const owner = ownerOf(filePath, all);
-						if (O.isSome(owner)) seen.set(owner.value.name, owner.value);
+						if (O.isSome(owner)) MutableHashMap.set(seen, owner.value.name, owner.value);
 					}
-					return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+					return [...MutableHashMap.values(seen)].sort((a, b) => a.name.localeCompare(b.name));
 				}),
 			// Both per-root methods DIE unstubbed rather than deriving from
 			// `listPackages`. Deriving would model a world in which every root holds
@@ -792,15 +795,11 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			// OTHER workspace contain".
 			infoIn: () =>
 				Effect.die(
-					new Error(
-						"WorkspaceDiscovery.makeTest: infoIn() was called but not stubbed — a double cannot know what another root's workspace looks like; pass an `infoIn` override.",
-					),
+					WorkspaceDiscoveryCause.make({ message: "WorkspaceDiscovery.makeTest: infoIn() was called but not stubbed — a double cannot know what another root's workspace looks like; pass an `infoIn` override." }),
 				),
 			listPackagesIn: () =>
 				Effect.die(
-					new Error(
-						"WorkspaceDiscovery.makeTest: listPackagesIn() was called but not stubbed — deriving it from `listPackages` would model every root as identical, which is the bug this method exists to prevent; pass a `listPackagesIn` override.",
-					),
+					WorkspaceDiscoveryCause.make({ message: "WorkspaceDiscovery.makeTest: listPackagesIn() was called but not stubbed — deriving it from `listPackages` would model every root as identical, which is the bug this method exists to prevent; pass a `listPackagesIn` override." }),
 				),
 			refresh: Effect.suspend(() => Effect.void),
 			// Nothing is memoized in a double, so dropping one root's memo is honestly
@@ -868,14 +867,14 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 			// Name → version, where a version-less member is present with `undefined`:
 			// membership and version are two different questions here, and `has` is
 			// what tells them apart.
-			const versionIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, ReadonlyMap<string, string | undefined>>();
-			const versionsByName = (all: ReadonlyArray<WorkspacePackage>): ReadonlyMap<string, string | undefined> => {
+			const versionIndexes = new WeakMap<ReadonlyArray<WorkspacePackage>, MutableHashMap.MutableHashMap<string, string | undefined>>();
+			const versionsByName = (all: ReadonlyArray<WorkspacePackage>): MutableHashMap.MutableHashMap<string, string | undefined> => {
 				const cached = versionIndexes.get(all);
 				if (cached !== undefined) return cached;
 				// First-write-wins, matching the `all.find` this index replaced.
-				const index = new Map<string, string | undefined>();
+				const index = MutableHashMap.empty<string, string | undefined>();
 				for (const pkg of all) {
-					if (!index.has(pkg.name)) index.set(pkg.name, pkg.version);
+					if (!MutableHashMap.has(index, pkg.name)) MutableHashMap.set(index, pkg.name, pkg.version);
 				}
 				versionIndexes.set(all, index);
 				return index;
@@ -887,8 +886,8 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 						Effect.mapError((cause) => DependencyResolutionError.make({ specifier, cause })),
 						Effect.flatMap((all) => {
 							const index = versionsByName(all);
-							if (!index.has(packageName)) return Effect.succeed(O.none<string>());
-							const version = index.get(packageName);
+							if (!MutableHashMap.has(index, packageName)) return Effect.succeed(O.none<string>());
+							const version = O.getOrUndefined(MutableHashMap.get(index, packageName));
 							return version === undefined
 								? Effect.fail(
 										// A domain condition read from structured data, not a foreign

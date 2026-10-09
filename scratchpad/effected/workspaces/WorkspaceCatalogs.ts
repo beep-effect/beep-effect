@@ -50,6 +50,13 @@ import * as R from "effect/Record";
 
 const $I = $ScratchpadId.create("effected/workspaces/WorkspaceCatalogs");
 
+/** A catalog shape or test-wiring defect with the original diagnostic message. */
+class WorkspaceCatalogsDefect extends S.TaggedError<WorkspaceCatalogsDefect>($I`WorkspaceCatalogsDefect`)(
+	"WorkspaceCatalogsDefect",
+	{ message: S.String },
+	$I.annote("WorkspaceCatalogsDefect", { description: "A catalog shape or test-wiring defect." }),
+) {}
+
 const JsonValue = S.fromJsonString(S.Unknown);
 
 /**
@@ -150,8 +157,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 	 * @param blocks - The `catalog` (default) and `catalogs` (named) blocks.
 	 */
 	static fromBunBlocks(blocks: { readonly catalog?: unknown; readonly catalogs?: unknown }): CatalogSet {
-		const raw: Record<string, unknown> = {};
-		if (isObject(blocks.catalogs)) Object.assign(raw, blocks.catalogs);
+		const raw: Record<string, unknown> = { ...(isObject(blocks.catalogs) ? blocks.catalogs : {}) };
 		if (isObject(blocks.catalog)) {
 			raw.default = { ...(isObject(raw.default) ? raw.default : {}), ...blocks.catalog };
 		}
@@ -181,7 +187,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 			return yield* CatalogAssemblyError.make({
 					source: "manifest",
 					path: "package.json",
-					cause: new Error("package.json is not a JSON object"),
+					cause: WorkspaceCatalogsDefect.make({ message: "package.json is not a JSON object" }),
 				});
 		}
 		const blocks = yield* manifestCatalogBlocks(manifest.workspaces);
@@ -230,7 +236,7 @@ export class CatalogSet extends S.Class<CatalogSet>($I`CatalogSet`)({
 
 /** Whether `value` is a non-null, non-array object. */
 const isObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /** Whether every value in an object is a string — a usable `dependency → range` catalog. */
 const isStringRecord = (value: unknown): value is Record<string, string> =>
@@ -243,17 +249,17 @@ const catalogBlocksOf = (
 	readonly catalog?: Record<string, string> | undefined;
 	readonly catalogs?: Record<string, Record<string, string>> | undefined;
 } => {
-	if (document === null || typeof document !== "object") return {};
+	if (!P.isObjectKeyword(document) || P.isFunction(document)) return {};
 	const catalog = "catalog" in document ? document.catalog : undefined;
 	const catalogs = "catalogs" in document ? document.catalogs : undefined;
 	// Preserve pnpm's duplicate-default refusal before dropping unusable entries.
 	if (catalog !== undefined && catalog !== null &&
-		typeof catalogs === "object" && catalogs !== null && "default" in catalogs &&
+		P.isObjectKeyword(catalogs) && !P.isFunction(catalogs) && "default" in catalogs &&
 		catalogs.default !== undefined && catalogs.default !== null) return {};
 	return {
 		catalogs: normalize({
 			default: catalog,
-			...(typeof catalogs === "object" && catalogs !== null ? catalogs : {}),
+			...(P.isObjectKeyword(catalogs) && !P.isFunction(catalogs) ? catalogs : {}),
 		}),
 	};
 };
@@ -297,7 +303,7 @@ const inlineReleaseAge = (document: unknown): Effect.Effect<PartialReleaseAgeGat
 
 /** A hard-fail catalog-assembly failure naming the malformed part of a `workspaces` field. */
 const malformed = (source: "manifest" | "catalog", path: string, detail: string): CatalogAssemblyError =>
-	CatalogAssemblyError.make({ source, path, cause: new Error(detail) });
+	CatalogAssemblyError.make({ source, path, cause: WorkspaceCatalogsDefect.make({ message: detail }) });
 
 /**
  * Validate a `catalog` (default) / `catalogs` (named) block pair, hard-failing on
@@ -431,7 +437,7 @@ export type CatalogAssemblyFailure = CatalogAssemblyError | WorkspaceRootNotFoun
 /** A defect naming the unstubbed test-double method — a test-wiring mistake, not a typed failure. */
 const unstubbed = (method: string): Effect.Effect<never> =>
 	Effect.die(
-		new Error(`WorkspaceCatalogs.makeTest: ${method}() was called but not stubbed — pass a \`${method}\` override.`),
+		WorkspaceCatalogsDefect.make({ message: `WorkspaceCatalogs.makeTest: ${method}() was called but not stubbed — pass a \`${method}\` override.` }),
 	);
 
 /** The single assembly pass's outputs, memoized together. */
@@ -624,203 +630,202 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
 	$I`WorkspaceCatalogs`,
 ) {
 	/** Builds the service. */
-	static readonly make = (
+	static readonly make = Effect.fn("WorkspaceCatalogs.make")(function* (
 		options?: WorkspaceCatalogsOptions,
-	): Effect.Effect<
+	): Effect.fn.Return<
 		WorkspaceCatalogsShape,
 		never,
 		WorkspaceRoot | LockfileReader | ConfigDependencyHooks | FileSystem.FileSystem | Path.Path
-	> =>
-		Effect.gen(function* () {
-			const roots = yield* WorkspaceRoot;
-			const lockfiles = yield* LockfileReader;
-			const hooks = yield* ConfigDependencyHooks;
-			const fs = yield* FileSystem.FileSystem;
-			const path = yield* Path.Path;
+	> {
+		const roots = yield* WorkspaceRoot;
+		const lockfiles = yield* LockfileReader;
+		const hooks = yield* ConfigDependencyHooks;
+		const fs = yield* FileSystem.FileSystem;
+		const path = yield* Path.Path;
 
-			// A file-presence probe that distinguishes genuine absence from a probe
-			// FAILURE. `fs.exists` already normalizes a NotFound PlatformError to
-			// `false`, so any error that escapes it (a permission or IO failure) is a
-			// genuine probe failure — surfacing it typed rather than collapsing it to
-			// "absent" is what keeps a locked-down `pnpm-workspace.yaml` from silently
-			// selecting the package.json reader (a silently-empty catalog is the "every
-			// dependency looks newly added" bug). The explicit NotFound arm is
-			// belt-and-suspenders for a backend whose `exists` surfaces NotFound.
-			//
-			// A `PlatformError` wraps one of two variants: `SystemError` (a normalized
-			// `reason._tag` such as `NotFound` / `PermissionDenied`) or `BadArgument`
-			// (`reason._tag === "BadArgument"`, no system reason). Only a `SystemError`
-			// whose reason is `NotFound` is genuine absence; every other reason — a
-			// `BadArgument`, or a `SystemError` with any other tag — is a real probe
-			// failure and surfaces typed.
-			const probeExists = (target: string): Effect.Effect<boolean, CatalogAssemblyError> =>
-				fs.exists(target).pipe(
-					Effect.catchTag("PlatformError", (error) => {
-						const reason = error.reason;
-						return reason instanceof PlatformError.SystemError && reason._tag === "NotFound"
-							? Effect.succeed(false)
-							: Effect.fail(CatalogAssemblyError.make({ source: "manifest", path: target, cause: error }));
-					}),
-				);
+		// A file-presence probe that distinguishes genuine absence from a probe
+		// FAILURE. `fs.exists` already normalizes a NotFound PlatformError to
+		// `false`, so any error that escapes it (a permission or IO failure) is a
+		// genuine probe failure — surfacing it typed rather than collapsing it to
+		// "absent" is what keeps a locked-down `pnpm-workspace.yaml` from silently
+		// selecting the package.json reader (a silently-empty catalog is the "every
+		// dependency looks newly added" bug). The explicit NotFound arm is
+		// belt-and-suspenders for a backend whose `exists` surfaces NotFound.
+		//
+		// A `PlatformError` wraps one of two variants: `SystemError` (a normalized
+		// `reason._tag` such as `NotFound` / `PermissionDenied`) or `BadArgument`
+		// (`reason._tag === "BadArgument"`, no system reason). Only a `SystemError`
+		// whose reason is `NotFound` is genuine absence; every other reason — a
+		// `BadArgument`, or a `SystemError` with any other tag — is a real probe
+		// failure and surfaces typed.
+		const probeExists = (target: string): Effect.Effect<boolean, CatalogAssemblyError> =>
+			fs.exists(target).pipe(
+				Effect.catchTag("PlatformError", (error) => {
+					const reason = error.reason;
+					return reason instanceof PlatformError.SystemError && reason._tag === "NotFound"
+						? Effect.succeed(false)
+						: Effect.fail(CatalogAssemblyError.make({ source: "manifest", path: target, cause: error }));
+				}),
+			);
 
-			// The single assembly pass produces BOTH the catalog set and the effective
-			// release-age gate off one root discovery, one inline read, and one hook
-			// replay — so the config-dependency hooks (which execute arbitrary code)
-			// run exactly once, and both outputs share the same memo.
-			const assemble: Effect.Effect<Assembled, CatalogAssemblyFailure> = Effect.gen(function* () {
-				const root = yield* findLayerRoot(roots, options);
+		// The single assembly pass produces BOTH the catalog set and the effective
+		// release-age gate off one root discovery, one inline read, and one hook
+		// replay — so the config-dependency hooks (which execute arbitrary code)
+		// run exactly once, and both outputs share the same memo.
+		const assemble: Effect.Effect<Assembled, CatalogAssemblyFailure> = Effect.gen(function* () {
+			const root = yield* findLayerRoot(roots, options);
 
-				// The lockfile is a RECORD of what was installed; an absent or
-				// unreadable one is not a catalog failure, it just contributes nothing.
-				// PM-aware: whichever extension (pnpm or bun) the lockfile carries.
-				// Both catalog and importer-version outputs come off this ONE read, the
-				// same "one pass, several outputs" discipline `releaseAgeGate` follows.
-				const lockfileOutputs = yield* lockfiles.read.pipe(
-					Effect.map((lockfile) => ({
-						catalogs: CatalogSet.fromLockfile(lockfile),
-						importerVersions: importerVersionsOf(lockfile),
-					})),
-					Effect.catch((_failure: LockfileReadFailure) =>
-						Effect.succeed({ catalogs: CatalogSet.empty(), importerVersions: {} }),
+			// The lockfile is a RECORD of what was installed; an absent or
+			// unreadable one is not a catalog failure, it just contributes nothing.
+			// PM-aware: whichever extension (pnpm or bun) the lockfile carries.
+			// Both catalog and importer-version outputs come off this ONE read, the
+			// same "one pass, several outputs" discipline `releaseAgeGate` follows.
+			const lockfileOutputs = yield* lockfiles.read.pipe(
+				Effect.map((lockfile) => ({
+					catalogs: CatalogSet.fromLockfile(lockfile),
+					importerVersions: importerVersionsOf(lockfile),
+				})),
+				Effect.catch((_failure: LockfileReadFailure) =>
+					Effect.succeed({ catalogs: CatalogSet.empty(), importerVersions: {} }),
+				),
+			);
+			const fromLockfile = lockfileOutputs.catalogs;
+			const importerVersions = lockfileOutputs.importerVersions;
+
+			// File presence picks the inline reader, the same rule the glob
+			// enumerator uses: pnpm-workspace.yaml → the pnpm path (config
+			// dependencies live only here); absent → the package.json path.
+			const workspaceYaml = path.join(root, "pnpm-workspace.yaml");
+			const hasPnpmWorkspace = yield* probeExists(workspaceYaml);
+
+			let inline: CatalogSet;
+			let injected: CatalogSet;
+			// The release-age gate contributions: inline pnpm-workspace.yaml keys and
+			// the replayed hooks. Both empty on the bun/package.json path (release-age
+			// is a pnpm feature and config dependencies live only in pnpm-workspace.yaml).
+			let inlineGate: PartialReleaseAgeGate = {};
+			let hookGate: PartialReleaseAgeGate = {};
+			// The EFFECTIVE rules: the workspace file's block seeded into the
+			// threaded config, with every replayed hook's contribution merged onto
+			// it. Read back off the injection rather than recomputed here — the
+			// point of seeding is that one object carries the answer.
+			let peerDependencyRules: PeerDependencyRules = NoPeerDependencyRules;
+			// Which version each config dependency replayed from; empty where
+			// config dependencies do not exist.
+			let hookReplays: Readonly<Record<string, HookReplay>> = {};
+			if (hasPnpmWorkspace) {
+				const text = yield* fs
+					.readFileString(workspaceYaml)
+					.pipe(
+						Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: workspaceYaml, cause })),
+					);
+				const document = yield* Yaml.parse(text).pipe(
+					Effect.mapError(
+						(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
 					),
 				);
-				const fromLockfile = lockfileOutputs.catalogs;
-				const importerVersions = lockfileOutputs.importerVersions;
-
-				// File presence picks the inline reader, the same rule the glob
-				// enumerator uses: pnpm-workspace.yaml → the pnpm path (config
-				// dependencies live only here); absent → the package.json path.
-				const workspaceYaml = path.join(root, "pnpm-workspace.yaml");
-				const hasPnpmWorkspace = yield* probeExists(workspaceYaml);
-
-				let inline: CatalogSet;
-				let injected: CatalogSet;
-				// The release-age gate contributions: inline pnpm-workspace.yaml keys and
-				// the replayed hooks. Both empty on the bun/package.json path (release-age
-				// is a pnpm feature and config dependencies live only in pnpm-workspace.yaml).
-				let inlineGate: PartialReleaseAgeGate = {};
-				let hookGate: PartialReleaseAgeGate = {};
-				// The EFFECTIVE rules: the workspace file's block seeded into the
-				// threaded config, with every replayed hook's contribution merged onto
-				// it. Read back off the injection rather than recomputed here — the
-				// point of seeding is that one object carries the answer.
-				let peerDependencyRules: PeerDependencyRules = NoPeerDependencyRules;
-				// Which version each config dependency replayed from; empty where
-				// config dependencies do not exist.
-				let hookReplays: Readonly<Record<string, HookReplay>> = {};
-				if (hasPnpmWorkspace) {
-					const text = yield* fs
-						.readFileString(workspaceYaml)
-						.pipe(
-							Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: workspaceYaml, cause })),
-						);
-					const document = yield* Yaml.parse(text).pipe(
-						Effect.mapError(
-							(cause) => CatalogAssemblyError.make({ source: "manifest", path: "pnpm-workspace.yaml", cause }),
-						),
+				// Validate the inline shape BEFORE normalizing: a malformed catalog block
+				// or the default catalog declared twice must fail typed here, exactly as
+				// the bun package.json path does — normalization would otherwise swallow
+				// it and read as an ABSENT catalog. Absent/empty catalogs still yield empty.
+				yield* validatePnpmWorkspaceCatalogs(document);
+				inline = CatalogSet.fromCatalogs(inlineCatalogs(catalogBlocksOf(document)));
+				// The inline release-age keys, hard-failing on a malformed value the same
+				// way the catalog blocks do.
+				inlineGate = yield* inlineReleaseAge(document);
+				// The opt-in hook replay, seeded by the inline catalogs and merged on
+				// top. The default layer's no-op hooks return the seed untouched, so
+				// this executes no config-dependency code. It surfaces the injected
+				// catalogs, the hooks' release-age contribution, the effective rules
+				// and the replay record from ONE replay.
+				// The working tree's own lockfile text, the integrity record a fetched
+				// config dependency is verified against. Unreadable reads as absent
+				// here, as it does for the lockfile record above: only a fetch needs
+				// it, and a fetch without it fails closed on its own. Read only when
+				// a config dependency is declared, since nothing else can use it.
+				// Read as TEXT beside `lockfiles.read()` because the env preamble
+				// the fetch verifies against is a document `Lockfile` does not model.
+				const lockfileText =
+					R.keys(configDependenciesOf(document)).length === 0
+						? undefined
+						: yield* fs
+								.readFileString(path.join(root, filenameFor("pnpm")))
+								.pipe(Effect.orElseSucceed(() => undefined));
+				const replayed = yield* injectFromDocument(hooks, root, document, inline, { lockfile: lockfileText });
+				injected = replayed.injected;
+				hookGate = replayed.injection.releaseAge;
+				peerDependencyRules = replayed.injection.peerDependencyRules;
+				hookReplays = replayed.injection.replays;
+			} else {
+				const manifestPath = path.join(root, "package.json");
+				// The presence probe must distinguish genuine absence from a probe
+				// FAILURE here too: a non-NotFound PlatformError (a permission/IO error)
+				// on `package.json` must fail typed rather than collapse to "absent" and
+				// return lockfile-only catalogs — the "every dependency looks newly
+				// added" bug on the bun branch. `probeExists` already does this.
+				const hasManifest = yield* probeExists(manifestPath);
+				if (!hasManifest)
+					return {
+						catalogs: fromLockfile,
+						releaseAgeGate: ReleaseAgeGate.combine(),
+						importerVersions,
+						peerDependencyRules: NoPeerDependencyRules,
+						hookReplays: {},
+					};
+				const text = yield* fs
+					.readFileString(manifestPath)
+					.pipe(
+						Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: manifestPath, cause })),
 					);
-					// Validate the inline shape BEFORE normalizing: a malformed catalog block
-					// or the default catalog declared twice must fail typed here, exactly as
-					// the bun package.json path does — normalization would otherwise swallow
-					// it and read as an ABSENT catalog. Absent/empty catalogs still yield empty.
-					yield* validatePnpmWorkspaceCatalogs(document);
-					inline = CatalogSet.fromCatalogs(inlineCatalogs(catalogBlocksOf(document)));
-					// The inline release-age keys, hard-failing on a malformed value the same
-					// way the catalog blocks do.
-					inlineGate = yield* inlineReleaseAge(document);
-					// The opt-in hook replay, seeded by the inline catalogs and merged on
-					// top. The default layer's no-op hooks return the seed untouched, so
-					// this executes no config-dependency code. It surfaces the injected
-					// catalogs, the hooks' release-age contribution, the effective rules
-					// and the replay record from ONE replay.
-					// The working tree's own lockfile text, the integrity record a fetched
-					// config dependency is verified against. Unreadable reads as absent
-					// here, as it does for the lockfile record above: only a fetch needs
-					// it, and a fetch without it fails closed on its own. Read only when
-					// a config dependency is declared, since nothing else can use it.
-					// Read as TEXT beside `lockfiles.read()` because the env preamble
-					// the fetch verifies against is a document `Lockfile` does not model.
-					const lockfileText =
-						R.keys(configDependenciesOf(document)).length === 0
-							? undefined
-							: yield* fs
-									.readFileString(path.join(root, filenameFor("pnpm")))
-									.pipe(Effect.orElseSucceed(() => undefined));
-					const replayed = yield* injectFromDocument(hooks, root, document, inline, { lockfile: lockfileText });
-					injected = replayed.injected;
-					hookGate = replayed.injection.releaseAge;
-					peerDependencyRules = replayed.injection.peerDependencyRules;
-					hookReplays = replayed.injection.replays;
-				} else {
-					const manifestPath = path.join(root, "package.json");
-					// The presence probe must distinguish genuine absence from a probe
-					// FAILURE here too: a non-NotFound PlatformError (a permission/IO error)
-					// on `package.json` must fail typed rather than collapse to "absent" and
-					// return lockfile-only catalogs — the "every dependency looks newly
-					// added" bug on the bun branch. `probeExists` already does this.
-					const hasManifest = yield* probeExists(manifestPath);
-					if (!hasManifest)
-						return {
-							catalogs: fromLockfile,
-							releaseAgeGate: ReleaseAgeGate.combine(),
-							importerVersions,
-							peerDependencyRules: NoPeerDependencyRules,
-							hookReplays: {},
-						};
-					const text = yield* fs
-						.readFileString(manifestPath)
-						.pipe(
-							Effect.mapError((cause) => CatalogAssemblyError.make({ source: "manifest", path: manifestPath, cause })),
-						);
-					inline = yield* CatalogSet.fromManifestWorkspaces(text);
-					// Config dependencies are a pnpm feature; there are none on this path.
-					injected = CatalogSet.empty();
-				}
+				inline = yield* CatalogSet.fromManifestWorkspaces(text);
+				// Config dependencies are a pnpm feature; there are none on this path.
+				injected = CatalogSet.empty();
+			}
 
-				const assembled = CatalogSet.merge(fromLockfile, inline, injected);
-				// Strictest-wins across the two sources: max age (clamped non-negative),
-				// exclude sets unioned — `ReleaseAgeGate.combine` is the single authority.
-				const releaseAgeGate = ReleaseAgeGate.combine(inlineGate, hookGate);
-				yield* Effect.logDebug("Catalogs assembled").pipe(
-					Effect.annotateLogs({
-						"workspace.root": root,
-						"workspace.catalogs": R.keys(assembled.entries).join(","),
-						"workspace.releaseAgeMinutes": releaseAgeGate.ageMinutes,
-					}),
-				);
-				return { catalogs: assembled, releaseAgeGate, importerVersions, peerDependencyRules, hookReplays };
-			});
-
-			const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(assemble, Duration.infinity);
-			const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
-
-			return {
-				set: Effect.suspend(Effect.fn("WorkspaceCatalogs.set")(function* () {
-					return (yield* memo).catalogs;
-				})),
-				resolveSpecifier: Effect.fn("WorkspaceCatalogs.resolveSpecifier")(function* (
-					dependency: string,
-					specifier: string,
-				) {
-					return (yield* memo).catalogs.resolveSpecifier(dependency, specifier);
+			const assembled = CatalogSet.merge(fromLockfile, inline, injected);
+			// Strictest-wins across the two sources: max age (clamped non-negative),
+			// exclude sets unioned — `ReleaseAgeGate.combine` is the single authority.
+			const releaseAgeGate = ReleaseAgeGate.combine(inlineGate, hookGate);
+			yield* Effect.logDebug("Catalogs assembled").pipe(
+				Effect.annotateLogs({
+					"workspace.root": root,
+					"workspace.catalogs": R.keys(assembled.entries).join(","),
+					"workspace.releaseAgeMinutes": releaseAgeGate.ageMinutes,
 				}),
-				peerDependencyRules: Effect.suspend(Effect.fn("WorkspaceCatalogs.peerDependencyRules")(function* () {
-					return (yield* memo).peerDependencyRules;
-				})),
-				releaseAgeGate: Effect.suspend(Effect.fn("WorkspaceCatalogs.releaseAgeGate")(function* () {
-					return (yield* memo).releaseAgeGate;
-				})),
-				importerVersions: Effect.suspend(Effect.fn("WorkspaceCatalogs.importerVersions")(function* () {
-					return (yield* memo).importerVersions;
-				})),
-				hookReplays: Effect.suspend(Effect.fn("WorkspaceCatalogs.hookReplays")(function* () {
-					return (yield* memo).hookReplays;
-				})),
-				// Infallible bookkeeping, not a fallible boundary — no span. The next
-				// read after this runs the full assembly again.
-				refresh: Effect.suspend(() => invalidate),
-			};
+			);
+			return { catalogs: assembled, releaseAgeGate, importerVersions, peerDependencyRules, hookReplays };
 		});
+
+		const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(assemble, Duration.infinity);
+		const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
+
+		return {
+			set: Effect.suspend(Effect.fn("WorkspaceCatalogs.set")(function* () {
+				return (yield* memo).catalogs;
+			})),
+			resolveSpecifier: Effect.fn("WorkspaceCatalogs.resolveSpecifier")(function* (
+				dependency: string,
+				specifier: string,
+			) {
+				return (yield* memo).catalogs.resolveSpecifier(dependency, specifier);
+			}),
+			peerDependencyRules: Effect.suspend(Effect.fn("WorkspaceCatalogs.peerDependencyRules")(function* () {
+				return (yield* memo).peerDependencyRules;
+			})),
+			releaseAgeGate: Effect.suspend(Effect.fn("WorkspaceCatalogs.releaseAgeGate")(function* () {
+				return (yield* memo).releaseAgeGate;
+			})),
+			importerVersions: Effect.suspend(Effect.fn("WorkspaceCatalogs.importerVersions")(function* () {
+				return (yield* memo).importerVersions;
+			})),
+			hookReplays: Effect.suspend(Effect.fn("WorkspaceCatalogs.hookReplays")(function* () {
+				return (yield* memo).hookReplays;
+			})),
+			// Infallible bookkeeping, not a fallible boundary — no span. The next
+			// read after this runs the full assembly again.
+			refresh: Effect.suspend(() => invalidate),
+		};
+	});
 
 	/**
 	 * The service over an explicit {@link ConfigDependencyHooks} layer — the

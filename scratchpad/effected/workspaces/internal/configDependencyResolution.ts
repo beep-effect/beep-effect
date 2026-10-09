@@ -1,4 +1,6 @@
+import { $ScratchpadId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 // Resolving a declared pnpm config dependency to the pnpmfile of the version
 // it DECLARES — not whatever happens to be installed right now.
 //
@@ -34,7 +36,7 @@ import * as Arr from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import type { HookReplayContext, HookReplaySource } from "../ConfigDependencyHooks.ts";
@@ -43,6 +45,15 @@ import type { ManifestVersion } from "./configDependencyShared.ts";
 import { carries, hooksError, ioOrNone, manifestVersion, sideLabel } from "./configDependencyShared.ts";
 import { splitConfigDependencySpec } from "./configDependencySpecGrammar.ts";
 import * as R from "effect/Record";
+
+const $I = $ScratchpadId.create("effected/workspaces/internal/configDependencyResolution");
+
+/** The resolution failure retained as the cause of a catalog assembly error. */
+class ConfigDependencyResolutionError extends S.TaggedError<ConfigDependencyResolutionError>($I`ConfigDependencyResolutionError`)(
+	"ConfigDependencyResolutionError",
+	{ message: S.String, cause: S.optionalKey(S.Defect({ includeStack: true })) },
+	$I.annote("ConfigDependencyResolutionError", { description: "Explains why a declared config dependency could not be resolved." }),
+) {}
 
 // The caller's Effect FileSystem may be virtual; resolution must walk the real pnpm store.
 const { readFile, readdir, realpath } = process.getBuiltinModule("node:fs/promises");
@@ -114,7 +125,7 @@ const declaredEntries = (
 		: Effect.fail(
 				hooksError(
 					traversal.name,
-					new Error(`config dependency name has a '..' path segment: ${traversal.name}`),
+					ConfigDependencyResolutionError.make({ message: `config dependency name has a '..' path segment: ${traversal.name}` }),
 					undefined,
 				),
 			);
@@ -167,8 +178,7 @@ const storeFromModulesYaml = (root: string): Effect.Effect<ReadonlyArray<string>
  * each walked up to its `links` ancestor. Scoped entries (`@scope/pkg`) are
  * one level deeper.
  */
-const storesFromLinks = (root: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+const storesFromLinks = Effect.fn("storesFromLinks")(function* (root: string): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError> {
 		const base = pnpmConfigDir(root);
 		const candidates: Array<string> = [];
 		for (const entry of yield* entriesOf(root, base)) {
@@ -195,8 +205,7 @@ const storesFromLinks = (root: string): Effect.Effect<ReadonlyArray<string>, Cat
  * its `v*` subdirectories (a store root holds one directory per store
  * version, `v11` today).
  */
-const storesFromEnvironment = (root: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+const storesFromEnvironment = Effect.fn("storesFromEnvironment")(function* (root: string): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError> {
 		const env = process.env;
 		const platform = process.platform;
 		const roots: Array<string> = [];
@@ -230,8 +239,7 @@ const storesFromEnvironment = (root: string): Effect.Effect<ReadonlyArray<string
  * root, since discovery serves every dependency of one `resolvePnpmfiles`
  * call rather than any single one.
  */
-const discoverStores = (root: string): Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+const discoverStores = Effect.fn("discoverStores")(function* (root: string): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError> {
 		const [fromYaml, fromLinks, fromEnvironment] = yield* Effect.all([
 			storeFromModulesYaml(root),
 			storesFromLinks(root),
@@ -277,12 +285,11 @@ const discoverStores = (root: string): Effect.Effect<ReadonlyArray<string>, Cata
  * are already deduplicated by realpath, so two matches here are two entries,
  * never one entry reached by two spellings.
  */
-const findInStores = (
+const findInStores = Effect.fn("findInStores")(function* (
 	name: string,
 	declared: string,
 	stores: ReadonlyArray<string>,
-): Effect.Effect<{ readonly store: string; readonly matches: ReadonlyArray<string> }, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+): Effect.fn.Return<{ readonly store: string; readonly matches: ReadonlyArray<string> }, CatalogAssemblyError> {
 		for (const store of stores) {
 			const versionDir = join(store, "links", name, declared);
 			const matches: Array<string> = [];
@@ -384,14 +391,13 @@ const pnpmfileIn = (name: string, dir: string): Effect.Effect<O.Option<string>, 
  * remediation is kept except for `integrityMismatch`, where the pins must be
  * reconciled first.
  */
-const resolveDirectory = (
+const resolveDirectory = Effect.fn("resolveDirectory")(function* (
 	root: string,
 	entry: DeclaredEntry,
 	stores: Effect.Effect<ReadonlyArray<string>, CatalogAssemblyError>,
 	locks: RecordedLocks,
 	options: ResolveOptions,
-): Effect.Effect<{ readonly dir: string; readonly source: HookReplaySource }, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+): Effect.fn.Return<{ readonly dir: string; readonly source: HookReplaySource }, CatalogAssemblyError> {
 		const { name, version: declared } = entry;
 		const side = options.side ?? {};
 		const installedDir = join(pnpmConfigDir(root), name);
@@ -405,13 +411,13 @@ const resolveDirectory = (
 		// which one the ref's integrity pinned, so replaying either would be a
 		// guess about which code to execute. Fail closed and say why.
 		if (only !== undefined)
-			return yield* hooksError(name, new Error(ambiguousMessage(name, declared, store, matches)), "ambiguous");
+			return yield* hooksError(name, ConfigDependencyResolutionError.make({ message: ambiguousMessage(name, declared, store, matches) }), "ambiguous");
 		const notInstalled = (fetch: O.Option<FetchFailure>) => {
 			const message = notInstalledMessage(name, declared, installed, searched, side, fetch);
 			const cause = O.getOrUndefined(fetch)?.cause;
 			return hooksError(
 				name,
-				cause === undefined ? new Error(message) : new Error(message, { cause }),
+				ConfigDependencyResolutionError.make({ message, ...O.getSomesStruct({ cause: O.fromUndefinedOr(cause) }) }),
 				O.match(fetch, { onNone: () => "notInstalled" as const, onSome: (failure) => failure.reason }),
 			);
 		};
@@ -452,12 +458,11 @@ export interface ResolveOptions {
 export const resolvePnpmfiles: {
 	(configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): (root: string) => Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
 	(root: string, configDependencies: Readonly<Record<string, string>>, options?: ResolveOptions): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError>;
-} = dual((args) => P.isString(args[0]) && args.length >= 2, (
+} = dual((args) => P.isString(args[0]) && args.length >= 2, Effect.fnUntraced(function* (
 	root: string,
 	configDependencies: Readonly<Record<string, string>>,
 	options: ResolveOptions = {},
-): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError> =>
-	Effect.gen(function* () {
+): Effect.fn.Return<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError> {
 		const entries = yield* declaredEntries(configDependencies);
 		// Store discovery and the declaring side's lockfile decode are each shared
 		// across the whole call and run lazily on first use (the first
@@ -471,8 +476,7 @@ export const resolvePnpmfiles: {
 				: yield* memoizeSuccess(PnpmEnvLockfile.configDependencies(lockfile));
 		return yield* Effect.forEach(
 			entries,
-			(entry) =>
-				Effect.gen(function* () {
+			Effect.fnUntraced(function* (entry) {
 					const { name, version } = entry;
 					const { dir, source } = yield* resolveDirectory(root, entry, stores, locks, options);
 					const pnpmfile = yield* pnpmfileIn(name, dir);
@@ -504,11 +508,11 @@ export const lookupPnpmfiles: {
 				return Effect.fail(
 					hooksError(
 						name,
-						new Error(
-							`config dependency ${key} has no entry in the supplied pnpmfile map (known: ${
+						ConfigDependencyResolutionError.make({
+							message: `config dependency ${key} has no entry in the supplied pnpmfile map (known: ${
 								known.length === 0 ? "none" : known.join(", ")
 							})`,
-						),
+						}),
 						undefined,
 					),
 				);

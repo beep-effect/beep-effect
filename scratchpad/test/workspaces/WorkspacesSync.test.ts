@@ -26,6 +26,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
+import { WorkspaceEnumerationDepthError } from "../../effected/workspaces/WorkspacesSync.ts";
 import nodePath, { join } from "node:path";
 import { afterAll, afterEach, assert, beforeAll, describe, it, vi } from "@effect/vitest";
 import type { MemoryFileSystemHandle } from "../../effected/memfs/index.ts";
@@ -205,9 +206,9 @@ describe("the sync hatch and the Effect enumerator agree at the depth boundary",
 		// NaN and 2.5 both slip past a bare `maxDepth < 1`, and a NaN bound then
 		// enumerates nothing — indistinguishable from a legitimately empty
 		// workspace. Same predicate as the enumerator's `Effect.die`.
-		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: Number.NaN }), RangeError);
-		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: 2.5 }), RangeError);
-		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: 0 }), RangeError);
+		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: Number.NaN }), WorkspaceEnumerationDepthError);
+		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: 2.5 }), WorkspaceEnumerationDepthError);
+		assert.throws(() => getWorkspacePackagesSync("/repo", { ...ops, maxDepth: 0 }), WorkspaceEnumerationDepthError);
 	});
 });
 

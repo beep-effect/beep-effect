@@ -24,6 +24,10 @@ const $I = $ScratchpadId.create("effected/workspaces/PackageManagerName");
 
 const JsonValue = S.fromJsonString(S.Unknown);
 
+class PackageManagerDetectorDefect extends S.TaggedError<PackageManagerDetectorDefect>($I`PackageManagerDetectorDefect`)("PackageManagerDetectorDefect", {
+	message: S.String,
+}, $I.annote("PackageManagerDetectorDefect", { description: "An invalid manifest value or unstubbed package manager detector." })) {}
+
 /**
  * The four package managers this package understands.
  *
@@ -126,7 +130,7 @@ interface ManagerHint {
 
 /** Whether `value` is a non-null, non-array object — corepack's own shape test. */
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-	typeof value === "object" && value !== null && !A.isArray(value);
+	P.isObjectKeyword(value) && !P.isFunction(value) && !A.isArray(value);
 
 /**
  * The exact version a `name` + `version` pair denotes, or none when the version
@@ -293,27 +297,26 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 		 * corrupt-manifest conditions, and swallowing them would report "no manager
 		 * declared" for a repo whose manifest is simply broken.
 		 */
-		const manifestOf = (root: string): Effect.Effect<O.Option<Record<string, unknown>>, WorkspaceManifestError> =>
-			Effect.gen(function* () {
-				const packageJsonPath = path.join(root, "package.json");
-				const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(() => false));
-				if (!exists) return O.none<Record<string, unknown>>();
+		const manifestOf = Effect.fnUntraced(function* (root: string): Effect.fn.Return<O.Option<Record<string, unknown>>, WorkspaceManifestError> {
+			const packageJsonPath = path.join(root, "package.json");
+			const exists = yield* fs.exists(packageJsonPath).pipe(Effect.orElseSucceed(() => false));
+			if (!exists) return O.none<Record<string, unknown>>();
 
-				const content = yield* fs
-					.readFileString(packageJsonPath)
-					.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
+			const content = yield* fs
+				.readFileString(packageJsonPath)
+				.pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "read", cause })));
 
-				const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
+			const parsed = yield* S.decodeEffect(JsonValue)(content).pipe(Effect.mapError((cause) => WorkspaceManifestError.make({ packageJsonPath, kind: "decode", cause })));
 
-				if (!isPlainObject(parsed)) {
-					return yield* WorkspaceManifestError.make({
-							packageJsonPath,
-							kind: "decode",
-							cause: new Error("package.json is not a JSON object"),
-						});
-				}
-				return O.some(parsed);
-			});
+			if (!isPlainObject(parsed)) {
+				return yield* WorkspaceManifestError.make({
+						packageJsonPath,
+						kind: "decode",
+						cause: PackageManagerDetectorDefect.make({ message: "package.json is not a JSON object" }),
+					});
+			}
+			return O.some(parsed);
+		});
 
 		/**
 		 * The manager name the manifest declares, if any.
@@ -545,9 +548,9 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
 	static readonly makeTest = (overrides: Partial<PackageManagerDetectorShape> = {}): PackageManagerDetectorShape => ({
 		detect: () =>
 			Effect.die(
-				new Error(
-					"PackageManagerDetector.makeTest: detect() was called but not stubbed — no honest default DetectedPackageManager exists for a test double; pass a `detect` override.",
-				),
+				PackageManagerDetectorDefect.make({
+					message: "PackageManagerDetector.makeTest: detect() was called but not stubbed — no honest default DetectedPackageManager exists for a test double; pass a `detect` override.",
+				}),
 			),
 		...overrides,
 	});

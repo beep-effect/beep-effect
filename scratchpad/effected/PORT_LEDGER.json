@@ -6961,7 +6961,9 @@
       "reviewRounds": [],
       "commits": [],
       "blocked": null,
-      "notes": [],
+      "notes": [
+        "2026-10-09T11:34:09.401Z beep laws done (four laws clean, allowlisted sites listed); S1 held by the environment-bound tests in TESTS_NOT_PASSING.md"
+      ],
       "closedAt": null
     },
     {

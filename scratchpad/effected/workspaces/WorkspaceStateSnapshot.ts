@@ -14,6 +14,8 @@ import { CatalogResolver, DependencyResolutionError, DependencySpecifier, Worksp
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -204,7 +206,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 	seededCatalogs: S.optionalKey(CatalogSet).annotateKey({ description: "Catalogs supplied from OUTSIDE this moment, consulted only when `catalogs` cannot answer." }),
 }, $I.annote("WorkspaceStateSnapshot", { description: "The state of a whole workspace at one moment — its packages and its assembled catalog set — as a serializable value." })) {
 	#versionIndex: ReadonlyMap<string, string> | undefined;
-	#packageIndex: ReadonlyMap<string, PackageStateSnapshot> | undefined;
+	#packageIndex: MutableHashMap.MutableHashMap<string, PackageStateSnapshot> | undefined;
 	#catalogResolver: Layer.Layer<CatalogResolver> | undefined;
 	#workspaceResolver: Layer.Layer<WorkspaceResolver> | undefined;
 	#resolvers: Layer.Layer<CatalogResolver | WorkspaceResolver> | undefined;
@@ -213,16 +215,18 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 		if (this.#versionIndex === undefined) {
 			// Only members that declared a version: an absent version stays absent
 			// here, rather than being presented as a placeholder string.
-			const index = new Map<string, string>();
-			for (const pkg of this.packages) if (pkg.version !== undefined) index.set(pkg.name, pkg.version);
-			this.#versionIndex = index;
+			const index = MutableHashMap.empty<string, string>();
+			for (const pkg of this.packages) if (pkg.version !== undefined) MutableHashMap.set(index, pkg.name, pkg.version);
+			// String keys live in the documented native backing map, preserving the
+			// public ReadonlyMap contract and insertion order.
+			this.#versionIndex = index.backing;
 		}
 		return this.#versionIndex;
 	}
 
-	#packages(): ReadonlyMap<string, PackageStateSnapshot> {
+	#packages(): MutableHashMap.MutableHashMap<string, PackageStateSnapshot> {
 		if (this.#packageIndex === undefined) {
-			this.#packageIndex = new Map(this.packages.map((pkg) => [pkg.name, pkg]));
+			this.#packageIndex = MutableHashMap.fromIterable(this.packages.map((pkg) => [pkg.name, pkg] as const));
 		}
 		return this.#packageIndex;
 	}
@@ -242,7 +246,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 
 	/** A single captured package by name, or `Option.none()`. Total. */
 	package(name: string): O.Option<PackageStateSnapshot> {
-		return O.fromUndefinedOr(this.#packages().get(name));
+		return MutableHashMap.get(this.#packages(), name);
 	}
 
 	/**
@@ -327,20 +331,17 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 		const exit = S.decodeExit(DependencySpecifier.FromString)(specifier);
 		if (!Exit.isSuccess(exit)) return O.none();
 		const classified = exit.value;
-		switch (classified._tag) {
-			case "catalog": {
-				const fromCatalogs = this.#catalogRange(dependency, classified.name);
+		return Match.value(classified).pipe(
+			Match.tag("catalog", (catalog) => {
+				const fromCatalogs = this.#catalogRange(dependency, catalog.name);
 				return O.isSome(fromCatalogs) ? fromCatalogs : onUnresolvedCatalog();
-			}
-			case "workspace": {
-				// A version-less member is absent from the index, so it resolves to
-				// `none` exactly as a non-member does — there is nothing to substitute
-				// for `workspace:^`.
-				return O.fromUndefinedOr(this.#versions().get(dependency));
-			}
-			default:
-				return O.none();
-		}
+			}),
+			// A version-less member is absent from the index, so it resolves to
+			// `none` exactly as a non-member does — there is nothing to substitute
+			// for `workspace:^`.
+			Match.tag("workspace", () => O.fromUndefinedOr(this.#versions().get(dependency))),
+			Match.orElse(O.none<string>),
+		);
 	}
 
 	/**
@@ -521,7 +522,7 @@ export class WorkspaceStateSnapshot extends S.Class<WorkspaceStateSnapshot>($I`W
 				// declared no version fails typed — the same answer the discovery-backed
 				// resolver gives.
 				versionOf: Effect.fn("WorkspaceResolver.versionOf")((packageName: string): Effect.Effect<O.Option<string>, DependencyResolutionError> => {
-					const member = this.#packages().get(packageName);
+					const member = O.getOrUndefined(MutableHashMap.get(this.#packages(), packageName));
 					if (member === undefined) return Effect.succeed(O.none<string>());
 					const version = member.version;
 					if (version === undefined) {

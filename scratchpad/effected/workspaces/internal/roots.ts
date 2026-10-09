@@ -8,6 +8,8 @@ import { dual } from "effect/Function";
 // `instanceId` is OPAQUE here — composed and looked up, never parsed.
 
 import type { Lockfile, ResolvedPackage } from "../../lockfiles/index.ts";
+import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 
 /** The two lookups every walk needs, built once per lockfile. */
 export interface InstanceIndex {
@@ -18,12 +20,14 @@ export interface InstanceIndex {
 }
 
 export const indexInstances = (lockfile: Lockfile): InstanceIndex => {
-	const byId = new Map(lockfile.packages.map((pkg) => [pkg.instanceId, pkg]));
-	const workspaceByPath = new Map<string, ResolvedPackage>();
+	const byId = MutableHashMap.fromIterable(A.map(lockfile.packages, (pkg) => [pkg.instanceId, pkg] as const));
+	const workspaceByPath = MutableHashMap.empty<string, ResolvedPackage>();
 	for (const pkg of lockfile.packages) {
-		if (pkg.isWorkspace && pkg.relativePath !== undefined) workspaceByPath.set(pkg.relativePath, pkg);
+		if (pkg.isWorkspace && pkg.relativePath !== undefined) MutableHashMap.set(workspaceByPath, pkg.relativePath, pkg);
 	}
-	return { byId, workspaceByPath };
+	// Primitive string keys live in the public backing map. Expose the existing
+	// ReadonlyMap boundary so callers retain native lookup and iteration semantics.
+	return { byId: byId.backing, workspaceByPath: workspaceByPath.backing };
 };
 
 /**

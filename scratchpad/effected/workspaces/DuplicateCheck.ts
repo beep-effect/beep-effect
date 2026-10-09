@@ -17,6 +17,9 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import type { Lockfile, ResolvedPackage } from "../lockfiles/index.ts";
 import * as S from "effect/Schema";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import { indexInstances, rootInstances } from "./internal/roots.ts";
 import * as R from "effect/Record";
 
@@ -249,7 +252,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		// Roots taken directly by an importer entry (no workspace row), keyed by
 		// the instance they resolved to. A workspace row's edges are attributed
 		// below, when the walk leaves the row.
-		const importerRoots = new Map<string, Array<string>>();
+		const importerRoots = MutableHashMap.empty<string, Array<string>>();
 		const unresolved: Array<string> = [];
 		const queue: Array<ResolvedPackage> = [];
 
@@ -264,24 +267,24 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 				continue;
 			}
 			for (const instance of roots.instances) {
-				const paths = importerRoots.get(instance.instanceId) ?? [];
+				const paths = O.getOrElse(MutableHashMap.get(importerRoots, instance.instanceId), (): Array<string> => []);
 				paths.push(importer.path);
-				importerRoots.set(instance.instanceId, paths);
+				MutableHashMap.set(importerRoots, instance.instanceId, paths);
 				queue.push(instance);
 			}
 		}
 
 		// One global walk: reachability is a property of the graph, not of any
 		// single importer, and every reached edge is a dependent to record.
-		const reached = new Set<string>();
+		const reached = MutableHashSet.empty<string>();
 		while (queue.length > 0) {
 			const current = queue.shift();
 			if (current === undefined) break;
-			if (reached.has(current.instanceId)) continue;
-			reached.add(current.instanceId);
+			if (MutableHashSet.has(reached, current.instanceId)) continue;
+			MutableHashSet.add(reached, current.instanceId);
 			for (const targetId of R.values(current.resolved)) {
 				const next = byId.get(targetId);
-				if (next !== undefined && !reached.has(targetId)) queue.push(next);
+				if (next !== undefined && !MutableHashSet.has(reached, targetId)) queue.push(next);
 			}
 		}
 
@@ -289,15 +292,15 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 		// package's edges in the order the lockfile lists the packages. Built from
 		// the lockfile rather than from the walk so the order never depends on
 		// which importer happened to reach an instance first.
-		const dependents = new Map<string, Array<Dependent>>();
-		const seen = new Set<string>();
+		const dependents = MutableHashMap.empty<string, Array<Dependent>>();
+		const seen = MutableHashSet.empty<string>();
 		const record = (targetId: string, dependent: Dependent): void => {
 			const key = `${targetId}\0${renderKey(dependent)}`;
-			if (seen.has(key)) return;
-			seen.add(key);
-			const list = dependents.get(targetId) ?? [];
+			if (MutableHashSet.has(seen, key)) return;
+			MutableHashSet.add(seen, key);
+			const list = O.getOrElse(MutableHashMap.get(dependents, targetId), (): Array<Dependent> => []);
 			list.push(dependent);
-			dependents.set(targetId, list);
+			MutableHashMap.set(dependents, targetId, list);
 		};
 		for (const importer of lockfile.importers) {
 			for (const [instanceId, paths] of importerRoots) {
@@ -305,7 +308,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 			}
 		}
 		for (const pkg of lockfile.packages) {
-			if (!reached.has(pkg.instanceId)) continue;
+			if (!MutableHashSet.has(reached, pkg.instanceId)) continue;
 			const from = dependentOf(pkg);
 			for (const targetId of R.values(pkg.resolved)) {
 				if (byId.has(targetId)) record(targetId, from);
@@ -314,21 +317,21 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 
 		// Group reached instances by name, then by version, keeping lockfile
 		// order on both axes.
-		const byName = new Map<string, Map<string, Array<ResolvedPackage>>>();
+		const byName = MutableHashMap.empty<string, MutableHashMap.MutableHashMap<string, Array<ResolvedPackage>>>();
 		for (const pkg of lockfile.packages) {
-			if (!reached.has(pkg.instanceId)) continue;
-			const versions = byName.get(pkg.name) ?? new Map<string, Array<ResolvedPackage>>();
-			const instances = versions.get(pkg.version) ?? [];
+			if (!MutableHashSet.has(reached, pkg.instanceId)) continue;
+			const versions = O.getOrElse(MutableHashMap.get(byName, pkg.name), () => MutableHashMap.empty<string, Array<ResolvedPackage>>());
+			const instances = O.getOrElse(MutableHashMap.get(versions, pkg.version), (): Array<ResolvedPackage> => []);
 			instances.push(pkg);
-			versions.set(pkg.version, instances);
-			byName.set(pkg.name, versions);
+			MutableHashMap.set(versions, pkg.version, instances);
+			MutableHashMap.set(byName, pkg.name, versions);
 		}
 
 		const duplicates: Array<DuplicatedPackage> = [];
 		for (const [name, versions] of byName) {
 			// Two or more DISTINCT VERSIONS is the rule. Instance count is not:
 			// peer-suffix variants of one version are the same code.
-			if (versions.size < 2) continue;
+			if (MutableHashMap.size(versions) < 2) continue;
 			if (!names(name)) continue;
 			duplicates.push(
 				DuplicatedPackage.make({
@@ -339,7 +342,7 @@ export class DuplicateCheck extends S.Class<DuplicateCheck>($I`DuplicateCheck`)(
 							instances: instances.map((instance) =>
 								DuplicateInstance.make({
 									instanceId: instance.instanceId,
-									dependents: dependents.get(instance.instanceId) ?? [],
+									dependents: O.getOrElse(MutableHashMap.get(dependents, instance.instanceId), () => []),
 								}),
 							),
 						}),

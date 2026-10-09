@@ -1,5 +1,6 @@
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 // The ONLY module that imports `@pnpm/catalogs.*`.
 //
 // Those four packages are what make this package integrated tier: they are
@@ -50,19 +51,19 @@ export const catalogNameOf = (specifier: string): string | null => parseCatalogP
 export const normalize = (raw: unknown): CatalogEntries => {
 	if (!P.isObjectOrArray(raw)) return {};
 	const entries: CatalogEntries = {};
-	for (const [catalogName, catalog] of Object.entries<unknown>(raw)) {
+	for (const [catalogName, catalog] of P.isObject(raw) ? R.toEntries(raw) : R.toEntries<keyof typeof raw & string, unknown>(raw)) {
 		if (!P.isObjectOrArray(catalog)) continue;
 		const clean: Record<string, string> = {};
-		for (const [dependency, value] of Object.entries<unknown>(catalog)) {
-			if (typeof value === "string") {
+		for (const [dependency, value] of P.isObject(catalog) ? R.toEntries(catalog) : R.toEntries<keyof typeof catalog & string, unknown>(catalog)) {
+			if (P.isString(value)) {
 				// `__proto__` as a plain assignment would mutate the prototype; route
 				// every key through defineProperty, matching JSON.parse semantics.
 				define(clean, dependency, value);
-			} else if (value !== null && typeof value === "object" && "specifier" in value) {
+			} else if (P.isObjectKeyword(value) && !P.isFunction(value) && "specifier" in value) {
 				// A pnpm LOCKFILE catalog entry is `{ specifier, version }`; the
 				// specifier is the declared range, which is what a catalog resolves to.
 				const specifier = value.specifier;
-				if (typeof specifier === "string") define(clean, dependency, specifier);
+				if (P.isString(specifier)) define(clean, dependency, specifier);
 			}
 		}
 		define(entries, catalogName, clean);
