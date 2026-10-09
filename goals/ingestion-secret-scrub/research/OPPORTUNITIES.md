@@ -170,3 +170,14 @@ exact-canary count is 0 as well. No credentials or approval were required.
   owned monitor before returning the blocked handoff.
 - Prevention: run cheap gates against the exact main candidate before merge;
   fix this finding once on main, then dependent lanes merge the repair once.
+
+## 2026-10-09 — detached monitor user-bus discovery
+
+- Work: submit the content-final 40-minute readiness monitor.
+- Evidence: `bun run beep yeet monitor --until-ready --detach` reports
+  "Detached proof jobs require an active systemd user manager".
+- Attribution: environment-only; the initial submission starts no attached job.
+- Disposition: retry with the existing user runtime directory and session-bus
+  environment; submission succeeds at the same 40-minute ceiling. No unit,
+  configuration, cap, credential or policy is changed.
+- Prevention: the launcher should propagate the existing user-bus environment.

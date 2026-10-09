@@ -430,3 +430,20 @@ packet whitespace pass. Reflection lint: blocking 0, advisory 0. Runtime-fragmen
 exact-canary scanner: eight final packet files, PR title/body stdin and branch
 commit-message stdin each count 0 (ten surfaces), pass. No fixtures or examples
 are added by this closing wave. Qualified source/parity receipts remain unchanged.
+
+Run-3 publication receipt: signed closing wave reached PR #1570; Yeet ready
+succeeded. Exact-head thread read returned zero outstanding of zero. The bounded
+monitor started with the existing user-bus environment; its 60-second wait timed
+out while CI remained pending. The monitor was intentionally stopped for the S11
+orchestrator handoff, reached terminal state and its proof receipt was acknowledged.
+No standard merge-ready verdict is claimed. Both Vercel build-rate-limit rows were
+acknowledged environment-only. Secret Scanning and Security passed on that head;
+other hosted checks remained pending and no introduced red was reported.
+
+The required final main sync then merged #1580 without conflict. None of the six
+scrub package directories changed, so source qualification receipts remain valid.
+Decision: include this sync and the user-bus friction receipt in one final wave;
+reason: preserve the required main merge and exact local/PR head equality.
+Reversal: a normal follow-up merge/change, never rebasing published work. Fresh
+CI supersedes earlier-head results; standard readiness and consolidated inherited
+repair remain with the orchestrator under S11. No worker merge occurs.
