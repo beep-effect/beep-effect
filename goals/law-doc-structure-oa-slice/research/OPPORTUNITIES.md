@@ -210,3 +210,9 @@
   for duplicate span counts and give oracle and candidate verification separate
   named test responsibilities. Preserve every assertion and measured denominator;
   do not alter Fallow budgets or its estimated-coverage model.
+
+- Wave-2 publication refused a stale base after main added a domain export to
+  generated root TypeScript/Vitest projections. Commit the complete packet wave,
+  merge main, and resolve projections only with `beep tsconfig-sync`: both branch
+  aliases survive. An installed owner-regeneration merge driver would avoid
+  manual conflict setup; do not bypass publication’s stale-base gate.
