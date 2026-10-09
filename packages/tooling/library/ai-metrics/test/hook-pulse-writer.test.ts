@@ -1028,7 +1028,9 @@ it.layer(NodeServices.layer)("hook-pulse writer conformance", (it) => {
       expect(run.exitCode).toBe(0);
       expect(run.stdout).toBe("");
       expect(run.rows).toHaveLength(0);
-      const refusal = yield* HookPulseRefusal.decodeJsonEffect(O.getOrThrow(A.head(run.refusals)));
+      const refusal = yield* S.decodeUnknownEffect(S.fromJsonString(HookPulseRefusal))(
+        O.getOrThrow(A.head(run.refusals))
+      );
       expect(refusal.reason).toBe("timeout");
     })
   );

@@ -598,7 +598,7 @@ const reconciliationTranscriptFiles = Effect.fn("HarnessLedger.reconciliationTra
         const file = path.join(dir, entry);
         const info = yield* fs.stat(file).pipe(
           Effect.matchEffect({
-            onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.asNone),
+            onFailure: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(O.none())),
             onSuccess: Effect.succeedSome,
           })
         );
