@@ -1,8 +1,9 @@
+import { CI_LANE_DESCRIPTORS, workflowJobContexts, workflowPolicyDiagnostics } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert } from "@effect/vitest";
+import { assert, expect } from "@effect/vitest";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -1087,6 +1088,53 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("CI runner security", (i
       assert.notInclude(packageJson, '"doctest":');
       assert.include(packageJson, '"@effect/doctest": "catalog:"');
       assert.isFalse(yield* fs.exists(path.join(repoRoot, "vitest.docs.ts")));
+    })
+  );
+
+  // Reusable Heavy is trusted at main; caller and scheduled names are orchestration exemptions.
+  it.effect(
+    "maps every hosted job to a descriptor or explicit orchestration exemption",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = new URL("../../../../..", import.meta.url).pathname;
+      const exemptions = [
+        "check.yml:Heavy Admission",
+        "check.yml:Heavy",
+        "check.yml:Lint (${{ matrix.partition }})",
+        "check.yml:Test Unit (${{ matrix.partition }})",
+        "cache-warm.yml:Warm Turbo cache",
+        "data-sync.yml:Sync Official Data",
+        "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
+        "fleet-shadow-check.yml:Shadow Probe",
+        "heavy-admit.yml:Heavy Admission",
+        "heavy-admit.yml:Heavy",
+        "property-laws-nightly.yml:Property Laws Sweep",
+        "release-desktop.yml:Validate desktop release inputs",
+        "release-desktop.yml:macOS arm64",
+        "release-desktop.yml:macOS x64",
+        "release-desktop.yml:Linux x64",
+        "release-desktop.yml:Windows x64",
+        "release-desktop.yml:Desktop release draft ready",
+        "rerun-runner-loss.yml:Rerun Runner Loss",
+      ];
+      const files = A.filter(yield* fs.readDirectory(`${root}/.github/workflows`), Str.endsWith(".yml"));
+      for (const file of files) {
+        const workflow = Str.replace(/\.yml$/, "")(file);
+        const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
+        expect(yield* workflowPolicyDiagnostics(file, text)).toEqual([]);
+        const contexts = yield* workflowJobContexts(file, text);
+        const declared = A.map(
+          A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
+          (row) => row.contextName
+        );
+        expect(
+          A.filter(
+            contexts,
+            (context) => !A.contains(declared, context) && !A.contains(exemptions, `${file}:${context}`)
+          )
+        ).toEqual([]);
+        expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
+      }
     })
   );
 });
