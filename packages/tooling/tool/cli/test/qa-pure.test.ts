@@ -223,7 +223,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
         );
-        exit.pipe(Exit.isFailure, assertTrue);
+        assertTrue(exit._tag === "Failure");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -232,7 +232,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         const exit = yield* Effect.exit(
           resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
         );
-        exit.pipe(Exit.isFailure, assertTrue);
+        assertTrue(exit._tag === "Failure");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
@@ -299,6 +299,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           yield* writeArtifactBudget(budgetPath, ArtifactBudget.make({ maxTotalBytes: 4096 }));
           const budget = yield* readArtifactBudget(budgetPath);
           budget.pipe(O.isSome, assertTrue);
+          assertSome(budget.pipe(O.map((value) => value.maxTotalBytes)), 4096);
           assertNone(yield* readExtractionPlan(`${dir}/extraction-plan.json`));
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

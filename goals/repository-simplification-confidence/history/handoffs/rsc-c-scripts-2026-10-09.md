@@ -955,3 +955,40 @@ updated-head hosted evidence, review window, orchestrator merge gate and retirem
 E co-sign and the resource P2 are resolved. All C-owned units are terminal.
 
 Graft saved approximately 31,041 tokens in one retrieval this run.
+
+## Run 9 main integration
+
+Resume ruling 7 integrates V's main merge `4e82f6d942` into C's existing
+PR #1583. The four expected conflicts are resolved as instructed: SPEC and
+OPPORTUNITIES retain both parents' rows in document order; the add/add Stage 5
+receipt puts V's contribution first, followed by C under its own heading. A
+line-preservation comparison against both parents reports zero missing
+nonblank lines in all three documents (apart from the renamed C title).
+
+The merge-driver fixture keeps V's bounded `it.layer`, scoped temporary
+directory and all four failure/interruption/cleanup witnesses. C's typed
+installation runs twice against the copied stable adapter, preserving
+idempotence and fail-closed projection assertions. The portable Effect ChildProcessSpawner boundary replaces the Bun-only
+global so this fixture can run under both runtimes. No retired setup script returns.
+
+Owner regeneration: `ci patterns --write` succeeds; `lint package-scripts
+--write` reports 152 manifests, zero drifting and zero written; `cache
+profile --write` completes without a new tracked projection diff. V's
+inventory is imported verbatim from main; C authors no inventory or
+allowlist changes. Previous terminal proof remains retained for unaffected
+surfaces. The required four checks, including both merge-driver runtimes,
+are queued serially via `.beep/rsc-c-run9-gates.sh` through beep-heavy.
+The live complete GraphQL read has one resolved review thread and zero
+unresolved threads; updated-head read and publication follow qualification.
+
+### Run 9 introduced-red attribution
+
+Initial batch: both five-case merge-driver runtimes pass, all 29 CI security
+fixtures pass, test-tsgo fails on C's native child_process import. The
+quick package lint observes the intermediate file before Biome runs and
+fails on import ordering/formatting. The repair uses canonical Effect
+ChildProcessSpawner and Biome formatting; no suppression or baseline edits.
+The serial repair batch reruns both merge-driver runtimes, test-tsgo and
+package-verify --quick. Its terminal results remain required; the initial
+passes do not qualify the repaired process boundary. The lint inbox row
+will be acknowledged with the merge repair SHA.

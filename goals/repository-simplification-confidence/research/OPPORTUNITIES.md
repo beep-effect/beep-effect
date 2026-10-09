@@ -219,6 +219,83 @@ are available. Cancellation is not a proof failure or a package pass.
 - Would have prevented it: reviewed-exception admission with exact current
   occurrence identities and evidence, owned by B/V; root policy before relying
   on package audit as comprehensive lint evidence.
+
+### Lane V: missing Stage 1 prerequisite (2026-10-09)
+
+Step 0 fetched and merged `origin/main`, then fast-forwarded the packet branch to `3dbf109066`. The required `history/receipts/stage-1-ownership.md` is absent: `git ls-tree` shows only history placeholder files and the exact file-existence test exits 1. The lane brief requires stopping before preservation in this state. Landing the Stage 1 receipt before launching V would prevent the blocked start. See `history/handoffs/rsc-v-vitest-canon-2026-10-09.md`.
+
+## Lane V admission environment (2026-10-09)
+
+- While formatting the reconciled CLI cohort, `beep-heavy` refused to start: `DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR not defined`. No heavy work started outside admission.
+- Repair: supply the existing user-session bus (`/run/user/1000/bus`) and runtime directory to the wrapper. A wrapper preflight that reports these missing variables before systemd invocation would prevent the failed launch.
+
+## Lane V heavy admission wait (2026-10-09)
+
+- Selected Node/Bun proof and the first inventory scan report `all 3 slots busy, waiting`. `lslocks` confirms all three heavy-slot locks are held by live processes; one holder is the fleet gate-loop shell. No lock or peer process was reaped, stopped or modified.
+- Cheap per-file formatting does not require a heavy slot; its own queued service was cancelled and formatting ran directly. All tests, scanners, compiler and package proof still use `beep-heavy`.
+- A FIFO admission queue and releasing the gate-loop's slot between heavy commands would avoid starving short qualifying work behind a long-lived shell. This lane records the symptom without changing workstation admission policy or another session's process.
+
+## Lane V selected-cohort invocation (2026-10-09)
+
+- The first admitted Node run exited 1 with `No test files found`: passing the package config from the repository root kept Vitest's root at the repo, while its include is `test/**/*.test.{ts,tsx}`. No test ran.
+- Correct invocation: change into the CLI package and pass package-relative cohort paths to the existing Vitest config. The retry remains behind `beep-heavy`; a reusable package-local cohort launcher would prevent the wrong-root attempt.
+
+## Lane V fixture import rewrite repaired (2026-10-09)
+
+- The first selected Node cohort ended with 4 failed files, 8 failed cases and 1,183 passed cases. Attribution: the lane's overly broad import rewrite also touched detector fixture strings, deleting their explicit `it`/assertion imports and invalidating the subjects; another overbroad deduplication removed multiline import openings. These are introduced repair-script defects, not scanner regressions.
+- Reconstructed every CLI source file by three-way comparison of the original base, current main and continuation, then applied the original detector WIP. Canonicalization now parses only real top-level import declarations before the first body declaration. Fixture source strings remain exact. Formatting and runtime proof are rerun; the failed attempt remains unqualified.
+- Prevention: constrain import edits to syntax nodes or a proven declaration-only header, and validate detector fixture text after any import codemod.
+
+### Lane V crash recovery: missing terminal package result
+
+The admitted repo-cli package gate survived the Desktop crash without a
+terminal result and stayed in nested test execution for over 40 minutes.
+Stopped only its owned service and retained its log under `.beep/rsc-v/`.
+A bounded outer timeout with a durable exit/duration row would make this
+recovery deterministic. The partial log is not package qualification.
+
+### Packet squash creates add/add conflicts after the authorized early merge
+
+`git merge origin/main` after #1560 produced add/add conflicts in thirteen
+packet documents. Resolve with the saved pre-squash packet tree as the
+three-way base: retain main's updates, then retain the lane-specific status,
+decision and friction deltas. A documented packet-squash reconciliation
+command would prevent this predictable recovery cost. No code or preservation
+export was discarded.
+
+### Heavy wrapper queue has no durable queue position
+
+Lane V's two 12 GB admitted collectors waited while all three heavy slots
+were occupied by peer lanes. `beep-heavy` reports only "all 3 slots busy";
+its repeated open-before-flock loop truncates the slot metadata even when
+acquisition fails, so metadata files cannot identify holders during contention.
+`lslocks` provides read-only holder evidence. A FIFO ticket and atomic
+post-acquisition metadata publication would make queue progress and crash
+recovery observable. This lane does not change the workstation wrapper or
+stop peer jobs; qualification stays queued.
+
+### Inherited SPEC prefix still blocks full knowledge references
+
+After #1565 was merged, the full `CI=true beep knowledge refs --check`
+completed red with one `external-mirror-reference` in this packet's
+`SPEC.md:374` (a home-absolute prefix example). The same example exists on
+main; #1565 fixed only the build-pipeline observation. V reports the remaining
+row to the orchestrator's packet lane for one main repair, then will merge
+main and rerun that gate. A full-corpus local check on the coordinating
+packet before its stage-1 publication would have caught this second row.
+
+## 2026-10-09 — V publication admission stalled after qualification
+
+V completed full repo-cli verification (757.718 s) and final source parity,
+then queued canonical Yeet publication. For more than 45 minutes all three
+slots remained occupied; newly arriving peer work obtained freed slots while
+V waited. The wrapper uses nonblocking flock polling at five-second intervals,
+not a FIFO queue. It starts the capped user service before admission, so an
+active unit alone is not evidence that the command started. V stopped only its
+two unadmitted services before the blocked handoff; no peer job was stopped.
+A fair admission order and separate queued/admitted state in the wrapper would
+have prevented starvation and the misleading liveness check.
+
 ### 2026-10-09 — E admission wrapper needs user-session bus
 
 - Work: run the heavy-admission regression through `beep-heavy`.
@@ -555,6 +632,33 @@ qualification and dependency-policy reruns are not a reusable full-proof
 manifest. Resume ruling 4 supplies the explicit push/create fallback. Matching
 the recovery command to the current publisher contract would avoid another
 heavy-slot wait; no proof state is fabricated or gate weakened.
+
+### V Run 4 schema-property gate after preserved source qualification
+
+Direct capped Yeet publication completed cheap gates but refused the push:
+`yeet-command-wiring.test.ts` has three Schema codec assertions without a
+schema-derived property. The integration did not previously run this full
+cheap tier. Added a generated run-plan print/decode property preserving
+context and ordered command data. Running the cheap tier before freezing the
+review snapshot would have caught the missing obligation earlier.
+
+The first schema-property repair used direct `Arbitrary.checkEffect`, which
+passed schema-first but introduced EV007 in effect-vitest. Converted it to
+`it.effect.prop` with the same generated plan, 25 runs and callback. The
+admitted collector's Node/Bun/typecheck passes remain recorded for the direct
+variant; its running package stage was stopped without a terminal result before
+changing source. A canonical-property example in the schema-first repair
+message would have prevented the cross-detector round trip.
+
+### V private release note missed by cheap publication gates
+
+Hosted Repo Sanity job 113997596244 rejects V's pre-D repo-cli changeset:
+`private workspaces must not accumulate release notes`. Main's D policy had
+landed, but cheap `changeset-status` only skipped the private workspace and
+passed; graph validation runs separately in hosted Repo Sanity. Archived the
+exact old note and removed the `.changeset` file. Including the cheap graph
+validation alongside status would prevent this introduced hosted failure.
+
 ### E package proof and resource-policy proof differ
 
 The full CLI package audit passed, but Yeet's Effect-Vitest scan still found a new platform import requiring provenance review and a resource layer without a timeout in the governance fixture. Reusing the existing bounded live-workflow security suite preserves the repository files as the subject and removes the duplicate resource boundary. No inventory or exception was refreshed. A focused resource-policy check alongside a new filesystem test would have exposed this before the full package rerun.
@@ -605,3 +709,39 @@ introduced by C. Replace that property read with `Config.String("PATH")`, preser
 the synthetic transport and inherited environment spread. Rerun only the affected
 fixture/type/package checks; no policy suppression or inventory edit. A fixture
 review against the existing ambient-PATH example would have prevented the error.
+
+### V Run 5 packet-check admission
+
+The merge-only refresh for #1575 needs knowledge-reference and packet checks,
+but its `beep-heavy` request reports `all 4 slots busy, waiting` before the
+payload starts. The wrapper supplies no queue position or admission estimate;
+this repeats the admission visibility friction already recorded by V and E.
+An ordered queue and an observable queued/admitted result would make this
+bounded refresh predictable. The worker waits without bypassing admission or
+stopping peer jobs; source qualification is reused under the 20:50Z ruling.
+
+After sixteen minutes, a read-only lock check showed a fifth shared slot while
+V's existing request still scanned only four. The wrapper captures its slot
+floor at launch. The operator-owned configuration now grants five slots, so V
+stopped only its unadmitted request and requeued the same checks through the
+unchanged wrapper to observe the live budget. Dynamic configuration refresh
+while queued would prevent this stale-admission window. No running payload or
+peer service was stopped, and the worker changed no admission setting.
+
+## C Run 9 integration admission
+
+The merge-only refresh for #1583 waits at `beep-heavy: all 5 slots busy,
+waiting` before its payload starts. C retains one serial queued wrapper
+and all unaffected terminal proof; no peer job or admission setting is
+changed. A visible queue position and admission timestamp would prevent
+uncertain progress reporting while preserving the shared resource budget.
+
+### C Run 9 portable process policy
+
+The merged fixture's Node child_process import passed both runtime suites
+but test-tsgo rejected it with `effect(nodeBuiltinImport)`. This is C's
+introduced integration error. Replacing the native import with the local
+Effect v4 ChildProcessSpawner boundary preserves both runtimes and all
+assertions; rerun the affected fixtures, type and package checks. Checking
+the canonical process API before choosing the native boundary would have
+prevented this extra qualification wave. No suppression or inventory edit.

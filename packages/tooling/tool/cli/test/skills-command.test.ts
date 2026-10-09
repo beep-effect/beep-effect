@@ -2,26 +2,22 @@ import { renderCodexConfigWithSkills, runSkillsUpdate, skillsCommand } from "@be
 import { it } from "@beep/test-runner";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { describe, expect } from "@effect/vitest";
+import { assert, describe, expect } from "@effect/vitest";
+import { assertExitFailure, assertSome } from "@effect/vitest/utils";
+import * as Cause from "effect/Cause";
 import { Command } from "effect/cli";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/http";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
 import * as TestConsole from "effect/testing/TestConsole";
+import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });
 const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, NodeCrypto.layer);
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    layer.pipe(
-      Layer.build,
-      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
-      Effect.scoped
-    );
 
 const remoteGrillMeSkill = `---
 name: grill-me
@@ -143,25 +139,12 @@ const makeTraversalSkillsClient = () =>
     )
   );
 
-const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tmpDir = yield* fs.makeTempDirectory();
-      const previousCwd = process.cwd();
-
-      process.chdir(tmpDir);
-      yield* fs.makeDirectory(".git", { recursive: true });
-
-      return { fs, previousCwd, tmpDir } as const;
-    }),
-    () => use,
-    ({ fs, previousCwd, tmpDir }) =>
-      Effect.gen(function* () {
-        process.chdir(previousCwd);
-        yield* fs.remove(tmpDir, { recursive: true, force: true });
-      })
-  ).pipe(provideScopedLayer(CommandTestLayer));
+const temporaryRepository = Effect.gen(function* () {
+  const root = yield* temporaryWorkingDirectory;
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.makeDirectory(".git", { recursive: true });
+  return root;
+}).pipe(Effect.withSpan("SkillsCommandTest.temporaryRepository"));
 
 const writeProjectFile = Effect.fn("SkillsCommandTest.writeProjectFile")(function* (
   relativePath: string,
@@ -209,9 +192,10 @@ describe("skills command", () => {
     expect(rendered).toContain("[mcp_servers.webstorm]");
   });
 
-  it("updates a selected remote skill, lockfile, Codex config, and agents mirror", () =>
-    Effect.runPromise(
+  it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("updates a selected remote skill, lockfile, Codex config, and agents mirror", () =>
       Effect.gen(function* () {
+        yield* temporaryRepository;
         yield* writeProjectFile(".claude/skills/grill-me/SKILL.md", "old skill\n");
         yield* writeProjectFile(
           ".claude/skills/local-only/SKILL.md",
@@ -262,12 +246,14 @@ describe("skills command", () => {
 
         const currentDrift = yield* runSkillsUpdate({ mode: "check", skill: O.some("grill-me") });
         expect(currentDrift).toEqual([]);
-      }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()), withTempRepoCommand)
-    ));
+      }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()))
+    );
+  });
 
-  it("rejects traversal paths from remote GitHub trees", () =>
-    Effect.runPromise(
+  it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("rejects traversal paths from remote GitHub trees", () =>
       Effect.gen(function* () {
+        yield* temporaryRepository;
         yield* writeProjectFile(".codex/config.toml", "[skills]\n  include_instructions = true\n");
 
         const result = yield* runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }).pipe(Effect.flip);
@@ -276,6 +262,97 @@ describe("skills command", () => {
 
         expect(result.message).toContain("unsafe file path");
         expect(yield* fs.exists(path.join(process.cwd(), ".claude", "pwned.md"))).toBe(false);
-      }).pipe(Effect.provideService(HttpClient.HttpClient, makeTraversalSkillsClient()), withTempRepoCommand)
-    ));
+      }).pipe(Effect.provideService(HttpClient.HttpClient, makeTraversalSkillsClient()))
+    );
+  });
+});
+
+// Exercise the constructor used by the command cases, including its fallible
+// .git setup. The native services remain the subject; these overrides observe
+// acquisition/release and provoke native failures at the owning boundaries.
+it.layer(CommandTestLayer, { timeout: "30 seconds" })("skills fixture ownership", (it) => {
+  for (const scenario of ["setup failure", "body failure", "interruption", "cleanup failure"]) {
+    it.effect(`restores cwd and owns the repository during ${scenario}`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const previousCwd = process.cwd();
+        const fiberId = yield* Effect.fiberId;
+        const rootRef = yield* Ref.make<O.Option<string>>(O.none());
+        const removeCwd = yield* Ref.make<O.Option<string>>(O.none());
+        const expectedError = yield* Ref.make<O.Option<PlatformError.PlatformError>>(O.none());
+        const observedFileSystem: FileSystem.FileSystem = {
+          ...fs,
+          makeTempDirectory: Effect.fn("SkillsCommandTest.observeRoot")(function* (options) {
+            const root = yield* fs.makeTempDirectory(options);
+            yield* Ref.set(rootRef, O.some(root));
+            return root;
+          }),
+          makeDirectory: Effect.fn("SkillsCommandTest.fixtureDirectory")(function* (directory, options) {
+            if (scenario === "setup failure" && directory === ".git") {
+              yield* fs.writeFileString(".git", "setup obstruction");
+            }
+            return yield* fs
+              .makeDirectory(directory, options)
+              .pipe(Effect.tapError((error) => Ref.set(expectedError, O.some(error))));
+          }),
+          remove: Effect.fn("SkillsCommandTest.observeRemoval")(function* (root, options) {
+            yield* Ref.set(removeCwd, O.some(process.cwd()));
+            return yield* fs
+              .remove(root, options)
+              .pipe(Effect.tapError((error) => Ref.set(expectedError, O.some(error))));
+          }),
+        };
+        const exit = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const root = yield* temporaryRepository;
+            if (scenario === "body failure") return yield* Effect.fail("fixture body failure");
+            if (scenario === "interruption") return yield* Effect.interrupt;
+            if (scenario === "cleanup failure") {
+              yield* fs.makeDirectory("blocked");
+              yield* fs.chmod(root, 0o000);
+            }
+          }).pipe(Effect.provideService(FileSystem.FileSystem, observedFileSystem))
+        ).pipe(Effect.exit);
+        const rootOption = yield* Ref.get(rootRef);
+        assertSome(rootOption, O.getOrThrow(rootOption));
+        const root = O.getOrThrow(rootOption);
+        // Ensure the deliberate permission fault cannot strand this control's
+        // root even if the cause assertion fails.
+        yield* Effect.gen(function* () {
+          expect(process.cwd()).toBe(previousCwd);
+          assertSome(yield* Ref.get(removeCwd), previousCwd);
+          if (scenario === "body failure") {
+            assertExitFailure(exit, Cause.fail("fixture body failure"));
+          } else if (scenario === "interruption") {
+            assertExitFailure(exit, Cause.interrupt(fiberId));
+          } else {
+            const errorOption = yield* Ref.get(expectedError);
+            const error = O.getOrThrow(errorOption);
+            assertSome(errorOption, error);
+            assert.instanceOf(error.reason, PlatformError.SystemError);
+            assert(exit._tag === "Failure");
+            if (scenario === "setup failure") {
+              expect(error.reason._tag).toBe("AlreadyExists");
+              expect(error.reason.method).toBe("makeDirectory");
+              expect(error.reason.pathOrDescriptor).toBe(".git");
+              assertExitFailure(exit, Cause.annotate(Cause.fail(error), Cause.annotations(exit.cause)));
+            } else {
+              expect(error.reason._tag).toBe("PermissionDenied");
+              expect(error.reason.method).toBe("remove");
+              expect(error.reason.pathOrDescriptor).toBe(root);
+              assertExitFailure(exit, Cause.annotate(Cause.die(error), Cause.annotations(exit.cause)));
+            }
+          }
+          if (scenario !== "cleanup failure") expect(yield* fs.exists(root)).toBe(false);
+        }).pipe(
+          Effect.ensuring(
+            scenario === "cleanup failure"
+              ? fs.chmod(root, 0o700).pipe(Effect.andThen(fs.remove(root, { recursive: true })), Effect.orDie)
+              : Effect.void
+          )
+        );
+        expect(yield* fs.exists(root)).toBe(false);
+      })
+    );
+  }
 });

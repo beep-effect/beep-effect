@@ -6940,3 +6940,211 @@ immediately: Security and Repo Sanity both identified SDK 1.30.0, already owned
 and fixed by fleet PR #1500. Merging that shared repair avoids duplicate fixes.
 The later runner-image warning was not Repo Sanity's first red. Transport
 fallback and explicit session-environment discovery would prevent this friction.
+
+### 2026-10-06 — A later main merge also invalidates dependency-output prerequisites
+
+The local integration of `9a42554f55` passed all 105 selected tests on Node/Bun
+and the direct test-project compiler, but package quick checking reported
+TS6305 for newly introduced PDF/drawing/OCR dependencies and derivative unknown
+types. The earlier branch's successful dependency build cannot qualify those
+new references. Build the current transitive dependency closure before
+attributing remaining diagnostics; do not repair downstream inferred-any errors
+while their declaration inputs are missing. Quick-mode receipts should record
+which dependency-output cohort they actually used.
+### 2026-10-06 — Fresh-lane package prerequisites and compiler outcome artifacts
+
+The nine-file resource continuation's two source writers ran package quick
+verification and reached TS6305 because a fresh worktree had no upstream
+declaration outputs. `PackageVerify.ts` already builds the transitive closure
+for a full audit; quick mode does not. Parent is using that canonical full
+path before rechecking the quick result. No production diagnostics are
+classified as introduced until prerequisites exist.
+
+A generated package-test-typecheck command also exited zero while its
+`.turbo/package-test-typecheck-result.json` recorded compiler exit one.
+Introduced control errors were repaired; the final stored artifact and the
+parent's direct test-project invocation both report zero. Automated handoffs
+should inspect the structured compiler result, not equate wrapper exit with
+compiler success. The direct command must set the CLI rootDir so the test
+project does not inherit the production-only src boundary.
+
+The Version Sync property retained its existing options. A run with 400 in
+the environment is not yet evidence that its native property actually used
+400 trials; verify the runner/floor path during the ordered property phase.
+No existing floor or property option was reduced for resource migration.
+
+
+### 2026-10-06 — Cleanup controls must identify each Cause reason
+
+The resource-next independent round-one review found that several new cleanup
+controls accepted any Die plus a PermissionDenied pretty substring. The injected
+Fail itself contained that substring, so an unrelated cleanup defect could pass.
+Other controls inspected only the first failure/defect, and a few mode arms had
+no registered case. Parent interrupted the owned full package attempt before
+source repair (exit 130), retaining its incomplete outcome. Exact Cause reason
+counts and identities, including remove method and denied path, prevent this
+false-positive control. Repairs and a source-bound round-two review are required;
+the preceding 478 passing tests do not discharge these review findings.
+
+### 2026-10-06 — Canonical inventory regeneration drops open-row context
+
+During consolidation of the qualified resource batch, the canonical writer
+retained all 1,896 candidate IDs and statuses but omitted the explanatory
+reason on the still-open archive-spawn provider candidate. Parent compared
+the exact rows, restored that reason from the qualified source commit and
+kept its historical ledger payload unchanged. Regeneration should preserve
+useful open-row rationale as well as required exception reasons; a successful
+writer exit alone does not prove disposition metadata was preserved.
+
+## 2026-10-06 — Property recommendation needs a production contract check
+
+The proposed truly absent-key test in `ratchet-diff.test.ts` failed because the
+shared numeric ratchet intentionally walks committed baseline metrics. Its sole
+production caller passes all current JSDoc totals but only the 21 selected
+baseline totals; 11 additional inventory totals are not quality-debt metrics.
+Changing the algorithm to satisfy the old test title would alter that policy.
+Inspecting the caller and baseline projection before translating a human-lens
+proposal into an expected value would have prevented this false production-bug
+attribution. Keep the failed proposal receipt, clarify the misleading test and
+JSDoc prose, and test both explicit zero and truly untracked metrics.
+
+### 2026-10-06 — A token-aware build guard lost launcher coverage
+
+Independent property-values round one reproduced eight compiler invocations
+that the old substring guard caught and the first token guard missed, including
+`bunx tsc -b project` and `env FOO=x tsgo -b project`. Documenting a smaller
+parser scope would weaken the existing law. The repair follows compiler
+basenames through explicit environment/package launchers and tests their
+value-taking options against unrelated operands. All 51 opposing controls
+pass on Node/Bun; round-two review remains separate. Preserve adversarial
+old/new command examples before replacing a lexical guard.
+
+The repair's initial quick package check also lacked transitive declaration
+outputs. Parent dependency hydration restored that precondition; the same
+quick lint/check plan then passed without outside source changes. Preserve
+the initial diagnostic cascade rather than attributing every derivative type
+error to the test-only repair.
+
+### 2026-10-06 — An independent review can waive a demonstrated regression incorrectly
+
+Round two closed the original eight launcher examples but explicitly left
+`nice`, `command` and `yarn exec` outside its table. Parent reproduced seven
+remaining legitimate/conservative old catches on the reviewed predicate.
+This is the same major detection regression, so the P0/P1 repair rule still
+applies after round two. Unknown prefixes now retain a bounded lexical review
+tripwire; known launchers distinguish option values and inert command data.
+All 64 opposing controls pass on Node/Bun. The earlier full audit passed its
+actual source and is retained; final changed-source package proof is separate.
+Do not let a reviewer scope a lost contract away merely because the new parser
+does not list a wrapper.
+
+R3 qualification addendum (C3 metadata handoff): source
+`9d74894c3cceae3bccce7c1828889a8c5bb68f59` separately passes the changed-source
+package proof (audit637.5s/docgen21.5s),137 selected Node/Bun cases and64 launcher
+controls. Independent R3 closes that original P1; its review did not execute
+these later package/runtime checks. Preserve the earlier round-two proof and
+rejected waiver as dated evidence. See `cli-property-values-proof.md` and its
+lineage; metadata-only handoff does not repeat the package audit.
+
+### 2026-10-06 — A post-edit row comparison misses the original baseline fingerprint
+
+The property-values final scan matched its earlier post-edit scan, but the
+integrated ratchet still found one changed occurrence for the existing
+`effect-vitest-contract` layer without a hook budget. Its ID, location, evidence
+and open status were unchanged; the strengthened callback changed its hash.
+Parent preserved the historical open identity and refreshed only that current
+fingerprint. Future reconciliation must compare the first source baseline as
+well as successive final scans; equal counts do not establish ratchet equality.
+
+### 2026-10-06 — Observation controls must override platform primitives
+
+The first property-boundaries proof caught two errors in the new control setup:
+`FileSystem.make` derives `readFileString` from `readFile`, so overriding the
+derived method did not inject the intended failure; the Files test facade also
+does not export the concrete model-integrity error constructor. The correction
+injects the primitive byte read and asserts the public verifier's exact error
+tag and message. The original red receipt remains retained. Check live factory
+construction and facade exports before constructing controls.
+
+The direct compiler also required the typed `S.decodeEffect` boundary for the
+new statically known model fixture. That diagnostic was repaired without
+weakening the model schema or changing runtime fixtures.
+
+### 2026-10-06 — Oracle repairs must preserve canonical assertion forms
+
+Parent review found two newly added `expect(O.isSome(...)).toBe(true)`
+presence checks in the docgen Effect test. The checks strengthened the oracle
+but recreated D5 detector debt. Use the installed `assertSome` helper for both
+subject and review presence before qualification, preserving the underlying
+observations and all original assertions. Run the selected detector alongside
+source review so an oracle repair cannot silently introduce a lexical regression.
+
+The same integration pass found a newly introduced Result tag comparison in
+the calendar boundary test. Parent replaced that new assertion with
+`assertFailure`, preserving its real invalid-date decode. Both new presence
+and failure assertions need the canonical helper check before worker handoff.
+
+### 2026-10-06 — Canonical helper names do not establish their argument contract
+
+Parent's new calendar assertion called `assertFailure(result)` without the
+installed helper's required expected value. The combined Node run correctly
+failed one of 919 cases, and the direct compiler reported TS2555. Parent
+stopped its owned in-progress full package proof (exit 130), retaining all
+three red/incomplete receipts. The correction flips the actual decode and
+requires its `SchemaError` instance with `assertInstanceOf`; an unexpected
+success now fails the same Effect and the error type is observed. Inspect
+the installed helper signature before replacing an assertion by name.
+The corrected source requires new runtime, compiler and full package proof.
+
+### 2026-10-06 — Error class presence is insufficient for a calendar oracle
+
+The earlier helper-contract entry above records the interim instance-only
+repair and remains historical. R1 then demonstrated that a valid created date
+with an invalid disposition or purpose still produces a SchemaError and passes
+that assertion. The second owned package attempt was interrupted with exit 130
+before the final repair; neither interrupted package attempt is a passing
+receipt. Retain both old source hashes and receipts instead of relabelling them.
+
+The final repair uses the installed Standard Schema issue formatter and the
+actual Result with independently expected created path and per-input messages.
+Three private wrong-field/diagnostic controls pass the interim oracle and fail
+the final exact assertion on Node and Bun. The copies also rewrite three paths
+for private loading; that limitation is explicit. Verify the helper signature,
+error representation and a wrong-field counterexample before spending a full
+package proof on a new oracle. Package completion remains pending integration.
+
+A separate metadata preparation check found the parent proposal's risk-tier
+reason copied native Git text from bootstrap, and the docgen source report
+predated D5. The proposed reasons now describe the actual strict required event
+reader and the D5 final hash separately; immutable older reports are retained.
+Guard future reconciliation on source commit, snapshot/live hashes, terminal
+package receipt and explicitly accepted independent findings.
+
+### 2026-10-06 — Completed C4 proof and immutable receipt shape
+
+The exact-calendar full package proof subsequently completed: child exit zero,
+stable fifteen hashes, audit 726.2s and docgen 25.2s. Parent accepts R2's exact
+issue oracle and closes its package-proof follow-up using that later receipt;
+the independent reviewer did not execute it. Earlier interrupted attempts and
+pending draft statements remain historical.
+
+The prepared guard expected a cwd field absent from the original parent wrapper
+receipt. Preserve that receipt unchanged and guard the exact execution root from
+the retained pkg-verify log line and source hashes, with parent execution evidence.
+The original prepared script is retained privately before this correction.
+
+The canonical baseline writer drops reasons on open rows. Its output stripped
+the unrelated step-git-exec archive-spawn reason; exact preimage comparison
+restored it before ratchet qualification. Preserve all unrelated rows, not just
+exception reasons, whenever a generated baseline is refreshed. The earlier
+historical wiring reanchor remains separately qualified rather than inferred
+from a changed fingerprint or duplicated as a new historical defect.
+
+### 2026-10-06 — Interrupted aggregate proof has no terminal verdict
+
+The parent execution ended while an aggregate package verification was active.
+On resumption the tool handle and matching live process were absent, and only
+the launch line remained in the log with no terminal receipt. The original
+source hashes and log are retained; this attempt is unqualified. A process
+disappearing is not an exit-zero result. Long proofs should use durable Yeet
+jobs where supported, with the terminal job record checked after continuation.

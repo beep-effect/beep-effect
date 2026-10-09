@@ -34,7 +34,6 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -663,7 +662,7 @@ describe("knowledge refs check gate", () => {
           "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
       });
       const exit = yield* Effect.exit(applyKnowledgeRefsCheck(report, { json: false }));
-      exit.pipe(Exit.isFailure, assertTrue);
+      assertTrue(exit._tag === "Failure");
       const logs = yield* TestConsole.logLines;
       expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
         true
@@ -1280,12 +1279,15 @@ it.effect(
     const source = `consume("${"x".repeat(180)}/tmp/closed-path")`;
     const evidence = Str.slice(0, 200)(source);
     const docs = yield* generatedDocuments(generatedFinding(source, evidence));
-    expect(
-      A.every(
-        hostObservations(yield* scanFixture({ ...docs, [generatedSourcePath]: source })),
-        (row) => row.classification === "audit-pattern-literal"
-      )
-    ).toBe(true);
+    const hosts = hostObservations(yield* scanFixture({ ...docs, [generatedSourcePath]: source }));
+    expect(hosts).toHaveLength(2);
+    expect(A.map(hosts, (row) => [row.location.path, row.classification])).toEqual(
+      expect.arrayContaining([
+        [generatedJsonlPath, "audit-pattern-literal"],
+        [generatedInventoryPath, "audit-pattern-literal"],
+      ])
+    );
+    expect(A.every(hosts, (row) => row.classification === "audit-pattern-literal")).toBe(true);
     for (const invalid of [evidence, `/* ${source} */`, Str.replace("closed-path", "different-path")(source)]) {
       expect(knowledgeRefsLiveDebt(yield* scanFixture({ ...docs, [generatedSourcePath]: invalid })).length).toBe(2);
     }
