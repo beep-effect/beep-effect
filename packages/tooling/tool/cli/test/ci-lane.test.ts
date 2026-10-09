@@ -380,10 +380,10 @@ describe("CI lane descriptors", () => {
     expect(descriptor.flags).toEqual([]);
   });
 
-  it("keeps the JSDoc ratchet visible but non-required", () => {
+  it("keeps the JSDoc ratchet required by the live ruleset", () => {
     const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "jsdoc-ratchet"));
     expect(descriptor.contextName).toBe("JSDoc Ratchet");
-    expect(descriptor.required).toBe(false);
+    expect(descriptor.required).toBe(true);
   });
 
   // lab-apps-lifecycle P2 (ratified row 10): the labs lane is PERMANENTLY
