@@ -33,7 +33,7 @@ and `TURBO_TEAM` are the same values CI uses (`gh variable list`).
 
 ```sh
 TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
-  bash scripts/enable-turbo-remote-reads.sh
+  bun run beep cache remote-reads
 ```
 
 Run it from the checkout you want to enable, or pass the checkout path as the
@@ -53,7 +53,7 @@ Correct an older reference by opting into replacement explicitly:
 ```sh
 TURBO_TOKEN_REPLACE=1 \
 TURBO_API=<endpoint> TURBO_TEAM=<team-slug> TURBO_TOKEN_REF=op://<vault>/<item>/<field> \
-  bash scripts/enable-turbo-remote-reads.sh
+  bun run beep cache remote-reads
 ```
 
 Replacement rewrites `TURBO_TOKEN` only when its current value differs from the

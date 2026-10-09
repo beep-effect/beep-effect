@@ -1283,9 +1283,14 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
   repoRoot: string
 ): Effect.fn.Return<void, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log("[github-checks] security: ONNX installer mitigation proof");
-  yield* runFixedStep(repoRoot, "security:onnx-installer-mitigation", "node", [
-    "--test",
-    "scripts/test-onnxruntime-installer-patch.mjs",
+  yield* runFixedStep(repoRoot, "security:onnx-installer-mitigation", "bun", [
+    "x",
+    "--no-install",
+    "vitest",
+    "run",
+    "--root",
+    "packages/drivers/face-detection",
+    "test/OnnxRuntimeInstall.test.ts",
   ]);
   yield* Console.log("[github-checks] security: osv scan");
   yield* runFixedStep(repoRoot, "security:osv-scan", "docker", [

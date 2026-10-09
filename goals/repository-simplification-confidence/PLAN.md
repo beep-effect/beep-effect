@@ -88,6 +88,34 @@ Lane names are planned; each lane is recorded in
 [`research/baseline-2026-10-09.md`](./research/baseline-2026-10-09.md) (or a
 dated successor receipt) when it opens.
 
+### C lane status — 2026-10-09
+
+`rsc-c-scripts`: wave 1 implements the command-family ports and coordinated
+Ci pre-runtime shim / install-export-restore ordering. R24 is resolved.
+Run 4's full package and local parity qualification is terminal and retained.
+Run 7 clears S5 through the orchestrator's durable notification ruling.
+The unused root ONNX dependency and lockfile row are removed; catalog, override,
+patch and consumer remain. Install and owner regeneration pass. The three
+required policy reruns now pass: Knip has zero introduced findings, Fallow
+dead-code has zero findings, and audit retains one nonblocking inherited
+complexity observation. PR #1583 is published and ready for review via the explicitly authorized
+push/create fallback after the push-only refusal. B owns the
+occurrence-specific judgments after V. E co-signs the workflow ordering on #1583;
+Run 8 integrates E main and repairs the resource-adapter P2. All five scoped
+integration checks pass after the fixture Config repair; all 29 runner-security
+cases pass. Updated-head hosted evidence and the orchestrator gate remain pending. No inventory is edited.
+Evidence:
+[`history/handoffs/rsc-c-scripts-2026-10-09.md`](history/handoffs/rsc-c-scripts-2026-10-09.md),
+[`history/receipts/stage-5-acceptance.md`](history/receipts/stage-5-acceptance.md).
+This status does not mark Script ports or Sensitive scripts accepted.
+
+Run 9 integrates V main `4e82f6d942`, preserving both packet contributions
+and the canonical scoped test harness. After repairing the introduced process
+API/formatting errors, merge-driver fixtures pass 5/5 on Node and Bun,
+test-tsgo passes 335 files, CI security passes 29/29, and repo-cli quick
+package verification passes. Unaffected terminal proof remains retained;
+updated-head hosted evidence and the orchestrator gate remain open.
+
 ### Lane inputs
 
 Each lane reads its sweep files and brief sections before editing. Paths

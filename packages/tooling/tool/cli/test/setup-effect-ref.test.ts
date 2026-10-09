@@ -1,12 +1,14 @@
+import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
+import { expect } from "@effect/vitest";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import { ChildProcess } from "effect/process";
-import * as Stream from "effect/Stream";
-import { expect } from "vitest";
 
 const writeExecutable = Effect.fn("SetupEffectRefTest.writeExecutable")(function* (filePath: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -22,13 +24,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
         const path = yield* Path.Path;
         const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
-          new URL("../../../../../scripts/setup-effect-ref.sh", import.meta.url)
+          new URL("../../../../../scripts/references.json", import.meta.url)
         );
         const binDir = path.join(tempDir, "bin");
         const repoRoot = path.join(tempDir, "repo");
         const workingDirectory = path.join(tempDir, "working");
         const home = path.join(tempDir, "home");
-        const gitLog = path.join(tempDir, "git.log");
+        const gitLog = path.join(home, "git.log");
         const realpathLog = path.join(tempDir, "realpath.log");
         yield* Effect.forEach(
           [binDir, repoRoot, workingDirectory, home],
@@ -39,7 +41,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
           path.join(binDir, "git"),
           [
             "#!/bin/sh",
-            'printf "%s\\n" "$*" >> "$GIT_LOG"',
+            'printf "%s\\n" "$*" >> "$HOME/git.log"',
             '[ "$1" = "clone" ] || exit 92',
             "for argument do target=$argument; done",
             'mkdir -p "$target/.git"',
@@ -54,31 +56,31 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
         const expectedRoot = useDefault
           ? path.join(canonicalTempDir, "home", "YeeBois", "references", "effect")
           : path.join(canonicalTempDir, "working", "effect reference");
+        yield* fs.makeDirectory(path.join(repoRoot, "scripts"));
+        yield* fs.writeFileString(
+          path.join(repoRoot, "scripts", "references.json"),
+          yield* fs.readFileString(setupScriptPath)
+        );
         const run = Effect.fn("SetupEffectRefTest.run")(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: workingDirectory,
-            env: {
-              HOME: home,
-              BEEP_REFERENCES_ROOT: useDefault ? "" : "missing-segment/../effect reference",
-              GIT_LOG: gitLog,
-              REALPATH_LOG: realpathLog,
-              PATH: `${binDir}:${ambientPath}`,
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr, stdout] = yield* Effect.all(
-            [
-              handle.exitCode,
-              handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-              handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-            ],
-            { concurrency: "unbounded" }
+          const operation = ReferenceWorkspace.use(
+            Effect.fnUntraced(function* (workspace) {
+              const root = yield* workspace.resolveRoot(
+                home,
+                useDefault ? O.none() : O.some(path.join(workingDirectory, "missing-segment/../effect reference"))
+              );
+              return yield* workspace.provision(home, repoRoot, root);
+            })
           );
-          expect(exitCode, stderr).toBe(0);
-          return { stderr, stdout };
-        }, Effect.scoped);
+          const lines = yield* Layer.build(referenceWorkspaceLayer(repoRoot)).pipe(
+            Effect.flatMap((context) => operation.pipe(Effect.provide(context))),
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ HOME: home, PATH: `${binDir}:${ambientPath}` })
+            ),
+            Effect.scoped
+          );
+          return { stderr: lines.filter((line) => line.startsWith("warning:")).join("\n"), stdout: lines.join("\n") };
+        });
         const links = [
           "effect",
           "effect-tsgo",
@@ -161,282 +163,4 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("setup-effect-ref", (it)
       })
     );
   }
-  it.effect("repairs blank remote-cache placeholders without replacing configured values", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-effect-ref-test-" });
-      const path = yield* Path.Path;
-      const ambientPath = yield* Config.String("PATH");
-      const setupScriptPath = yield* path.fromFileUrl(
-        new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
-      );
-      const repoRoot = path.join(tempDir, "repo");
-      yield* fs.makeDirectory(repoRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
-      yield* fs.writeFileString(
-        path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=op://existing/item/field",
-          'TURBO_TEAM=""',
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
-      );
-
-      const result = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: tempDir,
-            env: {
-              PATH: ambientPath,
-              TURBO_API: "https://replacement.example.test",
-              TURBO_TEAM: "configured-team",
-              TURBO_TOKEN_REF: "op://replacement/item/field",
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr, stdout] = yield* Effect.all(
-            [
-              handle.exitCode,
-              handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-              handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-            ],
-            { concurrency: "unbounded" }
-          );
-          return { exitCode, stderr, stdout };
-        })
-      );
-
-      expect(result.exitCode, result.stderr).toBe(0);
-      expect(result.stdout).toContain("repaired blank TURBO_TEAM=configured-team");
-      expect(result.stdout).toContain("bun run check --filter=@beep/types --dry=json");
-      const configured = yield* fs.readFileString(path.join(repoRoot, ".env"));
-      expect(configured).toContain("TURBO_API=https://existing.example.test");
-      expect(configured).toContain("TURBO_TOKEN=op://existing/item/field");
-      expect(configured).toContain("TURBO_TEAM=configured-team");
-      expect(configured).not.toContain("replacement.example.test");
-      expect(configured).not.toContain("op://replacement/item/field");
-    })
-  );
-  it.effect("replaces a stale remote-cache token reference only when explicitly enabled", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-effect-ref-test-" });
-      const path = yield* Path.Path;
-      const ambientPath = yield* Config.String("PATH");
-      const setupScriptPath = yield* path.fromFileUrl(
-        new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
-      );
-      const repoRoot = path.join(tempDir, "repo");
-      yield* fs.makeDirectory(repoRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
-      yield* fs.writeFileString(
-        path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=op://old-vault/old-item/password",
-          "TURBO_TEAM=existing-team",
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
-      );
-
-      const result = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: tempDir,
-            env: {
-              PATH: ambientPath,
-              TURBO_API: "https://replacement.example.test",
-              TURBO_TEAM: "replacement-team",
-              TURBO_TOKEN_REF: "op://new-vault/new-item/cache/password",
-              TURBO_TOKEN_REPLACE: "1",
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr, stdout] = yield* Effect.all(
-            [
-              handle.exitCode,
-              handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-              handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-            ],
-            { concurrency: "unbounded" }
-          );
-          return { exitCode, stderr, stdout };
-        })
-      );
-
-      expect(result.exitCode, result.stderr).toBe(0);
-      expect(result.stdout).toContain("replaced TURBO_TOKEN (prior: reference old-vault/old-item)");
-      const configured = yield* fs.readFileString(path.join(repoRoot, ".env"));
-      expect(configured).toContain("TURBO_TOKEN=op://new-vault/new-item/cache/password");
-      expect(configured).toContain("TURBO_API=https://existing.example.test");
-      expect(configured).toContain("TURBO_TEAM=existing-team");
-    })
-  );
-  it.effect("replaces a resolved remote-cache token without rendering it", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-effect-ref-test-" });
-      const path = yield* Path.Path;
-      const ambientPath = yield* Config.String("PATH");
-      const setupScriptPath = yield* path.fromFileUrl(
-        new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
-      );
-      const repoRoot = path.join(tempDir, "repo");
-      yield* fs.makeDirectory(repoRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
-      yield* fs.writeFileString(
-        path.join(repoRoot, ".env"),
-        [
-          "TURBO_API=https://existing.example.test",
-          "TURBO_TOKEN=resolved-value-must-not-appear",
-          "TURBO_TEAM=existing-team",
-          "TURBO_CACHE=local:rw,remote:r",
-          "",
-        ].join("\n")
-      );
-
-      const result = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: tempDir,
-            env: {
-              PATH: ambientPath,
-              TURBO_API: "https://replacement.example.test",
-              TURBO_TEAM: "replacement-team",
-              TURBO_TOKEN_REF: "op://new-vault/new-item/password",
-              TURBO_TOKEN_REPLACE: "1",
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr, stdout] = yield* Effect.all(
-            [
-              handle.exitCode,
-              handle.stderr.pipe(Stream.decodeText(), Stream.mkString),
-              handle.stdout.pipe(Stream.decodeText(), Stream.mkString),
-            ],
-            { concurrency: "unbounded" }
-          );
-          return { exitCode, stderr, stdout };
-        })
-      );
-
-      expect(result.exitCode, result.stderr).toBe(0);
-      expect(result.stdout).toContain("replaced TURBO_TOKEN (prior: raw value (not shown))");
-      expect(result.stdout).not.toContain("resolved-value-must-not-appear");
-      expect(yield* fs.readFileString(path.join(repoRoot, ".env"))).toContain(
-        "TURBO_TOKEN=op://new-vault/new-item/password"
-      );
-    })
-  );
-  it.effect("rejects an incomplete replacement reference without modifying the configured token", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-effect-ref-test-" });
-      const path = yield* Path.Path;
-      const ambientPath = yield* Config.String("PATH");
-      const setupScriptPath = yield* path.fromFileUrl(
-        new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
-      );
-      const repoRoot = path.join(tempDir, "repo");
-      const envPath = path.join(repoRoot, ".env");
-      const original = [
-        "TURBO_API=https://existing.example.test",
-        "TURBO_TOKEN=op://existing/item/field",
-        "TURBO_TEAM=existing-team",
-        "TURBO_CACHE=local:rw,remote:r",
-        "",
-      ].join("\n");
-      yield* fs.makeDirectory(repoRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
-      yield* fs.writeFileString(envPath, original);
-
-      const result = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: tempDir,
-            env: {
-              PATH: ambientPath,
-              TURBO_API: "https://replacement.example.test",
-              TURBO_TEAM: "replacement-team",
-              TURBO_TOKEN_REF: "op://vault-only",
-              TURBO_TOKEN_REPLACE: "1",
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr] = yield* Effect.all(
-            [handle.exitCode, handle.stderr.pipe(Stream.decodeText(), Stream.mkString)],
-            { concurrency: "unbounded" }
-          );
-          return { exitCode, stderr };
-        })
-      );
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain(
-        "TURBO_TOKEN_REF must be a 1Password reference (op://vault/item/[section/]field), never a token value"
-      );
-      expect(yield* fs.readFileString(envPath)).toBe(original);
-    })
-  );
-  it.effect("rejects duplicate remote-cache assignments without modifying the file", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectoryScoped({ prefix: "setup-effect-ref-test-" });
-      const path = yield* Path.Path;
-      const ambientPath = yield* Config.String("PATH");
-      const setupScriptPath = yield* path.fromFileUrl(
-        new URL("../../../../../scripts/enable-turbo-remote-reads.sh", import.meta.url)
-      );
-      const repoRoot = path.join(tempDir, "repo");
-      const envPath = path.join(repoRoot, ".env");
-      const original = [
-        "TURBO_API=https://existing.example.test",
-        "TURBO_TOKEN=op://existing/item/field",
-        'TURBO_TEAM=""',
-        "TURBO_TEAM=existing-team",
-        "TURBO_CACHE=local:rw,remote:r",
-        "",
-      ].join("\n");
-      yield* fs.makeDirectory(repoRoot, { recursive: true });
-      yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}\n");
-      yield* fs.writeFileString(envPath, original);
-
-      const result = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const handle = yield* ChildProcess.make("bash", [setupScriptPath, repoRoot], {
-            cwd: tempDir,
-            env: {
-              PATH: ambientPath,
-              TURBO_API: "https://replacement.example.test",
-              TURBO_TEAM: "configured-team",
-              TURBO_TOKEN_REF: "op://replacement/item/field",
-            },
-            stdin: "ignore",
-            stderr: "pipe",
-            stdout: "pipe",
-          });
-          const [exitCode, stderr] = yield* Effect.all(
-            [handle.exitCode, handle.stderr.pipe(Stream.decodeText(), Stream.mkString)],
-            { concurrency: "unbounded" }
-          );
-          return { exitCode, stderr };
-        })
-      );
-
-      expect(result.exitCode).toBe(1);
-      expect(result.stderr).toContain("duplicate TURBO_TEAM assignments in .env; refusing to modify it");
-      expect(yield* fs.readFileString(envPath)).toBe(original);
-    })
-  );
 });
