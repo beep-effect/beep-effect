@@ -17,7 +17,7 @@ does not re-earn it.
 | P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
 | P1 Implement | complete | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
 | P2 Verify | complete | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
-| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | complete | Publish content-final work and hand the ready PR to the orchestrator under S11. | Ready PR, zero outstanding review threads, final-head qualification and hosted receipts retained; S11 assigns hosted-red burn-down and merge to the orchestrator. |
 | P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P0 Research — mostly already paid
@@ -114,8 +114,8 @@ No implementation blocker remains. Run-4 canonical `it.layer` provision clears
 all ten EV002 findings and the EV003 wrapper. One EV015 judgment (serial,
 fork-free shared-clock advancement to falsify detector clock dependence) is
 pending B admission under the explicit resume ruling; publication is authorized
-with this documented judgment. The implementation/harness wave is pushed to
-PR #1572 at `b245bda5c7`. Closeout reflection and completed-retained state are in the final wave.
+with this documented judgment. The implementation/harness wave is pushed at `b245bda5c7`, and closure
+content is pushed at `911f674496`; PR #1572 is ready for review. Closeout reflection and completed-retained state are in the final wave.
 Fresh package/parity receipts and hosted monitoring are recorded in P2;
 the orchestrator applies the S11 merge gate. Merge belongs to the
 orchestrator under S11.

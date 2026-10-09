@@ -383,3 +383,15 @@ changed. Reversal: isolate test services with an equivalent canonical harness
 that retains the clock-independence assertion, or admit the reviewed judgment
 through the policy owner's workflow. Publication proceeds under S11 after
 recording the refused cheap gate; merge belongs to the orchestrator.
+
+### 2026-10-09 — P3 acceptance under the orchestrator's S11 ruling
+
+The lane brief supersedes this packet's older P3 green-hosted exit with the
+S11 handoff: content-final and ready PR, addressed review threads, no conflict,
+retained local qualification and exact-head hosted receipts. The orchestrator
+owns merge and consolidated hosted-red burn-down. This is not a claim that
+hosted CI is green or that the standard Yeet merge-ready gate returned yes.
+Two review threads concerning that distinction are answered and resolved via
+`yeet reply`; PLAN records the applicable S11 exit rather than claiming CLEAN.
+Reversal: restore the ordinary hosted-green P3 gate when the program's S11
+exception ends; the detector's runtime/schema semantics do not change.

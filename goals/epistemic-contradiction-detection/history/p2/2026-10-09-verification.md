@@ -332,3 +332,20 @@ manifest/PLAN phases P0-P4 are complete in the final closeout wave. Fresh heavy
 refresh and hosted checks remain separately recorded after they settle;
 completion metadata does not assert hosted CI is green. S11 merge remains
 orchestrator-owned, with the EV015 judgment explicitly pending B admission.
+
+Hosted head `911f674496`: ready transition succeeded, detached readiness
+monitor submitted and waited. Completed red-job logs were read immediately:
+SAST job `114024431789` and Secret Scanning job `114024431763` both fail with
+Docker's unauthenticated pull rate limit, exit 125 before either scan. Both
+inbox rows are acknowledged environment-only; no security-policy change or
+new credential route is introduced. Vercel deployments also report build rate
+limits and are acknowledged environment-only. These are hosted environment
+failures for the orchestrator's S11 consolidated burn-down, not detector test
+results. Local Gitleaks commit hooks report no leaks.
+
+Review round 1: two packet-status findings were answered and resolved through
+`bun run beep yeet reply` (two resolved, zero failed). Neither concerns code.
+PLAN and SPEC now state the applicable S11 content-final/ready handoff and
+retain the distinction from ordinary hosted-green merge readiness. The brief
+requires the lifecycle flip in this same final PR. Exact-head receipts and
+all active jobs must settle before the final report.

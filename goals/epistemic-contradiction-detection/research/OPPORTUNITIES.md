@@ -128,3 +128,18 @@ helper line 36 and ten EV002 detect call sites. An explicit export-only status
 or separate check/export command would have prevented this false proof claim.
 The claim is corrected in P2 and the handoff; no lint suppression or baseline
 refresh. The brief's repeated-blocker stop ends this run.
+
+## 2026-10-09 — Run-4 qualification queue and hosted container rate limits
+
+- Task: refresh both package gates and hosted parity after canonical test-harness repair.
+- Evidence: two `beep-heavy --detach` jobs remained queued beyond thirteen
+  minutes with only `all slots busy, waiting`, no queue position or age. The
+  resume ruling permits the lane-cgroup fallback after twenty minutes;
+  the lane leaves other holders and shared caps unchanged.
+- Prevention: expose FIFO queue position, wait age and an explicit admitted
+  result receipt in the wrapper, so lanes can act on bounded fallback rules.
+- Hosted evidence: PR #1572 SAST job `114024431789` and Secret Scanning job
+  `114024431763` both exit 125 on Docker's unauthenticated pull rate limit
+  before scanning. Inbox acknowledgements attribute them environment-only.
+- Prevention: the CI owner should provide a sanctioned cached or authenticated
+  container route in the consolidated S11 burn-down, preserving scanner pins.
