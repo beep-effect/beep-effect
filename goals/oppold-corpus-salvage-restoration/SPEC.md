@@ -496,3 +496,9 @@ passes. PR1 retains the heavy label, readiness monitor, review handling, and exa
 head final-file gate. The orchestrator owns inherited hosted reds and the merge.
 The frozen manifest and live slice wait for its merged report. Reversal: close the
 unmerged PR and revert the bounded changes before any live run.
+
+The worker started the required forty-minute bounded Yeet monitor, observed hosted
+check transitions and acknowledged the three deployment rate-limit failures, then
+stopped that local monitor at the run-2 handoff boundary. The final-file gate takes
+over under S11; no hosted-green or merge-ready verdict is claimed. This avoids an
+unowned running job after worker exit. Reversal: resubmit the same bounded monitor.

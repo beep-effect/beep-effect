@@ -283,3 +283,34 @@ followed by Yeet ready and a bounded readiness monitor. No baseline is edited.
 Reversal: close the unmerged PR and revert the bounded fixes and packet decisions;
 no immutable live state exists. The frozen manifest and live slice remain deferred
 until the orchestrator reports PR1 merged.
+
+### PR1 publication and monitor handoff
+
+- PR1 #1596 opened with `ready-for-heavy`; pushed head and API head both
+  `041fc523031dd3ed57b4636cf339975feb8871ae`. Yeet ready passed; draft false.
+- Fresh committed-head knowledge refs: pass, 45,497 observations, zero live gated.
+  Packet goal budget, manifest parse, index check, and diff whitespace checks pass.
+- Required forty-minute detached monitor submitted and observed hosted transitions.
+  Three Vercel build-rate-limit rows were acknowledged as environment-only; no
+  quota purchase, baseline edit, or code workaround. No unresolved review threads.
+- Local monitor intentionally cancelled at the run-2 handoff boundary, terminal
+  status confirmed and acknowledged. No merge-ready verdict claimed; hosted checks
+  remain pending. Orchestrator final-file gate takes over under S11. Reversal:
+  resubmit the same bounded monitor. All own verification and monitor units ended.
+- Final pre-report fetch/merge: already up to date. PR open, ready, structurally
+  mergeable. No live run, launch script, frozen manifest, or slice ledger exists.
+- This receipt-only commit is the final publication wave. Its pushed exact head
+  and final-file line are resolved after commit; the report below describes the
+  verified publication snapshot, and the worker's terminal report names the
+  subsequent receipt-only head. The final file uses that subsequent API-equal head.
+
+### Run-2 final report — verified publication snapshot
+
+lane: corpus-restore
+head: 041fc523031dd3ed57b4636cf339975feb8871ae (exact verified publication snapshot; subsequent commit adds only this handoff and monitor-transfer decision)
+PR(s): #1596 OPEN, ready for review, ready-for-heavy; PR1 pre-run fixes
+package-verify: @beep/repo-cli: pass; @beep/libpff: pass (retained run-1 full proof; no owned source changed on relaunch)
+hosted-parity: test-tsgo: pass | docgen local: pass | jsdoc-ratchet: pass | knowledge refs: pass, fresh committed-head zero gated | fallow audit+health: pass | scoped coverage: pass, CLI 5,890 tests and libpff 71 tests; all package percentages above baseline; restoration implementation 100% in all metrics
+handoff: goals/oppold-corpus-salvage-restoration/history/handoffs/corpus-restore-2026-10-09.md
+open items: Orchestrator owns PR1 gate/merge and inherited hosted reds; hosted readiness pending, no unresolved review threads at handoff. Required bounded monitor observed transitions then was cancelled and acknowledged for final-file monitoring transfer; reverse by resubmitting it. Do not write the frozen run manifest or launch the slice until the orchestrator reports PR1 MERGED. P1 remains pending. Decisions retain budget-bound Tika capture, portable engine-name escape preserving MIME names, ratio 4, attempt 7,200,000 ms, total 43,200,000 ms, total output 2,147,483,648 bytes, 100 GB free floor, R6 freeze record, R7 output authority, and private-workspace release notes under #1566; reverse fixes/docs before launch by reverting commits. Run-2 authorizes inherited-fence fallback; reverse by closing unmerged PR. All own units ended.
+final 041fc523031dd3ed57b4636cf339975feb8871ae #1596
