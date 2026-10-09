@@ -264,7 +264,11 @@ export const scanUnsafeAssertions = (
   return A.flatMap(files, ([absolute, label]) => scanOne(project.addSourceFileAtPath(absolute), label));
 };
 
-const FOREIGN = /["']@effected\/[^"']*["']/;
+// Import and export specifiers only (static, dynamic, side-effect, require and
+// vitest module mocks). A string that merely starts with the scope, such as a
+// service identity or an error message, is upstream text that S0 carries as is.
+const FOREIGN =
+  /(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s+|\brequire\s*\(\s*|\bvi\.(?:mock|doMock|unmock|importActual|importMock)\s*\(\s*)["']@effected\/[^"']*["']/;
 const LAB_ALIAS = /^\s*(?:import|export)\b.*\bfrom\s+["']@beep\/scratchpad\/effected\/|\bimport\(\s*["']@beep\/scratchpad\/effected\//;
 
 /**

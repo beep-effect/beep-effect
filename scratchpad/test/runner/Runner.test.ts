@@ -178,6 +178,16 @@ describe("specifier rewrites", () => {
   it("finds leftover foreign specifiers by line", () => {
     assert.deepStrictEqual(foreignSpecifierLines("a.ts", 'ok\nimport x from "@effected/glob"\n'), ["a.ts:2"]);
     assert.deepStrictEqual(pipe("a.ts", foreignSpecifierLines("clean")), []);
+    const forms = [
+      'import "@effected/glob";',
+      'const m = await import("@effected/glob");',
+      '} from "@effected/glob/node";',
+      'vi.mock("@effected/glob", () => ({}));',
+      'const id = Context.Service("@effected/memfs/Volume");',
+      'throw new TypeError(`@effected/toml internal cap`);',
+      'return name.startsWith("@effected/");',
+    ].join("\n");
+    assert.deepStrictEqual(foreignSpecifierLines("b.ts", forms), ["b.ts:1", "b.ts:2", "b.ts:3", "b.ts:4"]);
     const alias = 'import { x } from "@beep/scratchpad/effected/jsonc/index";\n * import { y } from "@beep/scratchpad/effected/jsonc/index"';
     assert.deepStrictEqual(foreignSpecifierLines("t.ts", alias), ["t.ts:1"]);
   });
