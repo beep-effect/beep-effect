@@ -327,3 +327,65 @@ receipts acknowledged. No hosted pass is inferred or shared CI policy changed.
 Vercel deployment build-rate-limit rows carry the repository exception. R4 keeps
 exact-head hosted state distinct from local parity. PR #1570 is draft; P3 final
 reflection, packet flip, support scan and ready/content-final push remain.
+
+## P3 closing wave — 2026-10-09
+
+- Phase reached: P0-P3 complete; completed-retained packet and structured Codex
+  reflection prepared for the content-final publication on PR #1570.
+- Verification: all six default package-verify, test-tsgo and scoped coverage
+  receipts pass; docgen local, regenerated JSDoc ratchet, knowledge refs and Fallow
+  audit/health pass. Reflection lint reports zero blocking and advisory findings.
+  Final support scan follows over the exact packet bytes, PR text and commit
+  messages; only method, category/count and pass/fail are retained.
+- Sync: merged current origin/main without conflict; none of the six scrub package
+  directories changed in that merge. Incoming CI, tooling and other-packet work
+  retains its upstream ownership; publication rechecks root cheap gates.
+- Decisions: retain mask-only evidence, existing category sets and pure retention
+  decisions for the narrow slice; reasons and reversals remain in SPEC. Use the
+  existing schema namespace barrel to avoid unowned generated alias changes;
+  reversal is a separately owned subpath/export projection migration. All six
+  packages are private; retain release notes instead of changesets per #1566 and
+  the resume ruling. Reversal is a release-policy change for published packages.
+- Open items: run content-final readiness monitor, read exact-head hosted results
+  and answer any review threads. Standard merge readiness is not inferred from
+  local proofs. S11 gives the orchestrator consolidated-red repair and merge
+  ownership. Vercel build-rate-limit rows are environment-only under the explicit
+  deployment exception. The prior-head scanner acquisition failures are attributed
+  and superseded by fresh-head CI; no credential or CI-policy repair is attempted.
+
+- P2 hosted security attribution: SAST image pull rate limit and Secret Scanning
+  auth-endpoint timeout both exit 125 before analysis; exact completed logs were
+  read immediately and both rows acknowledged as environment-only. Zero review
+  threads were returned by the fresh P3 read.
+
+- P3 exact-canary support receipt: 195 accumulated source/support/output surfaces,
+  each count zero, pass. Reflection and closing evidence are included. AC4 is
+  ticked from those counts; the final evidence edits are rechecked before commit.
+  AC8 remains unticked pending standard hosted readiness; S11 permits a separate
+  content-final worker handoff without claiming that failing CI is green.
+
+## P3 publication blocked — 2026-10-09
+
+- Supersedes the prepared closeout state above: P0-P2 complete; P3 in progress,
+  lifecycle active. Closing publication passed fifteen cheap gates but failed
+  inherited `lint:effect-vitest`; nothing was pushed. PR #1570 remains draft at
+  P2 head `ef87b84675fc87b18e5df3a623e699aa31055190`.
+- Attribution: the sole new finding is in
+  `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`,
+  added by main #1572. Exact diff against origin/main is empty. This lane owns
+  neither that test nor the detector baseline; the P0 inbox row is acknowledged
+  with the owning-lane/consolidated-main repair route.
+- Decision, reason and reversal: restore the packet to active/P3 in progress
+  because the completed-retained closing wave did not publish. Retain its
+  reflection and all passing proof. After main repairs the inherited finding,
+  merge main once, recheck final support bytes, restore completed-retained and
+  publish the single closing wave. Never suppress or waive the gate locally.
+- Verification retained: all six package-verify, test-tsgo and scoped coverage
+  pass; docgen local, JSDoc ratchet, knowledge refs, Fallow audit/health, reflection
+  and final support scans pass. AC4 remains proved, AC8 remains unticked.
+- Owned processes: closing publish ended with exit 1. The automatic readiness
+  monitor was deliberately stopped for the blocker, reached terminal state and
+  its proof-job row was acknowledged. No started proof is left running.
+- Open items: owning-lane repair on main, final publication/ready/monitor, and
+  exact-final-head hosted results. Prior-head scanner acquisition failures and
+  Vercel rate limits are attributed; zero review threads at the latest read.

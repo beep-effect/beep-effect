@@ -144,3 +144,29 @@ exact-canary count is 0 as well. No credentials or approval were required.
   not inferred. The next required publication starts a fresh head's checks.
 - Prevention: centrally provision scanner images or retry transient acquisition
   in the owning CI packet. This lane changes no CI policy, credentials or plan.
+
+## 2026-10-09 — repeated P2 scanner image acquisition
+
+- Work: read both completed security job logs for the P2 publication immediately.
+- Evidence: SAST exits 125 on Docker unauthenticated pull rate limit; Secret
+  Scanning exits 125 on Docker Hub auth-endpoint timeout for its pinned image.
+- Attribution: environment-only; analysis never began. Both inbox rows are
+  acknowledged with their exact acquisition failure. Local proofs do not imply
+  hosted scanner success. The final main sync carries upstream CI changes, and
+  the content-final publication starts fresh exact-head checks.
+- Prevention: central scanner-image provisioning belongs to the CI owner; this
+  lane does not alter credentials, registry endpoints, CI policy or billing.
+
+## 2026-10-09 — inherited gate blocks closing publication
+
+- Work: publish the P3 closing wave after the mandatory final merge from main.
+- Evidence: `bun run beep yeet publish` completes fifteen cheap gates but
+  `lint:effect-vitest` reports one new finding in
+  `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`.
+- Attribution: the file exactly matches origin/main and was added by #1572;
+  no scrub test is flagged. The local P0 row is acknowledged as out-of-scope.
+- Disposition: no suppression, baseline refresh or unowned edit. No P3 content
+  was pushed. Restore active/P3 in-progress, retain the reflection and stop the
+  owned monitor before returning the blocked handoff.
+- Prevention: run cheap gates against the exact main candidate before merge;
+  fix this finding once on main, then dependent lanes merge the repair once.

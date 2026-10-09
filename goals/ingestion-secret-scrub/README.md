@@ -34,9 +34,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0-P2 complete. PR #1570 carries the implementation at `da1a9b05c7` and remains
-in draft while P3 prepares the reflection, completed-retained flip and final
-support scan. No content-final or merge-ready claim is made yet.
+P0-P2 complete; P3 is blocked at publication. PR #1570 remains draft at the
+P2 head `ef87b84675`. The closing reflection and support scan are retained locally.
+The required main sync brought an out-of-scope Effect Vitest finding from #1572;
+no P3 content was pushed. The packet remains active until that inherited gate is
+repaired by its owner and the closing wave can publish.
 
 ## Latest Evidence
 
@@ -67,12 +69,26 @@ support scan. No content-final or merge-ready claim is made yet.
 - Exact-canary scan rebuilds three canaries from runtime fragments and counts
   only: 184 accumulated source/support/output surfaces, each 0, pass. This covers
   fixtures, errors, logs, telemetry test output, packet evidence, PR title/body and
-  branch commit messages. AC4 remains pending the P3 final-byte support re-scan.
+  branch commit messages. P3 final-byte support re-scan is recorded below.
 - Local commit-range gitleaks passes with no leaks. The P1 hosted Secret Scanning
   and SAST jobs failed before scanning on Docker image acquisition (pull rate
   limit and auth-endpoint timeout); their exact completed logs were read and rows
   acknowledged as environment-only. Hosted success is not inferred. Vercel build
   rate limits carry the explicit repository exception. Fresh heads run fresh CI.
+- P3 final-byte scan rebuilds the same three runtime-fragment canaries: 195
+  accumulated source/support/output surfaces, each 0, pass. It includes the closing
+  handoff and reflection, inventory, friction, README, PR title/body and branch
+  commit messages. Final evidence edits are rechecked before publication; AC4 is
+  ticked from these counts. No review replies exist at the fresh thread read.
+- Reflection lint passes with zero blocking and zero advisory findings. The final
+  main sync is conflict-free and changes none of the six scrub packages, so the
+  qualified source receipts remain applicable. Publication reran root cheap gates; fifteen pass and one inherited gate blocks push.
+- Closing publication blocker: `lint:effect-vitest` reports one new finding in
+  `packages/epistemic/use-cases/test/ContradictionDetection.golden.test.ts`. That
+  file exactly matches origin/main and arrived via #1572; no scrub test is flagged.
+  The local inbox row is attributed outside lane ownership. Owned monitor stopped
+  and terminal receipt acknowledged. Completion flip is reversed to active/P3 in
+  progress; the reflection is retained. No ready or merge-ready claim is made.
 - R4 maps on-demand Yeet verify to exact-head hosted CI plus this hosted-parity
   set. Final reflection and readiness evidence are recorded at P3. This proof
   covers one confidentiality prompt boundary, not injection, tool-policy or egress.

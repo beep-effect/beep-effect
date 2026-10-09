@@ -139,7 +139,7 @@ not replacement doctrine.
       coverage/residue, and `safeForPrompt` expectations.
 - [x] Supported hits produce sanitized text and correct categories/counts
       without retaining raw matches in any returned or serialized evidence.
-- [ ] Exact synthetic canary scans prove no raw secret survives into persisted
+- [x] Exact synthetic canary scans prove no raw secret survives into persisted
       artifacts, `TextAnchor.quote`, errors, logs, telemetry, snapshots, or
       support evidence.
 - [x] Unknown coverage, unresolved matches, and residue cases each make
@@ -152,6 +152,12 @@ not replacement doctrine.
       deletion within 12 months.
 - [ ] Focused tests, repo gates, reflection lint, and Yeet PR-to-mergeable proof
       pass with no unrelated refactors or formatting churn.
+
+AC4 evidence: P3 runtime-fragment scanner reports 195 accumulated surfaces, each
+zero, including final packet evidence, reflection, PR title/body and branch commit
+messages. Final evidence edits are rechecked before publication. AC8 remains
+unticked until standard hosted readiness is established; S11 separately authorizes
+the content-final worker handoff and consolidated-red repair by the orchestrator.
 
 ## Verification Matrix
 
