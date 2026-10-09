@@ -123,6 +123,50 @@ const demoSource = A.join(
 
 it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
   describe("effect import laws", () => {
+    it.effect(
+      "prunes reference symlink loops and still reports a real root import",
+      Effect.fnUntraced(
+        function* () {
+          yield* temporaryWorkingDirectory;
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeTsconfig;
+          yield* writeProjectFile("reference/source.ts", demoSource);
+          yield* fs.symlink(".", "reference/loop");
+          yield* fs.makeDirectory(".repos");
+          yield* fs.symlink("../reference", ".repos/demo");
+          yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
+          for (const directory of ["node_modules", "dist", "vendor", "packages/demo/.repos"]) {
+            yield* writeProjectFile(`${directory}/ignored.ts`, demoSource);
+            yield* writeProjectFile(`${directory}/ignored.md`, '```ts\nimport { Effect } from "effect";\n```\n');
+            yield* fs.symlink("loop", `${directory}/loop`);
+          }
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              strictCheck: true,
+              effectOnly: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["packages"],
+            })
+          );
+
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.changedFiles).toEqual(["packages/demo/src/index.ts"]);
+          expect(summary.rootImportsRewritten).toBe(1);
+          expect(summary.strictFailure).toBe(true);
+
+          yield* writeProjectFile("docs/guide.md", '```ts\nimport { Effect } from "effect";\n```\n');
+          const markdown = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({ mode: "markdown", effectOnly: true, excludePaths: [] })
+          );
+          expect(markdown.scannedFiles).toBe(1);
+          expect(markdown.changedFiles).toEqual(["docs/guide.md"]);
+          expect(markdown.rootImportsRewritten).toBe(1);
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
     it("keeps the promoted-family ratchet empty after the P2 stop", () => {
       expect(EffectImportRulesOptions.make({}).promotedFamilyPrefixes).toEqual(A.empty<string>());
     });
