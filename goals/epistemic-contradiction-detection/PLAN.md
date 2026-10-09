@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 Appetite: **small** — one short PR ladder (schema → service contract → first
 slice). If the work sprawls past that, cut to the first slice rather than
@@ -14,7 +14,7 @@ does not re-earn it.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
+| P0 Research | complete | Confirm the shipped contract surface and settle the conflict-class seat. | The `SPEC.md` Open Contract Question is answered on the record; every `file:line` in `SPEC.md` re-verified against the live tree. |
 | P1 Implement | pending | Schema → `Context.Service` contract → implementation, in that order. | Conflict-class `LiteralKit` + snapshot input schema, then the detection service contract, then the pure implementation; the shipped `Contradiction` surfaces are unmodified. |
 | P2 Verify | pending | Golden vectors and fixtures prove purity and contract conformance. | Golden-vector lane green, run twice with an advanced clock producing identical output; every emitted candidate decodes against `ContradictionCandidate`; `bun run beep yeet verify` SUCCESS. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -34,10 +34,14 @@ phase, not a mining phase. Read, do not redo:
 - [`DECISIONS.md`](../../explorations/graphnosis-prior-art/DECISIONS.md) Q1, Q6,
   Q9 — mirrored as dated entries in this packet's `SPEC.md` decision log.
 
+P0 complete (2026-10-09): option 1 selected; class-specific detector identities
+plus SemVer, no contract extension. Snapshot and full-entity conformance decisions
+are recorded in SPEC.md.
+
 P0's own work, all of it small:
 
 1. Re-verify every `file:line` citation in `SPEC.md` against the live tree; the
-   triage packet is mid-flight, so its surfaces can move under this packet.
+   triage packet is closed (completed-retained); its shipped surfaces remain read-only.
 2. Answer the Open Contract Question (conflict-class seat). If the answer is
    "negotiate with triage," open that conversation in P0 and record its state —
    but v1 proceeds on the no-change option regardless.
@@ -104,17 +108,17 @@ Before marking the packet closed (and `status` → `completed-retained`):
 
 ## Current Blockers
 
-None. This packet does not block on belief-view revision (capture stage) and
-does not block on the triage packet closing — it produces against triage's
-already-shipped schema.
+None. Belief-view revision graduated on 2026-08-17 to `goals/belief-view-engine`,
+which is paused with P1 pending. Triage closed completed-retained in #1421
+(`cd6c9a1b72`; code #520, `244529aa4f`). Neither blocks this detector.
 
 ## Execution Notes
 
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.
-- Triage is mid-flight at P2 verify. Coordinate before assuming any
-  `Contradiction` surface is stable, and never edit it from this packet.
+- Triage is closed and has no active owner. Produce against its shipped
+  `Contradiction` surface, and never edit it from this packet.
 
 ## Verification Commands
 

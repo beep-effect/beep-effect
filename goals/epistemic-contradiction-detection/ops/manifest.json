@@ -5,7 +5,7 @@
     "title": "Epistemic Contradiction Detection",
     "status": "active",
     "created": "2026-08-06",
-    "updated": "2026-08-29",
+    "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-contradiction-detection",
@@ -54,7 +54,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending",
+      "status": "complete",
       "exit": "Every file:line citation in SPEC.md is re-verified against the live tree, and SPEC.md's Open Contract Question (where conflict class rides on the shipped ContradictionCandidate contract) is answered on the record before any schema lands."
     },
     {

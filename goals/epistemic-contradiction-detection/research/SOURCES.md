@@ -59,11 +59,11 @@ license and provenance for each.
 
 | Capability | Path | Disposition |
 | --- | --- | --- |
-| `ContradictionCandidate` entity — the output contract | `packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts:58-86` | **reuse, read-only** — produced against, never edited |
-| `ContradictionAssessment` (requires `confidence`, a `Confidence` unit interval) | `packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts:913-925` | reuse, read-only — satisfied with per-class constants |
-| `ContradictionMatchBasis` (`detector`, `detectorVersion`, `kind`, evidence sets) | `ibid.:560-584`, exposed at `:648` | reuse, read-only — the conflict-class seat question in `SPEC.md` turns on this |
-| `ContradictionMatchBasisKind` = `["same-source-overlap", "independent-evidence"]` | `ibid.:435` | read-only — an evidence-provenance vocabulary; widening it is triage's change, not ours |
-| `BeliefVersionRef` — immutable belief-version reference | `ibid.:294` | reuse — the snapshot input references beliefs by this shape |
+| `ContradictionCandidate` entity — the output contract | `packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts:41-75` | **reuse, read-only** — produced against, never edited |
+| `ContradictionAssessment` (requires `confidence`, a `Confidence` unit interval) | `packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts:905-917` | reuse, read-only — satisfied with per-class constants |
+| `ContradictionMatchBasis` (`detector`, `detectorVersion`, `kind`, evidence sets) | `ibid.:554-578`, exposed at `:616-621` | reuse, read-only — the conflict-class seat question in `SPEC.md` turns on this |
+| `ContradictionMatchBasisKind` = `["same-source-overlap", "independent-evidence"]` | `ibid.:436` | read-only — an evidence-provenance vocabulary; widening it is triage's change, not ours |
+| `BeliefVersionRef` — immutable belief-version reference | `ibid.:312` | reuse — the snapshot input references beliefs by this shape |
 | `LiteralKit`, `SchemaUtils` | `@beep/schema` | reuse — every literal union in this packet |
 | Conflict-class vocabulary, snapshot input schema, per-class confidence constants, detection `Context.Service` | `packages/epistemic/{domain,use-cases}` | **NET-NEW** |
 | NLP similarity primitives (`TverskySimilarity`, `BowCosineSimilarity`, `TextSimilarity`, `ExtractKeywords`) | `packages/foundation/capability/nlp-processing/src/Tools/` | **explicitly not used in v1** — recorded so a later packet with calibration data knows they exist; reaching for them here is a stop condition |
@@ -82,5 +82,6 @@ license and provenance for each.
   (`SPEC.md:138-139`) are inputs to this packet's spec, not text to be edited.
 - Modality vocabulary owner:
   [`explorations/epistemic-belief-view-revision`](../../../explorations/epistemic-belief-view-revision/README.md)
-  — capture stage; this packet does not block on it.
+  — graduated on 2026-08-17 to `goals/belief-view-engine`, paused with P1 pending;
+  this packet does not block on it.
 - Decision log with dated Q1/Q6/Q9 entries: [`../SPEC.md`](../SPEC.md).

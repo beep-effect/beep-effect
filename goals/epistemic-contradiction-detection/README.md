@@ -41,10 +41,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Next concrete action: re-verify the `file:line`
-citations in [`SPEC.md`](./SPEC.md) against the live tree, then answer the Open
-Contract Question (where conflict class rides on the shipped contract) on the
-record before any schema is written.
+P0 complete. P1 implementation follows the recorded schema → service → implementation decisions.
 
 ## Provenance
 
@@ -63,8 +60,8 @@ Back-links, not copies:
   `ContradictionMatchBasis`, all shipped in
   `packages/epistemic/domain/src/{values,entities}/Contradiction/`.
 - [`explorations/epistemic-belief-view-revision`](../../explorations/epistemic-belief-view-revision/README.md)
-  owns the MATRES modality vocabulary this packet consumes. It is at **capture**
-  stage; this packet does **not** block on it.
+  owns the MATRES modality vocabulary (Q9). It graduated on 2026-08-17 to
+  `goals/belief-view-engine`, paused with P1 pending; this packet does **not** block on it.
 
 ## Latest Evidence
 
@@ -76,8 +73,8 @@ High-signal constraints that do not belong in the normative spec:
 
 - **The boundary is one-way.** Triage's stop-and-re-scope clause
   (`goals/epistemic-contradiction-triage/SPEC.md:138-139`) stays law. This
-  packet exists to answer that clause, not to relax it — and triage has not
-  closed (P2 verify in flight), which is one more reason v1 produces against
+  packet exists to answer that clause, not to relax it — and triage is closed
+  with no active owner, which is one more reason v1 produces against
   the shipped schema instead of extending it.
 - **Confidence is a constant, not a score.** The shipped
   `ContradictionAssessment` requires `confidence`, and v1 satisfies it with a
