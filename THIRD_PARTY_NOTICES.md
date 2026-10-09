@@ -144,3 +144,16 @@ limitations under the License.
 
 A full copy of the Apache License, Version 2.0 is included at
 [`licenses/Apache-2.0.txt`](./licenses/Apache-2.0.txt).
+
+## SPAR document vocabularies
+
+Selected class/property names are projected into TypeScript inventories, with
+no ontology axioms redistributed. All four pinned artifacts and repository
+licenses declare Creative Commons Attribution 4.0 International (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/. Changes: curated term selection
+and TypeScript representation. No upstream endorsement is implied.
+
+- **Doco** — Doco by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. CC BY 4.0. Commit `4c4109a64148c207f80d48a611a79a2d996a44b4`; artifact `docs/2026-06-25/doco.ttl`; version `1.4.0`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/doco/4c4109a64148c207f80d48a611a79a2d996a44b4/docs/2026-06-25/doco.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/doco/4c4109a64148c207f80d48a611a79a2d996a44b4/LICENSE.md).
+- **Deo** — Deo by David Shotton and Silvio Peroni. Contributors: Sebastian Barzaghi. CC BY 4.0. Commit `dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4`; artifact `docs/2026-08-14/deo.ttl`; version `1.2.0`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/deo/dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4/docs/2026-08-14/deo.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/deo/dfaa0904b1b7905cd8293dc2f1b9992c2871d0d4/LICENSE.md).
+- **Fabio** — Fabio by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Commit `ea5b2cd49a7a8f4dc695d633c76bb05608c085db`; artifact `docs/2026-09-03/fabio.ttl`; version `2.3.1`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/docs/2026-09-03/fabio.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/fabio/ea5b2cd49a7a8f4dc695d633c76bb05608c085db/LICENSE.md).
+- **Cito** — Cito by David Shotton and Silvio Peroni. Contributors: Paolo Ciccarese, Sebastian Barzaghi and Tim Clark. CC BY 4.0. Commit `d34b42e8d4d1c9d45bc530599328897805116994`; artifact `docs/2026-09-03/cito.ttl`; version `2.9.0`. [Pinned artifact](https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/docs/2026-09-03/cito.ttl); [repository license](https://raw.githubusercontent.com/SPAROntologies/cito/d34b42e8d4d1c9d45bc530599328897805116994/LICENSE.md).
