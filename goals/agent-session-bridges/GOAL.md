@@ -1,44 +1,51 @@
 # GOAL: Agent Session Bridges
 
-Use the current checkout; paths are repo-relative. Outcome: Compose the local router with owned native Codex, Claude and Grok sessions and CLI/MCP send/reply tools, preserving policy, capability, lifecycle and app-mode evidence.
+Active attached-T3 extension. Read README.md, SPEC.md, PLAN.md,
+ops/manifest.json, research/T3-INTEGRATION.md and research/SOURCES.md in this
+packet. AGENTS.md, required skills and architecture outrank packet prose.
+Prior managed receipts/reflection retain their recorded scope; they do not close
+this extension. PR #1571 is draft while integration changes; final hosted gates,
+reflection, merge and retirement remain open.
 
-Read goals/agent-session-bridges/README.md, SPEC.md, PLAN.md, ops/manifest.json and
-research/SOURCES.md first. The SPEC is normative; AGENTS.md, required skills and
-architecture outrank packet prose. Read source exploration decisions and executed
-spike receipts; do not confuse fixtures, controller-mediated browser replies or
-managed CLI evidence with production autonomous tools or native app enrollment.
+Hardened bidirectional task proof passed at captured source. Later refactor/helper tests, independent reviews, full CLI package proof and repository docgen passed. Cheap gates: 15 pass; inherited main EV015 blocks publication. Read research/T3-LOCAL-VERIFICATION.md and both live/reconciliation receipts; finish P2 then P3/P4.
 
-Merged-state declaration: completed-retained, effective only after PR #1571's exact final-head hosted checks, resolved reviews, 20-minute window and merge. Local implementation/full proofs passed; external closeout remains open until that gate. See README/SPEC for the prospective boundary; never treat this local manifest as a merge receipt.
+Maintain thin @beep/t3-code external MCP driver, repo CLI attach-t3 composition
+with existing EndpointDispatch/store loop, and grant-bound peer CLI using the
+existing toolkit handlers. Separate AttachedT3 identity/profile from native
+ManagedLaunchProfile ownership. Never alter T3 model settings or duplicate the
+router. Native T3 MCP is independently authorized outside Beep grant enforcement.
+Per-thread MCP injection is unproved; scoped CLI return is the first slice.
 
-Bounded first slice: Replace the controller-mediated Codex/Grok fixture with autonomous scoped send/reply tools on two owned managed sessions through the actual router; prove correlation, policy identity, bounded loops and owned cleanup.
+Prove real one-file repo audit delegation: owned T3 Codex coordinator briefs T3
+Claude through scoped Beep queue; autonomous correlated reply/ACK returns, native
+dispatches settle, and the coordinator writes a private report. Register both as
+valid desktop-session units with ownership/orphan plan without claiming the global
+orchestrator role. Preserve exact T3/native identities, workspace, pins and policy.
+No controller relay, new fallback, billing endpoint or merge authority.
 
-Before source edits activate schema-first-development/effect-first-development,
-query graft, search live source/barrels for reuse, run architecture routing and
-use create-package for a necessary new package. Root architecture review will
-record exact topology. Preserve unrelated files/processes and sibling ownership.
+Exclusive owned unchanged targets require host-config preflight/post-readback;
+independently observed native identity/policy has separate provenance/time. MCP
+thread metadata does not attest native identity or effective policy.
+T3 send has no atomic expected-policy/native/model CAS; explicitly retain the
+read→send race. Detected drift or unknown submission holds ambiguity with no blind
+retry. Full-access CLI execution is not OS isolation; separate native-app
+attachment, cold unload, fleet role handoff, browser production and federation
+remain gated. Cleanup closes owned bridge connections/client only, preserving
+T3 user threads/profile and unrelated sessions.
 
-In scope: local schema-backed communication, transactional receipt/recovery
-contract or native managed adapter/tool integration as specified by this goal.
-Out of scope: production orchestrator/merge-policy changes, global app settings,
-new paid endpoints, native Desktop/browser production/federation claims without
-the separately gated follow-ups. Preserve current model pins/fallback authority.
+Before code, use schema-first/effect-first skills, graft/live source reuse and
+canonical architecture/create-package writers. Preserve concurrent ownership.
+Run phases through P4 with actual behavior tests, bounded task proof, independent
+review, sanitized source-bound receipts and canonical package-verify handoffs.
+Publish a coherent wave via Yeet; mark ready at final content, answer/resolve
+reviews, wait exact-head hosted checks/window, then merge at existing gate.
+Write a new scoped reflection and same-PR lifecycle closeout when achieved;
+never infer completion from local proofs or the earlier prospective declaration.
 
-Run the phases through P4. Capture decisions and reversal in SPEC, actual new
-behavior tests and sanitized receipts, and package-verify for each touched package.
-Stop a provider route before inference if its effective permission/model identity
-mismatches; keep ambiguous consumption owned and hold unsafe mutation retries.
-Never silently resume a conversation another app owns or relay peer text as
-operator authority. Existing subscription tests must be bounded/disposable.
+Packet checks: goals doctor, explore/Atlas checks, valid manifest/provenance,
+launcher <=4000 chars, reflection-artifacts and diff hygiene. Record reversible
+decisions/friction as they arise. No new conversation-state goal is required.
 
-Publish through Yeet once cheap gates/content are ready; mark ready at final
-content, monitor exact-head hosted readiness, answer and resolve threads, wait the
-review window, and merge at the current gate. Completion requires the merged or
-mergeable implementation PR, scoped acceptance, verification, final reflection
-and same-PR lifecycle update. Exploration evidence does not close this goal.
-
-At P4 write history/reflections/YYYY-MM-DD-agent.md with valid frontmatter and
-run reflection-artifacts; retire/sweep from the owning merged lane.
-
-Packet checks: launcher <=4000 characters, valid manifest/provenance, goals doctor,
-explore check and git diff --check. Exact package/local commands follow recorded
-topology. Escalate money only; routine choices need a recorded reversible decision.
+Later h3 refactor reconciliation proved four ACKs and both reports, but reverse
+terminal settlement is incomplete after coordinator cancellation. See
+research/T3-REFACTOR-RECONCILIATION.json; ambiguity is retained without replay.

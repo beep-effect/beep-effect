@@ -29,3 +29,7 @@ reply proof (Recommended)” after the managed capability spike.
 ## 2026-10-09 — Implementation authorization
 
 > Graduate implementation goals and begin the router plus session bridges (Recommended)
+
+## 2026-10-09 — T3 integration authorized
+
+The operator authorized T3 integration after selecting T3-owned visible Claude/Codex conversations. Implement real bounded repository task coordination through the scoped Beep router, preserving exact T3/native identities, workspace and effective policy. Capability has priority; do not claim the global orchestrator role or separate Claude/ChatGPT Desktop attachment.

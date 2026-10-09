@@ -3,14 +3,14 @@
   "initiative": {
     "id": "agent-session-bridges",
     "title": "Agent Session Bridges",
-    "status": "completed-retained",
+    "status": "active",
     "created": "2026-10-09",
     "updated": "2026-10-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-session-bridges",
-  "lifecycle": "completed-retained",
-  "mission": "Compose the local router with owned native Codex, Claude and Grok sessions and CLI/MCP send/reply tools, preserving policy, capability, lifecycle and app-mode evidence.",
+  "lifecycle": "active",
+  "mission": "Compose managed and attached T3-owned sessions with the durable router and scoped messaging, proving bounded repository task delegation without global role takeover.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -50,7 +50,15 @@
     "goals/agent-session-bridges/research/GROK-MANAGED-ROUNDTRIP.json",
     "goals/agent-session-bridges/history/reflections/2026-10-09-codex.md",
     "goals/agent-session-bridges/research/CLAUDE-MANAGED-ROUNDTRIP.json",
-    "goals/agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md"
+    "goals/agent-session-bridges/research/CLAUDE-PATCH-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-INTEGRATION.md",
+    "explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md",
+    "goals/agent-session-bridges/research/T3-INTEGRATION-QUALIFICATION.json",
+    "goals/agent-session-bridges/research/T3-INTEGRATION-INITIAL-QUALIFICATION.json",
+    "goals/agent-session-bridges/research/T3-CACHE-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-REFACTOR-RECONCILIATION.json",
+    "goals/agent-session-bridges/research/T3-CACHE-HELPER-REVIEW.md",
+    "goals/agent-session-bridges/research/T3-LOCAL-VERIFICATION.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -59,7 +67,14 @@
     "research/probes/README.md",
     "../agent-message-router/research/ACCEPTANCE-AUDIT.md",
     "research/NATIVE-QUALIFICATION.md",
-    "research/CLAUDE-PATCH-REVIEW.md"
+    "research/CLAUDE-PATCH-REVIEW.md",
+    "research/T3-INTEGRATION.md",
+    "research/T3-INTEGRATION-QUALIFICATION.json",
+    "research/T3-INTEGRATION-INITIAL-QUALIFICATION.json",
+    "research/T3-CACHE-REVIEW.md",
+    "research/T3-REFACTOR-RECONCILIATION.json",
+    "research/T3-CACHE-HELPER-REVIEW.md",
+    "research/T3-LOCAL-VERIFICATION.md"
   ],
   "agentLaunchers": [
     {
@@ -84,17 +99,17 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "complete"
+      "status": "in-progress"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "complete"
+      "status": "pending"
     }
   ],
   "verificationCommands": [
@@ -112,5 +127,5 @@
   ],
   "dependsOn": ["goals/agent-message-router"],
   "resumeCondition": "Satisfied on 2026-10-09: documented versioned router contract and combined 20 injected/schema/tool/filesystem tests passed. Execution activated; later review findings are remediation within active work.",
-  "statusNote": "PROSPECTIVE MERGED-STATE DECLARATION for PR #1571 (https://github.com/beep-effect/beep-effect/pull/1571), effective ONLY after exact final-head hosted checks, answered/resolved reviews, the 20-minute review window and merge through the existing gate. External execution remains open until then; literal local completed-retained/phase values are not proof of completion. Published implementation source commit 1565951a24da16aed9e238fde55ca7250fe9c7d2; all three full package audits/docgen passed, CLI audit 745.2 seconds/docgen 23.9 seconds, 16 cheap gates and clean-head install passed. Router 44 tests; native 19 tests and final Claude patch zero introduced findings; both autonomous live pairs and Claude busy exercise passed. R1 remains one deferred pre-existing P2. Final reflection is retained; no hosted-gate pass or merge SHA is claimed."
+  "statusNote": "Local implementation and package verification complete: full CLI audit/docgen, driver package, repository docgen, focused tests and independent reviews pass. Cheap gates 15pass/1 inherited EV015 failure. Complete hardened live proof retained separately from interrupted final-refactor fourACK/twoheld outcome. External proof credentials revoked; original conversations retained. Publication, hosted gates, final scoped reflection, merge and retirement remain pending the main-owned repair."
 }

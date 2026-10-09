@@ -2,17 +2,18 @@
 
 ## Objective
 
-Compose the local router with owned native Codex, Claude and Grok sessions and CLI/MCP send/reply tools, preserving policy, capability, lifecycle and app-mode evidence.
+Compose the local router with managed native sessions and attached T3-owned Claude/Codex conversations, preserving scoped messaging, ownership and qualified policy evidence while proving bounded repository task delegation.
 
 The operator authorized graduation and beginning router plus bridges on 2026-10-09.
-The implementation promise is bounded to local managed communication and its
-contract; existing app and federation gates retain their separate acceptance.
+The original managed foundation remains retained evidence. The operator subsequently
+authorized attached T3-owned Claude/Codex task coordination through the same
+router. Separate-app attachment and federation retain their separate acceptance.
 
 ## Non-Goals
 
 - Implementing the sibling router's storage/envelope semantics again, production orchestrator/Yeet/merge-policy changes, new model fallback or billing routes.
 - Taking over unrelated live sessions, silently resuming a Desktop-owned conversation in another process, modifying global hooks/plugins or claiming browser/CLI evidence as native app attachment.
-- Production browser automation, native Desktop enrollment and remote federation; they remain explicitly gated/queued follow-ups with their own qualification.
+- Production browser automation, attachment to separate Claude/ChatGPT Desktop applications, remote federation and fleet-wide orchestrator role/handoff changes remain gated. The admitted T3-owned attached-host mode is the exception described below.
 - Automatic remediation of Cursor plan access through purchases or model substitution; blocked routes retain accurate capabilities.
 
 ## Source Hierarchy
@@ -41,12 +42,10 @@ Flat external runtime adapters in existing driver families or architecture-appro
 
 ## Acceptance Criteria
 
-**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
-The lifecycle, phases and merge-conditional checklist items in this branch take
-effect when this PR merges after its exact final head passes required hosted
-checks, answered/resolved review threads and the 20-minute review window.
-Execution remains open until then; the PR's live merge gate supplies the
-completion evidence.
+**Active extension, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The earlier prospective closeout is superseded by the authorized T3 integration.
+Managed functional proofs below retain their captured scope; the new T3 criteria
+and exact final-head hosted/review/merge gates remain open.
 
 - [x] Native owned Codex app-server, Claude persistent stream input and Grok ACP adapters implement the router's endpoint port and advertise only version/evidence-qualified capabilities; native extensions preserve Codex active steering and other stronger features.
 - [x] Cursor access failure is classified independently of an apparently successful end_turn/RPC result. The adapter can handshake and report a blocked generation route without pretending the approved model generated output; a later paid remedy requires separate operator authorization.
@@ -58,8 +57,8 @@ completion evidence.
 - [x] Busy steering versus queued follow-up, idle delivery versus wake, cancellation acceptance versus terminal cancellation, history resume versus same visible session and transport acceptance versus consumption are separate contract/evidence states.
 - [x] Restart/late-event/lost-ack behavior integrates with the router's ambiguous/reconciliation states. A provider without consumptive reconciliation holds unsafe retries; streaming buffers are not a durable queue.
 - [x] Evidence matrix explicitly leaves native Desktop enrollment, production browser bridge, cloud ChatGPT/Work and federation queued/gated. The earlier Claude web browser-mediated proof is useful acceptance evidence within that mode, not a production autonomous bridge.
-- [x] **Merge-conditional:** Scoped model tests use existing subscriptions/pins, minimal worker configuration and sanitized receipts; required package-verify/lint/check/test/docgen and exact-head hosted gates pass.
-- [x] **Merge-conditional:** Yeet drives the owning PR to mergeable and merger follows the existing gate; final reflection/lifecycle closeout lands with work. No unrelated refactors.
+- [ ] **Current final-head gate:** Scoped model tests use existing subscriptions/pins, minimal worker configuration and sanitized receipts; required package-verify/lint/check/test/docgen and exact-head hosted gates pass.
+- [ ] **Current final-head gate:** Yeet drives the owning PR to mergeable and merger follows the existing gate; final reflection/lifecycle closeout lands with work. No unrelated refactors.
 
 Functional checkboxes reflect the current real-store/transport fixtures and owned
 managed live receipts. The autonomous Codex↔Grok and Codex↔Claude receipts
@@ -67,8 +66,9 @@ include the distinct Claude queued-busy proof; Cursor remains an explicitly bloc
 generation cell. The [final Claude patch review](research/CLAUDE-PATCH-REVIEW.md)
 reports zero actionable introduced findings on its exact three-file snapshot.
 Stronger controls and permission readback retain their per-provider evidence
-limits; existing-app modes remain gated. Full local package proof is achieved. Hosted/Yeet/closeout boxes declare only the
-intended merged state and remain unfulfilled on this branch until the gate above.
+limits. Historical full local package proof remains achieved for its captured
+managed implementation; attached T3 and current final-head hosted/Yeet/closeout
+criteria remain unchecked and unfulfilled. Separate-app modes remain gated.
 
 ## Verification Matrix
 
@@ -85,7 +85,7 @@ intended merged state and remain unfulfilled on this branch until the gate above
 ## Stop Conditions
 
 - New money, services, quota top-ups or plan changes require the operator.
-- A provider or app route changes ownership/permissions unexpectedly: stop that route before inference and record its receipt; continue independent work.
+- Observed ownership/policy mismatch fences submission. Attached T3 has a read→send race: post-submission drift stops the route and holds ambiguity rather than claiming atomic pre-inference enforcement; continue independent work.
 - The same external blocker persists after bounded investigation: record exact evidence and recovery owner; do not change providers to evade a failed test.
 - Missing required source or irreconcilable scope/topology facts must be resolved before dependent edits. Routine design choices are recorded and carried forward under the existing autonomy charter.
 
@@ -140,3 +140,24 @@ T3 ownership does not establish attachment to another desktop application.
 Reversal: revoke disposable external credentials and detach owned runtime
 bindings, preserving the user-interacted profile and private evidence. No
 registered orchestrator role or provider fallback policy changed.
+
+## Attached T3 acceptance (functional proof complete; final gates open)
+
+- [x] Thin `@beep/t3-code` driver and `attach-t3` compose existing EndpointDispatch/store loop; separate AttachedT3 profile records external ownership, T3 host thread, workspace/lane/task, provider/model and host-reported configuration. Independently observed provider-native identity/policy baseline has separate provenance/time; a host thread id is never fabricated as native identity. No native child ownership is fabricated.
+- [x] Owned coordinator/worker are recorded as valid desktop-session register units with exact private addresses, ownership and orphan plan; no global orchestrator ledger claim, new role election, fallback or merge authority.
+- [x] Peer CLI invokes existing toolkit handlers with a fixed private persisted grant reference/state directory, exposing only messaging inputs. Actual router enforcement proves sender/recipient, repository/conversation scope, generation, expiry, durable quota, duplicate/reply correlation and ACK-before-finish semantics.
+- [x] Fresh authorized external OAuth remains private. Target ownership is exclusive and configuration remains unchanged during the bounded task. Preflight and post-readback check available host configuration; independent owned native-record observation qualifies effective policy and identity separately. Host configuration is not native attestation. T3 has no atomic expected-policy send precondition: the race is explicitly retained, unknown/drift outcomes hold ambiguity with no blind replay, and the adapter never changes model settings.
+- [x] T3 Codex delegates a real bounded one-file repository audit via the scoped Beep queue to T3 Claude; autonomous correlated result and ACK return without controller relay, both dispatches settle, and the coordinator writes a private report. Reverse initiation is exercised as a bounded second brief where needed. Original visible/native identities and policy evidence are preserved.
+- [x] Explicit queue mode, stable same-client request correlation, bounded reads/waits/cancellation, revocation/reconnect/stale-run fixtures and ambiguity recovery are tested. Accepted/queued is not consumed; ACK plus supported correlated terminal result qualifies completion. Lost launch without retry key is reconciled first.
+- [x] Cleanup closes only owned bridge resources and revokes owned external auth; it retains the app and conversations without model reconfiguration. Earlier owned archive/unarchive credential rotation is recorded separately. Native T3 messaging remains independently authorized outside Beep grants; CLI protocol scope does not imply OS isolation of Full-access threads. Per-thread MCP injection, cold unload and separate-app attachment remain unqualified.
+- [ ] Source-bound sanitized integration receipts, touched-package verification, independent review, exact final-head hosted/Yeet gates and a new scoped reflection/closeout pass.
+
+### T3 admission decision
+
+| Date | Decision | Reason | Reversal |
+| --- | --- | --- | --- |
+| 2026-10-09 | Extend and reactivate this bridge goal for attached T3 task coordination | User authorized integration after actual T3 host qualification; reuse existing router/toolkit/register rather than duplicate authority | Disable attachment, revoke owned OAuth and close owned connections; retain pending/ambiguous mail and user T3 threads/profile |
+| 2026-10-09 | Separate thin t3-code driver and grant-bound peer CLI | External app-host transport differs from owned CLI launches; per-thread MCP injection unproved | Remove new composition/driver exports, preserving managed adapter API and durable store |
+| 2026-10-09 | Exclusive owned target plus pre/post policy readback, with explicit race | T3 send has no expected-policy/native/model CAS; fingerprints alone cannot promise atomic pre-inference fencing | Hold ambiguous drift; require upstream compare-and-send before advertising stronger control |
+
+See [T3 integration design](research/T3-INTEGRATION.md) and [executed receipt](research/T3-INTEGRATION-QUALIFICATION.json) for topology, actual proof and evidence limits.

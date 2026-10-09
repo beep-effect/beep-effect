@@ -13,8 +13,10 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { agentMessageAttachT3Command } from "./AgentMessage.attached.command.ts";
 import { agentMessageStoreLayer, requirePrivateAgentPath } from "./AgentMessage.layer.ts";
 import { EndpointBinding, Envelope, LaunchGrant, Receipt, RouterError } from "./AgentMessage.models.ts";
+import { agentMessagePeerCommand } from "./AgentMessage.peer.command.ts";
 import { agentMessageServeCommand } from "./AgentMessage.runtime.ts";
 import { AgentMessageStore } from "./AgentMessage.store.ts";
 import { agentMessageMcpLayer } from "./AgentMessage.tools.ts";
@@ -219,5 +221,7 @@ export const agentMessageCommand = Command.make("agent-message").pipe(
     watch,
     tools,
     agentMessageServeCommand,
+    agentMessagePeerCommand,
+    agentMessageAttachT3Command,
   ])
 );

@@ -104,3 +104,11 @@ the latest local correction and T3 qualification await publication.
   and external comparison complete. Operator confirmed both session modes.
   Recommendation and probe contract written; alignment remains open.
 - 2026-10-09: Packet opened from the exploration template in an isolated lane.
+
+## Next Open Question
+
+No blocking admission question remains. Implement the approved attached T3 slice in the bridge goal; qualify the policy-race boundary and real delegated audit before marking it achieved.
+
+- 2026-10-09: T3 enrollment gate fired; reopened at decompose and admitted the bridge extension. New driver, attached-host composition and scoped peer CLI are approved; global role handoff remains deferred.
+
+- 2026-10-09: Re-graduated the admitted T3 slice into the active bridge goal. Thin external driver, attach-t3 and scoped peer CLI have explicit acceptance and policy limits; store-owner admission review has zero blockers. Provider-owner separate admission review also reports zero blockers; implementation/task proof remains pending.

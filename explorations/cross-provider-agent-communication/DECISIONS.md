@@ -194,3 +194,31 @@ T3 ownership does not establish attachment to another desktop application.
 Reversal: revoke disposable external credentials and detach owned runtime
 bindings, preserving the user-interacted profile and private evidence. No
 registered orchestrator role or provider fallback policy changed.
+
+## 2026-10-09 — Admit attached T3 task coordination
+
+**Decision:** Reopen at decompose and extend `agent-session-bridges` for the fired
+T3 enrollment gate. Use a new thin `@beep/t3-code` driver, host `attach-t3`
+composition and a grant-bound peer CLI return path. The existing router remains
+the durable authority; no second mailbox or new global orchestrator is admitted.
+
+**Rationale:** The installed-host qualification proves native autonomous messaging
+and visible identity/policy continuity. It does not implement a Beep adapter or
+scope T3 environment OAuth to Beep recipients. The operator now authorized that
+integration. Existing valid desktop-session register units describe the owned
+coordinator/worker; the current registered orchestrator retains authority.
+
+**Boundary:** Native T3 MCP remains independently authorized outside Beep grant
+security. Per-thread MCP injection is unproved; the first slice uses scoped CLI
+return. Full-access target execution is not OS isolation. T3 send has no atomic
+expected-policy/native-identity precondition: require exclusive owned unchanged
+targets, host-config read-before-send and post-readback, with independently observed native
+baseline/live policy proof separate. Detected reported drift or unknown
+submission becomes ambiguous; never blindly retry. Model settings are never
+changed by the adapter. Separate native-app attachment, fleet role routing/handoff,
+browser production and federation remain deferred.
+
+**Reversal:** Disable attachment, close owned bridge connections, revoke its owned
+external OAuth client and retain pending/ambiguous mail. Preserve T3 conversations,
+user profile and unrelated sessions. See the amended bridge SPEC and
+[T3 integration design](../../goals/agent-session-bridges/research/T3-INTEGRATION.md).

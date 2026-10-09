@@ -1,0 +1,171 @@
+{
+  "schemaVersion": "agent-t3-integration-reconciliation/v1",
+  "observedAt": "2026-10-09T23:39:44.640799+00:00",
+  "qualification": "post-cohesion-refactor h3 bounded task proof; restored host and canonical ambiguity recovery",
+  "historicalCompleteReceipt": "T3-INTEGRATION-QUALIFICATION.json",
+  "sourceBinding": {
+    "liveAttachedServiceSha256": "a62c24334ef460e3e09f4757e84bf99f36964b012a3750db05c2137d440d52db",
+    "typeImportReorderedAttachedServiceSha256": "67114b1635604b7f43400a9ae3d39b264f0c8e09151dbf7951b5578ac135dca6",
+    "independentlyRecomputedBunEmissionByteIdentical": true,
+    "emittedSha256": "984d49238c0a1536ed5eeaabe56eeae2f8027e3c660dcc59feb2937a42af81bd",
+    "note": "Exact source diff only moves an import type declaration; driver changes after this exercise require separate verification.",
+    "laterDriverServiceSha256": "933a5f13539586081714b139a98c7b2089f8a8090b2f3dc5774fa3e485d75d0a",
+    "laterDriverIndependentReview": {
+      "findings": 0,
+      "delta": "Canonical O.getSomesStruct replaces R.getSomes for session header; O now imports re-exported Effect helpers from @beep/utils.",
+      "sourceEvidence": "getSomesStruct delegates to R.getSomes; no network sequencing change.",
+      "independentlyExecutedParity": "None and Some session header objects match",
+      "verificationBoundary": "Synthetic parity and owner full package proof; no later-source live native invocation."
+    }
+  },
+  "router": {
+    "logicalMessages": 4,
+    "allAcknowledged": true,
+    "messages": [
+      {
+        "messageId": "t3-audit-forward-request-h3",
+        "state": "acknowledged",
+        "attemptGeneration": 1,
+        "dispatchActive": 0
+      },
+      {
+        "messageId": "t3-audit-forward-result-h3",
+        "state": "acknowledged",
+        "attemptGeneration": 1,
+        "dispatchActive": 0
+      },
+      {
+        "messageId": "t3-audit-reverse-request-h3",
+        "state": "acknowledged",
+        "attemptGeneration": 1,
+        "dispatchActive": 2
+      },
+      {
+        "messageId": "t3-audit-reverse-result-h3",
+        "state": "acknowledged",
+        "attemptGeneration": 1,
+        "dispatchActive": 2
+      }
+    ],
+    "receiptCount": 14,
+    "grantUsePerProvider": 2,
+    "forwardDispatchSettled": true,
+    "reverseDispatchSettled": false,
+    "reverseCorrelationCheckpoints": "submitted; bind reverse request to codex ordinal10 and reverse result to claude ordinal10",
+    "reverseAmbiguityHeld": true,
+    "recoverExpiredClaimsCount": 2
+  },
+  "nativeObservation": {
+    "nativeIdentityMatchesPriorOwnedPair": true,
+    "codex": {
+      "turnContextCount": 10,
+      "allPolicyContexts": {
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "approval_policy": "never",
+        "sandbox_policy": {
+          "type": "danger-full-access"
+        }
+      },
+      "taskCompleteCount": 10,
+      "latestNativeTaskCompleteAt": "2026-10-09T23:35:03.747Z",
+      "hostProjectionMismatch": "pre-restoration only; restored host reconciled completed"
+    },
+    "claude": {
+      "permissionRecordCount": 10,
+      "allPermissionModes": "bypassPermissions",
+      "latestHostTurnItem": "pre-restoration running; restored host run cancelled",
+      "modelEffortEvidence": "prior host configuration only"
+    }
+  },
+  "reports": [
+    {
+      "file": "source-before.sha256",
+      "sha256": "cdc739a2feeda36b1c443fa8a970edecd91eb91c08f26748f6203058a46f0983"
+    },
+    {
+      "file": "codex-coordination-report.md",
+      "sha256": "e34adf71058ddd946afbf177153290d493e3f0dbaf35f8bef9a6cd890dc5da15"
+    },
+    {
+      "file": "claude-coordination-report.md",
+      "sha256": "c3d956a3795b2d665e837975f13d0902272ba69aa3a31da4ed418f18343a5373"
+    },
+    {
+      "file": "forward-codex-terminal.json",
+      "sha256": "0fe5e736349241262c4af14df651721ec17ef9cd7e0e704d98622e19a5ee1261"
+    },
+    {
+      "file": "recover-receipt.json",
+      "sha256": "968a1ca3c612edc23845cb36997bb214ddf040baf3f4c946eb616fb459ff2668"
+    },
+    {
+      "file": "cleanup.sanitized.json",
+      "sha256": "05e5062f1a6a020077975c6a2a9de567892040033a550951d858b8eaf824581c"
+    },
+    {
+      "file": "final-codex-activity.json",
+      "sha256": "0569d966fe128b834b73900f18d98b4722f10477080582f6ae3b84c8bfdf1f29"
+    },
+    {
+      "file": "final-claude-activity.json",
+      "sha256": "88eab846abcc1be55d246c4a470cd744c851e14e25fb5541cf8a4a85f7703a27"
+    },
+    {
+      "file": "final-codex-configuration.json",
+      "sha256": "071c566c4e86c9ecadacf8e6f92fe9ae5509259636622e659861d55180b0dea7"
+    },
+    {
+      "file": "final-claude-configuration.json",
+      "sha256": "5135d6ce290bb5598615ee32dfc71adc0e7448a2107b1764dcc57c5b127affc4"
+    }
+  ],
+  "limits": [
+    "Four scoped ACKs, both private reports and both forward settlements are proved. Reverse request native run completed; reverse result run cancelled, so two reverse dispatches remain held ambiguous.",
+    "A cancelled coordinator result run does not qualify successful reverse native terminal settlement.",
+    "No controller resubmission or native mutation was used for reconciliation.",
+    "App restored in original profile and owned credentials re-probed401; no bridge or resend restarted. Whole-goal final gates remain open.",
+    "Public receipt excludes credentials, owned native IDs, absolute home paths and transcript contents."
+  ],
+  "preRestorationHostObservation": {
+    "codex": {
+      "completedRuns": 9,
+      "latestRunOrdinal": 10,
+      "latestRunStatus": "waiting",
+      "latestRunCompletedAt": null
+    },
+    "claude": {
+      "completedRuns": 9,
+      "latestRunOrdinal": 10,
+      "latestRunStatus": "running",
+      "latestRunCompletedAt": null
+    }
+  },
+  "hostObservation": {
+    "codex": {
+      "completedRuns": 10,
+      "latestRunOrdinal": 10,
+      "latestRunStatus": "completed",
+      "latestRunCompletedAt": "2026-10-09T23:38:25.764Z"
+    },
+    "claude": {
+      "completedRuns": 9,
+      "cancelledRuns": 1,
+      "latestRunOrdinal": 10,
+      "latestRunStatus": "cancelled",
+      "latestRunCompletedAt": "2026-10-09T23:38:25.499Z"
+    },
+    "activeRuns": 0
+  },
+  "cleanup": {
+    "externalCredentialHttpStatus": {
+      "externalOauth": 401,
+      "enrollment": 401
+    },
+    "bridgeWorkers": "absent after interruption; not restarted",
+    "appRestoredSameProfile": true,
+    "nativeAppAndConversationsRetained": true,
+    "persistedPeerGrants": "retained immutable with active ambiguity fences; not replaced",
+    "recovery": "canonical recover holds expired reverse claims; no resend or direct database edit"
+  }
+}

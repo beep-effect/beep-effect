@@ -45,6 +45,9 @@
       "path": "../../../drivers/runpod/tsconfig.json"
     },
     {
+      "path": "../../../drivers/t3-code/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/tesseract/tsconfig.json"
     },
     {

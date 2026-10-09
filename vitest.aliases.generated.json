@@ -1903,5 +1903,7 @@
   ],
   "@beep/epistemic-domain/values/ContradictionDetection": [
     "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
-  ]
+  ],
+  "@beep/t3-code": ["./packages/drivers/t3-code/src/index.ts"],
+  "@beep/t3-code/*": ["./packages/drivers/t3-code/src/*"]
 }

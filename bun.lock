@@ -1721,6 +1721,22 @@
         "vitest": "catalog:",
       },
     },
+    "packages/drivers/t3-code": {
+      "name": "@beep/t3-code",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/tailscale": {
       "name": "@beep/tailscale",
       "version": "0.0.0",
@@ -3253,6 +3269,7 @@
         "@beep/runpod": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/skill-contract": "workspace:^",
+        "@beep/t3-code": "workspace:^",
         "@beep/technical-drawing": "workspace:^",
         "@beep/tesseract": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -4149,6 +4166,8 @@
     "@beep/skill-contract": ["@beep/skill-contract@workspace:packages/foundation/modeling/skill-contract"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
+
+    "@beep/t3-code": ["@beep/t3-code@workspace:packages/drivers/t3-code"],
 
     "@beep/tailscale": ["@beep/tailscale@workspace:packages/drivers/tailscale"],
 

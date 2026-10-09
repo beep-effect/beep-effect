@@ -2,20 +2,19 @@
 
 ## Status
 
-Lifecycle: `completed-retained`
+Lifecycle: `active`
 
-**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
-The lifecycle, phases and merge-conditional checklist items in this branch take
-effect when this PR merges after its exact final head passes required hosted
-checks, answered/resolved review threads and the 20-minute review window.
-Execution remains open until then; the PR's live merge gate supplies the
-completion evidence.
+**Active attached-T3 extension, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
+The operator authorized integration after the T3-owned host qualification.
+The earlier prospective closeout is superseded for this expanded scope. Managed
+proofs remain historical evidence. T3 implementation and bounded forward/reverse
+audit proof passed; full final verification and exact final-head hosted/review/window/merge gates are open. The PR returned to draft for this work.
 
 Source: [ops/manifest.json](ops/manifest.json).
 
 ## Mission
 
-Compose the local router with owned native Codex, Claude and Grok sessions and CLI/MCP send/reply tools, preserving policy, capability, lifecycle and app-mode evidence.
+Compose managed and attached T3-owned sessions with the durable router and scoped messaging, proving bounded repository task delegation without global role takeover.
 
 ## Launch
 
@@ -34,15 +33,13 @@ Compose the local router with owned native Codex, Claude and Grok sessions and C
 
 ## Current Phase
 
-Local implementation and verification are complete. The phase values describe
-intended merged state; PR #1571 still requires exact final-head hosted review and
-merge. External execution remains open until that gate and post-merge closeout.
+P1 implementation and bounded attached T3 task proof are complete. P2 final verification is ongoing; P3 hosted readiness and P4 closeout remain pending. The active lifecycle does not claim merge or global orchestrator authority.
 
 First slice: Prove autonomous scoped send/reply between owned native Codex and Grok through the actual durable router; qualify Claude separately and retain Cursor access classification.
 
-## Latest Evidence
+## Managed foundation evidence (historical snapshots)
 
-The current router suite passes **44 tests** (23 store and 21 schema/tool/private
+The foundation router snapshot passed **44 tests** (23 store and 21 schema/tool/private
 filesystem cases); the explicit CLI test project type-checks. Independent review
 of the store extraction found no introduced regression and confirmed one
 pre-existing P2, tracked as [R1](../agent-message-router/research/FOLLOW-UPS.md): contradictory trusted-host
@@ -98,7 +95,7 @@ The [policy and portability repair receipt](../agent-message-router/research/POL
 records the later root-policy fixes and real Node/Bun SQLite regression proof.
 Original live provider receipts remain bound to their captured source snapshots.
 
-`agent-existing-session-enrollment` remains queued for exact native app/host enrollment,
+T3-owned enrollment is admitted above. `agent-existing-session-enrollment` remains queued for separate native app enrollment,
 UI continuity and permission proof; `agent-browser-session-bridge` remains queued for
 a production local browser driver and unattended authenticated enrollment;
 `agent-communication-federation` remains gated on local recovery and authority proof.
@@ -107,5 +104,37 @@ These named candidates stay in the exploration map, not falsely completed by thi
 ## Closeout
 
 Drive the implementation PR through Yeet to mergeable under current exact-head
-checks/review/window rules, merge at the existing gate, then apply this prospective declaration
-and retire the lane. Same-PR final lifecycle/reflection updates are required.
+checks/review/window rules. Land scoped lifecycle/reflection updates with final
+work in the same PR, effective only upon the exact final-head gate and merge;
+then merge at the existing gate and retire the lane.
+
+## Current next action: final qualification gates
+
+The [current T3 receipt](research/T3-INTEGRATION-QUALIFICATION.json) records the
+hardened forward/reverse AGENTS.md audits: four ACKed/settled messages at attempt
+one, each persisted grant used twice, and seven completed same-identity native
+runs per provider including prime and earlier exercises. At that historical receipt, both providers were idle
+with no nonterminal runs. The inbound scope guard passed independent review and
+nine regression cases. Both bridges are stopped, external credentials were
+revoked/re-probed401, peer grants invalidated and register units retired as
+metadata; the app/conversations remain. The no-tool prime remains negative scope
+evidence in the [initial receipt](research/T3-INTEGRATION-INITIAL-QUALIFICATION.json).
+
+Full repository docgen and final CLI package verification passed. The cohesion
+refactor and final header-helper repair passed their focused tests and independent
+reviews; captured live hashes remain separate from later source verification.
+Final cheap gates passed 15 lanes and failed only the inherited main EV015.
+See [final local verification](research/T3-LOCAL-VERIFICATION.md). Publication,
+exact final-head hosted gates and same-PR closeout remain blocked on the main-owned repair.
+[Cache posture review](research/T3-CACHE-REVIEW.md) qualifies bookkeeping only.
+Separate Claude/ChatGPT Desktop adapters, always-on operation, OS isolation and
+global orchestrator authority remain unqualified.
+
+The later [refactor reconciliation](research/T3-REFACTOR-RECONCILIATION.json)
+records four h3 ACKs and both coordinator reports, with only the forward pair
+settled. After restoring the original host profile, Codex run ten completed and
+Claude run ten was cancelled; neither remains active. Canonical recovery holds
+both reverse claims ambiguous. Both external credentials re-probed HTTP401;
+bridges were absent and not restarted, and immutable peer grants remain behind
+the ambiguity fences. No resend occurred. This partial refactor exercise does
+not replace the earlier complete hardened proof or finish final goal gates.

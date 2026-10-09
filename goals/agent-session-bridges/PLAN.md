@@ -2,67 +2,81 @@
 
 ## Status
 
-**Proposed state for merged `main`, [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571).**
-The lifecycle, phases and merge-conditional checklist items in this branch take
-effect when this PR merges after its exact final head passes required hosted
-checks, answered/resolved review threads and the 20-minute review window.
-Execution remains open until then; the PR's live merge gate supplies the
-completion evidence.
-
-Local full verification and the initial Yeet publication are complete: all three
-touched package audits/docgen passed, CLI audit 745.2 seconds/docgen 23.9 seconds,
-and 16 cheap gates plus clean-head install passed. PR #1571 was created from
-implementation source commit `1565951a24da16aed9e238fde55ca7250fe9c7d2`. Exact final-head hosted checks,
-review closure/window and merge remain unverified here.
-
-
-Local full proof binds the qualified implementation snapshot published at
-`1565951a24da16aed9e238fde55ca7250fe9c7d2`. Advancing-base integration and the final
-packet commit retain their own exact-head hosted/review gate; earlier local proof
-is not automatically promoted to the integrated final head.
+Active extension for attached T3-owned Claude/Codex task coordination, authorized
+2026-10-09. [PR #1571](https://github.com/beep-effect/beep-effect/pull/1571) is draft
+while content changes. Earlier managed proofs and prospective closeout are retained
+as history; they do not complete this expanded scope or the exact final-head gate.
 
 ## Phases
 
 | Phase | Status | Work | Exit criterion |
 | --- | --- | --- | --- |
-| P0 Research | complete | Router endpoint/envelope/receipt/policy contract and injected vertical slice passed; approved driver topology and minimal authenticated launch/lifetime design recorded. | Architecture and bounded source contract recorded; dependency ready |
-| P1 Implement | complete | Implement native managed adapters and scoped CLI/MCP send/reply tools, then prove autonomous two-provider conversation; qualify Claude and classify Cursor access explicitly. | Real implementation meets its scoped acceptance |
-| P2 Verify | complete | Run bounded idle/busy/steer/cancel/reconnect/policy tests on owned sessions and injected driver failure tests; capture a per-provider/mode receipt matrix and public sanitization proof. | Required local/package checks pass, receipt limits recorded |
-| P3 Yeet: PR to mergeable | complete (merge-conditional) | Publish final waves through Yeet, mark ready at content-final, answer/resolve review threads and wait detached readiness monitor | Exact final-head hosted checks, review closure and window satisfy the existing merge gate |
-| P4 Close | complete (merge-conditional) | Same-PR final lifecycle/reflection update, merge at gate and retire owning lane | Merged/mergeable proof retained, reflection validates, lifecycle completed-retained only when achieved |
+| P0 Research | complete | Installed T3 qualification and admitted thin-driver/host/peer-CLI design | Scope, authority and policy-race limits recorded |
+| P1 Implement | complete | t3-code driver, attached profile/dispatch and grant-bound peer CLI; valid register units | Scoped implementation and real bounded delegated audit |
+| P2 Verify | ongoing | Driver/host/store integration fixtures and owned visible T3 task proof; independent review | Actual correlated ACK/settled outcomes, policy/readback and sanitized receipts; package checks pass |
+| P3 Yeet: PR to mergeable | pending | Publish coherent final wave, mark ready, resolve reviews and monitor | Exact final-head hosted checks and review window satisfy existing gate |
+| P4 Close | pending | New scoped reflection, same-PR lifecycle declaration, merge and retirement | Completion supported by gate and scoped acceptance |
 
-## First vertical slice
+## First attached-host slice
 
-Replace the controller-mediated Codex/Grok fixture with autonomous scoped send/reply tools on two owned managed sessions through the actual router; prove correlation, policy identity, bounded loops and owned cleanup.
+Follow [T3-INTEGRATION.md](research/T3-INTEGRATION.md) and SPEC acceptance.
+Use the canonical new driver package; compose existing EndpointDispatch/store
+loop rather than duplicate router semantics. The peer CLI wraps existing toolkit
+handlers under a persisted grant. Native T3 tools are outside that grant claim.
 
-Use the exploration [probe contract](../../explorations/cross-provider-agent-communication/research/PROBE-PLAN.md) as an evidence
-matrix, not a requirement to rerun all old passing fixtures. Tests must exercise
-the actual new store/services/adapters and distinguish injected ports, live model
-receipt, autonomous tools and app-mode UI proof. Record unsupported or blocked
-cells; no silent provider replacement, plan purchase or app-session takeover.
+Register owned T3 Codex coordinator and Claude worker desktop-session units,
+without global role takeover. Delegate a real one-file repository audit through
+the scoped queue, return a correlated result and ACK, settle both dispatches and
+write a private report. The controller does not relay replies. Preserve exact
+visible/native identities, workspace and approved model/effort/policy.
 
-## P4 Closeout Checklist
+Exclusive owned unchanged targets and pre/post host configuration checks and separately observed native baseline reduce the T3
+read→send race; they do not provide atomic expected-policy fencing. Unknown or
+drift outcomes hold ambiguity without blind retry. Full-access execution is not
+OS isolation. No per-thread MCP injection or separate-app attachment is claimed.
 
-1. Record exact implementation PR/head, local proof, hosted gate and resolved review evidence.
-2. Retain the final dated reflection under `history/reflections/` with actual source commit, local package outcomes, remaining follow-ups and prospective closeout limits; validate reflection-artifacts.
-3. Land final phase/lifecycle changes with final work. Never mark this scaffold completed-retained from exploration fixture evidence.
-4. Merge only through the current gate after rereading review threads, then run the owning lane's Yeet retirement/sweep route.
+## Evidence and handoff
 
-## Execution Notes
+Retain historical managed receipts, independent reviews and source hashes as
+captured. New qualification must bind its actual implementation/artifact version.
+Do not relabel old fixtures as T3 adapter proof. Preserve unrelated files/processes
+and user T3 profiles; cleanup owns only bridge resources and its external client.
+Touched packages run canonical package-verify at handoff; scripts are generated.
 
-Preserve unrelated work. Exact topology is recorded in the router
-[implementation placement](../agent-message-router/research/IMPLEMENTATION.md).
-Touched packages are `@beep/repo-cli`, `@beep/ai-provider-cli` and `@beep/acp`;
-run canonical package-verify at each owned package handoff. Package scripts are generated, not hand-authored. The peer
-goal owns its surface; contract coordination is an on-disk handoff, not duplicate
-implementation. New model tests use only owned disposable sessions.
+## Verification
 
-## Verification Commands
+Run focused driver/adapter/toolkit tests, actual bounded T3 task proof and
+independent review, then required package lint/check/test/docgen. Validate goals
+doctor, explore/Atlas checks, launcher <=4000 characters, reflection-artifacts
+when the new reflection lands, local links and git diff --check. Publish/ready/
+monitor/review/merge use existing Yeet gates, with final lifecycle/reflection in
+the same PR. Escalate new money only; preserve current fallback authority.
 
-```sh
-test "$(wc -m < goals/agent-session-bridges/GOAL.md)" -le 4000
-jq . goals/agent-session-bridges/ops/manifest.json
-git diff --check -- goals/agent-session-bridges
-bun run beep goals doctor
-bun run beep explore --check
-```
+## Current verification state
+
+The hardened forward/reverse AGENTS.md audits passed on the captured inbound-guard
+source: four messages acknowledged and settled at attempt one, two sends per
+grant, and seven completed same-identity runs per provider including earlier
+exercises. At that historical receipt, both providers were idle with no nonterminal runs. Cleanup stopped the
+owned bridges, revoked/re-probed external credentials HTTP401, invalidated peer
+grants through canonical endpoint replacement and retired register metadata while
+retaining the app/conversations. See [current receipt](research/T3-INTEGRATION-QUALIFICATION.json).
+
+Inbound task scope is repaired and independently reviewed with zero remaining
+findings and nine passing cases. The subsequent Fallow cohesion refactor and
+header-helper repair passed focused tests and independent reviews; live hashes
+remain historical. Full repository docgen and final CLI package verification
+passed. Final cheap gates passed 15 lanes and failed only inherited EV015. See
+[final local verification](research/T3-LOCAL-VERIFICATION.md). Canonical task/fingerprint bookkeeping is separately recorded in
+[T3 cache review](research/T3-CACHE-REVIEW.md). The inherited main EV015 remains
+its main owner's responsibility. Exact final-head hosted readiness, review window,
+new scoped reflection, merge and retirement remain pending.
+
+The later [refactor reconciliation](research/T3-REFACTOR-RECONCILIATION.json)
+records four h3 ACKs and both coordinator reports, with only the forward pair
+settled. After restoring the original host profile, Codex run ten completed and
+Claude run ten was cancelled; neither remains active. Canonical recovery holds
+both reverse claims ambiguous. Both external credentials re-probed HTTP401;
+bridges were absent and not restarted, and immutable peer grants remain behind
+the ambiguity fences. No resend occurred. This partial refactor exercise does
+not replace the earlier complete hardened proof or finish final goal gates.

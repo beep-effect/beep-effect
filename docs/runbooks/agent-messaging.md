@@ -140,3 +140,56 @@ copy only the main file while a WAL writer is active.
 See the [router goal](../../goals/agent-message-router/SPEC.md) and
 [bridge goal](../../goals/agent-session-bridges/SPEC.md) for the current acceptance
 matrix, reproducible probes and the separately gated existing-app work.
+
+## Existing T3-owned threads
+
+`agent-message attach-t3 --state-dir <private-state> --profile-file <private-profile>`
+attaches the mailbox to one explicitly owned visible T3 thread. It opens a scoped
+HTTP client and worker; stopping that worker leaves the T3 app and native thread
+running. The profile is separate from a managed CLI launch. It records the exact
+host thread/project/workspace, provider instance, approved model and medium effort,
+full-access/default host configuration, artifact/source/version baseline, private
+OAuth file, endpoint ownership/generation and grant-bound peer wrapper. Native
+session/policy observation remains a dated independent baseline: MCP does not
+provide that native identity or effective permission readback.
+
+Create a private executable wrapper that accepts only the six peer operations and
+operation-specific arguments, fixes the state and grant files, and invokes
+`agent-message peer <operation> --state-dir <fixed-state> --grant-file <fixed-grant>`.
+Reject caller attempts to add state/grant/admin flags. The wrapper is a scoped
+protocol return path, not OS isolation of a Full-access model. The underlying
+Toolkit checks the persisted grant on every operation; file contents alone do not
+mint authority. Register the host-issued grant after the bridge emits its enrolled
+binding. Record the exact owned coordinator/worker as desktop-session register
+units, including ownership and an orphan plan; this never changes the orchestrator
+holder or merge authority.
+
+Peer operations are `send --message-id --conversation-id --recipient --body`,
+`reply --message-id --reply-to --body`, `acknowledge --message-id`, `inspect
+--message-id`, `inbox`, and `discover`. These invoke the existing messaging handlers,
+print their final encoded result and fail the command on returned tool failure.
+There is no peer registration, grant issuance, sender selection or recovery API.
+
+The first attachment slice submits queue mode only. Initial enrollment requires idle/completed
+with no active run. Once enrolled, delivery may queue a distinct returned run
+behind an active owned native turn; it never steers or merges content into that turn. A Beep claim commits before the T3 send; a stable hashed client
+request key and private bounded checkpoint correlate the original attempt. Queue
+acceptance is not consumption. Before any native submission, the envelope must match the receiving grant
+conversation/repository/direct target and its explicitly allowed peer endpoints. This attached mode treats the
+receiving grant allowedRecipients as a symmetric peer allowlist for inbound
+senders as well as outbound destinations.
+Foreign conversations and senders fail without exposing their text to T3. The
+peer must ACK through its scoped wrapper and
+the exact returned run must complete under matching host readback before delivery
+settles. Preflight and postcheck are separate reads: T3 provides no atomic
+expected-policy compare-and-send. Detected drift, timeout, lost receipt, stale run
+or missing ACK retains ambiguity, with no blind external resend. A rejected preflight
+is a definite failed attempt before submission. The checkpoint is reconciliation
+evidence; it does not automatically recover or clear a durable ambiguity hold.
+
+Reverse this composition by stopping its owned bridge worker, revoking its owned
+OAuth client and retaining the private mailbox/checkpoint. Preserve the original
+T3 conversations and independently observed native identities. Native T3 tools
+have their own broader authorization; only actual peer/router traffic earns the
+Beep grant enforcement claim. Separate Claude/ChatGPT Desktop attachment remains
+unqualified.

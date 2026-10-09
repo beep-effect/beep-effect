@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
-      "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs after structural main integration; preserve archived main review provenance, cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
+      "reviewer": "GPT-6.1-Sol medium (T3 integration cache posture review)",
+      "reason": "Record the exact root T3 fingerprint inputs, CLI T3 dependency edges and canonical generated T3 task posture reviewed in the basis; preserve all other subjects, scope, profile, epoch and qualification ledger without granting cache reuse qualification.",
       "basis": {
-        "path": "standards/cache-qualification-agent-message-review.md",
-        "sha256": "0d93e997fde1f3c98b1ba2210899135e7c13da5b2ba1687396b31b2cc9a1adbc"
+        "path": "goals/agent-session-bridges/research/T3-CACHE-REVIEW.md",
+        "sha256": "fa1eb09e090141de150941563d884137a5af2131ab1e17708ce2a7b9da679102"
       }
     },
     "@beep/acp": {
@@ -930,11 +930,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "GPT-6.1-Sol medium (agent messaging baseline review)",
-      "reason": "Record only the intentional ACP/provider/MCP dependency edges and six added policy-fingerprint inputs after structural main integration; preserve archived main review provenance, cache settings, scope, profile, epoch and qualification ledger without granting reuse qualification.",
+      "reviewer": "GPT-6.1-Sol medium (T3 integration cache posture review)",
+      "reason": "Record the exact root T3 fingerprint inputs, CLI T3 dependency edges and canonical generated T3 task posture reviewed in the basis; preserve all other subjects, scope, profile, epoch and qualification ledger without granting cache reuse qualification.",
       "basis": {
-        "path": "standards/cache-qualification-agent-message-review.md",
-        "sha256": "0d93e997fde1f3c98b1ba2210899135e7c13da5b2ba1687396b31b2cc9a1adbc"
+        "path": "goals/agent-session-bridges/research/T3-CACHE-REVIEW.md",
+        "sha256": "fa1eb09e090141de150941563d884137a5af2131ab1e17708ce2a7b9da679102"
       }
     },
     "@beep/repo-configs": {
@@ -1055,6 +1055,14 @@
       "basis": {
         "path": "goals/turborepo-task-qualification/research/cache-baseline-v2-per-subject-review.md",
         "sha256": "63bd6038cb84b819d2947a5a99926eaa309677013540850d763bd04fac77718f"
+      }
+    },
+    "@beep/t3-code": {
+      "reviewer": "GPT-6.1-Sol medium (T3 helper dependency review)",
+      "reason": "Record only reviewed T3 utils dependency edges; commands and effective configurations are unchanged. No cache qualification granted.",
+      "basis": {
+        "path": "goals/agent-session-bridges/research/T3-CACHE-HELPER-REVIEW.md",
+        "sha256": "a8cb358e9c72fa9c2327c555236303e3a2171913f5945e2041744c772bc16d33"
       }
     },
     "@beep/tailscale": {
@@ -2622,6 +2630,8 @@
             "packages/drivers/poppler/src/**",
             "packages/drivers/runpod/package.json",
             "packages/drivers/runpod/src/**",
+            "packages/drivers/t3-code/package.json",
+            "packages/drivers/t3-code/src/**",
             "packages/drivers/tesseract/package.json",
             "packages/drivers/tesseract/src/**",
             "packages/drivers/tika/package.json",
@@ -80303,6 +80313,7 @@
           "@beep/runpod#audit",
           "@beep/schema#audit",
           "@beep/skill-contract#audit",
+          "@beep/t3-code#audit",
           "@beep/technical-drawing#audit",
           "@beep/tesseract#audit",
           "@beep/test-runner#audit",
@@ -80399,6 +80410,7 @@
           "@beep/runpod#build",
           "@beep/schema#build",
           "@beep/skill-contract#build",
+          "@beep/t3-code#build",
           "@beep/technical-drawing#build",
           "@beep/tesseract#build",
           "@beep/test-runner#build",
@@ -80482,6 +80494,7 @@
           "@beep/runpod#build",
           "@beep/schema#build",
           "@beep/skill-contract#build",
+          "@beep/t3-code#build",
           "@beep/technical-drawing#build",
           "@beep/tesseract#build",
           "@beep/test-runner#build",
@@ -80552,6 +80565,7 @@
           "@beep/runpod#build",
           "@beep/schema#build",
           "@beep/skill-contract#build",
+          "@beep/t3-code#build",
           "@beep/technical-drawing#build",
           "@beep/tesseract#build",
           "@beep/test-runner#build",
@@ -80673,6 +80687,7 @@
           "@beep/runpod#transit",
           "@beep/schema#transit",
           "@beep/skill-contract#transit",
+          "@beep/t3-code#transit",
           "@beep/technical-drawing#transit",
           "@beep/tesseract#transit",
           "@beep/test-runner#transit",
@@ -80790,6 +80805,7 @@
           "@beep/runpod#transit",
           "@beep/schema#transit",
           "@beep/skill-contract#transit",
+          "@beep/t3-code#transit",
           "@beep/technical-drawing#transit",
           "@beep/tesseract#transit",
           "@beep/test-runner#transit",
@@ -81031,6 +81047,7 @@
           "@beep/runpod#transit",
           "@beep/schema#transit",
           "@beep/skill-contract#transit",
+          "@beep/t3-code#transit",
           "@beep/technical-drawing#transit",
           "@beep/tesseract#transit",
           "@beep/test-runner#transit",
@@ -81107,6 +81124,7 @@
           "@beep/runpod#transit",
           "@beep/schema#transit",
           "@beep/skill-contract#transit",
+          "@beep/t3-code#transit",
           "@beep/technical-drawing#transit",
           "@beep/tesseract#transit",
           "@beep/test-runner#transit",
@@ -81189,6 +81207,7 @@
           "@beep/runpod#transit",
           "@beep/schema#transit",
           "@beep/skill-contract#transit",
+          "@beep/t3-code#transit",
           "@beep/technical-drawing#transit",
           "@beep/tesseract#transit",
           "@beep/test-runner#transit",
@@ -90376,6 +90395,627 @@
             "../../tsconfig.packages.json"
           ],
           "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#audit",
+        "command": "bun run --if-present beep:audit",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#audit",
+          "@beep/mcp-kit#audit",
+          "@beep/schema#audit",
+          "@beep/utils#audit"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../biome.jsonc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.shared.ts"
+          ],
+          "env": [
+            "ALLOWED_EMAILS",
+            "APP_ADMINS_EMAILS",
+            "AUTH_*",
+            "BEEP_TEST_*",
+            "BEEP_TIKA_*",
+            "DATABASE_URL",
+            "DATABASE_URL_UNPOOLED",
+            "EMAIL_*",
+            "LIVEBLOCKS_*",
+            "NEXT_PUBLIC_*",
+            "OAUTH_*",
+            "OPENAI_*",
+            "RESEND_*",
+            "SECURITY_*"
+          ],
+          "passThroughEnv": [],
+          "outputs": [
+            "!**/.turbo/**",
+            "!.next/cache/**",
+            "**/node_modules/.tmp/*.tsbuildinfo",
+            ".expo/**",
+            ".next/**",
+            ".output/**",
+            ".vercel/output/**",
+            "_next/**",
+            "build/**",
+            "dist/**",
+            "docs/**",
+            "next-env.d.ts"
+          ],
+          "dependsOn": [
+            "^audit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "new-only"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#build",
+        "command": "bun run beep:build",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/mcp-kit#build",
+          "@beep/schema#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tools/tsgo-shim/package.json",
+            "../../../tools/tsgo-shim/tsgo.js",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [
+            "!**/.turbo/**",
+            "!.next/cache/**",
+            "**/node_modules/.tmp/*.tsbuildinfo",
+            ".expo/**",
+            ".next/**",
+            ".output/**",
+            ".vercel/output/**",
+            "_next/**",
+            "build/**",
+            "dist/**",
+            "next-env.d.ts",
+            "storybook-static/**"
+          ],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#check",
+        "command": "bun run beep:check",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/mcp-kit#build",
+          "@beep/schema#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tools/tsgo-shim/package.json",
+            "../../../tools/tsgo-shim/tsgo.js",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#coverage",
+        "command": "bunx vitest run --coverage --exclude=test/integration/**",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/mcp-kit#build",
+          "@beep/schema#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            "package.json",
+            "server/**",
+            "src-tauri/**",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest.config.ts",
+            "vitest.coverage.config.ts"
+          ],
+          "env": [
+            "BEEP_FC_SEED",
+            "NODE_OPTIONS",
+            "VITEST_COVERAGE_RATCHET",
+            "VITEST_COVERAGE_REPORT_ONLY"
+          ],
+          "passThroughEnv": [],
+          "outputs": [
+            "coverage/**"
+          ],
+          "dependsOn": [
+            "^build"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#docgen",
+        "command": "bun run beep:docgen",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/repo-docgen#transit",
+          "@beep/t3-code#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [
+            ".beep/docgen/**",
+            ".jsdoc-loop/generated-docs/**",
+            "docs/**"
+          ],
+          "dependsOn": [
+            "@beep/repo-docgen#transit",
+            "transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#lint",
+        "command": "bun run beep:lint",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!../../../tsconfig*.json",
+            "!.beep/**",
+            "!.beep/**",
+            "!.fallow/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../biome.jsonc",
+            "../../../package.json",
+            "../../../packages/tooling/policy-pack/lint-rules/configs/**",
+            "../../../packages/tooling/policy-pack/lint-rules/rules/**",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#lint:deprecated-apis",
+        "command": "beep-cli lint deprecated-apis --package .",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "//#lint:policy-fingerprint",
+          "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
+          "@beep/schema#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.cache/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/docs/**",
+            "!**/generated/**",
+            "!**/node_modules/**",
+            "!**/vendor/**",
+            "!../../../**/.beep/**/package.json",
+            "!../../../**/.next/**/package.json",
+            "!../../../**/.turbo/**/package.json",
+            "!../../../**/build/**/package.json",
+            "!../../../**/coverage/**/package.json",
+            "!../../../**/dist/**/package.json",
+            "!../../../**/node_modules/**/package.json",
+            "!../../../**/storybook-static/**/package.json",
+            "!.beep/**",
+            "!.fallow/**",
+            "!node_modules/**",
+            "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../apps/**/package.json",
+            "../../../apps/**/tsconfig*.json",
+            "../../../eslint.config.mjs",
+            "../../../infra/**/tsconfig*.json",
+            "../../../infra/package.json",
+            "../../../package.json",
+            "../../../packages/**/package.json",
+            "../../../packages/**/tsconfig*.json",
+            "../../../packages/tooling/policy-pack/repo-configs/package.json",
+            "../../../packages/tooling/policy-pack/repo-configs/src/eslint/**",
+            "../../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+            "../../../tsconfig*.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*",
+            "package.json",
+            "tsconfig*.json"
+          ],
+          "env": [
+            "NODE_OPTIONS"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#lint:fix",
+        "command": "bun run beep:lint:fix",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!../../../tsconfig*.json",
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../biome.jsonc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#lint:jsdoc",
+        "command": "beep-cli lint jsdoc --package .",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "//#lint:policy-fingerprint"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/docs/**",
+            "!**/node_modules/**",
+            "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
+            "!../../../**/.beep/**/package.json",
+            "!../../../**/.next/**/package.json",
+            "!../../../**/.turbo/**/package.json",
+            "!../../../**/build/**/package.json",
+            "!../../../**/coverage/**/package.json",
+            "!../../../**/dist/**/package.json",
+            "!../../../**/node_modules/**/package.json",
+            "!../../../**/storybook-static/**/package.json",
+            "!node_modules/**",
+            "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../eslint.config.mjs",
+            "../../../package.json",
+            "../../../packages/tooling/policy-pack/repo-configs/package.json",
+            "../../../packages/tooling/policy-pack/repo-configs/src/eslint/**",
+            "../../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/**",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../tsdoc.json",
+            ".env",
+            ".env.*",
+            "package.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#lint:laws",
+        "command": "beep-cli lint laws --package .",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "//#lint:policy-fingerprint"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
+            "!**/node_modules/**",
+            "!../../../**/.beep/**/package.json",
+            "!../../../**/.next/**/package.json",
+            "!../../../**/.turbo/**/package.json",
+            "!../../../**/build/**/package.json",
+            "!../../../**/coverage/**/package.json",
+            "!../../../**/dist/**/package.json",
+            "!../../../**/node_modules/**/package.json",
+            "!../../../**/storybook-static/**/package.json",
+            "!node_modules/**",
+            "**/*.{ts,tsx}",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/**/package.json",
+            "../../../packages/tooling/policy-pack/repo-configs/src/eslint/EffectLawsAllowlist.ts",
+            "../../../packages/tooling/policy-pack/repo-configs/src/eslint/NoNativeRuntimeHotspots.ts",
+            "../../../packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts",
+            "../../../standards/effect-laws.allowlist.jsonc",
+            "../../../tsconfig*.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            ".env",
+            ".env.*",
+            "package.json",
+            "tsconfig*.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#package-test-typecheck",
+        "command": "beep-cli quality test-tsgo-package",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
+          "@beep/schema#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+            "../../../packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "package.json",
+            "scripts/**",
+            "server/**",
+            "src-tauri/**",
+            "src/**",
+            "test/**",
+            "tsconfig*.json"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [
+            ".turbo/package-test-typecheck-result.json"
+          ],
+          "dependsOn": [
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#test",
+        "command": "bun run beep:test",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/mcp-kit#transit",
+          "@beep/schema#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*"
+          ],
+          "env": [
+            "BEEP_FC_NUM_RUNS",
+            "BEEP_FC_SEED"
+          ],
+          "passThroughEnv": [
+            "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
+            "GITHUB_STEP_SUMMARY"
+          ],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
+        "computation": "@beep/t3-code#test:integration",
+        "command": "bun run beep:test:integration",
+        "commandDigest": "2789dec78eaab6ca497bb0cd49a9c3cc60d68592d669a9d57123b8e91046d3c9",
+        "dependencies": [
+          "@beep/identity#build",
+          "@beep/mcp-kit#build",
+          "@beep/schema#build",
+          "@beep/utils#build"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!.beep/**",
+            "!.fallow/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts"
+          ],
+          "env": [
+            "AI_VENICE_API_KEY",
+            "BEEP_TEST_*",
+            "BEEP_TIKA_*",
+            "CLOUD_BOX_TOKEN",
+            "FIRECRAWL_API_KEY"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -104218,7 +104858,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "0ad4e71dbd8c45b4d6f35fbcc1095af0add73ee01c89cf73574d810187adc8cf"
+        "sha256": "531190bc7a7e999f3b24d9a9fc469e536e472b2b7955a7766412da9425f4a9e7"
       }
     ]
   }

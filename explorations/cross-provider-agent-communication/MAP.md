@@ -7,8 +7,8 @@ reported bounds. They do not substitute for the acceptance gates below.
 | Goal or candidate | State and mission | Dependency or re-entry gate | Reuse and new work |
 | --- | --- | --- | --- |
 | [agent-message-router](../../goals/agent-message-router/SPEC.md) | Active: local durable addressing, receipts, ordering, recovery and scoped direct delivery | Accepted spike contract | Existing Effect SQLite and CLI services; new delivery semantics, claims and receipt store |
-| [agent-session-bridges](../../goals/agent-session-bridges/SPEC.md) | Authored: native owned runtimes and autonomous CLI/MCP messaging | Router schema and injected vertical slice pass | Existing ACP, provider auth discovery and MCP kit; new managed launch profiles and provider wire adapters |
-| `agent-existing-session-enrollment` | Queued: native visible-app enrollment and continuity | A supported ownership/permission-safe app control route is available | Existing read-only app discovery; new identity bridge and same-visible-session tests |
+| [agent-session-bridges](../../goals/agent-session-bridges/SPEC.md) | Active extension: managed foundation plus attached T3 task coordination | T3-owned host qualification and explicit operator integration authorization | Existing durable router, EndpointDispatch, toolkit and register; new thin T3 driver, attach-t3 and grant-bound peer CLI |
+| `agent-existing-session-enrollment` | T3-owned gate fired into the bridge extension; separate-app enrollment remains queued | A supported ownership/permission-safe app control route is available | Existing read-only app discovery; new identity bridge and same-visible-session tests |
 | `agent-browser-session-bridge` | Queued: deployable opt-in browser bridge | Local router and managed bridge pass; production local browser control route selected | Controller-mediated Claude web proof; new deployed enrollment, assistant extraction, busy and recovery behavior |
 | `orchestrator-live-coordination` | Queued: owner/role routing, reviews, reds and handoff | Two qualified bridges plus local recovery; existing register authority composed | Existing Yeet inbox and session register; new producer routing and fenced control dispatch |
 | `agent-communication-federation` | Queued: remote-host routing, rich payloads and task interoperability | Local recovery and authority proof | Existing host boundaries where applicable; new authenticated gateway and optional A2A mapping |
@@ -43,3 +43,17 @@ and [probe specification](research/PROBE-PLAN.md). Proposed latency objectives
 remain targets, not production measurements. Preview APIs, permission resets,
 owner replacement, account switching and lost acknowledgements remain explicit
 test risks. Agent Relay is optional reference material, not an adopted backend.
+
+## Admitted T3 vertical slice (2026-10-09)
+
+Compose `@beep/t3-code` external MCP with existing durable EndpointDispatch/store
+loop in `attach-t3`; return through the existing toolkit via a persisted-grant
+peer CLI. Register owned T3 coordinator/worker desktop-session units without
+claiming the global role. Prove a real one-file repository audit brief, autonomous
+correlated result and ACK/settled dispatch in the same visible T3 conversations.
+Keep native T3 self-messaging distinct from Beep grant enforcement and record the
+read→send policy race. Acceptance and topology are in the bridge
+[T3 design](../../goals/agent-session-bridges/research/T3-INTEGRATION.md).
+The capability inventory composes existing router, MCP transport primitives and
+session register; attached external host transport/configuration is NET-NEW.
+Global review/red producers and role handoff remain queued above.

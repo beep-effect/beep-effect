@@ -193,3 +193,20 @@ session was contacted. This is authored research in a new isolated lane.
   [native qualification](NATIVE-QUALIFICATION.md) and the
   [Claude managed receipt](CLAUDE-MANAGED-ROUNDTRIP.json). Launch settings,
   MCP startup and live model behavior are distinct evidence.
+
+## Attached T3 extension (2026-10-09)
+
+- [Executed T3 host qualification](../../../explorations/cross-provider-agent-communication/research/T3CODE-QUALIFICATION.md) and its receipt index: installed host evidence, native identities/policy and limitations; not adapter proof or Beep recipient authorization.
+- [T3 integration design](T3-INTEGRATION.md): admitted architecture and executed functional acceptance, with final gates open; composes existing EndpointDispatch/store loop, AgentMessageToolkit and desktop-session register units. New external transport belongs in t3-code, not native managed launch profile.
+- Binding routing: standards/architecture/03-driver-boundaries.md and standards/ARCHITECTURE.md tooling operational driver composition. External OAuth remains private; no proprietary installed source is copied.
+
+- [Attached T3 integration qualification](T3-INTEGRATION-QUALIFICATION.json): actual bidirectional repository audits, four ACKed/settled messages, native observer separation, negative prime, owned credential/bridge cleanup, independent review and source/private-receipt digests. Full final verification and hosted closeout remain pending.
+
+- [Initial T3 integration receipt](T3-INTEGRATION-INITIAL-QUALIFICATION.json): immutable earlier exercised source, negative prime and original internal credential incident.
+- [T3 cache posture review](T3-CACHE-REVIEW.md): separately reviewed task/fingerprint baseline evidence, not runtime or cache-reuse qualification.
+
+- [Refactor interruption reconciliation](T3-REFACTOR-RECONCILIATION.json): four h3 ACKs and both reports, forward settlement, cancelled reverse coordinator and two canonical ambiguity holds; separate from the historical complete hardened proof.
+
+- [T3 helper cache review](T3-CACHE-HELPER-REVIEW.md): canonical dependency posture review for the schema-policy helper repair; no new cache qualification.
+
+- [Final local verification](T3-LOCAL-VERIFICATION.md): completed package checks and exact publication boundary.

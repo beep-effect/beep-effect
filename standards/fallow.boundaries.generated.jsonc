@@ -786,6 +786,12 @@
         ]
       },
       {
+        "name": "@beep/t3-code",
+        "patterns": [
+          "packages/drivers/t3-code/src/**"
+        ]
+      },
+      {
         "name": "@beep/tailscale",
         "patterns": [
           "packages/drivers/tailscale/src/**"
@@ -3582,6 +3588,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/t3-code",
           "@beep/technical-drawing",
           "@beep/tesseract",
           "@beep/test-runner",
@@ -3621,6 +3628,7 @@
           "@beep/runpod",
           "@beep/schema",
           "@beep/skill-contract",
+          "@beep/t3-code",
           "@beep/technical-drawing",
           "@beep/tesseract",
           "@beep/test-runner",
@@ -3986,6 +3994,23 @@
           "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/t3-code",
+        "allow": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/t3-code",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/t3-code",
           "@beep/utils"
         ]
       },

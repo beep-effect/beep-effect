@@ -84,3 +84,97 @@ introduced documentation against the canonical JSDoc categories and example
 grammar; do not grow the baseline or exclude the internal files. Prevention:
 run fresh documentation inventory and bounded repository metadata checks when
 adding private cross-file exports, as well as the package's own docgen.
+
+## 2026-10-09: repository hooks can expand a T3 enrollment turn
+
+Task: prime two owned T3 repository conversations with a no-tool READY brief.
+The inherited `full:00-cheap-gates` P0 stop hook continued after that reply.
+Claude repeated the bounded reply while refusing tools; Codex inspected the
+checkout inbox and its memory and used `yeet inbox ack --wontfix` despite the
+brief's no-tool restriction. Both turns eventually completed. The acknowledgment
+recorded that the existing implementation lane still owns the failure; it did
+not establish remediation or green proof. No tracked change is attributed to
+these peers: T3 checkpoint diffs include concurrent edits by the implementing
+agents and cannot establish who wrote them.
+
+Prevention: reconcile owned inbox obligations before a bounded host experiment,
+carry explicit coordinator/worker ownership and hook handling in real briefs,
+and inspect the complete executed turn rather than accepting its first READY
+message. Full-access agents and prompt boundaries are not OS isolation. Retain
+this failed no-tool enrollment case separately from the later scoped route proof.
+
+## 2026-10-09: package creation leaves an identity formatting failure
+
+Task: create the T3 driver through the canonical package generator, then run
+`beep quality package-verify @beep/identity`. Build, type checks, 115 tests and
+docgen passed, but Biome rejected the newly extended package-name list in
+`packages/foundation/modeling/identity/src/packages.ts`. Formatting that generated
+edit resolves the introduced failure. The package writer should format its
+identity registration output before returning success.
+
+## 2026-10-09: process arguments exposed an owned T3 credential
+
+Task: inspect package-verifier progress. A process command-line match included
+the internal MCP bearer passed to the owned T3 Claude process. The verifier
+reported the mistake and stopped argument inspection. The host archived only
+that owned conversation through the supported lifecycle API, verified its exact
+detach effect succeeded with `revokeMcpCredential: true`, then unarchived it.
+The installed source routes that terminal detach through thread credential
+revocation. The old bearer was not separately probed; retain that evidence limit.
+
+Prevention: emit only PID and command name for progress checks. Never inspect
+agent command arguments, which can contain credentials. Keep diagnostic values
+out of public receipts and use supported, scoped revocation before resuming proof.
+
+## 2026-10-09: incoming native delivery needs its own scope check
+
+Final review traced a valid sender grant through enqueue and claim into the T3
+adapter. The sender's conversation scope did not establish the receiver's scope.
+The receiver's later ACK would reject a foreign conversation, but its native
+model could already have seen the task. The adapter now checks the direct target,
+repository, receiver conversation and explicit symmetric peer allowlist before
+any T3 read or send. Two actual grant-to-claim regressions cover a foreign
+conversation and an unallowed sender, both with zero native sends. Preserve the
+earlier allowed-traffic proof separately from the hardened source rerun.
+
+Prevention: review incoming task authorization at the external submission
+boundary, independently of outbound grant validation and acknowledgment.
+
+## 2026-10-09: missing generated SDK output blocked full docgen
+
+The required full docgen run failed in `@beep/infra` while checking unchanged
+`@pulumi/gharunners` source against strict compiler options. Ten relevant files
+and the SDK/compiler lock records matched main; the installed SDK's declared
+`bin` output was absent. The existing `bun run infra:prepare-gha-runners`
+preparation command completed successfully. The subsequent full repository
+docgen run completed with exit 0, including aggregation. Ensure the
+tracked postinstall prerequisite has run after a script-skipping installation.
+
+## 2026-10-09: run structural gates before live qualification
+
+The final cheap-gate collection found two introduced Fallow complexity findings
+in `AgentMessage.attached.service.ts`: `submit` and `verifyAttachedT3`. Focused
+behavioral tests and the bidirectional live proof had already passed, so a later
+cohesion refactor requires its own review and source binding. The new package
+also needed canonical policy-fingerprint regeneration and a scoped cache-policy
+review. Run those structural gates before the live experiment to avoid repeating
+qualification or confusing a historical source receipt with the final source.
+The in-progress full CLI audit was cancelled when its source was superseded;
+that cancelled run is not a successful package proof.
+
+## 2026-10-09: interruption separates ACK from final native settlement
+
+The final refactored-source exercise persisted four ACKs and both coordinator
+reports before the host interruption. Its forward dispatches settled; two reverse
+dispatches remained active. Restoring the same T3 app/profile reconciled the
+Codex run as completed and the Claude run as cancelled. Canonical mailbox
+recovery retained the reverse ambiguity fences without replaying either task.
+The external proof credentials were revoked and independently returned HTTP401.
+Preserve the earlier complete hardened proof separately; an ACK or written report
+does not establish successful native completion after a host interruption.
+
+The full CLI package audit also lost its terminal receipt during interruption.
+The replacement audit buffers output across approximately 298 serial isolated
+test files; process metadata showed worker turnover and progress. A quiet log
+is neither a pass nor evidence of a hang. A per-step progress marker and explicit
+audit deadline would make this verification easier to observe and recover.
