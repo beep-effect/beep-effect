@@ -192,3 +192,33 @@ linked output SHA-256 manifests, and executes the same changed-input MISS.
 Its terminal result remains pending. This fixture correction changes no
 shared generated package scripts. Shared owns the broader inherited build
 script/incremental-output coupling follow-up.
+
+
+## Final clean-output cache qualification
+
+Execution/producer revision `4916a7479698b34f6461aa4495361d3dbb9f554d`, UTC
+`2026-10-09T21:12:29Z`–`21:12:34Z`; admitted command:
+`turbo run @beep/fc-runs#build @beep/types#build --cache=local:rw --summarize`.
+Both fixtures first completed `bun install --frozen-lockfile`. Token was absent,
+cache local-only, and the private cache started empty. Every execution began
+with an empty output manifest and cleared its owned incremental state.
+[Complete per-file SHA-256 manifests and per-task sources](./stage-5-g-cache-fixtures.json)
+are preserved independently of fixture retirement.
+
+| Fixture | fc-runs / types hashes | Result | Complete outputs |
+|---|---|---|---:|
+| Fresh clone cold | `3ca643e559fb1d3a` / `f8b314d6bfaf4138` | both MISS, exit 0 | 28 |
+| Same clone warm | same | both LOCAL HIT, exit 0 | 28 |
+| Linked worktree | same | both LOCAL HIT, exit 0 | 28 |
+| Changed-input lookup | `793c738517d0e311` / original types | MISS / LOCAL HIT | lookup only |
+| Changed-input execution | same changed/original hashes | MISS / LOCAL HIT, exit 0 | 28 |
+
+Cold, warm and linked manifests are identical. The fresh cold manifest also
+matches the earlier lane/shared-route 28-file manifest, proving its output
+health independently of the earlier producer. The changed build contains all
+required public outputs. Its source input was restored in `finally`.
+Local reuse, cross-clone/linked reuse, output restoration and changed-input
+invalidation are each proven for these tasks and inputs. Remote hit remains
+unsupported under the approved credential ruling. Current-process shared-path
+inventory is not proof of every other harness child environment; actual home
+changes and the two legacy cache retirements remain deferred to their owners.

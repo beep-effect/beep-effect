@@ -96,3 +96,35 @@ nested `A.filter`/`A.flatMap` contextual inference treated the row as unknown.
 The direct, single-pass `A.flatMap(rows, ...)` repair preserves warning order
 and selection. Compiler/docgen reruns and the default full package audit remain
 pending; their actual terminal results will be appended below.
+
+
+## Final G package and hosted-parity results
+
+The default `bun run beep quality package-verify @beep/repo-cli` passed at
+source `59e5cf879f1796dfec00d14ba6545e5c79154eeb`, UTC
+`2026-10-09T20:54:49Z`–`21:12:04Z`: audit 1005.4 seconds, docgen 27.8 seconds.
+The full audit includes package lint/check; this was not `--quick`.
+
+At source-equivalent receipt revision `4916a7479698b34f6461aa4495361d3dbb9f554d`,
+`bun run beep quality test-tsgo` passed (`21:11:31Z`–`21:11:52Z`, 331 files),
+and `bun run beep docgen local --base origin/main` passed
+(`21:11:52Z`–`21:12:29Z`, 2332 examples). The preceding owner commands all
+passed without tracked changes: schema-first write, package-scripts write,
+tsconfig-sync write, cache-profile write and goals-index write. These ran
+after the final main integration and fetch confirmed `origin/main` remains
+`df7d88aad7` at `21:07Z`. Code files are identical to the reviewed/package-
+verified source revision; later commits update receipts only.
+
+All named local parity checks have terminal passes. Scoped coverage is the
+separate percentage/count read above, not a full repository coverage gate.
+[Fresh cache fixtures](./stage-5-g-cache-fixtures.json) passed cold/warm/linked
+manifest equality and successful changed-input MISS with 28 healthy outputs.
+Real storage remains fully deferred: 2765 rows, 0 applied, 0/0 MiB reclaimed.
+
+The earlier hosted CLI shard failed only the two SIGKILL virtual-clock cases;
+these were fixed, independently reviewed, and both focused/full package runs
+now pass. Vercel statuses explicitly report deployment rate limiting. Hosted
+checks on each earlier pushed head remain historical; local proof does not
+turn those failures into hosted successes. S11 assigns the final hosted-red
+and 20-minute review-window merge gate to the orchestrator. No G merge is
+performed by the worker.
