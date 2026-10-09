@@ -96,6 +96,14 @@ Launch, from a `claude` session in `~/YeeBois/projects/beep-effect` on branch
 > cli stays in the port and the ledger keeps 29 rows. Engine's built-guard test keeps its vitest
 > global setup, which emits `dist/dev/pkg` with tsgo, the repo's own compiler (upstream runs
 > `build:dev` before tests). Rejected: dropping the whole cli module; dropping engine's test.
+>
+> **Review cap, 2026-10-09.** "Lets cap this at three rounds." The S4 loop (section 12) runs at most
+> three rounds per module, not five; jsonl and jsonc keep D19's single confirmation round. Round 3
+> is the last review: its required findings are fixed in a final fix wave and proven by the gates
+> (`audit:effected -- audit <m>` green), not by a fourth review. Anything a round-3 fix cannot
+> close goes to the row's backlog with its reason, and the module then closes `done`. Section 12.6
+> (`blocked` after the round limit) no longer applies. Supersedes "At most five rounds" in S4 and
+> section 12.
 
 This file is the whole contract. The `/goal` evaluator only reads the
 transcript, so section 0 defines what you print and when. Everything else is
